@@ -427,7 +427,7 @@ function EvalBar({ cp, mate, isDark: _isDark }: { cp: number; mate: number | nul
     <div className="flex flex-col items-center w-6 h-full rounded-md overflow-hidden border border-white/10">
       {/* Black portion (top) */}
       <div
-        className="w-full bg-gray-800 transition-all duration-500 relative"
+        className="w-full bg-[#1A1A1A] transition-all duration-500 relative"
         style={{ height: `${100 - whitePct}%` }}
       >
         {whitePct < 50 && (
@@ -442,7 +442,7 @@ function EvalBar({ cp, mate, isDark: _isDark }: { cp: number; mate: number | nul
         style={{ height: `${whitePct}%` }}
       >
         {whitePct >= 50 && (
-          <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-800 whitespace-nowrap">
+          <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#1A1A1A] whitespace-nowrap">
             {label}
           </span>
         )}
@@ -472,7 +472,7 @@ function MoveTreeBreadcrumb({
         <button
           onClick={() => onNavigate(STARTING_FEN)}
           className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-            isDark ? "bg-white/5 hover:bg-white/10 text-white/60" : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+            isDark ? "bg-white/5 hover:bg-white/10 text-white/60" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
           }`}
         >
           Start
@@ -484,7 +484,7 @@ function MoveTreeBreadcrumb({
           const isLast = i === moves.length - 1;
           return (
             <React.Fragment key={node.fen}>
-              <span className={isDark ? "text-white/30" : "text-gray-300"}>/</span>
+              <span className={isDark ? "text-white/30" : "text-[#6B6B50]/70"}>/</span>
               <button
                 onClick={() => onNavigate(node.fen)}
                 className={`px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
@@ -494,7 +494,7 @@ function MoveTreeBreadcrumb({
                       : "bg-emerald-100 text-emerald-700"
                     : isDark
                     ? "bg-white/5 hover:bg-white/10 text-white/70"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                    : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
                 }`}
               >
                 {prefix} {node.san || "?"}
@@ -514,7 +514,7 @@ function MoveTreeBreadcrumb({
             </span>
           )}
           <span className={`text-xs font-medium ${
-            isDark ? "text-white/60" : "text-gray-500"
+            isDark ? "text-white/60" : "text-[#6B6B50]"
           }`}>
             {currentNode.openingName}
           </span>
@@ -568,13 +568,13 @@ function ExplorerMoveRow({
             : "bg-emerald-50 border border-emerald-200"
           : isDark
           ? "hover:bg-white/5 border border-transparent"
-          : "hover:bg-gray-50 border border-transparent"
+          : "hover:bg-[#FFF3D5] border border-transparent"
       }`}
       onClick={onPlay}
     >
       {/* Move SAN */}
       <div className="w-16 shrink-0">
-        <span className={`font-bold font-mono text-base ${isDark ? "text-white" : "text-gray-900"}`}>
+        <span className={`font-bold font-mono text-base ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
           {move.san}
         </span>
       </div>
@@ -584,13 +584,13 @@ function ExplorerMoveRow({
         <div className="flex items-center gap-1.5 min-w-0">
           {openingEco && (
             <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${
-              isDark ? "bg-white/10 text-white/60" : "bg-gray-100 text-gray-500"
+              isDark ? "bg-white/10 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
             }`}>
               {openingEco}
             </span>
           )}
           {openingName && (
-            <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-gray-500"}`}>
+            <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
               {openingName}
             </span>
           )}
@@ -598,7 +598,7 @@ function ExplorerMoveRow({
       </div>
 
       {/* Frequency */}
-      <div className={`text-xs text-right shrink-0 w-20 ${isDark ? "text-white/50" : "text-gray-400"}`}>
+      <div className={`text-xs text-right shrink-0 w-20 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
         {games > 0 ? `1 in ${Math.round(1 / freq)}` : "rare"}
       </div>
 
@@ -606,8 +606,8 @@ function ExplorerMoveRow({
       <div className="w-24 shrink-0">
         <div className="flex h-2 rounded-full overflow-hidden">
           <div className="bg-white" style={{ width: `${winPct}%` }} />
-          <div className="bg-gray-400" style={{ width: `${drawPct}%` }} />
-          <div className="bg-gray-800" style={{ width: `${lossPct}%` }} />
+          <div className="bg-[#6B6B50]/60" style={{ width: `${drawPct}%` }} />
+          <div className="bg-[#1A1A1A]" style={{ width: `${lossPct}%` }} />
         </div>
       </div>
 
@@ -1602,14 +1602,14 @@ export default function RepertoireBuilder() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0d1a0f] text-white" : "bg-[#FFF3D5]/70 text-[#1A1A1A]"}`}>
         <Loader2 className="animate-spin" size={32} />
       </div>
     );
   }
 
   return (
-    <div className={`h-screen flex flex-col overflow-hidden ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`h-screen flex flex-col overflow-hidden ${isDark ? "bg-[#0d1a0f] text-white" : "bg-[#FFF3D5]/70 text-[#1A1A1A]"}`}>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div
         className="sticky top-0 z-40 flex items-center gap-3 px-4 lg:px-5 py-2.5"
@@ -1708,8 +1708,8 @@ export default function RepertoireBuilder() {
             )}
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               color === "white"
-                ? "bg-white text-gray-900 border border-gray-200"
-                : "bg-gray-800 text-white border border-gray-600"
+                ? "bg-white text-[#1A1A1A] border border-[#E8D9B0]"
+                : "bg-[#1A1A1A] text-white border border-[#4D6940]/40"
             }`}>
               {color === "white" ? "♜ White" : "♚ Black"}
             </span>
@@ -1735,7 +1735,7 @@ export default function RepertoireBuilder() {
               {quizStatus === "correct" ? "✓ Correct!" : quizStatus === "wrong" ? `✗ Wrong — correct move: ${quizHintSan ?? "?"}` : "Quiz Mode — find your prepared move"}
             </span>
             <span className={`ml-auto text-xs ${
-              isDark ? "text-white/50" : "text-gray-500"
+              isDark ? "text-white/50" : "text-[#6B6B50]"
             }`}>
               Score: {quizCorrect}/{quizTotal} ({quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 100}%)
             </span>
@@ -1743,7 +1743,7 @@ export default function RepertoireBuilder() {
               <button
                 onClick={skipQuizPosition}
                 className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg ${
-                  isDark ? "text-white/60 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                  isDark ? "text-white/60 hover:text-white hover:bg-white/10" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
                 }`}
               >
                 <SkipForward size={13} />
@@ -1877,7 +1877,7 @@ export default function RepertoireBuilder() {
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center gap-2">
                   {openingName && (
-                    <span className={`text-sm font-medium ${isDark ? "text-white/70" : "text-gray-600"}`}>
+                    <span className={`text-sm font-medium ${isDark ? "text-white/70" : "text-[#6B6B50]"}`}>
                       {openingName}
                     </span>
                   )}
@@ -1885,7 +1885,7 @@ export default function RepertoireBuilder() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => navigateTo(STARTING_FEN)}
-                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-gray-200 text-gray-500"}`}
+                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-[#E8D9B0] text-[#6B6B50]"}`}
                     title="Reset to start"
                   >
                     <RotateCcw size={16} />
@@ -1896,7 +1896,7 @@ export default function RepertoireBuilder() {
                         navigateTo(currentPath[currentPath.length - 2].fen);
                       }
                     }}
-                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-gray-200 text-gray-500"}`}
+                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-[#E8D9B0] text-[#6B6B50]"}`}
                     title="Previous move (←)"
                   >
                     <ChevronLeft size={18} />
@@ -1909,14 +1909,14 @@ export default function RepertoireBuilder() {
                         if (next.move) setLastMove([next.move.slice(0, 2), next.move.slice(2, 4)]);
                       }
                     }}
-                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-gray-200 text-gray-500"}`}
+                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-[#E8D9B0] text-[#6B6B50]"}`}
                     title="Next move (→)"
                   >
                     <ChevronRight size={18} />
                   </button>
                   <button
                     onClick={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
-                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-gray-200 text-gray-500"}`}
+                    className={`p-2 rounded-lg transition ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-[#E8D9B0] text-[#6B6B50]"}`}
                     title="Flip board"
                   >
                     <FlipHorizontal size={16} />
@@ -1930,7 +1930,7 @@ export default function RepertoireBuilder() {
                           : "bg-emerald-100 text-emerald-600"
                         : isDark
                         ? "hover:bg-white/10 text-white/40"
-                        : "hover:bg-gray-200 text-gray-400"
+                        : "hover:bg-[#E8D9B0] text-[#6B6B50]"
                     }`}
                     title="Toggle engine"
                   >
@@ -1941,11 +1941,11 @@ export default function RepertoireBuilder() {
 
               {/* Engine info line */}
               {showEngine && sfEval && (
-                <div className={`mt-2 text-xs flex items-center gap-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                <div className={`mt-2 text-xs flex items-center gap-2 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   <Zap size={12} />
                   <span>Stockfish 18 Lite{isMultiThreaded ? ` · ${threadCount}T` : ""} · depth {sfEval.depth}</span>
                   {sfEval.bestMove && (
-                    <span className={`font-mono ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                    <span className={`font-mono ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
                       Best: {sfEval.bestMove}
                     </span>
                   )}
@@ -1955,16 +1955,16 @@ export default function RepertoireBuilder() {
               {/* ── Annotation Notes ──────────────────────────────────────────────────────────────── */}
               {quizStatus === "idle" && (
                 <div className={`mt-3 rounded-xl border ${
-                  isDark ? "bg-gray-900/60 border-white/10" : "bg-gray-50 border-gray-200"
+                  isDark ? "bg-[#0f1f12]/60 border-white/10" : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
                 }`}>
                   {/* Header */}
                   <div className={`flex items-center justify-between px-3 py-2 border-b ${
-                    isDark ? "border-white/10" : "border-gray-200"
+                    isDark ? "border-white/10" : "border-[#E8D9B0]"
                   }`}>
                     <div className="flex items-center gap-1.5">
-                      <MessageSquare size={13} className={isDark ? "text-white/40" : "text-gray-400"} />
+                      <MessageSquare size={13} className={isDark ? "text-white/40" : "text-[#6B6B50]"} />
                       <span className={`text-xs font-medium ${
-                        isDark ? "text-white/50" : "text-gray-500"
+                        isDark ? "text-white/50" : "text-[#6B6B50]"
                       }`}>
                         {currentNode && currentNode.fen !== moveTree.fen
                           ? `Note on ${currentNode.san ?? "starting position"}`
@@ -1995,7 +1995,7 @@ export default function RepertoireBuilder() {
                     className={`w-full px-3 py-2 text-sm resize-none bg-transparent outline-none placeholder:text-sm ${
                       isDark
                         ? "text-white/80 placeholder-white/25"
-                        : "text-gray-700 placeholder-gray-400"
+                        : "text-[#1A1A1A]/85 placeholder-gray-400"
                     }`}
                   />
                 </div>
@@ -2007,7 +2007,7 @@ export default function RepertoireBuilder() {
           {quizStatus !== "idle" && quizStatus !== "complete" ? (
             /* ── Quiz Status Panel ── */
             <div className={`w-full lg:w-[45%] lg:sticky lg:top-20 rounded-2xl border ${
-              isDark ? "bg-gray-900/50 border-purple-500/20" : "bg-white border-purple-200"
+              isDark ? "bg-[#0f1f12]/50 border-purple-500/20" : "bg-[#FFF8E8] border-purple-200"
             } overflow-hidden`}>
               <div className={`px-4 py-3 border-b ${
                 isDark ? "border-purple-500/20" : "border-purple-100"
@@ -2019,7 +2019,7 @@ export default function RepertoireBuilder() {
                   }`}>Quiz Mode</h3>
                 </div>
                 <p className={`text-xs ${
-                  isDark ? "text-white/50" : "text-gray-500"
+                  isDark ? "text-white/50" : "text-[#6B6B50]"
                 }`}>
                   Find your prepared move from memory. Drag a piece to make your move.
                 </p>
@@ -2034,17 +2034,17 @@ export default function RepertoireBuilder() {
                       isDark ? "text-emerald-400" : "text-emerald-600"
                     }`}>{quizCorrect}</div>
                     <div className={`text-[11px] mt-0.5 ${
-                      isDark ? "text-white/40" : "text-gray-400"
+                      isDark ? "text-white/40" : "text-[#6B6B50]"
                     }`}>Correct</div>
                   </div>
                   <div className={`rounded-xl p-3 text-center ${
-                    isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-100"
+                    isDark ? "bg-white/5 border border-white/10" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/70"
                   }`}>
                     <div className={`text-2xl font-bold ${
-                      isDark ? "text-white/80" : "text-gray-700"
+                      isDark ? "text-white/80" : "text-[#1A1A1A]/85"
                     }`}>{quizTotal}</div>
                     <div className={`text-[11px] mt-0.5 ${
-                      isDark ? "text-white/40" : "text-gray-400"
+                      isDark ? "text-white/40" : "text-[#6B6B50]"
                     }`}>Attempts</div>
                   </div>
                   <div className={`rounded-xl p-3 text-center ${
@@ -2056,7 +2056,7 @@ export default function RepertoireBuilder() {
                       {quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 100}%
                     </div>
                     <div className={`text-[11px] mt-0.5 ${
-                      isDark ? "text-white/40" : "text-gray-400"
+                      isDark ? "text-white/40" : "text-[#6B6B50]"
                     }`}>Accuracy</div>
                   </div>
                 </div>
@@ -2064,10 +2064,10 @@ export default function RepertoireBuilder() {
                 {/* Move log */}
                 {quizMoveLog.length > 0 && (
                   <div className={`rounded-xl p-3 ${
-                    isDark ? "bg-white/5" : "bg-gray-50"
+                    isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
                   }`}>
                     <div className={`text-xs font-medium mb-2 ${
-                      isDark ? "text-white/50" : "text-gray-500"
+                      isDark ? "text-white/50" : "text-[#6B6B50]"
                     }`}>Move history</div>
                     <div className="flex flex-wrap gap-1.5">
                       {quizMoveLog.map((entry, i) => (
@@ -2112,10 +2112,10 @@ export default function RepertoireBuilder() {
           ) : (
             /* ── Explorer Panel ── */
           <div className={`w-full lg:w-[45%] lg:sticky lg:top-20 rounded-2xl border ${
-            isDark ? "bg-gray-900/50 border-white/10" : "bg-white border-gray-200"
+            isDark ? "bg-[#0f1f12]/50 border-white/10" : "bg-[#FFF8E8] border-[#E8D9B0]"
           } overflow-hidden`}>
             {/* Panel header with tab switcher */}
-            <div className={`px-4 pt-3 pb-0 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+            <div className={`px-4 pt-3 pb-0 border-b ${isDark ? "border-white/10" : "border-[#E8D9B0]/70"}`}>
               <MoveTreeBreadcrumb path={currentPath} onNavigate={navigateTo} isDark={isDark} />
 
               {/* Tab bar */}
@@ -2130,7 +2130,7 @@ export default function RepertoireBuilder() {
                         : "border-emerald-600 text-emerald-700"
                       : isDark
                       ? "border-transparent text-white/40 hover:text-white/70"
-                      : "border-transparent text-gray-400 hover:text-gray-600",
+                      : "border-transparent text-[#6B6B50] hover:text-[#6B6B50]",
                   ].join(" ")}
                 >
                   <BookOpen size={14} />
@@ -2146,7 +2146,7 @@ export default function RepertoireBuilder() {
                         : "border-emerald-600 text-emerald-700"
                       : isDark
                       ? "border-transparent text-white/40 hover:text-white/70"
-                      : "border-transparent text-gray-400 hover:text-gray-600",
+                      : "border-transparent text-[#6B6B50] hover:text-[#6B6B50]",
                   ].join(" ")}
                 >
                   <GitBranch size={14} />
@@ -2161,7 +2161,7 @@ export default function RepertoireBuilder() {
                 </button>
                 {/* Turn info — pushed right */}
                 {rightTab === "explorer" && (
-                  <span className={`ml-auto text-xs pb-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <span className={`ml-auto text-xs pb-2 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     {turnLabel} · Move {moveNumber}
                   </span>
                 )}
@@ -2171,12 +2171,12 @@ export default function RepertoireBuilder() {
             {/* ── Coverage Tracker (Explorer tab only) ── */}
             {rightTab === "explorer" && coverage && (
               <div className={`px-4 py-3 border-b ${
-                isDark ? "border-white/10" : "border-gray-100"
+                isDark ? "border-white/10" : "border-[#E8D9B0]/70"
               }`}>
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-xs font-semibold ${
-                    isDark ? "text-white/70" : "text-gray-600"
+                    isDark ? "text-white/70" : "text-[#6B6B50]"
                   }`}>
                     Your coverage
                   </span>
@@ -2193,7 +2193,7 @@ export default function RepertoireBuilder() {
 
                 {/* Progress bar */}
                 <div className={`h-2 w-full rounded-full overflow-hidden ${
-                  isDark ? "bg-white/10" : "bg-gray-200"
+                  isDark ? "bg-white/10" : "bg-[#E8D9B0]"
                 }`}>
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
@@ -2211,7 +2211,7 @@ export default function RepertoireBuilder() {
                 {coverage.uncovered.length > 0 && (
                   <div className="mt-2.5">
                     <span className={`text-[11px] block mb-1.5 ${
-                      isDark ? "text-white/40" : "text-gray-400"
+                      isDark ? "text-white/40" : "text-[#6B6B50]"
                     }`}>
                       Not yet prepared — click to prepare:
                     </span>
@@ -2262,10 +2262,10 @@ export default function RepertoireBuilder() {
             {/* Ghost chip: shown for 800ms after a coverage chip is clicked to confirm navigation */}
             {rightTab === "explorer" && flashedChipSan && !coverage && (
               <div className={`px-4 py-2 border-b ${
-                isDark ? "border-white/10" : "border-gray-100"
+                isDark ? "border-white/10" : "border-[#E8D9B0]/70"
               }`}>
                 <span className={`text-[11px] block mb-1.5 ${
-                  isDark ? "text-white/40" : "text-gray-400"
+                  isDark ? "text-white/40" : "text-[#6B6B50]"
                 }`}>
                   Navigated to:
                 </span>
@@ -2288,7 +2288,7 @@ export default function RepertoireBuilder() {
 
             {/* Repertoire children (moves already in tree) — Explorer tab only */}
             {rightTab === "explorer" && currentNode && currentNode.children.length > 0 && (
-              <div className={`px-4 py-2 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+              <div className={`px-4 py-2 border-b ${isDark ? "border-white/10" : "border-[#E8D9B0]/70"}`}>
                 <div className={`text-xs font-medium mb-2 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
                   Your repertoire moves
                 </div>
@@ -2342,12 +2342,12 @@ export default function RepertoireBuilder() {
                         </span>
                       )}
                       {child.openingName && (
-                        <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-gray-400"}`}>
+                        <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
                           {child.openingName}
                         </span>
                       )}
                       {!child.openingName && (
-                        <span className={`text-xs ${isDark ? "text-white/30" : "text-gray-300"}`}>
+                        <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>
                           {countMoves({ ...child, children: child.children }) + 1} move{countMoves({ ...child, children: child.children }) + 1 !== 1 ? "s" : ""} deep
                         </span>
                       )}
@@ -2388,7 +2388,7 @@ export default function RepertoireBuilder() {
                                 : "bg-red-500/30 text-red-400"
                               : isDark
                               ? "text-white/30 hover:text-white/70 hover:bg-white/10"
-                              : "text-gray-300 hover:text-gray-600 hover:bg-gray-100"
+                              : "text-[#6B6B50]/70 hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
                           }`}
                         >
                           {glyph}
@@ -2437,7 +2437,7 @@ export default function RepertoireBuilder() {
             {rightTab === "explorer" && (
             <>
             {/* Explorer moves table header */}
-            <div className={`px-4 py-2 flex items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <div className={`px-4 py-2 flex items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               <div className="w-16 shrink-0">Move</div>
               <div className="flex-1">Opening</div>
               <div className="w-20 text-right shrink-0">Expected in</div>
@@ -2450,10 +2450,10 @@ export default function RepertoireBuilder() {
               {explorerLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="animate-spin" size={20} />
-                  <span className={`ml-2 text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>Loading moves…</span>
+                  <span className={`ml-2 text-sm ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Loading moves…</span>
                 </div>
               ) : explorerMoves.length === 0 ? (
-                <div className={`text-center py-8 text-sm ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                <div className={`text-center py-8 text-sm ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
                   No moves found in the database for this position.
                   <br />
                   <span className="text-xs">Try making a move on the board to continue building.</span>
@@ -2498,15 +2498,15 @@ export default function RepertoireBuilder() {
       {showQuizSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={`w-full max-w-md rounded-2xl shadow-2xl ${
-            isDark ? "bg-gray-900 border border-white/10" : "bg-white border border-gray-200"
+            isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#FFF8E8] border border-[#E8D9B0]"
           }`}>
             <div className="px-6 py-6 text-center">
               <Trophy size={40} className="mx-auto mb-3 text-amber-400" />
               <h2 className={`text-2xl font-bold mb-1 ${
-                isDark ? "text-white" : "text-gray-900"
+                isDark ? "text-white" : "text-[#1A1A1A]"
               }`}>Quiz Complete!</h2>
               <p className={`text-sm mb-6 ${
-                isDark ? "text-white/50" : "text-gray-500"
+                isDark ? "text-white/50" : "text-[#6B6B50]"
               }`}>
                 You reached the end of your prepared repertoire.
               </p>
@@ -2519,17 +2519,17 @@ export default function RepertoireBuilder() {
                     isDark ? "text-emerald-400" : "text-emerald-600"
                   }`}>{quizCorrect}</div>
                   <div className={`text-xs mt-0.5 ${
-                    isDark ? "text-white/40" : "text-gray-400"
+                    isDark ? "text-white/40" : "text-[#6B6B50]"
                   }`}>Correct</div>
                 </div>
                 <div className={`rounded-xl p-3 ${
-                  isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-100"
+                  isDark ? "bg-white/5 border border-white/10" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/70"
                 }`}>
                   <div className={`text-3xl font-bold ${
-                    isDark ? "text-white/80" : "text-gray-700"
+                    isDark ? "text-white/80" : "text-[#1A1A1A]/85"
                   }`}>{quizTotal}</div>
                   <div className={`text-xs mt-0.5 ${
-                    isDark ? "text-white/40" : "text-gray-400"
+                    isDark ? "text-white/40" : "text-[#6B6B50]"
                   }`}>Attempts</div>
                 </div>
                 <div className={`rounded-xl p-3 ${
@@ -2541,17 +2541,17 @@ export default function RepertoireBuilder() {
                     {quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 100}%
                   </div>
                   <div className={`text-xs mt-0.5 ${
-                    isDark ? "text-white/40" : "text-gray-400"
+                    isDark ? "text-white/40" : "text-[#6B6B50]"
                   }`}>Accuracy</div>
                 </div>
               </div>
 
               {quizMoveLog.length > 0 && (
                 <div className={`rounded-xl p-3 mb-6 text-left ${
-                  isDark ? "bg-white/5" : "bg-gray-50"
+                  isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
                 }`}>
                   <div className={`text-xs font-medium mb-2 ${
-                    isDark ? "text-white/50" : "text-gray-500"
+                    isDark ? "text-white/50" : "text-[#6B6B50]"
                   }`}>Moves reviewed</div>
                   <div className="flex flex-wrap gap-1.5">
                     {quizMoveLog.map((entry, i) => (
@@ -2582,7 +2582,7 @@ export default function RepertoireBuilder() {
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                     isDark
                       ? "border-white/20 text-white/80 hover:bg-white/5"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      : "border-[#E8D9B0] text-[#1A1A1A]/85 hover:bg-[#FFF3D5]"
                   }`}
                 >
                   Back to Builder
@@ -2597,24 +2597,24 @@ export default function RepertoireBuilder() {
       {showPgnExport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
-            isDark ? "bg-gray-900 border border-white/10" : "bg-white border border-gray-200"
+            isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#FFF8E8] border border-[#E8D9B0]"
           }`}>
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b ${
-              isDark ? "border-white/10" : "border-gray-200"
+              isDark ? "border-white/10" : "border-[#E8D9B0]"
             }`}>
               <div className="flex items-center gap-2">
                 <FileText size={18} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Export PGN</h2>
+                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>Export PGN</h2>
               </div>
-              <button onClick={() => setShowPgnExport(false)} className={isDark ? "text-white/50 hover:text-white" : "text-gray-400 hover:text-gray-700"}>
+              <button onClick={() => setShowPgnExport(false)} className={isDark ? "text-white/50 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"}>
                 <X size={20} />
               </button>
             </div>
 
             {/* PGN text */}
             <div className="px-6 py-4">
-              <p className={`text-sm mb-3 ${isDark ? "text-white/60" : "text-gray-500"}`}>
+              <p className={`text-sm mb-3 ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
                 Copy or download the PGN to use in Chessbase, Lichess studies, or any other chess software.
               </p>
               <textarea
@@ -2623,22 +2623,22 @@ export default function RepertoireBuilder() {
                 rows={12}
                 className={`w-full text-xs font-mono rounded-xl p-3 resize-none outline-none ${
                   isDark
-                    ? "bg-gray-800 text-white/80 border border-white/10"
-                    : "bg-gray-50 text-gray-800 border border-gray-200"
+                    ? "bg-[#0f1f12] text-white/80 border border-white/10"
+                    : "bg-[#FFF3D5]/70 text-[#1A1A1A] border border-[#E8D9B0]"
                 }`}
               />
             </div>
 
             {/* Actions */}
             <div className={`flex items-center justify-end gap-3 px-6 py-4 border-t ${
-              isDark ? "border-white/10" : "border-gray-200"
+              isDark ? "border-white/10" : "border-[#E8D9B0]"
             }`}>
               <button
                 onClick={handleCopyPgn}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                   isDark
                     ? "border-white/20 text-white/80 hover:bg-white/5"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    : "border-[#E8D9B0] text-[#1A1A1A]/85 hover:bg-[#FFF3D5]"
                 }`}
               >
                 {pgnCopied ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
@@ -2660,17 +2660,17 @@ export default function RepertoireBuilder() {
       {showPgnImport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
-            isDark ? "bg-gray-900 border border-white/10" : "bg-white border border-gray-200"
+            isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#FFF8E8] border border-[#E8D9B0]"
           }`}>
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b ${
-              isDark ? "border-white/10" : "border-gray-200"
+              isDark ? "border-white/10" : "border-[#E8D9B0]"
             }`}>
               <div className="flex items-center gap-2">
                 <Upload size={18} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Import PGN</h2>
+                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>Import PGN</h2>
               </div>
-              <button onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }} className={isDark ? "text-white/50 hover:text-white" : "text-gray-400 hover:text-gray-700"}>
+              <button onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }} className={isDark ? "text-white/50 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"}>
                 <X size={20} />
               </button>
             </div>
@@ -2678,7 +2678,7 @@ export default function RepertoireBuilder() {
             <div className="px-6 py-4 space-y-4">
               {/* File picker */}
               <div>
-                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
                   Upload a .pgn file
                 </label>
                 <div
@@ -2686,7 +2686,7 @@ export default function RepertoireBuilder() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
                     isDark
                       ? "border-white/20 hover:border-emerald-500/50 text-white/50 hover:text-white/80"
-                      : "border-gray-300 hover:border-emerald-500 text-gray-400 hover:text-gray-600"
+                      : "border-[#E8D9B0] hover:border-emerald-500 text-[#6B6B50] hover:text-[#6B6B50]"
                   }`}
                 >
                   <Upload size={18} />
@@ -2703,7 +2703,7 @@ export default function RepertoireBuilder() {
 
               {/* Or paste */}
               <div>
-                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
                   Or paste PGN text
                 </label>
                 <textarea
@@ -2713,8 +2713,8 @@ export default function RepertoireBuilder() {
                   placeholder={`[Event "My Opening"]\n\n1. e4 e5 2. Nf3 Nc6 *`}
                   className={`w-full text-xs font-mono rounded-xl p-3 resize-none outline-none ${
                     isDark
-                      ? "bg-gray-800 text-white/80 border border-white/10 placeholder:text-white/20"
-                      : "bg-gray-50 text-gray-800 border border-gray-200 placeholder:text-gray-400"
+                      ? "bg-[#0f1f12] text-white/80 border border-white/10 placeholder:text-white/20"
+                      : "bg-[#FFF3D5]/70 text-[#1A1A1A] border border-[#E8D9B0] placeholder:text-[#6B6B50]/60"
                   }`}
                 />
               </div>
@@ -2741,7 +2741,7 @@ export default function RepertoireBuilder() {
               {/* Import mode */}
               {pgnImportPreview && (
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
                     Import mode
                   </label>
                   <div className="flex gap-3">
@@ -2756,14 +2756,14 @@ export default function RepertoireBuilder() {
                               : "bg-emerald-600 border-emerald-600 text-white"
                             : isDark
                               ? "border-white/20 text-white/60 hover:bg-white/5"
-                              : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                              : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
                         }`}
                       >
                         {mode === "replace" ? "Replace current tree" : "Merge into current tree"}
                       </button>
                     ))}
                   </div>
-                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     {pgnImportMode === "replace"
                       ? "The imported PGN will replace your entire current repertoire."
                       : "New lines from the PGN will be added to your existing repertoire without removing anything."}
@@ -2774,12 +2774,12 @@ export default function RepertoireBuilder() {
 
             {/* Actions */}
             <div className={`flex items-center justify-end gap-3 px-6 py-4 border-t ${
-              isDark ? "border-white/10" : "border-gray-200"
+              isDark ? "border-white/10" : "border-[#E8D9B0]"
             }`}>
               <button
                 onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }}
                 className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                  isDark ? "border-white/20 text-white/70 hover:bg-white/5" : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                  isDark ? "border-white/20 text-white/70 hover:bg-white/5" : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
                 }`}
               >
                 Cancel

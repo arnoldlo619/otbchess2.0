@@ -69,8 +69,8 @@ function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0d1a0f]">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
-        <span className="text-sm text-gray-400 font-medium">Loading…</span>
+        <div className="w-8 h-8 rounded-full border-2 border-[#4D6940] border-t-transparent animate-spin" />
+        <span className="text-sm text-[#6B6B50] font-medium">Loading…</span>
       </div>
     </div>
   );
@@ -82,7 +82,7 @@ function Router() {
     {/* Skip to main content — accessibility */}
     <a
       href="#main-content"
-      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#3D6B47] focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:shadow-lg"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#4D6940] focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:shadow-lg"
     >
       Skip to main content
     </a>

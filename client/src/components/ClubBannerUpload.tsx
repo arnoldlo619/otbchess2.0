@@ -14,7 +14,7 @@
  *   <ClubBannerUpload
  *     value={bannerDataUrl}
  *     onChange={(dataUrl) => setBanner(dataUrl)}
- *     accentColor="#3D6B47"
+ *     accentColor="#4D6940"
  *     isDark={isDark}
  *   />
  */
@@ -104,7 +104,7 @@ interface ClubBannerUploadProps {
 export function ClubBannerUpload({
   value,
   onChange,
-  accentColor = "#3D6B47",
+  accentColor = "#4D6940",
   isDark,
 }: ClubBannerUploadProps) {
   const inputRef   = useRef<HTMLInputElement>(null);
@@ -144,7 +144,7 @@ export function ClubBannerUpload({
   };
 
   const ringColor = dragging
-    ? isDark ? "ring-[#4CAF50]" : "ring-[#3D6B47]"
+    ? isDark ? "ring-[#4CAF50]" : "ring-[#4D6940]"
     : isDark ? "ring-white/10" : "ring-gray-200";
 
   return (
@@ -231,12 +231,12 @@ export function ClubBannerUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           className={`text-xs font-semibold transition-colors ${
-            isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#3D6B47] hover:text-[#2d5236]"
+            isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#4D6940] hover:text-[#3a5230]"
           }`}
         >
           {value ? "Change banner image" : "Upload banner image"}
         </button>
-        <span className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
+        <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
           Recommended: 1280 × 400 px
         </span>
       </div>

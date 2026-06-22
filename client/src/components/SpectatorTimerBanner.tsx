@@ -99,7 +99,7 @@ export function SpectatorTimerBanner({ snap }: Props) {
     ? isDark ? "bg-red-950/20 border-red-500/15" : "bg-red-50/60 border-red-200/60"
     : isNearEnd || isPaused
     ? isDark ? "bg-amber-950/20 border-amber-500/15" : "bg-amber-50 border-amber-200"
-    : isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-[#F0F5EE] border-[#EEEED2]";
+    : isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-[#FFF3D5] border-[#EEEED2]";
 
   const ringColor = isExpired
     ? "#EF4444"
@@ -182,7 +182,7 @@ export function SpectatorTimerBanner({ snap }: Props) {
 
       {/* Text */}
       <div className="min-w-0 flex-1">
-        <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+        <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
           {statusLabel}
         </p>
         <p
@@ -204,7 +204,7 @@ export function SpectatorTimerBanner({ snap }: Props) {
         <p className={`text-2xl font-bold tabular-nums ${accentColor}`}>
           {Math.round(progress * 100)}%
         </p>
-        <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>remaining</p>
+        <p className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>remaining</p>
       </div>
     </div>
   );

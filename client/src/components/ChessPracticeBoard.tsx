@@ -97,12 +97,12 @@ export default function ChessPracticeBoard({
 
   // Design tokens
   const bg = isDark ? "bg-[#0f1c11]" : "bg-white";
-  const border = isDark ? "border-[#1e2e22]/70" : "border-gray-200/80";
-  const textPrimary = isDark ? "text-white" : "text-gray-900";
-  const textSecondary = isDark ? "text-white/55" : "text-gray-500";
-  const textTertiary = isDark ? "text-white/30" : "text-gray-400";
-  const accentText = isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]";
-  const _accentBg = isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
+  const border = isDark ? "border-[#1e2e22]/70" : "border-[#E8D9B0]/80";
+  const textPrimary = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textSecondary = isDark ? "text-white/55" : "text-[#6B6B50]";
+  const textTertiary = isDark ? "text-white/30" : "text-[#6B6B50]";
+  const accentText = isDark ? "text-[#5B9A6A]" : "text-[#4D6940]";
+  const _accentBg = isDark ? "bg-[#4D6940]/20 text-[#5B9A6A]" : "bg-[#4D6940]/10 text-[#4D6940]";
 
   // ── Initialize / reset for a line ──────────────────────────────────────────
   const initLine = useCallback(
@@ -415,7 +415,7 @@ export default function ChessPracticeBoard({
 
           <button
             onClick={restartSession}
-            className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl bg-[#3D6B47] hover:bg-[#4a7d56] text-white text-sm font-semibold transition-all"
+            className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl bg-[#4D6940] hover:bg-[#4a7d56] text-white text-sm font-semibold transition-all"
           >
             <RotateCcw className="w-4 h-4" />
             Practice Again
@@ -471,7 +471,7 @@ export default function ChessPracticeBoard({
             </button>
             <button
               onClick={nextLine}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#3D6B47] hover:bg-[#4a7d56] text-white text-sm font-semibold transition-all"
+              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#4D6940] hover:bg-[#4a7d56] text-white text-sm font-semibold transition-all"
             >
               {lineIndex + 1 < lines.length ? "Next Line" : "Finish Session"}
               <ArrowRight className="w-3.5 h-3.5" />
@@ -496,7 +496,7 @@ export default function ChessPracticeBoard({
       ? isDark ? "bg-red-900/30 border-red-500/30" : "bg-red-50 border-red-200"
       : feedback === "hint"
       ? isDark ? "bg-yellow-900/20 border-yellow-500/20" : "bg-yellow-50 border-yellow-200"
-      : isDark ? "bg-[#162018]/60 border-[#1e2e22]/50" : "bg-gray-50 border-gray-200";
+      : isDark ? "bg-[#162018]/60 border-[#1e2e22]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0]";
 
   // Compute the correct move concept for mistake feedback
   const expectedSan = sanMoves[moveIndex];
@@ -551,8 +551,8 @@ export default function ChessPracticeBoard({
             {/* Side label (requirement 9) */}
             <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border shrink-0 ${
               userColor === "w"
-                ? isDark ? "bg-white/08 text-white/70 border-white/15" : "bg-gray-100 text-gray-700 border-gray-300"
-                : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+                ? isDark ? "bg-white/08 text-white/70 border-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85 border-[#E8D9B0]"
+                : isDark ? "bg-[#1a1a2e] text-[#6B6B50]/70 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
             }`}>
               You play {userColor === "w" ? "♔ White" : "♚ Black"}
             </span>
@@ -563,9 +563,9 @@ export default function ChessPracticeBoard({
         </div>
         {/* Progress */}
         <div className="flex items-center gap-2">
-          <div className={`w-24 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+          <div className={`w-24 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
             <div
-              className="h-full bg-[#3D6B47] rounded-full transition-all duration-500"
+              className="h-full bg-[#4D6940] rounded-full transition-all duration-500"
               style={{ width: `${((lineIndex) / lines.length) * 100}%` }}
             />
           </div>
@@ -624,9 +624,9 @@ export default function ChessPracticeBoard({
                   {userMovesDone} / {userMovesTotal}
                 </span>
               </div>
-              <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+              <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
                 <div
-                  className="h-full bg-[#3D6B47] rounded-full transition-all duration-300"
+                  className="h-full bg-[#4D6940] rounded-full transition-all duration-300"
                   style={{ width: `${userMovesTotal > 0 ? (userMovesDone / userMovesTotal) * 100 : 0}%` }}
                 />
               </div>
@@ -634,11 +634,11 @@ export default function ChessPracticeBoard({
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-2">
-              <div className={`rounded-xl p-2.5 text-center border ${isDark ? "border-[#1e2e22]/50 bg-[#162018]/40" : "border-gray-100 bg-gray-50"}`}>
+              <div className={`rounded-xl p-2.5 text-center border ${isDark ? "border-[#1e2e22]/50 bg-[#162018]/40" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70"}`}>
                 <p className="text-green-400 text-lg font-bold">{correctMoves}</p>
                 <p className={`text-[10px] ${textTertiary}`}>Correct</p>
               </div>
-              <div className={`rounded-xl p-2.5 text-center border ${isDark ? "border-[#1e2e22]/50 bg-[#162018]/40" : "border-gray-100 bg-gray-50"}`}>
+              <div className={`rounded-xl p-2.5 text-center border ${isDark ? "border-[#1e2e22]/50 bg-[#162018]/40" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70"}`}>
                 <p className={`text-lg font-bold ${totalAttempts - correctMoves > 0 ? "text-red-400" : textPrimary}`}>
                   {totalAttempts - correctMoves}
                 </p>
@@ -672,7 +672,7 @@ export default function ChessPracticeBoard({
           <div className={`p-3 border-t ${border}`}>
             <button
               onClick={nextLine}
-              className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-medium transition-all ${isDark ? "border-white/10 text-white/30 hover:text-white/50 hover:border-white/20" : "border-gray-200 text-gray-400 hover:text-gray-600"}`}
+              className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-medium transition-all ${isDark ? "border-white/10 text-white/30 hover:text-white/50 hover:border-white/20" : "border-[#E8D9B0] text-[#6B6B50] hover:text-[#6B6B50]"}`}
             >
               Skip this line
               <ChevronRight className="w-3.5 h-3.5" />

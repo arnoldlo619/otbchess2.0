@@ -165,7 +165,7 @@ export default function OpeningDetailDemo() {
   const FREE_LINES = 2;
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
+    <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-[#FFF3D5]/70"}`}>
       {/* Demo banner */}
       <DemoModeBanner onExitDemo={onExitDemo} />
 

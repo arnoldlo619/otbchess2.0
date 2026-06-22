@@ -66,14 +66,14 @@ export function RoundTimerCard({
       className={`rounded-2xl border p-5 space-y-4 ${
         isDark
           ? "bg-[oklch(0.22_0.06_145)] border-white/08"
-          : "bg-white border-gray-100"
+          : "bg-white border-[#E8D9B0]/70"
       }`}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3
           className={`text-xs font-bold uppercase tracking-widest ${
-            isDark ? "text-white/40" : "text-gray-400"
+            isDark ? "text-white/40" : "text-[#6B6B50]"
           }`}
         >
           Round {roundNumber} Timer
@@ -130,14 +130,14 @@ export function RoundTimerCard({
                   ? "text-amber-500"
                   : isDark
                   ? "text-white"
-                  : "text-gray-900"
+                  : "text-[#1A1A1A]"
               }`}
             >
               {formatTime(remainingSec)}
             </span>
             <span
               className={`text-[10px] font-semibold uppercase tracking-widest mt-0.5 ${
-                isDark ? "text-white/30" : "text-gray-400"
+                isDark ? "text-white/30" : "text-[#6B6B50]"
               }`}
             >
               {isExpired
@@ -173,8 +173,8 @@ export function RoundTimerCard({
               disabled={isExpired}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
                 isDark
-                  ? "bg-[#3D6B47]/40 text-[#4CAF50] hover:bg-[#3D6B47]/60"
-                  : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"
+                  ? "bg-[#4D6940]/40 text-[#4CAF50] hover:bg-[#4D6940]/60"
+                  : "bg-[#4D6940]/10 text-[#4D6940] hover:bg-[#4D6940]/20"
               }`}
               aria-label="Start timer"
             >
@@ -189,7 +189,7 @@ export function RoundTimerCard({
             className={`p-2 rounded-xl transition-all active:scale-95 ${
               isDark
                 ? "text-white/30 hover:text-white/60 hover:bg-white/08"
-                : "text-gray-300 hover:text-gray-500 hover:bg-gray-100"
+                : "text-[#6B6B50]/70 hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
             }`}
             aria-label="Reset timer"
           >
@@ -203,7 +203,7 @@ export function RoundTimerCard({
         <div className="space-y-2">
           <p
             className={`text-xs font-semibold uppercase tracking-wide ${
-              isDark ? "text-white/30" : "text-gray-400"
+              isDark ? "text-white/30" : "text-[#6B6B50]"
             }`}
           >
             Duration
@@ -216,11 +216,11 @@ export function RoundTimerCard({
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
                   currentDurationMin === min
                     ? isDark
-                      ? "bg-[#3D6B47]/50 text-[#4CAF50]"
-                      : "bg-[#3D6B47]/15 text-[#3D6B47]"
+                      ? "bg-[#4D6940]/50 text-[#4CAF50]"
+                      : "bg-[#4D6940]/15 text-[#4D6940]"
                     : isDark
                     ? "bg-white/06 text-white/50 hover:bg-white/12"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                 }`}
               >
                 {min}m
@@ -246,7 +246,7 @@ export function RoundTimerCard({
               className={`w-16 px-2 py-1 rounded-lg text-xs font-bold border outline-none transition-colors ${
                 isDark
                   ? "bg-white/06 border-white/10 text-white placeholder-white/20 focus:border-[#4CAF50]/50"
-                  : "bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-300 focus:border-[#3D6B47]/40"
+                  : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A]/85 placeholder-gray-300 focus:border-[#4D6940]/40"
               }`}
             />
           </div>

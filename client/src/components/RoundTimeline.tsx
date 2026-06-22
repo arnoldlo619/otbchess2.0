@@ -33,10 +33,10 @@ function resultLabel(result: Result): {
 }
 
 function outcomeStyle(outcome: "win" | "loss" | "draw" | "pending", isDark: boolean) {
-  if (outcome === "win")     return isDark ? "text-[#5DC467] font-black" : "text-[#3D6B47] font-black";
+  if (outcome === "win")     return isDark ? "text-[#5DC467] font-black" : "text-[#4D6940] font-black";
   if (outcome === "loss")    return isDark ? "text-red-400/60" : "text-red-500/60";
-  if (outcome === "draw")    return isDark ? "text-white/50" : "text-gray-500";
-  return isDark ? "text-white/25" : "text-gray-300";
+  if (outcome === "draw")    return isDark ? "text-white/50" : "text-[#6B6B50]";
+  return isDark ? "text-white/25" : "text-[#6B6B50]/70";
 }
 
 // ─── Board Card ───────────────────────────────────────────────────────────────
@@ -55,16 +55,16 @@ function BoardCard({
 
   const { text: resultText, white: whiteOutcome, black: blackOutcome } = resultLabel(game.result);
   const bg     = isDark ? "bg-[oklch(0.24_0.06_145)]" : "bg-white";
-  const border = isDark ? "border-white/08" : "border-gray-100";
-  const textMain  = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
+  const border = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMain  = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
 
   const resultBadgeCls =
     game.result === "*"
-      ? isDark ? "bg-white/06 text-white/35" : "bg-gray-100 text-gray-400"
+      ? isDark ? "bg-white/06 text-white/35" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
       : game.result === "½-½"
-      ? isDark ? "bg-white/08 text-white/55" : "bg-gray-100 text-gray-600"
-      : isDark ? "bg-[#3D6B47]/30 text-[#5DC467]" : "bg-[#3D6B47]/08 text-[#3D6B47]";
+      ? isDark ? "bg-white/08 text-white/55" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+      : isDark ? "bg-[#4D6940]/30 text-[#5DC467]" : "bg-[#4D6940]/08 text-[#4D6940]";
 
   function PlayerRow({
     player,
@@ -80,7 +80,7 @@ function BoardCard({
       <div
         className={`flex items-center gap-3 py-2.5 px-3 rounded-xl transition-colors ${
           isWin
-            ? isDark ? "bg-[#3D6B47]/18" : "bg-[#3D6B47]/06"
+            ? isDark ? "bg-[#4D6940]/18" : "bg-[#4D6940]/06"
             : ""
         }`}
       >
@@ -90,17 +90,17 @@ function BoardCard({
             color === "W"
               ? isDark
                 ? "bg-white/85 border-white/30"
-                : "bg-white border-gray-300 shadow-sm"
+                : "bg-white border-[#E8D9B0] shadow-sm"
               : isDark
               ? "bg-[oklch(0.15_0.04_145)] border-white/20"
-              : "bg-gray-800 border-gray-600"
+              : "bg-[#1A1A1A]/80 border-[#4D6940]/40"
           }`}
         />
         <PlayerAvatar username={player.username} name={player.name} size={30} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             {player.title && (
-              <span className="text-[9px] font-bold text-[#3D6B47] bg-[#3D6B47]/12 px-1.5 py-0.5 rounded leading-none flex-shrink-0">
+              <span className="text-[9px] font-bold text-[#4D6940] bg-[#4D6940]/12 px-1.5 py-0.5 rounded leading-none flex-shrink-0">
                 {player.title}
               </span>
             )}
@@ -126,7 +126,7 @@ function BoardCard({
       {/* Board header */}
       <div
         className={`flex items-center justify-between px-4 py-2.5 border-b ${border} ${
-          isDark ? "bg-white/03" : "bg-gray-50/70"
+          isDark ? "bg-white/03" : "bg-[#FFF3D5]/70/70"
         }`}
       >
         <span className={`text-xs font-bold uppercase tracking-widest ${textMuted}`}>
@@ -166,9 +166,9 @@ function RoundPanel({
   defaultOpen: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const border    = isDark ? "border-white/08" : "border-gray-100";
-  const textMain  = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
+  const border    = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMain  = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
 
   const completedGames = round.games.filter((g) => g.result !== "*").length;
   const totalGames     = round.games.length;
@@ -181,17 +181,17 @@ function RoundPanel({
 
   const statusColor =
     round.status === "completed"
-      ? isDark ? "text-[#5DC467] bg-[#3D6B47]/20" : "text-[#3D6B47] bg-[#3D6B47]/08"
+      ? isDark ? "text-[#5DC467] bg-[#4D6940]/20" : "text-[#4D6940] bg-[#4D6940]/08"
       : round.status === "in_progress"
       ? isDark ? "text-amber-300 bg-amber-400/10" : "text-amber-700 bg-amber-50"
-      : isDark ? "text-white/30 bg-white/05" : "text-gray-400 bg-gray-50";
+      : isDark ? "text-white/30 bg-white/05" : "text-[#6B6B50] bg-[#FFF3D5]/70";
 
   const statusIconColor =
     round.status === "completed"
-      ? isDark ? "text-[#5DC467]" : "text-[#3D6B47]"
+      ? isDark ? "text-[#5DC467]" : "text-[#4D6940]"
       : round.status === "in_progress"
       ? isDark ? "text-amber-300" : "text-amber-600"
-      : isDark ? "text-white/20" : "text-gray-300";
+      : isDark ? "text-white/20" : "text-[#6B6B50]/70";
 
   const statusLabel =
     round.status === "completed" ? "Complete" :
@@ -207,7 +207,7 @@ function RoundPanel({
       <button
         onClick={() => setOpen((o) => !o)}
         className={`w-full flex items-center justify-between px-6 py-4 transition-colors ${
-          isDark ? "hover:bg-white/03" : "hover:bg-gray-50/60"
+          isDark ? "hover:bg-white/03" : "hover:bg-[#FFF3D5]/60"
         }`}
       >
         <div className="flex items-center gap-4">
@@ -218,8 +218,8 @@ function RoundPanel({
           <div
             className={`w-9 h-9 rounded-xl flex items-center justify-center text-base font-black flex-shrink-0 ${
               round.status === "completed"
-                ? isDark ? "bg-[#3D6B47]/30 text-[#5DC467]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                : isDark ? "bg-white/08 text-white/60" : "bg-gray-100 text-gray-500"
+                ? isDark ? "bg-[#4D6940]/30 text-[#5DC467]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                : isDark ? "bg-white/08 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
             }`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
@@ -248,11 +248,11 @@ function RoundPanel({
           {/* Progress bar */}
           {totalGames > 0 && (
             <div className="hidden sm:flex flex-col items-end gap-1">
-              <div className={`w-24 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
+              <div className={`w-24 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`}>
                 <div
                   className={`h-full rounded-full transition-all ${
                     round.status === "completed"
-                      ? isDark ? "bg-[#5DC467]" : "bg-[#3D6B47]"
+                      ? isDark ? "bg-[#5DC467]" : "bg-[#4D6940]"
                       : isDark ? "bg-amber-400" : "bg-amber-500"
                   }`}
                   style={{ width: `${progressPct}%` }}
@@ -315,8 +315,8 @@ export default function RoundTimeline({ players, rounds, tournamentName, isDark 
     setExporting(false);
   }, [isDark, tournamentName]);
 
-  const textMain  = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
+  const textMain  = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
 
   const completedCount = rounds.filter((r) => r.status === "completed").length;
 
@@ -341,7 +341,7 @@ export default function RoundTimeline({ players, rounds, tournamentName, isDark 
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             isDark
               ? "bg-white/08 hover:bg-white/12 text-white/70"
-              : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+              : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
           }`}
         >
           {exporting ? (

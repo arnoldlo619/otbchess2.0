@@ -102,17 +102,17 @@ function PasswordInput({
             ? "border-red-400 focus:border-red-400"
             : isDark
               ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4ade80]"
-              : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#2d6a4f]"
+              : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]"
           }
           ${isDark && !hasError ? "bg-white/5 text-white placeholder:text-white/30" : ""}
-          ${!isDark && !hasError ? "bg-gray-50 text-gray-900 placeholder:text-gray-400" : ""}
+          ${!isDark && !hasError ? "bg-[#FFF3D5]/70 text-[#1A1A1A] placeholder:text-[#6B6B50]/60" : ""}
         `}
       />
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
         className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition
-          ${isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"}`}
+          ${isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"}`}
         tabIndex={-1}
         aria-label={show ? "Hide password" : "Show password"}
       >
@@ -128,7 +128,7 @@ function PasswordStrengthBar({ password, isDark }: { password: string; isDark: b
   if (!password) return null;
   return (
     <div className="mt-2 space-y-1">
-      <div className={`h-1.5 w-full rounded-full ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+      <div className={`h-1.5 w-full rounded-full ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
         <div
           className={`h-full rounded-full transition-all duration-300 ${strengthColor[level]} ${strengthWidth[level]}`}
         />
@@ -159,10 +159,10 @@ function RememberMe({
       <div
         className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition
           ${checked
-            ? "bg-[#2d6a4f] border-[#2d6a4f]"
+            ? "bg-[#4D6940] border-[#4D6940]"
             : isDark
               ? "border-white/20 group-hover:border-white/40"
-              : "border-gray-300 group-hover:border-gray-400"
+              : "border-[#E8D9B0] group-hover:border-[#4D6940]/40"
           }`}
         onClick={() => onChange(!checked)}
       >
@@ -178,7 +178,7 @@ function RememberMe({
         onChange={(e) => onChange(e.target.checked)}
         className="sr-only"
       />
-      <span className={`text-sm ${isDark ? "text-white/60" : "text-gray-500"}`}>
+      <span className={`text-sm ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
         Remember me for 30 days
       </span>
     </label>
@@ -365,23 +365,23 @@ export default function AuthModal({
 
   /* ── Styles ── */
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
-  const border = isDark ? "border-white/10" : "border-gray-200";
-  const text = isDark ? "text-white" : "text-gray-900";
-  const muted = isDark ? "text-white/50" : "text-gray-500";
+  const border = isDark ? "border-white/10" : "border-[#E8D9B0]";
+  const text = isDark ? "text-white" : "text-[#1A1A1A]";
+  const muted = isDark ? "text-white/50" : "text-[#6B6B50]";
   const inputCls = (hasError?: boolean) =>
     `w-full rounded-xl border px-4 py-3.5 text-base outline-none transition ${
       hasError
-        ? "border-red-400 focus:border-red-400 " + (isDark ? "bg-white/5 text-white placeholder:text-white/30" : "bg-gray-50 text-gray-900 placeholder:text-gray-400")
+        ? "border-red-400 focus:border-red-400 " + (isDark ? "bg-white/5 text-white placeholder:text-white/30" : "bg-[#FFF3D5]/70 text-[#1A1A1A] placeholder:text-[#6B6B50]/60")
         : isDark
           ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4ade80]"
-          : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#2d6a4f]"
+          : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]"
     }`;
   const tabActive = isDark
     ? "bg-[#4ade80]/10 text-[#4ade80] font-semibold"
-    : "bg-[#2d6a4f]/10 text-[#2d6a4f] font-semibold";
+    : "bg-[#4D6940]/10 text-[#4D6940] font-semibold";
   const tabInactive = isDark
     ? "text-white/40 hover:text-white/70"
-    : "text-gray-400 hover:text-gray-600";
+    : "text-[#6B6B50] hover:text-[#6B6B50]";
 
   const headerSubtitle =
     tab === "signin" ? "Welcome back" :
@@ -405,7 +405,7 @@ export default function AuthModal({
         {/* Header */}
         <div className={`flex items-center justify-between px-7 pt-7 pb-5 border-b ${border}`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#2d6a4f] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-[#4D6940] flex items-center justify-center">
               <Crown className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -416,7 +416,7 @@ export default function AuthModal({
           <button
             onClick={onClose}
             className={`p-2 rounded-xl transition ${
-              isDark ? "hover:bg-white/10 text-white/50" : "hover:bg-gray-100 text-gray-400"
+              isDark ? "hover:bg-white/10 text-white/50" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
             }`}
             aria-label="Close"
           >
@@ -518,7 +518,7 @@ export default function AuthModal({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#245a41] text-white font-semibold py-3.5 text-base transition disabled:opacity-60 mt-2"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#4D6940] hover:bg-[#245a41] text-white font-semibold py-3.5 text-base transition disabled:opacity-60 mt-2"
                 >
                   {loading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
@@ -531,7 +531,7 @@ export default function AuthModal({
                   <button
                     type="button"
                     onClick={() => switchTab("signup")}
-                    className="text-[#2d6a4f] dark:text-[#4ade80] font-medium hover:underline"
+                    className="text-[#4D6940] dark:text-[#4ade80] font-medium hover:underline"
                   >
                     Create one free
                   </button>
@@ -614,7 +614,7 @@ export default function AuthModal({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#2d6a4f] hover:bg-[#245a41] text-white font-semibold py-3.5 text-base transition disabled:opacity-60 mt-2"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#4D6940] hover:bg-[#245a41] text-white font-semibold py-3.5 text-base transition disabled:opacity-60 mt-2"
                 >
                   {loading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Creating account…</>
@@ -627,7 +627,7 @@ export default function AuthModal({
                   <button
                     type="button"
                     onClick={() => switchTab("signin")}
-                    className="text-[#2d6a4f] dark:text-[#4ade80] font-medium hover:underline"
+                    className="text-[#4D6940] dark:text-[#4ade80] font-medium hover:underline"
                   >
                     Sign in
                   </button>
@@ -640,25 +640,25 @@ export default function AuthModal({
               <form onSubmit={handleGuest} className="space-y-4" noValidate>
                 {/* What guests can/can't do */}
                 <div className={`rounded-2xl border px-4 py-3.5 space-y-2 ${
-                  isDark ? "bg-white/3 border-white/8" : "bg-gray-50 border-gray-200"
+                  isDark ? "bg-white/3 border-white/8" : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
                 }`}>
                   <p className={`text-xs font-semibold uppercase tracking-wide ${muted}`}>Guest access</p>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-emerald-500 font-bold">✓</span>
-                      <span className={isDark ? "text-white/70" : "text-gray-600"}>Join 1v1 Battle rooms</span>
+                      <span className={isDark ? "text-white/70" : "text-[#6B6B50]"}>Join 1v1 Battle rooms</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-emerald-500 font-bold">✓</span>
-                      <span className={isDark ? "text-white/70" : "text-gray-600"}>View tournaments as spectator</span>
+                      <span className={isDark ? "text-white/70" : "text-[#6B6B50]"}>View tournaments as spectator</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className={isDark ? "text-white/30" : "text-gray-400"}>✗</span>
-                      <span className={isDark ? "text-white/30" : "text-gray-400"}>Host battles or create tournaments</span>
+                      <span className={isDark ? "text-white/30" : "text-[#6B6B50]"}>✗</span>
+                      <span className={isDark ? "text-white/30" : "text-[#6B6B50]"}>Host battles or create tournaments</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className={isDark ? "text-white/30" : "text-gray-400"}>✗</span>
-                      <span className={isDark ? "text-white/30" : "text-gray-400"}>Save history (session lasts 24 h)</span>
+                      <span className={isDark ? "text-white/30" : "text-[#6B6B50]"}>✗</span>
+                      <span className={isDark ? "text-white/30" : "text-[#6B6B50]"}>Save history (session lasts 24 h)</span>
                     </div>
                   </div>
                 </div>
@@ -701,7 +701,7 @@ export default function AuthModal({
                   <button
                     type="button"
                     onClick={() => switchTab("signup")}
-                    className="text-[#2d6a4f] dark:text-[#4ade80] font-medium hover:underline"
+                    className="text-[#4D6940] dark:text-[#4ade80] font-medium hover:underline"
                   >
                     Create a free account
                   </button>

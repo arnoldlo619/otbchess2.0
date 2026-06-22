@@ -40,7 +40,7 @@ function seedBadgeClass(seed: number | null, isDark: boolean): string {
   if (seed === 1) return isDark ? "bg-amber-400/25 text-amber-300 border-amber-400/30" : "bg-amber-50 text-amber-600 border-amber-200";
   if (seed === 2) return isDark ? "bg-slate-400/20 text-slate-300 border-slate-400/25" : "bg-slate-50 text-slate-500 border-slate-200";
   if (seed === 3) return isDark ? "bg-orange-400/20 text-orange-300 border-orange-400/25" : "bg-orange-50 text-orange-500 border-orange-200";
-  return isDark ? "bg-white/08 text-white/40 border-white/10" : "bg-gray-50 text-gray-400 border-gray-200";
+  return isDark ? "bg-white/08 text-white/40 border-white/10" : "bg-[#FFF3D5]/70 text-[#6B6B50] border-[#E8D9B0]";
 }
 
 // ─── Mobile Match Card ─────────────────────────────────────────────────────────
@@ -101,13 +101,13 @@ function MobileMatchCard({
   const cardBorder = isMyGame
     ? isDark
       ? "border-[#4CAF50]/70 shadow-[0_0_0_2px_rgba(76,175,80,0.18),0_0_16px_rgba(76,175,80,0.08)]"
-      : "border-[#3D6B47]/60 shadow-[0_0_0_2px_rgba(61,107,71,0.15)]"
+      : "border-[#4D6940]/60 shadow-[0_0_0_2px_rgba(61,107,71,0.15)]"
     : isCurrentRound && isPending
-      ? isDark ? "border-[#4CAF50]/40 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#3D6B47]/35"
-      : isDark ? "border-white/08" : "border-gray-200";
-  const divider = isDark ? "border-white/06" : "border-gray-100";
-  const loserText = isDark ? "text-white/28" : "text-gray-300";
-  const winnerBg = isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/07";
+      ? isDark ? "border-[#4CAF50]/40 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#4D6940]/35"
+      : isDark ? "border-white/08" : "border-[#E8D9B0]";
+  const divider = isDark ? "border-white/06" : "border-[#E8D9B0]/70";
+  const loserText = isDark ? "text-white/28" : "text-[#6B6B50]/70";
+  const winnerBg = isDark ? "bg-[#4D6940]/25" : "bg-[#4D6940]/07";
 
   function PlayerRow({
     playerId,
@@ -131,8 +131,8 @@ function MobileMatchCard({
     if (isByeRow) {
       return (
         <div className="flex items-center gap-3 px-4 py-3 opacity-30">
-          <span className={`text-[10px] font-bold w-6 text-center ${isDark ? "text-white/30" : "text-gray-300"}`}>—</span>
-          <span className={`text-sm italic ${isDark ? "text-white/30" : "text-gray-300"}`}>BYE</span>
+          <span className={`text-[10px] font-bold w-6 text-center ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>—</span>
+          <span className={`text-sm italic ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>BYE</span>
         </div>
       );
     }
@@ -154,20 +154,20 @@ function MobileMatchCard({
         {/* Avatar placeholder */}
         <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-black ${
           isLoser
-            ? isDark ? "bg-white/06 text-white/20" : "bg-gray-100 text-gray-300"
-            : isDark ? "bg-[#3D6B47]/40 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+            ? isDark ? "bg-white/06 text-white/20" : "bg-[#E8D9B0]/40 text-[#6B6B50]/70"
+            : isDark ? "bg-[#4D6940]/40 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
         }`}>
           {(player?.name ?? playerId).charAt(0).toUpperCase()}
         </div>
         {/* Name + ELO */}
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-semibold truncate leading-tight ${
-            isLoser ? loserText : isDark ? "text-white/90" : "text-gray-900"
+            isLoser ? loserText : isDark ? "text-white/90" : "text-[#1A1A1A]"
           }`}>
             {player?.name ?? playerId}
           </p>
           {player?.elo && (
-            <p className={`text-[11px] tabular-nums ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            <p className={`text-[11px] tabular-nums ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
               {player.elo}
             </p>
           )}
@@ -175,7 +175,7 @@ function MobileMatchCard({
         {/* Score */}
         {score !== null && (
           <span className={`text-lg font-black tabular-nums flex-shrink-0 w-5 text-right ${
-            isWinner ? (isDark ? "text-[#4CAF50]" : "text-[#3D6B47]") : loserText
+            isWinner ? (isDark ? "text-[#4CAF50]" : "text-[#4D6940]") : loserText
           }`}>
             {score}
           </span>
@@ -185,7 +185,7 @@ function MobileMatchCard({
         {/* You badge */}
         {isMe && (
           <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/25"
+            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/25"
           }`}>
             You
           </span>
@@ -199,12 +199,12 @@ function MobileMatchCard({
       {/* Match number header */}
       <div className={`flex items-center justify-between px-4 py-2 border-b ${divider}`}>
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
             Match {matchNumber}
           </span>
           {isMyGame && (
             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
-              isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+              isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
             }`}>
               Your match
             </span>
@@ -220,7 +220,7 @@ function MobileMatchCard({
         )}
         {isPending && isCurrentRound && (
           <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
           }`}>
             <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
             Live
@@ -261,7 +261,7 @@ function MobileMatchCard({
             className={`flex-1 text-xs font-bold py-2.5 rounded-xl border transition-all active:scale-95 truncate ${
               isDark
                 ? "bg-white/08 hover:bg-white/14 text-white/70 border-white/08"
-                : "bg-gray-50 hover:bg-gray-100 text-gray-600 border-gray-200"
+                : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50 text-[#6B6B50] border-[#E8D9B0]"
             }`}
           >
             {white?.name?.split(" ")[0] ?? "White"} wins
@@ -271,7 +271,7 @@ function MobileMatchCard({
             className={`flex-none text-xs font-bold px-3 py-2.5 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "bg-white/05 hover:bg-white/10 text-white/50 border-white/06"
-                : "bg-gray-50 hover:bg-gray-100 text-gray-400 border-gray-200"
+                : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50 text-[#6B6B50] border-[#E8D9B0]"
             }`}
           >
             Draw
@@ -281,7 +281,7 @@ function MobileMatchCard({
             className={`flex-1 text-xs font-bold py-2.5 rounded-xl border transition-all active:scale-95 truncate ${
               isDark
                 ? "bg-white/08 hover:bg-white/14 text-white/70 border-white/08"
-                : "bg-gray-50 hover:bg-gray-100 text-gray-600 border-gray-200"
+                : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50 text-[#6B6B50] border-[#E8D9B0]"
             }`}
           >
             {black?.name?.split(" ")[0] ?? "Black"} wins
@@ -314,13 +314,13 @@ function ChampionSlide({
     <div className={`flex flex-col items-center justify-center gap-5 py-10 px-6 rounded-2xl border min-h-[260px] ${
       champ
         ? isDark ? "bg-[oklch(0.28_0.10_145)] border-amber-400/30" : "bg-amber-50 border-amber-200"
-        : isDark ? "bg-[oklch(0.20_0.05_145)] border-white/06" : "bg-gray-50 border-gray-200"
+        : isDark ? "bg-[oklch(0.20_0.05_145)] border-white/06" : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
     }`}>
       <div className="relative">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center ${
-          champ ? "bg-amber-400/20" : isDark ? "bg-white/06" : "bg-gray-100"
+          champ ? "bg-amber-400/20" : isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"
         }`}>
-          <Trophy className={`w-10 h-10 ${champ ? "text-amber-400" : isDark ? "text-white/20" : "text-gray-300"}`} />
+          <Trophy className={`w-10 h-10 ${champ ? "text-amber-400" : isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
         </div>
         {champ && (
           <Crown className="w-5 h-5 text-amber-400 absolute -top-1 -right-1" strokeWidth={2} />
@@ -332,20 +332,20 @@ function ChampionSlide({
           <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
             Tournament Champion
           </p>
-          <p className={`text-2xl font-black leading-tight mb-1 ${isDark ? "text-white" : "text-gray-900"}`}
+          <p className={`text-2xl font-black leading-tight mb-1 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}>
             {champ.name}
           </p>
-          <p className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          <p className={`text-sm ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
             {seed ? `Seed #${seed}` : ""}{champ.elo ? ` · ${champ.elo} ELO` : ""}
           </p>
         </div>
       ) : (
         <div className="text-center">
-          <p className={`text-lg font-bold mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          <p className={`text-lg font-bold mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
             Champion TBD
           </p>
-          <p className={`text-sm ${isDark ? "text-white/25" : "text-gray-300"}`}>
+          <p className={`text-sm ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
             Complete the final match to crown the winner.
           </p>
         </div>
@@ -480,23 +480,23 @@ export function MobileBracketCarousel({
   const T = {
     advanceBtn: isDark
       ? "bg-[oklch(0.42_0.14_145)] hover:bg-[oklch(0.48_0.16_145)] text-white"
-      : "bg-[#3D6B47] hover:bg-[#2A5535] text-white",
+      : "bg-[#4D6940] hover:bg-[#2A5535] text-white",
     completeBtn: isDark
       ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-400/30"
       : "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200",
-    tabBg: isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-gray-100",
-    tabActive: isDark ? "bg-[oklch(0.32_0.10_145)] text-white shadow-sm" : "bg-white text-gray-900 shadow-sm",
-    tabInactive: isDark ? "text-white/40" : "text-gray-400",
-    navBtn: isDark ? "bg-white/08 hover:bg-white/14 text-white/60 border-white/08" : "bg-white hover:bg-gray-50 text-gray-500 border-gray-200",
+    tabBg: isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#E8D9B0]/40",
+    tabActive: isDark ? "bg-[oklch(0.32_0.10_145)] text-white shadow-sm" : "bg-white text-[#1A1A1A] shadow-sm",
+    tabInactive: isDark ? "text-white/40" : "text-[#6B6B50]",
+    navBtn: isDark ? "bg-white/08 hover:bg-white/14 text-white/60 border-white/08" : "bg-white hover:bg-[#FFF3D5] text-[#6B6B50] border-[#E8D9B0]",
   };
 
   if (rounds.length === 0) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 gap-3 rounded-2xl ${
-        isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-gray-50"
+        isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#FFF3D5]/70"
       }`}>
-        <Trophy className={`w-10 h-10 ${isDark ? "text-white/20" : "text-gray-300"}`} />
-        <p className={`text-sm font-semibold ${isDark ? "text-white/30" : "text-gray-400"}`}>No bracket yet</p>
+        <Trophy className={`w-10 h-10 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
+        <p className={`text-sm font-semibold ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>No bracket yet</p>
       </div>
     );
   }
@@ -563,20 +563,20 @@ export function MobileBracketCarousel({
                 {/* Round header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h3 className={`text-base font-black ${isDark ? "text-white" : "text-gray-900"}`}
+                    <h3 className={`text-base font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                       style={{ fontFamily: "'Clash Display', sans-serif" }}>
                       {roundLabels[idx]}
                     </h3>
                     {isActive && round.games.some((g) => g.result === "*") && (
                       <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                       }`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
                         Live
                       </span>
                     )}
                   </div>
-                  <span className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                  <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
                     {round.games.filter((g) => g.result !== "*").length}/{round.games.length} done
                   </span>
                 </div>
@@ -601,7 +601,7 @@ export function MobileBracketCarousel({
 
           {/* Champion slide */}
           <div className="w-full flex-shrink-0 flex flex-col gap-3 px-0.5">
-            <h3 className={`text-base font-black ${isDark ? "text-white" : "text-gray-900"}`}
+            <h3 className={`text-base font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}>
               Champion
             </h3>
@@ -634,8 +634,8 @@ export function MobileBracketCarousel({
               onClick={() => goTo(i)}
               className={`rounded-full transition-all ${
                 i === slideIdx
-                  ? isDark ? "w-4 h-2 bg-[#4CAF50]" : "w-4 h-2 bg-[#3D6B47]"
-                  : isDark ? "w-2 h-2 bg-white/20" : "w-2 h-2 bg-gray-300"
+                  ? isDark ? "w-4 h-2 bg-[#4CAF50]" : "w-4 h-2 bg-[#4D6940]"
+                  : isDark ? "w-2 h-2 bg-white/20" : "w-2 h-2 bg-[#E8D9B0]"
               }`}
             />
           ))}
@@ -654,11 +654,11 @@ export function MobileBracketCarousel({
       {/* ── Director CTAs (shown when on active round slide) ── */}
       {onAdvanceRound && isCurrentSlideActive && allResultsIn && !isTournamentOver && (
         <div className={`flex items-center gap-3 p-4 rounded-2xl border ${
-          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#E8D9B0]/70"
         }`}>
           <div className="flex-1">
-            <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>All matches complete</p>
-            <p className={`text-xs mt-0.5 ${isDark ? "text-white/45" : "text-gray-500"}`}>
+            <p className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>All matches complete</p>
+            <p className={`text-xs mt-0.5 ${isDark ? "text-white/45" : "text-[#6B6B50]"}`}>
               {isLastRound ? "Enter the final result, then complete." : "Ready for the next round."}
             </p>
           </div>

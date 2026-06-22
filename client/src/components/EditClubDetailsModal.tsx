@@ -51,11 +51,11 @@ export function EditClubDetailsModal({
   if (!isOpen) return null;
 
   const bgColor = isDark ? "bg-[#0f1419]" : "bg-white";
-  const borderColor = isDark ? "border-white/10" : "border-gray-200";
-  const textColor = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/60" : "text-gray-600";
-  const inputBg = isDark ? "bg-white/5" : "bg-gray-50";
-  const inputBorder = isDark ? "border-white/10" : "border-gray-300";
+  const borderColor = isDark ? "border-white/10" : "border-[#E8D9B0]";
+  const textColor = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/60" : "text-[#6B6B50]";
+  const inputBg = isDark ? "bg-white/5" : "bg-[#FFF3D5]/70";
+  const inputBorder = isDark ? "border-white/10" : "border-[#E8D9B0]";
   const accent = "#4CAF50";
 
   return (
@@ -76,7 +76,7 @@ export function EditClubDetailsModal({
             <h2 className={`text-lg font-semibold ${textColor}`}>Edit Club Details</h2>
             <button
               onClick={onClose}
-              className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
+              className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-white/10" : "hover:bg-[#E8D9B0]/50"}`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -132,7 +132,7 @@ export function EditClubDetailsModal({
               className={`flex-1 px-4 py-2.5 rounded-xl font-semibold transition-all ${
                 isDark
                   ? "bg-white/10 text-white hover:bg-white/15 disabled:opacity-50"
-                  : "bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-50"
+                  : "bg-[#E8D9B0]/40 text-[#1A1A1A] hover:bg-[#E8D9B0] disabled:opacity-50"
               }`}
             >
               Cancel

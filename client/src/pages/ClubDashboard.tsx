@@ -880,7 +880,7 @@ function CreateEventModal({
                   }}
                   onMouseEnter={e => {
                     (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.40)";
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#3D6B47";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#4D6940";
                     (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
                     (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(61,107,71,0.35)";
                   }}
@@ -2060,8 +2060,8 @@ function PlayerOfMonthWidget({
   const [top, second, third] = ranked;
   const podium = [second, third].filter(Boolean) as PotmEntry[];
 
-  const card = isDark ? "bg-white/4 border-white/10" : "bg-white border-gray-200";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
+  const card = isDark ? "bg-white/4 border-white/10" : "bg-[#FFF8E8] border-[#E8D9B0]";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
 
   // Initials fallback
   function initials(name: string) {
@@ -2079,7 +2079,7 @@ function PlayerOfMonthWidget({
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-white/8 flex items-center gap-2">
         <Crown className="w-4 h-4 text-amber-400" />
-        <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/50" : "text-gray-500"}`}>
+        <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
           Player of the Month
         </span>
         <span className={`ml-auto text-[10px] ${textMuted}`}>Rolling 30 days</span>
@@ -2111,7 +2111,7 @@ function PlayerOfMonthWidget({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className={`text-lg font-black truncate ${isDark ? "text-white" : "text-gray-900"}`}>{top.memberName}</p>
+          <p className={`text-lg font-black truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{top.memberName}</p>
           <p className="text-xs text-amber-400 font-bold mb-2">#1 This Month</p>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
@@ -2147,7 +2147,7 @@ function PlayerOfMonthWidget({
                   <span className="text-xs font-black text-white/50">{initials(entry.memberName)}</span>
                 )}
               </div>
-              <span className={`flex-1 text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+              <span className={`flex-1 text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
                 {entry.memberName}
               </span>
               <span className="text-[11px] text-emerald-400 font-bold">{entry.battleWins}W</span>
@@ -2159,7 +2159,7 @@ function PlayerOfMonthWidget({
 
       {/* Past Winners Hall of Fame */}
       {archive.length > 0 && (
-        <div className={`border-t ${isDark ? "border-white/8" : "border-gray-100"}`}>
+        <div className={`border-t ${isDark ? "border-white/8" : "border-[#E8D9B0]/70"}`}>
           {/* Section header */}
           <div className="px-5 py-3 flex items-center gap-2">
             <Medal className="w-3.5 h-3.5 text-amber-400/70" />
@@ -2182,7 +2182,7 @@ function PlayerOfMonthWidget({
                   )}
                 </div>
                 {/* Name */}
-                <span className={`flex-1 text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-gray-800"}`}>
+                <span className={`flex-1 text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}>
                   {entry.memberName}
                 </span>
                 {/* Score */}
@@ -5798,7 +5798,7 @@ export default function ClubDashboard() {
                             {s.avatarUrl ? (
                               <img src={s.avatarUrl} alt={s.name} className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
                             ) : (
-                              <div className="w-5 h-5 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-[#4D6940] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
                                 {s.name.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -5850,7 +5850,7 @@ export default function ClubDashboard() {
                           {m.avatarUrl ? (
                             <img src={m.avatarUrl} alt={m.displayName} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-[#4D6940] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                               {m.displayName.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -5925,7 +5925,7 @@ export default function ClubDashboard() {
                         return (
                           <div key={b.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-[#4D6940] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
                                 {(opponentName ?? "?").charAt(0).toUpperCase()}
                               </div>
                               <div>
@@ -6009,7 +6009,7 @@ export default function ClubDashboard() {
                   <div className="space-y-3">
                     {[
                       { place: "1st Place", pct: 50, color: "text-amber-400" },
-                      { place: "2nd Place", pct: 30, color: "text-gray-300" },
+                      { place: "2nd Place", pct: 30, color: "text-[#6B6B50]/70" },
                       { place: "3rd Place", pct: 20, color: "text-amber-700" },
                     ].map(({ place, pct, color }) => (
                       <div key={place} className="flex items-center gap-3">

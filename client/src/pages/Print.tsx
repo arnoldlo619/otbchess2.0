@@ -226,18 +226,18 @@ function PairingSlip({
       className={`pairing-slip border-2 rounded-xl p-5 transition-colors ${
         isDark
           ? "border-white/15 bg-[oklch(0.22_0.06_145)]"
-          : "border-gray-200 bg-white"
+          : "border-[#E8D9B0] bg-white"
       }`}
       style={{ breakInside: "avoid" }}
     >
       {/* Slip header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-[#3D6B47] rounded flex items-center justify-center flex-shrink-0">
+          <div className="w-5 h-5 bg-[#4D6940] rounded flex items-center justify-center flex-shrink-0">
             <Crown className="w-3 h-3 text-white" strokeWidth={2.5} />
           </div>
           <span
-            className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/50" : "text-gray-400"}`}
+            className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             {tournamentName}
@@ -246,14 +246,14 @@ function PairingSlip({
         <div className="flex items-center gap-3">
           <span
             className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-              isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+              isDark ? "bg-[#4D6940]/30 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
             }`}
           >
             Round {round}
           </span>
           <span
             className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-              isDark ? "border-white/15 text-white/50" : "border-gray-200 text-gray-500"
+              isDark ? "border-white/15 text-white/50" : "border-[#E8D9B0] text-[#6B6B50]"
             }`}
           >
             Board {game.board}
@@ -266,12 +266,12 @@ function PairingSlip({
         {/* White */}
         <div
           className={`flex items-center gap-3 p-3 rounded-lg ${
-            isDark ? "bg-white/08" : "bg-gray-50"
+            isDark ? "bg-white/08" : "bg-[#FFF3D5]/70"
           }`}
         >
           <div
             className={`w-8 h-8 rounded border-2 flex-shrink-0 flex items-center justify-center text-xs font-bold ${
-              isDark ? "bg-white/90 border-white/30 text-gray-900" : "bg-white border-gray-300 text-gray-700"
+              isDark ? "bg-white/90 border-white/30 text-[#1A1A1A]" : "bg-white border-[#E8D9B0] text-[#1A1A1A]/85"
             }`}
           >
             W
@@ -279,46 +279,46 @@ function PairingSlip({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span
-                className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`font-bold text-sm ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 {white.name}
               </span>
               {white.title && (
-                <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1.5 py-0.5 rounded">
                   {white.title}
                 </span>
               )}
               <span className="text-xs">{FLAG_EMOJI[white.country]}</span>
             </div>
-            <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <span className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               @{white.username} · {white.elo} {ratingLabel}
             </span>
           </div>
-          <div className={`text-right ${isDark ? "text-white/60" : "text-gray-500"}`}>
-            <p className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{white.points}</p>
+          <div className={`text-right ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
+            <p className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{white.points}</p>
             <p className="text-xs">pts</p>
           </div>
         </div>
 
         {/* VS divider */}
         <div className="flex items-center gap-3">
-          <div className={`flex-1 h-px ${isDark ? "bg-white/08" : "bg-gray-100"}`} />
-          <span className={`text-xs font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>VS</span>
-          <div className={`flex-1 h-px ${isDark ? "bg-white/08" : "bg-gray-100"}`} />
+          <div className={`flex-1 h-px ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`} />
+          <span className={`text-xs font-bold ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>VS</span>
+          <div className={`flex-1 h-px ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`} />
         </div>
 
         {/* Black */}
         <div
           className={`flex items-center gap-3 p-3 rounded-lg ${
-            isDark ? "bg-white/04" : "bg-gray-50/60"
+            isDark ? "bg-white/04" : "bg-[#FFF3D5]/70/60"
           }`}
         >
           <div
             className={`w-8 h-8 rounded border-2 flex-shrink-0 flex items-center justify-center text-xs font-bold ${
               isDark
                 ? "bg-[oklch(0.12_0.04_145)] border-white/10 text-white/60"
-                : "bg-gray-800 border-gray-600 text-white"
+                : "bg-[#1A1A1A] border-[#4D6940]/40 text-white"
             }`}
           >
             B
@@ -326,24 +326,24 @@ function PairingSlip({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span
-                className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`font-bold text-sm ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 {black.name}
               </span>
               {black.title && (
-                <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1.5 py-0.5 rounded">
                   {black.title}
                 </span>
               )}
               <span className="text-xs">{FLAG_EMOJI[black.country]}</span>
             </div>
-            <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <span className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               @{black.username} · {black.elo} {ratingLabel}
             </span>
           </div>
-          <div className={`text-right ${isDark ? "text-white/60" : "text-gray-500"}`}>
-            <p className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{black.points}</p>
+          <div className={`text-right ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
+            <p className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{black.points}</p>
             <p className="text-xs">pts</p>
           </div>
         </div>
@@ -352,17 +352,17 @@ function PairingSlip({
       {/* Result entry line */}
       <div
         className={`mt-4 pt-4 border-t flex items-center justify-between ${
-          isDark ? "border-white/08" : "border-gray-100"
+          isDark ? "border-white/08" : "border-[#E8D9B0]/70"
         }`}
       >
         <div className="flex items-center gap-4">
-          <span className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>Result:</span>
+          <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Result:</span>
           <div className="flex gap-2">
             {["1-0", "½-½", "0-1"].map((r) => (
               <span
                 key={r}
                 className={`text-xs font-mono font-bold px-2.5 py-1 rounded border ${
-                  isDark ? "border-white/15 text-white/50" : "border-gray-200 text-gray-400"
+                  isDark ? "border-white/15 text-white/50" : "border-[#E8D9B0] text-[#6B6B50]"
                 }`}
               >
                 {r}
@@ -370,7 +370,7 @@ function PairingSlip({
             ))}
           </div>
         </div>
-        <div className={`flex items-center gap-2 text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
+        <div className={`flex items-center gap-2 text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
           <Clock className="w-3 h-3" />
           {timeControl}
         </div>
@@ -416,15 +416,15 @@ function WallChart({
     });
   });
 
-  const headerBg = isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F0F5EE]";
+  const headerBg = isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#FFF3D5]";
   const rowBg = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const altRowBg = isDark ? "bg-[oklch(0.24_0.06_145)]" : "bg-gray-50/60";
-  const borderColor = isDark ? "border-white/08" : "border-gray-100";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
-  const textMain = isDark ? "text-white" : "text-gray-900";
+  const altRowBg = isDark ? "bg-[oklch(0.24_0.06_145)]" : "bg-[#FFF3D5]/70/60";
+  const borderColor = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
 
   return (
-    <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/08" : "border-gray-100"}`}>
+    <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
       <div className={`overflow-x-auto`}>
         <table className="w-full text-sm border-collapse">
           <thead>
@@ -437,7 +437,7 @@ function WallChart({
                   key={r}
                   className={`text-center px-3 py-3 text-xs font-bold uppercase tracking-wider border-b ${borderColor} w-20 ${
                     r === currentRound
-                      ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                      ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
                       : textMuted
                   }`}
                 >
@@ -456,7 +456,7 @@ function WallChart({
                 <tr
                   key={player.id}
                   className={`transition-colors ${idx % 2 === 0 ? rowBg : altRowBg} ${
-                    isTop3 ? (isDark ? "border-l-2 border-l-[#4CAF50]" : "border-l-2 border-l-[#3D6B47]") : ""
+                    isTop3 ? (isDark ? "border-l-2 border-l-[#4CAF50]" : "border-l-2 border-l-[#4D6940]") : ""
                   }`}
                 >
                   {/* Rank */}
@@ -475,7 +475,7 @@ function WallChart({
                         {player.name}
                       </span>
                       {player.title && (
-                        <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                        <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1.5 py-0.5 rounded">
                           {player.title}
                         </span>
                       )}
@@ -505,7 +505,7 @@ function WallChart({
                         key={r}
                         className={`px-3 py-3 border-b ${borderColor} text-center ${
                           isCurrentRound
-                            ? isDark ? "bg-[#3D6B47]/10" : "bg-[#3D6B47]/04"
+                            ? isDark ? "bg-[#4D6940]/10" : "bg-[#4D6940]/04"
                             : ""
                         }`}
                       >
@@ -514,9 +514,9 @@ function WallChart({
                             <span
                               className={`text-sm font-bold tabular-nums ${
                                 cell.res === "1" ? "text-emerald-500"
-                                : cell.res === "0" ? isDark ? "text-white/30" : "text-gray-300"
+                                : cell.res === "0" ? isDark ? "text-white/30" : "text-[#6B6B50]/70"
                                 : cell.res === "½" ? "text-blue-500"
-                                : isDark ? "text-white/20" : "text-gray-200"
+                                : isDark ? "text-white/20" : "text-[#6B6B50]/50"
                               }`}
                             >
                               {cell.res}
@@ -525,8 +525,8 @@ function WallChart({
                               <span
                                 className={`text-[9px] font-bold px-1 rounded ${
                                   cell.color === "W"
-                                    ? isDark ? "bg-white/20 text-white/60" : "bg-gray-200 text-gray-500"
-                                    : isDark ? "bg-white/08 text-white/30" : "bg-gray-800 text-white"
+                                    ? isDark ? "bg-white/20 text-white/60" : "bg-[#E8D9B0] text-[#6B6B50]"
+                                    : isDark ? "bg-white/08 text-white/30" : "bg-[#1A1A1A] text-white"
                                 }`}
                               >
                                 {cell.color}
@@ -568,17 +568,17 @@ function WallChart({
 function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds: Round[]; isDark: boolean }) {
   const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
   const medals = ["🥇", "🥈", "🥉"];
-  const borderColor = isDark ? "border-white/08" : "border-gray-100";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
-  const textMain = isDark ? "text-white" : "text-gray-900";
+  const borderColor = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
   const rowBg = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const altRowBg = isDark ? "bg-[oklch(0.24_0.06_145)]" : "bg-gray-50/60";
+  const altRowBg = isDark ? "bg-[oklch(0.24_0.06_145)]" : "bg-[#FFF3D5]/70/60";
 
   return (
-    <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/08" : "border-gray-100"}`}>
+    <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className={isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F0F5EE]"}>
+          <tr className={isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#FFF3D5]"}>
             {["#", "Player", "ELO", "W", "D", "L", "Pts", "Buchholz"].map((h) => (
               <th
                 key={h}
@@ -607,7 +607,7 @@ function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds
                     {row.player.name}
                   </span>
                   {row.player.title && (
-                    <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                    <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1.5 py-0.5 rounded">
                       {row.player.title}
                     </span>
                   )}
@@ -628,7 +628,7 @@ function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds
                   <span className={`text-sm font-semibold tabular-nums ${
                     vi === 0 ? "text-emerald-500"
                     : vi === 1 ? "text-blue-500"
-                    : isDark ? "text-white/30" : "text-gray-300"
+                    : isDark ? "text-white/30" : "text-[#6B6B50]/70"
                   }`}>{v}</span>
                 </td>
               ))}
@@ -708,28 +708,28 @@ export default function PrintPage() {
           className={`no-print sticky top-0 z-40 border-b otb-header-safe transition-colors duration-300 ${
             isDark
               ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
-              : "bg-white/95 backdrop-blur-md border-gray-100"
+              : "bg-white/95 backdrop-blur-md border-[#E8D9B0]/70"
           }`}
         >
           <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
             {/* Left: breadcrumb */}
             <div className="flex items-center gap-2.5">
               <NavLogo />
-              <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
+              <span className={`text-sm ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}>/</span>
               <Link
                 href="/tournament/otb-demo-2026"
                 className={`flex items-center gap-1 text-sm transition-colors ${
-                  isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700"
+                  isDark ? "text-white/50 hover:text-white/80" : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 Standings
               </Link>
-              <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
+              <span className={`text-sm ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}>/</span>
               <div className="flex items-center gap-1.5">
-                <Printer className="w-3.5 h-3.5 text-[#3D6B47]" />
+                <Printer className="w-3.5 h-3.5 text-[#4D6940]" />
                 <span
-                  className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+                  className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}
                 >
                   Print
@@ -743,8 +743,8 @@ export default function PrintPage() {
                 href="/tournament/otb-demo-2026/manage"
                 className={`hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
                   isDark
-                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
-                    : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4D6940]/20"
+                    : "border-[#4D6940]/30 text-[#4D6940] hover:bg-[#4D6940]/08"
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
@@ -752,7 +752,7 @@ export default function PrintPage() {
               </Link>
               <button
                 onClick={() => window.print()}
-                className="flex items-center gap-2 px-4 py-2 bg-[#3D6B47] text-white text-xs font-semibold rounded-lg hover:bg-[#2A4A32] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg shadow-[#3D6B47]/30"
+                className="flex items-center gap-2 px-4 py-2 bg-[#4D6940] text-white text-xs font-semibold rounded-lg hover:bg-[#2A4A32] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg shadow-[#4D6940]/30"
               >
                 <Printer className="w-3.5 h-3.5" />
                 Print / Save PDF
@@ -768,29 +768,29 @@ export default function PrintPage() {
           {/* ── Tournament Header ─────────────────────────────────────────── */}
           <div
             className={`rounded-2xl border overflow-hidden ${
-              isDark ? "border-white/08" : "border-gray-100"
+              isDark ? "border-white/08" : "border-[#E8D9B0]/70"
             }`}
           >
             {/* Green accent bar */}
-            <div className="h-1.5 bg-gradient-to-r from-[#3D6B47] via-[#4CAF50] to-[#3D6B47]" />
+            <div className="h-1.5 bg-gradient-to-r from-[#4D6940] via-[#4CAF50] to-[#4D6940]" />
             <div
               className={`px-6 py-6 ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}
             >
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-[#3D6B47] rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-[#4D6940] rounded-lg flex items-center justify-center">
                       <Crown className="w-4 h-4 text-white" strokeWidth={2} />
                     </div>
                     <span
-                      className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
+                      className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}
                       style={{ fontFamily: "'Clash Display', sans-serif" }}
                     >
                       OTB Chess
                     </span>
                   </div>
                   <h1
-                    className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                    className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
                     {tournament.name}
@@ -805,8 +805,8 @@ export default function PrintPage() {
                       { icon: Trophy, text: `${ratingType === "blitz" ? "\u{1F525} Blitz" : "\u26A1 Rapid"} ELO` },
                     ].map(({ icon: Icon, text }) => (
                       <div key={text} className="flex items-center gap-1.5">
-                        <Icon className={`w-3.5 h-3.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                        <span className={`text-xs ${isDark ? "text-white/60" : "text-gray-500"}`}>{text}</span>
+                        <Icon className={`w-3.5 h-3.5 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+                        <span className={`text-xs ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>{text}</span>
                       </div>
                     ))}
                   </div>
@@ -814,7 +814,7 @@ export default function PrintPage() {
                 <div className="text-right">
                   <div
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${
-                      isDark ? "bg-[#3D6B47]/20 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                      isDark ? "bg-[#4D6940]/20 text-[#4CAF50]" : "bg-[#4D6940]/08 text-[#4D6940]"
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
@@ -822,7 +822,7 @@ export default function PrintPage() {
                       Round {tournament.currentRound} of {tournament.rounds}
                     </span>
                   </div>
-                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
                     Printed {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                 </div>
@@ -831,7 +831,7 @@ export default function PrintPage() {
           </div>
 
           {/* ── Section Tabs (no-print) ───────────────────────────────────── */}
-          <div className={`no-print flex gap-1 p-1 rounded-xl w-fit ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
+          <div className={`no-print flex gap-1 p-1 rounded-xl w-fit ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`}>
             {sectionTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -839,11 +839,11 @@ export default function PrintPage() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeSection === tab.id
                     ? isDark
-                      ? "bg-[#3D6B47] text-white shadow-sm"
-                      : "bg-white text-gray-900 shadow-sm"
+                      ? "bg-[#4D6940] text-white shadow-sm"
+                      : "bg-white text-[#1A1A1A] shadow-sm"
                     : isDark
                     ? "text-white/50 hover:text-white/70"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 <span>{tab.icon}</span>
@@ -858,18 +858,18 @@ export default function PrintPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2
-                    className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                    className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
                     Round {tournament.currentRound} — Pairing Slips
                   </h2>
-                  <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
+                  <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     Cut along the dashed lines and place one slip on each board before the round begins.
                   </p>
                 </div>
                 <span
                   className={`text-xs font-semibold px-3 py-1.5 rounded-full ${
-                    isDark ? "bg-[#3D6B47]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                    isDark ? "bg-[#4D6940]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                   }`}
                 >
                   {currentRound?.games.length ?? 0} boards
@@ -879,7 +879,7 @@ export default function PrintPage() {
               {/* Cut guide */}
               <div
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border border-dashed text-xs ${
-                  isDark ? "border-white/15 text-white/30" : "border-gray-300 text-gray-400"
+                  isDark ? "border-white/15 text-white/30" : "border-[#E8D9B0] text-[#6B6B50]"
                 }`}
               >
                 <span>✂</span>
@@ -902,9 +902,9 @@ export default function PrintPage() {
               </div>
 
               {/* All rounds slips summary */}
-              <div className={`mt-6 pt-6 border-t ${isDark ? "border-white/08" : "border-gray-100"}`}>
+              <div className={`mt-6 pt-6 border-t ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
                 <h3
-                  className={`text-sm font-bold mb-4 ${isDark ? "text-white/50" : "text-gray-400"}`}
+                  className={`text-sm font-bold mb-4 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}
                 >
                   Previous Rounds
@@ -917,16 +917,16 @@ export default function PrintPage() {
                       <div
                         key={round.number}
                         className={`rounded-xl border px-5 py-4 ${
-                          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/06" : "bg-white border-gray-100"
+                          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/06" : "bg-white border-[#E8D9B0]/70"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <span
-                            className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-400"}`}
+                            className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}
                           >
                             Round {round.number}
                           </span>
-                          <span className={`text-xs ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"} font-medium`}>
+                          <span className={`text-xs ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"} font-medium`}>
                             Complete
                           </span>
                         </div>
@@ -936,10 +936,10 @@ export default function PrintPage() {
                             const b = players.find((p) => p.id === g.blackId);
                             return (
                               <div key={g.id} className="flex items-center gap-2 text-xs">
-                                <span className={`font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                                <span className={`font-medium ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
                                   Bd {g.board}
                                 </span>
-                                <span className={`truncate ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                                <span className={`truncate ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
                                   {w?.name.split(" ")[0]}
                                 </span>
                                 <span
@@ -951,7 +951,7 @@ export default function PrintPage() {
                                 >
                                   {g.result}
                                 </span>
-                                <span className={`truncate ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                                <span className={`truncate ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
                                   {b?.name.split(" ")[0]}
                                 </span>
                               </div>
@@ -970,18 +970,18 @@ export default function PrintPage() {
             <div className="space-y-4 print-section">
               <div>
                 <h2
-                  className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                  className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}
                 >
                   Wall Chart — All Rounds
                 </h2>
-                <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
+                <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   Cross-table showing results, colors, and opponents for every player across all rounds.
                   Highlighted column = current round.
                 </p>
               </div>
               <WallChart players={players} rounds={tournament.roundData as Round[]} isDark={isDark} totalRounds={tournament.rounds} currentRound={tournament.currentRound} />
-              <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-300"}`}>
+              <p className={`text-xs ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
                 W = White pieces · B = Black pieces · 1 = Win · ½ = Draw · 0 = Loss · · = In progress
               </p>
             </div>
@@ -992,17 +992,17 @@ export default function PrintPage() {
             <div className="space-y-4 print-section">
               <div>
                 <h2
-                  className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                  className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}
                 >
                   Current Standings
                 </h2>
-                <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
+                <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   Sorted by points, then Buchholz tiebreak, then {ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round {tournament.currentRound - 1}.
                 </p>
               </div>
               <StandingsTable players={players} rounds={tournament.roundData as Round[]} isDark={isDark} />
-              <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-300"}`}>
+              <p className={`text-xs ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
                 Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses
               </p>
             </div>
@@ -1041,7 +1041,7 @@ export default function PrintPage() {
           {/* ── Footer ────────────────────────────────────────────────────── */}
           <div
             className={`pt-6 border-t flex items-center justify-between text-xs ${
-              isDark ? "border-white/08 text-white/25" : "border-gray-100 text-gray-300"
+              isDark ? "border-white/08 text-white/25" : "border-[#E8D9B0]/70 text-[#6B6B50]/70"
             }`}
           >
             <span>Generated by OTB Chess · otbchess.club</span>

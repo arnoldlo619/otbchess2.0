@@ -405,7 +405,7 @@ export default function VenueDisplay() {
           {/* Player names above board */}
           <div className="flex items-center justify-between mb-4 px-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-800 border border-white/10 flex items-center justify-center font-bold text-sm">
+              <div className="w-8 h-8 rounded-full bg-[#1A1A1A] border border-white/10 flex items-center justify-center font-bold text-sm">
                 {broadcast.blackPlayerName.charAt(0).toUpperCase()}
               </div>
               <span className="text-white font-bold" style={{ fontSize: `${1.4 * fontScale}rem` }}>{broadcast.blackPlayerName}</span>
@@ -441,7 +441,7 @@ export default function VenueDisplay() {
           {/* White player below board */}
           <div className="flex items-center justify-between mt-4 px-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white/90 border border-white/20 flex items-center justify-center font-bold text-sm text-gray-900">
+              <div className="w-8 h-8 rounded-full bg-white/90 border border-white/20 flex items-center justify-center font-bold text-sm text-[#1A1A1A]">
                 {broadcast.whitePlayerName.charAt(0).toUpperCase()}
               </div>
               <span className="text-white font-bold" style={{ fontSize: `${1.4 * fontScale}rem` }}>{broadcast.whitePlayerName}</span>
@@ -583,7 +583,7 @@ export default function VenueDisplay() {
                   <span className="text-xs text-white/35">{broadcast.blackPlayerElo}</span>
                 )}
                 <span className="text-sm text-white font-semibold">{broadcast.blackPlayerName}</span>
-                <div className="w-4 h-4 rounded-full bg-gray-800 border border-white/15 flex-shrink-0" />
+                <div className="w-4 h-4 rounded-full bg-[#1A1A1A] border border-white/15 flex-shrink-0" />
               </div>
             </div>
             {/* Result bar */}
@@ -650,7 +650,7 @@ export default function VenueDisplay() {
           {/* Black player (top) */}
           <div className="w-full max-w-[min(72vh,680px)] flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-white/10 flex items-center justify-center font-bold text-lg">
+              <div className="w-12 h-12 rounded-full bg-[#1A1A1A] border-2 border-white/10 flex items-center justify-center font-bold text-lg">
                 {broadcast.blackPlayerName.charAt(0).toUpperCase()}
               </div>
               <div>
@@ -713,7 +713,7 @@ export default function VenueDisplay() {
           {/* White player (bottom) */}
           <div className="w-full max-w-[min(72vh,680px)] flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-white/90 border-2 border-white/20 flex items-center justify-center font-bold text-lg text-gray-900">
+              <div className="w-12 h-12 rounded-full bg-white/90 border-2 border-white/20 flex items-center justify-center font-bold text-lg text-[#1A1A1A]">
                 {broadcast.whitePlayerName.charAt(0).toUpperCase()}
               </div>
               <div>

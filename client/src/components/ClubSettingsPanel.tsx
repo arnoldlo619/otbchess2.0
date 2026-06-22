@@ -99,11 +99,11 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
   const inputCls = `w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
     isDark
       ? "bg-white/8 border border-white/10 text-white placeholder-white/25 focus:ring-white/20"
-      : "bg-black/5 border border-black/10 text-gray-900 placeholder-gray-400 focus:ring-black/20"
+      : "bg-black/5 border border-black/10 text-[#1A1A1A] placeholder-gray-400 focus:ring-black/20"
   }`;
-  const labelCls = `text-xs font-semibold mb-1.5 block ${isDark ? "text-white/60" : "text-gray-500"}`;
-  const cardCls = `rounded-2xl border p-5 space-y-4 ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"}`;
-  const sectionTitle = `text-xs font-bold uppercase tracking-widest mb-4 ${isDark ? "text-white/50" : "text-gray-400"}`;
+  const labelCls = `text-xs font-semibold mb-1.5 block ${isDark ? "text-white/60" : "text-[#6B6B50]"}`;
+  const cardCls = `rounded-2xl border p-5 space-y-4 ${isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-white"}`;
+  const sectionTitle = `text-xs font-bold uppercase tracking-widest mb-4 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`;
 
   // ── Accent color handlers ──────────────────────────────────────────────────
   async function applyAccentColor(hex: string) {
@@ -185,8 +185,8 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
           <Settings2 className="w-4 h-4" style={{ color: accentColor }} />
         </div>
         <div>
-          <h2 className={`font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`}>Club Settings</h2>
-          <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>Manage your club's identity and appearance</p>
+          <h2 className={`font-bold text-base ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>Club Settings</h2>
+          <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Manage your club's identity and appearance</p>
         </div>
       </div>
 
@@ -217,7 +217,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               isDark={isDark}
               size={96}
             />
-            <p className={`text-[10px] mt-1.5 text-center max-w-[96px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            <p className={`text-[10px] mt-1.5 text-center max-w-[96px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
               Square, max 1 MB
             </p>
           </div>
@@ -246,7 +246,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               accentColor={accentColor}
               isDark={isDark}
             />
-            <p className={`text-[10px] mt-1.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            <p className={`text-[10px] mt-1.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
               Landscape 16:4 recommended · max 1 MB
             </p>
           </div>
@@ -332,7 +332,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               aria-label="Open color picker"
             />
             <div className="flex-1 relative">
-              <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>#</span>
+              <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-mono ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>#</span>
               <input
                 className={`${inputCls} pl-7 font-mono uppercase`}
                 value={hexInput.replace(/^#/, "")}
@@ -350,7 +350,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
         </div>
 
         {savingColor && (
-          <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>Saving color…</p>
+          <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Saving color…</p>
         )}
       </div>
 
@@ -386,7 +386,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               maxLength={280}
               placeholder="Tell players what your club is about…"
             />
-            <p className={`text-[10px] mt-1 text-right ${isDark ? "text-white/25" : "text-gray-400"}`}>
+            <p className={`text-[10px] mt-1 text-right ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>
               {description.length}/280
             </p>
           </div>
@@ -416,7 +416,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
                     ? "border-transparent text-white"
                     : isDark
                     ? "border-white/10 text-white/40 bg-white/5 hover:bg-white/8"
-                    : "border-gray-200 text-gray-400 bg-gray-50 hover:bg-gray-100"
+                    : "border-[#E8D9B0] text-[#6B6B50] bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
                 }`}
                 style={isPublic ? { background: accentColor, borderColor: accentColor } : {}}
               >
@@ -430,7 +430,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
                     ? "border-transparent text-white"
                     : isDark
                     ? "border-white/10 text-white/40 bg-white/5 hover:bg-white/8"
-                    : "border-gray-200 text-gray-400 bg-gray-50 hover:bg-gray-100"
+                    : "border-[#E8D9B0] text-[#6B6B50] bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
                 }`}
                 style={!isPublic ? { background: "#374151", borderColor: "#374151" } : {}}
               >

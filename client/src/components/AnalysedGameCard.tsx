@@ -15,13 +15,13 @@ function formatDate(iso: string | null): string {
 function getResultConfig(result: string | null, isDark: boolean) {
   switch (result) {
     case "1-0":
-      return { label: "1 – 0", bg: isDark ? "bg-white/10" : "bg-gray-100", text: isDark ? "text-white" : "text-gray-800", border: isDark ? "border-white/20" : "border-gray-300" };
+      return { label: "1 – 0", bg: isDark ? "bg-white/10" : "bg-[#E8D9B0]/40", text: isDark ? "text-white" : "text-[#1A1A1A]", border: isDark ? "border-white/20" : "border-[#E8D9B0]" };
     case "0-1":
       return { label: "0 – 1", bg: isDark ? "bg-[#4ade80]/15" : "bg-emerald-50", text: isDark ? "text-[#4ade80]" : "text-emerald-700", border: isDark ? "border-[#4ade80]/25" : "border-emerald-200" };
     case "1/2-1/2":
       return { label: "½ – ½", bg: isDark ? "bg-yellow-400/10" : "bg-yellow-50", text: isDark ? "text-yellow-300" : "text-yellow-700", border: isDark ? "border-yellow-400/20" : "border-yellow-200" };
     default:
-      return { label: "—", bg: isDark ? "bg-white/5" : "bg-gray-50", text: isDark ? "text-white/40" : "text-gray-400", border: isDark ? "border-white/10" : "border-gray-200" };
+      return { label: "—", bg: isDark ? "bg-white/5" : "bg-[#FFF3D5]/70", text: isDark ? "text-white/40" : "text-[#6B6B50]", border: isDark ? "border-white/10" : "border-[#E8D9B0]" };
   }
 }
 
@@ -36,12 +36,12 @@ function accuracyColor(acc: number | null): string {
 
 function AccuracyBar({ label, accuracy, isDark }: { label: string; accuracy: number | null; isDark: boolean }) {
   const pct = accuracy !== null ? Math.min(100, Math.max(0, accuracy)) : 0;
-  const muted = isDark ? "text-white/40" : "text-gray-400";
-  const textColor = isDark ? "text-white/70" : "text-gray-700";
+  const muted = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const textColor = isDark ? "text-white/70" : "text-[#1A1A1A]/85";
   return (
     <div className="flex items-center gap-2 min-w-0">
       <span className={`text-[10px] font-medium w-10 shrink-0 truncate ${muted}`}>{label}</span>
-      <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+      <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
         <div className={`h-full rounded-full transition-all ${accuracyColor(accuracy)}`} style={{ width: accuracy !== null ? `${pct}%` : "0%" }} />
       </div>
       <span className={`text-[10px] font-semibold w-7 text-right shrink-0 ${textColor}`}>
@@ -53,9 +53,9 @@ function AccuracyBar({ label, accuracy, isDark }: { label: string; accuracy: num
 
 export default function AnalysedGameCard({ game, isDark }: { game: AnalysedGame; isDark: boolean }) {
   const resultCfg = getResultConfig(game.result, isDark);
-  const card = isDark ? "bg-white/5 border-white/10" : "bg-white border-gray-200";
-  const text = isDark ? "text-white" : "text-gray-900";
-  const muted = isDark ? "text-white/40" : "text-gray-400";
+  const card = isDark ? "bg-white/5 border-white/10" : "bg-white border-[#E8D9B0]";
+  const text = isDark ? "text-white" : "text-[#1A1A1A]";
+  const muted = isDark ? "text-white/40" : "text-[#6B6B50]";
   const whiteName = game.whitePlayer ?? "White";
   const blackName = game.blackPlayer ?? "Black";
   const hasAccuracy = game.whiteAccuracy !== null || game.blackAccuracy !== null;

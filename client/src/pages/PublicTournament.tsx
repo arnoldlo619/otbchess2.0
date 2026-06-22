@@ -144,9 +144,9 @@ function RoundDots({ currentRound, totalRounds, isDark }: { currentRound: number
           key={i}
           className={`h-2 w-5 rounded-full transition-all ${
             i < currentRound - 1
-              ? "bg-[#3D6B47]"
+              ? "bg-[#4D6940]"
               : i === currentRound - 1
-              ? "bg-[#3D6B47] animate-pulse"
+              ? "bg-[#4D6940] animate-pulse"
               : isDark ? "bg-white/15" : "bg-[#EEEED2]"
           }`}
         />
@@ -170,7 +170,7 @@ function ELOBadge({ elo }: { elo: number }) {
 
 function TitleBadge({ title }: { title: string }) {
   return (
-    <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 border border-[#3D6B47]/20 px-1.5 py-0.5 rounded">
+    <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 border border-[#4D6940]/20 px-1.5 py-0.5 rounded">
       {title}
     </span>
   );
@@ -214,14 +214,14 @@ function SpotlightSearch({
         className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-200 ${
           focused
             ? isDark
-              ? "border-[#3D6B47]/60 bg-[oklch(0.25_0.07_145)] ring-2 ring-[#3D6B47]/20"
-              : "border-[#3D6B47]/40 bg-white ring-2 ring-[#3D6B47]/10"
+              ? "border-[#4D6940]/60 bg-[oklch(0.25_0.07_145)] ring-2 ring-[#4D6940]/20"
+              : "border-[#4D6940]/40 bg-white ring-2 ring-[#4D6940]/10"
             : isDark
             ? "border-white/10 bg-[oklch(0.22_0.06_145)]"
             : "border-[#EEEED2] bg-white"
         }`}
       >
-        <Search className={`w-5 h-5 flex-shrink-0 transition-colors ${focused ? "text-[#3D6B47]" : "text-muted-foreground"}`} />
+        <Search className={`w-5 h-5 flex-shrink-0 transition-colors ${focused ? "text-[#4D6940]" : "text-muted-foreground"}`} />
         <input
           ref={inputRef}
           type="text"
@@ -278,7 +278,7 @@ function SpotlightSearch({
                   setFocused(false);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                  isDark ? "hover:bg-white/05" : "hover:bg-[#F0F5EE]"
+                  isDark ? "hover:bg-white/05" : "hover:bg-[#FFF3D5]"
                 }`}
               >
                 <PlayerAvatar username={player.username} name={player.name} size={36} />
@@ -365,25 +365,25 @@ function FollowedPlayerCard({
     <div
       className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
         isDark
-          ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]"
-          : "border-[#3D6B47]/30 bg-white"
+          ? "border-[#4D6940]/40 bg-[oklch(0.22_0.06_145)]"
+          : "border-[#4D6940]/30 bg-white"
       }`}
     >
       {/* Header */}
       <div
         className={`px-5 py-4 flex items-center gap-3 border-b ${
-          isDark ? "border-white/08 bg-[#3D6B47]/10" : "border-[#EEEED2] bg-[#F0F8F2]"
+          isDark ? "border-white/08 bg-[#4D6940]/10" : "border-[#EEEED2] bg-[#F0F8F2]"
         }`}
       >
-        <Star className="w-4 h-4 text-[#3D6B47] flex-shrink-0" />
-        <span className="text-xs font-bold uppercase tracking-wider text-[#3D6B47]">Following</span>
+        <Star className="w-4 h-4 text-[#4D6940] flex-shrink-0" />
+        <span className="text-xs font-bold uppercase tracking-wider text-[#4D6940]">Following</span>
         <div className="flex-1" />
         <button
           onClick={onUnfollow}
           className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${
             isDark
               ? "text-white/50 hover:text-white/80 hover:bg-white/08"
-              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
           }`}
         >
           Unfollow
@@ -410,19 +410,19 @@ function FollowedPlayerCard({
 
         {/* Stats row */}
         <div className={`grid grid-cols-3 gap-3 mb-4`}>
-          <div className={`text-center px-3 py-2.5 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-3 py-2.5 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               #{rank || "—"}
             </p>
             <p className="text-xs text-muted-foreground">Rank</p>
           </div>
-          <div className={`text-center px-3 py-2.5 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-3 py-2.5 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {standingRow ? scoreFraction(standingRow.points) : "0"}
             </p>
             <p className="text-xs text-muted-foreground">Points</p>
           </div>
-          <div className={`text-center px-3 py-2.5 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-3 py-2.5 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-lg font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {standingRow ? `${standingRow.wins}/${standingRow.draws}/${standingRow.losses}` : "—"}
             </p>
@@ -434,13 +434,13 @@ function FollowedPlayerCard({
         {currentGame && (
           <div className={`rounded-xl border p-4 mb-4 ${isDark ? "border-white/10 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
             <div className="flex items-center gap-2 mb-2">
-              <Swords className="w-4 h-4 text-[#3D6B47]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#3D6B47]">
+              <Swords className="w-4 h-4 text-[#4D6940]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#4D6940]">
                 Current Game · Board {currentGame.board}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className={`w-4 h-4 rounded-full border-2 ${perspective === "white" ? "bg-white border-gray-300" : "bg-gray-800 border-gray-600"}`} />
+              <div className={`w-4 h-4 rounded-full border-2 ${perspective === "white" ? "bg-white border-[#E8D9B0]" : "bg-[#1A1A1A] border-[#4D6940]/40"}`} />
               <span className="text-sm font-medium text-foreground">Playing as {perspective === "white" ? "White" : "Black"}</span>
               <span className="text-muted-foreground">vs</span>
               {opponent ? (
@@ -480,7 +480,7 @@ function FollowedPlayerCard({
                     }`}
                   >
                     <span className="text-xs font-mono text-muted-foreground w-6">R{rh.round}</span>
-                    <div className={`w-3 h-3 rounded-full border ${rh.perspective === "white" ? "bg-white border-gray-300" : "bg-gray-800 border-gray-600"}`} />
+                    <div className={`w-3 h-3 rounded-full border ${rh.perspective === "white" ? "bg-white border-[#E8D9B0]" : "bg-[#1A1A1A] border-[#4D6940]/40"}`} />
                     <span className="flex-1 truncate text-foreground">
                       {rh.opponent?.name ?? "BYE"}
                     </span>
@@ -560,12 +560,12 @@ function PairingsSection({
         <div
           className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border mb-3 transition-all ${
             isDark
-              ? "bg-[oklch(0.22_0.06_145)] border-white/10 focus-within:border-[#3D6B47]/50 focus-within:ring-1 focus-within:ring-[#3D6B47]/20"
-              : "bg-white border-[#EEEED2] focus-within:border-[#3D6B47]/40 focus-within:ring-1 focus-within:ring-[#3D6B47]/10"
+              ? "bg-[oklch(0.22_0.06_145)] border-white/10 focus-within:border-[#4D6940]/50 focus-within:ring-1 focus-within:ring-[#4D6940]/20"
+              : "bg-white border-[#EEEED2] focus-within:border-[#4D6940]/40 focus-within:ring-1 focus-within:ring-[#4D6940]/10"
           }`}
         >
           <Search className={`w-4 h-4 flex-shrink-0 transition-colors ${
-            boardSearch ? "text-[#3D6B47]" : "text-muted-foreground"
+            boardSearch ? "text-[#4D6940]" : "text-muted-foreground"
           }`} />
           <input
             ref={boardSearchRef}
@@ -592,7 +592,7 @@ function PairingsSection({
 
       {/* Round tabs */}
       {rounds.length > 1 && (
-        <div className={`flex gap-1.5 p-1.5 rounded-2xl overflow-x-auto scrollbar-none mb-4 ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
+        <div className={`flex gap-1.5 p-1.5 rounded-2xl overflow-x-auto scrollbar-none mb-4 ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#FFF3D5]"}`}>
           {rounds.map((r) => (
             <button
               key={r.number}
@@ -600,8 +600,8 @@ function PairingsSection({
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                 r.number === activeRound
                   ? isDark
-                    ? "bg-[#3D6B47] text-white shadow-md"
-                    : "bg-[#3D6B47] text-white shadow-md"
+                    ? "bg-[#4D6940] text-white shadow-md"
+                    : "bg-[#4D6940] text-white shadow-md"
                   : isDark
                   ? "text-white/50 hover:text-white/80 hover:bg-white/08"
                   : "text-[#6B7280] hover:text-[#374151] hover:bg-white"
@@ -639,20 +639,20 @@ function PairingsSection({
                 className={`rounded-xl border px-4 py-3 transition-all relative overflow-hidden ${
                   isFollowed
                     ? isDark
-                      ? "border-[#3D6B47]/50 bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
-                      : "border-[#3D6B47]/30 bg-[#F0F8F2] ring-1 ring-[#3D6B47]/15"
+                      ? "border-[#4D6940]/50 bg-[#4D6940]/08 ring-1 ring-[#4D6940]/20"
+                      : "border-[#4D6940]/30 bg-[#F0F8F2] ring-1 ring-[#4D6940]/15"
                     : isDark
                     ? "border-white/08 bg-[oklch(0.25_0.07_145)] hover:border-white/15"
-                    : "border-[#EEEED2] bg-white hover:border-[#3D6B47]/20"
+                    : "border-[#EEEED2] bg-white hover:border-[#4D6940]/20"
                 }`}
               >
                 {isFollowed && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#3D6B47] rounded-r-sm" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4D6940] rounded-r-sm" />
                 )}
                 <div className="flex items-center gap-3">
                   {/* Board number */}
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    isDark ? "bg-white/08 text-white/50" : "bg-[#F0F5EE] text-[#6B7280]"
+                    isDark ? "bg-white/08 text-white/50" : "bg-[#FFF3D5] text-[#6B7280]"
                   }`}>
                     {game.board}
                   </div>
@@ -661,9 +661,9 @@ function PairingsSection({
                   <div className="flex-1 min-w-0">
                     {/* White */}
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="w-3 h-3 rounded-full bg-white border border-gray-300 flex-shrink-0" />
+                      <div className="w-3 h-3 rounded-full bg-white border border-[#E8D9B0] flex-shrink-0" />
                       <span className={`text-sm font-semibold truncate ${
-                        followedPlayerId === game.whiteId ? "text-[#3D6B47]" : "text-foreground"
+                        followedPlayerId === game.whiteId ? "text-[#4D6940]" : "text-foreground"
                       }`}>
                         {white?.name ?? "BYE"}
                       </span>
@@ -672,9 +672,9 @@ function PairingsSection({
                     </div>
                     {/* Black */}
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-gray-800 border border-gray-600 flex-shrink-0" />
+                      <div className="w-3 h-3 rounded-full bg-[#1A1A1A] border border-[#4D6940]/40 flex-shrink-0" />
                       <span className={`text-sm font-semibold truncate ${
-                        followedPlayerId === game.blackId ? "text-[#3D6B47]" : "text-foreground"
+                        followedPlayerId === game.blackId ? "text-[#4D6940]" : "text-foreground"
                       }`}>
                         {black?.name ?? "BYE"}
                       </span>
@@ -748,7 +748,7 @@ function StandingsSection({
         <div className="space-y-2">
           {/* Header */}
           <div className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground uppercase tracking-wider ${
-            isDark ? "bg-white/05" : "bg-[#F0F5EE]"
+            isDark ? "bg-white/05" : "bg-[#FFF3D5]"
           }`}>
             <span>#</span>
             <span>Player</span>
@@ -768,19 +768,19 @@ function StandingsSection({
                 className={`w-full grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-3.5 rounded-2xl border transition-all duration-200 hover:scale-[1.005] relative overflow-hidden text-left ${
                   isFollowed
                     ? isDark
-                      ? "border-[#3D6B47]/50 bg-[#3D6B47]/10 ring-1 ring-[#3D6B47]/30"
-                      : "border-[#3D6B47]/30 bg-[#F0F8F2] ring-1 ring-[#3D6B47]/20"
+                      ? "border-[#4D6940]/50 bg-[#4D6940]/10 ring-1 ring-[#4D6940]/30"
+                      : "border-[#4D6940]/30 bg-[#F0F8F2] ring-1 ring-[#4D6940]/20"
                     : isLeader
                     ? isDark
                       ? "border-amber-500/30 bg-amber-500/05"
                       : "border-amber-400/40 bg-amber-50/60"
                     : isDark
                     ? "border-white/08 bg-[oklch(0.25_0.07_145)] hover:border-white/15"
-                    : "border-[#EEEED2] bg-white hover:border-[#3D6B47]/20"
+                    : "border-[#EEEED2] bg-white hover:border-[#4D6940]/20"
                 }`}
               >
                 {isFollowed && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#3D6B47] rounded-r-sm" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4D6940] rounded-r-sm" />
                 )}
                 <span className={`text-base font-bold ${medalColor(rank)}`}>
                   {rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : rank}
@@ -832,16 +832,16 @@ function CompletedHero({
     <section>
       {/* Celebration header */}
       <div className={`rounded-2xl border overflow-hidden mb-6 ${
-        isDark ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#3D6B47]/20 bg-white"
+        isDark ? "border-[#4D6940]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#4D6940]/20 bg-white"
       }`}>
         <div className={`px-5 py-6 text-center border-b ${
-          isDark ? "border-white/08 bg-[#3D6B47]/15" : "border-[#EEEED2] bg-[#F0F8F2]"
+          isDark ? "border-white/08 bg-[#4D6940]/15" : "border-[#EEEED2] bg-[#F0F8F2]"
         }`}>
           <div className="flex justify-center mb-3">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-              isDark ? "bg-[#3D6B47]/30" : "bg-[#3D6B47]/10"
+              isDark ? "bg-[#4D6940]/30" : "bg-[#4D6940]/10"
             }`}>
-              <Trophy className="w-7 h-7 text-[#3D6B47]" />
+              <Trophy className="w-7 h-7 text-[#4D6940]" />
             </div>
           </div>
           <h1
@@ -976,21 +976,21 @@ function PlayerPerformanceCard({
     if (rank <= 3) return { text: "Podium Finish", color: "text-amber-600 bg-amber-500/08 border-amber-500/15" };
     if (pct >= 0.75) return { text: "Strong Performance", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" };
     if (pct >= 0.5) return { text: "Solid Result", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" };
-    return { text: "Well Played", color: "text-[#3D6B47] bg-[#3D6B47]/10 border-[#3D6B47]/20" };
+    return { text: "Well Played", color: "text-[#4D6940] bg-[#4D6940]/10 border-[#4D6940]/20" };
   };
   const perfLabel = getPerformanceLabel();
 
   return (
     <div className={`rounded-2xl border overflow-hidden ${
-      isDark ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#3D6B47]/20 bg-white"
+      isDark ? "border-[#4D6940]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#4D6940]/20 bg-white"
     }`}>
       {/* Card header — green accent */}
       <div className={`px-5 py-5 ${
-        isDark ? "bg-[#3D6B47]/15" : "bg-[#F0F8F2]"
+        isDark ? "bg-[#4D6940]/15" : "bg-[#F0F8F2]"
       }`}>
         <div className="flex items-center gap-2 mb-3">
-          <Trophy className="w-4 h-4 text-[#3D6B47]" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#3D6B47]">Player Performance Card</span>
+          <Trophy className="w-4 h-4 text-[#4D6940]" />
+          <span className="text-xs font-bold uppercase tracking-wider text-[#4D6940]">Player Performance Card</span>
         </div>
         <div className="flex items-center gap-4">
           <PlayerAvatar username={player.username} name={player.name} size={56} />
@@ -1020,23 +1020,23 @@ function PlayerPerformanceCard({
         )}
 
         <div className="grid grid-cols-4 gap-2 mb-5">
-          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>#{rank}</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Place</p>
           </div>
-          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {standingRow ? scoreFraction(standingRow.points) : "0"}
             </p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Score</p>
           </div>
-          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {standingRow ? `${standingRow.wins}/${standingRow.draws}/${standingRow.losses}` : "—"}
             </p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">W/D/L</p>
           </div>
-          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#FFF3D5]"}`}>
             <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {totalPlayers}
             </p>
@@ -1060,7 +1060,7 @@ function PlayerPerformanceCard({
                     }`}
                   >
                     <span className="text-xs font-mono text-muted-foreground w-7">R{rh.round}</span>
-                    <div className={`w-3 h-3 rounded-full border flex-shrink-0 ${rh.perspective === "white" ? "bg-white border-gray-300" : "bg-gray-800 border-gray-600"}`} />
+                    <div className={`w-3 h-3 rounded-full border flex-shrink-0 ${rh.perspective === "white" ? "bg-white border-[#E8D9B0]" : "bg-[#1A1A1A] border-[#4D6940]/40"}`} />
                     <span className="flex-1 truncate text-foreground">
                       {rh.opponent?.name ?? "BYE"}
                     </span>
@@ -1112,13 +1112,13 @@ function PersonalRecap({
     <div className="space-y-4">
       {/* Recap header */}
       <div className={`rounded-2xl border overflow-hidden ${
-        isDark ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#3D6B47]/20 bg-white"
+        isDark ? "border-[#4D6940]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#4D6940]/20 bg-white"
       }`}>
         <div className={`px-5 py-4 flex items-center gap-3 border-b ${
-          isDark ? "border-white/08 bg-[#3D6B47]/15" : "border-[#EEEED2] bg-[#F0F8F2]"
+          isDark ? "border-white/08 bg-[#4D6940]/15" : "border-[#EEEED2] bg-[#F0F8F2]"
         }`}>
-          <Star className="w-4 h-4 text-[#3D6B47] flex-shrink-0" />
-          <span className="text-sm font-bold text-[#3D6B47]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          <Star className="w-4 h-4 text-[#4D6940] flex-shrink-0" />
+          <span className="text-sm font-bold text-[#4D6940]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Your Tournament Recap
           </span>
           <div className="flex-1" />
@@ -1127,7 +1127,7 @@ function PersonalRecap({
             className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${
               isDark
                 ? "text-white/50 hover:text-white/80 hover:bg-white/08"
-                : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
             }`}
           >
             Clear
@@ -1192,10 +1192,10 @@ function PostEventCTAs({
         isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-white"
       }`}>
         <div className={`px-5 py-4 border-b ${
-          isDark ? "border-white/08 bg-[#3D6B47]/10" : "border-[#EEEED2] bg-[#F0F8F2]"
+          isDark ? "border-white/08 bg-[#4D6940]/10" : "border-[#EEEED2] bg-[#F0F8F2]"
         }`}>
           <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-[#3D6B47]" />
+            <Mail className="w-4 h-4 text-[#4D6940]" />
             <h3 className="text-sm font-bold text-foreground">
               {hasFollowedPlayer ? "Get Your Performance Card by Email" : "Get Tournament Results by Email"}
             </h3>
@@ -1217,13 +1217,13 @@ function PostEventCTAs({
                 placeholder="your@email.com"
                 className={`flex-1 px-4 py-2.5 rounded-xl border text-sm bg-transparent outline-none transition-colors ${
                   isDark
-                    ? "border-white/15 text-white placeholder:text-white/30 focus:border-[#3D6B47]/50"
-                    : "border-[#EEEED2] text-foreground placeholder:text-gray-400 focus:border-[#3D6B47]/40"
+                    ? "border-white/15 text-white placeholder:text-white/30 focus:border-[#4D6940]/50"
+                    : "border-[#EEEED2] text-foreground placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]/40"
                 }`}
               />
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-[#3D6B47] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors active:scale-95"
+                className="px-5 py-2.5 rounded-xl bg-[#4D6940] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors active:scale-95"
               >
                 Send
               </button>
@@ -1256,13 +1256,13 @@ function PostEventCTAs({
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
-                : "hover:bg-[#F0F5EE]"
+                : "hover:bg-[#FFF3D5]"
             }`}
           >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+              isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"
             }`}>
-              <UserPlus className="w-4.5 h-4.5 text-[#3D6B47]" />
+              <UserPlus className="w-4.5 h-4.5 text-[#4D6940]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Save Your Results</p>
@@ -1277,13 +1277,13 @@ function PostEventCTAs({
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
-                : "hover:bg-[#F0F5EE]"
+                : "hover:bg-[#FFF3D5]"
             }`}
           >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+              isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"
             }`}>
-              <Crown className="w-4.5 h-4.5 text-[#3D6B47]" />
+              <Crown className="w-4.5 h-4.5 text-[#4D6940]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Join the Club</p>
@@ -1298,13 +1298,13 @@ function PostEventCTAs({
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
-                : "hover:bg-[#F0F5EE]"
+                : "hover:bg-[#FFF3D5]"
             }`}
           >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+              isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"
             }`}>
-              <ExternalLink className="w-4.5 h-4.5 text-[#3D6B47]" />
+              <ExternalLink className="w-4.5 h-4.5 text-[#4D6940]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Explore ChessOTB</p>
@@ -1321,7 +1321,7 @@ function PostEventCTAs({
 // ─── Loading Skeleton ─────────────────────────────────────────────────────────
 
 function LoadingSkeleton({ isDark }: { isDark: boolean }) {
-  const shimmer = isDark ? "bg-white/08" : "bg-gray-200";
+  const shimmer = isDark ? "bg-white/08" : "bg-[#E8D9B0]";
   return (
     <div className={`min-h-screen ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       <div className="container max-w-2xl mx-auto px-4 py-20 space-y-6">
@@ -1353,7 +1353,7 @@ function ErrorState({ isDark, message }: { isDark: boolean; message: string }) {
         <p className="text-sm text-muted-foreground mb-6">{message}</p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#3D6B47] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors active:scale-95"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#4D6940] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors active:scale-95"
         >
           Go Home
         </Link>
@@ -1656,14 +1656,14 @@ export default function PublicTournament() {
         )}
 
         {/* Mobile Tabs */}
-        <div className={`flex gap-1.5 p-1.5 rounded-2xl sm:hidden ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
+        <div className={`flex gap-1.5 p-1.5 rounded-2xl sm:hidden ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#FFF3D5]"}`}>
           {(["pairings", "standings"] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all capitalize ${
                 tab === activeTab
-                  ? "bg-[#3D6B47] text-white shadow-md"
+                  ? "bg-[#4D6940] text-white shadow-md"
                   : isDark
                   ? "text-white/50 hover:text-white/80"
                   : "text-[#6B7280] hover:text-[#374151]"
@@ -1712,7 +1712,7 @@ export default function PublicTournament() {
         <footer className="text-center py-8 border-t border-border/30">
           <p className="text-xs text-muted-foreground">
             Powered by{" "}
-            <a href="https://chessotb.club" className="text-[#3D6B47] hover:underline font-medium">
+            <a href="https://chessotb.club" className="text-[#4D6940] hover:underline font-medium">
               ChessOTB
             </a>
           </p>

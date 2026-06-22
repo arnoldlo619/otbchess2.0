@@ -104,8 +104,8 @@ function RenderNode({
       ? "bg-white/[0.03] border-l-2 border-white/10"
       : "bg-white/[0.06] border-l-2 border-white/15"
     : variationDepth % 2 === 1
-    ? "bg-gray-50 border-l-2 border-gray-200"
-    : "bg-gray-100 border-l-2 border-gray-300";
+    ? "bg-[#FFF3D5]/70 border-l-2 border-[#E8D9B0]"
+    : "bg-[#E8D9B0]/40 border-l-2 border-[#E8D9B0]";
 
   const moveButton = (
     <button
@@ -119,11 +119,11 @@ function RenderNode({
             : "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-400"
           : isDark
           ? "text-white/80 hover:bg-white/10 hover:text-white"
-          : "text-gray-700 hover:bg-gray-200 hover:text-gray-900",
+          : "text-[#1A1A1A]/85 hover:bg-[#E8D9B0] hover:text-[#1A1A1A]",
       ].join(" ")}
     >
       {showMoveNum && (
-        <span className={`mr-0.5 text-[11px] font-normal ${isDark ? "text-white/35" : "text-gray-400"}`}>
+        <span className={`mr-0.5 text-[11px] font-normal ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
           {isWhite ? `${moveNum}.` : `${moveNum}…`}
         </span>
       )}
@@ -151,7 +151,7 @@ function RenderNode({
   const comment = node.comment ? (
     <span
       className={`block text-[11px] italic mt-0.5 ml-1 ${
-        isDark ? "text-white/40" : "text-gray-400"
+        isDark ? "text-white/40" : "text-[#6B6B50]"
       }`}
     >
       {node.comment}
@@ -266,7 +266,7 @@ export function MoveTreePanel({ root, currentFen, onNavigate, isDark }: MoveTree
       className="px-3 py-3 overflow-y-auto max-h-[60vh] select-none"
     >
       {!hasAnyMoves ? (
-        <div className={`flex flex-col items-center justify-center py-10 gap-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+        <div className={`flex flex-col items-center justify-center py-10 gap-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
           <GitBranch size={28} className="opacity-40" />
           <p className="text-sm text-center">
             No moves yet.

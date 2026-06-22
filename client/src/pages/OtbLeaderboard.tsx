@@ -43,25 +43,25 @@ export default function OtbLeaderboard() {
       .finally(() => setLoading(false));
   }, [category]);
 
-  const bg = isDark ? "bg-[#0d1a0f]" : "bg-gray-50";
-  const card = isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-gray-200";
-  const text = isDark ? "text-white" : "text-gray-900";
-  const muted = isDark ? "text-white/50" : "text-gray-500";
+  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#FFF3D5]/70";
+  const card = isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-[#E8D9B0]";
+  const text = isDark ? "text-white" : "text-[#1A1A1A]";
+  const muted = isDark ? "text-white/50" : "text-[#6B6B50]";
 
   return (
     <div className={`min-h-screen ${bg}`}>
       {/* Header */}
-      <div className={`sticky top-0 z-10 backdrop-blur-xl border-b ${isDark ? "bg-[#0d1a0f]/80 border-white/10" : "bg-white/80 border-gray-200"}`}>
+      <div className={`sticky top-0 z-10 backdrop-blur-xl border-b ${isDark ? "bg-[#0d1a0f]/80 border-white/10" : "bg-white/80 border-[#E8D9B0]"}`}>
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => navigate("/")}
-            className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? "bg-white/10" : "bg-gray-100"}`}
+            className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? "bg-white/10" : "bg-[#E8D9B0]/40"}`}
           >
-            <ChevronLeft className={`w-5 h-5 ${isDark ? "text-white" : "text-gray-700"}`} />
+            <ChevronLeft className={`w-5 h-5 ${isDark ? "text-white" : "text-[#1A1A1A]/85"}`} />
           </button>
           <NavLogo linked={true} className="h-6" />
           <div className="flex-1" />
-          <Trophy className="w-5 h-5 text-[#2d6a4f]" />
+          <Trophy className="w-5 h-5 text-[#4D6940]" />
         </div>
       </div>
 
@@ -71,7 +71,7 @@ export default function OtbLeaderboard() {
         <p className={`text-sm mb-5 ${muted}`}>Top rated players in over-the-board games</p>
 
         {/* Category tabs */}
-        <div className={`flex rounded-2xl p-1 mb-6 ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
+        <div className={`flex rounded-2xl p-1 mb-6 ${isDark ? "bg-white/5" : "bg-[#E8D9B0]/40"}`}>
           {(["blitz", "rapid"] as Category[]).map((cat) => (
             <button
               key={cat}
@@ -79,7 +79,7 @@ export default function OtbLeaderboard() {
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 category === cat
                   ? "bg-[#5a9e5f] text-white shadow-sm"
-                  : `${isDark ? "text-white/60" : "text-gray-500"}`
+                  : `${isDark ? "text-white/60" : "text-[#6B6B50]"}`
               }`}
             >
               OTB {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -90,14 +90,14 @@ export default function OtbLeaderboard() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-[#2d6a4f]" />
+            <Loader2 className="w-6 h-6 animate-spin text-[#4D6940]" />
           </div>
         )}
 
         {/* Empty state */}
         {!loading && entries.length === 0 && (
           <div className="text-center py-12">
-            <Trophy className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-white/20" : "text-gray-300"}`} />
+            <Trophy className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
             <p className={`text-sm ${muted}`}>No rated players yet. Be the first!</p>
           </div>
         )}
@@ -114,7 +114,7 @@ export default function OtbLeaderboard() {
                 <div className="w-8 text-center flex-shrink-0">
                   {idx < 3 ? (
                     <Medal className={`w-5 h-5 mx-auto ${
-                      idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : "text-amber-600"
+                      idx === 0 ? "text-yellow-400" : idx === 1 ? "text-[#6B6B50]/70" : "text-amber-600"
                     }`} />
                   ) : (
                     <span className={`text-sm font-bold ${muted}`}>{idx + 1}</span>

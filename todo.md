@@ -6605,3 +6605,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Vitest: 25 tests for Growth & Retention Engine (all passing)
 - [x] TypeScript: 0 errors
 - [x] ESLint: 0 errors (33 pre-existing warnings)
+
+## Light Mode Palette Upgrade
+- [x] CSS design tokens updated: --background #FFF3D5, --card #FFF8E8, --primary #4D6940, --foreground #1A1A1A, --muted-foreground #6B6B50, --border #E8D9B0
+- [x] index.css light mode variables fully updated (background, card, popover, primary, secondary, muted, border, input, ring)
+- [x] Chess board pattern updated to warm cream tones
+- [x] All pages batch-swept (35+ pages) - old gray/green colors replaced with Beige Cream + Olive Green palette
+- [x] All components batch-swept (50+ components) - old gray/green colors replaced
+- [x] UI components updated: anime-navbar, training-gallery, spin-border-button
+- [x] App.tsx updated
+- [x] TypeScript: 0 errors
+- [x] All new tests passing (41 tests)

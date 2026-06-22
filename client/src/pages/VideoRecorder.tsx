@@ -396,8 +396,8 @@ export default function VideoRecorder() {
   const lastFenRef = useRef<string | null>(null);
   const movePulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const bg = isDark ? "bg-[#0d1f12]" : "bg-gray-950";
-  const _cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-900";
+  const bg = isDark ? "bg-[#0d1f12]" : "bg-[#0d1a0f]";
+  const _cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#0f1f12]";
   const _accent = "text-[#4CAF50]";
 
   // ── Orientation listener ──────────────────────────────────────────────────

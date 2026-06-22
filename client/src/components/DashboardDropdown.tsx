@@ -112,7 +112,7 @@ export function DashboardDropdown() {
             <a
               href={activeTournament.href}
               onClick={(e) => { e.preventDefault(); window.location.href = activeTournament.href; }}
-              className="flex items-center gap-3 p-3 rounded-xl border border-[#4CAF50]/25 bg-[#3D6B47]/15 hover:bg-[#3D6B47]/25 transition-all group active:scale-[0.98]"
+              className="flex items-center gap-3 p-3 rounded-xl border border-[#4CAF50]/25 bg-[#4D6940]/15 hover:bg-[#4D6940]/25 transition-all group active:scale-[0.98]"
             >
               {/* Role icon */}
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#4CAF50]/20 text-[#4CAF50]">
@@ -174,7 +174,7 @@ export function DashboardDropdown() {
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/06 transition-colors group"
                 >
                   <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
-                    entry.role === "director" ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-white/08 text-white/40"
+                    entry.role === "director" ? "bg-[#4D6940]/30 text-[#4CAF50]" : "bg-white/08 text-white/40"
                   }`}>
                     {entry.role === "director" ? <Shield className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                   </div>
@@ -206,7 +206,7 @@ export function DashboardDropdown() {
         <button
           type="button"
           onClick={() => { window.location.href = "/"; }}
-          className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#4CAF50] hover:bg-[#3D6B47]/15 transition-colors"
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#4CAF50] hover:bg-[#4D6940]/15 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           New Tournament

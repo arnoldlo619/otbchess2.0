@@ -81,7 +81,7 @@ export function TrainingGallery({
             className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed ${
               isDark
                 ? "border-white/15 text-white/60 hover:border-[#5B9A6A]/60 hover:text-[#5B9A6A] hover:bg-[#5B9A6A]/10"
-                : "border-gray-200 text-gray-400 hover:border-[#3D6B47]/50 hover:text-[#3D6B47] hover:bg-[#3D6B47]/05"
+                : "border-[#E8D9B0] text-[#6B6B50] hover:border-[#4D6940]/50 hover:text-[#4D6940] hover:bg-[#4D6940]/05"
             }`}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -93,7 +93,7 @@ export function TrainingGallery({
             className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed ${
               isDark
                 ? "border-white/15 text-white/60 hover:border-[#5B9A6A]/60 hover:text-[#5B9A6A] hover:bg-[#5B9A6A]/10"
-                : "border-gray-200 text-gray-400 hover:border-[#3D6B47]/50 hover:text-[#3D6B47] hover:bg-[#3D6B47]/05"
+                : "border-[#E8D9B0] text-[#6B6B50] hover:border-[#4D6940]/50 hover:text-[#4D6940] hover:bg-[#4D6940]/05"
             }`}
           >
             <ArrowRight className="w-4 h-4" />
@@ -122,7 +122,7 @@ export function TrainingGallery({
                   className={`group relative h-full rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 ${
                     isDark
                       ? "bg-[#0f1c11] border-[#2e4a34]/60 hover:border-[#5B9A6A]/40 hover:shadow-xl hover:shadow-[#5B9A6A]/15"
-                      : "bg-white border-gray-200 hover:border-[#3D6B47]/30 hover:shadow-xl hover:shadow-[#3D6B47]/10"
+                      : "bg-[#FFF8E8] border-[#E8D9B0] hover:border-[#4D6940]/30 hover:shadow-xl hover:shadow-[#4D6940]/10"
                   }`}
                 >
                   {/* Image */}
@@ -171,12 +171,12 @@ export function TrainingGallery({
                   {/* Card body */}
                   <div className="p-5 flex flex-col gap-3">
                     {/* Title */}
-                    <h3 className={`text-base font-bold leading-snug ${isDark ? "text-white" : "text-gray-900"}`}>
+                    <h3 className={`text-base font-bold leading-snug ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
                       {item.title}
                     </h3>
 
                     {/* Description */}
-                    <p className={`text-sm leading-relaxed line-clamp-3 ${isDark ? "text-white/65" : "text-gray-500"}`}>
+                    <p className={`text-sm leading-relaxed line-clamp-3 ${isDark ? "text-white/65" : "text-[#6B6B50]"}`}>
                       {item.description}
                     </p>
 
@@ -186,7 +186,7 @@ export function TrainingGallery({
                         <span
                           key={h}
                           className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                            isDark ? "bg-white/07 text-white/55" : "bg-gray-100 text-gray-500"
+                            isDark ? "bg-white/07 text-white/55" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                           }`}
                         >
                           {h}
@@ -198,7 +198,7 @@ export function TrainingGallery({
                     <button
                       onClick={(e) => handleCta(item, e)}
                       className={`mt-1 inline-flex items-center gap-1.5 text-sm font-semibold transition-all duration-200 group/cta ${
-                        isDark ? "text-[#5B9A6A] hover:text-[#7ab88a]" : "text-[#3D6B47] hover:text-[#2f5438]"
+                        isDark ? "text-[#5B9A6A] hover:text-[#7ab88a]" : "text-[#4D6940] hover:text-[#2f5438]"
                       }`}
                     >
                       {item.cta}
@@ -223,8 +223,8 @@ export function TrainingGallery({
               aria-label={`Go to slide ${index + 1}`}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 currentSlide === index
-                  ? isDark ? "w-6 bg-[#5B9A6A]" : "w-6 bg-[#3D6B47]"
-                  : isDark ? "w-1.5 bg-white/20" : "w-1.5 bg-gray-300"
+                  ? isDark ? "w-6 bg-[#5B9A6A]" : "w-6 bg-[#4D6940]"
+                  : isDark ? "w-1.5 bg-white/20" : "w-1.5 bg-[#E8D9B0]"
               }`}
             />
           ))}

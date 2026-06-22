@@ -125,8 +125,8 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
   }, [scanning, onScan, onScanUrl]);
 
   const bg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-white";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/55" : "text-gray-500";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/55" : "text-[#6B6B50]";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "rgba(0,0,0,0.92)" }}>
@@ -154,7 +154,7 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
             <p className={`text-xs leading-relaxed ${textMuted}`}>{error}</p>
             <button
               onClick={onClose}
-              className="mt-4 w-full py-2.5 rounded-xl bg-[#3D6B47] text-white text-sm font-semibold"
+              className="mt-4 w-full py-2.5 rounded-xl bg-[#4D6940] text-white text-sm font-semibold"
             >
               Enter code manually
             </button>

@@ -278,15 +278,15 @@ export function GameVideoPlayer({
     return (
       <div
         className={`rounded-xl border p-4 flex items-center gap-3 ${
-          isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-gray-50"
+          isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-[#FFF3D5]/70"
         }`}
       >
-        <Film className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-400"}`} />
+        <Film className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`} />
         <div>
-          <p className={`text-xs font-medium ${isDark ? "text-white/50" : "text-gray-500"}`}>
+          <p className={`text-xs font-medium ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
             Video unavailable
           </p>
-          <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
             The recording could not be loaded.
           </p>
         </div>
@@ -297,7 +297,7 @@ export function GameVideoPlayer({
   return (
     <div
       className={`rounded-xl border overflow-hidden ${
-        isDark ? "border-white/10 bg-[#0a1a0c]" : "border-gray-200 bg-gray-900"
+        isDark ? "border-white/10 bg-[#0a1a0c]" : "border-[#E8D9B0] bg-[#1A1A1A]"
       }`}
     >
       {/* Section header */}
@@ -438,7 +438,7 @@ export function GameVideoPlayer({
               isWatchingClip
                 ? "bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/30"
                 : isLoaded
-                  ? "bg-[#3D6B47] hover:bg-[#4a7d55] text-white"
+                  ? "bg-[#4D6940] hover:bg-[#4a7d55] text-white"
                   : "bg-white/5 text-white/20 cursor-not-allowed"
             }`}
           >

@@ -188,17 +188,17 @@ const QUICKSTART_HERO = {
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const T = {
-  green: "#3D6B47",
+  green: "#4D6940",
   greenDark: "#2A4A32",
-  greenBg: "rgba(61,107,71,0.08)",
-  greenRing: "rgba(61,107,71,0.25)",
+  greenBg: "rgba(77,105,64,0.08)",
+  greenRing: "rgba(77,105,64,0.25)",
   // light
   lBg: "#FFFFFF",
   lPanel: "#F7F9F6",
   lBorder: "#E5E7EB",
-  lBorderFocus: "#3D6B47",
+  lBorderFocus: "#4D6940",
   lText: "#1A1A1A",
-  lSub: "#6B7280",
+  lSub: "#6B6B50",
   lMuted: "#9CA3AF",
   lInput: "#FFFFFF",
   lInputBorder: "#D1D5DB",
@@ -207,7 +207,7 @@ const T = {
   dPanel: "oklch(0.22 0.06 145)",
   dCard: "oklch(0.25 0.07 145)",
   dBorder: "rgba(255,255,255,0.10)",
-  dBorderFocus: "#3D6B47",
+  dBorderFocus: "#4D6940",
   dText: "#FFFFFF",
   dSub: "rgba(255,255,255,0.55)",
   dMuted: "rgba(255,255,255,0.30)",
@@ -267,7 +267,7 @@ function HeroPanel({
       style={{
         background: isDark
           ? "oklch(0.20 0.08 145)"
-          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #3D6B47 100%)",
+          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #4D6940 100%)",
       }}
     >
       {/* Subtle chess-board texture overlay */}
@@ -475,7 +475,7 @@ function ModeSelect({
       style={{
         background: isDark
           ? "oklch(0.14 0.04 145)"
-          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #3D6B47 100%)",
+          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #4D6940 100%)",
         animation: "wizardFadeIn 0.3s ease both",
       }}
     >
@@ -528,19 +528,19 @@ function ModeSelect({
             className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
             style={{
               padding: "24px 24px",
-              background: "rgba(61,107,71,0.25)",
-              border: "2px solid rgba(61,107,71,0.55)",
+              background: "rgba(77,105,64,0.25)",
+              border: "2px solid rgba(77,105,64,0.55)",
               backdropFilter: "blur(8px)",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.40)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#3D6B47";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.40)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "#4D6940";
               (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(61,107,71,0.35)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(77,105,64,0.35)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.25)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(61,107,71,0.55)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(77,105,64,0.55)";
               (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
@@ -844,8 +844,8 @@ function QuickstartForm({
       <div
         className="rounded-2xl border overflow-hidden"
         style={{
-          background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
-          border: `1.5px solid ${isDark ? "rgba(61,107,71,0.25)" : "rgba(61,107,71,0.18)"}`,
+          background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5",
+          border: `1.5px solid ${isDark ? "rgba(77,105,64,0.25)" : "rgba(77,105,64,0.18)"}`,
         }}
       >
         {/* Card header */}
@@ -860,14 +860,14 @@ function QuickstartForm({
         </div>
 
         {/* Format row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
           <button
             type="button"
             onClick={() => toggleInline("format")}
             className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
             style={{
               background: inlinePicker === "format"
-                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
                 : "transparent",
             }}
           >
@@ -891,7 +891,7 @@ function QuickstartForm({
           {inlinePicker === "format" && (
             <div
               className="px-5 lg:px-6 pb-4 space-y-3"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
             >
               <div className="grid grid-cols-2 gap-2 pt-3">
                 {([
@@ -948,8 +948,8 @@ function QuickstartForm({
           <div
             className="mx-3 my-2 rounded-xl flex items-center gap-3 px-3 py-2.5"
             style={{
-              background: isDark ? "rgba(61,107,71,0.22)" : "rgba(61,107,71,0.10)",
-              border: `1px solid ${isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"}`,
+              background: isDark ? "rgba(77,105,64,0.22)" : "rgba(77,105,64,0.10)",
+              border: `1px solid ${isDark ? "rgba(77,105,64,0.40)" : "rgba(77,105,64,0.25)"}`,
             }}
           >
             <Zap className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
@@ -983,14 +983,14 @@ function QuickstartForm({
         )}
 
         {/* Rounds row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
           <button
             type="button"
             onClick={() => toggleInline("rounds")}
             className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
             style={{
               background: inlinePicker === "rounds"
-                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
                 : "transparent",
             }}
           >
@@ -1014,7 +1014,7 @@ function QuickstartForm({
           {inlinePicker === "rounds" && (
             <div
               className="px-5 lg:px-6 pb-4 space-y-3"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
                 {roundOptions.map((r) => {
@@ -1041,7 +1041,7 @@ function QuickstartForm({
                         <span
                           className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
                           style={{
-                            background: active ? T.green : isDark ? "rgba(61,107,71,0.35)" : "#D1FAE5",
+                            background: active ? T.green : isDark ? "rgba(77,105,64,0.35)" : "#D1FAE5",
                             color: active ? "#FFFFFF" : T.green,
                           }}
                         >
@@ -1066,14 +1066,14 @@ function QuickstartForm({
         </div>
 
         {/* Max Players row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
           <button
             type="button"
             onClick={() => toggleInline("cap")}
             className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
             style={{
               background: inlinePicker === "cap"
-                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
                 : "transparent",
             }}
           >
@@ -1097,7 +1097,7 @@ function QuickstartForm({
           {inlinePicker === "cap" && (
             <div
               className="px-5 lg:px-6 pb-4 space-y-3"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
                 {capOptions.map((cap) => {
@@ -1151,14 +1151,14 @@ function QuickstartForm({
         </div>
 
         {/* Time Control row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
           <button
             type="button"
             onClick={() => toggleInline("time")}
             className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
             style={{
               background: inlinePicker === "time"
-                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
                 : "transparent",
             }}
           >
@@ -1187,7 +1187,7 @@ function QuickstartForm({
           {inlinePicker === "time" && (
             <div
               className="px-5 lg:px-6 pb-4"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
             >
               {/* Level 1 — Category buttons (no caption text) */}
               {!tcCategory && (
@@ -1343,7 +1343,7 @@ function QuickstartForm({
         </div>
 
         {/* Rating Type row — Rapid vs Blitz toggle */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
           <div className="flex items-center justify-between px-5 lg:px-6 py-2.5">
             <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>ELO Rating</span>
             <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}` }}>
@@ -1374,7 +1374,7 @@ function QuickstartForm({
         {/* Rating System row — static display (editable via separate toggle below) */}
         <div
           className="flex items-center justify-between px-5 lg:px-6 py-2.5"
-          style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+          style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
         >
           <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
           <span
@@ -1406,8 +1406,8 @@ function QuickstartForm({
           <div
             className="mt-3 rounded-2xl border overflow-hidden"
             style={{
-              background: isDark ? "rgba(61,107,71,0.06)" : "#F4F8F3",
-              border: `1.5px solid ${isDark ? "rgba(61,107,71,0.20)" : "rgba(61,107,71,0.14)"}`,
+              background: isDark ? "rgba(77,105,64,0.06)" : "#F4F8F3",
+              border: `1.5px solid ${isDark ? "rgba(77,105,64,0.20)" : "rgba(77,105,64,0.14)"}`,
               padding: "16px 20px",
             }}
           >
@@ -1568,7 +1568,7 @@ function StepDetails({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}>Drop an image or click to upload</p>
+            <p className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "#6B6B50" }}>Drop an image or click to upload</p>
             <p className="text-xs" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>JPG, PNG, WebP — shown in the tournament banner</p>
           </button>
         )}
@@ -1699,8 +1699,8 @@ function StepFormat({
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
-                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.50)" : "#6B6B50",
                   }}
                 >
                   <Icon className="w-6 h-6" strokeWidth={1.8} />
@@ -1737,7 +1737,7 @@ function StepFormat({
                   onClick={() => onChange({ rounds: r })}
                   className="w-12 h-12 rounded-xl text-base font-bold transition-all duration-200"
                   style={{
-                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
                     color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
                     boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
                   }}
@@ -1760,7 +1760,7 @@ function StepFormat({
                   onClick={() => onChange({ maxPlayers: p })}
                   className="h-12 px-4 rounded-xl text-base font-bold transition-all duration-200"
                   style={{
-                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
                     color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
                     boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
                   }}
@@ -1775,7 +1775,7 @@ function StepFormat({
 
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{ background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE", color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}
+        style={{ background: isDark ? "rgba(77,105,64,0.12)" : "#FFF3D5", color: isDark ? "rgba(255,255,255,0.55)" : "#6B6B50" }}
       >
         <Zap className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
@@ -1856,8 +1856,8 @@ function StepTime({
                   <span
                     className="text-[10px] mt-1.5 px-2 py-0.5 rounded-full font-semibold"
                     style={{
-                      background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
-                      color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : "#6B7280",
+                      background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+                      color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : "#6B6B50",
                     }}
                   >
                     {p.tag}
@@ -1888,7 +1888,7 @@ function StepTime({
                   type="button"
                   onClick={() => onChange({ [field.key]: Math.max(field.min, field.value - 1) })}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
-                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE", color: isDark ? T.dText : T.lText }}
+                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5", color: isDark ? T.dText : T.lText }}
                 >
                   −
                 </button>
@@ -1899,7 +1899,7 @@ function StepTime({
                   type="button"
                   onClick={() => onChange({ [field.key]: Math.min(field.max, field.value + 1) })}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
-                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE", color: isDark ? T.dText : T.lText }}
+                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5", color: isDark ? T.dText : T.lText }}
                 >
                   +
                 </button>
@@ -1911,7 +1911,7 @@ function StepTime({
 
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{ background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE", color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}
+        style={{ background: isDark ? "rgba(77,105,64,0.12)" : "#FFF3D5", color: isDark ? "rgba(255,255,255,0.55)" : "#6B6B50" }}
       >
         <Clock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
@@ -1973,7 +1973,7 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
           width: 180,
           height: 180,
           background: "#FFFFFF",
-          boxShadow: phase === "done" ? `0 0 0 3px ${T.green}, 0 8px 24px rgba(61,107,71,0.25)` : `0 4px 16px rgba(0,0,0,0.12)`,
+          boxShadow: phase === "done" ? `0 0 0 3px ${T.green}, 0 8px 24px rgba(77,105,64,0.25)` : `0 4px 16px rgba(0,0,0,0.12)`,
           transition: "box-shadow 0.5s ease",
         }}
       >
@@ -1989,7 +1989,7 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
           <div
             key={`${vPos}-${hPos}`}
             className={`absolute w-5 h-5 transition-all duration-700 ${cls}`}
-            style={{ borderColor: phase === "done" ? T.green : "rgba(61,107,71,0.4)", opacity: phase === "done" ? 1 : 0.6, [vPos]: 4, [hPos]: 4 }}
+            style={{ borderColor: phase === "done" ? T.green : "rgba(77,105,64,0.4)", opacity: phase === "done" ? 1 : 0.6, [vPos]: 4, [hPos]: 4 }}
           />
         ))}
         {phase === "scan" && (
@@ -2006,7 +2006,7 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
         )}
         {phase === "done" && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ animation: "fadeInScale 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards" }}>
-            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: T.green, boxShadow: "0 4px 16px rgba(61,107,71,0.45)" }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: T.green, boxShadow: "0 4px 16px rgba(77,105,64,0.45)" }}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
@@ -2065,7 +2065,7 @@ function SpectatorShareSection({ data, isDark }: { data: WizardData; isDark: boo
               Live
             </span>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#6B7280" }}>
+          <p className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#6B6B50" }}>
             Share with coaches, parents &amp; spectators — no account needed.
           </p>
         </div>
@@ -2346,14 +2346,14 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
               key={step}
               className="flex flex-col items-center text-center gap-2 rounded-2xl p-3"
               style={{
-                background: isDark ? "rgba(61,107,71,0.08)" : "#F0F5EE",
-                border: `1.5px solid ${isDark ? "rgba(61,107,71,0.18)" : "#D4E6D8"}`,
+                background: isDark ? "rgba(77,105,64,0.08)" : "#FFF3D5",
+                border: `1.5px solid ${isDark ? "rgba(77,105,64,0.18)" : "#D4E6D8"}`,
               }}
             >
               {/* Step number + icon */}
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: isDark ? "rgba(61,107,71,0.20)" : "#FFFFFF", color: T.green }}
+                style={{ background: isDark ? "rgba(77,105,64,0.20)" : "#FFFFFF", color: T.green }}
               >
                 {icon}
               </div>
@@ -2370,13 +2370,13 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
       <div
         className="flex items-start gap-3 rounded-2xl p-4"
         style={{
-          background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
-          border: `1.5px solid ${isDark ? "rgba(61,107,71,0.22)" : "#D4E6D8"}`,
+          background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5",
+          border: `1.5px solid ${isDark ? "rgba(77,105,64,0.22)" : "#D4E6D8"}`,
         }}
       >
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: isDark ? "rgba(61,107,71,0.25)" : "#FFFFFF", color: T.green }}
+          style={{ background: isDark ? "rgba(77,105,64,0.25)" : "#FFFFFF", color: T.green }}
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -2398,8 +2398,8 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
         <div
           className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
           style={{
-            background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
-            border: `1.5px solid ${isDark ? "rgba(61,107,71,0.30)" : "#C6D9C9"}`,
+            background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5",
+            border: `1.5px solid ${isDark ? "rgba(77,105,64,0.30)" : "#C6D9C9"}`,
           }}
         >
           <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
@@ -2709,7 +2709,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
                 style={{
                   width: i === step ? 18 : 5,
                   height: 5,
-                  background: i === step ? T.green : i < step ? "rgba(61,107,71,0.5)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
+                  background: i === step ? T.green : i < step ? "rgba(77,105,64,0.5)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
                 }}
               />
             ))}
@@ -2784,10 +2784,10 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             className="w-full flex items-center justify-center gap-2 text-base font-semibold rounded-2xl transition-all duration-200"
             style={{
               padding: "14px 24px",
-              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
               color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
               cursor: canAdvance ? "pointer" : "not-allowed",
-              boxShadow: canAdvance ? `0 4px 18px rgba(61,107,71,0.35)` : "none",
+              boxShadow: canAdvance ? `0 4px 18px rgba(77,105,64,0.35)` : "none",
             }}
           >
             {isShareStep ? (
@@ -2832,7 +2832,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
                 style={{
                   width: i === step ? 20 : 6,
                   height: 6,
-                  background: i === step ? T.green : i < step ? "rgba(61,107,71,0.45)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
+                  background: i === step ? T.green : i < step ? "rgba(77,105,64,0.45)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
                 }}
               />
             ))}
@@ -2845,13 +2845,13 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             className="flex items-center gap-2 text-sm font-semibold rounded-xl transition-all duration-200"
             style={{
               padding: "10px 22px",
-              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
               color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
               cursor: canAdvance ? "pointer" : "not-allowed",
-              boxShadow: canAdvance ? `0 4px 14px rgba(61,107,71,0.30)` : "none",
+              boxShadow: canAdvance ? `0 4px 14px rgba(77,105,64,0.30)` : "none",
             }}
-            onMouseEnter={(e) => { if (!canAdvance) return; (e.currentTarget as HTMLButtonElement).style.background = T.greenDark; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(61,107,71,0.40)"; }}
-            onMouseLeave={(e) => { if (!canAdvance) return; (e.currentTarget as HTMLButtonElement).style.background = T.green; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 14px rgba(61,107,71,0.30)"; }}
+            onMouseEnter={(e) => { if (!canAdvance) return; (e.currentTarget as HTMLButtonElement).style.background = T.greenDark; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(77,105,64,0.40)"; }}
+            onMouseLeave={(e) => { if (!canAdvance) return; (e.currentTarget as HTMLButtonElement).style.background = T.green; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 14px rgba(77,105,64,0.30)"; }}
           >
             {isShareStep ? (
               <><ArrowRight className="w-4 h-4" /> Go to Tournament</>

@@ -76,7 +76,7 @@ const STATUS_CONFIG: Record<string, { icon: React.ReactNode; label: string; colo
   mastered: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, label: "Mastered", color: "text-emerald-400" },
   reviewing: { icon: <Loader2 className="w-3.5 h-3.5" />, label: "Reviewing", color: "text-amber-400" },
   learning: { icon: <Play className="w-3.5 h-3.5" />, label: "Learning", color: "text-blue-400" },
-  new: { icon: <Circle className="w-3.5 h-3.5" />, label: "New", color: "text-gray-400 dark:text-white/30" },
+  new: { icon: <Circle className="w-3.5 h-3.5" />, label: "New", color: "text-[#6B6B50] dark:text-white/30" },
 };
 
 // ── Stat Bar ──────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ function StatBar({ label, value, max = 100 }: { label: string; value: number; ma
         <span className="text-white/40">{label}</span>
         <span className="text-white/60 font-mono">{value}/{max}</span>
       </div>
-      <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/[0.06]" : "bg-gray-200"}`}>
+      <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/[0.06]" : "bg-[#E8D9B0]"}`}>
         <div className="h-full rounded-full bg-emerald-500/60 transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -107,7 +107,7 @@ function LineRow({ line, openingSlug: _openingSlug, onClick, isFavorited, onTogg
     <div className="relative group">
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${isDark ? "bg-white/[0.02] border border-white/[0.04] hover:border-emerald-500/20 hover:bg-white/[0.04]" : "bg-white border border-gray-200/70 hover:border-[#3D6B47]/30 hover:shadow-sm"}`}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${isDark ? "bg-white/[0.02] border border-white/[0.04] hover:border-emerald-500/20 hover:bg-white/[0.04]" : "bg-white border border-[#E8D9B0]/70 hover:border-[#4D6940]/30 hover:shadow-sm"}`}
     >
       {/* Progress indicator */}
       <div className={`shrink-0 ${statusCfg?.color ?? "text-white/20"}`}>
@@ -117,7 +117,7 @@ function LineRow({ line, openingSlug: _openingSlug, onClick, isFavorited, onTogg
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h4 className={`text-sm font-medium transition-colors truncate ${isDark ? "text-white/80 group-hover:text-emerald-400" : "text-gray-800 group-hover:text-[#3D6B47]"}`}>
+          <h4 className={`text-sm font-medium transition-colors truncate ${isDark ? "text-white/80 group-hover:text-emerald-400" : "text-[#1A1A1A] group-hover:text-[#4D6940]"}`}>
             {line.title}
           </h4>
           {line.mustKnow && (
@@ -133,7 +133,7 @@ function LineRow({ line, openingSlug: _openingSlug, onClick, isFavorited, onTogg
           )}
         </div>
         {line.description && (
-          <p className={`text-[11px] mt-0.5 truncate ${isDark ? "text-white/35" : "text-gray-400"}`}>{line.description}</p>
+          <p className={`text-[11px] mt-0.5 truncate ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>{line.description}</p>
         )}
       </div>
 
@@ -142,15 +142,15 @@ function LineRow({ line, openingSlug: _openingSlug, onClick, isFavorited, onTogg
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${colors.bg} ${colors.text} ${colors.border}`}>
           {line.difficulty}
         </span>
-        <span className={`text-[10px] font-mono w-8 text-right ${isDark ? "text-white/25" : "text-gray-400"}`}>
+        <span className={`text-[10px] font-mono w-8 text-right ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>
           {Math.ceil(line.moveCount / 2)}m
         </span>
         {line.progress && line.progress.accuracy > 0 && (
-          <span className={`text-[10px] font-mono w-10 text-right ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          <span className={`text-[10px] font-mono w-10 text-right ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
             {line.progress.accuracy}%
           </span>
         )}
-        <ChevronRight className={`w-4 h-4 transition-colors ${isDark ? "text-white/15 group-hover:text-emerald-400" : "text-gray-300 group-hover:text-[#3D6B47]"}`} />
+        <ChevronRight className={`w-4 h-4 transition-colors ${isDark ? "text-white/15 group-hover:text-emerald-400" : "text-[#6B6B50]/70 group-hover:text-[#4D6940]"}`} />
       </div>
     </button>
     {/* Favorite button — floats on the right edge */}
@@ -161,7 +161,7 @@ function LineRow({ line, openingSlug: _openingSlug, onClick, isFavorited, onTogg
         className={`absolute top-1/2 -translate-y-1/2 right-10 z-10 p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 ${
           isFavorited
             ? "text-rose-400 bg-rose-500/10 hover:bg-rose-500/20"
-            : isDark ? "text-white/25 hover:text-rose-400 hover:bg-rose-500/10" : "text-gray-300 hover:text-rose-400 hover:bg-rose-50"
+            : isDark ? "text-white/25 hover:text-rose-400 hover:bg-rose-500/10" : "text-[#6B6B50]/70 hover:text-rose-400 hover:bg-rose-50"
         }`}
       >
         <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
@@ -239,10 +239,10 @@ function OpeningDetailContent() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-[#FFF3D5]/70"}`}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-          <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-500"}`}>Loading opening...</span>
+          <span className={`text-sm ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Loading opening...</span>
         </div>
       </div>
     );
@@ -250,7 +250,7 @@ function OpeningDetailContent() {
 
   if (error || !opening) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-[#FFF3D5]/70"}`}>
         <div className="text-center space-y-3">
           <p className="text-sm text-red-400">{error ?? "Opening not found"}</p>
           <button onClick={() => navigate("/openings")} className="text-xs text-emerald-400 hover:underline">
@@ -267,9 +267,9 @@ function OpeningDetailContent() {
   const firstUnstudied = allLines.find((l) => !l.progress || l.progress.status === "new");
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
+    <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-[#FFF3D5]/70"}`}>
       {/* Back nav */}
-      <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-gray-200/70 bg-white/90"}`}>
+      <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-[#E8D9B0]/70 bg-white/90"}`}>
         <div className="max-w-5xl mx-auto px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
             <NavLogo />
@@ -278,13 +278,13 @@ function OpeningDetailContent() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/openings")}
-              className={`flex items-center gap-1.5 text-xs transition-colors ${isDark ? "text-white/40 hover:text-emerald-400" : "text-gray-400 hover:text-[#3D6B47]"}`}
+              className={`flex items-center gap-1.5 text-xs transition-colors ${isDark ? "text-white/40 hover:text-emerald-400" : "text-[#6B6B50] hover:text-[#4D6940]"}`}
             >
               <ArrowLeft className="w-4 h-4" />
               Library
             </button>
-            <span className={`${isDark ? "text-white/15" : "text-gray-300"}`}>/</span>
-            <span className={`text-xs font-medium truncate ${isDark ? "text-white/60" : "text-gray-700"}`}>{opening.name}</span>
+            <span className={`${isDark ? "text-white/15" : "text-[#6B6B50]/70"}`}>/</span>
+            <span className={`text-xs font-medium truncate ${isDark ? "text-white/60" : "text-[#1A1A1A]/85"}`}>{opening.name}</span>
           </div>
         </div>
       </div>
@@ -295,7 +295,7 @@ function OpeningDetailContent() {
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* Board — dominant element, fills ~55% on desktop */}
           <div className="w-full lg:w-[55%] shrink-0">
-            <div className={`rounded-2xl overflow-hidden border-2 pointer-events-none shadow-2xl ${isDark ? "border-emerald-500/20 shadow-emerald-900/40" : "border-[#3D6B47]/20 shadow-gray-300/60"}`}>
+            <div className={`rounded-2xl overflow-hidden border-2 pointer-events-none shadow-2xl ${isDark ? "border-emerald-500/20 shadow-emerald-900/40" : "border-[#4D6940]/20 shadow-gray-300/60"}`}>
               <Chessboard
                 options={{
                   position: opening.thumbnailFen,
@@ -313,16 +313,16 @@ function OpeningDetailContent() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <div className={`w-3 h-3 rounded-full ${opening.side === "white" ? "bg-white border border-white/30" : "bg-gray-800 border border-white/20"}`} />
-                <span className={`text-[11px] font-mono uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>{opening.eco}</span>
+                <span className={`text-[11px] font-mono uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{opening.eco}</span>
                 {opening.isFeatured && (
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[10px] font-semibold border border-amber-500/20">
                     <Star className="w-3 h-3 fill-current" /> Featured
                   </span>
                 )}
               </div>
-              <h1 className={`text-3xl lg:text-4xl font-bold leading-tight ${isDark ? "text-white/95" : "text-gray-900"}`}>{opening.name}</h1>
+              <h1 className={`text-3xl lg:text-4xl font-bold leading-tight ${isDark ? "text-white/95" : "text-[#1A1A1A]"}`}>{opening.name}</h1>
               {opening.shortDescription && (
-                <p className={`text-base mt-2 leading-relaxed ${isDark ? "text-white/55" : "text-gray-500"}`}>{opening.shortDescription}</p>
+                <p className={`text-base mt-2 leading-relaxed ${isDark ? "text-white/55" : "text-[#6B6B50]"}`}>{opening.shortDescription}</p>
               )}
             </div>
 
@@ -333,10 +333,10 @@ function OpeningDetailContent() {
               <StatBar label="Strategic Complexity" value={opening.strategicComplexity} />
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px]">
-                  <span className={`${isDark ? "text-white/40" : "text-gray-400"}`}>Character</span>
-                  <span className={`capitalize ${isDark ? "text-white/60" : "text-gray-700"}`}>{opening.playCharacter}</span>
+                  <span className={`${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Character</span>
+                  <span className={`capitalize ${isDark ? "text-white/60" : "text-[#1A1A1A]/85"}`}>{opening.playCharacter}</span>
                 </div>
-                <div className={`h-1 rounded-full ${isDark ? "bg-white/[0.06]" : "bg-gray-200"}`} />
+                <div className={`h-1 rounded-full ${isDark ? "bg-white/[0.06]" : "bg-[#E8D9B0]"}`} />
               </div>
             </div>
 
@@ -346,7 +346,7 @@ function OpeningDetailContent() {
                 {opening.tags.map((tag) => (
                   <span
                     key={tag.slug}
-                    className={`px-2 py-0.5 rounded-full text-[10px] ${isDark ? "text-white/40 bg-white/[0.03] border border-white/[0.05]" : "text-gray-500 bg-gray-100 border border-gray-200"}`}
+                    className={`px-2 py-0.5 rounded-full text-[10px] ${isDark ? "text-white/40 bg-white/[0.03] border border-white/[0.05]" : "text-[#6B6B50] bg-[#E8D9B0]/40 border border-[#E8D9B0]"}`}
                   >
                     {tag.name}
                   </span>
@@ -356,18 +356,18 @@ function OpeningDetailContent() {
 
             {/* Progress summary */}
             {user && allLines.length > 0 && (
-              <div className={`flex items-center gap-4 p-3 rounded-lg ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
+              <div className={`flex items-center gap-4 p-3 rounded-lg ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/70"}`}>
                 <div className="text-center">
                   <div className="text-lg font-bold text-emerald-400">{masteredCount}</div>
-                  <div className={`text-[9px] uppercase ${isDark ? "text-white/30" : "text-gray-400"}`}>Mastered</div>
+                  <div className={`text-[9px] uppercase ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Mastered</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-bold text-amber-400">{learningCount}</div>
-                  <div className={`text-[9px] uppercase ${isDark ? "text-white/30" : "text-gray-400"}`}>In Progress</div>
+                  <div className={`text-[9px] uppercase ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>In Progress</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-lg font-bold ${isDark ? "text-white/50" : "text-gray-500"}`}>{lineCount}</div>
-                  <div className={`text-[9px] uppercase ${isDark ? "text-white/30" : "text-gray-400"}`}>Total Lines</div>
+                  <div className={`text-lg font-bold ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>{lineCount}</div>
+                  <div className={`text-[9px] uppercase ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Total Lines</div>
                 </div>
                 <div className="flex-1" />
                 <div className="h-8 w-8 rounded-full border-2 border-emerald-500/30 flex items-center justify-center">
@@ -398,8 +398,8 @@ function OpeningDetailContent() {
 
         {/* Long description */}
         {opening.longDescription && (
-          <div className={`prose prose-sm max-w-none p-4 rounded-xl ${isDark ? "prose-invert bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
-            <p className={`text-sm leading-relaxed whitespace-pre-line ${isDark ? "text-white/60" : "text-gray-600"}`}>{opening.longDescription}</p>
+          <div className={`prose prose-sm max-w-none p-4 rounded-xl ${isDark ? "prose-invert bg-white/[0.02] border border-white/[0.04]" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/70"}`}>
+            <p className={`text-sm leading-relaxed whitespace-pre-line ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>{opening.longDescription}</p>
           </div>
         )}
 
@@ -407,21 +407,21 @@ function OpeningDetailContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-emerald-400" />
-            <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/70" : "text-gray-600"}`}>
+            <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/70" : "text-[#6B6B50]"}`}>
               Study Lines ({lineCount})
             </h2>
           </div>
 
           {chapters.length === 0 ? (
             <div className="text-center py-12 space-y-2">
-              <Lock className={`w-8 h-8 mx-auto ${isDark ? "text-white/15" : "text-gray-300"}`} />
-              <p className={`text-sm ${isDark ? "text-white/35" : "text-gray-400"}`}>No study lines available yet</p>
-              <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-400"}`}>Lines are being prepared for this opening</p>
+              <Lock className={`w-8 h-8 mx-auto ${isDark ? "text-white/15" : "text-[#6B6B50]/70"}`} />
+              <p className={`text-sm ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>No study lines available yet</p>
+              <p className={`text-xs ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>Lines are being prepared for this opening</p>
             </div>
           ) : (
             chapters.map((chapter) => (
               <div key={chapter.name} className="space-y-2">
-                <h3 className={`text-xs font-semibold uppercase tracking-wider px-1 ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                <h3 className={`text-xs font-semibold uppercase tracking-wider px-1 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
                   {chapter.name}
                 </h3>
                 <div className="space-y-1">

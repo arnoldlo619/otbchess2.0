@@ -113,40 +113,40 @@ function PlayerPill({
       className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all ${
         selected
           ? isDark
-            ? "border-[#3D6B47]/70 bg-[#3D6B47]/15 ring-1 ring-[#3D6B47]/30"
-            : "border-[#3D6B47]/50 bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
+            ? "border-[#4D6940]/70 bg-[#4D6940]/15 ring-1 ring-[#4D6940]/30"
+            : "border-[#4D6940]/50 bg-[#4D6940]/08 ring-1 ring-[#4D6940]/20"
           : isDark
           ? "border-white/08 bg-[oklch(0.25_0.07_145)] hover:border-white/20 disabled:opacity-40"
-          : "border-gray-200 bg-white hover:border-[#3D6B47]/30 disabled:opacity-40"
+          : "border-[#E8D9B0] bg-white hover:border-[#4D6940]/30 disabled:opacity-40"
       }`}
     >
       {/* Color dot */}
       <div className={`w-3 h-3 rounded-full flex-shrink-0 border ${
         color === "white"
-          ? "bg-white border-gray-300"
-          : "bg-gray-800 border-gray-600"
+          ? "bg-white border-[#E8D9B0]"
+          : "bg-[#1A1A1A]/80 border-[#4D6940]/40"
       }`} />
       {/* Name + board */}
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-semibold truncate ${
           selected
-            ? isDark ? "text-[#6FCF7F]" : "text-[#3D6B47]"
-            : isDark ? "text-white/90" : "text-gray-900"
+            ? isDark ? "text-[#6FCF7F]" : "text-[#4D6940]"
+            : isDark ? "text-white/90" : "text-[#1A1A1A]"
         }`}>
           {player.name}
         </p>
-        <p className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-400"}`}>
+        <p className={`text-[10px] ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
           {game.board === 1 && "♛ "}Board {game.board} · {color === "white" ? "White" : "Black"}
         </p>
       </div>
       {/* ELO */}
       {player.elo > 0 && (
-        <span className={`text-xs font-mono flex-shrink-0 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+        <span className={`text-xs font-mono flex-shrink-0 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
           {player.elo}
         </span>
       )}
       {selected && (
-        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isDark ? "bg-[#4CAF50]" : "bg-[#3D6B47]"}`} />
+        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isDark ? "bg-[#4CAF50]" : "bg-[#4D6940]"}`} />
       )}
     </button>
   );
@@ -248,7 +248,7 @@ export function PairingSwapModal({
 
   const surface = isDark
     ? "bg-[oklch(0.20_0.06_145)] border-white/10"
-    : "bg-white border-gray-200";
+    : "bg-white border-[#E8D9B0]";
 
   const playerA = selectedA ? playerMap.get(selectedA) : null;
   const playerB = selectedB ? playerMap.get(selectedB) : null;
@@ -266,20 +266,20 @@ export function PairingSwapModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${isDark ? "border-white/08" : "border-gray-100"}`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
           <div>
-            <h2 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+            <h2 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
               <ArrowLeftRight className="w-4 h-4" />
               Swap Board Assignment
             </h2>
-            <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               Round {roundNumber} · Select two players to swap
             </p>
           </div>
           <button
             onClick={handleClose}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-              isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-gray-100 text-gray-400"
+              isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
             }`}
           >
             <X className="w-4 h-4" />
@@ -287,59 +287,59 @@ export function PairingSwapModal({
         </div>
 
         {/* Selection summary strip */}
-        <div className={`flex items-center gap-2 px-5 py-3 border-b flex-shrink-0 ${isDark ? "border-white/06 bg-white/02" : "border-gray-100 bg-gray-50/60"}`}>
+        <div className={`flex items-center gap-2 px-5 py-3 border-b flex-shrink-0 ${isDark ? "border-white/06 bg-white/02" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70/60"}`}>
           {/* Slot A */}
           <div className={`flex-1 px-3 py-2 rounded-xl border text-sm ${
             selectedA
-              ? isDark ? "border-[#3D6B47]/50 bg-[#3D6B47]/10" : "border-[#3D6B47]/30 bg-[#3D6B47]/05"
-              : isDark ? "border-white/08 bg-white/03" : "border-dashed border-gray-200 bg-white"
+              ? isDark ? "border-[#4D6940]/50 bg-[#4D6940]/10" : "border-[#4D6940]/30 bg-[#4D6940]/05"
+              : isDark ? "border-white/08 bg-white/03" : "border-dashed border-[#E8D9B0] bg-white"
           }`}>
             {selectedA && playerA ? (
               <div>
-                <p className={`font-semibold text-xs truncate ${isDark ? "text-white/90" : "text-gray-900"}`}>{playerA.name}</p>
-                <p className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-400"}`}>Board {slotA?.game.board} · {slotA?.color}</p>
+                <p className={`font-semibold text-xs truncate ${isDark ? "text-white/90" : "text-[#1A1A1A]"}`}>{playerA.name}</p>
+                <p className={`text-[10px] ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>Board {slotA?.game.board} · {slotA?.color}</p>
               </div>
             ) : (
-              <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-400"}`}>Select player 1</p>
+              <p className={`text-xs ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>Select player 1</p>
             )}
           </div>
 
-          <ArrowLeftRight className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/25" : "text-gray-300"}`} />
+          <ArrowLeftRight className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`} />
 
           {/* Slot B */}
           <div className={`flex-1 px-3 py-2 rounded-xl border text-sm ${
             selectedB
-              ? isDark ? "border-[#3D6B47]/50 bg-[#3D6B47]/10" : "border-[#3D6B47]/30 bg-[#3D6B47]/05"
-              : isDark ? "border-white/08 bg-white/03" : "border-dashed border-gray-200 bg-white"
+              ? isDark ? "border-[#4D6940]/50 bg-[#4D6940]/10" : "border-[#4D6940]/30 bg-[#4D6940]/05"
+              : isDark ? "border-white/08 bg-white/03" : "border-dashed border-[#E8D9B0] bg-white"
           }`}>
             {selectedB && playerB ? (
               <div>
-                <p className={`font-semibold text-xs truncate ${isDark ? "text-white/90" : "text-gray-900"}`}>{playerB.name}</p>
-                <p className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-400"}`}>Board {slotB?.game.board} · {slotB?.color}</p>
+                <p className={`font-semibold text-xs truncate ${isDark ? "text-white/90" : "text-[#1A1A1A]"}`}>{playerB.name}</p>
+                <p className={`text-[10px] ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>Board {slotB?.game.board} · {slotB?.color}</p>
               </div>
             ) : (
-              <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-400"}`}>Select player 2</p>
+              <p className={`text-xs ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>Select player 2</p>
             )}
           </div>
         </div>
 
         {/* Search */}
-        <div className={`px-5 py-3 border-b flex-shrink-0 ${isDark ? "border-white/06" : "border-gray-100"}`}>
+        <div className={`px-5 py-3 border-b flex-shrink-0 ${isDark ? "border-white/06" : "border-[#E8D9B0]/70"}`}>
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
-            isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-gray-200"
+            isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#E8D9B0]"
           }`}>
-            <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-400"}`} />
+            <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`} />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search players…"
               className={`flex-1 bg-transparent text-sm outline-none ${
-                isDark ? "text-white placeholder:text-white/30" : "text-gray-900 placeholder:text-gray-400"
+                isDark ? "text-white placeholder:text-white/30" : "text-[#1A1A1A] placeholder:text-[#6B6B50]/60"
               }`}
             />
             {search && (
-              <button onClick={() => setSearch("")} className={isDark ? "text-white/30 hover:text-white/60" : "text-gray-400 hover:text-gray-600"}>
+              <button onClick={() => setSearch("")} className={isDark ? "text-white/30 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"}>
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -350,7 +350,7 @@ export function PairingSwapModal({
         <div className="flex-1 overflow-y-auto px-5 py-3 space-y-1.5">
           {filteredSlots.length === 0 ? (
             <div className="text-center py-8">
-              <p className={`text-sm ${isDark ? "text-white/35" : "text-gray-400"}`}>No players found</p>
+              <p className={`text-sm ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>No players found</p>
             </div>
           ) : (
             filteredSlots.map(({ playerId, game, color }) => (
@@ -370,8 +370,8 @@ export function PairingSwapModal({
 
         {/* Preview */}
         {preview && (
-          <div className={`px-5 py-3 border-t flex-shrink-0 ${isDark ? "border-white/08 bg-white/02" : "border-gray-100 bg-gray-50/40"}`}>
-            <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          <div className={`px-5 py-3 border-t flex-shrink-0 ${isDark ? "border-white/08 bg-white/02" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70/40"}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
               Preview after swap
             </p>
             {sameBoard && (
@@ -385,13 +385,13 @@ export function PairingSwapModal({
                 const w = playerMap.get(board.whiteId);
                 const b = playerMap.get(board.blackId);
                 return (
-                  <div key={board.id} className={`px-3 py-2 rounded-xl border ${isDark ? "border-white/08 bg-white/03" : "border-gray-200 bg-white"}`}>
+                  <div key={board.id} className={`px-3 py-2 rounded-xl border ${isDark ? "border-white/08 bg-white/03" : "border-[#E8D9B0] bg-white"}`}>
                     <div className="flex items-center gap-1 mb-1">
                       {board.board === 1 && <Crown className="w-3 h-3 text-amber-400" />}
-                      <span className={`font-bold ${isDark ? "text-white/50" : "text-gray-500"}`}>Board {board.board}</span>
+                      <span className={`font-bold ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>Board {board.board}</span>
                     </div>
-                    <p className={`truncate ${isDark ? "text-white/80" : "text-gray-800"}`}>⬜ {w?.name ?? "BYE"}</p>
-                    <p className={`truncate ${isDark ? "text-white/80" : "text-gray-800"}`}>⬛ {b?.name ?? "BYE"}</p>
+                    <p className={`truncate ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}>⬜ {w?.name ?? "BYE"}</p>
+                    <p className={`truncate ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}>⬛ {b?.name ?? "BYE"}</p>
                   </div>
                 );
               })}
@@ -400,11 +400,11 @@ export function PairingSwapModal({
         )}
 
         {/* Footer */}
-        <div className={`flex items-center justify-end gap-2.5 px-5 py-4 border-t flex-shrink-0 ${isDark ? "border-white/08" : "border-gray-100"}`}>
+        <div className={`flex items-center justify-end gap-2.5 px-5 py-4 border-t flex-shrink-0 ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
           <button
             onClick={handleClose}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-              isDark ? "text-white/50 hover:text-white/80 hover:bg-white/06" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              isDark ? "text-white/50 hover:text-white/80 hover:bg-white/06" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
             }`}
           >
             Cancel
@@ -414,8 +414,8 @@ export function PairingSwapModal({
             disabled={!selectedA || !selectedB}
             className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 ${
               isDark
-                ? "bg-[#3D6B47] text-white hover:bg-[#4CAF50] disabled:cursor-not-allowed"
-                : "bg-[#3D6B47] text-white hover:bg-[#2D5437] disabled:cursor-not-allowed"
+                ? "bg-[#4D6940] text-white hover:bg-[#4CAF50] disabled:cursor-not-allowed"
+                : "bg-[#4D6940] text-white hover:bg-[#2D5437] disabled:cursor-not-allowed"
             }`}
           >
             <ArrowLeftRight className="w-3.5 h-3.5" />

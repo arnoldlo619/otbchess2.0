@@ -48,9 +48,9 @@ const RANK_MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 function rankColor(rank: number, isDark: boolean): string {
   if (rank === 1) return "text-amber-400";
-  if (rank === 2) return isDark ? "text-gray-300" : "text-gray-500";
+  if (rank === 2) return isDark ? "text-[#6B6B50]/70" : "text-[#6B6B50]";
   if (rank === 3) return "text-orange-400";
-  return isDark ? "text-white/40" : "text-gray-400";
+  return isDark ? "text-white/40" : "text-[#6B6B50]";
 }
 
 // ─── Elim bracket placement ──────────────────────────────────────────────────
@@ -230,8 +230,8 @@ function buildSwissElimRows(
 
 function TbCell({ value, decimals = 1, muted = false, isDark }: { value: number; decimals?: number; muted?: boolean; isDark: boolean }) {
   const base = muted
-    ? isDark ? "text-white/35" : "text-gray-400"
-    : isDark ? "text-white/70" : "text-gray-600";
+    ? isDark ? "text-white/35" : "text-[#6B6B50]"
+    : isDark ? "text-white/70" : "text-[#6B6B50]";
   return (
     <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${base}`}>
       {value.toFixed(decimals)}
@@ -244,13 +244,13 @@ function TbCell({ value, decimals = 1, muted = false, isDark }: { value: number;
 function Skeleton({ isDark }: { isDark: boolean }) {
   const shimmer = isDark
     ? "bg-white/08"
-    : "bg-gray-200";
+    : "bg-[#E8D9B0]";
   const shimmerStrong = isDark
     ? "bg-white/12"
-    : "bg-gray-300";
+    : "bg-[#E8D9B0]";
   const cardBg = isDark ? "bg-[#111f14]" : "bg-white";
   const border = isDark ? "border-white/08" : "border-[#E8F0E8]";
-  const accent = "#3D6B47";
+  const accent = "#4D6940";
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -505,20 +505,20 @@ export default function FinalStandings() {
   const cardBg = isDark ? "bg-[#111f14]" : "bg-white";
   const border = isDark ? "border-white/08" : "border-[#E8F0E8]";
   const textMain = isDark ? "text-white" : "text-[#1a1a1a]";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
-  const accent = "#3D6B47";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const accent = "#4D6940";
   const headerBg = isDark ? "bg-[#0a1a0d]" : "bg-white";
-  const thBg = isDark ? "bg-[#0f1f12]" : "bg-[#F0F5EE]";
-  const thText = isDark ? "text-white/50" : "text-[#3D6B47]";
+  const thBg = isDark ? "bg-[#0f1f12]" : "bg-[#FFF3D5]";
+  const thText = isDark ? "text-white/50" : "text-[#4D6940]";
   const rowHover = isDark ? "hover:bg-white/04" : "hover:bg-[#F7FAF7]";
-  const rowHighlight = isDark ? "bg-[#3D6B47]/12" : "bg-[#3D6B47]/06";
+  const rowHighlight = isDark ? "bg-[#4D6940]/12" : "bg-[#4D6940]/06";
 
   // ── Error state ─────────────────────────────────────────────────────────────
   if (!loading && error) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${bg}`}>
         <p className={`text-sm ${textMuted}`}>{error}</p>
-        <Link href="/" className="text-sm font-semibold text-[#3D6B47] underline">Go home</Link>
+        <Link href="/" className="text-sm font-semibold text-[#4D6940] underline">Go home</Link>
       </div>
     );
   }
@@ -538,7 +538,7 @@ export default function FinalStandings() {
           {/* Back */}
           <Link
             href={`/tournament/${id}`}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-[#3D6B47]"}`}
+            className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-[#6B6B50] hover:text-[#4D6940]"}`}
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Tournament</span>
@@ -593,7 +593,7 @@ export default function FinalStandings() {
                   className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
                     isDark
                       ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#4CAF50]/10"
-                      : "border-[#3D6B47]/20 text-[#3D6B47] bg-[#3D6B47]/08"
+                      : "border-[#4D6940]/20 text-[#4D6940] bg-[#4D6940]/08"
                   }`}
                 >
                   Complete
@@ -634,11 +634,11 @@ export default function FinalStandings() {
                       <p className={`text-xs font-bold text-center leading-tight truncate w-full px-1 ${textMain}`}>
                         {top3[1].player.name || top3[1].player.username}
                       </p>
-                      <p className={`text-xs font-semibold ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                      <p className={`text-xs font-semibold ${isDark ? "text-[#6B6B50]/70" : "text-[#6B6B50]"}`}>
                         {isSwissElim ? "Finalist" : `${top3[1].points} pts`}
                       </p>
                       <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-20 ${
-                        isDark ? "bg-gray-600/40" : "bg-gray-200"
+                        isDark ? "bg-gray-600/40" : "bg-[#E8D9B0]"
                       }`}>
                         <span className="text-xl leading-none">🥈</span>
                         <span className={`text-xs font-black mt-1 ${textMain}`}>#2</span>
@@ -702,14 +702,14 @@ export default function FinalStandings() {
                     /* Placeholder when only 2 players are in the tournament */
                     <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px] opacity-30">
                       <div className={`w-10 h-10 rounded-full border-2 border-dashed ${
-                        isDark ? "border-white/20" : "border-gray-300"
+                        isDark ? "border-white/20" : "border-[#E8D9B0]"
                       } flex items-center justify-center`}>
                         <span className="text-lg">🥉</span>
                       </div>
                       <p className={`text-xs font-semibold text-center ${textMuted}`}>3rd Place</p>
                       <p className={`text-[10px] ${textMuted}`}>TBD</p>
                       <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-16 ${
-                        isDark ? "bg-white/05" : "bg-gray-100"
+                        isDark ? "bg-white/05" : "bg-[#E8D9B0]/40"
                       }`}>
                         <span className={`text-xs font-black ${textMuted}`}>#3</span>
                       </div>
@@ -770,13 +770,13 @@ export default function FinalStandings() {
                         <Fragment key={row.player.id}>
                           {showBracketDivider && (
                             <tr>
-                              <td colSpan={10} className={`px-4 py-2 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
+                              <td colSpan={10} className={`px-4 py-2 ${isDark ? "bg-white/04" : "bg-[#FFF3D5]/70"}`}>
                                 <div className="flex items-center gap-3">
-                                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
                                   <span className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
                                     Eliminated in Swiss Phase
                                   </span>
-                                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
                                 </div>
                               </td>
                             </tr>
@@ -840,7 +840,7 @@ export default function FinalStandings() {
                             <TbCell value={row.sonnebornBerger} isDark={isDark} />
 
                             {/* W */}
-                            <td className={`text-right tabular-nums text-xs font-bold px-2 py-3 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                            <td className={`text-right tabular-nums text-xs font-bold px-2 py-3 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
                               {row.wins}
                             </td>
                             {/* D */}
@@ -883,7 +883,7 @@ export default function FinalStandings() {
                 className={`flex items-center justify-center gap-2 flex-1 py-3.5 rounded-xl text-sm font-semibold border transition-colors ${
                   isDark
                     ? "border-white/12 text-white/70 hover:bg-white/06"
-                    : "border-[#E8F0E8] text-gray-600 hover:bg-[#F0F5EE]"
+                    : "border-[#E8F0E8] text-[#6B6B50] hover:bg-[#FFF3D5]"
                 }`}
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -895,7 +895,7 @@ export default function FinalStandings() {
                 className={`flex items-center justify-center gap-2 flex-1 py-3.5 rounded-xl text-sm font-semibold border transition-colors ${
                   isDark
                     ? "border-white/12 text-white/70 hover:bg-white/06"
-                    : "border-[#E8F0E8] text-gray-600 hover:bg-[#F0F5EE]"
+                    : "border-[#E8F0E8] text-[#6B6B50] hover:bg-[#FFF3D5]"
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -907,7 +907,7 @@ export default function FinalStandings() {
                 className={`flex items-center justify-center gap-2 flex-1 py-3.5 rounded-xl text-sm font-semibold border transition-all ${
                   isDark
                     ? "border-white/12 text-white/70 hover:bg-white/06 hover:border-white/20"
-                    : "border-[#E8F0E8] text-gray-600 hover:bg-[#F0F5EE]"
+                    : "border-[#E8F0E8] text-[#6B6B50] hover:bg-[#FFF3D5]"
                 }`}
               >
                 <div className="w-4 h-4 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center">

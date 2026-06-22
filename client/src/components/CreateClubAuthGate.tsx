@@ -30,9 +30,9 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-white";
   const card = isDark ? "bg-[#142018]" : "bg-[#f5f8f5]";
   const border = isDark ? "border-white/10" : "border-black/8";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/55" : "text-gray-500";
-  const accent = isDark ? "oklch(0.65 0.14 145)" : "#3D6B47";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/55" : "text-[#6B6B50]";
+  const accent = isDark ? "oklch(0.65 0.14 145)" : "#4D6940";
 
   const perks = [
     { icon: Trophy, label: "Host OTB tournaments" },
@@ -88,7 +88,7 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
             >
               OTB!!
             </div>
-            <p className={`text-xs mt-0.5 font-medium ${isDark ? "text-white/60" : "text-[#3D6B47]/70"}`}>
+            <p className={`text-xs mt-0.5 font-medium ${isDark ? "text-white/60" : "text-[#4D6940]/70"}`}>
               Start your chess club
             </p>
           </div>
@@ -97,7 +97,7 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
         {/* Close */}
         <button
           onClick={onClose}
-          className={`absolute top-3 right-3 p-1.5 rounded-lg transition-colors ${isDark ? "text-white/40 hover:text-white/80 hover:bg-white/10" : "text-gray-400 hover:text-gray-700 hover:bg-black/5"}`}
+          className={`absolute top-3 right-3 p-1.5 rounded-lg transition-colors ${isDark ? "text-white/40 hover:text-white/80 hover:bg-white/10" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-black/5"}`}
         >
           <X className="w-4 h-4" />
         </button>
@@ -138,7 +138,7 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
 
             <button
               onClick={() => { setAuthTab("signin"); setShowAuth(true); }}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 active:scale-[0.98] ${border} ${isDark ? "text-white/80 bg-white/5 hover:bg-white/8" : "text-gray-700 bg-gray-50 hover:bg-gray-100"}`}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold border transition-all hover:opacity-80 active:scale-[0.98] ${border} ${isDark ? "text-white/80 bg-white/5 hover:bg-white/8" : "text-[#1A1A1A]/85 bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"}`}
             >
               <span>Sign in to existing account</span>
               <ChevronRight className="w-4 h-4" />
@@ -146,7 +146,7 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
 
             <button
               onClick={onPreview}
-              className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-colors ${isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"}`}
+              className={`w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-colors ${isDark ? "text-white/40 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"}`}
             >
               <Eye className="w-3.5 h-3.5" />
               Preview wizard without signing in

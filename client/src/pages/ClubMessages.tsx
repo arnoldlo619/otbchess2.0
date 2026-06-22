@@ -83,7 +83,7 @@ function timeAgo(iso: string) {
 // ── Avatar ────────────────────────────────────────────────────────────────────
 function Avatar({ user, size = 40 }: { user: OtherUser | null; size?: number }) {
   if (!user) return <div className="rounded-full bg-white/10" style={{ width: size, height: size }} />;
-  const cls = `rounded-full object-cover flex-shrink-0 flex items-center justify-center font-bold text-white bg-[#2d6a4f]`;
+  const cls = `rounded-full object-cover flex-shrink-0 flex items-center justify-center font-bold text-white bg-[#4D6940]`;
   if (user.avatarUrl) {
     return <img src={user.avatarUrl} alt={user.displayName} className={`rounded-full object-cover flex-shrink-0`} style={{ width: size, height: size }} />;
   }
@@ -169,7 +169,7 @@ function ChessGameCard({
               allowDragging: isMyTurn && game.status === "active",
               onPieceDrop: onDrop,
               boardStyle: { borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.4)" },
-              darkSquareStyle: { backgroundColor: "#2d6a4f" },
+              darkSquareStyle: { backgroundColor: "#4D6940" },
               lightSquareStyle: { backgroundColor: "#d4edda" },
             }}
           />
@@ -184,7 +184,7 @@ function ChessGameCard({
         <div className="flex gap-2 p-3">
           <button
             onClick={() => onAccept(game.id)}
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-[#2d6a4f] hover:bg-[#245a41] text-white text-xs font-semibold py-2 transition"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-[#4D6940] hover:bg-[#245a41] text-white text-xs font-semibold py-2 transition"
           >
             <Check className="w-3.5 h-3.5" /> Accept
           </button>
@@ -422,7 +422,7 @@ export default function ClubMessages() {
                     onClick={() => startConversation(m.userId)}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 transition text-left"
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-[#4D6940] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                       {initials(m.displayName)}
                     </div>
                     <span className="text-sm text-white truncate">{m.displayName}</span>
@@ -506,7 +506,7 @@ export default function ClubMessages() {
                 </div>
                 <button
                   onClick={sendChessInvite}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2d6a4f]/30 hover:bg-[#2d6a4f]/50 text-[#4ade80] text-xs font-semibold border border-[#4ade80]/20 transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4D6940]/30 hover:bg-[#4D6940]/50 text-[#4ade80] text-xs font-semibold border border-[#4ade80]/20 transition"
                 >
                   <Swords className="w-3.5 h-3.5" />
                   Challenge to Chess
@@ -552,7 +552,7 @@ export default function ClubMessages() {
                         <div
                           className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm ${
                             isMe
-                              ? "bg-[#2d6a4f] text-white rounded-br-sm"
+                              ? "bg-[#4D6940] text-white rounded-br-sm"
                               : "bg-white/10 text-white/90 rounded-bl-sm"
                           }`}
                         >
@@ -582,7 +582,7 @@ export default function ClubMessages() {
                   <button
                     onClick={sendMessage}
                     disabled={!messageInput.trim() || sending}
-                    className="w-10 h-10 rounded-2xl bg-[#2d6a4f] hover:bg-[#245a41] flex items-center justify-center transition disabled:opacity-40"
+                    className="w-10 h-10 rounded-2xl bg-[#4D6940] hover:bg-[#245a41] flex items-center justify-center transition disabled:opacity-40"
                   >
                     {sending ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Send className="w-4 h-4 text-white" />}
                   </button>

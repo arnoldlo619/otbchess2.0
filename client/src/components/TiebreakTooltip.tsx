@@ -174,10 +174,10 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
           open
             ? isDark
               ? "bg-white/20 text-white"
-              : "bg-[#3D6B47]/20 text-[#3D6B47]"
+              : "bg-[#4D6940]/20 text-[#4D6940]"
             : isDark
             ? "bg-white/10 text-white/40 hover:bg-white/20 hover:text-white/70"
-            : "bg-gray-200/80 text-gray-400 hover:bg-[#3D6B47]/15 hover:text-[#3D6B47]"
+            : "bg-[#E8D9B0]/80 text-[#6B6B50] hover:bg-[#4D6940]/15 hover:text-[#4D6940]"
         } ${className}`}
         style={{
           width: "14px",
@@ -202,7 +202,7 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
           className={`absolute z-50 w-64 rounded-xl shadow-xl border transition-all duration-150 ${
             isDark
               ? "bg-[oklch(0.22_0.06_145)] border-white/12 text-white"
-              : "bg-white border-[#E8F0E8] text-gray-800"
+              : "bg-white border-[#E8F0E8] text-[#1A1A1A]"
           }`}
           style={{
             left: "50%",
@@ -248,12 +248,12 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
               >
                 {def.abbr}
               </span>
-              <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+              <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
                 {def.label}
               </span>
               <span
                 className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                  isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
+                  isDark ? "bg-white/08 text-white/40" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                 }`}
               >
                 {def.order}
@@ -261,14 +261,14 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
             </div>
 
             {/* Description */}
-            <p className={`text-xs leading-relaxed mb-2.5 ${isDark ? "text-white/70" : "text-gray-600"}`}>
+            <p className={`text-xs leading-relaxed mb-2.5 ${isDark ? "text-white/70" : "text-[#6B6B50]"}`}>
               {def.description}
             </p>
 
             {/* Example */}
             <div
               className={`text-xs px-2.5 py-2 rounded-lg font-mono ${
-                isDark ? "bg-white/06 text-white/50" : "bg-gray-50 text-gray-500"
+                isDark ? "bg-white/06 text-white/50" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
               }`}
             >
               {def.example}

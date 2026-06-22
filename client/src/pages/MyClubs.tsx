@@ -116,9 +116,9 @@ function ClubCard({
   const [, navigate] = useLocation();
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
-  const cardBorder = isDark ? "border-white/8" : "border-gray-100";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/70" : "text-gray-600";
+  const cardBorder = isDark ? "border-white/8" : "border-[#E8D9B0]/70";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/70" : "text-[#6B6B50]";
   // Showcase clubs seeded as seed-club-7 through seed-club-11
   const isTrending = /^seed-club-(7|8|9|10|11)$/.test(club.id);
 
@@ -203,7 +203,7 @@ function ClubCard({
             </div>
             <span
               className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold mt-0.5 ${
-                isDark ? "bg-white/8 text-white/50" : "bg-gray-100 text-gray-500"
+                isDark ? "bg-white/8 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
               }`}
             >
               {CATEGORY_ICONS[club.category]}
@@ -216,7 +216,7 @@ function ClubCard({
           </p>
 
           {/* Stats */}
-          <div className={`flex items-center gap-5 mt-4 pt-3.5 border-t ${isDark ? "border-white/6" : "border-gray-100"}`}>
+          <div className={`flex items-center gap-5 mt-4 pt-3.5 border-t ${isDark ? "border-white/6" : "border-[#E8D9B0]/70"}`}>
             <span className={`flex items-center gap-1.5 text-xs font-semibold ${textMuted}`}>
               <Users className="w-3.5 h-3.5" />
               {club.memberCount.toLocaleString()}
@@ -245,7 +245,7 @@ function ClubCard({
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
             isDark
               ? "bg-white/6 text-white/60 hover:bg-white/10 hover:text-white/80"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700"
+              : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0] hover:text-[#1A1A1A]"
           }`}
         >
           <Crown className="w-3.5 h-3.5" />
@@ -256,7 +256,7 @@ function ClubCard({
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
             isDark
               ? "bg-white/6 text-white/60 hover:bg-white/10 hover:text-white/80"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700"
+              : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0] hover:text-[#1A1A1A]"
           }`}
         >
           <PlusCircle className="w-3.5 h-3.5" />
@@ -283,9 +283,9 @@ function FollowedClubCard({
 }) {
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
-  const cardBorder = isDark ? "border-white/8" : "border-gray-100";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/70" : "text-gray-600";
+  const cardBorder = isDark ? "border-white/8" : "border-[#E8D9B0]/70";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/70" : "text-[#6B6B50]";
 
   return (
     <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
@@ -333,7 +333,7 @@ function FollowedClubCard({
         <p className={`text-xs mt-1 line-clamp-2 leading-relaxed ${textMuted}`}>{club.tagline}</p>
 
         {/* Stats row */}
-        <div className={`flex items-center gap-4 mt-3 pt-3 border-t ${isDark ? "border-white/6" : "border-gray-100"}`}>
+        <div className={`flex items-center gap-4 mt-3 pt-3 border-t ${isDark ? "border-white/6" : "border-[#E8D9B0]/70"}`}>
           <span className={`flex items-center gap-1 text-xs font-semibold ${textMuted}`}>
             <Users className="w-3.5 h-3.5" />
             {club.memberCount.toLocaleString()}
@@ -348,7 +348,7 @@ function FollowedClubCard({
         <div className="flex gap-2 mt-3">
           <button
             onClick={onJoin}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors active:scale-95"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-[#4D6940] text-white hover:bg-[#3a5230] transition-colors active:scale-95"
           >
             <UserPlus className="w-3.5 h-3.5" />
             Join
@@ -358,7 +358,7 @@ function FollowedClubCard({
             className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors active:scale-95 ${
               isDark
                 ? "border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 bg-white/4"
-                : "border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 bg-white"
+                : "border-[#E8D9B0] text-[#6B6B50] hover:text-red-500 hover:border-red-200 bg-white"
             }`}
           >
             <BellOff className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ function getDateGroup(iso: string): string {
 }
 
 const RSVP_OPTIONS: Array<{ status: RSVPStatus; label: string; icon: React.ReactNode; activeClass: string }> = [
-  { status: "going", label: "Going", icon: <CheckCircle2 className="w-3.5 h-3.5" />, activeClass: "bg-[#3D6B47] text-white" },
+  { status: "going", label: "Going", icon: <CheckCircle2 className="w-3.5 h-3.5" />, activeClass: "bg-[#4D6940] text-white" },
   { status: "maybe", label: "Maybe", icon: <MinusCircle className="w-3.5 h-3.5" />, activeClass: "bg-amber-500/20 text-amber-400" },
   { status: "not_going", label: "Can't Go", icon: <Circle className="w-3.5 h-3.5" />, activeClass: "bg-red-500/15 text-red-400" },
 ];
@@ -444,7 +444,7 @@ function UpcomingEventsTab({
         <section key={group}>
           <div className="flex items-center gap-3 mb-4">
             <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>{group}</h2>
-            <div className={`flex-1 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+            <div className={`flex-1 h-px ${isDark ? "bg-white/8" : "bg-[#E8D9B0]/40"}`} />
           </div>
           <div className="space-y-3">
             {groups[group].map((ev) => (
@@ -598,8 +598,8 @@ function EventCard({
               <span
                 className={`flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
                   event.isJoined
-                    ? isDark ? "bg-[#4CAF50]/12 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                    : isDark ? "bg-white/6 text-white/50" : "bg-gray-100 text-gray-500"
+                    ? isDark ? "bg-[#4CAF50]/12 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                    : isDark ? "bg-white/6 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                 }`}
               >
                 {event.isJoined ? <Users className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
@@ -619,7 +619,7 @@ function EventCard({
                     ? `${opt.activeClass} border-transparent`
                     : isDark
                     ? "border-white/8 text-white/40 hover:text-white hover:border-white/20 bg-white/3"
-                    : "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300 bg-white"
+                    : "border-[#E8D9B0] text-[#6B6B50] hover:text-[#1A1A1A] hover:border-[#E8D9B0] bg-white"
                 }`}
               >
                 {opt.icon}
@@ -792,13 +792,13 @@ export default function MyClubs() {
   const _myClubIds = new Set(myClubs.map((c) => c.id));
 
   // ── Colour palette ──────────────────────────────────────────────────────────
-  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]";
+  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#FFF3D5]";
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
-  const cardBorder = isDark ? "border-white/8" : "border-gray-100";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/70" : "text-gray-600";
-  const inputBg = isDark ? "bg-white/6 border-white/10 text-white placeholder:text-white/30" : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400";
-  const divider = isDark ? "border-white/8" : "border-gray-100";
+  const cardBorder = isDark ? "border-white/8" : "border-[#E8D9B0]/70";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/70" : "text-[#6B6B50]";
+  const inputBg = isDark ? "bg-white/6 border-white/10 text-white placeholder:text-white/30" : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60";
+  const divider = isDark ? "border-white/8" : "border-[#E8D9B0]/70";
 
   return (
     <div className={`min-h-screen ${bg}`}>
@@ -810,7 +810,7 @@ export default function MyClubs() {
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#4D6940] text-white hover:bg-[#3a5230] transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Create Club</span>
@@ -843,8 +843,8 @@ export default function MyClubs() {
                 onClick={() => setActiveTab("clubs")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                   activeTab === "clubs"
-                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-gray-900 shadow-sm"
-                    : isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-900"
+                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-[#1A1A1A] shadow-sm"
+                    : isDark ? "text-white/50 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -852,8 +852,8 @@ export default function MyClubs() {
                 {myClubs.length > 0 && (
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                     activeTab === "clubs"
-                      ? "bg-[#3D6B47]/20 text-[#4CAF50]"
-                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-gray-500"
+                      ? "bg-[#4D6940]/20 text-[#4CAF50]"
+                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-[#6B6B50]"
                   }`}>{myClubs.length}</span>
                 )}
               </button>
@@ -861,8 +861,8 @@ export default function MyClubs() {
                 onClick={() => setActiveTab("events")}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                   activeTab === "events"
-                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-gray-900 shadow-sm"
-                    : isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-900"
+                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-[#1A1A1A] shadow-sm"
+                    : isDark ? "text-white/50 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 <CalendarDays className="w-4 h-4" />
@@ -870,8 +870,8 @@ export default function MyClubs() {
                 {upcomingEvents.length > 0 && (
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                     activeTab === "events"
-                      ? "bg-[#3D6B47]/20 text-[#4CAF50]"
-                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-gray-500"
+                      ? "bg-[#4D6940]/20 text-[#4CAF50]"
+                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-[#6B6B50]"
                   }`}>{upcomingEvents.length}</span>
                 )}
               </button>
@@ -904,7 +904,7 @@ export default function MyClubs() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Bell className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                <Bell className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
                 <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>
                   Following
                 </h2>
@@ -981,7 +981,7 @@ export default function MyClubs() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
               className={`text-xs font-medium px-3 py-1.5 rounded-xl border outline-none transition-colors cursor-pointer ${
-                isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-gray-50 border-gray-200 text-gray-600"
+                isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50]"
               }`}
             >
               <option value="members">Most Members</option>
@@ -1008,7 +1008,7 @@ export default function MyClubs() {
               <button
                 onClick={() => setSearch("")}
                 className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                  isDark ? "text-white/40 hover:text-white/80 bg-white/10" : "text-gray-400 hover:text-gray-700 bg-gray-100"
+                  isDark ? "text-white/40 hover:text-white/80 bg-white/10" : "text-[#6B6B50] hover:text-[#1A1A1A] bg-[#E8D9B0]/40"
                 }`}
                 aria-label="Clear search"
               >
@@ -1025,8 +1025,8 @@ export default function MyClubs() {
                 onClick={() => setCategoryFilter(cat)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   categoryFilter === cat
-                    ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
-                    : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-gray-100 text-gray-500 hover:text-gray-800 border border-transparent"
+                    ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20"
+                    : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:text-[#1A1A1A] border border-transparent"
                 }`}
               >
                 {cat !== "all" && CATEGORY_ICONS[cat]}
@@ -1053,14 +1053,14 @@ export default function MyClubs() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className={`rounded-3xl border ${cardBorder} ${card} p-5 animate-pulse`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-2xl flex-shrink-0 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    <div className={`w-12 h-12 rounded-2xl flex-shrink-0 ${isDark ? "bg-white/8" : "bg-[#E8D9B0]/40"}`} />
                     <div className="flex-1">
-                      <div className={`h-4 w-3/4 rounded-full mb-2 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
-                      <div className={`h-3 w-1/2 rounded-full ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
+                      <div className={`h-4 w-3/4 rounded-full mb-2 ${isDark ? "bg-white/8" : "bg-[#E8D9B0]/40"}`} />
+                      <div className={`h-3 w-1/2 rounded-full ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`} />
                     </div>
                   </div>
-                  <div className={`h-3 w-full rounded-full mb-1.5 ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
-                  <div className={`h-3 w-2/3 rounded-full ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
+                  <div className={`h-3 w-full rounded-full mb-1.5 ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`} />
+                  <div className={`h-3 w-2/3 rounded-full ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`} />
                 </div>
               ))}
             </div>
@@ -1103,12 +1103,12 @@ export default function MyClubs() {
             onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
           >
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-colors ${
-              isDark ? "bg-white/5 group-hover:bg-[#4CAF50]/10" : "bg-gray-50 group-hover:bg-[#3D6B47]/8"
+              isDark ? "bg-white/5 group-hover:bg-[#4CAF50]/10" : "bg-[#FFF3D5]/70 group-hover:bg-[#4D6940]/8"
             }`}>
-              <Plus className={`w-7 h-7 transition-colors ${isDark ? "text-white/30 group-hover:text-[#4CAF50]" : "text-gray-300 group-hover:text-[#3D6B47]"}`} />
+              <Plus className={`w-7 h-7 transition-colors ${isDark ? "text-white/30 group-hover:text-[#4CAF50]" : "text-[#6B6B50]/70 group-hover:text-[#4D6940]"}`} />
             </div>
             <h3
-              className={`text-base font-bold mb-1 transition-colors ${isDark ? "text-white/60 group-hover:text-white" : "text-gray-400 group-hover:text-gray-900"}`}
+              className={`text-base font-bold mb-1 transition-colors ${isDark ? "text-white/60 group-hover:text-white" : "text-[#6B6B50] group-hover:text-[#1A1A1A]"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               Start a New Club

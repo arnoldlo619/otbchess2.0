@@ -110,7 +110,7 @@ export function LeagueDropdown() {
                     onClick={(e) => { e.preventDefault(); window.location.href = `/league/${lg.id}`; }}
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors group"
                   >
-                    <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-[#3D6B47]/30 text-[#4CAF50]">
+                    <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-[#4D6940]/30 text-[#4CAF50]">
                       <Swords className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">

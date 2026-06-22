@@ -82,12 +82,12 @@ export function ActiveTournamentBanner() {
         className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl shadow-2xl border transition-all active:scale-[0.98] ${
           isDark
             ? "bg-[oklch(0.20_0.07_145)]/96 border-[#4CAF50]/25 shadow-black/40"
-            : "bg-white/97 border-[#3D6B47]/18 shadow-[#3D6B47]/12"
+            : "bg-white/97 border-[#4D6940]/18 shadow-[#4D6940]/12"
         } backdrop-blur-xl`}
       >
         {/* Role icon */}
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
         }`}>
           {activeTournament.role === "director"
             ? <Shield className="w-5 h-5" />
@@ -109,21 +109,21 @@ export function ActiveTournamentBanner() {
               {st.label}
             </span>
             <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-              isDark ? "text-white/35" : "text-gray-400"
+              isDark ? "text-white/35" : "text-[#6B6B50]"
             }`}>
               {activeTournament.role === "director" ? "Director" : "Player"}
             </span>
           </div>
           <p
             className={`text-sm font-bold truncate leading-tight ${
-              isDark ? "text-white" : "text-gray-900"
+              isDark ? "text-white" : "text-[#1A1A1A]"
             }`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             {activeTournament.name}
           </p>
           <p className={`text-xs mt-0.5 ${
-            isDark ? "text-white/45" : "text-gray-500"
+            isDark ? "text-white/45" : "text-[#6B6B50]"
           }`}>
             {activeTournament.role === "director"
               ? "Tap to manage your tournament"
@@ -132,7 +132,7 @@ export function ActiveTournamentBanner() {
         </div>
 
         <ChevronRight className={`w-5 h-5 flex-shrink-0 ${
-          isDark ? "text-white/30" : "text-gray-300"
+          isDark ? "text-white/30" : "text-[#6B6B50]/70"
         }`} />
       </Link>
 
@@ -143,7 +143,7 @@ export function ActiveTournamentBanner() {
           className={`absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full flex items-center justify-center border shadow-md transition-all hover:scale-110 active:scale-95 ${
             isDark
               ? "bg-[oklch(0.22_0.06_145)] border-white/12 text-white/45 hover:text-white/80"
-              : "bg-white border-gray-200 text-gray-400 hover:text-gray-600"
+              : "bg-white border-[#E8D9B0] text-[#6B6B50] hover:text-[#6B6B50]"
           }`}
           aria-label="Dismiss tournament banner"
         >

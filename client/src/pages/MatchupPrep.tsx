@@ -216,20 +216,20 @@ type Tokens = ReturnType<typeof useDesignTokens>;
 function useDesignTokens(isDark: boolean) {
   return {
     page:          isDark ? "bg-[#0a1409]"                                           : "bg-[#f8faf8]",
-    card:          isDark ? "bg-[#0f1c11] border border-[#243028]/70 rounded-2xl"   : "bg-white border border-gray-200/80 rounded-2xl shadow-sm",
-    cardSubtle:    isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60 rounded-xl" : "bg-gray-50/70 border border-gray-200/60 rounded-xl",
-    header:        isDark ? "bg-[#0a1409]/95 border-b border-[#1e2e22]/80"          : "bg-white/95 border-b border-gray-200/70",
-    input:         isDark ? "bg-[#0a1409] border-[#243028]/70 text-white placeholder:text-white/50 focus:border-[#4a8a5a]/60" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
-    textPrimary:   isDark ? "text-white"       : "text-gray-900",
-    textSecondary: isDark ? "text-white/55"    : "text-gray-500",
-    textTertiary:  isDark ? "text-white/30"    : "text-gray-400",
+    card:          isDark ? "bg-[#0f1c11] border border-[#243028]/70 rounded-2xl"   : "bg-white border border-[#E8D9B0]/80 rounded-2xl shadow-sm",
+    cardSubtle:    isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60 rounded-xl" : "bg-[#FFF3D5]/70/70 border border-[#E8D9B0]/60 rounded-xl",
+    header:        isDark ? "bg-[#0a1409]/95 border-b border-[#1e2e22]/80"          : "bg-white/95 border-b border-[#E8D9B0]/70",
+    input:         isDark ? "bg-[#0a1409] border-[#243028]/70 text-white placeholder:text-white/50 focus:border-[#4a8a5a]/60" : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]",
+    textPrimary:   isDark ? "text-white"       : "text-[#1A1A1A]",
+    textSecondary: isDark ? "text-white/55"    : "text-[#6B6B50]",
+    textTertiary:  isDark ? "text-white/30"    : "text-[#6B6B50]",
     accent:        "text-[#5B9A6A]",
-    accentBg:      isDark ? "bg-[#5B9A6A]/10 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]",
-    divider:       isDark ? "border-[#1e2e22]/70" : "border-gray-200/70",
-    tabActive:     isDark ? "bg-[#162018] text-white border-[#2e4a34]/50"           : "bg-white text-gray-900 border-gray-300 shadow-sm",
-    tabInactive:   isDark ? "text-white/35 hover:text-white/60 hover:bg-white/03"   : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/50",
-    rowHover:      isDark ? "hover:bg-[#162018]/50"                                 : "hover:bg-gray-50/80",
-    monoBlock:     isDark ? "bg-[#060e07] text-[#5B9A6A] border border-[#1e2e22]/60" : "bg-[#3D6B47]/04 text-[#3D6B47] border border-[#3D6B47]/10",
+    accentBg:      isDark ? "bg-[#5B9A6A]/10 text-[#5B9A6A]" : "bg-[#4D6940]/08 text-[#4D6940]",
+    divider:       isDark ? "border-[#1e2e22]/70" : "border-[#E8D9B0]/70",
+    tabActive:     isDark ? "bg-[#162018] text-white border-[#2e4a34]/50"           : "bg-white text-[#1A1A1A] border-[#E8D9B0] shadow-sm",
+    tabInactive:   isDark ? "text-white/35 hover:text-white/60 hover:bg-white/03"   : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50/50",
+    rowHover:      isDark ? "hover:bg-[#162018]/50"                                 : "hover:bg-[#FFF3D5]/80",
+    monoBlock:     isDark ? "bg-[#060e07] text-[#5B9A6A] border border-[#1e2e22]/60" : "bg-[#4D6940]/04 text-[#4D6940] border border-[#4D6940]/10",
   };
 }
 
@@ -556,9 +556,9 @@ export default function MatchupPrep() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all min-h-[40px] shrink-0 ${
                 searchInput.trim() && !loading
                   ? isDark
-                    ? "bg-[#3D6B47] text-white hover:bg-[#4a8a5a] active:scale-95"
-                    : "bg-[#3D6B47] text-white hover:bg-[#2d5237] active:scale-95"
-                  : isDark ? "bg-white/05 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    ? "bg-[#4D6940] text-white hover:bg-[#4a8a5a] active:scale-95"
+                    : "bg-[#4D6940] text-white hover:bg-[#2d5237] active:scale-95"
+                  : isDark ? "bg-white/05 text-white/20 cursor-not-allowed" : "bg-[#E8D9B0]/40 text-[#6B6B50] cursor-not-allowed"
               }`}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
@@ -572,7 +572,7 @@ export default function MatchupPrep() {
                 onClick={() => fetchReport(report.opponent.username, true)}
                 disabled={refreshing}
                 className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                  isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                  isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50] hover:text-[#6B6B50]"
                 }`}
                 title="Refresh report"
               >
@@ -584,8 +584,8 @@ export default function MatchupPrep() {
                   disabled={saving}
                   className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
                     savedId
-                      ? isDark ? "text-[#5B9A6A] hover:bg-[#3D6B47]/10" : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
-                      : isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                      ? isDark ? "text-[#5B9A6A] hover:bg-[#4D6940]/10" : "text-[#4D6940] hover:bg-[#4D6940]/08"
+                      : isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50] hover:text-[#6B6B50]"
                   }`}
                   title={savedId ? "Saved — view saved reports" : "Save this report"}
                 >
@@ -600,7 +600,7 @@ export default function MatchupPrep() {
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
           {/* Time Control */}
           <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#E8D9B0]/40/80 border border-[#E8D9B0]/60"}`}>
             {(["all", "rapid", "blitz"] as const).map((tc) => (
               <button
                 key={tc}
@@ -613,8 +613,8 @@ export default function MatchupPrep() {
                 }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
                   tcFilter === tc
-                    ? "bg-[#3D6B47] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-700"
+                    ? "bg-[#4D6940] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : "Blitz"}
@@ -623,11 +623,11 @@ export default function MatchupPrep() {
           </div>
 
           {/* Separator */}
-          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-gray-200"}`} />
+          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#E8D9B0]"}`} />
 
           {/* Game Count */}
           <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Depth</span>
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#E8D9B0]/40/80 border border-[#E8D9B0]/60"}`}>
             {(["50", "100"] as const).map((gc) => (
               <button
                 key={gc}
@@ -639,8 +639,8 @@ export default function MatchupPrep() {
                 }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   gameCountFilter === gc
-                    ? "bg-[#3D6B47] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-700"
+                    ? "bg-[#4D6940] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 {gc} games
@@ -649,19 +649,19 @@ export default function MatchupPrep() {
           </div>
 
           {/* Separator */}
-          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-gray-200"}`} />
+          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#E8D9B0]"}`} />
 
           {/* Color Focus */}
           <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Color</span>
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#E8D9B0]/40/80 border border-[#E8D9B0]/60"}`}>
             {(["both", "white", "black"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setColorFilter(c)}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
                   colorFilter === c
-                    ? "bg-[#3D6B47] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-700"
+                    ? "bg-[#4D6940] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#1A1A1A]"
                 }`}
               >
                 {c === "both" ? "Both" : c === "white" ? "♔ White" : "♚ Black"}
@@ -712,7 +712,7 @@ export default function MatchupPrep() {
             <OpponentHero report={report} opponentProfile={opponentProfile} isDark={isDark} t={t} />
 
             {/* ── Tab Navigation ── */}
-            <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-gray-100/80 border border-gray-200/60"}`}>
+            <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-[#E8D9B0]/40/80 border border-[#E8D9B0]/60"}`}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -721,13 +721,13 @@ export default function MatchupPrep() {
                     activeTab === tab.id ? t.tabActive + " border" : t.tabInactive
                   }`}
                 >
-                  <span className={activeTab === tab.id ? (isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]") : ""}>{tab.icon}</span>
+                  <span className={activeTab === tab.id ? (isDark ? "text-[#5B9A6A]" : "text-[#4D6940]") : ""}>{tab.icon}</span>
                   <span>{tab.label}</span>
                   {tab.id === "lines" && enrichedLines.length > 0 && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                       activeTab === "lines"
-                        ? isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                        : isDark ? "bg-white/06 text-white/30" : "bg-gray-300/50 text-gray-400"
+                        ? isDark ? "bg-[#4D6940]/25 text-[#5B9A6A]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                        : isDark ? "bg-white/06 text-white/30" : "bg-[#E8D9B0]/50 text-[#6B6B50]"
                     }`}>
                       {enrichedLines.length}
                     </span>
@@ -790,7 +790,7 @@ export default function MatchupPrep() {
         {/* ── Welcome / Empty State ── */}
         {!report && !loading && !error && (
           <div className={`${t.card} py-12 px-6 sm:py-16 flex flex-col items-center gap-5 text-center`}>
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#4D6940]/06"}`}>
               <img
                 src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
                 alt="OTB!!"
@@ -837,7 +837,7 @@ function OpponentHero({
       <div className="flex items-center gap-3.5">
         {/* Avatar */}
         <div className={`relative shrink-0 w-12 h-12 rounded-xl overflow-hidden ${
-          isDark ? "bg-[#162018] border border-[#2e4a34]/40" : "bg-[#3D6B47]/06 border border-[#3D6B47]/15"
+          isDark ? "bg-[#162018] border border-[#2e4a34]/40" : "bg-[#4D6940]/06 border border-[#4D6940]/15"
         }`}>
           {opponentProfile?.avatar ? (
             <img
@@ -850,7 +850,7 @@ function OpponentHero({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className={`text-lg font-bold ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/40"}`}>
+              <span className={`text-lg font-bold ${isDark ? "text-[#5B9A6A]/60" : "text-[#4D6940]/40"}`}>
                 {opp.username.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -917,9 +917,9 @@ function OpponentHero({
 
 function RatingChip({ label, value, isDark }: { label: string; value: number; isDark: boolean }) {
   return (
-    <div className={`text-center px-2.5 py-1.5 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/70" : "bg-gray-50 border border-gray-200"}`}>
-      <div className={`text-[9px] font-semibold uppercase ${isDark ? "text-white/25" : "text-gray-400"}`}>{label}</div>
-      <div className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
+    <div className={`text-center px-2.5 py-1.5 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/70" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]"}`}>
+      <div className={`text-[9px] font-semibold uppercase ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>{label}</div>
+      <div className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{value}</div>
     </div>
   );
 }
@@ -955,7 +955,7 @@ function OpeningTreeBranch({
   const pathToHere = [...activePath.slice(0, depth), node.move];
 
   return (
-    <div className={`${depth > 0 ? "ml-4 pl-3 border-l" : ""} ${isDark ? "border-[#1e2e22]/60" : "border-gray-200/60"}`}>
+    <div className={`${depth > 0 ? "ml-4 pl-3 border-l" : ""} ${isDark ? "border-[#1e2e22]/60" : "border-[#E8D9B0]/60"}`}>
       <button
         onClick={() => {
           setExpanded(!expanded);
@@ -963,16 +963,16 @@ function OpeningTreeBranch({
         }}
         className={`flex items-center gap-2 py-1.5 w-full text-left group transition-colors rounded-lg px-2 -mx-2 ${
           isActive
-            ? isDark ? "bg-[#3D6B47]/15 border border-[#3D6B47]/30" : "bg-[#3D6B47]/08 border border-[#3D6B47]/15"
-            : isDark ? "hover:bg-white/03" : "hover:bg-gray-50"
+            ? isDark ? "bg-[#4D6940]/15 border border-[#4D6940]/30" : "bg-[#4D6940]/08 border border-[#4D6940]/15"
+            : isDark ? "hover:bg-white/03" : "hover:bg-[#FFF3D5]"
         }`}
       >
         {node.children.length > 0 && (
           <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${!expanded ? "-rotate-90" : ""} ${t.textTertiary}`} />
         )}
         {node.children.length === 0 && <span className="w-3" />}
-        <span className={`font-mono text-sm font-semibold ${isActive ? (isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]") : t.textPrimary}`}>{node.label}</span>
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${isDark ? "bg-white/06" : "bg-gray-100"} ${t.textTertiary}`}>
+        <span className={`font-mono text-sm font-semibold ${isActive ? (isDark ? "text-[#5B9A6A]" : "text-[#4D6940]") : t.textPrimary}`}>{node.label}</span>
+        <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"} ${t.textTertiary}`}>
           {node.pct}%
         </span>
         <span className={`ml-auto text-[11px] font-semibold ${wrColor}`}>
@@ -1030,23 +1030,23 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-4">
-        <GitBranch className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+        <GitBranch className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
         <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Decision Tree</h3>
         <div className="ml-auto flex gap-1">
           <button
             onClick={() => setTreeColor("white")}
             className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-colors ${
               treeColor === "white"
-                ? isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A] border border-[#3D6B47]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
-                : isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"
+                ? isDark ? "bg-[#4D6940]/20 text-[#5B9A6A] border border-[#4D6940]/30" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20"
+                : isDark ? "text-white/40 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"
             }`}
           >As White</button>
           <button
             onClick={() => setTreeColor("black")}
             className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-colors ${
               treeColor === "black"
-                ? isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A] border border-[#3D6B47]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
-                : isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"
+                ? isDark ? "bg-[#4D6940]/20 text-[#5B9A6A] border border-[#4D6940]/30" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20"
+                : isDark ? "text-white/40 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"
             }`}
           >As Black</button>
         </div>
@@ -1073,7 +1073,7 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
             </div>
             {/* Selected node info */}
             {selectedNode && (
-              <div className={`mt-2 text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"}`}>
+              <div className={`mt-2 text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"}`}>
                 <p className={`text-xs font-semibold ${t.textPrimary}`}>{selectedNode.label}</p>
                 <p className={`text-[10px] ${t.textTertiary}`}>
                   {selectedNode.count} games • {Math.round(selectedNode.winRate * 100)}% win rate
@@ -1084,7 +1084,7 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
               <button
                 onClick={handleReset}
                 className={`mt-2 w-full text-[10px] font-semibold py-1.5 rounded-lg transition-colors ${
-                  isDark ? "text-white/50 hover:text-white/70 hover:bg-white/05" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  isDark ? "text-white/50 hover:text-white/70 hover:bg-white/05" : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
                 }`}
               >
                 ↺ Reset Board
@@ -1140,14 +1140,14 @@ function ScoutReportTab({
       {/* ── Opening Repertoire (simplified: 2 as White, 2 as Black) ── */}
       <div className={`${t.card} p-4 sm:p-5`}>
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
           <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Repertoire</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
 
           {/* As White */}
           <div>
-            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               ♔ As White
             </p>
             <div className="space-y-1.5">
@@ -1156,7 +1156,7 @@ function ScoutReportTab({
                 .slice(0, 2)
                 .map((o, i) => (
                   <div key={i} className={`px-3 py-2 rounded-xl text-xs font-semibold truncate ${
-                    isDark ? "bg-[#1e2e22]/60 text-white/80" : "bg-gray-100 text-gray-800"
+                    isDark ? "bg-[#1e2e22]/60 text-white/80" : "bg-[#E8D9B0]/40 text-[#1A1A1A]"
                   }`}>
                     {o.name}
                   </div>
@@ -1169,7 +1169,7 @@ function ScoutReportTab({
 
           {/* As Black */}
           <div>
-            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               ♚ As Black
             </p>
             <div className="space-y-1.5">
@@ -1178,7 +1178,7 @@ function ScoutReportTab({
                 : opp.blackOpenings
               ).slice(0, 2).map((o, i) => (
                 <div key={i} className={`px-3 py-2 rounded-xl text-xs font-semibold truncate ${
-                  isDark ? "bg-[#1e2e22]/60 text-white/80" : "bg-gray-100 text-gray-800"
+                  isDark ? "bg-[#1e2e22]/60 text-white/80" : "bg-[#E8D9B0]/40 text-[#1A1A1A]"
                 }`}>
                   {o.name}
                 </div>
@@ -1195,7 +1195,7 @@ function ScoutReportTab({
       {/* ── Prep Recommendations (replaces "How to Beat This Player") ── */}
       {report.prepRecommendations && report.prepRecommendations.length > 0 && (
         <div className={`${t.card} p-4 sm:p-5 border-2 ${
-          isDark ? "border-[#3D6B47]/40 bg-gradient-to-br from-[#0f1c11] to-[#162018]" : "border-[#3D6B47]/20 bg-gradient-to-br from-[#f0fdf4] to-white"
+          isDark ? "border-[#4D6940]/40 bg-gradient-to-br from-[#0f1c11] to-[#162018]" : "border-[#4D6940]/20 bg-gradient-to-br from-[#f0fdf4] to-white"
         }`}>
           <div className="flex items-center gap-2 mb-4">
             <Target className={`w-5 h-5 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
@@ -1209,11 +1209,11 @@ function ScoutReportTab({
                 low: isDark ? "bg-red-500/12 text-red-400 border-red-500/20" : "bg-red-50 text-red-600 border-red-200",
               };
               const sideColors = rec.useAs === "white"
-                ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
-                : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700";
+                ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A] border-[#E8D9B0]"
+                : isDark ? "bg-[#1a1a2e] text-[#6B6B50]/70 border-[#4D6940]/40/30" : "bg-[#1A1A1A] text-white border-[#4D6940]/30";
               return (
                 <div key={i} className={`p-3 rounded-xl border ${
-                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#E8D9B0]/70"
                 }`}>
                   {/* Side + Target + Confidence badges */}
                   <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -1241,7 +1241,7 @@ function ScoutReportTab({
                   <button
                     onClick={onViewLines}
                     className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${
-                      isDark ? "text-[#5B9A6A] hover:text-emerald-400" : "text-[#3D6B47] hover:text-emerald-600"
+                      isDark ? "text-[#5B9A6A] hover:text-emerald-400" : "text-[#4D6940] hover:text-emerald-600"
                     } transition-colors`}
                   >
                     <BookOpen className="w-3 h-3" />
@@ -1257,7 +1257,7 @@ function ScoutReportTab({
       {/* ── Legacy Victory Plan fallback (if no prepRecommendations) ── */}
       {(!report.prepRecommendations || report.prepRecommendations.length === 0) && report.victoryPlan && report.victoryPlan.length > 0 && (
         <div className={`${t.card} p-4 sm:p-5 border-2 ${
-          isDark ? "border-[#3D6B47]/40 bg-gradient-to-br from-[#0f1c11] to-[#162018]" : "border-[#3D6B47]/20 bg-gradient-to-br from-[#f0fdf4] to-white"
+          isDark ? "border-[#4D6940]/40 bg-gradient-to-br from-[#0f1c11] to-[#162018]" : "border-[#4D6940]/20 bg-gradient-to-br from-[#f0fdf4] to-white"
         }`}>
           <div className="flex items-center gap-2 mb-4">
             <Zap className={`w-5 h-5 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
@@ -1273,10 +1273,10 @@ function ScoutReportTab({
               };
               return (
                 <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${
-                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#E8D9B0]/70"
                 }`}>
                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
-                    isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                    isDark ? "bg-[#4D6940]/20 text-[#5B9A6A]" : "bg-[#4D6940]/10 text-[#4D6940]"
                   }`}>{i + 1}</div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -1298,7 +1298,7 @@ function ScoutReportTab({
       {weaknesses.length > 0 && (
         <div className={`${t.card} p-4 sm:p-5`}>
           <div className="flex items-center gap-2 mb-3">
-            <Crosshair className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+            <Crosshair className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
             <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Exploitable Weaknesses</h3>
           </div>
           <div className="space-y-2">
@@ -1327,7 +1327,7 @@ function ScoutReportTab({
       {matchupSummary && (
         <div className={`${t.card} p-4 sm:p-5`}>
           <div className="flex items-center gap-2 mb-4">
-            <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+            <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
             <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Your Game Plan</h3>
           </div>
           <div className="space-y-3">
@@ -1335,11 +1335,11 @@ function ScoutReportTab({
             {/* Branch 1: If you have White */}
             {matchupSummary.whiteTarget && (
               <div className={`p-3 rounded-xl border ${
-                isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#E8D9B0]/70"
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                    isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
+                    isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A] border-[#E8D9B0]"
                   }`}>♔ If you have White</span>
                 </div>
                 <p className={`text-sm font-semibold mb-1 ${t.textPrimary}`}>{matchupSummary.whiteTarget}</p>
@@ -1355,11 +1355,11 @@ function ScoutReportTab({
             {/* Branch 2: If you have Black */}
             {matchupSummary.blackTarget && (
               <div className={`p-3 rounded-xl border ${
-                isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#E8D9B0]/70"
               }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                    isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+                    isDark ? "bg-[#1a1a2e] text-[#6B6B50]/70 border-[#4D6940]/40/30" : "bg-[#1A1A1A] text-white border-[#4D6940]/30"
                   }`}>♚ If you have Black</span>
                 </div>
                 <p className={`text-sm font-semibold mb-1 ${t.textPrimary}`}>{matchupSummary.blackTarget}</p>
@@ -1380,7 +1380,7 @@ function ScoutReportTab({
             {/* Study First */}
             {matchupSummary.studyFirst && (
               <div className={`flex items-start gap-2.5 p-3 rounded-xl ${
-                isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"
+                isDark ? "bg-[#4D6940]/10 border border-[#4D6940]/20" : "bg-[#4D6940]/05 border border-[#4D6940]/12"
               }`}>
                 <Flame className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                 <div className="min-w-0">
@@ -1400,7 +1400,7 @@ function ScoutReportTab({
       {report.behavior && (
         <div className={`${t.card} p-4 sm:p-5`}>
           <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+            <BarChart3 className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
             <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Game Behavior & Pressure Points</h3>
           </div>
           {/* Mistake Heatmap */}
@@ -1441,15 +1441,15 @@ function ScoutReportTab({
           </div>
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3 mb-3">
-            <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"}`}>
+            <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"}`}>
               <p className={`text-lg font-bold ${t.textPrimary}`}>{report.behavior.timeoutPct}%</p>
               <p className={`text-[10px] ${t.textTertiary}`}>Time Trouble</p>
             </div>
-            <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"}`}>
+            <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"}`}>
               <p className={`text-lg font-bold ${t.textPrimary}`}>{report.behavior.resignPct}%</p>
               <p className={`text-[10px] ${t.textTertiary}`}>Resign Rate</p>
             </div>
-            <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"}`}>
+            <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"}`}>
               <p className={`text-lg font-bold ${t.textPrimary}`}>{report.behavior.avgGameLength}</p>
               <p className={`text-[10px] ${t.textTertiary}`}>Avg Moves</p>
             </div>
@@ -1502,7 +1502,7 @@ function ScoutReportTab({
                         <p className={`text-sm font-semibold ${t.textPrimary}`}>{pl.name}</p>
                         <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${t.monoBlock}`}>{pl.eco}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                          isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-500"
+                          isDark ? "bg-white/06 text-white/40" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                         }`}>as {pl.color}</span>
                         {practiceCount > 0 && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
@@ -1517,7 +1517,7 @@ function ScoutReportTab({
                   </div>
                   {/* Problem move highlight */}
                   <div className={`mx-3 mb-3 p-3 rounded-lg ${
-                    isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-white border border-gray-200/70"
+                    isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-white border border-[#E8D9B0]/70"
                   }`}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`text-[10px] font-bold uppercase tracking-widest ${
@@ -1603,12 +1603,12 @@ function ScoutReportTab({
           onClick={onViewLines}
           className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] group ${
             isDark
-              ? "border-[#2e4a34]/40 hover:border-[#3D6B47]/50 hover:bg-[#162018]/50"
-              : "border-gray-200/80 hover:border-[#3D6B47]/20 hover:bg-[#3D6B47]/02"
+              ? "border-[#2e4a34]/40 hover:border-[#4D6940]/50 hover:bg-[#162018]/50"
+              : "border-[#E8D9B0]/80 hover:border-[#4D6940]/20 hover:bg-[#4D6940]/02"
           }`}
         >
           <span className={`text-sm ${t.textTertiary}`}>{enrichedLines.length} counter-lines ready</span>
-          <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`}>
+          <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`}>
             Study Lines
             <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </div>
@@ -1642,7 +1642,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
   const confidenceColors = {
     high:     isDark ? "bg-emerald-500/12 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200",
     moderate: isDark ? "bg-amber-500/12 text-amber-400 border-amber-500/20"     : "bg-amber-50 text-amber-700 border-amber-200",
-    low:      isDark ? "bg-gray-500/12 text-gray-400 border-gray-500/20"        : "bg-gray-50 text-gray-500 border-gray-200",
+    low:      isDark ? "bg-[#6B6B50]/12 text-[#6B6B50] border-[#6B6B50]/20"        : "bg-[#FFF3D5]/70 text-[#6B6B50] border-[#E8D9B0]",
   };
 
   const severityBar = (score: number) => {
@@ -1653,7 +1653,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
         ? "bg-amber-400"
         : "bg-emerald-500";
     return (
-      <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-200"}`}>
+      <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#E8D9B0]"}`}>
         <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
       </div>
     );
@@ -1663,10 +1663,10 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
     <div className={`${t.card} p-4 sm:p-5`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-1">
-        <Activity className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+        <Activity className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
         <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Engine Analysis</h3>
         <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-          isDark ? "bg-[#3D6B47]/12 text-[#5B9A6A] border-[#3D6B47]/25" : "bg-[#3D6B47]/08 text-[#3D6B47] border-[#3D6B47]/15"
+          isDark ? "bg-[#4D6940]/12 text-[#5B9A6A] border-[#4D6940]/25" : "bg-[#4D6940]/08 text-[#4D6940] border-[#4D6940]/15"
         }`}>
           Stockfish
         </span>
@@ -1679,7 +1679,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
       {/* Summary stats row */}
       {(enginePatterns.avgBlundersPerGame > 0 || enginePatterns.avgMistakesPerGame > 0) && (
         <div className={`grid grid-cols-3 gap-2 mb-4 p-3 rounded-xl ${
-          isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"
+          isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"
         }`}>
           <div className="text-center">
             <p className={`text-base font-bold ${
@@ -1708,18 +1708,18 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
       <div className="space-y-2.5">
         {enginePatterns.patterns.map((pattern, i) => (
           <div key={i} className={`rounded-xl border overflow-hidden transition-all ${
-            isDark ? "border-[#1e2e22]/70 bg-[#0a1409]" : "border-gray-200/70 bg-white"
+            isDark ? "border-[#1e2e22]/70 bg-[#0a1409]" : "border-[#E8D9B0]/70 bg-white"
           }`}>
             {/* Pattern header — always visible */}
             <button
               onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
               className={`w-full flex items-start gap-3 p-3 text-left transition-colors ${
-                isDark ? "hover:bg-white/02" : "hover:bg-gray-50/60"
+                isDark ? "hover:bg-white/02" : "hover:bg-[#FFF3D5]/60"
               }`}
             >
               {/* Pattern type icon */}
               <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                isDark ? "bg-[#162018] text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                isDark ? "bg-[#162018] text-[#5B9A6A]" : "bg-[#4D6940]/08 text-[#4D6940]"
               }`}>
                 {patternTypeIcon(pattern.patternType)}
               </div>
@@ -1753,7 +1753,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
             {/* Expanded detail */}
             {expandedIdx === i && (
               <div className={`px-3 pb-3 border-t ${
-                isDark ? "border-[#1e2e22]/60" : "border-gray-200/60"
+                isDark ? "border-[#1e2e22]/60" : "border-[#E8D9B0]/60"
               }`}>
                 {/* Description */}
                 <p className={`text-sm leading-relaxed mt-3 mb-3 ${t.textSecondary}`}>{pattern.description}</p>
@@ -1764,7 +1764,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
                     <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${t.textTertiary}`}>Evidence</p>
                     {pattern.evidence.map((ev, j) => (
                       <div key={j} className={`flex items-center gap-2 p-2 rounded-lg text-[11px] ${
-                        isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"
+                        isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"
                       }`}>
                         {ev.eco && (
                           <span className={`font-mono font-bold px-1.5 py-0.5 rounded ${t.monoBlock}`}>{ev.eco}</span>
@@ -1778,7 +1778,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`ml-auto flex items-center gap-1 font-medium ${
-                              isDark ? "text-[#5B9A6A] hover:text-emerald-400" : "text-[#3D6B47] hover:text-emerald-600"
+                              isDark ? "text-[#5B9A6A] hover:text-emerald-400" : "text-[#4D6940] hover:text-emerald-600"
                             } transition-colors`}
                           >
                             View game
@@ -1832,7 +1832,7 @@ function _EndgameBar({ profile, isDark, t }: { profile: { checkmates: number; re
         <span><span className="text-emerald-500 font-semibold">{matePct}%</span> Checkmate</span>
         <span><span className="text-red-400 font-semibold">{resignPct}%</span> Resign</span>
         <span><span className="text-amber-400 font-semibold">{timeoutPct}%</span> Timeout</span>
-        <span><span className="text-gray-400 font-semibold">{drawPct}%</span> Draw</span>
+        <span><span className="text-[#6B6B50] font-semibold">{drawPct}%</span> Draw</span>
       </div>
     </div>
   );
@@ -1875,21 +1875,21 @@ function StudyLinesTab({
         const sampleNote = lineExt.sampleSize ? `Based on ${lineExt.sampleSize} games` : undefined;
         return (
           <div key={i} className={`rounded-2xl border overflow-hidden ${
-            isDark ? "border-[#1e2e22]/60 bg-[#0a1409]" : "border-gray-200/70 bg-white"
+            isDark ? "border-[#1e2e22]/60 bg-[#0a1409]" : "border-[#E8D9B0]/70 bg-white"
           }`}>
             {/* Header card with metadata */}
             <div className="p-4 space-y-2">
               {/* Priority + metadata row */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
-                  isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"
+                  isDark ? "bg-[#4D6940]/15 text-[#5B9A6A]" : "bg-[#4D6940]/06 text-[#4D6940]"
                 }`}>{i + 1}</span>
                 {/* Side badge */}
                 {useAs && (
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
                     useAs === "white"
-                      ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
-                      : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+                      ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A] border-[#E8D9B0]"
+                      : isDark ? "bg-[#1a1a2e] text-[#6B6B50]/70 border-[#4D6940]/40/30" : "bg-[#1A1A1A] text-white border-[#4D6940]/30"
                   }`}>
                     Use as {useAs}
                   </span>
@@ -1932,10 +1932,10 @@ function StudyLinesTab({
               {/* Main Idea */}
               {mainIdea && (
                 <div className={`p-2.5 rounded-lg ${
-                  isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"
+                  isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"
                 }`}>
                   <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
-                    isDark ? "text-[#5B9A6A]/70" : "text-[#3D6B47]/60"
+                    isDark ? "text-[#5B9A6A]/70" : "text-[#4D6940]/60"
                   }`}>Main Idea</p>
                   <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{mainIdea}</p>
                 </div>
@@ -1973,10 +1973,10 @@ function StudyLinesTab({
 
             {/* Context header before board (requirement 8) */}
             <div className={`mx-4 mb-2 p-3 rounded-xl border ${
-              isDark ? "bg-[#060e07] border-[#1e2e22]/50" : "bg-[#f0fdf4]/70 border-[#3D6B47]/10"
+              isDark ? "bg-[#060e07] border-[#1e2e22]/50" : "bg-[#f0fdf4]/70 border-[#4D6940]/10"
             }`}>
               <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
-                isDark ? "text-[#5B9A6A]/70" : "text-[#3D6B47]/60"
+                isDark ? "text-[#5B9A6A]/70" : "text-[#4D6940]/60"
               }`}>Why study this line</p>
               <p className={`text-xs leading-relaxed ${t.textSecondary}`}>
                 {useAs === "white"
@@ -2020,7 +2020,7 @@ function StudyLinesTab({
                 className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
                   isDark
                     ? "text-[#5B9A6A] hover:bg-[#5B9A6A]/10 border border-[#5B9A6A]/20 hover:border-[#5B9A6A]/40"
-                    : "text-[#3D6B47] hover:bg-[#3D6B47]/08 border border-[#3D6B47]/15 hover:border-[#3D6B47]/30"
+                    : "text-[#4D6940] hover:bg-[#4D6940]/08 border border-[#4D6940]/15 hover:border-[#4D6940]/30"
                 }`}
               >
                 <Dumbbell className="w-3 h-3" />
@@ -2036,12 +2036,12 @@ function StudyLinesTab({
         onClick={onStartPractice}
         className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] group ${
           isDark
-            ? "border-[#2e4a34]/40 hover:border-[#3D6B47]/50 hover:bg-[#162018]/50"
-            : "border-gray-200/80 hover:border-[#3D6B47]/20 hover:bg-[#3D6B47]/02"
+            ? "border-[#2e4a34]/40 hover:border-[#4D6940]/50 hover:bg-[#162018]/50"
+            : "border-[#E8D9B0]/80 hover:border-[#4D6940]/20 hover:bg-[#4D6940]/02"
         }`}
       >
         <span className={`text-sm ${t.textTertiary}`}>Ready to drill these lines?</span>
-        <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`}>
+        <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`}>
           Start Practice
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </div>
@@ -2054,7 +2054,7 @@ function PriorityBadge({ priority, isDark }: { priority: "must-know" | "likely" 
   const config = {
     "must-know": { label: "Must Know", dot: "bg-emerald-500", dark: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", light: "bg-emerald-50 border-emerald-200 text-emerald-700" },
     "likely":    { label: "Likely",    dot: "bg-amber-500",   dark: "bg-amber-500/10 border-amber-500/20 text-amber-400",     light: "bg-amber-50 border-amber-200 text-amber-700" },
-    "useful":    { label: "Useful",    dot: "bg-gray-400",    dark: "bg-white/05 border-white/10 text-white/35",               light: "bg-gray-50 border-gray-200 text-gray-400" },
+    "useful":    { label: "Useful",    dot: "bg-[#6B6B50]/60",    dark: "bg-white/05 border-white/10 text-white/35",               light: "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50]" },
   };
   const c = config[priority];
   return (
@@ -2092,7 +2092,7 @@ function PracticeBoardTab({
               className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors ${
                 isDark
                   ? "text-white/40 hover:text-white/70 hover:bg-white/06 border border-white/08"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-gray-200"
+                  : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50 border border-[#E8D9B0]"
               }`}
             >
               <ChevronRight className="w-3 h-3 rotate-180" />
@@ -2130,16 +2130,16 @@ function PracticeBoardTab({
     <div className="space-y-4">
       {/* Practice context card */}
       <div className={`p-3 rounded-xl border ${
-        isDark ? "bg-[#0f1c11] border-[#1e2e22]/60" : "bg-gray-50 border-gray-200/60"
+        isDark ? "bg-[#0f1c11] border-[#1e2e22]/60" : "bg-[#FFF3D5]/70 border-[#E8D9B0]/60"
       }`}>
         <div className="flex items-center gap-2 flex-wrap mb-2">
-          <Dumbbell className={`w-3.5 h-3.5 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <Dumbbell className={`w-3.5 h-3.5 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
           <span className={`text-xs font-semibold ${t.textPrimary}`}>Practice Mode</span>
           {useAs && (
             <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
               useAs === "white"
-                ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
-                : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+                ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A] border-[#E8D9B0]"
+                : isDark ? "bg-[#1a1a2e] text-[#6B6B50]/70 border-[#4D6940]/40/30" : "bg-[#1A1A1A] text-white border-[#4D6940]/30"
             }`}>
               You play as {useAs}
             </span>
@@ -2191,7 +2191,7 @@ function PrepLoadingState({ username, isDark, t }: { username: string; isDark: b
   return (
     <div className={`${t.card} py-16 flex flex-col items-center gap-5`}>
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-        isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"
+        isDark ? "bg-[#162018]" : "bg-[#4D6940]/06"
       }`}>
         <Loader2 className="w-7 h-7 text-[#5B9A6A] animate-spin" />
       </div>
@@ -2242,7 +2242,7 @@ function PrepErrorState({
         </div>
       </div>
       <div className={`p-3 rounded-xl mb-4 ${
-        isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-gray-50/70 border border-gray-200/60"
+        isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-[#FFF3D5]/70/70 border border-[#E8D9B0]/60"
       }`}>
         <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>Possible reasons:</p>
         <ul className={`space-y-1 text-xs ${t.textTertiary}`}>
@@ -2256,7 +2256,7 @@ function PrepErrorState({
         <button
           onClick={onRetry}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-            isDark ? "bg-[#3D6B47] text-white hover:bg-[#4a7a56]" : "bg-[#3D6B47] text-white hover:bg-[#2e5236]"
+            isDark ? "bg-[#4D6940] text-white hover:bg-[#4a7a56]" : "bg-[#4D6940] text-white hover:bg-[#2e5236]"
           }`}
         >
           <RefreshCw className="w-3 h-3" /> Try again
@@ -2265,7 +2265,7 @@ function PrepErrorState({
           <button
             onClick={onUseAllFormats}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-              isDark ? "border-[#1e2e22]/60 text-white/70 hover:text-white hover:bg-[#162018]" : "border-gray-300 text-gray-700 hover:bg-gray-100"
+              isDark ? "border-[#1e2e22]/60 text-white/70 hover:text-white hover:bg-[#162018]" : "border-[#E8D9B0] text-[#1A1A1A]/85 hover:bg-[#E8D9B0]/50"
             }`}
           >
             Use All formats
@@ -2275,7 +2275,7 @@ function PrepErrorState({
           <button
             onClick={onAnalyze100}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-              isDark ? "border-[#1e2e22]/60 text-white/70 hover:text-white hover:bg-[#162018]" : "border-gray-300 text-gray-700 hover:bg-gray-100"
+              isDark ? "border-[#1e2e22]/60 text-white/70 hover:text-white hover:bg-[#162018]" : "border-[#E8D9B0] text-[#1A1A1A]/85 hover:bg-[#E8D9B0]/50"
             }`}
           >
             Analyze 100 games
@@ -2292,8 +2292,8 @@ function EmptyState({
   icon: React.ReactNode; title: string; description: string; isDark: boolean; t: Tokens;
 }) {
   return (
-    <div className={`py-12 px-6 rounded-2xl flex flex-col items-center gap-4 text-center ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-white border border-gray-200/80 shadow-sm"}`}>
-      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
+    <div className={`py-12 px-6 rounded-2xl flex flex-col items-center gap-4 text-center ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-white border border-[#E8D9B0]/80 shadow-sm"}`}>
+      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#4D6940]/06"}`}>
         {icon}
       </div>
       <div>
@@ -2320,7 +2320,7 @@ function SavedReportsPanel({
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <BookmarkCheck className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <BookmarkCheck className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#4D6940]"}`} />
           <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Saved Reports</h3>
         </div>
         <button onClick={onClose} className={`text-xs ${t.textTertiary} transition-colors`}>Close</button>
@@ -2334,7 +2334,7 @@ function SavedReportsPanel({
           {reports.map((r) => (
             <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${t.cardSubtle} ${t.rowHover}`}>
               <button className="flex-1 flex items-center gap-3 text-left min-w-0" onClick={() => onSelect(r.opponentUsername)}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/08"}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#4D6940]/15" : "bg-[#4D6940]/08"}`}>
                   <Target className="w-4 h-4 text-[#5B9A6A]" />
                 </div>
                 <div className="min-w-0">
@@ -2348,7 +2348,7 @@ function SavedReportsPanel({
               </button>
               <button
                 onClick={() => onDelete(r.id)}
-                className={`p-1.5 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-red-500/10 text-white/20 hover:text-red-400" : "hover:bg-red-50 text-gray-300 hover:text-red-500"}`}
+                className={`p-1.5 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-red-500/10 text-white/20 hover:text-red-400" : "hover:bg-red-50 text-[#6B6B50]/70 hover:text-red-500"}`}
                 title="Delete saved report"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -2380,20 +2380,20 @@ function RecentlyScoutedChips({
             key={username}
             className={`group flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border text-sm font-medium transition-all ${
               isDark
-                ? "bg-[#0d1a0f]/60 border-[#1e2e22]/60 text-white/70 hover:border-[#3D6B47]/40 hover:text-white"
-                : "bg-gray-50/80 border-gray-200/60 text-gray-600 hover:border-[#3D6B47]/30 hover:text-gray-900"
+                ? "bg-[#0d1a0f]/60 border-[#1e2e22]/60 text-white/70 hover:border-[#4D6940]/40 hover:text-white"
+                : "bg-[#FFF3D5]/70/80 border-[#E8D9B0]/60 text-[#6B6B50] hover:border-[#4D6940]/30 hover:text-[#1A1A1A]"
             }`}
           >
             <button onClick={() => onSelect(username)} className="flex items-center gap-1.5 min-w-0">
               <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${
-                isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                isDark ? "bg-[#4D6940]/20 text-[#5B9A6A]" : "bg-[#4D6940]/08 text-[#4D6940]"
               }`}>{username.charAt(0).toUpperCase()}</span>
               <span className="truncate max-w-[120px]">{username}</span>
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(username); }}
               className={`ml-0.5 w-4 h-4 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
-                isDark ? "hover:bg-white/10 text-white/30 hover:text-white/60" : "hover:bg-gray-200 text-gray-300 hover:text-gray-500"
+                isDark ? "hover:bg-white/10 text-white/30 hover:text-white/60" : "hover:bg-[#E8D9B0] text-[#6B6B50]/70 hover:text-[#6B6B50]"
               }`}
             >
               <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>

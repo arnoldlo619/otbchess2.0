@@ -471,17 +471,17 @@ export function AvatarNavDropdown({
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className={`flex items-center gap-1.5 rounded-full border transition-all ${isDark ? "border-white/20 bg-black/30 hover:bg-white/10 active:bg-white/15" : "border-gray-200 bg-white/80 hover:bg-gray-100 active:bg-gray-200 shadow-sm"} backdrop-blur-md`}
+            className={`flex items-center gap-1.5 rounded-full border transition-all ${isDark ? "border-white/20 bg-black/30 hover:bg-white/10 active:bg-white/15" : "border-[#E8D9B0] bg-white/80 hover:bg-[#E8D9B0]/50 active:bg-[#E8D9B0] shadow-sm"} backdrop-blur-md`}
             style={{ padding: "3px 8px 3px 3px" }}
           >
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
               style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }}
             >
-              <LogIn className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
+              <LogIn className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`} />
             </div>
             <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
+              <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`} />
             </motion.div>
           </button>
           <AnimatePresence>
@@ -514,11 +514,11 @@ export function AvatarNavDropdown({
               >
                 {/* Header row: Sign In label + theme toggle */}
                 <div className="flex items-center justify-between px-3 pt-2 pb-1">
-                  <span className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/25" : "text-gray-400"}`}>Account</span>
+                  <span className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>Account</span>
                   <button
                     onClick={() => toggleTheme?.()}
                     title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/08" : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"}`}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/08" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}
                   >
                     {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                     <div
@@ -535,7 +535,7 @@ export function AvatarNavDropdown({
                 <div className="px-2 pb-1">
                   <button
                     onClick={handleSignIn}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}
                   >
                     <LogIn className="w-4 h-4 flex-shrink-0" />
                     <span>Sign In</span>
@@ -551,7 +551,7 @@ export function AvatarNavDropdown({
                   <Link
                     href="/clock"
                     onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}
                   >
                     <Timer className="w-4 h-4 flex-shrink-0" />
                     <span>Chess Clock</span>
@@ -572,7 +572,7 @@ export function AvatarNavDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
-        className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30 hover:bg-white/10 active:bg-white/15" : "bg-white/80 hover:bg-gray-100 active:bg-gray-200 shadow-sm"} backdrop-blur-md`}
+        className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30 hover:bg-white/10 active:bg-white/15" : "bg-white/80 hover:bg-[#E8D9B0]/50 active:bg-[#E8D9B0] shadow-sm"} backdrop-blur-md`}
         style={{ padding: "3px 8px 3px 3px" }}
       >
         {/* Avatar circle */}
@@ -581,7 +581,7 @@ export function AvatarNavDropdown({
           style={{
             background:
               user && !user.isGuest
-                ? "#3D6B47"
+                ? "#4D6940"
                 : user?.isGuest
                 ? "rgba(245,158,11,0.15)"
                 : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
@@ -594,7 +594,7 @@ export function AvatarNavDropdown({
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
+          <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`} />
         </motion.div>
       </button>
 
@@ -643,7 +643,7 @@ export function AvatarNavDropdown({
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
                   className="relative w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 group"
-                  style={{ background: "#3D6B47" }}
+                  style={{ background: "#4D6940" }}
                   title="Change profile photo"
                   disabled={avatarUploading}
                 >
@@ -657,7 +657,7 @@ export function AvatarNavDropdown({
                 </button>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className={`text-sm font-semibold truncate leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+                    <p className={`text-sm font-semibold truncate leading-tight ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
                       {user.displayName || user.email}
                     </p>
                     {user.isStaff && (
@@ -673,7 +673,7 @@ export function AvatarNavDropdown({
                   </div>
                   {user.chesscomUsername && (
                     <div className="flex flex-col gap-1">
-                      <p className={`text-[11px] truncate leading-tight ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                      <p className={`text-[11px] truncate leading-tight ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                         chess.com/{user.chesscomUsername}
                       </p>
                       {/* Compact three-rating row — only shown when at least one rating exists */}
@@ -734,7 +734,7 @@ export function AvatarNavDropdown({
                   border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.12)` : "1px solid rgba(0,0,0,0.08)",
                 }}
               >
-                <p className={`text-[9px] font-semibold uppercase tracking-widest mb-1.5 ${isDark ? "text-white/25" : "text-gray-400"}`}>
+                <p className={`text-[9px] font-semibold uppercase tracking-widest mb-1.5 ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>
                   Rating History
                 </p>
                 <div className="flex flex-col gap-1.5">
@@ -750,7 +750,7 @@ export function AvatarNavDropdown({
                     return (
                       <div key={label} className="flex items-center gap-2">
                         {/* Format label */}
-                        <span className={`text-[10px] w-10 flex-shrink-0 flex items-center gap-0.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                        <span className={`text-[10px] w-10 flex-shrink-0 flex items-center gap-0.5 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
                           <span>{icon}</span>
                           <span>{label.slice(0, 1)}</span>
                         </span>
@@ -782,7 +782,7 @@ export function AvatarNavDropdown({
 
             {/* ── Section: Nav links ── */}
             <div className="px-2 pt-1.5 pb-1">
-              <p className={`px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+              <p className={`px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
                 Navigate
               </p>
               {resolvedNavItems.map((item) => {
@@ -842,7 +842,7 @@ export function AvatarNavDropdown({
             <div className="px-2 pb-1">
               <button
                 onClick={() => toggleTheme?.()}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
+                className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"}`}
                 style={{ border: "1px solid transparent" }}
                 onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)")}
                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
@@ -873,7 +873,7 @@ export function AvatarNavDropdown({
                 <Link
                   href="/profile"
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"}`}
                   style={{ border: "1px solid transparent" }}
                   onMouseEnter={(e) =>
                     ((e.currentTarget as HTMLElement).style.background =
@@ -919,7 +919,7 @@ export function AvatarNavDropdown({
                   {/* Tools section divider */}
                   <div className={`px-3 pt-2 pb-1`}>
                     <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${
-                      isDark ? "text-white/25" : "text-gray-400"
+                      isDark ? "text-white/25" : "text-[#6B6B50]"
                     }`}>
                       <Wrench className="w-3 h-3" />
                       <span>Tools</span>
@@ -940,7 +940,7 @@ export function AvatarNavDropdown({
                     <div className="flex flex-col min-w-0">
                       <span>Chessnut BT Test Lab</span>
                       <span className={`text-[10px] font-normal truncate ${
-                        isDark ? "text-white/35" : "text-gray-400"
+                        isDark ? "text-white/35" : "text-[#6B6B50]"
                       }`}>BLE diagnostics &amp; validation</span>
                     </div>
                     <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -969,7 +969,7 @@ export function AvatarNavDropdown({
               ) : (
                 <button
                   onClick={handleSignIn}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}
                 >
                   <LogIn className="w-4 h-4 flex-shrink-0" />
                   <span>Sign In</span>
@@ -1039,7 +1039,7 @@ export function AvatarNavDropdown({
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
                     className="relative w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 group"
-                    style={{ background: "#3D6B47" }}
+                    style={{ background: "#4D6940" }}
                     title="Change profile photo"
                     disabled={avatarUploading}
                   >
@@ -1052,7 +1052,7 @@ export function AvatarNavDropdown({
                   </button>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                      <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
                         {user.displayName || user.email}
                       </p>
                       {user.isStaff && (
@@ -1067,7 +1067,7 @@ export function AvatarNavDropdown({
                       )}
                     </div>
                     {user.chesscomUsername && (
-                      <p className={`text-[11px] truncate ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                      <p className={`text-[11px] truncate ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                         chess.com/{user.chesscomUsername}
                       </p>
                     )}
@@ -1080,7 +1080,7 @@ export function AvatarNavDropdown({
 
               {/* Nav links */}
               <div className="px-3 pb-1">
-                <p className={`px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                <p className={`px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
                   Navigate
                 </p>
                 {resolvedNavItems.map((item, i) => {
@@ -1124,7 +1124,7 @@ export function AvatarNavDropdown({
               {user?.isStaff && (
                 <div className="px-3 pb-1">
                   <p className={`px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-1.5 ${
-                    isDark ? "text-white/30" : "text-gray-400"
+                    isDark ? "text-white/30" : "text-[#6B6B50]"
                   }`}>
                     <Wrench className="w-3 h-3" />
                     Tools
@@ -1143,7 +1143,7 @@ export function AvatarNavDropdown({
                     <div className="flex flex-col min-w-0">
                       <span>Chessnut BT Test Lab</span>
                       <span className={`text-[10px] font-normal ${
-                        isDark ? "text-white/35" : "text-gray-400"
+                        isDark ? "text-white/35" : "text-[#6B6B50]"
                       }`}>BLE diagnostics &amp; validation</span>
                     </div>
                     <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
@@ -1157,11 +1157,11 @@ export function AvatarNavDropdown({
               <div className="px-3 pb-1">
                 <button
                   onClick={() => toggleTheme?.()}
-                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"}`}
                   style={{ border: "1px solid transparent" }}
                 >
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "var(--dropdown-icon-bg)" }}>
-                    {isDark ? <Sun className="w-4 h-4 text-white/50" /> : <Moon className="w-4 h-4 text-gray-500" />}
+                    {isDark ? <Sun className="w-4 h-4 text-white/50" /> : <Moon className="w-4 h-4 text-[#6B6B50]" />}
                   </div>
                   <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
                   <div
@@ -1185,11 +1185,11 @@ export function AvatarNavDropdown({
                   <Link
                     href="/profile"
                     onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"}`}
                     style={{ border: "1px solid transparent" }}
                   >
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "var(--dropdown-icon-bg)" }}>
-                      <Crown className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-500"}`} />
+                      <Crown className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`} />
                     </div>
                     <span>My Profile</span>
                   </Link>

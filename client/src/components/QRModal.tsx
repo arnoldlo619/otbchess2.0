@@ -67,28 +67,28 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
       {/* Modal */}
       <div
         className={`relative z-10 w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
-          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-gray-100"
+          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-[#E8D9B0]/70"
         }`}
         style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Green accent bar */}
-        <div className="h-1 bg-gradient-to-r from-[#3D6B47] via-[#4CAF50] to-[#3D6B47]" />
+        <div className="h-1 bg-gradient-to-r from-[#4D6940] via-[#4CAF50] to-[#4D6940]" />
 
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[#3D6B47] rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#4D6940] rounded-xl flex items-center justify-center">
               <Crown className="w-4 h-4 text-white" strokeWidth={2} />
             </div>
             <div>
               <p
-                className={`font-bold text-sm leading-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`font-bold text-sm leading-tight ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Player Join QR Code
               </p>
-              <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 {tournamentName}
               </p>
             </div>
@@ -101,7 +101,7 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
             className={`group flex items-center gap-1.5 h-11 px-3 rounded-xl font-semibold text-sm transition-all active:scale-95 ${
               isDark
                 ? "bg-white/10 text-white hover:bg-white/18 border border-white/15"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85 hover:bg-[#E8D9B0] border border-[#E8D9B0]"
             }`}
           >
             <X className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} />
@@ -134,7 +134,7 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
             {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos) => (
               <div
                 key={pos}
-                className={`absolute ${pos} w-5 h-5 border-[#3D6B47] ${
+                className={`absolute ${pos} w-5 h-5 border-[#4D6940] ${
                   pos.includes("top") && pos.includes("left") ? "border-t-2 border-l-2 rounded-tl-xl" :
                   pos.includes("top") && pos.includes("right") ? "border-t-2 border-r-2 rounded-tr-xl" :
                   pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-xl" :
@@ -146,12 +146,12 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
 
           {/* Code badge */}
           <div className={`flex flex-col items-center gap-1`}>
-            <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
               Tournament Code
             </p>
-            <div className={`px-5 py-2 rounded-xl ${isDark ? "bg-white/08" : "bg-gray-50"}`}>
+            <div className={`px-5 py-2 rounded-xl ${isDark ? "bg-white/08" : "bg-[#FFF3D5]/70"}`}>
               <span
-                className={`text-2xl font-bold tracking-[0.2em] font-mono ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`text-2xl font-bold tracking-[0.2em] font-mono ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 {code}
@@ -160,9 +160,9 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
           </div>
 
           {/* Instructions */}
-          <div className={`w-full rounded-xl px-4 py-3 flex items-start gap-3 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/06"}`}>
-            <Smartphone className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-            <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>
+          <div className={`w-full rounded-xl px-4 py-3 flex items-start gap-3 ${isDark ? "bg-[#4D6940]/15" : "bg-[#4D6940]/06"}`}>
+            <Smartphone className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+            <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
               Players scan this code with their phone camera to open the join page. They enter their chess.com username and their ELO is pulled automatically.
             </p>
           </div>
@@ -173,8 +173,8 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
               onClick={handleCopy}
               className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-all ${
                 copied
-                  ? isDark ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#3D6B47]/15" : "border-[#3D6B47]/40 text-[#3D6B47] bg-[#3D6B47]/08"
-                  : isDark ? "border-white/10 text-white/70 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  ? isDark ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#4D6940]/15" : "border-[#4D6940]/40 text-[#4D6940] bg-[#4D6940]/08"
+                  : isDark ? "border-white/10 text-white/70 hover:bg-white/05" : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
               }`}
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -182,7 +182,7 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
             </button>
             <button
               onClick={handleDownload}
-              className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium bg-[#3D6B47] text-white hover:bg-[#2A4A32] transition-all hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#3D6B47]/30"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium bg-[#4D6940] text-white hover:bg-[#2A4A32] transition-all hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#4D6940]/30"
             >
               <Download className="w-3.5 h-3.5" />
               Save QR

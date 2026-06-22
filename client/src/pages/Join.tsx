@@ -93,8 +93,8 @@ function eloTier(elo: number) {
   if (elo >= 2500) return { label: "Grandmaster", color: "text-amber-700", bg: "bg-amber-50 border border-amber-200" };
   if (elo >= 2200) return { label: "Master", color: "text-purple-700", bg: "bg-purple-50 border border-purple-200" };
   if (elo >= 1800) return { label: "Expert", color: "text-blue-700", bg: "bg-blue-50 border border-blue-200" };
-  if (elo >= 1400) return { label: "Intermediate", color: "text-[#3D6B47]", bg: "bg-[#3D6B47]/08 border border-[#3D6B47]/20" };
-  return { label: "Beginner", color: "text-gray-600", bg: "bg-gray-50 border border-gray-200" };
+  if (elo >= 1400) return { label: "Intermediate", color: "text-[#4D6940]", bg: "bg-[#4D6940]/08 border border-[#4D6940]/20" };
+  return { label: "Beginner", color: "text-[#6B6B50]", bg: "bg-[#FFF3D5]/70 border border-[#E8D9B0]" };
 }
 
 function eloTierDark(elo: number) {
@@ -128,9 +128,9 @@ function StepProgress({ step }: { step: Step }) {
   const pct = step === "success" ? 100 : ((idx) / 3) * 100;
 
   return (
-    <div className="w-full h-0.5 bg-gray-100 dark:bg-white/08 rounded-full overflow-hidden">
+    <div className="w-full h-0.5 bg-[#E8D9B0]/40 dark:bg-white/08 rounded-full overflow-hidden">
       <div
-        className="h-full bg-[#3D6B47] rounded-full transition-all duration-500 ease-out"
+        className="h-full bg-[#4D6940] rounded-full transition-all duration-500 ease-out"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -150,8 +150,8 @@ function EloStatBox({
   return (
     <div className={`rounded-2xl px-3 py-3 text-center relative overflow-hidden ${
       isPrimary
-        ? isDark ? "bg-[#3D6B47]/20 ring-1 ring-[#4CAF50]/30" : "bg-[#3D6B47]/07 ring-1 ring-[#3D6B47]/18"
-        : isDark ? "bg-white/05" : "bg-gray-50"
+        ? isDark ? "bg-[#4D6940]/20 ring-1 ring-[#4CAF50]/30" : "bg-[#4D6940]/07 ring-1 ring-[#4D6940]/18"
+        : isDark ? "bg-white/05" : "bg-[#FFF3D5]/70"
     }`}>
       {isPrimary && !done && (
         <div className="absolute inset-0 pointer-events-none" style={{
@@ -160,7 +160,7 @@ function EloStatBox({
         }} />
       )}
       <p className={`text-2xl font-bold tabular-nums leading-none ${
-        isPrimary ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]" : textMain
+        isPrimary ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]" : textMain
       }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
         {displayValue}
       </p>
@@ -198,9 +198,9 @@ function ShareSheet({
   }
 
   const bg = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const border = isDark ? "border-white/08" : "border-gray-100";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/50" : "text-gray-500";
+  const border = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
 
   return (
     <div
@@ -223,8 +223,8 @@ function ShareSheet({
           </h3>
 
           {/* Preview card */}
-          <div className={`rounded-2xl p-4 mb-4 ${isDark ? "bg-[#3D6B47]/15 border border-[#4CAF50]/15" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"}`}>
-            <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
+          <div className={`rounded-2xl p-4 mb-4 ${isDark ? "bg-[#4D6940]/15 border border-[#4CAF50]/15" : "bg-[#4D6940]/05 border border-[#4D6940]/12"}`}>
+            <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
               {shareText}
             </p>
           </div>
@@ -236,10 +236,10 @@ function ShareSheet({
               <button
                 onClick={handleNativeShare}
                 className={`flex flex-col items-center gap-2 py-3.5 rounded-2xl transition-all active:scale-95 ${
-                  isDark ? "bg-white/06 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
+                  isDark ? "bg-white/06 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
                 }`}
               >
-                <Share2 className={`w-5 h-5 ${isDark ? "text-white/70" : "text-gray-600"}`} />
+                <Share2 className={`w-5 h-5 ${isDark ? "text-white/70" : "text-[#6B6B50]"}`} />
                 <span className={`text-xs font-medium ${textMuted}`}>Share</span>
               </button>
             )}
@@ -248,10 +248,10 @@ function ShareSheet({
             <button
               onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, "_blank")}
               className={`flex flex-col items-center gap-2 py-3.5 rounded-2xl transition-all active:scale-95 ${
-                isDark ? "bg-white/06 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
+                isDark ? "bg-white/06 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
               }`}
             >
-              <Twitter className={`w-5 h-5 ${isDark ? "text-white/70" : "text-gray-600"}`} />
+              <Twitter className={`w-5 h-5 ${isDark ? "text-white/70" : "text-[#6B6B50]"}`} />
               <span className={`text-xs font-medium ${textMuted}`}>Twitter</span>
             </button>
 
@@ -259,10 +259,10 @@ function ShareSheet({
             <button
               onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`, "_blank")}
               className={`flex flex-col items-center gap-2 py-3.5 rounded-2xl transition-all active:scale-95 ${
-                isDark ? "bg-white/06 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
+                isDark ? "bg-white/06 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
               }`}
             >
-              <MessageCircle className={`w-5 h-5 ${isDark ? "text-white/70" : "text-gray-600"}`} />
+              <MessageCircle className={`w-5 h-5 ${isDark ? "text-white/70" : "text-[#6B6B50]"}`} />
               <span className={`text-xs font-medium ${textMuted}`}>WhatsApp</span>
             </button>
           </div>
@@ -272,8 +272,8 @@ function ShareSheet({
             onClick={handleCopy}
             className={`w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-97 ${
               copied
-                ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                : isDark ? "bg-white/08 text-white/80 hover:bg-white/12" : "bg-gray-100 text-gray-700 hover:bg-gray-150"
+                ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                : isDark ? "bg-white/08 text-white/80 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85 hover:bg-gray-150"
             }`}
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -939,14 +939,14 @@ export default function JoinPage() {
 
   // -- Shared style tokens -----------------------------------------------------
   const bg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]";
-  const card = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100/80";
+  const card = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#E8D9B0]/70/80";
   const inputBase = `mobile-input ${isDark
     ? "!bg-[oklch(0.26_0.06_145)] !border-white/12 !text-white placeholder:text-white/25 focus:!border-[#4CAF50] focus:!shadow-[0_0_0_3px_oklch(0.55_0.13_145/0.20)]"
-    : "!bg-white !border-gray-200 !text-gray-900 placeholder:text-gray-300 focus:!border-[#3D6B47] focus:!shadow-[0_0_0_3px_oklch(0.44_0.12_145/0.10)]"}`;
-  const labelCls = isDark ? "text-white/45" : "text-gray-400";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/40" : "text-gray-400";
-  const divider = isDark ? "bg-white/06" : "bg-gray-100";
+    : "!bg-white !border-[#E8D9B0] !text-[#1A1A1A] placeholder:text-[#6B6B50]/70 focus:!border-[#4D6940] focus:!shadow-[0_0_0_3px_oklch(0.44_0.12_145/0.10)]"}`;
+  const labelCls = isDark ? "text-white/45" : "text-[#6B6B50]";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const divider = isDark ? "bg-white/06" : "bg-[#E8D9B0]/40";
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col transition-colors duration-300`}
@@ -954,7 +954,7 @@ export default function JoinPage() {
 
       {/* -- Header ----------------------------------------------------------- */}
       <header className={`flex items-center justify-between px-4 pt-safe-top pb-3 pt-3 border-b ${
-        isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-gray-100 bg-[#F7FAF8]"
+        isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-[#E8D9B0]/70 bg-[#F7FAF8]"
       } sticky top-0 z-30 backdrop-blur-md otb-header-safe`}
         style={{ paddingTop: `max(env(safe-area-inset-top), 0.75rem)` }}>
         <div className="flex items-center gap-3">
@@ -964,7 +964,7 @@ export default function JoinPage() {
                 if (step === "username") advanceStep("code");
                 else if (step === "confirm") { advanceStep("username"); active.reset(); setUnifiedProfile(null); }
               }}
-              className={`touch-target -ml-2 rounded-xl ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-700"} transition-colors`}
+              className={`touch-target -ml-2 rounded-xl ${isDark ? "text-white/60 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"} transition-colors`}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -1054,9 +1054,9 @@ export default function JoinPage() {
           {/* Tournament info chip */}
           {step !== "code" && step !== "success" && (
             <div key={`chip-${stepKey}`} className={`animate-slide-down-fade rounded-2xl border px-4 py-3 flex items-center gap-3 ${
-              isDark ? "bg-[#3D6B47]/12 border-[#4CAF50]/18" : "bg-[#3D6B47]/05 border-[#3D6B47]/12"
+              isDark ? "bg-[#4D6940]/12 border-[#4CAF50]/18" : "bg-[#4D6940]/05 border-[#4D6940]/12"
             }`}>
-              <div className="w-9 h-9 bg-[#3D6B47] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm shadow-[#3D6B47]/30">
+              <div className="w-9 h-9 bg-[#4D6940] rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm shadow-[#4D6940]/30">
                 <Trophy className="w-4 h-4 text-white" strokeWidth={2} />
               </div>
               <div className="flex-1 min-w-0">
@@ -1068,7 +1068,7 @@ export default function JoinPage() {
                   <span className={`text-xs flex items-center gap-1 ${textMuted}`}>
                     <MapPin className="w-2.5 h-2.5" />{tournamentDisplay.venue}
                   </span>
-                  <span className={`text-xs ${isDark ? "text-white/15" : "text-gray-200"}`}>·</span>
+                  <span className={`text-xs ${isDark ? "text-white/15" : "text-[#6B6B50]/50"}`}>·</span>
                   <span className={`text-xs flex items-center gap-1 ${textMuted}`}>
                     <Users className="w-2.5 h-2.5" />{tournamentDisplay.playerCount} players
                   </span>
@@ -1084,25 +1084,25 @@ export default function JoinPage() {
               {existingReg && (
                 <div className={`rounded-2xl border p-4 ${
                   isDark
-                    ? "bg-[#3D6B47]/15 border-[#4CAF50]/25"
-                    : "bg-[#3D6B47]/06 border-[#3D6B47]/18"
+                    ? "bg-[#4D6940]/15 border-[#4CAF50]/25"
+                    : "bg-[#4D6940]/06 border-[#4D6940]/18"
                 }`}>
                   <div className="flex items-start gap-3">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/12"
+                      isDark ? "bg-[#4CAF50]/20" : "bg-[#4D6940]/12"
                     }`}>
                       <CheckCircle2 className={`w-5 h-5 ${
-                        isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                        isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
                       }`} strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-bold ${
-                        isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                        isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
                       }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                         Already registered
                       </p>
                       <p className={`text-xs mt-0.5 leading-relaxed ${
-                        isDark ? "text-white/55" : "text-gray-500"
+                        isDark ? "text-white/55" : "text-[#6B6B50]"
                       }`}>
                         <span className="font-semibold">{existingReg.name}</span>
                         {" "}({existingReg.rating} ELO) is registered for{" "}
@@ -1115,7 +1115,7 @@ export default function JoinPage() {
                           setExistingReg(null);
                         }}
                         className={`mt-2 text-xs font-medium underline underline-offset-2 ${
-                          isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"
+                          isDark ? "text-white/40 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"
                         }`}
                       >
                         Not me — register again
@@ -1171,7 +1171,7 @@ export default function JoinPage() {
                 <button
                   type="button"
                   onClick={() => { setTournamentCode("OTB2026"); setError(""); }}
-                  className={`mt-3 text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"} underline underline-offset-2`}
+                  className={`mt-3 text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"} underline underline-offset-2`}
                 >
                   Try the demo → OTB2026
                 </button>
@@ -1266,7 +1266,7 @@ export default function JoinPage() {
                     <button
                       type="button"
                       onClick={() => setAuthShowPw((s) => !s)}
-                      className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition ${isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"}`}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition ${isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"}`}
                       tabIndex={-1}
                     >
                       {authShowPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -1274,7 +1274,7 @@ export default function JoinPage() {
                   </div>
                   {authMode === "signup" && authPassword && (
                     <div className="mt-2 space-y-1">
-                      <div className={`h-1.5 w-full rounded-full ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+                      <div className={`h-1.5 w-full rounded-full ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
                         <div className={`h-full rounded-full transition-all duration-300 ${
                           scorePassword(authPassword) === "weak" ? "w-1/3 bg-red-400" :
                           scorePassword(authPassword) === "fair" ? "w-2/3 bg-yellow-400" :
@@ -1336,7 +1336,7 @@ export default function JoinPage() {
                   <button
                     type="button"
                     onClick={() => { setAuthMode(authMode === "signup" ? "signin" : "signup"); setAuthError(""); }}
-                    className={`text-sm font-medium underline underline-offset-2 ${isDark ? "text-white/50 hover:text-white/80" : "text-gray-500 hover:text-gray-700"}`}
+                    className={`text-sm font-medium underline underline-offset-2 ${isDark ? "text-white/50 hover:text-white/80" : "text-[#6B6B50] hover:text-[#1A1A1A]"}`}
                   >
                     {authMode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
                   </button>
@@ -1372,23 +1372,23 @@ export default function JoinPage() {
               {/* Already registered banner */}
               {existingReg && (
                 <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
-                  isDark ? "bg-[#3D6B47]/15 border-[#4CAF50]/25" : "bg-[#3D6B47]/06 border-[#3D6B47]/18"
+                  isDark ? "bg-[#4D6940]/15 border-[#4CAF50]/25" : "bg-[#4D6940]/06 border-[#4D6940]/18"
                 }`}>
                   <CheckCircle2 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                    isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                    isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
                   }`} strokeWidth={1.5} />
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-bold ${
-                      isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                      isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
                     }`}>Already registered</p>
-                    <p className={`text-xs mt-0.5 ${isDark ? "text-white/55" : "text-gray-500"}`}>
+                    <p className={`text-xs mt-0.5 ${isDark ? "text-white/55" : "text-[#6B6B50]"}`}>
                       <span className="font-semibold">{existingReg.name}</span> ({existingReg.rating} ELO)
                     </p>
                     <button
                       type="button"
                       onClick={() => { clearRegistration(existingReg.tournamentId, existingReg.username); setExistingReg(null); }}
                       className={`mt-1.5 text-xs font-medium underline underline-offset-2 ${
-                        isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"
+                        isDark ? "text-white/40 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"
                       }`}
                     >Not me — register again</button>
                   </div>
@@ -1469,9 +1469,9 @@ export default function JoinPage() {
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       platform === p
                         ? p === "chesscom"
-                          ? isDark ? "bg-[#3D6B47]/30 text-[#4CAF50] shadow-sm" : "bg-[#3D6B47]/10 text-[#3D6B47] shadow-sm"
+                          ? isDark ? "bg-[#4D6940]/30 text-[#4CAF50] shadow-sm" : "bg-[#4D6940]/10 text-[#4D6940] shadow-sm"
                           : isDark ? "bg-orange-400/20 text-orange-300 shadow-sm" : "bg-orange-50 text-orange-600 shadow-sm"
-                        : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"
+                        : isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"
                     }`}
                   >
                     {p === "chesscom" ? (
@@ -1518,7 +1518,7 @@ export default function JoinPage() {
                       className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 ${
                         isDark
                           ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
-                          : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/18"
+                          : "bg-[#4D6940]/10 text-[#4D6940] hover:bg-[#4D6940]/18"
                       }`}
                     >
                       {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Look up"}
@@ -1558,18 +1558,18 @@ export default function JoinPage() {
                 <div className={`h-1 bg-gradient-to-r ${
                   profile.platform === "lichess"
                     ? "from-orange-600 via-orange-400 to-orange-600"
-                    : "from-[#3D6B47] via-[#4CAF50] to-[#3D6B47]"
+                    : "from-[#4D6940] via-[#4CAF50] to-[#4D6940]"
                 }`} />
 
                 <div className="p-5 space-y-4">
                   {/* Avatar + name */}
                   <div className="flex items-center gap-4">
                     <div className="relative flex-shrink-0">
-                      <div className="w-14 h-14 rounded-2xl bg-[#3D6B47]/12 flex items-center justify-center overflow-hidden">
+                      <div className="w-14 h-14 rounded-2xl bg-[#4D6940]/12 flex items-center justify-center overflow-hidden">
                         {profile.avatar ? (
                           <img src={`/api/avatar-proxy?url=${encodeURIComponent(profile.avatar)}`} alt={profile.username} className="w-full h-full object-cover" crossOrigin="anonymous" />
                         ) : (
-                          <span className="text-2xl font-bold text-[#3D6B47]"
+                          <span className="text-2xl font-bold text-[#4D6940]"
                             style={{ fontFamily: "'Clash Display', sans-serif" }}>
                             {profile.username[0].toUpperCase()}
                           </span>
@@ -1586,7 +1586,7 @@ export default function JoinPage() {
                           {profile.name ?? profile.username}
                         </span>
                         {profile.title && (
-                          <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-2 py-0.5 rounded-md">
+                          <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-2 py-0.5 rounded-md">
                             {profile.title}
                           </span>
                         )}
@@ -1596,7 +1596,7 @@ export default function JoinPage() {
                         <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${
                           profile.platform === "lichess"
                             ? isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-600"
-                            : isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/20" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/15"
+                            : isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/20" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/15"
                         }`}>
                           {profile.platform === "lichess" ? "♞ Lichess" : "♔ chess.com"}
                         </span>
@@ -1638,7 +1638,7 @@ export default function JoinPage() {
                   <div className={`h-px ${divider}`} />
 
                   {/* Tournament details */}
-                  <div className={`rounded-xl px-4 py-3 space-y-2 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
+                  <div className={`rounded-xl px-4 py-3 space-y-2 ${isDark ? "bg-white/04" : "bg-[#FFF3D5]/70"}`}>
                     {[
                       { icon: Trophy, text: tournamentDisplay.name },
                       { icon: MapPin, text: tournamentDisplay.venue },
@@ -1646,8 +1646,8 @@ export default function JoinPage() {
                       { icon: Users, text: `${tournamentDisplay.playerCount} players registered` },
                     ].map(({ icon: Icon, text }) => (
                       <div key={text} className="flex items-center gap-2.5">
-                        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                        <span className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>{text}</span>
+                        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+                        <span className={`text-sm ${isDark ? "text-white/70" : "text-[#6B6B50]"}`}>{text}</span>
                       </div>
                     ))}
                   </div>
@@ -1658,7 +1658,7 @@ export default function JoinPage() {
                     <p className={`text-xs ${textMuted}`}>Let the director send you your results after the tournament.</p>
                     {/* Phone */}
                     <div className="relative">
-                      <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-gray-300"}`} />
+                      <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`} />
                       <input
                         type="tel"
                         inputMode="tel"
@@ -1671,7 +1671,7 @@ export default function JoinPage() {
                     </div>
                     {/* Email */}
                     <div className="relative">
-                      <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-gray-300"}`} />
+                      <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`} />
                       <input
                         type="email"
                         inputMode="email"
@@ -1698,7 +1698,7 @@ export default function JoinPage() {
               {/* Hero */}
               <div className="text-center py-4">
                 <div className="relative inline-block">
-                  <div className="w-20 h-20 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-[#3D6B47]/30">
+                  <div className="w-20 h-20 bg-[#4D6940] rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-[#4D6940]/30">
                     <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={1.5} />
                   </div>
                   <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center animate-scale-in">
@@ -1711,7 +1711,7 @@ export default function JoinPage() {
                 </h2>
                 <p className={`text-sm mt-1 ${textMuted}`}>
                   Registered as{" "}
-                  <span className={`font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                  <span className={`font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
                     {profile.name ?? profile.username}
                   </span>
                 </p>
@@ -1719,7 +1719,7 @@ export default function JoinPage() {
 
               {/* Registration card */}
               <div className={`mobile-card border ${card}`}>
-                <div className="h-1 bg-gradient-to-r from-[#3D6B47] via-[#4CAF50] to-[#3D6B47]" />
+                <div className="h-1 bg-gradient-to-r from-[#4D6940] via-[#4CAF50] to-[#4D6940]" />
                 <div className="p-5 space-y-4">
                   {/* Player + ELO */}
                   <div className="flex items-center justify-between">
@@ -1743,7 +1743,7 @@ export default function JoinPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-xl font-bold tabular-nums ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
+                      <p className={`text-xl font-bold tabular-nums ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}>
                         {resolvedConfig?.ratingType === "blitz" ? profile.blitz : profile.rapid}
                       </p>
@@ -1772,7 +1772,7 @@ export default function JoinPage() {
 
                   {/* Push notification opt-in */}
                   {resolvedConfig && (
-                    <div className={`rounded-xl overflow-hidden ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
+                    <div className={`rounded-xl overflow-hidden ${isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/08"}`}>
                       <NotifyBell
                         tournamentId={resolvedConfig.id}
                         tournamentName={tournamentDisplay.name}
@@ -1782,8 +1782,8 @@ export default function JoinPage() {
                   )}
 
                   {/* What's next */}
-                  <div className={`rounded-xl px-4 py-3 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/06"}`}>
-                    <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                  <div className={`rounded-xl px-4 py-3 ${isDark ? "bg-[#4D6940]/15" : "bg-[#4D6940]/06"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
                       What's next
                     </p>
                     <ul className="space-y-1.5">
@@ -1793,10 +1793,10 @@ export default function JoinPage() {
                         "First opponent matched by ELO proximity",
                       ].map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <span className={`text-xs font-bold mt-0.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                          <span className={`text-xs font-bold mt-0.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
                             {i + 1}.
                           </span>
-                          <span className={`text-xs ${isDark ? "text-white/60" : "text-gray-600"}`}>{item}</span>
+                          <span className={`text-xs ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -1810,7 +1810,7 @@ export default function JoinPage() {
                   href={`/clubs/${resolvedConfig.clubId}`}
                   className={`mobile-card border ${card} p-5 flex items-center gap-4 group hover:border-[#4CAF50]/40 transition-all`}
                 >
-                  <div className="w-12 h-12 bg-[#3D6B47] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+                  <div className="w-12 h-12 bg-[#4D6940] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#4D6940]/25">
                     <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1822,7 +1822,7 @@ export default function JoinPage() {
                       Follow this club for future tournaments and events
                     </p>
                   </div>
-                  <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30 group-hover:text-white/60" : "text-gray-300 group-hover:text-gray-500"} transition-colors`} />
+                  <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30 group-hover:text-white/60" : "text-[#6B6B50]/70 group-hover:text-[#6B6B50]"} transition-colors`} />
                 </Link>
               )}
             </div>

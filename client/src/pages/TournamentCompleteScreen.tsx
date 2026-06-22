@@ -26,11 +26,11 @@ function GuestAccountPrompt({
 
   if (user) return null; // already signed in
 
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
-  const border = isDark ? "border-[#4CAF50]/25" : "border-[#3D6B47]/20";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
+  const border = isDark ? "border-[#4CAF50]/25" : "border-[#4D6940]/20";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#f0f7f2]";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/55" : "text-gray-500";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/55" : "text-[#6B6B50]";
 
   const openSignup = () => { setAuthTab("signup"); setAuthOpen(true); };
   const openSignin = () => { setAuthTab("signin"); setAuthOpen(true); };
@@ -40,7 +40,7 @@ function GuestAccountPrompt({
       <div className="mx-4 mt-5">
         <div className={`rounded-2xl border ${border} ${cardBg} p-5`}>
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-[#3D6B47] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+            <div className="w-10 h-10 bg-[#4D6940] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#4D6940]/25">
               <Star className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
@@ -56,7 +56,7 @@ function GuestAccountPrompt({
           <div className="flex gap-2.5 mt-4">
             <button
               onClick={openSignup}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#3D6B47] text-white text-sm font-bold"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#4D6940] text-white text-sm font-bold"
             >
               <UserPlus className="w-4 h-4" /> Create Account
             </button>
@@ -106,12 +106,12 @@ export function TournamentCompleteScreen({
   clubName,
 }: TournamentCompleteProps) {
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/50" : "text-gray-500";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-50";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
-  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
-  const divider = isDark ? "border-white/08" : "border-gray-100";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FFF3D5]/70";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
+  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08";
+  const divider = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
 
   // Sort by points desc, buchholz tiebreak, then ELO
   const sorted = [...players].sort((a, b) => {
@@ -142,8 +142,8 @@ export function TournamentCompleteScreen({
         : "bg-amber-50 text-amber-600";
     if (idx === 0)
       return isDark
-        ? "bg-gray-400/20 text-gray-300"
-        : "bg-gray-100 text-gray-600";
+        ? "bg-[#6B6B50]/20 text-[#6B6B50]/70"
+        : "bg-[#E8D9B0]/40 text-[#6B6B50]";
     return isDark
       ? "bg-orange-400/20 text-orange-300"
       : "bg-orange-50 text-orange-600";
@@ -248,7 +248,7 @@ export function TournamentCompleteScreen({
                   isMe
                     ? isDark
                       ? "bg-[#4CAF50]/10"
-                      : "bg-[#3D6B47]/06"
+                      : "bg-[#4D6940]/06"
                     : idx % 2 === 0
                     ? cardBg
                     : isDark
@@ -262,7 +262,7 @@ export function TournamentCompleteScreen({
                     rank === 1
                       ? "text-amber-400"
                       : rank === 2
-                      ? "text-gray-400"
+                      ? "text-[#6B6B50]"
                       : rank === 3
                       ? "text-orange-400"
                       : textMuted
@@ -321,10 +321,10 @@ export function TournamentCompleteScreen({
             className={`flex items-center gap-4 rounded-2xl border p-4 transition-all ${
               isDark
                 ? "bg-[#1a2e1e] border-white/10 hover:border-[#4CAF50]/40"
-                : "bg-white border-gray-200 hover:border-[#3D6B47]/40"
+                : "bg-white border-[#E8D9B0] hover:border-[#4D6940]/40"
             }`}
           >
-            <div className="w-12 h-12 bg-[#3D6B47] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+            <div className="w-12 h-12 bg-[#4D6940] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#4D6940]/25">
               <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
@@ -347,7 +347,7 @@ export function TournamentCompleteScreen({
       <div className="px-4 pb-safe-bottom pb-8 pt-5 mt-auto">
         <Link
           href={`/tournament/${tournamentId}`}
-          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-base bg-[#3D6B47] text-white"
+          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-base bg-[#4D6940] text-white"
         >
           <Trophy className="w-5 h-5" />
           View Full Tournament Page

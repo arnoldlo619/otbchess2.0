@@ -152,23 +152,23 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
   const providerLabel = data.broadcastProvider === "youtube" ? "YouTube" : data.broadcastProvider === "twitch" ? "Twitch" : data.broadcastProvider === "custom" ? "Custom HTTPS" : null;
 
   const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const cardBorder = isDark ? "border-white/08" : "border-gray-100";
-  const labelColor = isDark ? "text-white/70" : "text-gray-600";
-  const inputBg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-gray-50";
-  const inputBorder = isDark ? "border-white/10" : "border-gray-200";
-  const inputText = isDark ? "text-white" : "text-gray-900";
+  const cardBorder = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const labelColor = isDark ? "text-white/70" : "text-[#6B6B50]";
+  const inputBg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#FFF3D5]/70";
+  const inputBorder = isDark ? "border-white/10" : "border-[#E8D9B0]";
+  const inputText = isDark ? "text-white" : "text-[#1A1A1A]";
 
   return (
     <div className={`rounded-2xl border overflow-hidden ${cardBg} ${cardBorder}`}>
-      <div className={`px-5 py-3 border-b flex items-center gap-2 ${isDark ? "border-white/06" : "border-gray-100"}`}>
-        <MonitorPlay className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-        <h2 className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/35" : "text-gray-400"}`}>
+      <div className={`px-5 py-3 border-b flex items-center gap-2 ${isDark ? "border-white/06" : "border-[#E8D9B0]/70"}`}>
+        <MonitorPlay className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+        <h2 className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
           Board Broadcast
         </h2>
       </div>
 
       <div className="px-5 py-4 space-y-4">
-        <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+        <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
           Feature a live YouTube or Twitch stream for a selected board on the public tournament page.
         </p>
 
@@ -180,7 +180,7 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
             role="switch"
             aria-checked={data.broadcastEnabled}
             onClick={() => setData((p) => ({ ...p, broadcastEnabled: !p.broadcastEnabled }))}
-            className={`relative w-11 h-6 rounded-full transition-colors ${data.broadcastEnabled ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-gray-300"}`}
+            className={`relative w-11 h-6 rounded-full transition-colors ${data.broadcastEnabled ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-[#E8D9B0]"}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${data.broadcastEnabled ? "translate-x-5" : ""}`} />
           </button>
@@ -246,9 +246,9 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
                         ? s === "live"
                           ? "bg-red-600/15 border-red-500/30 text-red-400"
                           : s === "ended"
-                          ? isDark ? "bg-white/10 border-white/20 text-white/60" : "bg-gray-100 border-gray-300 text-gray-600"
+                          ? isDark ? "bg-white/10 border-white/20 text-white/60" : "bg-[#E8D9B0]/40 border-[#E8D9B0] text-[#6B6B50]"
                           : isDark ? "bg-[#4CAF50]/15 border-[#4CAF50]/30 text-[#4CAF50]" : "bg-green-50 border-green-300 text-green-700"
-                        : isDark ? "bg-transparent border-white/08 text-white/30 hover:border-white/15" : "bg-transparent border-gray-200 text-gray-400 hover:border-gray-300"
+                        : isDark ? "bg-transparent border-white/08 text-white/30 hover:border-white/15" : "bg-transparent border-[#E8D9B0] text-[#6B6B50] hover:border-[#E8D9B0]"
                     }`}
                   >
                     {s === "live" && <Radio className="w-3 h-3 inline mr-1" />}
@@ -263,7 +263,7 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
               <div>
                 <button
                   onClick={() => setShowPreview(!showPreview)}
-                  className={`text-xs font-medium flex items-center gap-1.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"} hover:underline`}
+                  className={`text-xs font-medium flex items-center gap-1.5 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"} hover:underline`}
                 >
                   <ExternalLink className="w-3 h-3" />
                   {showPreview ? "Hide preview" : "Preview embed"}
@@ -306,7 +306,7 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] ${
               isDark
                 ? "bg-[#4CAF50]/15 hover:bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/20"
-                : "bg-[#3D6B47] hover:bg-[#2A4A32] text-white"
+                : "bg-[#4D6940] hover:bg-[#2A4A32] text-white"
             } disabled:opacity-50`}
           >
             <Save className="w-4 h-4" />

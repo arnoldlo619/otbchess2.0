@@ -264,7 +264,7 @@ function TournamentStatusBadge({ status, isDark = true }: { status: ClubTourname
   }
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-      isDark ? "bg-white/8 text-white/40" : "bg-gray-100 text-gray-400"
+      isDark ? "bg-white/8 text-white/40" : "bg-[#E8D9B0]/60 text-[#6B6B50]"
     }`}>
       <CheckCircle2 className="w-2.5 h-2.5" /> Completed
     </span>
@@ -288,14 +288,14 @@ function StatPill({
         isDark ? "bg-white/6" : "bg-black/5"
       }`}
     >
-      <div className={`${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>{icon}</div>
+      <div className={`${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>{icon}</div>
       <span
-        className={`text-xl font-bold leading-none ${isDark ? "text-white" : "text-gray-900"}`}
+        className={`text-xl font-bold leading-none ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
         style={{ fontFamily: "'Clash Display', sans-serif" }}
       >
         {value}
       </span>
-      <span className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+      <span className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
         {label}
       </span>
     </div>
@@ -324,12 +324,12 @@ const FEED_EVENT_CONFIG: Record<
 > = {
   member_join: {
     icon: <UserPlus className="w-4 h-4" />,
-    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    accent: "text-[#4D6940] bg-[#4D6940]/10",
     darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
   },
   member_leave: {
     icon: <UserMinus className="w-4 h-4" />,
-    accent: "text-gray-500 bg-gray-100",
+    accent: "text-[#6B6B50] bg-[#E8D9B0]/50",
     darkAccent: "text-white/40 bg-white/8",
   },
   tournament_created: {
@@ -349,12 +349,12 @@ const FEED_EVENT_CONFIG: Record<
   },
   club_founded: {
     icon: <Star className="w-4 h-4" />,
-    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    accent: "text-[#4D6940] bg-[#4D6940]/10",
     darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
   },
   poll: {
     icon: <BarChart2 className="w-4 h-4" />,
-    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    accent: "text-[#4D6940] bg-[#4D6940]/10",
     darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
   },
   rsvp_form: {
@@ -384,7 +384,7 @@ const FEED_EVENT_CONFIG: Record<
   },
   event_created: {
     icon: <Calendar className="w-4 h-4" />,
-    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    accent: "text-[#4D6940] bg-[#4D6940]/10",
     darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
   },
 };
@@ -430,7 +430,7 @@ function FeedEventCard({
   const userVotedOptions = userId ? (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id) : [];
   const userRsvp = userId ? (event.rsvpEntries ?? []).find((r) => r.userId === userId) : undefined;
   // Use the club's accent color passed as a prop (keeps FeedEventCard stateless)
-  const accent = accentColor ?? (isDark ? "#4CAF50" : "#3D6B47");
+  const accent = accentColor ?? (isDark ? "#4CAF50" : "#4D6940");
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId || !isMemberUser) return;
@@ -456,14 +456,14 @@ function FeedEventCard({
             <p className={`text-sm font-medium ${textMain} leading-snug`}>{event.description}</p>
             {event.detail && (
               <p className={`text-sm mt-1 leading-relaxed ${
-                event.type === "announcement" ? (isDark ? "text-white/70" : "text-gray-600") : textMuted
+                event.type === "announcement" ? (isDark ? "text-white/70" : "text-[#6B6B50]") : textMuted
               }`}>{event.detail}</p>
             )}
             <div className="flex items-center gap-3 mt-1.5">
               <span className={`text-xs ${textMuted}`}>{relativeTime(event.createdAt)}</span>
               {event.linkHref && (
                 <a href={event.linkHref} className={`text-xs font-semibold transition-colors ${
-                  isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#3D6B47] hover:text-[#2d5236]"
+                  isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#4D6940] hover:text-[#3a5230]"
                 }`}>{event.linkLabel ?? "View"} &rarr;</a>
               )}
             </div>
@@ -472,7 +472,7 @@ function FeedEventCard({
             <button
               onClick={() => onDelete(event.id)}
               className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
-                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]/70 hover:text-[#6B6B50]"
               }`}
               title="Remove from feed"
             >
@@ -495,7 +495,7 @@ function FeedEventCard({
             </div>
             {canDelete && (
               <button onClick={() => onDelete(event.id)} className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
-                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]/70 hover:text-[#6B6B50]"
               }`}><Trash2 className="w-3.5 h-3.5" /></button>
             )}
           </div>
@@ -511,7 +511,7 @@ function FeedEventCard({
                   onClick={() => handleVote(opt.id)}
                   disabled={pollExpired || !isMemberUser}
                   className={`w-full text-left rounded-xl overflow-hidden border transition-all relative ${
-                    voted ? "border-[#4CAF50]/50" : isDark ? "border-white/10 hover:border-white/25" : "border-gray-200 hover:border-gray-300"
+                    voted ? "border-[#4CAF50]/50" : isDark ? "border-white/10 hover:border-white/25" : "border-[#E8D9B0] hover:border-[#E8D9B0]"
                   } ${(pollExpired || !isMemberUser) ? "cursor-default" : "cursor-pointer"}`}
                 >
                   {showResults && (
@@ -523,11 +523,11 @@ function FeedEventCard({
                   <div className="relative flex items-center justify-between px-3 py-2.5">
                     <div className="flex items-center gap-2">
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        voted ? "border-[#4CAF50] bg-[#4CAF50]" : isDark ? "border-white/30" : "border-gray-300"
+                        voted ? "border-[#4CAF50] bg-[#4CAF50]" : isDark ? "border-white/30" : "border-[#E8D9B0]"
                       }`}>
                         {voted && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
                       </div>
-                      <span className={`text-sm font-medium ${voted ? (isDark ? "text-white" : "text-gray-900") : textMuted}`}>{opt.text}</span>
+                      <span className={`text-sm font-medium ${voted ? (isDark ? "text-white" : "text-[#1A1A1A]") : textMuted}`}>{opt.text}</span>
                     </div>
                     {showResults && <span className={`text-xs font-semibold ${textMuted}`}>{pct}%</span>}
                   </div>
@@ -558,7 +558,7 @@ function FeedEventCard({
             </div>
             {canDelete && (
               <button onClick={() => onDelete(event.id)} className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
-                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]/70 hover:text-[#6B6B50]"
               }`}><Trash2 className="w-3.5 h-3.5" /></button>
             )}
           </div>
@@ -609,11 +609,11 @@ function FeedEventCard({
             </div>
             {canDelete && (
               <button onClick={() => onDelete(event.id)} className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
-                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]/70 hover:text-[#6B6B50]"
               }`}><Trash2 className="w-3.5 h-3.5" /></button>
             )}
           </div>
-          <div className={`rounded-xl p-3 border ${ isDark ? "border-white/08 bg-white/4" : "border-gray-100 bg-gray-50" }`}>
+          <div className={`rounded-xl p-3 border ${ isDark ? "border-white/08 bg-white/4" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70" }`}>
             <div className="flex items-center gap-3 flex-wrap">
               {event.rsvpDate && (
                 <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
@@ -637,8 +637,8 @@ function FeedEventCard({
                   onClick={() => handleRsvp(s)}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                     userRsvp?.status === s
-                      ? s === "going" ? "bg-[#4CAF50] text-white" : s === "maybe" ? "bg-amber-500 text-white" : isDark ? "bg-white/15 text-white/60" : "bg-gray-200 text-gray-500"
-                      : isDark ? "bg-white/07 text-white/50 hover:bg-white/12 hover:text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                      ? s === "going" ? "bg-[#4CAF50] text-white" : s === "maybe" ? "bg-amber-500 text-white" : isDark ? "bg-white/15 text-white/60" : "bg-[#E8D9B0] text-[#6B6B50]"
+                      : isDark ? "bg-white/07 text-white/50 hover:bg-white/12 hover:text-white" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0] hover:text-[#1A1A1A]"
                   }`}
                 >
                   {s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go"}
@@ -665,7 +665,7 @@ function FeedEventCard({
                         </div>
                       ))}
                       {group.length > 5 && (
-                        <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[9px] font-bold ${ isDark ? "border-white/10 text-white/50 bg-white/08" : "border-gray-200 text-gray-400 bg-gray-100" }`}>
+                        <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[9px] font-bold ${ isDark ? "border-white/10 text-white/50 bg-white/08" : "border-[#E8D9B0] text-[#6B6B50] bg-[#E8D9B0]/40" }`}>
                           +{group.length - 5}
                         </div>
                       )}
@@ -948,20 +948,20 @@ export default function ClubProfile() {
 
   if (!club) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center gap-6 px-6 ${isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]"}`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-6 px-6 ${isDark ? "bg-[#0d1a0f]" : "bg-[#FFF3D5]"}`}>
         <NavLogo />
         <div className={`rounded-3xl border p-8 max-w-sm w-full text-center ${
-          isDark ? "bg-[#0f1f12] border-white/10" : "bg-white border-gray-200"
+          isDark ? "bg-[#0f1f12] border-white/10" : "bg-[#FFF8E8] border-[#E8D9B0]"
         }`}>
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
             isDark ? "bg-amber-500/15" : "bg-amber-50"
           }`}>
             <span className="text-2xl">&#9816;</span>
           </div>
-          <h2 className={`text-base font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+          <h2 className={`text-base font-bold mb-2 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
             Club not found
           </h2>
-          <p className={`text-sm mb-5 leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>
+          <p className={`text-sm mb-5 leading-relaxed ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
             This club may have been deleted or created before a platform update. You can remove it from your profile to keep things tidy.
           </p>
           <div className="flex flex-col gap-2">
@@ -974,7 +974,7 @@ export default function ClubProfile() {
             <Link
               href="/clubs"
               className={`w-full py-2.5 rounded-2xl text-sm font-medium transition text-center block ${
-                isDark ? "bg-white/8 hover:bg-white/12 text-white/70" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                isDark ? "bg-white/8 hover:bg-white/12 text-white/70" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
               }`}
             >
               Browse all clubs
@@ -1159,18 +1159,18 @@ export default function ClubProfile() {
   })();
 
   // ── Colour palette ──────────────────────────────────────────────────────────
-  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]";
-  const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
-  const cardBorder = isDark ? "border-white/8" : "border-gray-100";
-  const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/50" : "text-gray-400";
-  const divider = isDark ? "border-white/8" : "border-gray-100";
-  const tabActive = isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
-  const tabInactive = isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700";
+  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#FFF3D5]";
+  const card = isDark ? "bg-[#1a2e1d]" : "bg-[#FFF8E8]";
+  const cardBorder = isDark ? "border-white/8" : "border-[#E8D9B0]";
+  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
+  const divider = isDark ? "border-white/8" : "border-[#E8D9B0]";
+  const tabActive = isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]";
+  const tabInactive = isDark ? "text-white/50 hover:text-white/80" : "text-[#6B6B50] hover:text-[#1A1A1A]";
   // Use the club's stored accent color — falls back to platform defaults if not set.
   // Because `club` is in React state and updated by the onClubChange subscriber,
   // this re-derives automatically whenever the owner saves a new color in Settings.
-  const accent = club?.accentColor ?? (isDark ? "#4CAF50" : "#3D6B47");
+  const accent = club?.accentColor ?? (isDark ? "#4CAF50" : "#4D6940");
 
   return (
     <div className={`min-h-screen ${bg}`}>
@@ -1570,7 +1570,7 @@ export default function ClubProfile() {
             <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden animate-in fade-in duration-200`}>
               {/* Header */}
               <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between gap-3`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   Members
                 </h2>
                 <span className={`text-xs font-medium ${textMuted}`}>{club.memberCount} total</span>
@@ -1585,7 +1585,7 @@ export default function ClubProfile() {
                     onChange={(e) => { setMemberSearch(e.target.value); setMemberPage(1); }}
                     placeholder="Search members…"
                     className={`w-full pl-8 pr-3 py-1.5 rounded-xl border text-xs outline-none transition-colors focus:border-[${accent}] ${
-                      isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
+                      isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]"
                     }`}
                   />
                 </div>
@@ -1593,7 +1593,7 @@ export default function ClubProfile() {
                   value={memberSort}
                   onChange={(e) => { setMemberSort(e.target.value as typeof memberSort); setMemberPage(1); }}
                   className={`text-xs px-2 py-1.5 rounded-xl border outline-none cursor-pointer ${
-                    isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-gray-50 border-gray-200 text-gray-600"
+                    isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50]"
                   }`}
                 >
                   <option value="role">By Role</option>
@@ -1621,14 +1621,14 @@ export default function ClubProfile() {
                       disabled={memberPage === 1}
                       onClick={() => setMemberPage((p) => p - 1)}
                       className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
-                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85 hover:bg-[#E8D9B0]"
                       }`}
                     >Prev</button>
                     <button
                       disabled={memberPage === totalPages}
                       onClick={() => setMemberPage((p) => p + 1)}
                       className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
-                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85 hover:bg-[#E8D9B0]"
                       }`}
                     >Next</button>
                   </div>
@@ -1651,18 +1651,18 @@ export default function ClubProfile() {
               const completed = steps.filter((s) => s.done).length;
               if (completed === steps.length) return null;
               return (
-                <div className={`rounded-3xl border ${isDark ? "border-[#4CAF50]/25 bg-[#4CAF50]/5" : "border-[#3D6B47]/20 bg-[#3D6B47]/5"} p-5`}>
+                <div className={`rounded-3xl border ${isDark ? "border-[#4CAF50]/25 bg-[#4CAF50]/5" : "border-[#4D6940]/20 bg-[#4D6940]/5"} p-5`}>
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h2 className={`text-sm font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Set Up Your Club</h2>
                       <p className={`text-xs ${textMuted} mt-0.5`}>{completed} of {steps.length} steps complete</p>
                     </div>
                     <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                      isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                      isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                     }`}>{Math.round((completed / steps.length) * 100)}%</div>
                   </div>
                   {/* Progress bar */}
-                  <div className={`h-1.5 rounded-full mb-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+                  <div className={`h-1.5 rounded-full mb-4 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{ width: `${(completed / steps.length) * 100}%`, background: "oklch(0.55 0.13 145)" }}
@@ -1675,10 +1675,10 @@ export default function ClubProfile() {
                       }`}>
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${
                           step.done
-                            ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40" : "bg-[#3D6B47]/15 border-[#3D6B47]/30"
-                            : isDark ? "border-white/20 bg-transparent" : "border-gray-300 bg-transparent"
+                            ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40" : "bg-[#4D6940]/15 border-[#4D6940]/30"
+                            : isDark ? "border-white/20 bg-transparent" : "border-[#E8D9B0] bg-transparent"
                         }`}>
-                          {step.done && <Check className={`w-3 h-3 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />}
+                          {step.done && <Check className={`w-3 h-3 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />}
                         </div>
                         <span className={step.done ? "line-through opacity-50" : ""}>{step.label}</span>
                       </div>
@@ -1702,7 +1702,7 @@ export default function ClubProfile() {
             {/* Description */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   About
                 </h2>
                 {(isOwner || isDirector) && (
@@ -1711,21 +1711,21 @@ export default function ClubProfile() {
                     className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                       isDark
                         ? "bg-white/10 text-white hover:bg-white/20"
-                        : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                        : "bg-[#E8D9B0]/40 text-[#1A1A1A] hover:bg-[#E8D9B0]"
                     }`}
                   >
                     Edit
                   </button>
                 )}
               </div>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
                 {club.description}
               </p>
             </div>
 
             {/* Details grid */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 Details
               </h2>
               <div className="space-y-3">
@@ -1739,63 +1739,63 @@ export default function ClubProfile() {
             {/* Social links + meeting schedule + contact */}
             {(club.website || club.discord || club.twitter || club.instagram || club.tiktok || club.youtube || club.linktree || club.meetingDay || club.contactEmail || club.contactPhone) && (
               <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   Links & Info
                 </h2>
                 <div className="flex flex-col gap-1.5">
                   {club.website && (
                     <a href={club.website} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
-                      <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Website</span>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
+                      <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Website</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.discord && (
                     <a href={club.discord} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
                       <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Discord</span>
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Discord</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.instagram && (
                     <a href={club.instagram.startsWith("http") ? club.instagram : `https://instagram.com/${club.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
                       <Camera className={`w-4 h-4 text-pink-500`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Instagram</span>
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Instagram</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.tiktok && (
                     <a href={club.tiktok.startsWith("http") ? club.tiktok : `https://tiktok.com/@${club.tiktok.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
-                      <Video className={`w-4 h-4 ${isDark ? "text-white/70" : "text-gray-700"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>TikTok</span>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
+                      <Video className={`w-4 h-4 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>TikTok</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.youtube && (
                     <a href={club.youtube} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
                       <Play className={`w-4 h-4 text-red-500`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>YouTube</span>
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>YouTube</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.linktree && (
                     <a href={club.linktree} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
-                      <Link2 className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Linktree</span>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
+                      <Link2 className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Linktree</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {(club.meetingDay || club.meetingTime) && (
-                    <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
+                    <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-white/3" : "bg-[#FFF3D5]/70"}`}>
                       <Clock className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                       <div>
-                        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
                           {[club.meetingDay, club.meetingTime].filter(Boolean).join(" · ")}
                         </p>
                         {club.meetingNotes && (
@@ -1806,39 +1806,39 @@ export default function ClubProfile() {
                   )}
                   {club.contactEmail && (
                     <a href={`mailto:${club.contactEmail}`}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
-                      <Mail className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-400"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>{club.contactEmail}</span>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
+                      <Mail className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>{club.contactEmail}</span>
                     </a>
                   )}
                   {club.contactPhone && (
                     <a href={`tel:${club.contactPhone}`}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
-                      <Phone className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-400"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>{club.contactPhone}</span>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
+                      <Phone className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>{club.contactPhone}</span>
                     </a>
                   )}
                   {club.facebook && (
                     <a href={club.facebook.startsWith("http") ? club.facebook : `https://facebook.com/${club.facebook.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
                       <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Facebook</span>
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Facebook</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.xUrl && (
                     <a href={club.xUrl.startsWith("http") ? club.xUrl : `https://x.com/${club.xUrl.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
-                      <svg className={`w-4 h-4 ${isDark ? "text-white/70" : "text-gray-700"}`} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>X / Twitter</span>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
+                      <svg className={`w-4 h-4 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>X / Twitter</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.meetupUrl && (
                     <a href={club.meetupUrl} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"}`}>
                       <MapPin className={`w-4 h-4 text-red-500`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Meetup</span>
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Meetup</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
@@ -1849,10 +1849,10 @@ export default function ClubProfile() {
             {/* What to Expect section */}
             {club.whatToExpect && (
               <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                   What to Expect
                 </h2>
-                <p className={`text-sm leading-relaxed ${isDark ? "text-white/75" : "text-gray-700"}`}>
+                <p className={`text-sm leading-relaxed ${isDark ? "text-white/75" : "text-[#1A1A1A]/85"}`}>
                   {club.whatToExpect}
                 </p>
               </div>
@@ -1864,7 +1864,7 @@ export default function ClubProfile() {
               <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
                 <div className="flex items-start gap-3">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
-                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                   }`}>
                     {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
                   </div>
@@ -1878,7 +1878,7 @@ export default function ClubProfile() {
                       className={`w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none border transition-colors ${
                         isDark
                           ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/40"
-                          : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]/40"
+                          : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]/40"
                       }`}
                     />
                     <div className="flex items-center justify-between mt-2">
@@ -1889,7 +1889,7 @@ export default function ClubProfile() {
                         className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 ${
                           isDark
                             ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A] disabled:hover:bg-[#4CAF50]"
-                            : "bg-[#3D6B47] text-white hover:bg-[#2d5236] disabled:hover:bg-[#3D6B47]"
+                            : "bg-[#4D6940] text-white hover:bg-[#3a5230] disabled:hover:bg-[#4D6940]"
                         }`}
                       >
                         {postingAnnouncement ? "Posting…" : "Post"}
@@ -1912,21 +1912,21 @@ export default function ClubProfile() {
                   <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
                       <Trophy className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Top Members</h2>
+                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Top Members</h2>
                     </div>
                     <button
                       onClick={() => setActiveTab("members")}
-                      className={`flex items-center gap-1 text-xs font-semibold transition-colors ${isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#3D6B47] hover:text-[#2d5236]"}`}
+                      className={`flex items-center gap-1 text-xs font-semibold transition-colors ${isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#4D6940] hover:text-[#3a5230]"}`}
                     >
                       See all <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                     {top.map((m, idx) => (
-                      <div key={m.userId} className={`flex items-center gap-3 px-5 py-3 transition-colors ${isDark ? "hover:bg-white/4" : "hover:bg-gray-50"}`}>
-                        <span className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-gray-400"}`}>{idx + 1}</span>
+                      <div key={m.userId} className={`flex items-center gap-3 px-5 py-3 transition-colors ${isDark ? "hover:bg-white/4" : "hover:bg-[#FFF3D5]"}`}>
+                        <span className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>{idx + 1}</span>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden ${
-                          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                         }`}>
                           {m.avatarUrl ? (
                             <img src={m.avatarUrl} alt={m.displayName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -1960,7 +1960,7 @@ export default function ClubProfile() {
                       <button
                         onClick={() => setActiveTab("members")}
                         className={`w-full text-center text-xs font-semibold py-1.5 rounded-xl transition-colors ${
-                          isDark ? "text-white/50 hover:text-white hover:bg-white/6" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                          isDark ? "text-white/50 hover:text-white hover:bg-white/6" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#FFF3D5]"
                         }`}
                       >
                         View all {members.length} members →
@@ -1979,10 +1979,10 @@ export default function ClubProfile() {
               const ownerChesscom = ownerMember?.chesscomUsername ?? null;
               return (
                 <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>Organized by</h2>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Organized by</h2>
                   <div className="flex items-center gap-4">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0 overflow-hidden ${
-                      isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                      isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                     }`}>
                       {ownerAvatar ? (
                         <img src={ownerAvatar} alt={ownerName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -2003,7 +2003,7 @@ export default function ClubProfile() {
                     <button
                       onClick={() => setShowContactOwner(true)}
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex-shrink-0 ${
-                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85 hover:bg-[#E8D9B0]"
                       }`}
                     >
                       <Mail className="w-3.5 h-3.5" />
@@ -2026,7 +2026,7 @@ export default function ClubProfile() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     isDark
                       ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/25 hover:bg-[#4CAF50]/25"
-                      : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20 hover:bg-[#3D6B47]/20"
+                      : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20 hover:bg-[#4D6940]/20"
                   }`}
                 >
                   <Share2 className="w-3.5 h-3.5" />
@@ -2049,7 +2049,7 @@ export default function ClubProfile() {
             ) : (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     Activity
                   </h2>
                 </div>
@@ -2108,7 +2108,7 @@ export default function ClubProfile() {
                 <button
                   onClick={() => setShowCreateEvent(true)}
                   className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors ${
-                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-[#E8D9B0]/40 text-[#1A1A1A] hover:bg-[#E8D9B0]"
                   }`}
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
@@ -2125,8 +2125,8 @@ export default function ClubProfile() {
                   onClick={() => setEventsFilter(f)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                     eventsFilter === f
-                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
-                      : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-gray-100 text-gray-500 hover:text-gray-800 border border-transparent"
+                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20"
+                      : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:text-[#1A1A1A] border border-transparent"
                   }`}
                 >
                   {f === "all" ? "All" : f === "events" ? "Events" : "Tournaments"}
@@ -2143,7 +2143,7 @@ export default function ClubProfile() {
                   <button
                     onClick={() => setShowCreateEvent(true)}
                     className={`mt-4 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
-                      isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                      isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-[#E8D9B0]/40 text-[#1A1A1A] hover:bg-[#E8D9B0]"
                     }`}
                   >
                     Create First Event
@@ -2156,9 +2156,9 @@ export default function ClubProfile() {
                 {filteredUpcoming.length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                     <div className={`px-5 py-3.5 border-b ${divider} flex items-center justify-between`}>
-                      <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
+                      <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Upcoming</h2>
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                       }`}>{filteredUpcoming.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
@@ -2178,7 +2178,7 @@ export default function ClubProfile() {
                           <div key={ev.id} className={`rounded-2xl overflow-hidden border transition-all ${
                             isDark
                               ? "bg-[#0d1f12] border-white/8 hover:border-white/15"
-                              : "bg-white border-gray-200 hover:border-gray-300 shadow-sm"
+                              : "bg-white border-[#E8D9B0] hover:border-[#E8D9B0] shadow-sm"
                           }`}>
                             {/* Cover image — full bleed */}
                             {ev.coverImageUrl ? (
@@ -2210,8 +2210,8 @@ export default function ClubProfile() {
                                   </span>
                                   {(isOwner || isDirector) && (
                                     <div className="flex items-center gap-1">
-                                      <button onClick={() => { setEditingEvent(ev); const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16); setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this", coverImageUrl: ev.coverImageUrl ?? "" }); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}><Pencil className="w-3 h-3" /></button>
-                                      <button onClick={() => setConfirmDeleteId(ev.id)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}><Trash2 className="w-3 h-3" /></button>
+                                      <button onClick={() => { setEditingEvent(ev); const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16); setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this", coverImageUrl: ev.coverImageUrl ?? "" }); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-white hover:bg-white/8" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}><Pencil className="w-3 h-3" /></button>
+                                      <button onClick={() => setConfirmDeleteId(ev.id)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-[#6B6B50] hover:text-red-500 hover:bg-red-50"}`}><Trash2 className="w-3 h-3" /></button>
                                     </div>
                                   )}
                                 </div>
@@ -2224,7 +2224,7 @@ export default function ClubProfile() {
                                 <h3 className={`text-lg font-black leading-snug flex-1 ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{ev.title}</h3>
                                 {ev.recurrence && ev.recurrence !== "none" && (
                                   <span className={`mt-0.5 text-[9px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
-                                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                                   }`}>{ev.recurrence === "biweekly" ? "BI-WEEKLY" : ev.recurrence.toUpperCase()}</span>
                                 )}
                               </div>
@@ -2281,7 +2281,7 @@ export default function ClubProfile() {
                                     className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all active:scale-95 ${
                                       myRsvp?.status === "going"
                                         ? isDark ? "text-black" : "text-white"
-                                        : isDark ? "bg-white/8 text-white/70 hover:bg-white/15" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        : isDark ? "bg-white/8 text-white/70 hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                                     }`}
                                     style={myRsvp?.status === "going" ? { background: evAccent } : {}}
                                   >
@@ -2292,7 +2292,7 @@ export default function ClubProfile() {
                                   <button
                                     onClick={() => {}}
                                     className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all ${
-                                      isDark ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-gray-50 text-gray-300 cursor-not-allowed"
+                                      isDark ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-[#FFF3D5]/70 text-[#6B6B50]/70 cursor-not-allowed"
                                     }`}
                                     disabled
                                   >
@@ -2310,7 +2310,7 @@ export default function ClubProfile() {
                           <a
                             key={t.id}
                             href={`/tournament/${t.id}`}
-                            className={`flex items-start gap-3 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                            className={`flex items-start gap-3 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}
                           >
                             {/* Date badge */}
                             <div className="w-11 h-11 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center text-center bg-[#4CAF50]/15">
@@ -2323,7 +2323,7 @@ export default function ClubProfile() {
                               <div className="flex items-center gap-2">
                                 <p className={`text-sm font-semibold ${textMain} truncate`}>{t.name}</p>
                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
-                                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
                                 }`}>Tournament</span>
                               </div>
                               <p className={`text-xs ${textMuted} mt-0.5`}>
@@ -2340,7 +2340,7 @@ export default function ClubProfile() {
                         <button
                           onClick={() => setShowAllUpcoming(v => !v)}
                           className={`w-full py-3 text-xs font-semibold transition-colors ${
-                            isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                            isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#FFF3D5]"
                           }`}
                         >
                           {showAllUpcoming ? "Show Less" : `View All ${filteredUpcoming.length} Upcoming Events`}
@@ -2354,7 +2354,7 @@ export default function ClubProfile() {
                 {filteredPast.length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                     <div className={`px-5 py-3.5 border-b ${divider} flex items-center justify-between`}>
-                      <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Past</h2>
+                      <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Past</h2>
                       <span className={`text-xs font-medium ${textMuted}`}>{filteredPast.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
@@ -2364,9 +2364,9 @@ export default function ClubProfile() {
                         const venue = isPastEvent ? (item.data as ClubEvent).venue : undefined;
                         return (
                           <div key={item.type === "event" ? (item.data as ClubEvent).id : (item.data as TournamentConfig).id}
-                            className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                            className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}
                           >
-                            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
                               {isPastEvent
                                 ? <CheckCircle2 className={`w-4 h-4 ${textMuted}`} />
                                 : <Trophy className={`w-4 h-4 ${textMuted}`} />}
@@ -2379,7 +2379,7 @@ export default function ClubProfile() {
                               </p>
                             </div>
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                              isDark ? "bg-white/8 text-white/30" : "bg-gray-100 text-gray-400"
+                              isDark ? "bg-white/8 text-white/30" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                             }`}>{isPastEvent ? "Past" : "Ended"}</span>
                           </div>
                         );
@@ -2388,7 +2388,7 @@ export default function ClubProfile() {
                         <button
                           onClick={() => setShowAllPast(v => !v)}
                           className={`w-full py-3 text-xs font-semibold transition-colors ${
-                            isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                            isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#FFF3D5]"
                           }`}
                         >
                           {showAllPast ? `Show Less` : `See All ${filteredPast.length} Past Events`}
@@ -2412,7 +2412,7 @@ export default function ClubProfile() {
                 >
                   <div className="flex items-center justify-between mb-5">
                     <h2 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>New Event</h2>
-                    <button onClick={() => setShowCreateEvent(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}>
+                    <button onClick={() => setShowCreateEvent(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}>
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -2433,7 +2433,7 @@ export default function ClubProfile() {
                         </div>
                       ) : (
                         <label className={`flex flex-col items-center justify-center gap-2 w-full rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
-                          isDark ? "border-white/15 hover:border-white/30 bg-white/3 hover:bg-white/5" : "border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
+                          isDark ? "border-white/15 hover:border-white/30 bg-white/3 hover:bg-white/5" : "border-[#E8D9B0] hover:border-[#4D6940]/40 bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
                         }`} style={{ height: 100 }}>
                           {uploadingCover ? (
                             <span className={`text-xs ${textMuted}`}>Uploading…</span>
@@ -2471,7 +2471,7 @@ export default function ClubProfile() {
                         onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
                         placeholder="e.g. Thursday Night Blitz"
                         className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]/40"
                         }`}
                       />
                     </div>
@@ -2482,7 +2482,7 @@ export default function ClubProfile() {
                         value={eventForm.startAt}
                         onChange={(e) => setEventForm((f) => ({ ...f, startAt: e.target.value }))}
                         className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                          isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-gray-400"
+                          isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] focus:border-[#4D6940]/40"
                         }`}
                       />
                     </div>
@@ -2494,7 +2494,7 @@ export default function ClubProfile() {
                         onChange={(e) => setEventForm((f) => ({ ...f, venue: e.target.value }))}
                         placeholder="e.g. Club Room 2B"
                         className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]/40"
                         }`}
                       />
                     </div>
@@ -2506,7 +2506,7 @@ export default function ClubProfile() {
                         placeholder="Optional event details..."
                         rows={2}
                         className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors resize-none ${
-                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]/40"
                         }`}
                       />
                     </div>
@@ -2518,7 +2518,7 @@ export default function ClubProfile() {
                         onChange={(e) => setEventForm((f) => ({ ...f, admissionNote: e.target.value }))}
                         placeholder="e.g. Free with RSVP or $5 at door"
                         className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]/40"
                         }`}
                       />
                     </div>
@@ -2531,8 +2531,8 @@ export default function ClubProfile() {
                             onClick={() => setEventForm((f) => ({ ...f, recurrence: opt }))}
                             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                               eventForm.recurrence === opt
-                                ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
-                                : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#4D6940] text-white"
+                                : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                             }`}>
                             {opt === "none" ? "One-time" : opt === "biweekly" ? "Bi-weekly" : opt.charAt(0).toUpperCase() + opt.slice(1)}
                           </button>
@@ -2544,7 +2544,7 @@ export default function ClubProfile() {
                           <input type="date" value={eventForm.recurrenceEndDate}
                             onChange={(e) => setEventForm((f) => ({ ...f, recurrenceEndDate: e.target.value }))}
                             className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
-                              isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-gray-400"
+                              isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] focus:border-[#4D6940]/40"
                             }`} />
                           <p className={`text-[10px] mt-1 ${textMuted} opacity-60`}>
                             {eventForm.recurrence === "weekly" ? "Up to 12 weekly occurrences" : eventForm.recurrence === "biweekly" ? "Up to 12 bi-weekly occurrences" : "Up to 6 monthly occurrences"}
@@ -2595,7 +2595,7 @@ export default function ClubProfile() {
                       }
                     }}
                     className={`w-full mt-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isDark ? "bg-[#4CAF50] text-black hover:bg-[#45a049]" : "bg-[#3D6B47] text-white hover:bg-[#2d5236]"
+                      isDark ? "bg-[#4CAF50] text-black hover:bg-[#45a049]" : "bg-[#4D6940] text-white hover:bg-[#3a5230]"
                     }`}
                   >
                     {creatingEvent ? "Creating..." : eventForm.recurrence !== "none" ? "Create Series" : "Create Event"}
@@ -2616,17 +2616,17 @@ export default function ClubProfile() {
             {isOwner ? (
               <button
                 onClick={() => setShowWizard(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#3D6B47]/40 text-sm font-semibold transition-all hover:border-[#3D6B47] hover:bg-[#3D6B47]/8 group"
+                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#4D6940]/40 text-sm font-semibold transition-all hover:border-[#4D6940] hover:bg-[#4D6940]/8 group"
               >
-                <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}`} />
-                <span className={isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}>
+                <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#4D6940] group-hover:text-[#3a5230]"}`} />
+                <span className={isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#4D6940] group-hover:text-[#3a5230]"}>
                   Host a Tournament for {club.name}
                 </span>
               </button>
             ) : user && joined ? (
               /* Member / Director — locked, informational only */
               <div
-                className={`w-full flex items-center gap-3 py-3 px-5 rounded-2xl border ${cardBorder} ${isDark ? "bg-white/2" : "bg-gray-50"} cursor-not-allowed`}
+                className={`w-full flex items-center gap-3 py-3 px-5 rounded-2xl border ${cardBorder} ${isDark ? "bg-white/2" : "bg-[#FFF3D5]/70"} cursor-not-allowed`}
                 title="Only the club owner can create tournaments"
               >
                 <Lock className={`w-4 h-4 flex-shrink-0 ${textMuted}`} />
@@ -2644,8 +2644,8 @@ export default function ClubProfile() {
                   onClick={() => setTourneyFormatFilter(f)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                     tourneyFormatFilter === f
-                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
-                      : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-gray-100 text-gray-500 hover:text-gray-800 border border-transparent"
+                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20"
+                      : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:text-[#1A1A1A] border border-transparent"
                   }`}
                 >
                   {f === "all" ? "All Formats" : f === "swiss" ? "Swiss" : f === "roundrobin" ? "Round Robin" : "Arena"}
@@ -2657,7 +2657,7 @@ export default function ClubProfile() {
             {upcomingTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     Upcoming & Active
                   </h2>
                 </div>
@@ -2673,7 +2673,7 @@ export default function ClubProfile() {
             {liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     Upcoming
                   </h2>
                   <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-500/15 text-green-600">
@@ -2685,7 +2685,7 @@ export default function ClubProfile() {
                     <a
                       key={t.id}
                       href={`/tournament/${t.id}`}
-                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}
                     >
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-green-500/15" : "bg-green-50"}`}>
                         <Zap className="w-4 h-4 text-green-500" strokeWidth={1.8} />
@@ -2697,7 +2697,7 @@ export default function ClubProfile() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>
                           {t.format === "swiss" ? "Swiss" : t.format === "roundrobin" ? "Round Robin" : "Elimination"}
                         </span>
                         <span className={`text-xs ${textMuted}`}>{t.rounds}R</span>
@@ -2712,7 +2712,7 @@ export default function ClubProfile() {
             {completedTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     Past Tournaments
                   </h2>
                 </div>
@@ -2728,7 +2728,7 @@ export default function ClubProfile() {
             {livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                     Past Tournaments
                   </h2>
                 </div>
@@ -2737,9 +2737,9 @@ export default function ClubProfile() {
                     <a
                       key={t.id}
                       href={`/tournament/${t.id}`}
-                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}
                     >
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
                         <CheckCircle2 className={`w-4 h-4 ${textMuted}`} strokeWidth={1.8} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -2749,7 +2749,7 @@ export default function ClubProfile() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>
                           {t.format === "swiss" ? "Swiss" : t.format === "roundrobin" ? "Round Robin" : "Elimination"}
                         </span>
                         <span className={`text-xs ${textMuted}`}>{t.rounds}R</span>
@@ -2801,10 +2801,10 @@ export default function ClubProfile() {
             {isOwner && (
               <button
                 onClick={() => setShowCreateLeague(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#3D6B47]/40 text-sm font-semibold transition-all hover:border-[#3D6B47] hover:bg-[#3D6B47]/8 group"
+                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#4D6940]/40 text-sm font-semibold transition-all hover:border-[#4D6940] hover:bg-[#4D6940]/8 group"
               >
-                <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}`} />
-                <span className={isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}>
+                <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#4D6940] group-hover:text-[#3a5230]"}`} />
+                <span className={isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#4D6940] group-hover:text-[#3a5230]"}>
                   Create a League for {club.name}
                 </span>
               </button>
@@ -2819,7 +2819,7 @@ export default function ClubProfile() {
                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}>1</div>
                     <span className={`text-xs font-medium ${leagueWizardStep === 1 ? textMain : textMuted}`}>Details</span>
                   </div>
-                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: leagueWizardStep === 2 ? "oklch(0.55 0.13 145)" : (isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb"), color: leagueWizardStep === 2 ? "#fff" : (isDark ? "rgba(255,255,255,0.3)" : "#9ca3af") }}>2</div>
                     <span className={`text-xs font-medium ${leagueWizardStep === 2 ? textMain : textMuted}`}>Players</span>
@@ -2833,7 +2833,7 @@ export default function ClubProfile() {
                       <label className={`text-xs font-medium block mb-1 ${textMuted}`}>League Name *</label>
                       <input
                         autoFocus
-                        className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
+                        className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder-gray-400"}`}
                         placeholder="e.g. Spring 2026 League"
                         value={leagueForm.name}
                         onChange={(e) => setLeagueForm((f) => ({ ...f, name: e.target.value }))}
@@ -2843,7 +2843,7 @@ export default function ClubProfile() {
                       <label className={`text-xs font-medium block mb-1 ${textMuted}`}>Description <span className={textMuted}>(optional)</span></label>
                       <textarea
                         rows={2}
-                        className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 resize-none ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
+                        className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 resize-none ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder-gray-400"}`}
                         placeholder="Brief description…"
                         value={leagueForm.description}
                         onChange={(e) => setLeagueForm((f) => ({ ...f, description: e.target.value }))}
@@ -2872,13 +2872,13 @@ export default function ClubProfile() {
                       <button
                         type="button"
                         onClick={() => { setShowCreateLeague(false); setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 }); setLeagueWizardStep(1); setSelectedPlayerIds([]); }}
-                        className={`py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}
+                        className={`py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}
                       >Cancel</button>
                       <button
                         type="button"
                         disabled={!leagueForm.name.trim()}
                         onClick={() => { setLeagueWizardStep(2); setSelectedPlayerIds([]); }}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 border ${isDark ? "border-white/10 text-white/60 hover:border-white/20" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 border ${isDark ? "border-white/10 text-white/60 hover:border-white/20" : "border-[#E8D9B0] text-[#6B6B50] hover:border-[#E8D9B0]"}`}
                       >Next: Pick Players →</button>
                       <button
                         type="button"
@@ -2949,7 +2949,7 @@ export default function ClubProfile() {
                                 key={m.userId}
                                 disabled={disabled}
                                 onClick={() => setSelectedPlayerIds((prev) => sel ? prev.filter((id) => id !== m.userId) : [...prev, m.userId])}
-                                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b last:border-b-0 ${isDark ? "border-white/5" : "border-gray-100"} ${disabled ? "opacity-30" : ""}`}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b last:border-b-0 ${isDark ? "border-white/5" : "border-[#E8D9B0]/70"} ${disabled ? "opacity-30" : ""}`}
                                 style={{ background: sel ? "oklch(0.55 0.13 145 / 0.12)" : "transparent" }}
                               >
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 overflow-hidden" style={{ background: sel ? "oklch(0.55 0.13 145)" : (isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb") }}>
@@ -2976,7 +2976,7 @@ export default function ClubProfile() {
                         <button
                           type="button"
                           onClick={() => setLeagueWizardStep(1)}
-                          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}
+                          className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}
                         >← Back</button>
                         <button
                           type="button"
@@ -3025,9 +3025,9 @@ export default function ClubProfile() {
             ) : clubLeagues.length === 0 && !showCreateLeague ? (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-12 text-center px-6`}>
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-                  isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/8"
+                  isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/8"
                 }`}>
-                  <Award className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                  <Award className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
                 </div>
                 <p className={`text-base font-bold ${textMain} mb-1`}>No Leagues Yet</p>
                 {isOwner ? (
@@ -3097,11 +3097,11 @@ export default function ClubProfile() {
                 return (
                   <div
                     key={lg.id}
-                    className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors cursor-pointer ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                    className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors cursor-pointer ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}
                     onClick={() => navigate(`/leagues/${lg.id}`)}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${lg.status === "completed" ? (isDark ? "bg-yellow-500/15" : "bg-yellow-50") : isDraft ? (isDark ? "bg-white/5" : "bg-gray-50") : (isDark ? "bg-[#4CAF50]/15" : "bg-green-50")}`}>
-                      <Trophy className={`w-4 h-4 ${lg.status === "completed" ? "text-yellow-500" : isDraft ? (isDark ? "text-white/30" : "text-gray-400") : "text-[#4CAF50]"}`} strokeWidth={1.8} />
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${lg.status === "completed" ? (isDark ? "bg-yellow-500/15" : "bg-yellow-50") : isDraft ? (isDark ? "bg-white/5" : "bg-[#FFF3D5]/70") : (isDark ? "bg-[#4CAF50]/15" : "bg-green-50")}`}>
+                      <Trophy className={`w-4 h-4 ${lg.status === "completed" ? "text-yellow-500" : isDraft ? (isDark ? "text-white/30" : "text-[#6B6B50]") : "text-[#4CAF50]"}`} strokeWidth={1.8} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</p>
@@ -3232,15 +3232,15 @@ export default function ClubProfile() {
               </h2>
               <button
                 onClick={() => setShowSettings(false)}
-                className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
+                className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Avatar section */}
-            <div className={`rounded-2xl border ${cardBorder} p-5 mb-3 ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <div className={`rounded-2xl border ${cardBorder} p-5 mb-3 ${isDark ? "bg-white/3" : "bg-[#FFF3D5]/70"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 Club Avatar
               </p>
               <div className="flex items-center gap-5">
@@ -3258,7 +3258,7 @@ export default function ClubProfile() {
                     {club.avatarUrl ? "Custom avatar set" : "Using initials placeholder"}
                   </p>
                   {pendingAvatar !== undefined && pendingAvatar !== club.avatarUrl && (
-                    <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                    <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
                       New avatar ready to save
                     </p>
                   )}
@@ -3267,8 +3267,8 @@ export default function ClubProfile() {
             </div>
 
             {/* Banner section */}
-            <div className={`rounded-2xl border ${cardBorder} p-5 mb-4 ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <div className={`rounded-2xl border ${cardBorder} p-5 mb-4 ${isDark ? "bg-white/3" : "bg-[#FFF3D5]/70"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 Hero Banner
               </p>
               <ClubBannerUpload
@@ -3278,7 +3278,7 @@ export default function ClubProfile() {
                 isDark={isDark}
               />
               {pendingBanner !== undefined && pendingBanner !== club.bannerUrl && (
-                <p className={`text-xs mt-2 font-medium ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                <p className={`text-xs mt-2 font-medium ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
                   {pendingBanner ? "New banner ready to save" : "Banner will be removed"}
                 </p>
               )}
@@ -3293,8 +3293,8 @@ export default function ClubProfile() {
                 {deleteStep === 0 && (
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Delete this club</p>
-                      <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>Permanently removes the club and all its data.</p>
+                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Delete this club</p>
+                      <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Permanently removes the club and all its data.</p>
                     </div>
                     <button
                       onClick={() => { setDeleteStep(1); setDeleteConfirmText(""); }}
@@ -3306,7 +3306,7 @@ export default function ClubProfile() {
                 )}
                 {deleteStep === 1 && (
                   <div className="space-y-3">
-                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
                       Type <span className="font-mono text-red-400">{club?.name}</span> to confirm
                     </p>
                     <input
@@ -3317,13 +3317,13 @@ export default function ClubProfile() {
                       className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
                         isDark
                           ? "bg-white/5 border-red-500/30 text-white placeholder-white/20 focus:border-red-400"
-                          : "bg-white border-red-300 text-gray-900 placeholder-gray-300 focus:border-red-500"
+                          : "bg-white border-red-300 text-[#1A1A1A] placeholder-gray-300 focus:border-red-500"
                       }`}
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setDeleteStep(0); setDeleteConfirmText(""); }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"}`}
                       >
                         Cancel
                       </button>
@@ -3363,8 +3363,8 @@ export default function ClubProfile() {
                         <ArrowRightLeft className="w-3.5 h-3.5 text-orange-400" />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Transfer ownership</p>
-                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>Hand off this club to another member.</p>
+                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Transfer ownership</p>
+                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Hand off this club to another member.</p>
                       </div>
                     </div>
                     <button
@@ -3383,7 +3383,7 @@ export default function ClubProfile() {
                   <div className="mt-4 pt-4 border-t border-orange-500/15 space-y-3">
                     <div className="flex items-center gap-2">
                       <ArrowRightLeft className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
-                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Select new owner</p>
+                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>Select new owner</p>
                     </div>
                     <select
                       value={selectedTransferMemberId}
@@ -3391,7 +3391,7 @@ export default function ClubProfile() {
                       className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
                         isDark
                           ? "bg-white/5 border-orange-500/30 text-white focus:border-orange-400"
-                          : "bg-white border-orange-300 text-gray-900 focus:border-orange-500"
+                          : "bg-white border-orange-300 text-[#1A1A1A] focus:border-orange-500"
                       }`}
                     >
                       <option value="">Choose a member...</option>
@@ -3406,7 +3406,7 @@ export default function ClubProfile() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setTransferStep(0); setSelectedTransferMemberId(""); }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"}`}
                       >
                         Cancel
                       </button>
@@ -3422,14 +3422,14 @@ export default function ClubProfile() {
                 )}
                 {transferStep === 2 && (
                   <div className="mt-4 pt-4 border-t border-red-500/10 space-y-3">
-                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
                       Transfer ownership to <span className="text-orange-400">{members.find((m) => m.userId === selectedTransferMemberId)?.displayName}</span>?
                     </p>
-                    <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>You will no longer be the owner but can remain a member.</p>
+                    <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>You will no longer be the owner but can remain a member.</p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setTransferStep(1); }}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"}`}
                       >
                         Back
                       </button>
@@ -3471,7 +3471,7 @@ export default function ClubProfile() {
             {/* Save / Cancel */}           <div className="flex gap-2">
               <button
                 onClick={() => { setShowSettings(false); setPendingAvatar(undefined); setPendingBanner(undefined); setDeleteStep(0); setDeleteConfirmText(""); setIsDeleting(false); setTransferStep(0); setSelectedTransferMemberId(""); setIsTransferring(false); setShowLeaveConfirm(false); setIsLeavingClub(false); }}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"}`}
               >
                 Cancel
               </button>
@@ -3559,7 +3559,7 @@ export default function ClubProfile() {
                   setPendingAvatar(undefined);
                   setPendingBanner(undefined);
                 }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors disabled:opacity-40"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#4D6940] text-white hover:bg-[#3a5230] transition-colors disabled:opacity-40"
               >
                 {savingSettings ? (
                   <span className="flex items-center justify-center gap-2">
@@ -3587,7 +3587,7 @@ export default function ClubProfile() {
             >
               <div className="flex items-center justify-between mb-5">
                 <h2 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Share {club.name}</h2>
-                <button onClick={() => setShowShareModal(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}>
+                <button onClick={() => setShowShareModal(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"}`}>
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -3598,14 +3598,14 @@ export default function ClubProfile() {
                 </div>
               </div>
               {/* URL copy row */}
-              <div className={`flex items-center gap-2 rounded-xl border ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-gray-50"} px-3 py-2.5 mb-4`}>
+              <div className={`flex items-center gap-2 rounded-xl border ${isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-[#FFF3D5]/70"} px-3 py-2.5 mb-4`}>
                 <span className={`flex-1 text-xs truncate ${textMuted}`}>{shareUrl}</span>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(shareUrl).then(() => toast.success("Link copied!"));
                   }}
                   className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 ${
-                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-[#E8D9B0] text-[#1A1A1A] hover:bg-[#E8D9B0]"
                   }`}
                 >
                   <Copy className="w-3.5 h-3.5" />
@@ -3677,10 +3677,10 @@ export default function ClubProfile() {
       {/* ── Edit Event Modal ────────────────────────────────────────────── */}
       {editingEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-white" }`}>
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-[#FFF8E8]" }`}>
             <div className="flex items-center justify-between mb-5">
               <h2 className={`text-lg font-bold ${textMain}`}>Edit Event</h2>
-              <button onClick={() => setEditingEvent(null)} className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/8 text-white/50" : "hover:bg-gray-100 text-gray-400"}`}>
+              <button onClick={() => setEditingEvent(null)} className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/8 text-white/50" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -3701,7 +3701,7 @@ export default function ClubProfile() {
                   </div>
                 ) : (
                   <label className={`flex flex-col items-center justify-center gap-1.5 w-full rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
-                    isDark ? "border-white/15 hover:border-white/30 bg-white/3 hover:bg-white/5" : "border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
+                    isDark ? "border-white/15 hover:border-white/30 bg-white/3 hover:bg-white/5" : "border-[#E8D9B0] hover:border-[#4D6940]/40 bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
                   }`} style={{ height: 90 }}>
                     {uploadingEditCover ? (
                       <span className={`text-xs ${textMuted}`}>Uploading…</span>
@@ -3738,7 +3738,7 @@ export default function ClubProfile() {
                   onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Wednesday Night Blitz"
                   className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]"
                   }`}
                 />
               </div>
@@ -3749,7 +3749,7 @@ export default function ClubProfile() {
                   value={editForm.startAt}
                   onChange={e => setEditForm(f => ({ ...f, startAt: e.target.value }))}
                   className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                    isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#3D6B47]"
+                    isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] focus:border-[#4D6940]"
                   }`}
                 />
               </div>
@@ -3760,7 +3760,7 @@ export default function ClubProfile() {
                   onChange={e => setEditForm(f => ({ ...f, venue: e.target.value }))}
                   placeholder="e.g. Club Hall, Room 2"
                   className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]"
                   }`}
                 />
               </div>
@@ -3771,7 +3771,7 @@ export default function ClubProfile() {
                   onChange={e => setEditForm(f => ({ ...f, admissionNote: e.target.value }))}
                   placeholder="e.g. Free · Members only"
                   className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
-                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]"
                   }`}
                 />
               </div>
@@ -3783,7 +3783,7 @@ export default function ClubProfile() {
                   rows={3}
                   placeholder="What should members know about this event?"
                   className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors resize-none ${
-                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50] focus:border-[#4D6940]"
                   }`}
                 />
               </div>
@@ -3796,8 +3796,8 @@ export default function ClubProfile() {
                       onClick={() => setEditForm(f => ({ ...f, recurrence: opt }))}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                         editForm.recurrence === opt
-                          ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
-                          : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                          ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#4D6940] text-white"
+                          : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                       }`}>
                       {opt === "none" ? "One-time" : opt === "biweekly" ? "Bi-weekly" : opt.charAt(0).toUpperCase() + opt.slice(1)}
                     </button>
@@ -3810,7 +3810,7 @@ export default function ClubProfile() {
                       <input type="date" value={editForm.recurrenceEndDate}
                         onChange={e => setEditForm(f => ({ ...f, recurrenceEndDate: e.target.value }))}
                         className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
-                          isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#3D6B47]"
+                          isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] focus:border-[#4D6940]"
                         }`} />
                     </div>
                     {editingEvent?.recurrenceSeriesId && (
@@ -3822,8 +3822,8 @@ export default function ClubProfile() {
                               onClick={() => setEditForm(f => ({ ...f, editScope: scope }))}
                               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                                 editForm.editScope === scope
-                                  ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
-                                  : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                  ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#4D6940] text-white"
+                                  : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                               }`}>
                               {scope === "this" ? "This event only" : "All future events"}
                             </button>
@@ -3839,7 +3839,7 @@ export default function ClubProfile() {
               <button
                 onClick={() => setEditingEvent(null)}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                 }`}
               >
                 Cancel
@@ -3883,8 +3883,8 @@ export default function ClubProfile() {
                 }}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
                   savingEdit || !editForm.title.trim() || !editForm.startAt
-                    ? isDark ? "bg-white/10 text-white/30 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : isDark ? "bg-[#4CAF50] text-black hover:bg-[#5DBF62]" : "bg-[#3D6B47] text-white hover:bg-[#2E5236]"
+                    ? isDark ? "bg-white/10 text-white/30 cursor-not-allowed" : "bg-[#E8D9B0] text-[#6B6B50] cursor-not-allowed"
+                    : isDark ? "bg-[#4CAF50] text-black hover:bg-[#5DBF62]" : "bg-[#4D6940] text-white hover:bg-[#3a5230]"
                 }`}
               >
                 {savingEdit ? "Saving…" : "Save Changes"}
@@ -3897,7 +3897,7 @@ export default function ClubProfile() {
       {/* ── Delete Event Confirmation ────────────────────────────────────── */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
-          <div className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-white" }`}>
+          <div className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-[#FFF8E8]" }`}>
             <div className="flex items-center gap-3 mb-4">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ isDark ? "bg-red-500/15" : "bg-red-50" }`}>
                 <Trash2 className="w-5 h-5 text-red-500" />
@@ -3912,7 +3912,7 @@ export default function ClubProfile() {
               <button
                 onClick={() => setConfirmDeleteId(null)}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                 }`}
               >
                 Cancel
@@ -4012,12 +4012,12 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/6 text-white/40" : "bg-gray-50 text-gray-400"}`}>
+      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/6 text-white/40" : "bg-[#FFF3D5]/70 text-[#6B6B50]"}`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/30" : "text-gray-400"}`}>{label}</p>
-        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>{value}</p>
+        <p className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>{label}</p>
+        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>{value}</p>
       </div>
     </div>
   );
@@ -4047,7 +4047,7 @@ function MemberRow({
   }, [clubId, member.userId]);
 
   return (
-    <div className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+    <div className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}>
       <PlayerAvatar
         username={username ?? ""}
         platform={platform}
@@ -4057,7 +4057,7 @@ function MemberRow({
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
             {member.displayName}
           </span>
           <RoleBadge role={member.role} />
@@ -4089,7 +4089,7 @@ function MemberRow({
       <div className="text-right flex-shrink-0">
         {member.tournamentsPlayed > 0 && (
           <>
-            <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+            <p className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
               {member.tournamentsPlayed}
             </p>
             <p className={`text-[10px] ${textMuted}`}>played</p>
@@ -4110,14 +4110,14 @@ function TournamentRow({
   textMuted: string;
 }) {
   return (
-    <div className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+    <div className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"}`}>
       {/* Format icon */}
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/6" : "bg-gray-50"}`}>
-        <Trophy className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/6" : "bg-[#FFF3D5]/70"}`}>
+        <Trophy className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
             {tournament.name}
           </span>
           <TournamentStatusBadge status={tournament.status} isDark={isDark} />

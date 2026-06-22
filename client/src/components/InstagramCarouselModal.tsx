@@ -46,7 +46,7 @@ interface Props {
 
 const BRAND = {
   white: "#FFFFFF",
-  offWhite: "#F0F5EE",
+  offWhite: "#FFF3D5",
   gold: "#F5C842",
   silver: "#C8D0D8",
   bronze: "#CD7F32",
@@ -80,11 +80,11 @@ export const SLIDE_THEMES: SlideTheme[] = [
     label: "Classic",
     bg: "#2A4A32",
     bgDark: "#0A1A0E",
-    accent: "#3D6B47",
+    accent: "#4D6940",
     accentLight: "#769656",
     accentBright: "#4CAF50",
-    glow: "#3D6B47",
-    swatch: "#3D6B47",
+    glow: "#4D6940",
+    swatch: "#4D6940",
   },
   {
     id: "midnight-blue",
@@ -1997,18 +1997,18 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     >
       <div
         className={`relative flex flex-col rounded-2xl overflow-hidden shadow-2xl w-full max-w-2xl max-h-[95dvh] ${
-          isDark ? "bg-[#0F1F13] border border-white/10" : "bg-white border border-gray-200"
+          isDark ? "bg-[#0F1F13] border border-white/10" : "bg-white border border-[#E8D9B0]"
         }`}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${isDark ? "border-white/08" : "border-gray-100"}`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
               <Instagram className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Instagram Carousel</h2>
-              <p className={`text-[11px] ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <h2 className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>Instagram Carousel</h2>
+              <p className={`text-[11px] ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 {SLIDES.length} slides · {isStory ? "1080×1920 Story" : "1080×1080 Square"} · PNG
               </p>
             </div>
@@ -2016,7 +2016,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
           <button
             onClick={onClose}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
-              isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-gray-100 text-gray-400"
+              isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
             }`}
           >
             <X className="w-4 h-4" />
@@ -2028,17 +2028,17 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
           <div className="flex flex-col items-center gap-4 p-5">
 
             {/* ── Format Toggle ── */}
-            <div className={`w-full rounded-2xl border p-1 flex gap-1 ${isDark ? "border-white/08 bg-white/03" : "border-gray-200 bg-gray-50"}`}>
+            <div className={`w-full rounded-2xl border p-1 flex gap-1 ${isDark ? "border-white/08 bg-white/03" : "border-[#E8D9B0] bg-[#FFF3D5]/70"}`}>
               <button
                 onClick={() => setSlideFormat("square")}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   slideFormat === "square"
                     ? isDark
                       ? "bg-white/10 text-white shadow-sm"
-                      : "bg-white text-gray-900 shadow-sm"
+                      : "bg-white text-[#1A1A1A] shadow-sm"
                     : isDark
                     ? "text-white/40 hover:text-white/60"
-                    : "text-gray-400 hover:text-gray-600"
+                    : "text-[#6B6B50] hover:text-[#6B6B50]"
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -2051,7 +2051,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                     ? "bg-gradient-to-r from-[#833AB4] to-[#FD1D1D] text-white shadow-sm"
                     : isDark
                     ? "text-white/40 hover:text-white/60"
-                    : "text-gray-400 hover:text-gray-600"
+                    : "text-[#6B6B50] hover:text-[#6B6B50]"
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
@@ -2101,7 +2101,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                   isDark
                     ? "bg-white/06 hover:bg-white/12 text-white/60 disabled:opacity-30"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-500 disabled:opacity-30"
+                    : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50] disabled:opacity-30"
                 }`}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -2117,16 +2117,16 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                     <div
                       className={`rounded-full transition-all ${
                         idx === activeSlide
-                          ? "w-6 h-2 bg-[#3D6B47]"
+                          ? "w-6 h-2 bg-[#4D6940]"
                           : isDark
                           ? "w-2 h-2 bg-white/20 hover:bg-white/40"
-                          : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+                          : "w-2 h-2 bg-[#E8D9B0] hover:bg-[#4D6940]/50"
                       }`}
                     />
                     <span className={`text-[10px] font-medium transition-colors ${
                       idx === activeSlide
-                        ? "text-[#3D6B47]"
-                        : isDark ? "text-white/30 group-hover:text-white/50" : "text-gray-300 group-hover:text-gray-500"
+                        ? "text-[#4D6940]"
+                        : isDark ? "text-white/30 group-hover:text-white/50" : "text-[#6B6B50]/70 group-hover:text-[#6B6B50]"
                     }`}>
                       {slide.label}
                     </span>
@@ -2140,7 +2140,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                   isDark
                     ? "bg-white/06 hover:bg-white/12 text-white/60 disabled:opacity-30"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-500 disabled:opacity-30"
+                    : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50] disabled:opacity-30"
                 }`}
               >
                 <ChevronRight className="w-4 h-4" />
@@ -2148,11 +2148,11 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             </div>
 
             {/* ── Host Logo Upload ── */}
-            <div className={`w-full rounded-2xl border p-4 ${isDark ? "border-white/08 bg-white/03" : "border-gray-200 bg-gray-50"}`}>
+            <div className={`w-full rounded-2xl border p-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#E8D9B0] bg-[#FFF3D5]/70"}`}>
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-gray-700"}`}>Club / Host Logo</p>
-                  <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                  <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>Club / Host Logo</p>
+                  <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
                     {clubLogoUrl ? "Auto-loaded from your club profile — override or remove below" : "Appears on every slide alongside the OTB!! mark"}
                   </p>
                 </div>
@@ -2168,12 +2168,12 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
 
               {hostLogoUrl ? (
                 <div className="flex items-center gap-3">
-                  <div className={`rounded-xl overflow-hidden border p-2 flex items-center justify-center ${isDark ? "border-white/10 bg-white/05" : "border-gray-200 bg-white"}`} style={{ width: 72, height: 48 }}>
+                  <div className={`rounded-xl overflow-hidden border p-2 flex items-center justify-center ${isDark ? "border-white/10 bg-white/05" : "border-[#E8D9B0] bg-white"}`} style={{ width: 72, height: 48 }}>
                     <img src={hostLogoUrl} alt="Host logo" className="max-w-full max-h-full object-contain" />
                   </div>
                   <div>
-                    <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-700"}`}>Logo uploaded</p>
-                    <button onClick={() => logoInputRef.current?.click()} className={`text-[10px] mt-0.5 ${isDark ? "text-[#769656] hover:text-[#4CAF50]" : "text-[#3D6B47] hover:text-[#2A4A32]"}`}>
+                    <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>Logo uploaded</p>
+                    <button onClick={() => logoInputRef.current?.click()} className={`text-[10px] mt-0.5 ${isDark ? "text-[#769656] hover:text-[#4CAF50]" : "text-[#4D6940] hover:text-[#2A4A32]"}`}>
                       Change image
                     </button>
                   </div>
@@ -2191,17 +2191,17 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                   }}
                   className={`w-full rounded-xl border-2 border-dashed py-4 flex flex-col items-center gap-1.5 transition-colors ${
                     logoDragging
-                      ? isDark ? "border-[#769656] bg-[#769656]/10" : "border-[#3D6B47] bg-[#3D6B47]/05"
-                      : isDark ? "border-white/10 hover:border-white/20" : "border-gray-200 hover:border-gray-300"
+                      ? isDark ? "border-[#769656] bg-[#769656]/10" : "border-[#4D6940] bg-[#4D6940]/05"
+                      : isDark ? "border-white/10 hover:border-white/20" : "border-[#E8D9B0] hover:border-[#E8D9B0]"
                   }`}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? "text-white/30" : "text-gray-400"}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? "text-white/30" : "text-[#6B6B50]"}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Upload logo (PNG, SVG, JPG)</span>
-                  <span className={`text-[10px] ${isDark ? "text-white/20" : "text-gray-300"}`}>Click or drag &amp; drop</span>
+                  <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>Upload logo (PNG, SVG, JPG)</span>
+                  <span className={`text-[10px] ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}>Click or drag &amp; drop</span>
                 </button>
               )}
 
@@ -2219,8 +2219,8 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             </div>
 
             {/* ── Colour Theme Picker ── */}
-            <div className={`w-full rounded-2xl border p-4 ${isDark ? "border-white/08 bg-white/03" : "border-gray-200 bg-gray-50"}`}>
-              <p className={`text-xs font-bold mb-3 ${isDark ? "text-white/70" : "text-gray-700"}`}>Slide Colour Theme</p>
+            <div className={`w-full rounded-2xl border p-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#E8D9B0] bg-[#FFF3D5]/70"}`}>
+              <p className={`text-xs font-bold mb-3 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>Slide Colour Theme</p>
               <div className="flex items-center gap-2 flex-wrap">
                 {SLIDE_THEMES.map((t) => {
                   const isActive = activeTheme.id === t.id;
@@ -2246,7 +2246,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                       >
                         <div style={{ position: "absolute", bottom: 7, right: 7, width: 10, height: 10, borderRadius: "50%", background: t.accentLight }} />
                       </div>
-                      <span className={`text-[10px] font-semibold leading-none transition-colors ${isActive ? isDark ? "text-white/80" : "text-gray-800" : isDark ? "text-white/35" : "text-gray-400"}`}>
+                      <span className={`text-[10px] font-semibold leading-none transition-colors ${isActive ? isDark ? "text-white/80" : "text-[#1A1A1A]" : isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
                         {t.label}
                       </span>
                     </button>
@@ -2257,7 +2257,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
 
             {/* Mobile share hint */}
             {canShare && (
-              <p className={`text-[11px] text-center ${isDark ? "text-white/25" : "text-gray-400"}`}>
+              <p className={`text-[11px] text-center ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>
                 On mobile, "Download Slide" opens your native share sheet — save directly to Photos or share to Instagram.
               </p>
             )}
@@ -2266,18 +2266,18 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
 
         {/* Export progress bar */}
         {exporting && exportProgress > 0 && (
-          <div className={`px-5 py-2 flex-shrink-0 ${isDark ? "bg-white/03" : "bg-gray-50"}`}>
-            <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
-              <div className="h-full bg-[#3D6B47] transition-all duration-300 rounded-full" style={{ width: `${exportProgress}%` }} />
+          <div className={`px-5 py-2 flex-shrink-0 ${isDark ? "bg-white/03" : "bg-[#FFF3D5]/70"}`}>
+            <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`}>
+              <div className="h-full bg-[#4D6940] transition-all duration-300 rounded-full" style={{ width: `${exportProgress}%` }} />
             </div>
-            <p className={`text-xs mt-1 text-center ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <p className={`text-xs mt-1 text-center ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
               Exporting {isStory ? "Story" : "Carousel"} slides… {exportProgress}%
             </p>
           </div>
         )}
 
         {/* Footer actions */}
-        <div className={`flex items-center gap-3 px-5 py-4 border-t flex-shrink-0 ${isDark ? "border-white/08" : "border-gray-100"}`}>
+        <div className={`flex items-center gap-3 px-5 py-4 border-t flex-shrink-0 ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
           {/* Download / Share single slide */}
           <button
             onClick={downloadSingle}
@@ -2285,7 +2285,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex-1 justify-center ${
               isDark
                 ? "bg-white/06 hover:bg-white/10 text-white/70 border border-white/10"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200"
+                : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#1A1A1A]/85 border border-[#E8D9B0]"
             } disabled:opacity-50`}
           >
             {exporting
@@ -2304,7 +2304,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             onClick={downloadAll}
             disabled={exporting}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-colors flex-1 justify-center disabled:opacity-50"
-            style={{ background: exporting ? "#2A4A32" : "linear-gradient(135deg, #3D6B47 0%, #2A4A32 100%)" }}
+            style={{ background: exporting ? "#2A4A32" : "linear-gradient(135deg, #4D6940 0%, #2A4A32 100%)" }}
           >
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Download All (ZIP)

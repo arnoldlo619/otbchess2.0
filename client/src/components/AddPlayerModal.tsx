@@ -83,9 +83,9 @@ export interface BulkUpsertPayload {
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-const G = "#3D6B47";
-const G_RING = "rgba(61,107,71,0.25)";
-const G_BG = "rgba(61,107,71,0.08)";
+const G = "#4D6940";
+const G_RING = "rgba(77,105,64,0.25)";
+const G_BG = "rgba(77,105,64,0.08)";
 const AMBER = "#D97706";
 const AMBER_BG = "rgba(217,119,6,0.08)";
 const _AMBER_RING = "rgba(217,119,6,0.25)";
@@ -985,7 +985,7 @@ export function AddPlayerModal({
                   className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold"
                   style={{
                     background: isDark ? G_BG : "#F0FDF4",
-                    border: `1.5px solid ${isDark ? "rgba(61,107,71,0.35)" : "#BBF7D0"}`,
+                    border: `1.5px solid ${isDark ? "rgba(77,105,64,0.35)" : "#BBF7D0"}`,
                     color: G,
                     animation: "fadeInUp 0.18s ease both",
                   }}
@@ -1033,7 +1033,7 @@ export function AddPlayerModal({
                       className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
                       style={{
                         padding: "10px 18px",
-                        background: username.trim() ? G : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                        background: username.trim() ? G : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
                         color: username.trim() ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
                         cursor: username.trim() ? "pointer" : "not-allowed",
                       }}
@@ -1045,7 +1045,7 @@ export function AddPlayerModal({
                   {lookupState === "found" && lookupResult && (
                     <div
                       className="mt-3 flex items-center gap-3 rounded-xl border p-3"
-                      style={{ background: isDark ? G_BG : "#F0FDF4", border: `1.5px solid ${isDark ? "rgba(61,107,71,0.35)" : "#BBF7D0"}`, animation: "fadeInUp 0.2s ease both" }}
+                      style={{ background: isDark ? G_BG : "#F0FDF4", border: `1.5px solid ${isDark ? "rgba(77,105,64,0.35)" : "#BBF7D0"}`, animation: "fadeInUp 0.2s ease both" }}
                     >
                       {lookupResult.avatar ? (
                         <img src={toProxiedAvatarUrl(lookupResult.avatar) ?? undefined} alt={lookupResult.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" crossOrigin="anonymous" />
@@ -1071,10 +1071,10 @@ export function AddPlayerModal({
                                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
                                 style={{
                                   background: ratingType === "rapid"
-                                    ? (isDark ? "rgba(61,107,71,0.30)" : "rgba(61,107,71,0.12)")
+                                    ? (isDark ? "rgba(77,105,64,0.30)" : "rgba(77,105,64,0.12)")
                                     : (isDark ? "rgba(255,255,255,0.08)" : "#F3F4F6"),
                                   color: ratingType === "rapid" ? G : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
-                                  border: ratingType === "rapid" ? `1px solid ${isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"}` : "1px solid transparent",
+                                  border: ratingType === "rapid" ? `1px solid ${isDark ? "rgba(77,105,64,0.40)" : "rgba(77,105,64,0.25)"}` : "1px solid transparent",
                                 }}
                               >
                                 ⚡ Rapid {lookupResult.rapid}
@@ -1085,10 +1085,10 @@ export function AddPlayerModal({
                                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
                                 style={{
                                   background: ratingType === "blitz"
-                                    ? (isDark ? "rgba(61,107,71,0.30)" : "rgba(61,107,71,0.12)")
+                                    ? (isDark ? "rgba(77,105,64,0.30)" : "rgba(77,105,64,0.12)")
                                     : (isDark ? "rgba(255,255,255,0.08)" : "#F3F4F6"),
                                   color: ratingType === "blitz" ? G : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
-                                  border: ratingType === "blitz" ? `1px solid ${isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"}` : "1px solid transparent",
+                                  border: ratingType === "blitz" ? `1px solid ${isDark ? "rgba(77,105,64,0.40)" : "rgba(77,105,64,0.25)"}` : "1px solid transparent",
                                 }}
                               >
                                 🔥 Blitz {lookupResult.blitz}
@@ -1198,7 +1198,7 @@ export function AddPlayerModal({
               className="flex items-center gap-2 text-sm font-semibold rounded-xl transition-all duration-200"
               style={{
                 padding: "10px 22px",
-                background: canAdd ? G : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                background: canAdd ? G : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
                 color: canAdd ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
                 cursor: canAdd ? "pointer" : "not-allowed",
                 boxShadow: canAdd ? `0 4px 14px ${G_RING}` : "none",

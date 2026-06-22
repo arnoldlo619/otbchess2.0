@@ -76,7 +76,7 @@ export function SpectatorShareModal({
         className={`relative z-10 w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
           isDark
             ? "bg-[oklch(0.22_0.06_145)] border-white/10"
-            : "bg-white border-gray-100"
+            : "bg-white border-[#E8D9B0]/70"
         }`}
         style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
         onClick={(e) => e.stopPropagation()}
@@ -87,7 +87,7 @@ export function SpectatorShareModal({
         {/* Header */}
         <div
           className={`flex items-center justify-between px-5 py-4 border-b ${
-            isDark ? "border-white/08" : "border-gray-100"
+            isDark ? "border-white/08" : "border-[#E8D9B0]/70"
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -97,14 +97,14 @@ export function SpectatorShareModal({
             <div>
               <p
                 className={`font-bold text-sm leading-tight ${
-                  isDark ? "text-white" : "text-gray-900"
+                  isDark ? "text-white" : "text-[#1A1A1A]"
                 }`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Watch Live
               </p>
               <p
-                className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}
+                className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}
               >
                 {tournamentName}
               </p>
@@ -115,7 +115,7 @@ export function SpectatorShareModal({
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isDark
                 ? "hover:bg-white/10 text-white/50"
-                : "hover:bg-gray-100 text-gray-400"
+                : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
             }`}
           >
             <X className="w-4 h-4" />
@@ -179,7 +179,7 @@ export function SpectatorShareModal({
             />
             <p
               className={`text-xs leading-relaxed ${
-                isDark ? "text-white/60" : "text-gray-600"
+                isDark ? "text-white/60" : "text-[#6B6B50]"
               }`}
             >
               Share this QR code with coaches, parents, and spectators. The page
@@ -192,7 +192,7 @@ export function SpectatorShareModal({
             className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-mono ${
               isDark
                 ? "bg-white/05 border-white/10 text-white/50"
-                : "bg-gray-50 border-gray-200 text-gray-500"
+                : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50]"
             }`}
           >
             <span className="flex-1 truncate">{spectatorUrl}</span>
@@ -209,7 +209,7 @@ export function SpectatorShareModal({
                     : "border-[#1a6b8a]/40 text-[#1a6b8a] bg-[#1a6b8a]/08"
                   : isDark
                   ? "border-white/10 text-white/70 hover:bg-white/05"
-                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
               }`}
             >
               {copied ? (
@@ -224,7 +224,7 @@ export function SpectatorShareModal({
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-medium border transition-all ${
                 isDark
                   ? "border-white/10 text-white/70 hover:bg-white/05"
-                  : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
               }`}
             >
               <Download className="w-3.5 h-3.5" />

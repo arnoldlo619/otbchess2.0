@@ -43,9 +43,9 @@ export function OtbRatingCard({ isDark }: { isDark: boolean }) {
 
   if (loading) {
     return (
-      <div className={`rounded-3xl border p-6 ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-gray-200"}`}>
+      <div className={`rounded-3xl border p-6 ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-[#E8D9B0]"}`}>
         <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-[#2d6a4f]" />
+          <Loader2 className="w-5 h-5 animate-spin text-[#4D6940]" />
         </div>
       </div>
     );
@@ -53,25 +53,25 @@ export function OtbRatingCard({ isDark }: { isDark: boolean }) {
 
   if (!ratings || (!ratings.blitz && !ratings.rapid)) {
     return (
-      <div className={`rounded-3xl border p-6 ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-gray-200"}`}>
+      <div className={`rounded-3xl border p-6 ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-[#E8D9B0]"}`}>
         <div className="flex items-center gap-2 mb-3">
-          <Trophy className="w-5 h-5 text-[#2d6a4f]" />
-          <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>OTB Rating</h2>
+          <Trophy className="w-5 h-5 text-[#4D6940]" />
+          <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>OTB Rating</h2>
         </div>
-        <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
+        <p className={`text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
           No OTB games played yet. Use the chess clock to register and play rated games!
         </p>
       </div>
     );
   }
 
-  const card = isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-gray-200";
-  const text = isDark ? "text-white" : "text-gray-900";
+  const card = isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-[#E8D9B0]";
+  const text = isDark ? "text-white" : "text-[#1A1A1A]";
 
   return (
     <div className={`rounded-3xl border p-6 ${card}`}>
       <div className="flex items-center gap-2 mb-4">
-        <Trophy className="w-5 h-5 text-[#2d6a4f]" />
+        <Trophy className="w-5 h-5 text-[#4D6940]" />
         <h2 className={`text-base font-bold ${text}`}>OTB Rating</h2>
       </div>
 
@@ -124,9 +124,9 @@ function RatingBlock({
   tier: string;
   isDark: boolean;
 }) {
-  const bg = isDark ? "bg-white/5" : "bg-gray-50";
-  const text = isDark ? "text-white" : "text-gray-900";
-  const muted = isDark ? "text-white/50" : "text-gray-500";
+  const bg = isDark ? "bg-white/5" : "bg-[#FFF3D5]/70";
+  const text = isDark ? "text-white" : "text-[#1A1A1A]";
+  const muted = isDark ? "text-white/50" : "text-[#6B6B50]";
 
   const tierBadge = (() => {
     switch (tier) {

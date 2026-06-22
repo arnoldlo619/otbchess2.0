@@ -495,24 +495,24 @@ export function FilmGameSheet({
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className={`relative w-full rounded-t-3xl border-t overflow-hidden ${cardBg} ${isDark ? "border-white/08" : "border-gray-100"} animate-slide-up-fade safe-bottom`}
+        className={`relative w-full rounded-t-3xl border-t overflow-hidden ${cardBg} ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"} animate-slide-up-fade safe-bottom`}
         style={{ maxHeight: "92dvh" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className={`w-10 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-gray-300"}`} />
+          <div className={`w-10 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-[#E8D9B0]"}`} />
         </div>
 
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-3 border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
+        <div className={`flex items-center justify-between px-5 py-3 border-b ${isDark ? "border-white/06" : "border-[#E8D9B0]/70"}`}>
           <div className="flex items-center gap-2">
             <Camera className={`w-4 h-4 ${accent}`} />
             <span className={`text-sm font-bold ${textMain}`}>Film Your Game</span>
           </div>
           <button
             onClick={onClose}
-            className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? "bg-white/10 hover:bg-white/15" : "bg-gray-100 hover:bg-gray-200"} transition-colors`}
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? "bg-white/10 hover:bg-white/15" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0]"} transition-colors`}
           >
             <X className={`w-4 h-4 ${textMuted}`} />
           </button>
@@ -522,7 +522,7 @@ export function FilmGameSheet({
           {/* ── Idle ── */}
           {cameraState === "idle" && (
             <div className="px-5 py-8 flex flex-col items-center text-center gap-5">
-              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"}`}>
+              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#4D6940]/08"}`}>
                 <Camera className={`w-10 h-10 ${accent}`} />
               </div>
               <div>
@@ -531,7 +531,7 @@ export function FilmGameSheet({
                   Set up your phone on a tripod angled at the board from the side. Capture both players and the full board for the best view.
                 </p>
               </div>
-              <div className={`w-full rounded-2xl px-4 py-3 text-left ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+              <div className={`w-full rounded-2xl px-4 py-3 text-left ${isDark ? "bg-white/05" : "bg-[#FFF3D5]/70"}`}>
                 <p className={`text-xs font-bold ${accent} uppercase tracking-wider mb-2`}>Tips for best results</p>
                 <ul className={`text-xs ${textMuted} space-y-1.5`}>
                   <li>📐 Place phone horizontally on a tripod</li>
@@ -542,7 +542,7 @@ export function FilmGameSheet({
               </div>
               <button
                 onClick={() => startCamera(facingMode)}
-                className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"}`}
+                className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-[#4CAF50] text-white" : "bg-[#4D6940] text-white"}`}
               >
                 <Camera className="w-4 h-4" />
                 Start Camera
@@ -581,7 +581,7 @@ export function FilmGameSheet({
               </div>
               <button
                 onClick={() => startCamera(facingMode)}
-                className={`w-full py-4 rounded-2xl font-bold text-sm ${isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"}`}
+                className={`w-full py-4 rounded-2xl font-bold text-sm ${isDark ? "bg-white/10 text-white" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85"}`}
               >
                 Try Again
               </button>
@@ -669,8 +669,8 @@ export function FilmGameSheet({
                       disabled={recordState === "recording"}
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                         showOverlay
-                          ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                          : isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-400"
+                          ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                          : isDark ? "bg-white/08 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                       } disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
                       <Layers className="w-3.5 h-3.5" />
@@ -683,8 +683,8 @@ export function FilmGameSheet({
                         onClick={() => setShowGuide(g => !g)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                           showGuide
-                            ? isDark ? "bg-white/10 text-white/70" : "bg-gray-200 text-gray-600"
-                            : isDark ? "bg-white/05 text-white/30" : "bg-gray-50 text-gray-300"
+                            ? isDark ? "bg-white/10 text-white/70" : "bg-[#E8D9B0] text-[#6B6B50]"
+                            : isDark ? "bg-white/05 text-white/30" : "bg-[#FFF3D5]/70 text-[#6B6B50]/70"
                         }`}
                       >
                         Guide {showGuide ? "On" : "Off"}
@@ -698,7 +698,7 @@ export function FilmGameSheet({
                         disabled={isFlipping}
                         aria-label={facingMode === "environment" ? "Switch to front camera" : "Switch to rear camera"}
                         className={`ml-auto flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                          isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
                         }`}
                       >
                         {isFlipping ? (
@@ -714,7 +714,7 @@ export function FilmGameSheet({
 
                 {/* Overlay preview info */}
                 {showOverlay && recordState === "idle" && (
-                  <div className={`rounded-xl px-3 py-2.5 ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                  <div className={`rounded-xl px-3 py-2.5 ${isDark ? "bg-white/05" : "bg-[#FFF3D5]/70"}`}>
                     <p className={`text-xs font-semibold ${accent} mb-1`}>Clock overlay preview</p>
                     <div className="flex items-center justify-between">
                       <div>
@@ -735,9 +735,9 @@ export function FilmGameSheet({
 
                 {/* Watermark customization panel */}
                 {showOverlay && recordState === "idle" && (
-                  <div className={`rounded-xl overflow-hidden ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                  <div className={`rounded-xl overflow-hidden ${isDark ? "bg-white/05" : "bg-[#FFF3D5]/70"}`}>
                     {/* Panel header */}
-                    <div className={`px-3 py-2.5 flex items-center justify-between border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
+                    <div className={`px-3 py-2.5 flex items-center justify-between border-b ${isDark ? "border-white/06" : "border-[#E8D9B0]/70"}`}>
                       <span className={`text-xs font-bold ${textMain}`}>Watermark</span>
                       <span className={`text-[10px] ${textMuted}`}>Baked into recording</span>
                     </div>
@@ -749,8 +749,8 @@ export function FilmGameSheet({
                           onClick={() => setWatermarkLogoDataUrl(null)}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                             !watermarkLogoDataUrl
-                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                              : isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
+                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                              : isDark ? "bg-white/08 text-white/40" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                           }`}
                         >
                           <Type className="w-3 h-3" /> Text
@@ -759,8 +759,8 @@ export function FilmGameSheet({
                           onClick={() => logoInputRef.current?.click()}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                             watermarkLogoDataUrl
-                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                              : isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
+                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                              : isDark ? "bg-white/08 text-white/40" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                           }`}
                         >
                           {logoUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImagePlus className="w-3 h-3" />}
@@ -786,7 +786,7 @@ export function FilmGameSheet({
                           className={`w-full px-3 py-2 rounded-lg text-xs font-semibold outline-none border ${
                             isDark
                               ? "bg-white/08 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50"
-                              : "bg-white border-gray-200 text-gray-800 placeholder:text-gray-300 focus:border-[#3D6B47]/40"
+                              : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/70 focus:border-[#4D6940]/40"
                           } transition-colors`}
                         />
                       )}
@@ -797,7 +797,7 @@ export function FilmGameSheet({
                           <img src={watermarkLogoDataUrl} alt="Logo" className="h-8 rounded object-contain" style={{ maxWidth: 80 }} />
                           <button
                             onClick={() => setWatermarkLogoDataUrl(null)}
-                            className={`flex items-center gap-1 text-xs ${isDark ? "text-white/40 hover:text-red-400" : "text-gray-400 hover:text-red-500"} transition-colors`}
+                            className={`flex items-center gap-1 text-xs ${isDark ? "text-white/40 hover:text-red-400" : "text-[#6B6B50] hover:text-red-500"} transition-colors`}
                           >
                             <Trash2 className="w-3 h-3" /> Remove
                           </button>
@@ -816,8 +816,8 @@ export function FilmGameSheet({
                               onClick={() => setWatermarkPosition(pos)}
                               className={`py-1.5 rounded-lg text-[10px] font-semibold capitalize transition-colors ${
                                 watermarkPosition === pos
-                                  ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                                  : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                  ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                                  : isDark ? "bg-white/06 text-white/40" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
                               }`}
                             >
                               {pos.replace("-", " ")}
@@ -836,7 +836,7 @@ export function FilmGameSheet({
                     className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
                       recordState === "recording"
                         ? "bg-red-600 text-white"
-                        : isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"
+                        : isDark ? "bg-[#4CAF50] text-white" : "bg-[#4D6940] text-white"
                     }`}
                   >
                     {recordState === "recording" ? (
@@ -856,28 +856,28 @@ export function FilmGameSheet({
                 {/* Post-recording */}
                 {recordState === "stopped" && blobUrl && (
                   <div className="space-y-3">
-                    <div className={`rounded-2xl px-4 py-3 text-center ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                    <div className={`rounded-2xl px-4 py-3 text-center ${isDark ? "bg-white/05" : "bg-[#FFF3D5]/70"}`}>
                       <p className={`text-sm font-bold ${textMain} mb-0.5`}>Recording saved!</p>
                       <p className={`text-xs ${textMuted}`}>{formatElapsed(elapsed)} recorded{showOverlay ? " · with clock overlay" : ""}</p>
                     </div>
                     {shareError && <p className="text-xs text-red-400 text-center">{shareError}</p>}
                     <button
                       onClick={shareVideo}
-                      className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"}`}
+                      className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-[#4CAF50] text-white" : "bg-[#4D6940] text-white"}`}
                     >
                       <Share2 className="w-4 h-4" />
                       Share / Post
                     </button>
                     <button
                       onClick={downloadVideo}
-                      className={`w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"}`}
+                      className={`w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-white/10 text-white" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85"}`}
                     >
                       <Download className="w-4 h-4" />
                       Save to Device
                     </button>
                     <button
                       onClick={() => { setRecordState("idle"); setBlobUrl(null); setElapsed(0); }}
-                      className={`w-full py-3 rounded-2xl font-semibold text-sm ${isDark ? "text-white/50" : "text-gray-400"}`}
+                      className={`w-full py-3 rounded-2xl font-semibold text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}
                     >
                       Record Again
                     </button>

@@ -102,7 +102,7 @@ function ConfirmDialog({ open, title, message, confirmLabel, onConfirm, onCancel
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: Broadcast["status"] }) {
   const map: Record<string, { label: string; cls: string }> = {
-    ready:    { label: "Ready",    cls: "bg-gray-500/20 text-gray-300 border-gray-500/30" },
+    ready:    { label: "Ready",    cls: "bg-[#6B6B50]/20 text-[#6B6B50]/70 border-[#6B6B50]/30" },
     live:     { label: "● LIVE",   cls: "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" },
     paused:   { label: "Paused",   cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
     finished: { label: "Finished", cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
@@ -118,7 +118,7 @@ function OperatorBadge({ status }: { status: OperatorStatus }) {
     ready:            { label: "Ready",              cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
     move_saved:       { label: "Move saved",         cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
     waiting_white:    { label: "Waiting for White",  cls: "bg-white/10 text-white/70 border-white/20" },
-    waiting_black:    { label: "Waiting for Black",  cls: "bg-gray-600/20 text-gray-300 border-gray-500/30" },
+    waiting_black:    { label: "Waiting for Black",  cls: "bg-[#6B6B50]/20 text-[#6B6B50]/70 border-[#6B6B50]/30" },
     error_illegal:    { label: "Illegal move",       cls: "bg-red-500/15 text-red-400 border-red-500/30" },
     syncing:          { label: "Syncing…",           cls: "bg-blue-500/15 text-blue-400 border-blue-500/30 animate-pulse" },
     display_connected:{ label: "Display connected",  cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
@@ -825,7 +825,7 @@ export default function BroadcastConsole() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0d1a0f]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-[#4D6940] border-t-transparent animate-spin" />
           <span className="text-sm text-white/50">Loading broadcast console…</span>
         </div>
       </div>
@@ -883,7 +883,7 @@ export default function BroadcastConsole() {
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
             {/* Turn indicator */}
             <div className="flex items-center gap-3">
-              <div className={`w-4 h-4 rounded-full ${chess.turn() === "w" ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" : "bg-gray-700 border-2 border-white/30"}`} />
+              <div className={`w-4 h-4 rounded-full ${chess.turn() === "w" ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]" : "bg-[#1A1A1A] border-2 border-white/30"}`} />
               <span className="text-base font-semibold text-white/80">{turnLabel}</span>
               {broadcast.lastMoveSan && (
                 <span className="text-sm text-white/40 font-mono bg-white/5 px-2 py-0.5 rounded">Last: {broadcast.lastMoveSan}</span>
@@ -967,11 +967,11 @@ export default function BroadcastConsole() {
               {/* Players */}
               <div className="mt-4 pt-3 border-t border-white/5 space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-white text-[8px] font-bold text-gray-900 flex items-center justify-center">W</div>
+                  <div className="w-4 h-4 rounded bg-white text-[8px] font-bold text-[#1A1A1A] flex items-center justify-center">W</div>
                   <span className="text-xs text-white/70 truncate">{broadcast.whitePlayerName}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-gray-700 text-[8px] font-bold text-white flex items-center justify-center">B</div>
+                  <div className="w-4 h-4 rounded bg-[#1A1A1A] text-[8px] font-bold text-white flex items-center justify-center">B</div>
                   <span className="text-xs text-white/70 truncate">{broadcast.blackPlayerName}</span>
                 </div>
               </div>
@@ -1094,7 +1094,7 @@ export default function BroadcastConsole() {
               {/* Turn + last move */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${chess.turn() === "w" ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.4)]" : "bg-gray-700 border border-white/20"}`} />
+                  <div className={`w-3 h-3 rounded-full ${chess.turn() === "w" ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.4)]" : "bg-[#1A1A1A] border border-white/20"}`} />
                   <span className="text-sm font-medium text-white/70">{turnLabel}</span>
                   {broadcast.lastMoveSan && <span className="text-xs text-white/40 font-mono">Last: {broadcast.lastMoveSan}</span>}
                 </div>

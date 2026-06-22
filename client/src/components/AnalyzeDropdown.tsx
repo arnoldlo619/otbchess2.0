@@ -18,7 +18,7 @@ export function AnalyzeDropdown() {
     <div
       className={cn(
         "absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-lg",
-        "bg-white dark:bg-[#1a2f1f] border border-gray-200 dark:border-[#2d4a35]",
+        "bg-white dark:bg-[#1a2f1f] border border-[#E8D9B0] dark:border-[#2d4a35]",
         "shadow-lg dark:shadow-2xl z-50",
         "py-2 px-0"
       )}
@@ -28,8 +28,8 @@ export function AnalyzeDropdown() {
         href="/games"
         className={cn(
           "flex items-center gap-3 px-4 py-2.5 text-sm font-medium",
-          "text-gray-700 dark:text-gray-200",
-          "hover:bg-gray-100 dark:hover:bg-[#2d4a35]",
+          "text-[#1A1A1A]/85 dark:text-[#6B6B50]/50",
+          "hover:bg-[#E8D9B0]/50 dark:hover:bg-[#2d4a35]",
           "transition-colors duration-150",
           "cursor-pointer"
         )}
@@ -43,8 +43,8 @@ export function AnalyzeDropdown() {
         href="/prep"
         className={cn(
           "flex items-center gap-3 px-4 py-2.5 text-sm font-medium",
-          "text-gray-700 dark:text-gray-200",
-          "hover:bg-gray-100 dark:hover:bg-[#2d4a35]",
+          "text-[#1A1A1A]/85 dark:text-[#6B6B50]/50",
+          "hover:bg-[#E8D9B0]/50 dark:hover:bg-[#2d4a35]",
           "transition-colors duration-150",
           "cursor-pointer"
         )}
@@ -54,15 +54,15 @@ export function AnalyzeDropdown() {
       </Link>
 
       {/* Divider */}
-      <div className="my-1.5 mx-3 border-t border-gray-200 dark:border-[#2d4a35]" />
+      <div className="my-1.5 mx-3 border-t border-[#E8D9B0] dark:border-[#2d4a35]" />
 
       {/* Openings Library Option */}
       <Link
         href="/openings"
         className={cn(
           "flex items-center gap-3 px-4 py-2.5 text-sm font-medium",
-          "text-gray-700 dark:text-gray-200",
-          "hover:bg-gray-100 dark:hover:bg-[#2d4a35]",
+          "text-[#1A1A1A]/85 dark:text-[#6B6B50]/50",
+          "hover:bg-[#E8D9B0]/50 dark:hover:bg-[#2d4a35]",
           "transition-colors duration-150",
           "cursor-pointer"
         )}

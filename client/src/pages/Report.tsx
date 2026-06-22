@@ -72,7 +72,7 @@ function TabBar({
     { id: "rounds",     label: "Rounds",        icon: ListOrdered },
   ];
   return (
-    <div className={`flex border-b ${ isDark ? "border-white/08" : "border-gray-100" }`}>
+    <div className={`flex border-b ${ isDark ? "border-white/08" : "border-[#E8D9B0]/70" }`}>
       {tabs.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
         return (
@@ -81,8 +81,8 @@ function TabBar({
             onClick={() => onTabChange(id)}
             className={`relative flex items-center gap-1.5 px-5 py-3 text-xs font-semibold transition-all ${
               isActive
-                ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-                : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"
+                ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
+                : isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"
             }`}
           >
             <Icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -90,7 +90,7 @@ function TabBar({
             {isActive && (
               <span
                 className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
-                style={{ background: isDark ? "#4CAF50" : "#3D6B47" }}
+                style={{ background: isDark ? "#4CAF50" : "#4D6940" }}
               />
             )}
           </button>
@@ -167,16 +167,16 @@ function SummaryBanner({
       className={`rounded-2xl p-5 border mb-6 ${
         isDark
           ? "bg-[oklch(0.22_0.06_145)] border-white/10"
-          : "bg-white border-gray-100 shadow-sm"
+          : "bg-white border-[#E8D9B0]/70 shadow-sm"
       }`}
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
             Final Report
           </p>
           <h2
-            className={`text-xl font-black ${isDark ? "text-white" : "text-gray-900"}`}
+            className={`text-xl font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             {tournamentName}
@@ -184,7 +184,7 @@ function SummaryBanner({
         </div>
         <div className="flex items-center gap-1.5">
           <Crown className="w-4 h-4 text-amber-500" />
-          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
             {champion?.player.name}
           </span>
         </div>
@@ -200,17 +200,17 @@ function SummaryBanner({
           <div
             key={label}
             className={`rounded-xl p-3 ${
-              isDark ? "bg-white/06" : "bg-gray-50"
+              isDark ? "bg-white/06" : "bg-[#FFF3D5]/70"
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <Icon className={`w-3 h-3 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-              <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <Icon className={`w-3 h-3 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+              <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 {label}
               </span>
             </div>
             <span
-              className={`text-lg font-black ${isDark ? "text-white" : "text-gray-900"}`}
+              className={`text-lg font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {value}
@@ -242,12 +242,12 @@ function AccentColorPicker({
       className={`mt-2 rounded-2xl border px-3 py-2.5 ${
         isDark
           ? "bg-white/05 border-white/10"
-          : "bg-gray-50 border-gray-200"
+          : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
       }`}
     >
       <div className="flex items-center gap-2 mb-2">
-        <Palette className={`w-3 h-3 flex-shrink-0 ${isDark ? "text-white/40" : "text-gray-400"}`} />
-        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+        <Palette className={`w-3 h-3 flex-shrink-0 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`} />
+        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
           Card Accent
         </span>
       </div>
@@ -388,10 +388,10 @@ function NativeShareButton({
           state === "done"
             ? isDark
               ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30"
-              : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
+              : "bg-[#4D6940]/10 text-[#4D6940] border border-[#4D6940]/20"
             : isDark
             ? "bg-white/08 text-white/80 hover:bg-white/14 border border-white/10 hover:border-white/20 active:scale-[0.98]"
-            : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 active:scale-[0.98]"
+            : "bg-[#FFF3D5]/70 text-[#1A1A1A]/85 hover:bg-[#E8D9B0]/50 border border-[#E8D9B0] active:scale-[0.98]"
         }
       `}
     >
@@ -521,7 +521,7 @@ function ExportableCard({
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-gray-900 font-semibold text-sm hover:bg-gray-100 transition-colors disabled:opacity-60"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#1A1A1A] font-semibold text-sm hover:bg-[#E8D9B0]/50 transition-colors disabled:opacity-60"
         >
           {exporting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -551,10 +551,10 @@ function ExportableCard({
       <div className="mt-2">
         {/* Name / rank row */}
         <div className="text-center mb-2">
-          <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>
+          <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#6B6B50]"}`}>
             {perf.player.name}
           </p>
-          <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
             #{perf.rank} · {perf.points}pts
           </p>
         </div>
@@ -833,12 +833,12 @@ export default function ReportPage() {
           isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
         }`}
       >
-        <div className={`text-center max-w-sm ${isDark ? "text-white" : "text-gray-900"}`}>
+        <div className={`text-center max-w-sm ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
           <div className="text-5xl mb-4">📊</div>
           <h2 className="text-xl font-black mb-2" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             No Results Yet
           </h2>
-          <p className={`text-sm mb-6 ${isDark ? "text-white/50" : "text-gray-500"}`}>
+          <p className={`text-sm mb-6 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
             Performance reports are generated after the tournament is complete and all results are entered.
           </p>
           <SpinBorderButton
@@ -863,7 +863,7 @@ export default function ReportPage() {
         className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${
           isDark
             ? "bg-[oklch(0.18_0.05_145/0.94)] border-b border-white/06"
-            : "bg-white/92 border-b border-gray-100"
+            : "bg-white/92 border-b border-[#E8D9B0]/70"
         }`}
       >
         {/* Single consolidated row */}
@@ -873,7 +873,7 @@ export default function ReportPage() {
             <button
               title="Back to dashboard"
               className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
-                isDark ? "text-white/40 hover:text-white/80 hover:bg-white/06" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                isDark ? "text-white/40 hover:text-white/80 hover:bg-white/06" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -884,13 +884,13 @@ export default function ReportPage() {
           <NavLogo />
 
           {/* Divider */}
-          <div className={`w-px h-4 flex-shrink-0 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+          <div className={`w-px h-4 flex-shrink-0 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
 
           {/* Title + tournament badge */}
           <div className="flex items-baseline gap-2 min-w-0">
             <span
               className={`text-sm font-bold leading-none flex-shrink-0 ${
-                isDark ? "text-white/90" : "text-gray-900"
+                isDark ? "text-white/90" : "text-[#1A1A1A]"
               }`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
@@ -898,7 +898,7 @@ export default function ReportPage() {
             </span>
             <span
               className={`text-[11px] font-medium truncate ${
-                isDark ? "text-white/35" : "text-gray-400"
+                isDark ? "text-white/35" : "text-[#6B6B50]"
               }`}
             >
               {tournamentName}
@@ -917,7 +917,7 @@ export default function ReportPage() {
                 className={`p-2 rounded-lg transition-colors ${
                   isDark
                     ? "text-[#4CAF50]/80 hover:text-[#4CAF50] hover:bg-[#4CAF50]/10"
-                    : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                    : "text-[#4D6940] hover:bg-[#4D6940]/08"
                 }`}
               >
                 <Share2 className="w-4 h-4" />
@@ -929,7 +929,7 @@ export default function ReportPage() {
                 className={`p-2 rounded-lg transition-colors disabled:opacity-40 ${
                   isDark
                     ? "text-[#4CAF50]/80 hover:text-[#4CAF50] hover:bg-[#4CAF50]/10"
-                    : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                    : "text-[#4D6940] hover:bg-[#4D6940]/08"
                 }`}
               >
                 {downloadingAll ? (
@@ -949,7 +949,7 @@ export default function ReportPage() {
             className={`p-2 rounded-lg transition-colors disabled:opacity-40 ${
               isDark
                 ? "text-[#4CAF50]/80 hover:text-[#4CAF50] hover:bg-[#4CAF50]/10"
-                : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                : "text-[#4D6940] hover:bg-[#4D6940]/08"
             }`}
           >
             {downloadingPdf ? (
@@ -985,22 +985,22 @@ export default function ReportPage() {
             className={`flex items-center gap-4 rounded-2xl border p-4 mb-6 transition-all ${
               isDark
                 ? "bg-[#1a2e1e] border-white/10 hover:border-[#4CAF50]/40"
-                : "bg-white border-gray-200 hover:border-[#3D6B47]/40"
+                : "bg-white border-[#E8D9B0] hover:border-[#4D6940]/40"
             }`}
           >
-            <div className="w-12 h-12 bg-[#3D6B47] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+            <div className="w-12 h-12 bg-[#4D6940] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#4D6940]/25">
               <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}
+              <p className={`font-bold text-sm ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 Join {config.clubName}
               </p>
-              <p className={`text-xs mt-0.5 ${isDark ? "text-white/50" : "text-gray-500"}`}>
+              <p className={`text-xs mt-0.5 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
                 Follow this club for future tournaments and events
               </p>
             </div>
-            <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+            <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`} />
           </Link>
         )}
 
@@ -1012,9 +1012,9 @@ export default function ReportPage() {
               <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
                 isDark
                   ? "bg-white/06 border-white/10 text-white"
-                  : "bg-white border-gray-200 text-gray-900"
+                  : "bg-white border-[#E8D9B0] text-[#1A1A1A]"
               }`}>
-                <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/40" : "text-gray-400"}`} />
+                <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`} />
                 <input
                   type="text"
                   placeholder="Search players…"
@@ -1028,12 +1028,12 @@ export default function ReportPage() {
             {/* Section heading */}
             <div className="flex items-center justify-between mb-4">
               <h3
-                className={`text-base font-black ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`text-base font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Player Cards
               </h3>
-              <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <span className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
                 Pick a color · Tap Share · {filtered.length} players
               </span>
             </div>
@@ -1096,7 +1096,7 @@ export default function ReportPage() {
             {performances.length >= 3 && (
               <div className="mt-10">
                 <h3
-                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-gray-900"}`}
+                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}
                 >
                   🏆 Podium
@@ -1104,30 +1104,30 @@ export default function ReportPage() {
                 <div className="grid grid-cols-3 gap-3 items-end">
                   {/* 2nd */}
                   <div className="flex flex-col items-center mt-6">
-                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
+                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#E8D9B0]/70 shadow-sm"}`}>
                       <div className="text-2xl mb-1">🥈</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[1].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>{performances[1].points}pts</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{performances[1].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{performances[1].points}pts</p>
                     </div>
-                    <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
+                    <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"}`} />
                   </div>
                   {/* 1st */}
                   <div className="flex flex-col items-center">
-                    <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#3D6B47]/05 border-[#3D6B47]/30 shadow-md"}`}>
+                    <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#4D6940]/05 border-[#4D6940]/30 shadow-md"}`}>
                       <div className="text-2xl mb-1">🏆</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[0].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"} font-semibold`}>{performances[0].points}pts</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{performances[0].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"} font-semibold`}>{performances[0].points}pts</p>
                     </div>
-                    <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"}`} />
+                    <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08"}`} />
                   </div>
                   {/* 3rd */}
                   <div className="flex flex-col items-center mt-8">
-                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
+                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#E8D9B0]/70 shadow-sm"}`}>
                       <div className="text-2xl mb-1">🥉</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[2].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>{performances[2].points}pts</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{performances[2].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{performances[2].points}pts</p>
                     </div>
-                    <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
+                    <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"}`} />
                   </div>
                 </div>
               </div>

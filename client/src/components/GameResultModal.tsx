@@ -116,14 +116,14 @@ export function GameResultModal({
                 onClick={() => handleSubmitResult("white_wins")}
                 className="w-full py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-semibold flex items-center justify-center gap-2 transition-colors"
               >
-                <div className="w-5 h-5 rounded-full bg-white border border-gray-300" />
+                <div className="w-5 h-5 rounded-full bg-white border border-[#E8D9B0]" />
                 White Wins
               </button>
               <button
                 onClick={() => handleSubmitResult("black_wins")}
                 className="w-full py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-semibold flex items-center justify-center gap-2 transition-colors"
               >
-                <div className="w-5 h-5 rounded-full bg-gray-800 border border-gray-600" />
+                <div className="w-5 h-5 rounded-full bg-[#1A1A1A] border border-[#4D6940]/40" />
                 Black Wins
               </button>
               <button
