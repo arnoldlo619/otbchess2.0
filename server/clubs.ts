@@ -1395,3 +1395,384 @@ clubsRouter.delete(
     }
   }
 );
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GROWTH & RETENTION ENDPOINTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** GET /api/clubs/:id/growth/analytics — attendance analytics for owner */
+clubsRouter.get("/:id/growth/analytics", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    // Get all past events for this club
+    const { meetupCheckins } = await import("../shared/schema.js");
+    const events = await db.select().from(clubEvents)
+      .where(eq(clubEvents.clubId, id))
+      .orderBy(desc(clubEvents.startAt));
+    const rsvps = await db.select().from(clubEventRsvps).where(eq(clubEventRsvps.clubId, id));
+    const checkins = await db.select().from(meetupCheckins).where(eq(meetupCheckins.clubId, id));
+    const members = await db.select().from(dbClubMembers).where(eq(dbClubMembers.clubId, id));
+    const now = new Date();
+    const pastEvents = events.filter(e => new Date(e.startAt) < now);
+    const upcomingEvents = events.filter(e => new Date(e.startAt) >= now);
+    // Per-event attendance data
+    const eventStats = pastEvents.slice(0, 10).map(ev => {
+      const evRsvps = rsvps.filter(r => r.eventId === ev.id && r.status === "going").length;
+      const evCheckins = checkins.filter(c => c.eventId === ev.id).length;
+      return {
+        id: ev.id,
+        title: ev.title,
+        date: ev.startAt instanceof Date ? ev.startAt.toISOString() : String(ev.startAt),
+        rsvpCount: evRsvps,
+        attendanceCount: evCheckins,
+        conversionRate: evRsvps > 0 ? Math.round((evCheckins / evRsvps) * 100) : 0,
+      };
+    });
+    // Member segments
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const { memberEngagement } = await import("../shared/schema.js");
+    const engagements = await db.select().from(memberEngagement).where(eq(memberEngagement.clubId, id));
+    const activeMembers = engagements.filter(e => e.lastAttendedAt && new Date(e.lastAttendedAt) > thirtyDaysAgo).length;
+    const atRiskMembers = engagements.filter(e => e.lastAttendedAt && new Date(e.lastAttendedAt) <= thirtyDaysAgo && new Date(e.lastAttendedAt) > ninetyDaysAgo).length;
+    const inactiveMembers = engagements.filter(e => !e.lastAttendedAt || new Date(e.lastAttendedAt) <= ninetyDaysAgo).length;
+    const newThisMonth = members.filter(m => m.joinedAt && new Date(m.joinedAt) > thirtyDaysAgo).length;
+    res.json({
+      summary: {
+        totalMembers: members.length,
+        totalEvents: events.length,
+        pastEvents: pastEvents.length,
+        upcomingEvents: upcomingEvents.length,
+        totalAttendance: checkins.length,
+        avgAttendance: pastEvents.length > 0 ? Math.round(checkins.length / pastEvents.length) : 0,
+        newMembersThisMonth: newThisMonth,
+      },
+      segments: {
+        active: activeMembers,
+        atRisk: atRiskMembers,
+        inactive: inactiveMembers,
+        new: newThisMonth,
+      },
+      eventStats,
+    });
+  } catch (err) {
+    logger.error("[clubs] GET /:id/growth/analytics error:", err);
+    res.status(500).json({ error: "Failed to load analytics" });
+  }
+});
+
+/** GET /api/clubs/:id/growth/members — member segments with engagement data */
+clubsRouter.get("/:id/growth/members", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    const { memberEngagement } = await import("../shared/schema.js");
+    const members = await db.select().from(dbClubMembers).where(eq(dbClubMembers.clubId, id));
+    const engagements = await db.select().from(memberEngagement).where(eq(memberEngagement.clubId, id));
+    const engMap = new Map(engagements.map(e => [e.memberId, e]));
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const result = members.map(m => {
+      const eng = engMap.get(m.userId);
+      const lastAt = eng?.lastAttendedAt ? new Date(eng.lastAttendedAt) : null;
+      let segment: "active" | "at_risk" | "inactive" | "new" = "new";
+      if (lastAt) {
+        if (lastAt > thirtyDaysAgo) segment = "active";
+        else if (lastAt > ninetyDaysAgo) segment = "at_risk";
+        else segment = "inactive";
+      }
+      return {
+        userId: m.userId,
+        displayName: m.displayName,
+        avatarUrl: m.avatarUrl,
+        role: m.role,
+        joinedAt: m.joinedAt instanceof Date ? m.joinedAt.toISOString() : String(m.joinedAt),
+        eventsAttended: eng?.eventsAttendedCount ?? 0,
+        currentStreak: eng?.currentStreak ?? 0,
+        longestStreak: eng?.longestStreak ?? 0,
+        lastAttendedAt: lastAt ? lastAt.toISOString() : null,
+        badges: eng?.badgesJson ? JSON.parse(eng.badgesJson) : [],
+        segment,
+      };
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error("[clubs] GET /:id/growth/members error:", err);
+    res.status(500).json({ error: "Failed to load member segments" });
+  }
+});
+
+/** GET /api/clubs/:id/seasons — list club seasons */
+clubsRouter.get("/:id/seasons", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const { clubSeasons, clubSeasonStandings } = await import("../shared/schema.js");
+    const seasons = await db.select().from(clubSeasons)
+      .where(eq(clubSeasons.clubId, id))
+      .orderBy(desc(clubSeasons.createdAt));
+    res.json(seasons.map(s => ({
+      ...s,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      createdAt: s.createdAt instanceof Date ? s.createdAt.toISOString() : String(s.createdAt),
+    })));
+  } catch (err) {
+    logger.error("[clubs] GET /:id/seasons error:", err);
+    res.status(500).json({ error: "Failed to load seasons" });
+  }
+});
+
+/** POST /api/clubs/:id/seasons — create a club season */
+clubsRouter.post("/:id/seasons", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    const { clubSeasons } = await import("../shared/schema.js");
+    const body = req.body as any;
+    const seasonId = nanoid(16);
+    await db.insert(clubSeasons).values({
+      id: seasonId,
+      clubId: id,
+      name: body.name,
+      startDate: body.startDate,
+      endDate: body.endDate ?? null,
+      scoringMethod: body.scoringMethod ?? "hybrid",
+      visibility: body.visibility ?? "public",
+      status: "active",
+      createdBy: requesterId,
+    });
+    const [created] = await db.select().from(clubSeasons).where(eq(clubSeasons.id, seasonId));
+    res.status(201).json({ ...created, createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt) });
+  } catch (err) {
+    logger.error("[clubs] POST /:id/seasons error:", err);
+    res.status(500).json({ error: "Failed to create season" });
+  }
+});
+
+/** GET /api/clubs/:id/seasons/:seasonId/standings — season standings */
+clubsRouter.get("/:id/seasons/:seasonId/standings", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const { seasonId } = req.params;
+    const { clubSeasonStandings } = await import("../shared/schema.js");
+    const standings = await db.select().from(clubSeasonStandings)
+      .where(eq(clubSeasonStandings.seasonId, seasonId))
+      .orderBy(clubSeasonStandings.rank);
+    res.json(standings);
+  } catch (err) {
+    logger.error("[clubs] GET /:id/seasons/:seasonId/standings error:", err);
+    res.status(500).json({ error: "Failed to load standings" });
+  }
+});
+
+/** GET /api/clubs/:id/announcements — list announcements (public) */
+clubsRouter.get("/:id/announcements", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const { clubAnnouncements } = await import("../shared/schema.js");
+    const rows = await db.select().from(clubAnnouncements)
+      .where(eq(clubAnnouncements.clubId, id))
+      .orderBy(desc(clubAnnouncements.pinned), desc(clubAnnouncements.createdAt));
+    res.json(rows.map(r => ({
+      ...r,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    })));
+  } catch (err) {
+    logger.error("[clubs] GET /:id/announcements error:", err);
+    res.status(500).json({ error: "Failed to load announcements" });
+  }
+});
+
+/** POST /api/clubs/:id/announcements — create announcement */
+clubsRouter.post("/:id/announcements", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    const { clubAnnouncements } = await import("../shared/schema.js");
+    const body = req.body as any;
+    const annId = nanoid(16);
+    await db.insert(clubAnnouncements).values({
+      id: annId,
+      clubId: id,
+      title: body.title,
+      body: body.body,
+      visibility: body.visibility ?? "public",
+      pinned: body.pinned ? 1 : 0,
+      relatedEventId: body.relatedEventId ?? null,
+      relatedTournamentId: body.relatedTournamentId ?? null,
+      createdBy: requesterId,
+      createdByName: body.createdByName ?? "",
+    });
+    const [created] = await db.select().from(clubAnnouncements).where(eq(clubAnnouncements.id, annId));
+    res.status(201).json({ ...created, createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt) });
+  } catch (err) {
+    logger.error("[clubs] POST /:id/announcements error:", err);
+    res.status(500).json({ error: "Failed to create announcement" });
+  }
+});
+
+/** DELETE /api/clubs/:id/announcements/:annId — delete announcement */
+clubsRouter.delete("/:id/announcements/:annId", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id, annId } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    const { clubAnnouncements } = await import("../shared/schema.js");
+    await db.delete(clubAnnouncements).where(eq(clubAnnouncements.id, annId));
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("[clubs] DELETE /:id/announcements/:annId error:", err);
+    res.status(500).json({ error: "Failed to delete announcement" });
+  }
+});
+
+/** GET /api/clubs/:id/events/:eventId/recap — get or generate event recap */
+clubsRouter.get("/:id/events/:eventId/recap", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id, eventId } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    const { eventRecaps, meetupCheckins } = await import("../shared/schema.js");
+    // Check if recap already exists
+    const [existing] = await db.select().from(eventRecaps).where(eq(eventRecaps.eventId, eventId));
+    if (existing) { res.json(existing); return; }
+    // Generate recap from check-in data
+    const [event] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
+    if (!event) { res.status(404).json({ error: "Event not found" }); return; }
+    const checkins = await db.select().from(meetupCheckins).where(eq(meetupCheckins.eventId, eventId));
+    const attendanceCount = checkins.length;
+    const eventDate = event.startAt instanceof Date ? event.startAt : new Date(event.startAt);
+    const dateStr = eventDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    const caption = attendanceCount > 0
+      ? `${attendanceCount} players showed up for ${event.title} on ${dateStr} at ${club.name}. Great to see the OTB community growing! ♟️ #ChessOTB #OTBChess #ChessCommunity`
+      : `We hosted ${event.title} on ${dateStr} at ${club.name}. Thanks to everyone who joined! ♟️ #ChessOTB #OTBChess`;
+    const summary = `${event.title} — ${dateStr}. ${attendanceCount} player${attendanceCount !== 1 ? "s" : ""} attended.`;
+    const recapId = nanoid(16);
+    await db.insert(eventRecaps).values({
+      id: recapId,
+      clubId: id,
+      eventId,
+      generatedCaption: caption,
+      generatedSummary: summary,
+      attendanceCount,
+      firstTimeCount: 0,
+      returningCount: attendanceCount,
+    });
+    const [created] = await db.select().from(eventRecaps).where(eq(eventRecaps.id, recapId));
+    res.status(201).json(created);
+  } catch (err) {
+    logger.error("[clubs] GET /:id/events/:eventId/recap error:", err);
+    res.status(500).json({ error: "Failed to generate recap" });
+  }
+});
+
+/** POST /api/clubs/:id/events/:eventId/engagement-sync — sync check-in to member_engagement */
+clubsRouter.post("/:id/events/:eventId/engagement-sync", requireFullAuth, async (req: Request, res: Response) => {
+  const requesterId = getUserId(req, res);
+  if (!requesterId) return;
+  try {
+    const db = await getDb();
+    const { id, eventId } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === requesterId;
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+    if (!isOwner && membership?.role !== "director") {
+      res.status(403).json({ error: "Owner/director only" }); return;
+    }
+    const { meetupCheckins, memberEngagement } = await import("../shared/schema.js");
+    const checkins = await db.select().from(meetupCheckins).where(eq(meetupCheckins.eventId, eventId));
+    // Upsert engagement for each checked-in member
+    for (const checkin of checkins) {
+      const [existing] = await db.select().from(memberEngagement)
+        .where(and(eq(memberEngagement.memberId, checkin.userId), eq(memberEngagement.clubId, id)));
+      if (existing) {
+        await db.update(memberEngagement)
+          .set({
+            eventsAttendedCount: existing.eventsAttendedCount + 1,
+            lastAttendedAt: checkin.checkedInAt,
+            currentStreak: existing.currentStreak + 1,
+            longestStreak: Math.max(existing.longestStreak, existing.currentStreak + 1),
+          })
+          .where(and(eq(memberEngagement.memberId, checkin.userId), eq(memberEngagement.clubId, id)));
+      } else {
+        await db.insert(memberEngagement).values({
+          id: nanoid(16),
+          memberId: checkin.userId,
+          clubId: id,
+          eventsAttendedCount: 1,
+          lastAttendedAt: checkin.checkedInAt,
+          currentStreak: 1,
+          longestStreak: 1,
+        });
+      }
+    }
+    res.json({ synced: checkins.length });
+  } catch (err) {
+    logger.error("[clubs] POST /:id/events/:eventId/engagement-sync error:", err);
+    res.status(500).json({ error: "Failed to sync engagement" });
+  }
+});

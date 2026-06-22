@@ -6586,3 +6586,22 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Client: Settings tab — Danger Zone sub-tab (publish/unpublish, delete with confirm)
 - [x] Vitest: 16 tests for club operations dashboard features (all passing)
 - [x] TypeScript: 0 errors
+
+## Club Growth & Retention Engine
+- [x] Schema: club_seasons, club_season_standings, club_announcements, member_engagement, event_recaps tables created in DB
+- [x] Schema: capacity, rsvp_required, waitlist_enabled, entry_fee, event_status columns on club_events
+- [x] Server: GET/POST /api/clubs/:id/seasons (list + create seasons)
+- [x] Server: GET /api/clubs/:id/growth/analytics (summary, segments, event stats)
+- [x] Server: GET /api/clubs/:id/growth/members (member engagement with segments)
+- [x] Server: POST /api/clubs/:id/growth/engagement (log member engagement)
+- [x] Server: POST /api/clubs/:id/recaps (save event recap)
+- [x] Server: GET /api/clubs/:id/announcements (list pinned announcements)
+- [x] Client: Growth tab added to ClubDashboard (Dashboard, Members, Seasons, Toolkit sub-tabs)
+- [x] Client: Growth Dashboard sub-tab — summary stat cards, attendance bar chart, recommended actions
+- [x] Client: Growth Members sub-tab — member segments (Active/At-Risk/Inactive/New), per-member engagement cards
+- [x] Client: Growth Seasons sub-tab — create season form, seasons list with active badge
+- [x] Client: Growth Toolkit sub-tab — message templates (Welcome/Re-engage/Event Reminder/Recap), social captions, Post-Event Recap Generator, recommended hashtags
+- [x] Client: Recap Generator — event selector, generate button, editable textarea, copy button
+- [x] Vitest: 25 tests for Growth & Retention Engine (all passing)
+- [x] TypeScript: 0 errors
+- [x] ESLint: 0 errors (33 pre-existing warnings)

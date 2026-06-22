@@ -2165,3 +2165,129 @@ export const prepPatternSummary = mysqlTable(
 );
 export type PrepPatternSummaryRow = typeof prepPatternSummary.$inferSelect;
 export type NewPrepPatternSummaryRow = typeof prepPatternSummary.$inferInsert;
+
+// ─── club_seasons ─────────────────────────────────────────────────────────────
+export const clubSeasons = mysqlTable(
+  "club_seasons",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    startDate: varchar("start_date", { length: 20 }).notNull(),
+    endDate: varchar("end_date", { length: 20 }),
+    scoringMethod: varchar("scoring_method", { length: 30 }).notNull().default("hybrid"),
+    visibility: varchar("visibility", { length: 20 }).notNull().default("public"),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    createdBy: varchar("created_by", { length: 36 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    csClubIdx: index("cs_club_idx").on(table.clubId),
+    csStatusIdx: index("cs_status_idx").on(table.clubId, table.status),
+  })
+);
+export type ClubSeasonRow = typeof clubSeasons.$inferSelect;
+export type NewClubSeasonRow = typeof clubSeasons.$inferInsert;
+
+// ─── club_season_standings ────────────────────────────────────────────────────
+export const clubSeasonStandings = mysqlTable(
+  "club_season_standings",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    seasonId: varchar("season_id", { length: 36 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    displayName: varchar("display_name", { length: 120 }).notNull(),
+    avatarUrl: varchar("avatar_url", { length: 500 }),
+    points: int("points").notNull().default(0),
+    eventsAttended: int("events_attended").notNull().default(0),
+    tournamentsPlayed: int("tournaments_played").notNull().default(0),
+    wins: int("wins").notNull().default(0),
+    losses: int("losses").notNull().default(0),
+    draws: int("draws").notNull().default(0),
+    rank: int("rank").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    cssSeasonIdx: index("css_season_idx").on(table.seasonId),
+    cssClubIdx: index("css_club_idx").on(table.clubId),
+    cssUnique: uniqueIndex("css_unique").on(table.seasonId, table.userId),
+  })
+);
+export type ClubSeasonStandingRow = typeof clubSeasonStandings.$inferSelect;
+export type NewClubSeasonStandingRow = typeof clubSeasonStandings.$inferInsert;
+
+// ─── club_announcements ───────────────────────────────────────────────────────
+export const clubAnnouncements = mysqlTable(
+  "club_announcements",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    visibility: varchar("visibility", { length: 20 }).notNull().default("public"),
+    pinned: tinyint("pinned").notNull().default(0),
+    relatedEventId: varchar("related_event_id", { length: 64 }),
+    relatedTournamentId: varchar("related_tournament_id", { length: 100 }),
+    createdBy: varchar("created_by", { length: 36 }).notNull(),
+    createdByName: varchar("created_by_name", { length: 120 }).notNull().default(""),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    caClubIdx: index("ca_club_idx").on(table.clubId),
+    caPinnedIdx: index("ca_pinned_idx").on(table.clubId, table.pinned),
+  })
+);
+export type ClubAnnouncementRow = typeof clubAnnouncements.$inferSelect;
+export type NewClubAnnouncementRow = typeof clubAnnouncements.$inferInsert;
+
+// ─── member_engagement ────────────────────────────────────────────────────────
+export const memberEngagement = mysqlTable(
+  "member_engagement",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    memberId: varchar("member_id", { length: 36 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    eventsAttendedCount: int("events_attended_count").notNull().default(0),
+    tournamentsPlayedCount: int("tournaments_played_count").notNull().default(0),
+    lastAttendedAt: timestamp("last_attended_at"),
+    currentStreak: int("current_streak").notNull().default(0),
+    longestStreak: int("longest_streak").notNull().default(0),
+    badgesJson: text("badges_json"),
+    referralSource: varchar("referral_source", { length: 50 }),
+    referredByUserId: varchar("referred_by_user_id", { length: 36 }),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    meClubIdx: index("me_club_idx").on(table.clubId),
+    meUnique: uniqueIndex("me_unique").on(table.memberId, table.clubId),
+  })
+);
+export type MemberEngagementRow = typeof memberEngagement.$inferSelect;
+export type NewMemberEngagementRow = typeof memberEngagement.$inferInsert;
+
+// ─── event_recaps ─────────────────────────────────────────────────────────────
+export const eventRecaps = mysqlTable(
+  "event_recaps",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    eventId: varchar("event_id", { length: 64 }).notNull(),
+    generatedCaption: text("generated_caption"),
+    generatedSummary: text("generated_summary"),
+    attendanceCount: int("attendance_count").notNull().default(0),
+    firstTimeCount: int("first_time_count").notNull().default(0),
+    returningCount: int("returning_count").notNull().default(0),
+    nextEventId: varchar("next_event_id", { length: 64 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    erClubIdx: index("er_club_idx").on(table.clubId),
+    erEventIdx: uniqueIndex("er_event_idx").on(table.eventId),
+  })
+);
+export type EventRecapRow = typeof eventRecaps.$inferSelect;
+export type NewEventRecapRow = typeof eventRecaps.$inferInsert;

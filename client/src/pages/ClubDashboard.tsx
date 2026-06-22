@@ -181,6 +181,12 @@ import {
   Eye,
   EyeOff,
   Trash,
+  Sprout,
+  Target,
+  MessageCircle,
+  BarChart,
+  UserX,
+  Lightbulb,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -2307,7 +2313,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "events" | "members" | "feed" | "battles" | "leagues" | "settings" | "qr"; // battles kept for internal use; tournaments merged into events
+type Tab = "overview" | "events" | "members" | "feed" | "battles" | "leagues" | "settings" | "qr" | "growth"; // battles kept for internal use; tournaments merged into events
 type SettingsSubTab = "home" | "payments" | "profile" | "join" | "danger";
 
 export default function ClubDashboard() {
@@ -2350,6 +2356,25 @@ export default function ClubDashboard() {
   const [confirmDelete, setConfirmDelete] = useState("");
   const [deletingClub, setDeletingClub] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
+  // Growth tab state
+  const [growthAnalytics, setGrowthAnalytics] = useState<null | {
+    summary: { totalMembers: number; totalEvents: number; pastEvents: number; upcomingEvents: number; totalAttendance: number; avgAttendance: number; newMembersThisMonth: number };
+    segments: { active: number; atRisk: number; inactive: number; new: number };
+    eventStats: Array<{ id: string; title: string; date: string; rsvpCount: number; attendanceCount: number; conversionRate: number }>;
+  }>(null);
+  const [growthMembersData, setGrowthMembersData] = useState<Array<{ userId: string; displayName: string; avatarUrl: string | null; role: string; eventsAttended: number; currentStreak: number; longestStreak: number; lastAttendedAt: string | null; badges: string[]; segment: string }>>([]);
+  const [growthLoading, setGrowthLoading] = useState(false);
+  const [growthMemberFilter, setGrowthMemberFilter] = useState<"all" | "active" | "at_risk" | "inactive" | "new">("all");
+  const [copiedTemplate, setCopiedTemplate] = useState<string | null>(null);
+  const [growthSubTab, setGrowthSubTab] = useState<"dashboard" | "members" | "toolkit" | "seasons">("dashboard");
+  const [seasonName, setSeasonName] = useState("");
+  const [seasonStartDate, setSeasonStartDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [seasonEndDate, setSeasonEndDate] = useState(() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().split("T")[0]; });
+  const [creatingSeasonLoading, setCreatingSeasonLoading] = useState(false);
+  const [seasons, setSeasons] = useState<Array<{ id: string; name: string; startDate: string; endDate: string; isActive: boolean; description?: string }>>([]);
+  const [recapEventId, setRecapEventId] = useState<string>("");
+  const [recapText, setRecapText] = useState("");
+  const [generatingRecap, setGeneratingRecap] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
@@ -3091,6 +3116,7 @@ export default function ClubDashboard() {
     // battles tab removed - now a sub-tab of Feed
     { id: "leagues", label: "Leagues", icon: Trophy },
     { id: "qr", label: "QR Tools", icon: QrCode, ownerOnly: true },
+    { id: "growth", label: "Growth", icon: Sprout, ownerOnly: true },
     { id: "settings", label: "Settings", icon: Settings2 },
   ];
 
@@ -5148,6 +5174,487 @@ export default function ClubDashboard() {
               </ul>
             </div>
           </div>
+          );
+        })()}
+        {/* ── GROWTH TAB (owner/director only) ─────────────────────────────── */}
+        {tab === "growth" && isOwnerOrDirector && (() => {
+          async function loadGrowthData() {
+            if (!club) return;
+            setGrowthLoading(true);
+            try {
+              const [analyticsRes, membersRes] = await Promise.all([
+                authFetch(`/api/clubs/${club.id}/growth/analytics`, { credentials: "include" }),
+                authFetch(`/api/clubs/${club.id}/growth/members`, { credentials: "include" }),
+              ]);
+              if (analyticsRes.ok) setGrowthAnalytics(await analyticsRes.json());
+              if (membersRes.ok) setGrowthMembersData(await membersRes.json());
+            } catch { /* offline */ }
+            finally { setGrowthLoading(false); }
+          }
+          const _segmentColor = (seg: string) => {
+            if (seg === "active") return "text-emerald-400";
+            if (seg === "at_risk") return "text-amber-400";
+            if (seg === "inactive") return "text-red-400";
+            return "text-blue-400";
+          };
+          const _segmentBg = (seg: string) => {
+            if (seg === "active") return "bg-emerald-500/15 border-emerald-500/30";
+            if (seg === "at_risk") return "bg-amber-500/15 border-amber-500/30";
+            if (seg === "inactive") return "bg-red-500/15 border-red-500/30";
+            return "bg-blue-500/15 border-blue-500/30";
+          };
+          const filteredMembers = growthMemberFilter === "all"
+            ? growthMembersData
+            : growthMembersData.filter(m => m.segment === growthMemberFilter);
+          const messageTemplates = [
+            { id: "welcome", label: "Welcome New Member", icon: PartyPopper, text: `Welcome to ${club?.name}! 🎉 We're excited to have you join our OTB chess community. Our next event is coming up soon — RSVP to save your spot and come play some great chess with us!` },
+            { id: "reactivate", label: "Re-engage Inactive", icon: Flame, text: `Hey! We miss you at ${club?.name}. 🙏 It's been a while since we've seen you at the board. We have some great events coming up — would love to see you back!` },
+            { id: "event_reminder", label: "Event Reminder", icon: Calendar, text: `Reminder: ${club?.name} has an event coming up this week! ♟️ Don't forget to RSVP so we can plan accordingly. See you at the board!` },
+            { id: "social_invite", label: "Social Invite", icon: _Share2 ?? Globe, text: `Join us at ${club?.name} for OTB chess! We're a community of passionate chess players who meet regularly to play, learn, and grow together. Come check us out — all skill levels welcome! ♟️` },
+            { id: "recap", label: "Post-Event Recap", icon: Trophy, text: `What a great session at ${club?.name}! 🏆 Thanks to everyone who came out. We had an amazing turnout and some incredible games. See you at the next one!` },
+          ];
+          const socialToolkitItems = [
+            { label: "Copy Club Link", icon: Link2, action: () => { navigator.clipboard.writeText(`${window.location.origin}/clubs/${club?.slug || club?.id}`); toast.success("Club link copied!"); } },
+            { label: "Copy Join QR URL", icon: QrCode, action: () => { navigator.clipboard.writeText(`${window.location.origin}/clubs/${club?.slug || club?.id}`); toast.success("Join URL copied for QR!"); } },
+            { label: "Download Club Card", icon: Camera, action: () => toast.info("Club card download coming soon") },
+            { label: "Share to Instagram", icon: Globe, action: () => toast.info("Instagram sharing coming soon") },
+          ];
+          return (
+            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Growth & Retention</h2>
+                  <p className="text-white/50 text-sm mt-0.5">Track attendance, understand your members, and grow your club</p>
+                </div>
+                <button
+                  onClick={loadGrowthData}
+                  disabled={growthLoading}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/15 text-white transition-colors"
+                >
+                  <RefreshCw className={`w-4 h-4 ${growthLoading ? "animate-spin" : ""}`} />
+                  {growthLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+
+              {/* Sub-tab nav */}
+              <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "oklch(0.15 0.04 240)" }}>
+                {(["dashboard", "members", "seasons", "toolkit"] as const).map(st => (
+                  <button
+                    key={st}
+                    onClick={() => setGrowthSubTab(st)}
+                    className={`flex-1 min-w-[72px] py-2 rounded-lg text-xs font-semibold capitalize transition-all ${
+                      growthSubTab === st ? "bg-white/15 text-white" : "text-white/50 hover:text-white/80"
+                    }`}
+                  >
+                    {st === "dashboard" ? "Dashboard" : st === "members" ? "Members" : st === "seasons" ? "Seasons" : "Toolkit"}
+                  </button>
+                ))}
+              </div>
+
+              {/* DASHBOARD sub-tab */}
+              {growthSubTab === "dashboard" && (
+                <div className="space-y-5">
+                  {!growthAnalytics && !growthLoading && (
+                    <div className="rounded-2xl border border-white/10 p-8 text-center" style={{ background: "oklch(0.15 0.04 240)" }}>
+                      <Sprout className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
+                      <p className="text-white font-semibold mb-1">No analytics yet</p>
+                      <p className="text-white/50 text-sm mb-4">Click Refresh to load your club's growth data</p>
+                      <button onClick={loadGrowthData} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-colors">
+                        Load Analytics
+                      </button>
+                    </div>
+                  )}
+                  {growthLoading && (
+                    <div className="rounded-2xl border border-white/10 p-8 text-center" style={{ background: "oklch(0.15 0.04 240)" }}>
+                      <RefreshCw className="w-8 h-8 text-white/40 mx-auto mb-3 animate-spin" />
+                      <p className="text-white/50 text-sm">Loading analytics...</p>
+                    </div>
+                  )}
+                  {growthAnalytics && (
+                    <>
+                      {/* Summary stat cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          { label: "Total Members", value: growthAnalytics.summary.totalMembers, icon: Users, color: "text-blue-400" },
+                          { label: "Avg Attendance", value: growthAnalytics.summary.avgAttendance, icon: BarChart, color: "text-emerald-400" },
+                          { label: "New This Month", value: growthAnalytics.summary.newMembersThisMonth, icon: UserPlus, color: "text-purple-400" },
+                          { label: "Total Events", value: growthAnalytics.summary.totalEvents, icon: Calendar, color: "text-amber-400" },
+                        ].map(card => (
+                          <div key={card.label} className="rounded-2xl border border-white/08 p-4" style={{ background: "oklch(0.15 0.04 240)" }}>
+                            <card.icon className={`w-5 h-5 ${card.color} mb-2`} />
+                            <div className="text-2xl font-bold text-white">{card.value}</div>
+                            <div className="text-white/50 text-xs mt-0.5">{card.label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Member segments */}
+                      <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                        <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Member Segments</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            { key: "active", label: "Active", desc: "Attended in 30d", count: growthAnalytics.segments.active, color: "emerald" },
+                            { key: "at_risk", label: "At Risk", desc: "30–90d inactive", count: growthAnalytics.segments.atRisk, color: "amber" },
+                            { key: "inactive", label: "Inactive", desc: "90d+ inactive", count: growthAnalytics.segments.inactive, color: "red" },
+                            { key: "new", label: "New", desc: "Joined this month", count: growthAnalytics.segments.new, color: "blue" },
+                          ].map(seg => (
+                            <div key={seg.key} className={`rounded-xl border p-3 ${seg.key === "active" ? "bg-emerald-500/10 border-emerald-500/25" : seg.key === "at_risk" ? "bg-amber-500/10 border-amber-500/25" : seg.key === "inactive" ? "bg-red-500/10 border-red-500/25" : "bg-blue-500/10 border-blue-500/25"}`}>
+                              <div className={`text-2xl font-bold ${seg.key === "active" ? "text-emerald-400" : seg.key === "at_risk" ? "text-amber-400" : seg.key === "inactive" ? "text-red-400" : "text-blue-400"}`}>{seg.count}</div>
+                              <div className="text-white text-sm font-semibold mt-0.5">{seg.label}</div>
+                              <div className="text-white/40 text-xs">{seg.desc}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Recommended actions */}
+                      <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                        <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Recommended Actions</h3>
+                        <div className="space-y-3">
+                          {growthAnalytics.segments.atRisk > 0 && (
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                              <Flame className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-white text-sm font-semibold">{growthAnalytics.segments.atRisk} members at risk of churning</p>
+                                <p className="text-white/50 text-xs mt-0.5">Send a re-engagement message to bring them back</p>
+                              </div>
+                              <button onClick={() => { setGrowthSubTab("toolkit"); }} className="ml-auto text-xs font-bold text-amber-400 hover:text-amber-300 flex-shrink-0">Message →</button>
+                            </div>
+                          )}
+                          {growthAnalytics.segments.new > 0 && (
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                              <UserPlus className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-white text-sm font-semibold">{growthAnalytics.segments.new} new members this month</p>
+                                <p className="text-white/50 text-xs mt-0.5">Send a welcome message to make them feel at home</p>
+                              </div>
+                              <button onClick={() => { setGrowthSubTab("toolkit"); }} className="ml-auto text-xs font-bold text-blue-400 hover:text-blue-300 flex-shrink-0">Welcome →</button>
+                            </div>
+                          )}
+                          {growthAnalytics.summary.upcomingEvents === 0 && (
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                              <CalendarClock className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-white text-sm font-semibold">No upcoming events scheduled</p>
+                                <p className="text-white/50 text-xs mt-0.5">Create an event to keep your members engaged</p>
+                              </div>
+                              <button onClick={() => setTab("events")} className="ml-auto text-xs font-bold text-purple-400 hover:text-purple-300 flex-shrink-0">Create →</button>
+                            </div>
+                          )}
+                          {growthAnalytics.segments.active >= 5 && (
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                              <Sprout className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-white text-sm font-semibold">Strong active core of {growthAnalytics.segments.active} members</p>
+                                <p className="text-white/50 text-xs mt-0.5">Share your club link to attract new players</p>
+                              </div>
+                              <button onClick={() => { setGrowthSubTab("toolkit"); }} className="ml-auto text-xs font-bold text-emerald-400 hover:text-emerald-300 flex-shrink-0">Share →</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Recent event attendance */}
+                      {growthAnalytics.eventStats.length > 0 && (
+                        <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                          <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Recent Event Attendance</h3>
+                          <div className="space-y-2">
+                            {growthAnalytics.eventStats.map(ev => (
+                              <div key={ev.id} className="flex items-center gap-3 py-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white text-sm font-semibold truncate">{ev.title}</p>
+                                  <p className="text-white/40 text-xs">{new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                                </div>
+                                <div className="flex items-center gap-4 text-right flex-shrink-0">
+                                  <div>
+                                    <div className="text-white text-sm font-bold">{ev.attendanceCount}</div>
+                                    <div className="text-white/40 text-xs">attended</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-white text-sm font-bold">{ev.rsvpCount}</div>
+                                    <div className="text-white/40 text-xs">RSVPed</div>
+                                  </div>
+                                  <div className={`text-sm font-bold ${ev.conversionRate >= 70 ? "text-emerald-400" : ev.conversionRate >= 40 ? "text-amber-400" : "text-red-400"}`}>
+                                    {ev.conversionRate}%
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* MEMBERS sub-tab */}
+              {growthSubTab === "members" && (
+                <div className="space-y-4">
+                  {/* Segment filter pills */}
+                  <div className="flex flex-wrap gap-2">
+                    {(["all", "active", "at_risk", "inactive", "new"] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setGrowthMemberFilter(f)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold capitalize transition-all border ${
+                          growthMemberFilter === f
+                            ? f === "active" ? "bg-emerald-500/25 border-emerald-500/50 text-emerald-300" : f === "at_risk" ? "bg-amber-500/25 border-amber-500/50 text-amber-300" : f === "inactive" ? "bg-red-500/25 border-red-500/50 text-red-300" : f === "new" ? "bg-blue-500/25 border-blue-500/50 text-blue-300" : "bg-white/15 border-white/25 text-white"
+                            : "bg-white/05 border-white/10 text-white/50 hover:text-white/80"
+                        }`}
+                      >
+                        {f === "at_risk" ? "At Risk" : f.charAt(0).toUpperCase() + f.slice(1)}
+                        {growthMembersData.filter(m => f === "all" || m.segment === f).length > 0 && (
+                          <span className="ml-1.5 opacity-70">{growthMembersData.filter(m => f === "all" || m.segment === f).length}</span>
+                        )}
+                      </button>
+                    ))}
+                    <button onClick={loadGrowthData} disabled={growthLoading} className="ml-auto px-3 py-1.5 rounded-full text-xs font-bold bg-white/08 text-white/50 hover:text-white/80 border border-white/10 transition-colors">
+                      <RefreshCw className={`w-3.5 h-3.5 inline mr-1 ${growthLoading ? "animate-spin" : ""}`} />Refresh
+                    </button>
+                  </div>
+                  {growthMembersData.length === 0 && !growthLoading && (
+                    <div className="rounded-2xl border border-white/10 p-8 text-center" style={{ background: "oklch(0.15 0.04 240)" }}>
+                      <Users className="w-10 h-10 text-white/20 mx-auto mb-3" />
+                      <p className="text-white/50 text-sm">Click Refresh to load member engagement data</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    {filteredMembers.map(m => (
+                      <div key={m.userId} className="flex items-center gap-3 p-3 rounded-2xl border border-white/08" style={{ background: "oklch(0.15 0.04 240)" }}>
+                        <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={40} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-white text-sm font-semibold truncate">{m.displayName}</p>
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                              m.segment === "active" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" :
+                              m.segment === "at_risk" ? "bg-amber-500/15 border-amber-500/30 text-amber-400" :
+                              m.segment === "inactive" ? "bg-red-500/15 border-red-500/30 text-red-400" :
+                              "bg-blue-500/15 border-blue-500/30 text-blue-400"
+                            }`}>{m.segment === "at_risk" ? "At Risk" : m.segment.charAt(0).toUpperCase() + m.segment.slice(1)}</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="text-white/40 text-xs">{m.eventsAttended} events</span>
+                            {m.currentStreak > 0 && <span className="text-amber-400 text-xs">🔥 {m.currentStreak} streak</span>}
+                            {m.lastAttendedAt && <span className="text-white/30 text-xs">Last: {new Date(m.lastAttendedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+                          </div>
+                        </div>
+                        {m.badges.length > 0 && (
+                          <div className="flex gap-1">
+                            {m.badges.slice(0, 3).map((b, i) => <span key={i} className="text-sm">{b}</span>)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TOOLKIT sub-tab */}
+              {growthSubTab === "toolkit" && (
+                <div className="space-y-5">
+                  {/* Message templates */}
+                  <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                    <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Message Templates</h3>
+                    <div className="space-y-3">
+                      {messageTemplates.map(tpl => (
+                        <div key={tpl.id} className="p-4 rounded-xl border border-white/08" style={{ background: "oklch(0.12 0.04 240)" }}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <tpl.icon className="w-4 h-4 text-white/50" />
+                              <span className="text-white text-sm font-semibold">{tpl.label}</span>
+                            </div>
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(tpl.text); setCopiedTemplate(tpl.id); setTimeout(() => setCopiedTemplate(null), 2000); toast.success("Template copied!"); }}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                copiedTemplate === tpl.id ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-white/60 hover:bg-white/15 hover:text-white"
+                              }`}
+                            >
+                              {copiedTemplate === tpl.id ? <CheckCircle className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedTemplate === tpl.id ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
+                          <p className="text-white/50 text-xs leading-relaxed line-clamp-2">{tpl.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social growth toolkit */}
+                  <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                    <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Social Growth Toolkit</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {socialToolkitItems.map(item => (
+                        <button
+                          key={item.label}
+                          onClick={item.action}
+                          className="flex items-center gap-3 p-4 rounded-xl border border-white/08 hover:border-white/15 text-left transition-all group" style={{ background: "oklch(0.12 0.04 240)" }}
+                        >
+                          <item.icon className="w-5 h-5 text-white/50 group-hover:text-white/80 transition-colors flex-shrink-0" />
+                          <span className="text-white/70 text-sm font-semibold group-hover:text-white transition-colors">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Hashtag suggestions */}
+                  <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                    <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-3">Recommended Hashtags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {["#ChessOTB", "#OTBChess", "#ChessCommunity", "#ChessClub", "#PlayChess", "#ChessLife", `#${(club?.name || "").replace(/\s+/g, "")}`, "#BoardGames", "#ChessPlayers"].map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => { navigator.clipboard.writeText(tag); toast.success(`${tag} copied!`); }}
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white/08 text-white/60 hover:bg-white/15 hover:text-white border border-white/10 transition-all"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recap Generator */}
+                  <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                    <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Post-Event Recap Generator</h3>
+                    <p className="text-white/40 text-xs mb-4">Select a recent event and generate a shareable recap post for social media.</p>
+                    <div className="space-y-3">
+                      <select
+                        value={recapEventId}
+                        onChange={e => { setRecapEventId(e.target.value); setRecapText(""); }}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none"
+                      >
+                        <option value="">Select an event...</option>
+                        {[...upcomingEvents, ...(events || [])].filter((ev, i, arr) => arr.findIndex(e => e.id === ev.id) === i).slice(0, 10).map(ev => (
+                          <option key={ev.id} value={ev.id}>{ev.title} — {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</option>
+                        ))}
+                      </select>
+                      {recapEventId && (
+                        <button
+                          onClick={() => {
+                            const ev = [...upcomingEvents, ...(events || [])].find(e => e.id === recapEventId);
+                            if (!ev) return;
+                            setGeneratingRecap(true);
+                            setTimeout(() => {
+                              const rsvpCount = 0; // RSVP count available via countRSVPs(ev.id).going if needed
+                              const recap = `🏆 What a session at ${club?.name}!\n\nWe just wrapped up "${ev.title}" and it was incredible. ${rsvpCount > 0 ? `${rsvpCount} players showed up` : "Great turnout"} for an evening of serious OTB chess. The games were intense, the atmosphere was electric, and the community showed up in full force.\n\nThank you to everyone who came out. This is what OTB chess is all about — real boards, real moves, real community. ♟️\n\nNext event coming soon — follow us and stay tuned!\n\n#ChessOTB #OTBChess #ChessClub #${(club?.name || "").replace(/\s+/g, "")} #ChessCommunity`;
+                              setRecapText(recap);
+                              setGeneratingRecap(false);
+                            }, 800);
+                          }}
+                          disabled={generatingRecap}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
+                          style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                        >
+                          {generatingRecap ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                          {generatingRecap ? "Generating..." : "Generate Recap"}
+                        </button>
+                      )}
+                      {recapText && (
+                        <div className="relative">
+                          <textarea
+                            value={recapText}
+                            onChange={e => setRecapText(e.target.value)}
+                            rows={8}
+                            className="w-full px-4 py-3 rounded-xl text-sm text-white bg-white/06 border border-white/10 outline-none resize-none leading-relaxed"
+                          />
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(recapText); toast.success("Recap copied!"); }}
+                            className="absolute top-2 right-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-all"
+                          >
+                            <Copy className="w-3.5 h-3.5" />Copy
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SEASONS sub-tab */}
+              {growthSubTab === "seasons" && (
+                <div className="space-y-5">
+                  {/* Create season form */}
+                  <div className="rounded-2xl border border-white/10 p-5" style={{ background: "oklch(0.15 0.04 240)" }}>
+                    <h3 className="text-sm font-bold text-white/70 uppercase tracking-wider mb-4">Create a Season</h3>
+                    <p className="text-white/40 text-xs mb-4">Seasons let you track attendance, standings, and member performance over a defined period.</p>
+                    <div className="space-y-3">
+                      <input
+                        value={seasonName}
+                        onChange={e => setSeasonName(e.target.value)}
+                        placeholder="e.g. Summer 2026 Season"
+                        className="w-full px-4 py-2.5 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none placeholder-white/25"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-white/40 text-xs font-semibold block mb-1.5">Start Date</label>
+                          <input type="date" value={seasonStartDate} onChange={e => setSeasonStartDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-white/40 text-xs font-semibold block mb-1.5">End Date</label>
+                          <input type="date" value={seasonEndDate} onChange={e => setSeasonEndDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none" />
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!seasonName.trim() || !club) return;
+                          setCreatingSeasonLoading(true);
+                          try {
+                            const res = await authFetch(`/api/clubs/${club.id}/seasons`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ name: seasonName.trim(), startDate: seasonStartDate, endDate: seasonEndDate }),
+                              credentials: "include",
+                            });
+                            if (res.ok) {
+                              const newSeason = await res.json();
+                              setSeasons(prev => [newSeason, ...prev]);
+                              setSeasonName("");
+                              toast.success("Season created!");
+                            } else {
+                              toast.error("Failed to create season.");
+                            }
+                          } catch { toast.error("Network error."); }
+                          finally { setCreatingSeasonLoading(false); }
+                        }}
+                        disabled={!seasonName.trim() || creatingSeasonLoading}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+                        style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                      >
+                        {creatingSeasonLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        {creatingSeasonLoading ? "Creating..." : "Create Season"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Seasons list */}
+                  {seasons.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6" style={{ background: "oklch(0.15 0.04 240)" }}>
+                      <Trophy className="w-10 h-10 text-white/20" />
+                      <p className="text-white/50 font-semibold">No seasons yet</p>
+                      <p className="text-white/30 text-sm">Create your first season to start tracking member performance over time.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {seasons.map(s => (
+                        <div key={s.id} className="flex items-center gap-4 p-4 rounded-2xl border border-white/08" style={{ background: "oklch(0.15 0.04 240)" }}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-white font-semibold text-sm">{s.name}</p>
+                              {s.isActive && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Active</span>}
+                            </div>
+                            <p className="text-white/40 text-xs mt-0.5">
+                              {new Date(s.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} — {new Date(s.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </p>
+                          </div>
+                          <Trophy className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           );
         })()}
         {/* ── SETTINGS TABents) ──────────────────── */}
