@@ -915,8 +915,10 @@ function HowItWorks() {
       icon: <Swords className="w-3 h-3" />,
       title: "Optimal Pairings Generated",
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
-      imageSrc: "/manus-storage/otb-board-pairings_41832e9e.webp",
-      imageAlt: "Board pairings screen showing matchups",
+      imageSrc: "/manus-storage/tournament-complete-podium_e5b65f03.webp",
+      imageAlt: "Tournament complete screen with final podium",
+      imageSrc2: "/manus-storage/otb-board-pairings_41832e9e.webp",
+      imageAlt2: "Board pairings screen showing matchups",
       phoneLeft: true,
     },
   ];
