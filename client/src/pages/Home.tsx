@@ -993,7 +993,7 @@ function Features() {
   return (
     <section
       id="features"
-      className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
+      className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#EEF5EE]"}`}
       ref={ref}
     >
       <div className="container">
