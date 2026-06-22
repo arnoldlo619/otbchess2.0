@@ -110,6 +110,27 @@ function dbRowToClub(row: typeof dbClubs.$inferSelect) {
     intakeQuestions: row.intakeQuestions ?? undefined,
     status: row.status ?? "published",
     announcement: row.announcement ?? undefined,
+    // Landing page extended fields
+    facebook: row.facebook ?? undefined,
+    xUrl: row.xUrl ?? undefined,
+    meetupUrl: row.meetupUrl ?? undefined,
+    whatsapp: row.whatsapp ?? undefined,
+    groupme: row.groupme ?? undefined,
+    beginnerFriendly: row.beginnerFriendly === 1,
+    isVerified: row.isVerified === 1,
+    isClaimed: row.isClaimed === 1,
+    city: row.city ?? undefined,
+    region: row.region ?? undefined,
+    venueName: row.venueName ?? undefined,
+    eventCount: row.eventCount ?? 0,
+    gamesPlayed: row.gamesPlayed ?? 0,
+    newMembersThisMonth: row.newMembersThisMonth ?? 0,
+    activeSince: row.activeSince instanceof Date
+      ? row.activeSince.toISOString()
+      : row.activeSince ? String(row.activeSince) : undefined,
+    whatToExpect: row.whatToExpect ?? undefined,
+    featuredEventId: row.featuredEventId ?? undefined,
+    featuredTournamentId: row.featuredTournamentId ?? undefined,
     foundedAt:
       row.foundedAt instanceof Date
         ? row.foundedAt.toISOString()
@@ -583,6 +604,25 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
       "announcement",
       "avatarUrl",
       "bannerUrl",
+      // Landing page extended fields
+      "facebook",
+      "xUrl",
+      "meetupUrl",
+      "whatsapp",
+      "groupme",
+      "beginnerFriendly",
+      "isVerified",
+      "isClaimed",
+      "city",
+      "region",
+      "venueName",
+      "eventCount",
+      "gamesPlayed",
+      "newMembersThisMonth",
+      "activeSince",
+      "whatToExpect",
+      "featuredEventId",
+      "featuredTournamentId",
     ];
     const updates: Record<string, unknown> = {};
     for (const key of allowed) {

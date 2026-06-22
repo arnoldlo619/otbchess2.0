@@ -6555,3 +6555,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Reduce polling interval from 5s to 3s for faster fallback recovery
 - [x] Add manual "Refresh State" button in player waiting room as user-triggered fallback
 - [x] Training page: Add "Video Editor" as first feature card (above Repertoire Builder), linking to external URL, with In Beta badge, platform-consistent styling, and content describing the side-by-side video + digital board editor
+
+## Club Landing Page Upgrade
+- [x] Add isVerified and beginnerFriendly hero badges to ClubProfile hero identity row
+- [x] Add Facebook, X/Twitter, Meetup social links to "Links & Info" sidebar card
+- [x] Add "What to Expect" card in feed tab (shown when club.whatToExpect is set)
+- [x] Add mobile sticky Join CTA bar above bottom nav (shown to non-members/guests only)
+- [x] Add Quick Stats bar (Members, Tournaments, Events, Founded) above About card in feed tab
+- [x] Add Top Members / Leaderboard Preview card in feed tab (top 5 by role, "See all" → members tab)
+- [x] Add Organizer / Club Director card in feed tab (owner avatar, name, chess.com, Contact button)
+- [x] Add Share / QR teaser card in feed tab (triggers existing share modal)
+- [x] Add OG/SEO meta tags via useEffect (og:title, og:description, og:image, og:url, twitter:card, document.title)
+- [x] 18 new DB columns added (facebook, xUrl, meetupUrl, beginnerFriendly, isVerified, isClaimed, whatToExpect, venueName, eventCount, gamesPlayed, newMembersThisMonth, activeSince, etc.)
+- [x] Server mapper updated for all new landing page fields
+- [x] Club TypeScript interface updated with all new fields
+- [x] TypeScript: 0 errors after all changes

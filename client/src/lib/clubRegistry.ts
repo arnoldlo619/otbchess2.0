@@ -78,6 +78,25 @@ export interface Club {
   status?: "draft" | "published";
   /** Pinned announcement shown at the top of the profile */
   announcement?: string;
+  // Landing page extended fields
+  facebook?: string;
+  xUrl?: string;
+  meetupUrl?: string;
+  whatsapp?: string;
+  groupme?: string;
+  beginnerFriendly?: boolean;
+  isVerified?: boolean;
+  isClaimed?: boolean;
+  city?: string;
+  region?: string;
+  venueName?: string;
+  eventCount?: number;
+  gamesPlayed?: number;
+  newMembersThisMonth?: number;
+  activeSince?: string;
+  whatToExpect?: string;
+  featuredEventId?: string;
+  featuredTournamentId?: string;
 }
 
 export interface ClubMember {
