@@ -37,13 +37,13 @@ import {
 
 // ─── Design tokens (mirrors TournamentWizard) ─────────────────────────────────
 const T = {
-  green: "#4D6940",
+  green: "#436850",
   greenDark: "#2A4A32",
   greenBg: "rgba(77,105,64,0.08)",
   greenRing: "rgba(77,105,64,0.25)",
   lBorder: "#E5E7EB",
-  lText: "#1A1A1A",
-  lSub: "#6B6B50",
+  lText: "#12372A",
+  lSub: "#436850",
   lMuted: "#9CA3AF",
   lInput: "#FFFFFF",
   lInputBorder: "#D1D5DB",
@@ -225,7 +225,7 @@ function OptionChip({
       className="rounded-xl text-sm font-semibold transition-all duration-150"
       style={{
         padding: "8px 14px",
-        background: active ? T.green : isDark ? "rgba(255,255,255,0.07)" : "#FFF3D5",
+        background: active ? T.green : isDark ? "rgba(255,255,255,0.07)" : "#FBFADA",
         color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.55)" : T.lSub,
         boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
         cursor: disabled ? "not-allowed" : "pointer",
@@ -437,7 +437,7 @@ export function TournamentSettingsPanel({
                     <div
                       className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+                        background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
                         color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : T.lSub,
                       }}
                     >
@@ -550,7 +550,7 @@ export function TournamentSettingsPanel({
                     <span
                       className="text-[9px] mt-1 px-1.5 py-0.5 rounded-full font-semibold"
                       style={{
-                        background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+                        background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
                         color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.40)" : T.lSub,
                       }}
                     >
@@ -586,7 +586,7 @@ export function TournamentSettingsPanel({
                       disabled={isLocked}
                       onClick={() => patch({ [field.key]: Math.max(field.min, field.value - 1) })}
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-colors"
-                      style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5", color: isDark ? T.dText : T.lText }}
+                      style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FBFADA", color: isDark ? T.dText : T.lText }}
                     >
                       −
                     </button>
@@ -598,7 +598,7 @@ export function TournamentSettingsPanel({
                       disabled={isLocked}
                       onClick={() => patch({ [field.key]: Math.min(field.max, field.value + 1) })}
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-base font-bold transition-colors"
-                      style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5", color: isDark ? T.dText : T.lText }}
+                      style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FBFADA", color: isDark ? T.dText : T.lText }}
                     >
                       +
                     </button>
@@ -611,7 +611,7 @@ export function TournamentSettingsPanel({
           {/* Duration hint */}
           <div
             className="flex items-center gap-2 rounded-xl px-4 py-3 text-xs"
-            style={{ background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5", color: isDark ? "rgba(255,255,255,0.45)" : T.lSub }}
+            style={{ background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA", color: isDark ? "rgba(255,255,255,0.45)" : T.lSub }}
           >
             <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
             <span>
@@ -705,7 +705,7 @@ export function TournamentSettingsPanel({
           className="w-full flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-200"
           style={{
             padding: "13px 20px",
-            background: dirty ? T.green : isDark ? "rgba(255,255,255,0.07)" : "#FFF3D5",
+            background: dirty ? T.green : isDark ? "rgba(255,255,255,0.07)" : "#FBFADA",
             color: dirty ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
             boxShadow: dirty ? `0 4px 14px rgba(77,105,64,0.30)` : "none",
             cursor: dirty ? "pointer" : "not-allowed",

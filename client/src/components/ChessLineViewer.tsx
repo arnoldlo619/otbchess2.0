@@ -118,23 +118,23 @@ function BoardView({
 
   // Design tokens
   const bg = isDark ? "bg-[#0f1c11]" : "bg-white";
-  const border = isDark ? "border-[#1e2e22]/70" : "border-[#E8D9B0]/80";
-  const textPrimary = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textSecondary = isDark ? "text-white/55" : "text-[#6B6B50]";
-  const textTertiary = isDark ? "text-white/30" : "text-[#6B6B50]";
-  const accentText = isDark ? "text-[#5B9A6A]" : "text-[#4D6940]";
-  const accentBg = isDark ? "bg-[#4D6940]/20 text-[#5B9A6A]" : "bg-[#4D6940]/10 text-[#4D6940]";
+  const border = isDark ? "border-[#1e2e22]/70" : "border-[#ADBC9F]/80";
+  const textPrimary = isDark ? "text-white" : "text-[#12372A]";
+  const textSecondary = isDark ? "text-white/55" : "text-[#436850]";
+  const textTertiary = isDark ? "text-white/30" : "text-[#436850]";
+  const accentText = isDark ? "text-[#5B9A6A]" : "text-[#436850]";
+  const accentBg = isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/10 text-[#436850]";
   const activeMoveStyle = isDark
-    ? "bg-[#4D6940]/30 text-white border border-[#4D6940]/40"
-    : "bg-[#4D6940]/15 text-[#4D6940] border border-[#4D6940]/25";
+    ? "bg-[#436850]/30 text-white border border-[#436850]/40"
+    : "bg-[#436850]/15 text-[#436850] border border-[#436850]/25";
   const inactiveMoveStyle = isDark
     ? "text-white/60 hover:bg-white/05 hover:text-white"
-    : "text-[#6B6B50] hover:bg-[#E8D9B0]/50 hover:text-[#1A1A1A]";
+    : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A]";
   const btnBase = `flex items-center justify-center rounded-xl transition-all active:scale-95 border`;
   const btnEnabled = isDark
     ? "border-[#2e4a34]/50 text-white/70 hover:bg-[#162018] hover:text-white"
-    : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]/50 hover:text-[#1A1A1A]";
-  const btnDisabled = isDark ? "border-[#1e2e22]/40 text-white/15 cursor-not-allowed" : "border-[#E8D9B0]/70 text-[#6B6B50]/70 cursor-not-allowed";
+    : "border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A]";
+  const btnDisabled = isDark ? "border-[#1e2e22]/40 text-white/15 cursor-not-allowed" : "border-[#ADBC9F]/70 text-[#436850]/70 cursor-not-allowed";
 
   const boardMaxWidth = isFullscreen ? "min(60vh, 560px)" : "280px";
 
@@ -307,13 +307,13 @@ function BoardView({
 
           {/* Keyboard hint */}
           <div className={`px-3 pb-2 flex items-center gap-2 ${textTertiary}`}>
-            <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${isDark ? "border-white/10 bg-white/05" : "border-[#E8D9B0] bg-[#FFF3D5]/70"}`}>←</kbd>
-            <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${isDark ? "border-white/10 bg-white/05" : "border-[#E8D9B0] bg-[#FFF3D5]/70"}`}>→</kbd>
+            <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${isDark ? "border-white/10 bg-white/05" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>←</kbd>
+            <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${isDark ? "border-white/10 bg-white/05" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>→</kbd>
             <span className="text-[10px]">navigate moves</span>
             {isFullscreen && (
               <>
                 <span className="text-[10px] ml-2">·</span>
-                <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ml-1 ${isDark ? "border-white/10 bg-white/05" : "border-[#E8D9B0] bg-[#FFF3D5]/70"}`}>Esc</kbd>
+                <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ml-1 ${isDark ? "border-white/10 bg-white/05" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>Esc</kbd>
                 <span className="text-[10px]">exit fullscreen</span>
               </>
             )}
@@ -379,7 +379,7 @@ export default function ChessLineViewer({
 
   // Design tokens (needed for outer wrappers)
   const bg = isDark ? "bg-[#0f1c11]" : "bg-white";
-  const border = isDark ? "border-[#1e2e22]/70" : "border-[#E8D9B0]/80";
+  const border = isDark ? "border-[#1e2e22]/70" : "border-[#ADBC9F]/80";
 
   // Group moves into pairs for the move list (White + Black per row)
   const movePairs: { moveNum: number; white: { san: string; idx: number } | null; black: { san: string; idx: number } | null }[] = [];
@@ -407,8 +407,8 @@ export default function ChessLineViewer({
   };
 
   if (totalSteps === 0) {
-    const accentText = isDark ? "text-[#5B9A6A]" : "text-[#4D6940]";
-    const textSecondary = isDark ? "text-white/55" : "text-[#6B6B50]";
+    const accentText = isDark ? "text-[#5B9A6A]" : "text-[#436850]";
+    const textSecondary = isDark ? "text-white/55" : "text-[#436850]";
     return (
       <div className={`rounded-2xl border p-6 text-center ${bg} ${border}`}>
         <BookOpen className={`w-8 h-8 mx-auto mb-2 ${accentText}`} />
@@ -441,7 +441,7 @@ export default function ChessLineViewer({
             className={`absolute top-4 right-4 z-10 flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
               isDark
                 ? "border-[#2e4a34]/60 text-white/60 hover:bg-[#162018] hover:text-white"
-                : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]/50 hover:text-[#1A1A1A]"
+                : "border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A]"
             }`}
             title="Exit fullscreen (Esc)"
           >

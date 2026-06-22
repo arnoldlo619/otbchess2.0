@@ -54,7 +54,7 @@ function seedBadgeClass(seed: number | null, isDark: boolean): string {
   if (seed === 1) return isDark ? "bg-amber-400/25 text-amber-300 border-amber-400/30" : "bg-amber-50 text-amber-600 border-amber-200";
   if (seed === 2) return isDark ? "bg-slate-400/20 text-slate-300 border-slate-400/25" : "bg-slate-50 text-slate-500 border-slate-200";
   if (seed === 3) return isDark ? "bg-orange-400/20 text-orange-300 border-orange-400/25" : "bg-orange-50 text-orange-500 border-orange-200";
-  return isDark ? "bg-white/08 text-white/40 border-white/10" : "bg-[#FFF3D5]/70 text-[#6B6B50] border-[#E8D9B0]";
+  return isDark ? "bg-white/08 text-white/40 border-white/10" : "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]";
 }
 
 // Card dimensions — must match EliminationBracketView
@@ -82,14 +82,14 @@ function PlayerRow({
   isByeRow: boolean;
   isDark: boolean;
 }) {
-  const loserText = isDark ? "text-white/28" : "text-[#6B6B50]/70";
-  const winnerBg = isDark ? "bg-[#4D6940]/25" : "bg-[#4D6940]/07";
+  const loserText = isDark ? "text-white/28" : "text-[#436850]/70";
+  const winnerBg = isDark ? "bg-[#436850]/25" : "bg-[#436850]/07";
 
   if (isByeRow) {
     return (
       <div className={`flex items-center gap-2 px-3 py-2.5 opacity-30`}>
-        <span className={`text-[10px] font-bold w-6 text-center ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>—</span>
-        <span className={`text-xs italic ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>BYE</span>
+        <span className={`text-[10px] font-bold w-6 text-center ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>—</span>
+        <span className={`text-xs italic ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>BYE</span>
       </div>
     );
   }
@@ -97,8 +97,8 @@ function PlayerRow({
   if (!player) {
     return (
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <div className={`w-[22px] h-[18px] rounded flex-shrink-0 ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"} animate-pulse`} />
-        <div className={`h-3 w-20 rounded ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"} animate-pulse`} />
+        <div className={`w-[22px] h-[18px] rounded flex-shrink-0 ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"} animate-pulse`} />
+        <div className={`h-3 w-20 rounded ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"} animate-pulse`} />
       </div>
     );
   }
@@ -128,13 +128,13 @@ function PlayerRow({
       <div className="flex-1 min-w-0">
         <span className={`text-xs font-semibold truncate block leading-tight ${
           isLoser ? loserText : isWinner
-            ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
-            : isDark ? "text-white/88" : "text-[#1A1A1A]"
+            ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
+            : isDark ? "text-white/88" : "text-[#12372A]"
         }`}>
           {player.name}
         </span>
         {player.elo && (
-          <span className={`text-[9px] ${isDark ? "text-white/28" : "text-[#6B6B50]"}`}>
+          <span className={`text-[9px] ${isDark ? "text-white/28" : "text-[#436850]"}`}>
             {player.elo}
           </span>
         )}
@@ -142,7 +142,7 @@ function PlayerRow({
       {/* Score */}
       {score !== null && (
         <span className={`text-sm font-black tabular-nums flex-shrink-0 w-4 text-right ${
-          isWinner ? (isDark ? "text-[#4CAF50]" : "text-[#4D6940]") : loserText
+          isWinner ? (isDark ? "text-[#4CAF50]" : "text-[#436850]") : loserText
         }`}>
           {score}
         </span>
@@ -183,8 +183,8 @@ function MatchCard({
   const blackScore = game.result === "0-1" ? "1" : game.result === "½-½" ? "½" : game.result === "1-0" ? "0" : null;
 
   const cardBorder = isCurrentRound && pending
-    ? isDark ? "border-[#4CAF50]/35 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#4D6940]/35"
-    : isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+    ? isDark ? "border-[#4CAF50]/35 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#436850]/35"
+    : isDark ? "border-white/08" : "border-[#ADBC9F]/70";
 
   return (
     <div
@@ -202,7 +202,7 @@ function MatchCard({
         isByeRow={game.whiteId === "BYE"}
         isDark={isDark}
       />
-      <div className={`h-px mx-2.5 ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"}`} />
+      <div className={`h-px mx-2.5 ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
       <PlayerRow
         player={game.blackId === "BYE" ? undefined : black}
         seed={blackSeed}
@@ -309,10 +309,10 @@ function RoundColumn({
         <span
           className={`text-[11px] font-black uppercase tracking-wider ${
             isCurrentRound
-              ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
+              ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
               : isCompleted
-              ? isDark ? "text-white/35" : "text-[#6B6B50]"
-              : isDark ? "text-white/20" : "text-[#6B6B50]/70"
+              ? isDark ? "text-white/35" : "text-[#436850]"
+              : isDark ? "text-white/20" : "text-[#436850]/70"
           }`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
@@ -320,14 +320,14 @@ function RoundColumn({
         </span>
         {isCurrentRound && (
           <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
           }`}>
             <span className="w-1 h-1 rounded-full bg-[#4CAF50] animate-pulse" />
             Live
           </span>
         )}
         {isCompleted && (
-          <span className={`text-[9px] font-semibold ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}>✓</span>
+          <span className={`text-[9px] font-semibold ${isDark ? "text-white/20" : "text-[#436850]/70"}`}>✓</span>
         )}
       </div>
 
@@ -371,12 +371,12 @@ function ChampionCard({
       className={`flex flex-col items-center justify-center rounded-xl border p-4 gap-3 flex-shrink-0 ${
         champ
           ? isDark ? "bg-[oklch(0.28_0.10_145)] border-amber-400/30" : "bg-amber-50 border-amber-200"
-          : isDark ? "bg-[oklch(0.20_0.05_145)] border-white/06" : "bg-[#FFF3D5]/70 border-[#E8D9B0]/70"
+          : isDark ? "bg-[oklch(0.20_0.05_145)] border-white/06" : "bg-[#FBFADA]/70 border-[#ADBC9F]/70"
       }`}
       style={{ width: 140 }}
     >
       <div className="relative">
-        <Trophy className={`w-7 h-7 ${champ ? "text-amber-400" : isDark ? "text-white/15" : "text-[#6B6B50]/50"}`} />
+        <Trophy className={`w-7 h-7 ${champ ? "text-amber-400" : isDark ? "text-white/15" : "text-[#436850]/50"}`} />
         {champ && <Crown className="w-3.5 h-3.5 text-amber-400 absolute -top-1.5 -right-1.5" strokeWidth={2} />}
       </div>
       {champ ? (
@@ -384,18 +384,18 @@ function ChampionCard({
           <p className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
             Champion
           </p>
-          <p className={`text-sm font-black leading-tight ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+          <p className={`text-sm font-black leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}>
             {champ.name}
           </p>
           {seed && (
-            <p className={`text-[9px] mt-0.5 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+            <p className={`text-[9px] mt-0.5 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
               Seed #{seed}{champ.elo ? ` · ${champ.elo}` : ""}
             </p>
           )}
         </div>
       ) : (
-        <p className={`text-[10px] font-semibold text-center ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
+        <p className={`text-[10px] font-semibold text-center ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
           Champion TBD
         </p>
       )}
@@ -436,17 +436,17 @@ export function PublicBracketView({
   if (isAwaitingCutoff) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border ${
-        isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#E8D9B0]/70"
+        isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
       }`}>
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-amber-500/10" : "bg-amber-50"}`}>
           <Clock className={`w-7 h-7 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
         </div>
         <div className="text-center">
-          <p className={`text-base font-black ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}
+          <p className={`text-base font-black ${isDark ? "text-white/80" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Swiss Phase Complete
           </p>
-          <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             The director is generating the elimination bracket.
           </p>
         </div>
@@ -464,17 +464,17 @@ export function PublicBracketView({
   if (elimRounds.length === 0) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border ${
-        isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#E8D9B0]/70"
+        isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
       }`}>
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-amber-500/10" : "bg-amber-50"}`}>
           <Trophy className={`w-7 h-7 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
         </div>
         <div className="text-center">
-          <p className={`text-base font-black ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}
+          <p className={`text-base font-black ${isDark ? "text-white/80" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Swiss Phase in Progress
           </p>
-          <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             The elimination bracket will appear here automatically after the final Swiss round.
           </p>
         </div>
@@ -522,16 +522,16 @@ export function PublicBracketView({
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-          isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"
+          isDark ? "bg-[#436850]/20" : "bg-[#436850]/10"
         }`}>
-          <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+          <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
         </div>
         <div>
-          <h3 className={`text-sm font-black ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}
+          <h3 className={`text-sm font-black ${isDark ? "text-white/80" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Elimination Bracket
           </h3>
-          <p className={`text-xs ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs ${isDark ? "text-white/35" : "text-[#436850]"}`}>
             {seededPlayers.length} players · {elimRounds.length} round{elimRounds.length !== 1 ? "s" : ""}
             {format === "swiss_elim" ? " · Swiss → Elimination" : ""}
           </p>

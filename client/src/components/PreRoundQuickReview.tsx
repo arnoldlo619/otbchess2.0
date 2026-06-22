@@ -197,8 +197,8 @@ export function PreRoundQuickReview({
     ? "bg-[#100d04] border border-amber-500/20"
     : "bg-amber-50/60 border border-amber-200/70";
   const headerText = isDark ? "text-amber-400" : "text-amber-700";
-  const subText = isDark ? "text-white/55" : "text-[#6B6B50]";
-  const bodyText = isDark ? "text-white/80" : "text-[#1A1A1A]/85";
+  const subText = isDark ? "text-white/55" : "text-[#436850]";
+  const bodyText = isDark ? "text-white/80" : "text-[#12372A]/85";
   const labelText = isDark ? "text-amber-400/60" : "text-amber-600/60";
   const rowBg = isDark ? "bg-white/03 border border-white/06" : "bg-white/70 border border-amber-200/40";
   const rowHighlight = isDark
@@ -206,8 +206,8 @@ export function PreRoundQuickReview({
     : "bg-amber-50 border border-amber-200/60";
   const lineBg = isDark
     ? "bg-[#0a1409] border border-[#1e2e22]/60"
-    : "bg-white border border-[#E8D9B0]/70";
-  const monoText = isDark ? "text-[#5B9A6A]" : "text-[#4D6940]";
+    : "bg-white border border-[#ADBC9F]/70";
+  const monoText = isDark ? "text-[#5B9A6A]" : "text-[#436850]";
   const divider = isDark ? "border-amber-500/10" : "border-amber-200/50";
 
   return (
@@ -282,7 +282,7 @@ export function PreRoundQuickReview({
                   <p className={`text-sm font-semibold ${bodyText}`}>{topLine.name}</p>
                   {topLine.eco && (
                     <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md shrink-0 ${
-                      isDark ? "bg-[#4D6940]/15 text-[#5B9A6A]" : "bg-[#4D6940]/08 text-[#4D6940]"
+                      isDark ? "bg-[#436850]/15 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"
                     }`}>
                       {topLine.eco}
                     </span>

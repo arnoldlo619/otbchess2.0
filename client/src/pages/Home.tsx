@@ -182,7 +182,7 @@ function Nav({
         scrolled
           ? isDark
             ? "bg-[oklch(0.20_0.06_145)] backdrop-blur-md border-b border-white/10 shadow-sm"
-            : "bg-[#F2F7F3]/96 backdrop-blur-md border-b border-[#4D6940]/12 shadow-sm"
+            : "bg-[#F2F7F3]/96 backdrop-blur-md border-b border-[#436850]/12 shadow-sm"
           : "bg-transparent"
       }`}
     >
@@ -205,7 +205,7 @@ function Nav({
               className={`text-sm font-medium transition-colors duration-200 ${
                 isDark
                   ? "text-white/60 hover:text-white"
-                  : "text-[#4B5563] hover:text-[#4D6940]"
+                  : "text-[#436850] hover:text-[#436850]"
               }`}
             >
               {link.label}
@@ -224,14 +224,14 @@ function Nav({
                     ? isDark ? "border-amber-500/30 text-amber-300 hover:bg-amber-500/10" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
                     : isDark
                       ? "border-white/20 text-white/80 hover:bg-white/10"
-                      : "border-[#4D6940]/20 text-[#4D6940] hover:bg-[#4D6940]/08"
+                      : "border-[#436850]/20 text-[#436850] hover:bg-[#436850]/08"
                 }`}
               >
                 {user.isGuest ? (
                   <Ghost className="w-4 h-4" />
                 ) : (
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    isDark ? "bg-[#4D6940] text-white" : "bg-[#4D6940] text-white"
+                    isDark ? "bg-[#436850] text-white" : "bg-[#436850] text-white"
                   }`}>
                     {(user.displayName || user.email).charAt(0).toUpperCase()}
                   </span>
@@ -242,7 +242,7 @@ function Nav({
               {userMenuOpen && (
                 <div
                   className={`absolute right-0 top-full mt-2 w-48 rounded-xl shadow-xl border z-50 overflow-hidden ${
-                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-[#4D6940]/12"
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-[#436850]/12"
                   }`}
                   onMouseLeave={() => setUserMenuOpen(false)}
                 >
@@ -250,7 +250,7 @@ function Nav({
                     <Link
                       href="/profile"
                       className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors ${
-                        isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#4D6940]/06"
+                        isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#436850]/06"
                       }`}
                       onClick={() => setUserMenuOpen(false)}
                     >
@@ -270,7 +270,7 @@ function Nav({
                   <button
                     onClick={() => { logout(); setUserMenuOpen(false); }}
                     className={`flex items-center gap-2 w-full px-4 py-3 text-sm transition-colors border-t ${
-                      isDark ? "text-red-400 hover:bg-white/08 border-white/08" : "text-red-500 hover:bg-red-50 border-[#E8D9B0]/70"
+                      isDark ? "text-red-400 hover:bg-white/08 border-white/08" : "text-red-500 hover:bg-red-50 border-[#ADBC9F]/70"
                     }`}
                   >
                     <X className="w-4 h-4" /> Sign Out
@@ -282,7 +282,7 @@ function Nav({
             <button
               onClick={onSignIn}
               className={`text-sm font-medium transition-colors ${
-                isDark ? "text-white/70 hover:text-white" : "text-[#4D6940] hover:text-[#2A4A32]"
+                isDark ? "text-white/70 hover:text-white" : "text-[#436850] hover:text-[#2A4A32]"
               }`}
             >
               Sign In
@@ -293,7 +293,7 @@ function Nav({
               className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 isDark
                   ? "text-white/60 hover:text-white"
-                  : "text-[#4B5563] hover:text-[#4D6940]"
+                  : "text-[#436850] hover:text-[#436850]"
               }`}
             >
               Clubs
@@ -304,7 +304,7 @@ function Nav({
               className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 isDark
                   ? "text-white/60 hover:text-white"
-                  : "text-[#4B5563] hover:text-[#4D6940]"
+                  : "text-[#436850] hover:text-[#436850]"
               }`}
             >
               Analyze
@@ -327,13 +327,13 @@ function Nav({
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-[#F2F7F3] border-[#4D6940]/12"}`}>
+        <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-[#F2F7F3] border-[#436850]/12"}`}>
           {navLinks.map((link) => (
             <button
               key={link.id}
               onClick={() => { scrollTo(link.id); setMobileOpen(false); }}
               className={`block w-full text-left py-3 text-sm font-medium border-b last:border-0 ${
-                isDark ? "text-white/70 border-white/08" : "text-[#6B6B50] border-[#E8D9B0]"
+                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
               }`}
             >
               {link.label}
@@ -344,7 +344,7 @@ function Nav({
               <Link
                 href="/profile"
                 className={`block w-full py-3 text-sm font-medium border-b ${
-                  isDark ? "text-white/70 border-white/08" : "text-[#6B6B50] border-[#E8D9B0]"
+                  isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
                 }`}
                 onClick={() => setMobileOpen(false)}
               >
@@ -353,7 +353,7 @@ function Nav({
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
                 className={`block w-full text-left py-3 text-sm font-medium border-b text-red-500 ${
-                  isDark ? "border-white/08" : "border-[#E8D9B0]"
+                  isDark ? "border-white/08" : "border-[#ADBC9F]"
                 }`}
               >
                 Sign Out
@@ -363,7 +363,7 @@ function Nav({
             <button
               onClick={() => { onSignIn(); setMobileOpen(false); }}
               className={`block w-full text-left py-3 text-sm font-medium border-b ${
-                isDark ? "text-white/70 border-white/08" : "text-[#6B6B50] border-[#E8D9B0]"
+                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
               }`}
             >
               Sign In
@@ -372,7 +372,7 @@ function Nav({
           <Link href="/clubs">
             <span
               className={`block w-full py-3 text-sm font-medium border-b ${
-                isDark ? "text-white/70 border-white/08" : "text-[#6B6B50] border-[#E8D9B0]"
+                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
               }`}
               onClick={() => setMobileOpen(false)}
             >
@@ -382,7 +382,7 @@ function Nav({
           <Link href="/record">
             <span
               className={`block w-full py-3 text-sm font-medium border-b ${
-                isDark ? "text-white/70 border-white/08" : "text-[#6B6B50] border-[#E8D9B0]"
+                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
               }`}
               onClick={() => setMobileOpen(false)}
             >
@@ -423,7 +423,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               as="span"
               containerClassName={isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#EEF5EE]"}
               className={`text-[11px] font-semibold tracking-[0.18em] uppercase leading-none ${
-                isDark ? "text-white/75 bg-[oklch(0.18_0.05_145)]" : "text-[#4D6940] bg-[#EEF5EE]"
+                isDark ? "text-white/75 bg-[oklch(0.18_0.05_145)]" : "text-[#436850] bg-[#EEF5EE]"
               }`}
             >
               For Chess Clubs &amp; Communities
@@ -436,7 +436,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           >
             Chess Tournaments,
             <br />
-            <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"}>
+            <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}>
               Over The Board.
             </span>
           </h1>
@@ -482,7 +482,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             <Link
               href="/tournament/otb-demo-2026/manage"
               className={`text-sm font-medium underline underline-offset-4 ${
-                isDark ? "text-white/50 hover:text-white/80" : "text-[#4B5563] hover:text-[#4D6940]"
+                isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#436850]"
               }`}
             >
               View live demo →
@@ -506,7 +506,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
                 className={`stat-pill inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-300 cursor-default select-none ${
                   isDark
                     ? "border-white/15 text-white/60 bg-white/04 hover:border-[oklch(0.65_0.14_145)]/50 hover:text-white/90 hover:bg-[oklch(0.65_0.14_145)]/10"
-                    : "border-[#4D6940]/20 text-[#4D6940]/80 bg-[#4D6940]/05 hover:border-[#4D6940]/50 hover:text-[#4D6940] hover:bg-[#4D6940]/10"
+                    : "border-[#436850]/20 text-[#436850]/80 bg-[#436850]/05 hover:border-[#436850]/50 hover:text-[#436850] hover:bg-[#436850]/10"
                 }`}
                 style={{ position: "relative" }}
               >
@@ -548,7 +548,7 @@ function StatsBar() {
     { target: 4.9, suffix: "★", decimals: 1, label: "Average Rating" },
   ];
   return (
-    <section ref={ref} className="bg-[#4D6940] py-10">
+    <section ref={ref} className="bg-[#436850] py-10">
       <div className="container">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, i) => (
@@ -734,8 +734,8 @@ function ParallaxStep({
   mockupType?: 'phone' | 'macbook';
 }) {
   const { ref, inView } = useInView(0.2);
-  const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]";
-  const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#4D6940]/10";
+  const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]";
+  const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#436850]/10";
 
   // MacBook step: side-by-side layout, mockup capped at 480px
   if (mockupType === 'macbook') {
@@ -793,7 +793,7 @@ function ParallaxStep({
             </h3>
           </div>
           <p className="text-muted-foreground text-lg leading-relaxed mb-8">{description}</p>
-          <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]"}`} />
+          <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`} />
         </div>
       </div>
     );
@@ -878,7 +878,7 @@ function ParallaxStep({
         </p>
 
         {/* Divider accent */}
-        <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]"}`} />
+        <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`} />
       </div>
     </div>
   );
@@ -929,7 +929,7 @@ function HowItWorks() {
       <div className="container pt-24 pb-4">
         <div className="text-center">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${
-            isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"
+            isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
           }`}>
             Simple Process
           </p>
@@ -948,7 +948,7 @@ function HowItWorks() {
       {/* Divider */}
       <div className="container">
         <div className={`h-px w-full mt-12 ${
-          isDark ? "bg-white/[0.06]" : "bg-[#E8D9B0]/40"
+          isDark ? "bg-white/[0.06]" : "bg-[#ADBC9F]/40"
         }`} />
       </div>
 
@@ -993,12 +993,12 @@ function Features() {
   return (
     <section
       id="features"
-      className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FFF3D5]"}`}
+      className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
       ref={ref}
     >
       <div className="container">
         <div className="text-center mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"}`}
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
             style={{ animationFillMode: "forwards" }}>
             Platform Features
           </p>
@@ -1014,7 +1014,7 @@ function Features() {
             const cardContent = (
               <>
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]/08 text-[#4D6940]"}`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/08 text-[#436850]"}`}>
                     {feature.icon}
                   </div>
                   <span className="tag-elo">{feature.tag}</span>
@@ -1022,7 +1022,7 @@ function Features() {
                 <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
                 <p className="text-base text-muted-foreground leading-relaxed">{feature.description}</p>
                 {(feature as { href?: string }).href && (
-                  <p className={`text-xs font-semibold mt-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"}`}>View feature →</p>
+                  <p className={`text-xs font-semibold mt-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>View feature →</p>
                 )}
               </>
             );
@@ -1181,8 +1181,8 @@ function Showcase() {
     setProgressKey(k => k + 1);
   };
 
-  const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]";
-  const _accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]/10 text-[#4D6940]";
+  const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]";
+  const _accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/10 text-[#436850]";
   const slideGlassColor = isDark
     ? SLIDE_COLORS[activeSlide]?.dark
     : SLIDE_COLORS[activeSlide]?.light;
@@ -1194,7 +1194,7 @@ function Showcase() {
         {/* ── Slide selector tabs ── */}
         <div className={`flex justify-center mb-14 ${inView ? "animate-fade-up-soft" : "opacity-0"}`} style={{ animationFillMode: "forwards" }}>
           <div className={`inline-flex rounded-2xl p-1.5 gap-1 ${
-            isDark ? "bg-[oklch(0.18_0.06_145)] border border-white/08" : "bg-[#FFF3D5] border border-[#4D6940]/10"
+            isDark ? "bg-[oklch(0.18_0.06_145)] border border-white/08" : "bg-[#FBFADA] border border-[#436850]/10"
           }`}>
             {CAROUSEL_SLIDES.map((s, i) => (
               <button
@@ -1204,10 +1204,10 @@ function Showcase() {
                   activeSlide === i
                     ? isDark
                       ? "bg-[oklch(0.28_0.09_145)] text-white shadow-sm"
-                      : "bg-white text-[#1A1A1A] shadow-sm"
+                      : "bg-white text-[#12372A] shadow-sm"
                     : isDark
                       ? "text-white/40 hover:text-white/70"
-                      : "text-[#6B6B50] hover:text-[#1A1A1A]"
+                      : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
                 <span className={activeSlide === i ? accentText : ""}>{s.badgeIcon}</span>
@@ -1238,7 +1238,7 @@ function Showcase() {
               <div className={`absolute inset-0 rounded-2xl pointer-events-none ${
                 isDark
                   ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
-                  : "ring-1 ring-inset ring-[#4D6940]/15"
+                  : "ring-1 ring-inset ring-[#436850]/15"
               }`} />
               {/* Screenshot — fills frame; per-slide objectFit override for wide images; click to expand */}
               <div
@@ -1283,7 +1283,7 @@ function Showcase() {
               {slide.bullets.map((b, idx) => (
                 <div key={idx} className="flex items-start gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]/08 text-[#4D6940]"
+                    isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/08 text-[#436850]"
                   }`}>{b.icon}</div>
                   <p className="text-sm text-muted-foreground leading-relaxed pt-1.5">{b.text}</p>
                 </div>
@@ -1306,12 +1306,12 @@ function Showcase() {
         {/* ── Progress bar ── */}
         <div className="flex justify-center mt-10 mb-2">
           <div className={`relative w-48 h-0.5 rounded-full overflow-hidden ${
-            isDark ? "bg-white/10" : "bg-[#E8D9B0]"
+            isDark ? "bg-white/10" : "bg-[#ADBC9F]"
           }`}>
             <div
               key={progressKey}
               className={`absolute inset-y-0 left-0 rounded-full ${
-                isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]"
+                isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"
               } ${isHovered ? "[animation-play-state:paused]" : "[animation-play-state:running]"}`}
               style={{
                 animation: "carousel-progress 6s linear forwards",
@@ -1328,8 +1328,8 @@ function Showcase() {
               onClick={() => goToSlide(i)}
               className={`rounded-full transition-all duration-300 ${
                 activeSlide === i
-                  ? `w-6 h-2 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#4D6940]"}`
-                  : `w-2 h-2 ${isDark ? "bg-white/20 hover:bg-white/40" : "bg-[#E8D9B0] hover:bg-[#4D6940]/50"}`
+                  ? `w-6 h-2 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`
+                  : `w-2 h-2 ${isDark ? "bg-white/20 hover:bg-white/40" : "bg-[#ADBC9F] hover:bg-[#436850]/50"}`
               }`}
               aria-label={`Slide ${i + 1}`}
             />
@@ -1396,7 +1396,7 @@ function PlayerDemo() {
   return (
     <section
       id="player-demo"
-      className={`py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FFF3D5]"}`}
+      className={`py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
       ref={ref}
     >
       {/* YouTube video background */}
@@ -1434,7 +1434,7 @@ function PlayerDemo() {
       </div>
       <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center mb-12">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"}`}>
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>
             chess.com Integration
           </p>
           <h2 className="text-4xl font-semibold tracking-tight mb-4 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
@@ -1444,9 +1444,9 @@ function PlayerDemo() {
           </h2>
           <p className="text-muted-foreground">
             Enter your chess.com username to see your OTB Profile. Try{" "}
-            <code className={`px-1.5 py-0.5 rounded text-xs border ${isDark ? "bg-[oklch(0.28_0.08_145)] text-[oklch(0.65_0.14_145)] border-white/10" : "bg-white text-[#4D6940] border-[#EEEED2]"}`}>hikaru</code>{" "}
+            <code className={`px-1.5 py-0.5 rounded text-xs border ${isDark ? "bg-[oklch(0.28_0.08_145)] text-[oklch(0.65_0.14_145)] border-white/10" : "bg-white text-[#436850] border-[#EEEED2]"}`}>hikaru</code>{" "}
             or{" "}
-            <code className={`px-1.5 py-0.5 rounded text-xs border ${isDark ? "bg-[oklch(0.28_0.08_145)] text-[oklch(0.65_0.14_145)] border-white/10" : "bg-white text-[#4D6940] border-[#EEEED2]"}`}>gothamchess</code>.
+            <code className={`px-1.5 py-0.5 rounded text-xs border ${isDark ? "bg-[oklch(0.28_0.08_145)] text-[oklch(0.65_0.14_145)] border-white/10" : "bg-white text-[#436850] border-[#EEEED2]"}`}>gothamchess</code>.
           </p>
         </div>
 
@@ -1461,10 +1461,10 @@ function PlayerDemo() {
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLookup()}
                 placeholder="chess.com username..."
-                className={`flex-1 px-4 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4D6940]/30 focus:border-[#4D6940] transition-all ${
+                className={`flex-1 px-4 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#436850]/30 focus:border-[#436850] transition-all ${
                   isDark
                     ? "bg-[oklch(0.22_0.06_145)] border-white/10 text-white placeholder:text-white/30"
-                    : "bg-[#FFF3D5]/50 border-[#EEEED2] text-[#1A1A1A]"
+                    : "bg-[#FBFADA]/50 border-[#EEEED2] text-[#12372A]"
                 }`}
               />
               <button
@@ -1531,7 +1531,7 @@ function PlayerDemo() {
                           {profile.title && (
                             <span
                               className="text-[10px] font-black px-1.5 py-0.5 rounded-md tracking-wide"
-                              style={{ background: isDark ? "oklch(0.65 0.14 145 / 0.18)" : "rgba(61,107,71,0.12)", color: isDark ? "oklch(0.75 0.14 145)" : "#4D6940" }}
+                              style={{ background: isDark ? "oklch(0.65 0.14 145 / 0.18)" : "rgba(61,107,71,0.12)", color: isDark ? "oklch(0.75 0.14 145)" : "#436850" }}
                             >
                               {profile.title}
                             </span>
@@ -1588,7 +1588,7 @@ function PlayerDemo() {
                 <div className="px-5 py-4 space-y-4">
                   {analysisLoading && (
                     <div className="flex items-center justify-center gap-2 py-4">
-                      <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: isDark ? "oklch(0.65 0.14 145 / 0.3)" : "#4D6940", borderTopColor: isDark ? "oklch(0.65 0.14 145)" : "#4D6940" }} />
+                      <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: isDark ? "oklch(0.65 0.14 145 / 0.3)" : "#436850", borderTopColor: isDark ? "oklch(0.65 0.14 145)" : "#436850" }} />
                       <span className="text-xs" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Analysing last 50 games…</span>
                     </div>
                   )}
@@ -1681,12 +1681,12 @@ function PlayerDemo() {
                               <div key={o.name}>
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs truncate pr-3 flex-1" style={{ color: isDark ? "oklch(0.80 0.05 145)" : "#2a3a2a" }}>{o.name}</span>
-                                  <span className="text-[11px] font-bold flex-shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#4D6940" }}>{o.pct}%</span>
+                                  <span className="text-[11px] font-bold flex-shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#436850" }}>{o.pct}%</span>
                                 </div>
                                 <div className="h-1 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.28 0.07 145 / 0.6)" : "rgba(61,107,71,0.10)" }}>
                                   <div
                                     className="h-full rounded-full transition-all duration-700"
-                                    style={{ width: `${o.pct}%`, background: isDark ? "linear-gradient(90deg, oklch(0.55 0.14 145), oklch(0.72 0.16 145))" : "linear-gradient(90deg, #4D6940, #5a9e6a)" }}
+                                    style={{ width: `${o.pct}%`, background: isDark ? "linear-gradient(90deg, oklch(0.55 0.14 145), oklch(0.72 0.16 145))" : "linear-gradient(90deg, #436850, #5a9e6a)" }}
                                   />
                                 </div>
                               </div>
@@ -1707,7 +1707,7 @@ function PlayerDemo() {
                               <div key={o.name}>
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs truncate pr-3 flex-1" style={{ color: isDark ? "oklch(0.80 0.05 145)" : "#2a3a2a" }}>{o.name}</span>
-                                  <span className="text-[11px] font-bold flex-shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#4D6940" }}>{o.pct}%</span>
+                                  <span className="text-[11px] font-bold flex-shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#436850" }}>{o.pct}%</span>
                                 </div>
                                 <div className="h-1 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.28 0.07 145 / 0.6)" : "rgba(61,107,71,0.10)" }}>
                                   <div
@@ -1736,7 +1736,7 @@ function PlayerDemo() {
                           </div>
                           <div
                             className="text-2xl font-black"
-                            style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#4D6940" }}
+                            style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#436850" }}
                           >
                             {profile.analysis.endgameWinPct}%
                           </div>
@@ -1788,7 +1788,7 @@ function Testimonials() {
     <section id="testimonials" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"}`}
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
             style={{ animationFillMode: "forwards" }}>
             From the Community
           </p>
@@ -1807,11 +1807,11 @@ function Testimonials() {
             >
               <div className="flex items-center gap-1 mb-4">
                 {[...Array(5)].map((_, j) => (
-                  <Star key={j} className={`w-4 h-4 ${isDark ? "fill-[oklch(0.65_0.14_145)] text-[oklch(0.65_0.14_145)]" : "fill-[#4D6940] text-[#4D6940]"}`} />
+                  <Star key={j} className={`w-4 h-4 ${isDark ? "fill-[oklch(0.65_0.14_145)] text-[oklch(0.65_0.14_145)]" : "fill-[#436850] text-[#436850]"}`} />
                 ))}
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 italic">"{t.quote}"</p>
-              <div className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-white/10" : "border-[#E8D9B0]"}`}>
+              <div className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-white/10" : "border-[#ADBC9F]"}`}>
                 <div>
                   <p className="font-semibold text-foreground text-sm">{t.author}</p>
                   <p className="text-xs text-muted-foreground">{t.role}</p>
@@ -1831,7 +1831,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-28 bg-[#4D6940] relative overflow-hidden" ref={ref}>
+    <section className="py-28 bg-[#436850] relative overflow-hidden" ref={ref}>
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
       <div
         className="absolute inset-0 pointer-events-none"
@@ -1859,7 +1859,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={onCreateTournament}
-              className="bg-white text-[#4D6940] font-semibold text-base px-8 py-3.5 rounded-lg hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-white text-[#436850] font-semibold text-base px-8 py-3.5 rounded-lg hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
             >
               Create Free Tournament
             </button>
@@ -1901,7 +1901,7 @@ function Footer() {
   };
 
   return (
-    <footer className="bg-[#1A1A1A] text-white py-16" style={{ paddingBottom: "max(4rem, calc(4rem + env(safe-area-inset-bottom, 0px)))" }}>
+    <footer className="bg-[#12372A] text-white py-16" style={{ paddingBottom: "max(4rem, calc(4rem + env(safe-area-inset-bottom, 0px)))" }}>
       <div className="container">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>

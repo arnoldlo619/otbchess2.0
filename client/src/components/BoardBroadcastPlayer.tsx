@@ -41,9 +41,9 @@ export function BoardBroadcastPlayer({ url, title, status, tournamentName, metad
   const hasPairing = !!(metadata?.whiteName && metadata?.blackName);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-[#E8D9B0] shadow-sm"}`}>
+    <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-[#ADBC9F] shadow-sm"}`}>
       {/* Header row: LIVE badge + title + board/round info */}
-      <div className={`px-4 py-2.5 flex items-center gap-2 flex-wrap ${isDark ? "border-b border-white/06" : "border-b border-[#E8D9B0]/70"}`}>
+      <div className={`px-4 py-2.5 flex items-center gap-2 flex-wrap ${isDark ? "border-b border-white/06" : "border-b border-[#ADBC9F]/70"}`}>
         {status === "live" && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 shadow-sm">
             <Radio className="w-2.5 h-2.5 text-white animate-pulse" />
@@ -51,16 +51,16 @@ export function BoardBroadcastPlayer({ url, title, status, tournamentName, metad
           </span>
         )}
         {status === "ended" && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#4D6940]/80">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#436850]/80">
             <MonitorOff className="w-2.5 h-2.5 text-white/70" />
             <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Ended</span>
           </span>
         )}
-        <h3 className={`text-sm font-bold truncate flex-1 min-w-0 ${isDark ? "text-white" : "text-[#1A1A1A]"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+        <h3 className={`text-sm font-bold truncate flex-1 min-w-0 ${isDark ? "text-white" : "text-[#12372A]"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {boardLabel}
         </h3>
         {metadata?.roundNumber && (
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${isDark ? "bg-white/08 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
             Rd {metadata.roundNumber}
           </span>
         )}
@@ -83,49 +83,49 @@ export function BoardBroadcastPlayer({ url, title, status, tournamentName, metad
       </div>
 
       {/* Metadata bar */}
-      <div className={`px-4 py-3 space-y-1.5 ${isDark ? "border-t border-white/06" : "border-t border-[#E8D9B0]/70"}`}>
+      <div className={`px-4 py-3 space-y-1.5 ${isDark ? "border-t border-white/06" : "border-t border-[#ADBC9F]/70"}`}>
         {/* Tournament name */}
         {tournamentName && (
-          <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{tournamentName}</p>
+          <p className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>{tournamentName}</p>
         )}
 
         {/* Board pairing — when available */}
         {hasPairing && (
-          <div className={`flex items-center gap-2 pt-1.5 ${isDark ? "border-t border-white/06" : "border-t border-[#E8D9B0]/50"}`}>
+          <div className={`flex items-center gap-2 pt-1.5 ${isDark ? "border-t border-white/06" : "border-t border-[#ADBC9F]/50"}`}>
             {/* White */}
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <span className="w-3 h-3 rounded-full bg-white border border-[#E8D9B0] flex-shrink-0" />
-              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}>
+              <span className="w-3 h-3 rounded-full bg-white border border-[#ADBC9F] flex-shrink-0" />
+              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-[#12372A]"}`}>
                 {metadata!.whiteName}
               </span>
               {metadata!.whiteRating != null && (
-                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
                   ({metadata!.whiteRating})
                 </span>
               )}
             </div>
             {/* Result */}
-            <span className={`text-xs font-bold flex-shrink-0 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+            <span className={`text-xs font-bold flex-shrink-0 ${isDark ? "text-white/50" : "text-[#436850]"}`}>
               {metadata!.result && metadata!.result !== "*" ? metadata!.result : "vs"}
             </span>
             {/* Black */}
             <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
               {metadata!.blackRating != null && (
-                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
                   ({metadata!.blackRating})
                 </span>
               )}
-              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}>
+              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-[#12372A]"}`}>
                 {metadata!.blackName}
               </span>
-              <span className="w-3 h-3 rounded-full bg-[#1A1A1A] border border-[#4D6940]/40 flex-shrink-0" />
+              <span className="w-3 h-3 rounded-full bg-[#12372A] border border-[#436850]/40 flex-shrink-0" />
             </div>
           </div>
         )}
 
         {/* Fallback when no pairing data */}
         {!hasPairing && (
-          <p className={`text-xs ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs ${isDark ? "text-white/35" : "text-[#436850]"}`}>
             {metadata?.boardNumber
               ? `Featured Board: Board ${metadata.boardNumber}`
               : "Player details will appear when pairings are available."}

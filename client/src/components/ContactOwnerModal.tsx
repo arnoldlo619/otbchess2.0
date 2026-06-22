@@ -68,12 +68,12 @@ export function ContactOwnerModal({
   if (!isOpen) return null;
 
   const card = isDark ? "bg-[#111c13]" : "bg-white";
-  const cardBorder = isDark ? "border-white/10" : "border-[#E8D9B0]";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
+  const cardBorder = isDark ? "border-white/10" : "border-[#ADBC9F]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
   const inputBg = isDark
     ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25"
-    : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]/40";
+    : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40";
   const remaining = MAX_CHARS - message.length;
   const isOverLimit = remaining < 0;
 
@@ -187,7 +187,7 @@ export function ContactOwnerModal({
             className={`p-1.5 rounded-xl transition-colors ${
               isDark
                 ? "text-white/40 hover:text-white hover:bg-white/8"
-                : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
+                : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
             }`}
           >
             <X className="w-4 h-4" />
@@ -207,12 +207,12 @@ export function ContactOwnerModal({
             <div className="flex flex-col items-center py-8 gap-3 text-center">
               <div
                 className={`w-14 h-14 rounded-full flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/15" : "bg-[#4D6940]/10"
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/10"
                 }`}
               >
                 <CheckCircle2
                   className={`w-7 h-7 ${
-                    isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
+                    isDark ? "text-[#4CAF50]" : "text-[#436850]"
                   }`}
                 />
               </div>
@@ -258,7 +258,7 @@ export function ContactOwnerModal({
                     className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
                       isDark
                         ? "bg-white/8 text-white/40"
-                        : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+                        : "bg-[#ADBC9F]/40 text-[#436850]"
                     }`}
                   >
                     ⌘ Enter

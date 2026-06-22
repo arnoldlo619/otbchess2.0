@@ -62,13 +62,13 @@ function ThinkingDots({ isDark }: { isDark: boolean }) {
       {[0, 1, 2].map(i => (
         <span
           key={i}
-          className={`w-1.5 h-1.5 rounded-full ${isDark ? "bg-[#5B9A6A]/60" : "bg-[#4D6940]/50"}`}
+          className={`w-1.5 h-1.5 rounded-full ${isDark ? "bg-[#5B9A6A]/60" : "bg-[#436850]/50"}`}
           style={{
             animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
           }}
         />
       ))}
-      <span className={`text-xs ml-1 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+      <span className={`text-xs ml-1 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
         Thinking…
       </span>
       <style>{`
@@ -95,10 +95,10 @@ function InsightText({ text, isDark }: { text: string; isDark: boolean }) {
   const mainLines = keyTakeawayIdx >= 0 ? lines.slice(0, keyTakeawayIdx) : lines;
   const takeaway = keyTakeawayIdx >= 0 ? lines[keyTakeawayIdx] : null;
 
-  const textColor = isDark ? "text-white/80" : "text-[#1A1A1A]/85";
+  const textColor = isDark ? "text-white/80" : "text-[#12372A]/85";
   const takeawayBg = isDark
     ? "bg-[#5B9A6A]/08 border border-[#5B9A6A]/20 text-[#5B9A6A]"
-    : "bg-[#4D6940]/06 border border-[#4D6940]/15 text-[#4D6940]";
+    : "bg-[#436850]/06 border border-[#436850]/15 text-[#436850]";
 
   return (
     <div className="space-y-2">
@@ -109,7 +109,7 @@ function InsightText({ text, isDark }: { text: string; isDark: boolean }) {
           if (line.startsWith("- ") || line.startsWith("• ")) {
             return (
               <div key={i} className="flex gap-2">
-                <span className={`mt-1.5 w-1 h-1 rounded-full flex-shrink-0 ${isDark ? "bg-[#5B9A6A]/50" : "bg-[#4D6940]/40"}`} />
+                <span className={`mt-1.5 w-1 h-1 rounded-full flex-shrink-0 ${isDark ? "bg-[#5B9A6A]/50" : "bg-[#436850]/40"}`} />
                 <span>{line.replace(/^[-•]\s*/, "")}</span>
               </div>
             );
@@ -119,7 +119,7 @@ function InsightText({ text, isDark }: { text: string; isDark: boolean }) {
             const [num, ...rest] = line.split(/\.\s(.+)/);
             return (
               <div key={i} className="flex gap-2">
-                <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${isDark ? "text-[#5B9A6A]/60" : "text-[#4D6940]/50"}`}>{num}.</span>
+                <span className={`text-xs font-mono mt-0.5 flex-shrink-0 ${isDark ? "text-[#5B9A6A]/60" : "text-[#436850]/50"}`}>{num}.</span>
                 <span>{rest.join("")}</span>
               </div>
             );
@@ -127,7 +127,7 @@ function InsightText({ text, isDark }: { text: string; isDark: boolean }) {
           // Bold headers (e.g., **Opening:**)
           if (line.startsWith("**") && line.includes("**")) {
             return (
-              <p key={i} className={`font-medium ${isDark ? "text-white/90" : "text-[#1A1A1A]"}`}>
+              <p key={i} className={`font-medium ${isDark ? "text-white/90" : "text-[#12372A]"}`}>
                 {line.replace(/\*\*/g, "")}
               </p>
             );
@@ -232,11 +232,11 @@ export function CoachInsightCard({
   // ── Design tokens ─────────────────────────────────────────────────────────
   const cardBg = isDark
     ? "bg-[#0c1a0e] border border-[#1e3022]/80"
-    : "bg-white border border-[#4D6940]/12";
-  const accentLine = "bg-gradient-to-r from-[#5B9A6A] to-[#4D6940]";
-  const labelColor = isDark ? "text-[#5B9A6A]" : "text-[#4D6940]";
-  const textSecondary = isDark ? "text-white/45" : "text-[#6B6B50]";
-  const textPrimary = isDark ? "text-white" : "text-[#1A1A1A]";
+    : "bg-white border border-[#436850]/12";
+  const accentLine = "bg-gradient-to-r from-[#5B9A6A] to-[#436850]";
+  const labelColor = isDark ? "text-[#5B9A6A]" : "text-[#436850]";
+  const textSecondary = isDark ? "text-white/45" : "text-[#436850]";
+  const textPrimary = isDark ? "text-white" : "text-[#12372A]";
 
   const insightTypeLabel = label ?? INSIGHT_TYPE_LABELS[context.insightType];
   const insightTypeDesc = INSIGHT_TYPE_DESCRIPTIONS[context.insightType];
@@ -286,10 +286,10 @@ export function CoachInsightCard({
                 isSaved
                   ? isDark
                     ? "bg-[#5B9A6A]/15 text-[#5B9A6A]"
-                    : "bg-[#4D6940]/10 text-[#4D6940]"
+                    : "bg-[#436850]/10 text-[#436850]"
                   : isDark
                     ? "text-white/35 hover:text-white/60 hover:bg-white/05"
-                    : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50/60"
+                    : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50/60"
               }`}
               title={isSaved ? "Remove from saved" : "Save for later"}
             >
@@ -303,7 +303,7 @@ export function CoachInsightCard({
 
         {/* Quota details dropdown */}
         {showQuotaDetails && cardState === "idle" && (
-          <div className={`mb-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03 border border-white/06" : "bg-[#FFF3D5]/70 border border-[#E8D9B0]/60"}`}>
+          <div className={`mb-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03 border border-white/06" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"}`}>
             <div className={`space-y-1 ${textSecondary}`}>
               <div className="flex justify-between">
                 <span>Plan</span>
@@ -330,7 +330,7 @@ export function CoachInsightCard({
             className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
               isDark
                 ? "bg-[#5B9A6A]/12 text-[#5B9A6A] hover:bg-[#5B9A6A]/20 border border-[#5B9A6A]/20"
-                : "bg-[#4D6940]/08 text-[#4D6940] hover:bg-[#4D6940]/14 border border-[#4D6940]/15"
+                : "bg-[#436850]/08 text-[#436850] hover:bg-[#436850]/14 border border-[#436850]/15"
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -387,7 +387,7 @@ export function CoachInsightCard({
         {cardState === "quota_exhausted" && (
           <div className={`space-y-3 py-1`}>
             <div className="flex items-start gap-2.5">
-              <Lock className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`} />
+              <Lock className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
               <div>
                 <p className={`text-sm font-medium ${textPrimary}`}>
                   Monthly limit reached
@@ -398,7 +398,7 @@ export function CoachInsightCard({
                 </p>
               </div>
             </div>
-            <div className={`text-xs px-3 py-2 rounded-xl ${isDark ? "bg-[#5B9A6A]/08 border border-[#5B9A6A]/15 text-[#5B9A6A]" : "bg-[#4D6940]/06 border border-[#4D6940]/12 text-[#4D6940]"}`}>
+            <div className={`text-xs px-3 py-2 rounded-xl ${isDark ? "bg-[#5B9A6A]/08 border border-[#5B9A6A]/15 text-[#5B9A6A]" : "bg-[#436850]/06 border border-[#436850]/12 text-[#436850]"}`}>
               Upgrade to Pro for 10 insights/month
             </div>
           </div>

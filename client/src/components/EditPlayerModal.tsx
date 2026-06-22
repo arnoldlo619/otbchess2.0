@@ -176,13 +176,13 @@ export function EditPlayerModal({
   // ── Styles ──────────────────────────────────────────────────────────────────
   const surface = isDark
     ? "bg-[oklch(0.20_0.06_145)] border-white/10"
-    : "bg-white border-[#E8D9B0]";
+    : "bg-white border-[#ADBC9F]";
   const inputBase = `w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-all ${
     isDark
-      ? "bg-[oklch(0.25_0.07_145)] border-white/10 text-white placeholder:text-white/30 focus:border-[#4D6940]/60 focus:ring-1 focus:ring-[#4D6940]/20"
-      : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]/50 focus:ring-1 focus:ring-[#4D6940]/15"
+      ? "bg-[oklch(0.25_0.07_145)] border-white/10 text-white placeholder:text-white/30 focus:border-[#436850]/60 focus:ring-1 focus:ring-[#436850]/20"
+      : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/50 focus:ring-1 focus:ring-[#436850]/15"
   }`;
-  const labelBase = `block text-xs font-semibold mb-1.5 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`;
+  const labelBase = `block text-xs font-semibold mb-1.5 ${isDark ? "text-white/50" : "text-[#436850]"}`;
 
   return (
     <div
@@ -195,19 +195,19 @@ export function EditPlayerModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
           <div>
-            <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+            <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
               Edit Player
             </h2>
-            <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               @{player.username}
             </p>
           </div>
           <button
             onClick={onClose}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-              isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
+              isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
             }`}
           >
             <X className="w-4 h-4" />
@@ -238,7 +238,7 @@ export function EditPlayerModal({
             <label className={labelBase}>
               Active ELO
               <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                isDark ? "bg-[#4D6940]/25 text-[#6FCF7F]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
               }`}>
                 {currentLabel} · used for pairings
               </span>
@@ -259,13 +259,13 @@ export function EditPlayerModal({
 
           {/* Fetch from chess.com */}
           {player.username && (
-            <div className={`rounded-xl border p-3.5 ${isDark ? "border-white/08 bg-white/03" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70"}`}>
+            <div className={`rounded-xl border p-3.5 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
+                  <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>
                     Pull ratings from chess.com
                   </p>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
                     Fetches latest {currentLabel} &amp; {altLabel} ELOs for @{player.username}
                   </p>
                 </div>
@@ -274,10 +274,10 @@ export function EditPlayerModal({
                   disabled={fetching}
                   className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     fetchSuccess
-                      ? isDark ? "bg-[#4D6940]/30 text-[#6FCF7F]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                      ? isDark ? "bg-[#436850]/30 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                       : isDark
                       ? "bg-white/08 text-white/70 hover:bg-white/12 disabled:opacity-40"
-                      : "bg-white border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5] disabled:opacity-40"
+                      : "bg-white border border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA] disabled:opacity-40"
                   }`}
                 >
                   {fetchSuccess ? (
@@ -315,7 +315,7 @@ export function EditPlayerModal({
               min={0}
               max={4000}
             />
-            <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+            <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
               Use this to set a rating for unrated players or correct an inaccurate chess.com rating.
             </p>
           </div>
@@ -325,7 +325,7 @@ export function EditPlayerModal({
             <button
               onClick={() => setShowAllRatings((v) => !v)}
               className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"
+                isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"
               }`}
             >
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllRatings ? "rotate-180" : ""}`} />
@@ -364,11 +364,11 @@ export function EditPlayerModal({
         </div>
 
         {/* Footer */}
-        <div className={`flex items-center justify-end gap-2.5 px-5 py-4 border-t ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+        <div className={`flex items-center justify-end gap-2.5 px-5 py-4 border-t ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
           <button
             onClick={onClose}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-              isDark ? "text-white/50 hover:text-white/80 hover:bg-white/06" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
+              isDark ? "text-white/50 hover:text-white/80 hover:bg-white/06" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
             }`}
           >
             Cancel
@@ -378,8 +378,8 @@ export function EditPlayerModal({
             disabled={!!nameError || !!eloError}
             className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 ${
               isDark
-                ? "bg-[#4D6940] text-white hover:bg-[#4CAF50]"
-                : "bg-[#4D6940] text-white hover:bg-[#2D5437]"
+                ? "bg-[#436850] text-white hover:bg-[#4CAF50]"
+                : "bg-[#436850] text-white hover:bg-[#2D5437]"
             }`}
           >
             Save Changes

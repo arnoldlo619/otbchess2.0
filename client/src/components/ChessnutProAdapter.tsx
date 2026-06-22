@@ -139,13 +139,13 @@ export function ChessnutProAdapter({ onMove: _onMove, currentFen: _currentFen, a
 
   return (
     <div className={`rounded-xl border p-4 space-y-3 ${
-      isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
+      isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F]"
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Cpu className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
-          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+          <Cpu className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
             Chessnut Pro (Beta)
           </span>
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
@@ -158,7 +158,7 @@ export function ChessnutProAdapter({ onMove: _onMove, currentFen: _currentFen, a
       {/* Status / controls */}
       {connectionState === "disconnected" && (
         <div className="space-y-2">
-          <p className={`text-xs ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs ${isDark ? "text-white/50" : "text-[#436850]"}`}>
             Connect your Chessnut Air or Pro e-board via Bluetooth to automatically input moves.
           </p>
           {!isSupported && (
@@ -177,7 +177,7 @@ export function ChessnutProAdapter({ onMove: _onMove, currentFen: _currentFen, a
                 ? isDark
                   ? "bg-blue-500/15 border border-blue-500/30 text-blue-400 hover:bg-blue-500/25"
                   : "bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100"
-                : "opacity-40 cursor-not-allowed bg-gray-500/10 border border-gray-500/20 text-[#6B6B50]"
+                : "opacity-40 cursor-not-allowed bg-gray-500/10 border border-gray-500/20 text-[#436850]"
             }`}
           >
             <BluetoothSearching className="w-4 h-4" />
@@ -187,7 +187,7 @@ export function ChessnutProAdapter({ onMove: _onMove, currentFen: _currentFen, a
       )}
 
       {connectionState === "connecting" && (
-        <div className={`flex items-center gap-2 text-sm ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
+        <div className={`flex items-center gap-2 text-sm ${isDark ? "text-white/60" : "text-[#436850]"}`}>
           <BluetoothSearching className="w-4 h-4 animate-pulse text-blue-400" />
           Searching for Chessnut device...
         </div>
@@ -200,7 +200,7 @@ export function ChessnutProAdapter({ onMove: _onMove, currentFen: _currentFen, a
             <span className="font-medium">{deviceName}</span>
           </div>
           {lastFen && (
-            <div className={`text-[10px] font-mono px-2 py-1 rounded ${isDark ? "bg-white/05 text-white/30" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>
+            <div className={`text-[10px] font-mono px-2 py-1 rounded ${isDark ? "bg-white/05 text-white/30" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
               {lastFen.split(" ")[0]}
             </div>
           )}
@@ -237,7 +237,7 @@ export function ChessnutProAdapter({ onMove: _onMove, currentFen: _currentFen, a
             className={`w-full py-2 rounded-lg text-sm font-semibold transition-all ${
               isDark
                 ? "bg-white/06 border border-white/10 text-white/60 hover:bg-white/10"
-                : "bg-[#E8D9B0]/40 border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]"
+                : "bg-[#ADBC9F]/40 border border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]"
             }`}
           >
             Try Again
@@ -253,7 +253,7 @@ function ConnectionBadge({ state, isDark }: { state: ConnectionState; isDark: bo
     disconnected: {
       icon: <BluetoothOff className="w-3 h-3" />,
       label: "Disconnected",
-      cls: isDark ? "bg-white/06 text-white/30 border-white/10" : "bg-[#E8D9B0]/40 text-[#6B6B50] border-[#E8D9B0]",
+      cls: isDark ? "bg-white/06 text-white/30 border-white/10" : "bg-[#ADBC9F]/40 text-[#436850] border-[#ADBC9F]",
     },
     connecting: {
       icon: <BluetoothSearching className="w-3 h-3 animate-pulse" />,
@@ -292,7 +292,7 @@ export function InputSourceSelector({
 }) {
   return (
     <div className={`flex rounded-lg border overflow-hidden text-xs font-bold ${
-      isDark ? "border-white/10 bg-white/04" : "border-[#E8D9B0] bg-[#FFF3D5]/70"
+      isDark ? "border-white/10 bg-white/04" : "border-[#ADBC9F] bg-[#FBFADA]/70"
     }`}>
       {(["manual", "chessnut"] as InputSource[]).map((s) => (
         <button
@@ -302,10 +302,10 @@ export function InputSourceSelector({
             source === s
               ? isDark
                 ? "bg-[#4CAF50]/20 text-[#4CAF50]"
-                : "bg-[#4D6940]/10 text-[#4D6940]"
+                : "bg-[#436850]/10 text-[#436850]"
               : isDark
               ? "text-white/40 hover:text-white/60"
-              : "text-[#6B6B50] hover:text-[#6B6B50]"
+              : "text-[#436850] hover:text-[#436850]"
           }`}
         >
           {s === "manual" ? <Cpu className="w-3 h-3" /> : <Bluetooth className="w-3 h-3" />}

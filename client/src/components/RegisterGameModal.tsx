@@ -270,8 +270,8 @@ export function RegisterGameModal({
         <div
           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide ${
             isWhite
-              ? "bg-white text-[#1A1A1A]"
-              : "bg-[#1A1A1A] text-white border border-white/20"
+              ? "bg-white text-[#12372A]"
+              : "bg-[#12372A] text-white border border-white/20"
           }`}
         >
           {isWhite ? "⬜ White" : "⬛ Black"}
@@ -469,8 +469,8 @@ export function RegisterGameModal({
             <div className="bg-white rounded-2xl p-4 mb-4 mx-auto max-w-[200px]">
               <div className="flex items-center justify-center h-[160px]">
                 <div className="text-center">
-                  <QrCode className="w-16 h-16 text-[#1A1A1A] mx-auto mb-2" />
-                  <p className="text-[#6B6B50] text-xs">
+                  <QrCode className="w-16 h-16 text-[#12372A] mx-auto mb-2" />
+                  <p className="text-[#436850] text-xs">
                     Share the link below
                   </p>
                 </div>

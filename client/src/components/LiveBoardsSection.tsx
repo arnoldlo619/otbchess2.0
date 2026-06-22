@@ -51,7 +51,7 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
         className={`group block rounded-2xl overflow-hidden border transition-all duration-200 hover:scale-[1.02] hover:shadow-xl cursor-pointer ${
           isDark
             ? "bg-[oklch(0.22_0.06_145)] border-white/08 hover:border-[oklch(0.55_0.14_145)/0.4]"
-            : "bg-white border-[#EEEED2] hover:border-[#4D6940]/30 shadow-sm"
+            : "bg-white border-[#EEEED2] hover:border-[#436850]/30 shadow-sm"
         }`}
       >
         {/* Board thumbnail */}
@@ -84,7 +84,7 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
               </span>
             )}
             {isEnded && (
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? "bg-white/10 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? "bg-white/10 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
                 ENDED
               </span>
             )}
@@ -97,7 +97,7 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
 
           {/* Board number badge */}
           <div className="absolute top-2 right-2">
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? "bg-black/40 text-white/70" : "bg-white/80 text-[#6B6B50]"}`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? "bg-black/40 text-white/70" : "bg-white/80 text-[#436850]"}`}>
               Bd {broadcast.boardNumber}
             </span>
           </div>
@@ -105,7 +105,7 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
           {/* Last move badge */}
           {broadcast.lastMoveSan && isLive && (
             <div className="absolute bottom-2 right-2">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${isDark ? "bg-black/50 text-[oklch(0.75_0.14_145)]" : "bg-white/90 text-[#4D6940]"}`}>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${isDark ? "bg-black/50 text-[oklch(0.75_0.14_145)]" : "bg-white/90 text-[#436850]"}`}>
                 {broadcast.moveNumber}. {broadcast.lastMoveSan}
               </span>
             </div>
@@ -117,12 +117,12 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
           {/* White player */}
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${isDark ? "bg-white/80" : "bg-white border border-[#E8D9B0]"}`} />
-              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/90" : "text-[#1A1A1A]"}`}>
+              <span className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${isDark ? "bg-white/80" : "bg-white border border-[#ADBC9F]"}`} />
+              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/90" : "text-[#12372A]"}`}>
                 {broadcast.whitePlayerName}
               </span>
               {broadcast.whitePlayerElo && (
-                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
                   {broadcast.whitePlayerElo}
                 </span>
               )}
@@ -138,12 +138,12 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
           {/* Black player */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${isDark ? "bg-[oklch(0.25_0.07_145)] border border-white/20" : "bg-[#1A1A1A]"}`} />
-              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/90" : "text-[#1A1A1A]"}`}>
+              <span className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${isDark ? "bg-[oklch(0.25_0.07_145)] border border-white/20" : "bg-[#12372A]"}`} />
+              <span className={`text-xs font-semibold truncate ${isDark ? "text-white/90" : "text-[#12372A]"}`}>
                 {broadcast.blackPlayerName}
               </span>
               {broadcast.blackPlayerElo && (
-                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+                <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-[#436850]"}`}>
                   {broadcast.blackPlayerElo}
                 </span>
               )}
@@ -159,15 +159,15 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
           {/* Result label or move count */}
           <div className={`mt-2 pt-1.5 border-t flex items-center justify-between ${isDark ? "border-white/06" : "border-[#EEEED2]"}`}>
             {resultLabel ? (
-              <span className={`text-[10px] font-semibold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#4D6940]"}`}>
+              <span className={`text-[10px] font-semibold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>
                 {resultLabel}
               </span>
             ) : (
-              <span className={`text-[10px] ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}>
+              <span className={`text-[10px] ${isDark ? "text-white/35" : "text-[#436850]"}`}>
                 {broadcast.moveNumber > 0 ? `Move ${broadcast.moveNumber}` : "Not started"}
               </span>
             )}
-            <ChevronRight className={`w-3 h-3 flex-shrink-0 transition-transform group-hover:translate-x-0.5 ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`} />
+            <ChevronRight className={`w-3 h-3 flex-shrink-0 transition-transform group-hover:translate-x-0.5 ${isDark ? "text-white/25" : "text-[#436850]/70"}`} />
           </div>
         </div>
       </div>
@@ -252,8 +252,8 @@ export function LiveBoardsSection({ tournamentId, isDark }: LiveBoardsSectionPro
       {/* Section header */}
       <div className={`px-4 py-3 flex items-center justify-between border-b ${isDark ? "border-white/06" : "border-[#EEEED2]"}`}>
         <div className="flex items-center gap-2">
-          <Radio className={`w-4 h-4 ${liveCount > 0 ? "text-[#4CAF50]" : isDark ? "text-white/40" : "text-[#6B6B50]"}`} />
-          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+          <Radio className={`w-4 h-4 ${liveCount > 0 ? "text-[#4CAF50]" : isDark ? "text-white/40" : "text-[#436850]"}`} />
+          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
             Live Boards
           </span>
           {liveCount > 0 && (
@@ -264,7 +264,7 @@ export function LiveBoardsSection({ tournamentId, isDark }: LiveBoardsSectionPro
           )}
         </div>
         <Link href={`/tournament/${tournamentId}/broadcasts`}>
-          <div className={`flex items-center gap-1 text-xs font-medium transition-colors ${isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"}`}>
+          <div className={`flex items-center gap-1 text-xs font-medium transition-colors ${isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"}`}>
             View all
             <ExternalLink className="w-3 h-3" />
           </div>
@@ -278,7 +278,7 @@ export function LiveBoardsSection({ tournamentId, isDark }: LiveBoardsSectionPro
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className={`rounded-2xl overflow-hidden animate-pulse ${isDark ? "bg-white/05" : "bg-[#E8D9B0]/40"}`}
+                className={`rounded-2xl overflow-hidden animate-pulse ${isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"}`}
                 style={{ aspectRatio: "1 / 1.3" }}
               />
             ))}

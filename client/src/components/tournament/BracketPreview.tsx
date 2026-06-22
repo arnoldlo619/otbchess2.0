@@ -39,7 +39,7 @@ function useColors(isDark: boolean) {
     cellBorder: isDark ? "rgba(255,255,255,0.10)" : "rgba(61,107,71,0.15)",
     line: isDark ? "rgba(255,255,255,0.12)" : "rgba(61,107,71,0.18)",
     text: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
-    textBold: isDark ? "rgba(255,255,255,0.85)" : "#1A1A1A",
+    textBold: isDark ? "rgba(255,255,255,0.85)" : "#12372A",
     green: GREEN,
     greenBg: GREEN_BG,
     greenRing: GREEN_RING,

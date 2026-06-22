@@ -177,7 +177,7 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
               width: 28,
               height: 15,
               borderRadius: 999,
-              background: isDark ? "rgba(255,255,255,0.12)" : "#4D6940",
+              background: isDark ? "rgba(255,255,255,0.12)" : "#436850",
               display: "flex",
               alignItems: "center",
               flexShrink: 0,

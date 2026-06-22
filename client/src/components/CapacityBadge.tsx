@@ -48,10 +48,10 @@ export function CapacityBadge({
   // Colour tokens per state
   const colours = {
     ok: {
-      bg: isDark ? "bg-[#4D6940]/25" : "bg-[#4D6940]/10",
-      text: isDark ? "text-[#4CAF50]" : "text-[#4D6940]",
+      bg: isDark ? "bg-[#436850]/25" : "bg-[#436850]/10",
+      text: isDark ? "text-[#4CAF50]" : "text-[#436850]",
       bar: "bg-[#4CAF50]",
-      icon: isDark ? "text-[#4CAF50]" : "text-[#4D6940]",
+      icon: isDark ? "text-[#4CAF50]" : "text-[#436850]",
     },
     warning: {
       bg: isDark ? "bg-amber-500/20" : "bg-amber-50",
@@ -74,23 +74,23 @@ export function CapacityBadge({
         <div className="flex items-center gap-2">
           <div
             className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-              isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08"
+              isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08"
             }`}
           >
             <Users className={`w-4 h-4 ${colours.icon}`} />
           </div>
           <div>
             <p
-              className={`text-xs ${isDark ? "text-white/35" : "text-[#6B6B50]"}`}
+              className={`text-xs ${isDark ? "text-white/35" : "text-[#436850]"}`}
             >
               Players
             </p>
             <p
-              className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+              className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}
             >
               {current}{" "}
               <span
-                className={`font-normal text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}
+                className={`font-normal text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}
               >
                 / {max}
               </span>
@@ -110,7 +110,7 @@ export function CapacityBadge({
       </div>
       {/* Fill bar */}
       <div
-        className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-[#E8D9B0]/40"}`}
+        className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-[#ADBC9F]/40"}`}
       >
         <div
           className={`h-full rounded-full transition-all duration-500 ${colours.bar}`}

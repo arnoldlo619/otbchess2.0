@@ -291,7 +291,7 @@ export const GameHighlightCard = forwardRef<
             <span
               style={{
                 fontSize: 10,
-                color: "#4D6940",
+                color: "#436850",
                 fontWeight: 600,
                 marginLeft: 2,
               }}
@@ -329,7 +329,7 @@ export const GameHighlightCard = forwardRef<
             <span
               style={{
                 fontSize: 10,
-                color: "#4D6940",
+                color: "#436850",
                 fontWeight: 600,
                 marginLeft: 2,
               }}
@@ -357,7 +357,7 @@ export const GameHighlightCard = forwardRef<
               style={{
                 fontSize: 9,
                 fontWeight: 800,
-                color: "#4D6940",
+                color: "#436850",
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 background: "rgba(61,107,71,0.15)",

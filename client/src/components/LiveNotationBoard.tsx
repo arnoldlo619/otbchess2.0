@@ -184,7 +184,7 @@ export default function LiveNotationBoard({
         </span>
         <div
           className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
-            turn === "b" ? "bg-[#1A1A1A] shadow-[0_0_8px_rgba(0,0,0,0.5)] border border-white/30" : "bg-white/10"
+            turn === "b" ? "bg-[#12372A] shadow-[0_0_8px_rgba(0,0,0,0.5)] border border-white/30" : "bg-white/10"
           }`}
         />
       </div>
@@ -213,7 +213,7 @@ export default function LiveNotationBoard({
               boardStyle: {
                 borderRadius: "12px",
               },
-              darkSquareStyle: { backgroundColor: "#4D6940" },
+              darkSquareStyle: { backgroundColor: "#436850" },
               lightSquareStyle: { backgroundColor: "#E8E0D5" },
             }}
           />

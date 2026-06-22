@@ -182,8 +182,8 @@ function AdminGate({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-[#0d1a0f]">
         <Card className="w-96 bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="pt-6 text-center">
-            <Shield className="w-12 h-12 text-[#4D6940] mx-auto mb-4" />
-            <p className="text-[#6B6B50]/70">Please sign in to access the admin panel.</p>
+            <Shield className="w-12 h-12 text-[#436850] mx-auto mb-4" />
+            <p className="text-[#436850]/70">Please sign in to access the admin panel.</p>
           </CardContent>
         </Card>
       </div>
@@ -196,7 +196,7 @@ function AdminGate({ children }: { children: React.ReactNode }) {
         <Card className="w-96 bg-[#1a2e1c] border-[#2a4a2e]">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Lock className="w-5 h-5 text-[#4D6940]" />
+              <Lock className="w-5 h-5 text-[#436850]" />
               Openings Admin
             </CardTitle>
           </CardHeader>
@@ -218,7 +218,7 @@ function AdminGate({ children }: { children: React.ReactNode }) {
                 className="bg-[#0d1a0f] border-[#2a4a2e] text-white mb-3"
               />
               {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
-              <Button type="submit" className="w-full bg-[#4D6940] hover:bg-[#4a7d54] text-white">
+              <Button type="submit" className="w-full bg-[#436850] hover:bg-[#4a7d54] text-white">
                 Unlock
               </Button>
             </form>
@@ -251,15 +251,15 @@ function AdminDashboard() {
       <div className="border-b border-[#2a4a2e] bg-[#1a2e1c]/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BookOpen className="w-5 h-5 text-[#4D6940]" />
+            <BookOpen className="w-5 h-5 text-[#436850]" />
             <h1 className="text-lg font-semibold">Openings Admin</h1>
-            <Badge variant="outline" className="border-[#4D6940] text-[#4D6940] text-xs">Internal</Badge>
+            <Badge variant="outline" className="border-[#436850] text-[#436850] text-xs">Internal</Badge>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => { window.location.href = "/"; }}
-            className="text-[#6B6B50] hover:text-white"
+            className="text-[#436850] hover:text-white"
           >
             Back to Site
           </Button>
@@ -276,16 +276,16 @@ function AdminDashboard() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="bg-[#1a2e1c] border border-[#2a4a2e] mb-6">
-              <TabsTrigger value="openings" className="data-[state=active]:bg-[#4D6940]">
+              <TabsTrigger value="openings" className="data-[state=active]:bg-[#436850]">
                 <BookOpen className="w-4 h-4 mr-1.5" /> Openings
               </TabsTrigger>
-              <TabsTrigger value="qa" className="data-[state=active]:bg-[#4D6940]">
+              <TabsTrigger value="qa" className="data-[state=active]:bg-[#436850]">
                 <BarChart3 className="w-4 h-4 mr-1.5" /> QA Dashboard
               </TabsTrigger>
-              <TabsTrigger value="tags" className="data-[state=active]:bg-[#4D6940]">
+              <TabsTrigger value="tags" className="data-[state=active]:bg-[#436850]">
                 <Tag className="w-4 h-4 mr-1.5" /> Tags
               </TabsTrigger>
-              <TabsTrigger value="import" className="data-[state=active]:bg-[#4D6940]">
+              <TabsTrigger value="import" className="data-[state=active]:bg-[#436850]">
                 <Upload className="w-4 h-4 mr-1.5" /> PGN Import
               </TabsTrigger>
             </TabsList>
@@ -340,7 +340,7 @@ function OpeningsManager({ onSelectOpening }: { onSelectOpening: (id: string) =>
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B50]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#436850]" />
           <Input
             placeholder="Search openings..."
             value={search}
@@ -349,23 +349,23 @@ function OpeningsManager({ onSelectOpening }: { onSelectOpening: (id: string) =>
           />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchOpenings} className="border-[#2a4a2e] text-[#6B6B50]/70">
+          <Button variant="outline" size="sm" onClick={fetchOpenings} className="border-[#2a4a2e] text-[#436850]/70">
             <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
           </Button>
-          <Button size="sm" onClick={() => setShowCreate(true)} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+          <Button size="sm" onClick={() => setShowCreate(true)} className="bg-[#436850] hover:bg-[#4a7d54]">
             <Plus className="w-4 h-4 mr-1.5" /> New Opening
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-[#6B6B50]">Loading openings...</div>
+        <div className="text-center py-12 text-[#436850]">Loading openings...</div>
       ) : (
         <div className="grid gap-3">
           {filtered.map((o) => (
             <Card
               key={o.id}
-              className="bg-[#1a2e1c] border-[#2a4a2e] hover:border-[#4D6940] transition-colors cursor-pointer"
+              className="bg-[#1a2e1c] border-[#2a4a2e] hover:border-[#436850] transition-colors cursor-pointer"
               onClick={() => onSelectOpening(o.id)}
             >
               <CardContent className="py-4 px-5 flex items-center justify-between">
@@ -373,18 +373,18 @@ function OpeningsManager({ onSelectOpening }: { onSelectOpening: (id: string) =>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-white">{o.name}</span>
-                      <Badge variant="outline" className="text-xs border-[#4D6940]/40 text-[#6B6B50]">{o.eco}</Badge>
-                      <Badge variant="outline" className={`text-xs ${o.color === "white" ? "border-[#E8D9B0] text-[#6B6B50]/70" : "border-[#6B6B50]/50 text-[#6B6B50]"}`}>
+                      <Badge variant="outline" className="text-xs border-[#436850]/40 text-[#436850]">{o.eco}</Badge>
+                      <Badge variant="outline" className={`text-xs ${o.color === "white" ? "border-[#ADBC9F] text-[#436850]/70" : "border-[#436850]/50 text-[#436850]"}`}>
                         {o.color}
                       </Badge>
                       {o.isFeatured === 1 && <Badge className="bg-amber-600/20 text-amber-400 text-xs">Featured</Badge>}
                       {o.isPublished === 1 ? (
                         <Badge className="bg-green-600/20 text-green-400 text-xs"><Eye className="w-3 h-3 mr-1" />Published</Badge>
                       ) : (
-                        <Badge className="bg-[#6B6B50]/20 text-[#6B6B50] text-xs"><EyeOff className="w-3 h-3 mr-1" />Draft</Badge>
+                        <Badge className="bg-[#436850]/20 text-[#436850] text-xs"><EyeOff className="w-3 h-3 mr-1" />Draft</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-[#6B6B50]">
+                    <div className="flex items-center gap-3 text-xs text-[#436850]">
                       <span>{o.lineStats.total} lines</span>
                       <span className="text-green-500">{o.lineStats.published} published</span>
                       <span className="text-amber-500">{o.lineStats.draft} draft</span>
@@ -392,12 +392,12 @@ function OpeningsManager({ onSelectOpening }: { onSelectOpening: (id: string) =>
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-[#6B6B50]" />
+                <ChevronRight className="w-5 h-5 text-[#436850]" />
               </CardContent>
             </Card>
           ))}
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-[#6B6B50]">No openings found.</div>
+            <div className="text-center py-12 text-[#436850]">No openings found.</div>
           )}
         </div>
       )}
@@ -446,13 +446,13 @@ function CreateOpeningDialog({ onClose, onCreated }: { onClose: () => void; onCr
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label className="text-[#6B6B50]/70">Name</Label>
+            <Label className="text-[#436850]/70">Name</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Sicilian Defense" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-[#6B6B50]/70">Color</Label>
+              <Label className="text-[#436850]/70">Color</Label>
               <Select value={form.color} onValueChange={(v) => setForm({ ...form, color: v })}>
                 <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1">
                   <SelectValue />
@@ -465,23 +465,23 @@ function CreateOpeningDialog({ onClose, onCreated }: { onClose: () => void; onCr
               </Select>
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">ECO Code</Label>
+              <Label className="text-[#436850]/70">ECO Code</Label>
               <Input value={form.eco} onChange={(e) => setForm({ ...form, eco: e.target.value })}
                 placeholder="e.g. B20" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
             </div>
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Starting Moves</Label>
+            <Label className="text-[#436850]/70">Starting Moves</Label>
             <Input value={form.startingMoves} onChange={(e) => setForm({ ...form, startingMoves: e.target.value })}
               placeholder="e.g. 1.e4 c5" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Summary</Label>
+            <Label className="text-[#436850]/70">Summary</Label>
             <Input value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })}
               placeholder="One-line description" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Difficulty</Label>
+            <Label className="text-[#436850]/70">Difficulty</Label>
             <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v })}>
               <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1">
                 <SelectValue />
@@ -497,8 +497,8 @@ function CreateOpeningDialog({ onClose, onCreated }: { onClose: () => void; onCr
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-[#6B6B50]">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={saving} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+          <Button variant="ghost" onClick={onClose} className="text-[#436850]">Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="bg-[#436850] hover:bg-[#4a7d54]">
             {saving ? "Creating..." : "Create Opening"}
           </Button>
         </DialogFooter>
@@ -587,22 +587,22 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-[#6B6B50]">Loading...</div>;
+    return <div className="text-center py-12 text-[#436850]">Loading...</div>;
   }
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-[#6B6B50] hover:text-white">
+        <Button variant="ghost" size="sm" onClick={onBack} className="text-[#436850] hover:text-white">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Button>
         <h2 className="text-xl font-semibold">{opening?.name}</h2>
-        <Badge variant="outline" className="border-[#4D6940]/40 text-[#6B6B50]">{opening?.eco}</Badge>
+        <Badge variant="outline" className="border-[#436850]/40 text-[#436850]">{opening?.eco}</Badge>
         {opening?.isPublished === 1 ? (
           <Badge className="bg-green-600/20 text-green-400 text-xs">Published</Badge>
         ) : (
-          <Badge className="bg-[#6B6B50]/20 text-[#6B6B50] text-xs">Draft</Badge>
+          <Badge className="bg-[#436850]/20 text-[#436850] text-xs">Draft</Badge>
         )}
       </div>
 
@@ -611,25 +611,25 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-3 px-4">
             <div className="text-2xl font-bold text-white">{lines.length}</div>
-            <div className="text-xs text-[#6B6B50]">Total Lines</div>
+            <div className="text-xs text-[#436850]">Total Lines</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-3 px-4">
             <div className="text-2xl font-bold text-green-400">{lines.filter((l) => l.isPublished === 1).length}</div>
-            <div className="text-xs text-[#6B6B50]">Published</div>
+            <div className="text-xs text-[#436850]">Published</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-3 px-4">
             <div className="text-2xl font-bold text-amber-400">{lines.filter((l) => !l._qa.complete).length}</div>
-            <div className="text-xs text-[#6B6B50]">Incomplete</div>
+            <div className="text-xs text-[#436850]">Incomplete</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-3 px-4">
             <div className="text-2xl font-bold text-sky-400">{lines.filter((l) => l.isTrap === 1).length}</div>
-            <div className="text-xs text-[#6B6B50]">Trap Lines</div>
+            <div className="text-xs text-[#436850]">Trap Lines</div>
           </CardContent>
         </Card>
       </div>
@@ -637,34 +637,34 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
       {/* Bulk Actions */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-[#6B6B50] cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-[#436850] cursor-pointer">
             <input
               type="checkbox"
               checked={selectedLines.size === lines.length && lines.length > 0}
               onChange={toggleAll}
-              className="rounded border-[#4D6940]/40"
+              className="rounded border-[#436850]/40"
             />
             Select all
           </label>
           {selectedLines.size > 0 && (
             <>
-              <span className="text-sm text-[#6B6B50]">{selectedLines.size} selected</span>
+              <span className="text-sm text-[#436850]">{selectedLines.size} selected</span>
               <Button size="sm" variant="outline" onClick={() => handleBulkPublish(true)}
                 className="border-green-600 text-green-400 hover:bg-green-600/10">
                 <Eye className="w-3 h-3 mr-1" /> Publish
               </Button>
               <Button size="sm" variant="outline" onClick={() => handleBulkPublish(false)}
-                className="border-[#4D6940]/40 text-[#6B6B50] hover:bg-[#6B6B50]/10">
+                className="border-[#436850]/40 text-[#436850] hover:bg-[#436850]/10">
                 <EyeOff className="w-3 h-3 mr-1" /> Unpublish
               </Button>
             </>
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={fetchDetail} className="border-[#2a4a2e] text-[#6B6B50]/70">
+          <Button variant="outline" size="sm" onClick={fetchDetail} className="border-[#2a4a2e] text-[#436850]/70">
             <RefreshCw className="w-4 h-4 mr-1.5" /> Refresh
           </Button>
-          <Button size="sm" onClick={() => setShowCreateLine(true)} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+          <Button size="sm" onClick={() => setShowCreateLine(true)} className="bg-[#436850] hover:bg-[#4a7d54]">
             <Plus className="w-4 h-4 mr-1.5" /> New Line
           </Button>
         </div>
@@ -680,12 +680,12 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
                   type="checkbox"
                   checked={selectedLines.has(line.id)}
                   onChange={() => toggleLineSelection(line.id)}
-                  className="rounded border-[#4D6940]/40"
+                  className="rounded border-[#436850]/40"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium text-white text-sm truncate">{line.title}</span>
-                    <Badge variant="outline" className="text-xs border-[#4D6940]/40 text-[#6B6B50] shrink-0">{line.eco}</Badge>
+                    <Badge variant="outline" className="text-xs border-[#436850]/40 text-[#436850] shrink-0">{line.eco}</Badge>
                     <Badge variant="outline" className={`text-xs shrink-0 ${
                       line.difficulty === "beginner" ? "border-green-600 text-green-400" :
                       line.difficulty === "intermediate" ? "border-amber-600 text-amber-400" :
@@ -702,31 +702,31 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
                     {line.isPublished === 1 ? (
                       <Badge className="bg-green-600/20 text-green-400 text-xs shrink-0"><Eye className="w-3 h-3 mr-1" />Live</Badge>
                     ) : (
-                      <Badge className="bg-[#6B6B50]/20 text-[#6B6B50] text-xs shrink-0">Draft</Badge>
+                      <Badge className="bg-[#436850]/20 text-[#436850] text-xs shrink-0">Draft</Badge>
                     )}
                   </div>
-                  <div className="text-xs text-[#6B6B50] font-mono truncate">{line.pgn}</div>
+                  <div className="text-xs text-[#436850] font-mono truncate">{line.pgn}</div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="sm" onClick={() => handleValidate(line.id)}
-                    className="text-[#6B6B50] hover:text-green-400 h-8 w-8 p-0"
+                    className="text-[#436850] hover:text-green-400 h-8 w-8 p-0"
                     title="Validate">
                     <CheckCircle className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setEditingLine(line)}
-                    className="text-[#6B6B50] hover:text-sky-400 h-8 w-8 p-0"
+                    className="text-[#436850] hover:text-sky-400 h-8 w-8 p-0"
                     title="Edit">
                     <Edit3 className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => {
                     navigator.clipboard.writeText(line.id);
                   }}
-                    className="text-[#6B6B50] hover:text-white h-8 w-8 p-0"
+                    className="text-[#436850] hover:text-white h-8 w-8 p-0"
                     title="Copy ID">
                     <Copy className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDeleteLine(line.id)}
-                    className="text-[#6B6B50] hover:text-red-400 h-8 w-8 p-0"
+                    className="text-[#436850] hover:text-red-400 h-8 w-8 p-0"
                     title="Delete">
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -736,7 +736,7 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
           </Card>
         ))}
         {lines.length === 0 && (
-          <div className="text-center py-12 text-[#6B6B50]">No lines yet. Create one or import PGN.</div>
+          <div className="text-center py-12 text-[#436850]">No lines yet. Create one or import PGN.</div>
         )}
       </div>
 
@@ -756,7 +756,7 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
             <div className="space-y-3">
               {validationResult.result.issues.length > 0 && (
                 <div>
-                  <Label className="text-[#6B6B50]/70 text-sm">Issues:</Label>
+                  <Label className="text-[#436850]/70 text-sm">Issues:</Label>
                   <ul className="mt-1 space-y-1">
                     {validationResult.result.issues.map((issue, i) => (
                       <li key={i} className="text-red-400 text-sm flex items-start gap-2">
@@ -769,7 +769,7 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
               )}
               {!validationResult.result.completeness.complete && (
                 <div>
-                  <Label className="text-[#6B6B50]/70 text-sm">Missing fields:</Label>
+                  <Label className="text-[#436850]/70 text-sm">Missing fields:</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {validationResult.result.completeness.missing.map((f) => (
                       <Badge key={f} variant="outline" className="text-xs border-amber-600 text-amber-400">{f}</Badge>
@@ -782,7 +782,7 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
               )}
             </div>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setValidationResult(null)} className="text-[#6B6B50]">Close</Button>
+              <Button variant="ghost" onClick={() => setValidationResult(null)} className="text-[#436850]">Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -845,25 +845,25 @@ function CreateLineDialog({ openingId, onClose, onCreated }: { openingId: string
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label className="text-[#6B6B50]/70">Title</Label>
+            <Label className="text-[#436850]/70">Title</Label>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g. Najdorf: 6.Bg5 Main Line" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Move Sequence (SAN)</Label>
+            <Label className="text-[#436850]/70">Move Sequence (SAN)</Label>
             <Input value={form.moveSequence} onChange={(e) => setForm({ ...form, moveSequence: e.target.value })}
               placeholder="e.g. 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 6.Bg5"
               className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1 font-mono" />
-            <p className="text-xs text-[#6B6B50] mt-1">Moves will be validated for legality. FEN and PGN auto-generated.</p>
+            <p className="text-xs text-[#436850] mt-1">Moves will be validated for legality. FEN and PGN auto-generated.</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label className="text-[#6B6B50]/70">ECO</Label>
+              <Label className="text-[#436850]/70">ECO</Label>
               <Input value={form.eco} onChange={(e) => setForm({ ...form, eco: e.target.value })}
                 placeholder="B90" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Difficulty</Label>
+              <Label className="text-[#436850]/70">Difficulty</Label>
               <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v })}>
                 <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e]">
@@ -875,7 +875,7 @@ function CreateLineDialog({ openingId, onClose, onCreated }: { openingId: string
               </Select>
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Color</Label>
+              <Label className="text-[#436850]/70">Color</Label>
               <Select value={form.color} onValueChange={(v) => setForm({ ...form, color: v })}>
                 <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e]">
@@ -886,34 +886,34 @@ function CreateLineDialog({ openingId, onClose, onCreated }: { openingId: string
             </div>
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Description</Label>
+            <Label className="text-[#436850]/70">Description</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="What this line is about..." className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" rows={2} />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Strategic Summary</Label>
+            <Label className="text-[#436850]/70">Strategic Summary</Label>
             <Textarea value={form.strategicSummary} onChange={(e) => setForm({ ...form, strategicSummary: e.target.value })}
               placeholder="Key strategic ideas..." className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" rows={2} />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Hint Text</Label>
+            <Label className="text-[#436850]/70">Hint Text</Label>
             <Input value={form.hintText} onChange={(e) => setForm({ ...form, hintText: e.target.value })}
               placeholder="Study hint for the learner" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Punishment Idea</Label>
+            <Label className="text-[#436850]/70">Punishment Idea</Label>
             <Input value={form.punishmentIdea} onChange={(e) => setForm({ ...form, punishmentIdea: e.target.value })}
               placeholder="How to punish opponent's mistake" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-[#6B6B50]/70">Commonness (0-100)</Label>
+              <Label className="text-[#436850]/70">Commonness (0-100)</Label>
               <Input type="number" min={0} max={100} value={form.commonness}
                 onChange={(e) => setForm({ ...form, commonness: parseInt(e.target.value) || 0 })}
                 className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Priority (0-100)</Label>
+              <Label className="text-[#436850]/70">Priority (0-100)</Label>
               <Input type="number" min={0} max={100} value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
                 className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
@@ -922,18 +922,18 @@ function CreateLineDialog({ openingId, onClose, onCreated }: { openingId: string
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <Switch checked={form.isMustKnow} onCheckedChange={(v) => setForm({ ...form, isMustKnow: v })} />
-              <Label className="text-[#6B6B50]/70">Must-Know</Label>
+              <Label className="text-[#436850]/70">Must-Know</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.isTrap} onCheckedChange={(v) => setForm({ ...form, isTrap: v })} />
-              <Label className="text-[#6B6B50]/70">Trap Line</Label>
+              <Label className="text-[#436850]/70">Trap Line</Label>
             </div>
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-[#6B6B50]">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={saving} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+          <Button variant="ghost" onClick={onClose} className="text-[#436850]">Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="bg-[#436850] hover:bg-[#4a7d54]">
             {saving ? "Creating..." : "Create Line"}
           </Button>
         </DialogFooter>
@@ -986,22 +986,22 @@ function EditLineDialog({ line, onClose, onSaved }: { line: Line; onClose: () =>
         </DialogHeader>
         <div className="space-y-4">
           <div className="bg-[#0d1a0f] rounded-lg p-3 border border-[#2a4a2e]">
-            <Label className="text-[#6B6B50] text-xs">PGN (read-only)</Label>
+            <Label className="text-[#436850] text-xs">PGN (read-only)</Label>
             <p className="text-white font-mono text-sm mt-1">{line.pgn}</p>
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Title</Label>
+            <Label className="text-[#436850]/70">Title</Label>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
               className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-[#6B6B50]/70">ECO</Label>
+              <Label className="text-[#436850]/70">ECO</Label>
               <Input value={form.eco} onChange={(e) => setForm({ ...form, eco: e.target.value })}
                 className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Difficulty</Label>
+              <Label className="text-[#436850]/70">Difficulty</Label>
               <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v })}>
                 <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e]">
@@ -1014,34 +1014,34 @@ function EditLineDialog({ line, onClose, onSaved }: { line: Line; onClose: () =>
             </div>
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Description</Label>
+            <Label className="text-[#436850]/70">Description</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" rows={2} />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Strategic Summary</Label>
+            <Label className="text-[#436850]/70">Strategic Summary</Label>
             <Textarea value={form.strategicSummary} onChange={(e) => setForm({ ...form, strategicSummary: e.target.value })}
               className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" rows={2} />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Hint Text</Label>
+            <Label className="text-[#436850]/70">Hint Text</Label>
             <Input value={form.hintText} onChange={(e) => setForm({ ...form, hintText: e.target.value })}
               className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Punishment Idea</Label>
+            <Label className="text-[#436850]/70">Punishment Idea</Label>
             <Input value={form.punishmentIdea} onChange={(e) => setForm({ ...form, punishmentIdea: e.target.value })}
               className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-[#6B6B50]/70">Commonness (0-100)</Label>
+              <Label className="text-[#436850]/70">Commonness (0-100)</Label>
               <Input type="number" min={0} max={100} value={form.commonness}
                 onChange={(e) => setForm({ ...form, commonness: parseInt(e.target.value) || 0 })}
                 className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Priority (0-100)</Label>
+              <Label className="text-[#436850]/70">Priority (0-100)</Label>
               <Input type="number" min={0} max={100} value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
                 className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
@@ -1050,22 +1050,22 @@ function EditLineDialog({ line, onClose, onSaved }: { line: Line; onClose: () =>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <Switch checked={form.isMustKnow} onCheckedChange={(v) => setForm({ ...form, isMustKnow: v })} />
-              <Label className="text-[#6B6B50]/70">Must-Know</Label>
+              <Label className="text-[#436850]/70">Must-Know</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.isTrap} onCheckedChange={(v) => setForm({ ...form, isTrap: v })} />
-              <Label className="text-[#6B6B50]/70">Trap Line</Label>
+              <Label className="text-[#436850]/70">Trap Line</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.isPublished} onCheckedChange={(v) => setForm({ ...form, isPublished: v })} />
-              <Label className="text-[#6B6B50]/70">Published</Label>
+              <Label className="text-[#436850]/70">Published</Label>
             </div>
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-[#6B6B50]">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={saving} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+          <Button variant="ghost" onClick={onClose} className="text-[#436850]">Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="bg-[#436850] hover:bg-[#4a7d54]">
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
@@ -1102,7 +1102,7 @@ function QADashboard() {
 
   useEffect(() => { fetchQA(); }, [fetchQA]);
 
-  if (loading) return <div className="text-center py-12 text-[#6B6B50]">Loading QA data...</div>;
+  if (loading) return <div className="text-center py-12 text-[#436850]">Loading QA data...</div>;
 
   return (
     <div className="space-y-6">
@@ -1111,31 +1111,31 @@ function QADashboard() {
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-4 px-5 text-center">
             <div className="text-3xl font-bold text-white">{stats?.openings ?? 0}</div>
-            <div className="text-xs text-[#6B6B50] mt-1">Openings</div>
+            <div className="text-xs text-[#436850] mt-1">Openings</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-4 px-5 text-center">
             <div className="text-3xl font-bold text-white">{stats?.lines.total ?? 0}</div>
-            <div className="text-xs text-[#6B6B50] mt-1">Total Lines</div>
+            <div className="text-xs text-[#436850] mt-1">Total Lines</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-4 px-5 text-center">
             <div className="text-3xl font-bold text-green-400">{stats?.lines.published ?? 0}</div>
-            <div className="text-xs text-[#6B6B50] mt-1">Published</div>
+            <div className="text-xs text-[#436850] mt-1">Published</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-4 px-5 text-center">
             <div className="text-3xl font-bold text-white">{stats?.nodes ?? 0}</div>
-            <div className="text-xs text-[#6B6B50] mt-1">Nodes</div>
+            <div className="text-xs text-[#436850] mt-1">Nodes</div>
           </CardContent>
         </Card>
         <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
           <CardContent className="py-4 px-5 text-center">
             <div className="text-3xl font-bold text-white">{stats?.tags ?? 0}</div>
-            <div className="text-xs text-[#6B6B50] mt-1">Tags</div>
+            <div className="text-xs text-[#436850] mt-1">Tags</div>
           </CardContent>
         </Card>
       </div>
@@ -1237,7 +1237,7 @@ function TagManager() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B50]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#436850]" />
           <Input
             placeholder="Filter tags..."
             value={filter}
@@ -1245,13 +1245,13 @@ function TagManager() {
             className="pl-10 bg-[#1a2e1c] border-[#2a4a2e] text-white"
           />
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+        <Button size="sm" onClick={() => setShowCreate(true)} className="bg-[#436850] hover:bg-[#4a7d54]">
           <Plus className="w-4 h-4 mr-1.5" /> New Tag
         </Button>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-[#6B6B50]">Loading tags...</div>
+        <div className="text-center py-12 text-[#436850]">Loading tags...</div>
       ) : (
         <div className="space-y-4">
           {categories.map((cat) => {
@@ -1267,7 +1267,7 @@ function TagManager() {
                     {catTags.map((tag) => (
                       <div key={tag.id} className="flex items-center gap-1 bg-[#0d1a0f] rounded-full px-3 py-1 border border-[#2a4a2e]">
                         <span className="text-sm text-white">{tag.name}</span>
-                        <button onClick={() => handleDelete(tag.id)} className="text-[#6B6B50] hover:text-red-400 ml-1">
+                        <button onClick={() => handleDelete(tag.id)} className="text-[#436850] hover:text-red-400 ml-1">
                           <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
@@ -1314,12 +1314,12 @@ function CreateTagDialog({ onClose, onCreated }: { onClose: () => void; onCreate
         <DialogHeader><DialogTitle>Create Tag</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label className="text-[#6B6B50]/70">Name</Label>
+            <Label className="text-[#436850]/70">Name</Label>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Kingside Attack" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Category</Label>
+            <Label className="text-[#436850]/70">Category</Label>
             <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
               <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e]">
@@ -1333,15 +1333,15 @@ function CreateTagDialog({ onClose, onCreated }: { onClose: () => void; onCreate
             </Select>
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Description</Label>
+            <Label className="text-[#436850]/70">Description</Label>
             <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Optional description" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} className="text-[#6B6B50]">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={saving} className="bg-[#4D6940] hover:bg-[#4a7d54]">
+          <Button variant="ghost" onClick={onClose} className="text-[#436850]">Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="bg-[#436850] hover:bg-[#4a7d54]">
             {saving ? "Creating..." : "Create Tag"}
           </Button>
         </DialogFooter>
@@ -1392,13 +1392,13 @@ function PGNImporter() {
       <Card className="bg-[#1a2e1c] border-[#2a4a2e]">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Upload className="w-5 h-5 text-[#4D6940]" />
+            <Upload className="w-5 h-5 text-[#436850]" />
             Import PGN
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="text-[#6B6B50]/70">Opening</Label>
+            <Label className="text-[#436850]/70">Opening</Label>
             <Select value={form.openingId} onValueChange={(v) => setForm({ ...form, openingId: v })}>
               <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue placeholder="Select opening..." /></SelectTrigger>
               <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e] max-h-64">
@@ -1409,7 +1409,7 @@ function PGNImporter() {
             </Select>
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">PGN</Label>
+            <Label className="text-[#436850]/70">PGN</Label>
             <Textarea
               value={form.pgn}
               onChange={(e) => setForm({ ...form, pgn: e.target.value })}
@@ -1419,18 +1419,18 @@ function PGNImporter() {
             />
           </div>
           <div>
-            <Label className="text-[#6B6B50]/70">Line Title (optional)</Label>
+            <Label className="text-[#436850]/70">Line Title (optional)</Label>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Auto-generated from moves if empty" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label className="text-[#6B6B50]/70">ECO</Label>
+              <Label className="text-[#436850]/70">ECO</Label>
               <Input value={form.eco} onChange={(e) => setForm({ ...form, eco: e.target.value })}
                 placeholder="A00" className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1" />
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Difficulty</Label>
+              <Label className="text-[#436850]/70">Difficulty</Label>
               <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v })}>
                 <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e]">
@@ -1442,7 +1442,7 @@ function PGNImporter() {
               </Select>
             </div>
             <div>
-              <Label className="text-[#6B6B50]/70">Color</Label>
+              <Label className="text-[#436850]/70">Color</Label>
               <Select value={form.color} onValueChange={(v) => setForm({ ...form, color: v })}>
                 <SelectTrigger className="bg-[#0d1a0f] border-[#2a4a2e] text-white mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-[#1a2e1c] border-[#2a4a2e]">
@@ -1461,7 +1461,7 @@ function PGNImporter() {
                 <CheckCircle className="w-4 h-4 text-green-400" />
                 <span className="text-green-400 font-medium text-sm">Import Successful</span>
               </div>
-              <div className="text-sm text-[#6B6B50]/70 space-y-1">
+              <div className="text-sm text-[#436850]/70 space-y-1">
                 <p>Line ID: <code className="text-white">{result.lineId}</code></p>
                 <p>PGN: <code className="text-white font-mono">{result.pgn}</code></p>
                 <p>Ply count: {result.plyCount} | Nodes created: {result.nodesCreated}</p>
@@ -1470,7 +1470,7 @@ function PGNImporter() {
           )}
 
           <Button onClick={handleImport} disabled={importing || !form.openingId || !form.pgn}
-            className="bg-[#4D6940] hover:bg-[#4a7d54] w-full">
+            className="bg-[#436850] hover:bg-[#4a7d54] w-full">
             {importing ? "Importing..." : "Import PGN & Generate Nodes"}
           </Button>
         </CardContent>

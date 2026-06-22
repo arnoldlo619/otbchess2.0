@@ -110,26 +110,26 @@ export function SwissPhaseSummaryModal({
     overlay: "fixed inset-0 z-50 flex items-center justify-center p-4",
     card: isDark
       ? "bg-[oklch(0.18_0.06_145)] border-white/10"
-      : "bg-white border-[#E8D9B0]",
-    title: isDark ? "text-white" : "text-[#1A1A1A]",
-    subtitle: isDark ? "text-white/50" : "text-[#6B6B50]",
-    divider: isDark ? "border-white/08" : "border-[#E8D9B0]/70",
-    rowHover: isDark ? "hover:bg-white/04" : "hover:bg-[#FFF3D5]",
+      : "bg-white border-[#ADBC9F]",
+    title: isDark ? "text-white" : "text-[#12372A]",
+    subtitle: isDark ? "text-white/50" : "text-[#436850]",
+    divider: isDark ? "border-white/08" : "border-[#ADBC9F]/70",
+    rowHover: isDark ? "hover:bg-white/04" : "hover:bg-[#FBFADA]",
     advancingBg: isDark ? "bg-[#4CAF50]/06" : "bg-green-50/60",
-    eliminatedBg: isDark ? "bg-white/02" : "bg-[#FFF3D5]/70/40",
-    sectionLabel: isDark ? "text-white/35" : "text-[#6B6B50]",
-    nameText: isDark ? "text-white/90" : "text-[#1A1A1A]",
-    statText: isDark ? "text-white/45" : "text-[#6B6B50]",
-    scoreText: isDark ? "text-white/80" : "text-[#1A1A1A]/85",
+    eliminatedBg: isDark ? "bg-white/02" : "bg-[#FBFADA]/70/40",
+    sectionLabel: isDark ? "text-white/35" : "text-[#436850]",
+    nameText: isDark ? "text-white/90" : "text-[#12372A]",
+    statText: isDark ? "text-white/45" : "text-[#436850]",
+    scoreText: isDark ? "text-white/80" : "text-[#12372A]/85",
     closeBtn: isDark
       ? "hover:bg-white/08 text-white/40 hover:text-white/70"
-      : "hover:bg-[#E8D9B0]/50 text-[#6B6B50] hover:text-[#6B6B50]",
+      : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]",
     confirmBtn: isDark
       ? "bg-[#4CAF50]/90 hover:bg-[#4CAF50] text-white"
-      : "bg-[#4D6940] hover:bg-[#3a5230] text-white",
+      : "bg-[#436850] hover:bg-[#3a5230] text-white",
     cancelBtn: isDark
       ? "bg-white/06 hover:bg-white/10 text-white/60"
-      : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]",
+      : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850]",
     cutoffPill: (active: boolean) =>
       active
         ? isDark
@@ -137,7 +137,7 @@ export function SwissPhaseSummaryModal({
           : "bg-green-50 border-green-400 text-green-700"
         : isDark
           ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:border-white/15"
-          : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]/50",
+          : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50",
   };
 
   return (
@@ -163,7 +163,7 @@ export function SwissPhaseSummaryModal({
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
               isDark ? "bg-[#4CAF50]/15" : "bg-green-50"
             }`}>
-              <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+              <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
             </div>
             <div>
               <p
@@ -249,15 +249,15 @@ export function SwissPhaseSummaryModal({
           {/* Cutoff divider */}
           {eliminated.length > 0 && (
             <div className={`flex items-center gap-3 px-4 py-2 ${
-              isDark ? "bg-white/03 border-y border-white/06" : "bg-[#E8D9B0]/40/60 border-y border-[#E8D9B0]"
+              isDark ? "bg-white/03 border-y border-white/06" : "bg-[#ADBC9F]/40/60 border-y border-[#ADBC9F]"
             }`}>
-              <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+              <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
               <span className={`text-[10px] font-bold uppercase tracking-widest flex-shrink-0 ${
-                isDark ? "text-white/30" : "text-[#6B6B50]"
+                isDark ? "text-white/30" : "text-[#436850]"
               }`}>
                 Cutoff — {playerCount - previewCutoff} player{playerCount - previewCutoff !== 1 ? "s" : ""} eliminated after Swiss
               </span>
-              <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+              <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
             </div>
           )}
 
@@ -339,7 +339,7 @@ function StandingRowItem({ row, seed, isAdvancing, isDark, T }: RowProps) {
             isAdvancing
               ? isDark
                 ? "text-white/90"
-                : "text-[#1A1A1A]"
+                : "text-[#12372A]"
               : T.nameText
           }`}
         >

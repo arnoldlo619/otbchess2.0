@@ -252,7 +252,7 @@ export default function RepertoireList() {
   );
 
   return (
-    <div className={`min-h-screen ${isDark ? "text-white" : "text-[#1A1A1A]"}`} style={{ background: isDark ? "oklch(0.15 0.04 145)" : "oklch(0.96 0.02 145)" }}>
+    <div className={`min-h-screen ${isDark ? "text-white" : "text-[#12372A]"}`} style={{ background: isDark ? "oklch(0.15 0.04 145)" : "oklch(0.96 0.02 145)" }}>
       {/* Subtle checkered overlay */}
       <div className="fixed inset-0 chess-board-bg opacity-[0.18] pointer-events-none z-0" />
       {/* Header — platform standard */}
@@ -298,11 +298,11 @@ export default function RepertoireList() {
               {showColorPicker && (
                 <div className="absolute right-0 top-full mt-2 rounded-xl border shadow-xl z-50 overflow-hidden bg-[#0f1f12] border-white/10">
                   <button onClick={() => createRepertoire("white")} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-white/5 transition">
-                    <div className="w-5 h-5 rounded-full bg-white border border-[#E8D9B0]" />
+                    <div className="w-5 h-5 rounded-full bg-white border border-[#ADBC9F]" />
                     <span>Play as White</span>
                   </button>
                   <button onClick={() => createRepertoire("black")} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-white/5 transition">
-                    <div className="w-5 h-5 rounded-full bg-[#1A1A1A] border border-[#4D6940]/40" />
+                    <div className="w-5 h-5 rounded-full bg-[#12372A] border border-[#436850]/40" />
                     <span>Play as Black</span>
                   </button>
                 </div>
@@ -345,11 +345,11 @@ export default function RepertoireList() {
         ) : repertoires.length === 0 ? (
           /* Empty state */
           <div className="text-center py-16">
-            <BookOpen size={48} className={`mx-auto mb-4 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
-            <h2 className={`text-lg font-semibold mb-2 ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
+            <BookOpen size={48} className={`mx-auto mb-4 ${isDark ? "text-white/20" : "text-[#436850]/70"}`} />
+            <h2 className={`text-lg font-semibold mb-2 ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>
               No repertoires yet
             </h2>
-            <p className={`text-sm mb-6 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <p className={`text-sm mb-6 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               Create your first opening repertoire to start building your preparation.
             </p>
             <div className="flex items-center justify-center gap-3">
@@ -359,10 +359,10 @@ export default function RepertoireList() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm border transition ${
                   isDark
                     ? "bg-white/5 border-white/20 text-white hover:bg-white/10"
-                    : "bg-white border-[#E8D9B0] text-[#1A1A1A] hover:bg-[#FFF3D5]"
+                    : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#FBFADA]"
                 }`}
               >
-                <div className="w-4 h-4 rounded-full bg-white border border-[#E8D9B0]" />
+                <div className="w-4 h-4 rounded-full bg-white border border-[#ADBC9F]" />
                 White Repertoire
               </button>
               <button
@@ -371,10 +371,10 @@ export default function RepertoireList() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm border transition ${
                   isDark
                     ? "bg-white/5 border-white/20 text-white hover:bg-white/10"
-                    : "bg-white border-[#E8D9B0] text-[#1A1A1A] hover:bg-[#FFF3D5]"
+                    : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#FBFADA]"
                 }`}
               >
-                <div className="w-4 h-4 rounded-full bg-[#1A1A1A] border border-[#4D6940]/40" />
+                <div className="w-4 h-4 rounded-full bg-[#12372A] border border-[#436850]/40" />
                 Black Repertoire
               </button>
             </div>
@@ -383,67 +383,67 @@ export default function RepertoireList() {
           <>
             {/* ── Summary Dashboard ─────────────────────────────────────────── */}
             <div className={`mb-6 rounded-2xl border p-5 ${
-              isDark ? "bg-[#0f1f12]/60 border-white/10" : "bg-white border-[#E8D9B0] shadow-sm"
+              isDark ? "bg-[#0f1f12]/60 border-white/10" : "bg-white border-[#ADBC9F] shadow-sm"
             }`}>
               <div className="flex items-center gap-2 mb-4">
                 <BarChart2 size={16} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                <h2 className={`text-sm font-semibold tracking-wide uppercase ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
+                <h2 className={`text-sm font-semibold tracking-wide uppercase ${isDark ? "text-white/60" : "text-[#436850]"}`}>
                   Overall Progress
                 </h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {/* Stat: Repertoires */}
-                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
-                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FBFADA]/70"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                     <BookOpen size={13} />
                     <span className="text-[11px] uppercase tracking-wide font-medium">Repertoires</span>
                   </div>
-                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>
                     {repertoires.length}
                   </p>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     {repertoires.filter(r => r.color === "white").length}W · {repertoires.filter(r => r.color === "black").length}B
                   </p>
                 </div>
 
                 {/* Stat: Total Moves */}
-                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
-                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FBFADA]/70"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                     <TrendingUp size={13} />
                     <span className="text-[11px] uppercase tracking-wide font-medium">Total Moves</span>
                   </div>
-                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>
                     {totalMovesAll}
                   </p>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     across all repertoires
                   </p>
                 </div>
 
                 {/* Stat: Unique Lines */}
-                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
-                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FBFADA]/70"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                     <GitBranch size={13} />
                     <span className="text-[11px] uppercase tracking-wide font-medium">Lines</span>
                   </div>
-                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>
                     {totalLinesAll}
                   </p>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     unique variations
                   </p>
                 </div>
 
                 {/* Stat: Last Updated */}
-                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
-                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-[#FBFADA]/70"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                     <Clock size={13} />
                     <span className="text-[11px] uppercase tracking-wide font-medium">Last Updated</span>
                   </div>
-                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>
                     {mostRecentUpdate ? formatRelativeDate(mostRecentUpdate.updatedAt) : "—"}
                   </p>
-                  <p className={`text-[11px] mt-0.5 truncate ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <p className={`text-[11px] mt-0.5 truncate ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     {mostRecentUpdate?.title || ""}
                   </p>
                 </div>
@@ -468,7 +468,7 @@ export default function RepertoireList() {
                     className={`group w-full text-left rounded-2xl border transition cursor-pointer ${
                       isDark
                         ? "bg-[#0f1f12]/50 border-white/10 hover:border-emerald-500/40 hover:bg-[#0f1f12]"
-                        : "bg-white border-[#E8D9B0] hover:border-emerald-300 hover:shadow-md"
+                        : "bg-white border-[#ADBC9F] hover:border-emerald-300 hover:shadow-md"
                     }`}
                   >
                     {/* Card top row */}
@@ -476,8 +476,8 @@ export default function RepertoireList() {
                       {/* Color indicator */}
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 ${
                         rep.color === "white"
-                          ? "bg-white border border-[#E8D9B0] text-[#1A1A1A]"
-                          : "bg-[#1A1A1A] border border-[#4D6940]/40 text-white"
+                          ? "bg-white border border-[#ADBC9F] text-[#12372A]"
+                          : "bg-[#12372A] border border-[#436850]/40 text-white"
                       }`}>
                         {rep.color === "white" ? "♔" : "♚"}
                       </div>
@@ -497,8 +497,8 @@ export default function RepertoireList() {
                               onBlur={() => saveRename(rep.id)}
                               className={`flex-1 min-w-0 text-sm font-semibold rounded-lg px-2 py-1 border outline-none focus:ring-2 focus:ring-emerald-500/50 ${
                                 isDark
-                                  ? "bg-[#1A1A1A] border-emerald-500/50 text-white"
-                                  : "bg-white border-emerald-400 text-[#1A1A1A]"
+                                  ? "bg-[#12372A] border-emerald-500/50 text-white"
+                                  : "bg-white border-emerald-400 text-[#12372A]"
                               }`}
                               maxLength={80}
                               autoFocus
@@ -516,7 +516,7 @@ export default function RepertoireList() {
                                 </button>
                                 <button
                                   onMouseDown={(e) => { e.preventDefault(); cancelRename(); }}
-                                  className={`p-1 rounded ${isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"}`}
+                                  className={`p-1 rounded ${isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"}`}
                                   title="Cancel"
                                 >
                                   <X size={14} />
@@ -527,13 +527,13 @@ export default function RepertoireList() {
                         ) : (
                           /* ── Static title with pencil affordance ── */
                           <div className="flex items-center gap-1.5 group/title">
-                            <h3 className={`font-semibold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                            <h3 className={`font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
                               {rep.title}
                             </h3>
                             <button
                               onClick={(e) => startRename(e, rep)}
                               className={`opacity-0 group-hover/title:opacity-100 p-0.5 rounded transition-opacity ${
-                                isDark ? "text-white/30 hover:text-white/70" : "text-[#6B6B50]/70 hover:text-[#6B6B50]"
+                                isDark ? "text-white/30 hover:text-white/70" : "text-[#436850]/70 hover:text-[#436850]"
                               }`}
                               title="Rename repertoire"
                             >
@@ -541,7 +541,7 @@ export default function RepertoireList() {
                             </button>
                           </div>
                         )}
-                        <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                        <p className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                           Updated {formatRelativeDate(rep.updatedAt)}
                         </p>
                       </div>
@@ -564,44 +564,44 @@ export default function RepertoireList() {
                         )}
                       </button>
 
-                      <ChevronRight size={18} className={`shrink-0 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"} group-hover:translate-x-0.5 transition-transform`} />
+                      <ChevronRight size={18} className={`shrink-0 ${isDark ? "text-white/20" : "text-[#436850]/70"} group-hover:translate-x-0.5 transition-transform`} />
                     </div>
 
                     {/* Stats row */}
                     <div className={`flex items-center gap-0 border-t px-5 py-3 ${
-                      isDark ? "border-white/5" : "border-[#E8D9B0]/70"
+                      isDark ? "border-white/5" : "border-[#ADBC9F]/70"
                     }`}>
                       {/* Moves */}
                       <div className="flex-1 flex items-center gap-1.5">
                         <TrendingUp size={13} className={isDark ? "text-emerald-400/70" : "text-emerald-600"} />
-                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
+                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
                           {stats.totalMoves}
                         </span>
-                        <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>moves</span>
+                        <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>moves</span>
                       </div>
 
-                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
 
                       {/* Lines */}
                       <div className="flex-1 flex items-center gap-1.5 px-4">
                         <GitBranch size={13} className={isDark ? "text-blue-400/70" : "text-blue-500"} />
-                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
+                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
                           {stats.uniqueLines}
                         </span>
-                        <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>lines</span>
+                        <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>lines</span>
                       </div>
 
-                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
 
                       {/* Depth */}
                       <div className="flex-1 flex items-center gap-1.5 px-4">
                         <Layers size={13} className={isDark ? "text-purple-400/70" : "text-purple-500"} />
-                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
+                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
                           {depthLabel}
                         </span>
                       </div>
 
-                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
 
                       {/* Root moves */}
                       <div className="flex-1 flex items-center gap-1 pl-4 overflow-hidden">
@@ -620,11 +620,11 @@ export default function RepertoireList() {
                               </span>
                             ))}
                             {stats.totalMoves > 4 && (
-                              <span className={`text-[11px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>…</span>
+                              <span className={`text-[11px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>…</span>
                             )}
                           </>
                         ) : (
-                          <span className={`text-xs italic ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}>
+                          <span className={`text-xs italic ${isDark ? "text-white/20" : "text-[#436850]/70"}`}>
                             No moves yet
                           </span>
                         )}

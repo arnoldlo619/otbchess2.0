@@ -86,7 +86,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
       <Link href="/">
         <button
           className={`absolute top-5 left-5 flex items-center gap-1.5 text-sm font-medium transition-colors ${
-            isDark ? "text-white/50 hover:text-white/80" : "text-[#6B6B50] hover:text-[#1A1A1A]"
+            isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#12372A]"
           }`}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
         className={`w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)] border-white/10"
-            : "bg-white border-[#E8D9B0]/70"
+            : "bg-white border-[#ADBC9F]/70"
         }`}
         style={{
           marginTop: "max(1rem, 10vh)",
@@ -118,20 +118,20 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
         >
           <div
             className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center ${
-              isDark ? "bg-[#4D6940]/40" : "bg-[#4D6940]/12"
+              isDark ? "bg-[#436850]/40" : "bg-[#436850]/12"
             }`}
           >
             <ShieldAlert
-              className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}
+              className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}
             />
           </div>
           <h1
-            className={`text-xl font-black mb-1 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+            className={`text-xl font-black mb-1 ${isDark ? "text-white" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             Admin Access Only
           </h1>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>
             The Tournament Archive is restricted to platform administrators.
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
             <label
               htmlFor="archive-password"
               className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${
-                isDark ? "text-white/50" : "text-[#6B6B50]"
+                isDark ? "text-white/50" : "text-[#436850]"
               }`}
             >
               Admin Password
@@ -151,7 +151,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
             <div className="relative">
               <div
                 className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                  isDark ? "text-white/30" : "text-[#6B6B50]"
+                  isDark ? "text-white/30" : "text-[#436850]"
                 }`}
               >
                 <Lock className="w-4 h-4" />
@@ -172,17 +172,17 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
                   error
                     ? isDark
                       ? "border-red-500/60 bg-red-500/08 text-white placeholder:text-white/30"
-                      : "border-red-400 bg-red-50 text-[#1A1A1A] placeholder:text-[#6B6B50]/60"
+                      : "border-red-400 bg-red-50 text-[#12372A] placeholder:text-[#436850]/60"
                     : isDark
                     ? "border-white/12 bg-white/06 text-white placeholder:text-white/30 focus:border-[#4CAF50]/60 focus:bg-white/08"
-                    : "border-[#E8D9B0] bg-[#FFF3D5]/70 text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]/50 focus:bg-white"
+                    : "border-[#ADBC9F] bg-[#FBFADA]/70 text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/50 focus:bg-white"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${
-                  isDark ? "text-white/30 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"
+                  isDark ? "text-white/30 hover:text-white/60" : "text-[#436850] hover:text-[#436850]"
                 }`}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
@@ -207,8 +207,8 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
             disabled={loading}
             className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-60 ${
               isDark
-                ? "bg-[#4D6940] text-white hover:bg-[#4CAF50]/80"
-                : "bg-[#4D6940] text-white hover:bg-[#2d5235]"
+                ? "bg-[#436850] text-white hover:bg-[#4CAF50]/80"
+                : "bg-[#436850] text-white hover:bg-[#2d5235]"
             }`}
           >
             {loading ? (

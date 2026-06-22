@@ -126,14 +126,14 @@ function resultLabel(result: string | null): {
     default:
       return {
         label: "In progress",
-        color: "text-[#6B6B50]",
+        color: "text-[#436850]",
         icon: <Clock className="w-3 h-3" />,
       };
   }
 }
 
 function accuracyColor(acc: number | null): string {
-  if (acc === null) return "text-[#6B6B50]";
+  if (acc === null) return "text-[#436850]";
   if (acc >= 90) return "text-emerald-500";
   if (acc >= 75) return "text-green-500";
   if (acc >= 60) return "text-amber-500";
@@ -185,8 +185,8 @@ function GameCard({
       onClick={onClick}
       className={`w-full text-left rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99] ${
         isDark
-          ? "bg-white/5 border-white/10 hover:border-[#4D6940]/50 hover:bg-white/8"
-          : "bg-white border-[#E8D9B0] hover:border-[#4D6940]/40 hover:shadow-md"
+          ? "bg-white/5 border-white/10 hover:border-[#436850]/50 hover:bg-white/8"
+          : "bg-white border-[#ADBC9F] hover:border-[#436850]/40 hover:shadow-md"
       }`}
     >
       <div className="p-4 space-y-3">
@@ -197,17 +197,17 @@ function GameCard({
               {/* White piece indicator */}
               <span
                 className={`inline-block w-3 h-3 rounded-sm border flex-shrink-0 ${
-                  isDark ? "bg-white border-white/30" : "bg-white border-[#E8D9B0]"
+                  isDark ? "bg-white border-white/30" : "bg-white border-[#ADBC9F]"
                 }`}
               />
               <span
                 className={`text-sm font-semibold truncate ${
-                  isDark ? "text-white" : "text-[#1A1A1A]"
+                  isDark ? "text-white" : "text-[#12372A]"
                 }`}
               >
                 {game.whitePlayer ?? "White"}
               </span>
-              <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>vs</span>
+              <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>vs</span>
               {/* Black piece indicator */}
               <span
                 className={`inline-block w-3 h-3 rounded-sm border flex-shrink-0 ${
@@ -216,7 +216,7 @@ function GameCard({
               />
               <span
                 className={`text-sm font-semibold truncate ${
-                  isDark ? "text-white" : "text-[#1A1A1A]"
+                  isDark ? "text-white" : "text-[#12372A]"
                 }`}
               >
                 {game.blackPlayer ?? "Black"}
@@ -229,15 +229,15 @@ function GameCard({
                 <span
                   className={`text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded font-mono ${
                     isDark
-                      ? "bg-[#4D6940]/30 text-[#4D6940]"
-                      : "bg-[#4D6940]/10 text-[#4D6940]"
+                      ? "bg-[#436850]/30 text-[#436850]"
+                      : "bg-[#436850]/10 text-[#436850]"
                   }`}
                 >
                   {game.openingEco}
                 </span>
               )}
               <span
-                className={`text-xs truncate ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}
+                className={`text-xs truncate ${isDark ? "text-white/50" : "text-[#436850]"}`}
               >
                 {game.openingName ?? "Unknown opening"}
               </span>
@@ -262,7 +262,7 @@ function GameCard({
         {/* Bottom row: accuracy + metadata */}
         <div
           className={`flex items-center justify-between pt-2 border-t ${
-            isDark ? "border-white/5" : "border-[#E8D9B0]/70"
+            isDark ? "border-white/5" : "border-[#ADBC9F]/70"
           }`}
         >
           {/* Accuracy scores */}
@@ -278,7 +278,7 @@ function GameCard({
                       ? `${Math.round(game.whiteAccuracy)}%`
                       : "—"}
                   </span>
-                  <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     W
                   </span>
                 </div>
@@ -291,13 +291,13 @@ function GameCard({
                       ? `${Math.round(game.blackAccuracy)}%`
                       : "—"}
                   </span>
-                  <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     B
                   </span>
                 </div>
               </>
             ) : (
-              <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+              <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                 {isAnalyzing ? "Calculating accuracy…" : "No accuracy data"}
               </span>
             )}
@@ -306,15 +306,15 @@ function GameCard({
           {/* Date + move count */}
           <div className="flex items-center gap-2">
             {hasMoveCount && (
-              <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+              <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                 {game.totalMoves}m
               </span>
             )}
-            <span className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <span className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               {formatDate(game.date ?? game.createdAt)}
             </span>
             <ChevronRight
-              className={`w-3.5 h-3.5 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}
+              className={`w-3.5 h-3.5 ${isDark ? "text-white/20" : "text-[#436850]/70"}`}
             />
           </div>
         </div>
@@ -394,7 +394,7 @@ function MyGamesSection({
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center justify-between">
-        <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+        <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
           My Games
         </h2>
         <button
@@ -403,7 +403,7 @@ function MyGamesSection({
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             isDark
               ? "text-white/40 hover:text-white/70 hover:bg-white/5"
-              : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+              : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50"
           }`}
           aria-label="Refresh games list"
         >
@@ -419,7 +419,7 @@ function MyGamesSection({
             <div
               key={i}
               className={`h-24 rounded-2xl animate-pulse ${
-                isDark ? "bg-white/5" : "bg-[#E8D9B0]/40"
+                isDark ? "bg-white/5" : "bg-[#ADBC9F]/40"
               }`}
             />
           ))}
@@ -448,7 +448,7 @@ function MyGamesSection({
       {!loading && !error && games.length === 0 && (
         <div
           className={`flex flex-col items-center justify-center gap-3 py-12 rounded-2xl border border-dashed ${
-            isDark ? "border-white/10 text-white/30" : "border-[#E8D9B0] text-[#6B6B50]"
+            isDark ? "border-white/10 text-white/30" : "border-[#ADBC9F] text-[#436850]"
           }`}
         >
           <Swords className="w-8 h-8 opacity-40" />
@@ -600,20 +600,20 @@ export default function GameRecorder() {
       className={`min-h-screen ${
         isDark
           ? "bg-[#0d1a0f] text-white"
-          : "bg-gradient-to-b from-gray-50 to-white text-[#1A1A1A]"
+          : "bg-gradient-to-b from-gray-50 to-white text-[#12372A]"
       }`}
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header
         className={`sticky top-0 z-50 backdrop-blur-md border-b otb-header-safe ${
-          isDark ? "bg-[#0d1a0f]/90 border-white/10" : "bg-white/90 border-[#E8D9B0]"
+          isDark ? "bg-[#0d1a0f]/90 border-white/10" : "bg-white/90 border-[#ADBC9F]"
         }`}
       >
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => (mode === "select" ? navigate("/") : setMode("select"))}
             className={`p-2 rounded-xl transition-colors ${
-              isDark ? "hover:bg-white/10 text-white/70 hover:text-white" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50] hover:text-[#1A1A1A]"
+              isDark ? "hover:bg-white/10 text-white/70 hover:text-white" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#12372A]"
             }`}
             aria-label="Back"
           >
@@ -635,7 +635,7 @@ export default function GameRecorder() {
                 <h1 className="text-3xl font-bold tracking-tight">
                   OTB Analysis Features
                 </h1>
-                <p className={`text-base ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+                <p className={`text-base ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                   Analyze your OTB games with engine-powered insights
                 </p>
               </div>
@@ -647,7 +647,7 @@ export default function GameRecorder() {
                   className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                     isDark
                       ? "bg-white/5 border-white/10 hover:border-emerald-600/50 hover:bg-white/[0.08]"
-                      : "bg-white border-[#E8D9B0] hover:border-emerald-600/40 hover:shadow-md"
+                      : "bg-white border-[#ADBC9F] hover:border-emerald-600/40 hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -657,7 +657,7 @@ export default function GameRecorder() {
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-emerald-400/70" : "text-emerald-600/70"}`}>Analysis</p>
                       <h3 className="font-bold text-base leading-tight">Analyze PGN</h3>
-                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                         Paste game notation for instant Stockfish engine analysis
                       </p>
                     </div>
@@ -671,7 +671,7 @@ export default function GameRecorder() {
                   className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                     isDark
                       ? "bg-white/5 border-white/10 hover:border-emerald-600/50 hover:bg-white/[0.08]"
-                      : "bg-white border-[#E8D9B0] hover:border-emerald-600/40 hover:shadow-md"
+                      : "bg-white border-[#ADBC9F] hover:border-emerald-600/40 hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -684,7 +684,7 @@ export default function GameRecorder() {
                         <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">NEW</span>
                       </div>
                       <h3 className="font-bold text-base leading-tight">Openings &amp; Repertoire</h3>
-                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                         Study openings, build your repertoire, and prep against opponents
                       </p>
                     </div>
@@ -698,7 +698,7 @@ export default function GameRecorder() {
                   className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                     isDark
                       ? "bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-amber-900/10"
-                      : "bg-white border-[#E8D9B0] hover:border-amber-500/40 hover:shadow-md"
+                      : "bg-white border-[#ADBC9F] hover:border-amber-500/40 hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -711,7 +711,7 @@ export default function GameRecorder() {
                         <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">NEW</span>
                       </div>
                       <h3 className="font-bold text-base leading-tight">Matchup Prep</h3>
-                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                         Research your next opponent&apos;s games, tendencies, and weaknesses
                       </p>
                     </div>
@@ -722,20 +722,20 @@ export default function GameRecorder() {
                 {/* ── Card 4: Record via Camera (Coming Soon) ── */}
                 <div
                   className={`relative overflow-hidden rounded-2xl border p-5 text-left cursor-not-allowed select-none opacity-50 ${
-                    isDark ? "bg-white/[0.03] border-white/[0.08]" : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
+                    isDark ? "bg-white/[0.03] border-white/[0.08]" : "bg-[#FBFADA]/70 border-[#ADBC9F]"
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/[0.08]" : "bg-[#E8D9B0]/40"}`}>
-                      <Camera className="w-7 h-7 text-[#6B6B50]" />
+                    <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/[0.08]" : "bg-[#ADBC9F]/40"}`}>
+                      <Camera className="w-7 h-7 text-[#436850]" />
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
-                        <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Recording</p>
-                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/35" : "bg-[#E8D9B0] text-[#6B6B50]"}`}>SOON</span>
+                        <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-[#436850]"}`}>Recording</p>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/35" : "bg-[#ADBC9F] text-[#436850]"}`}>SOON</span>
                       </div>
-                      <h3 className={`font-bold text-base leading-tight ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>Record via Camera</h3>
-                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                      <h3 className={`font-bold text-base leading-tight ${isDark ? "text-white/50" : "text-[#436850]"}`}>Record via Camera</h3>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                         Point your phone camera at the board for automatic move detection
                       </p>
                     </div>
@@ -754,7 +754,7 @@ export default function GameRecorder() {
           <div className="space-y-6">
             <div className="space-y-1">
               <h2 className="text-2xl font-bold tracking-tight">Enter Game PGN</h2>
-              <p className={`text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+              <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                 Paste your game notation below for engine analysis
               </p>
             </div>
@@ -764,7 +764,7 @@ export default function GameRecorder() {
               <div className="space-y-1.5">
                 <label
                   className={`text-xs font-medium ${
-                    isDark ? "text-white/50" : "text-[#6B6B50]"
+                    isDark ? "text-white/50" : "text-[#436850]"
                   }`}
                 >
                   White Player
@@ -778,15 +778,15 @@ export default function GameRecorder() {
                   placeholder="Player name"
                   className={`w-full px-3 py-2.5 rounded-xl border text-sm transition-colors ${
                     isDark
-                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4D6940]"
-                      : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]"
+                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#436850]"
+                      : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]"
                   } outline-none`}
                 />
               </div>
               <div className="space-y-1.5">
                 <label
                   className={`text-xs font-medium ${
-                    isDark ? "text-white/50" : "text-[#6B6B50]"
+                    isDark ? "text-white/50" : "text-[#436850]"
                   }`}
                 >
                   Black Player
@@ -800,8 +800,8 @@ export default function GameRecorder() {
                   placeholder="Player name"
                   className={`w-full px-3 py-2.5 rounded-xl border text-sm transition-colors ${
                     isDark
-                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4D6940]"
-                      : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]"
+                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#436850]"
+                      : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]"
                   } outline-none`}
                 />
               </div>
@@ -812,7 +812,7 @@ export default function GameRecorder() {
               <div className="space-y-1.5">
                 <label
                   className={`text-xs font-medium ${
-                    isDark ? "text-white/50" : "text-[#6B6B50]"
+                    isDark ? "text-white/50" : "text-[#436850]"
                   }`}
                 >
                   Event (optional)
@@ -826,15 +826,15 @@ export default function GameRecorder() {
                   placeholder="e.g. Club Championship"
                   className={`w-full px-3 py-2.5 rounded-xl border text-sm transition-colors ${
                     isDark
-                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4D6940]"
-                      : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]"
+                      ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#436850]"
+                      : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]"
                   } outline-none`}
                 />
               </div>
               <div className="space-y-1.5">
                 <label
                   className={`text-xs font-medium ${
-                    isDark ? "text-white/50" : "text-[#6B6B50]"
+                    isDark ? "text-white/50" : "text-[#436850]"
                   }`}
                 >
                   Date
@@ -847,8 +847,8 @@ export default function GameRecorder() {
                   }
                   className={`w-full px-3 py-2.5 rounded-xl border text-sm transition-colors ${
                     isDark
-                      ? "bg-white/5 border-white/10 text-white focus:border-[#4D6940]"
-                      : "bg-white border-[#E8D9B0] text-[#1A1A1A] focus:border-[#4D6940]"
+                      ? "bg-white/5 border-white/10 text-white focus:border-[#436850]"
+                      : "bg-white border-[#ADBC9F] text-[#12372A] focus:border-[#436850]"
                   } outline-none`}
                 />
               </div>
@@ -858,7 +858,7 @@ export default function GameRecorder() {
             <div className="space-y-1.5">
               <label
                 className={`text-xs font-medium ${
-                  isDark ? "text-white/50" : "text-[#6B6B50]"
+                  isDark ? "text-white/50" : "text-[#436850]"
                 }`}
               >
                 Result
@@ -878,11 +878,11 @@ export default function GameRecorder() {
                     className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
                       setup.result === opt.value
                         ? isDark
-                          ? "bg-[#4D6940] text-white"
-                          : "bg-[#4D6940] text-white"
+                          ? "bg-[#436850] text-white"
+                          : "bg-[#436850] text-white"
                         : isDark
                           ? "bg-white/5 text-white/60 hover:bg-white/10"
-                          : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                          : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
                     }`}
                   >
                     {opt.label}
@@ -896,7 +896,7 @@ export default function GameRecorder() {
               <div className="flex items-center justify-between">
                 <label
                   className={`text-xs font-medium ${
-                    isDark ? "text-white/50" : "text-[#6B6B50]"
+                    isDark ? "text-white/50" : "text-[#436850]"
                   }`}
                 >
                   PGN Notation
@@ -907,7 +907,7 @@ export default function GameRecorder() {
                     className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors ${
                       isDark
                         ? "text-white/40 hover:text-white/70 hover:bg-white/5"
-                        : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                        : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50"
                     }`}
                   >
                     <Clipboard className="w-3 h-3" />
@@ -917,8 +917,8 @@ export default function GameRecorder() {
                     onClick={handleLoadSample}
                     className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors ${
                       isDark
-                        ? "text-[#4D6940]/70 hover:text-[#4D6940] hover:bg-[#4D6940]/10"
-                        : "text-[#4D6940]/70 hover:text-[#4D6940] hover:bg-[#4D6940]/5"
+                        ? "text-[#436850]/70 hover:text-[#436850] hover:bg-[#436850]/10"
+                        : "text-[#436850]/70 hover:text-[#436850] hover:bg-[#436850]/5"
                     }`}
                   >
                     <Swords className="w-3 h-3" />
@@ -933,8 +933,8 @@ export default function GameRecorder() {
                 rows={8}
                 className={`w-full px-4 py-3 rounded-xl border text-sm font-mono leading-relaxed transition-colors resize-none ${
                   isDark
-                    ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#4D6940]"
-                    : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/70 focus:border-[#4D6940]"
+                    ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-[#436850]"
+                    : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/70 focus:border-[#436850]"
                 } outline-none`}
               />
 
@@ -986,10 +986,10 @@ export default function GameRecorder() {
               disabled={!validationResult?.valid || submitting}
               className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                 validationResult?.valid && !submitting
-                  ? "bg-[#4D6940] text-white hover:bg-[#2d5235] active:scale-[0.98]"
+                  ? "bg-[#436850] text-white hover:bg-[#2d5235] active:scale-[0.98]"
                   : isDark
                     ? "bg-white/10 text-white/30 cursor-not-allowed"
-                    : "bg-[#E8D9B0]/40 text-[#6B6B50] cursor-not-allowed"
+                    : "bg-[#ADBC9F]/40 text-[#436850] cursor-not-allowed"
               }`}
             >
               {submitting ? (
@@ -1008,13 +1008,13 @@ export default function GameRecorder() {
             {!user && (
               <p
                 className={`text-center text-xs ${
-                  isDark ? "text-white/30" : "text-[#6B6B50]"
+                  isDark ? "text-white/30" : "text-[#436850]"
                 }`}
               >
                 You need to{" "}
                 <button
                   onClick={() => navigate("/profile")}
-                  className="text-[#4D6940] hover:underline"
+                  className="text-[#436850] hover:underline"
                 >
                   sign in
                 </button>{" "}

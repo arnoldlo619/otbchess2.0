@@ -46,7 +46,7 @@ import {
 // ─── Design tokens (match Director.tsx) ──────────────────────────────────────
 
 const T = {
-  green: "#4D6940",
+  green: "#436850",
   greenLight: "#5A9A68",
   greenRing: "rgba(61,107,71,0.18)",
   dBg: "#0F1A12",
@@ -438,7 +438,7 @@ function PairingPreviewRow({
             </span>
             <div
               className="w-3 h-3 rounded-sm flex-shrink-0"
-              style={{ background: "#1A1A1A" }}
+              style={{ background: "#12372A" }}
             />
           </div>
         </div>
@@ -556,7 +556,7 @@ function OrganizerControls({
               onChange={(e) =>
                 onChange({ ...settings, eloTolerance: Number(e.target.value) })
               }
-              className="w-full accent-[#4D6940]"
+              className="w-full accent-[#436850]"
             />
             <p className="text-[10px] mt-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
               Maximum Elo gap allowed before a pairing is rejected.
@@ -589,7 +589,7 @@ function OrganizerControls({
                 onChange={(e) =>
                   onChange({ ...settings, styleInfluence: Number(e.target.value) })
                 }
-                className="w-full accent-[#4D6940]"
+                className="w-full accent-[#436850]"
               />
               <p className="text-[10px] mt-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                 How strongly style data influences pairings vs. rating alone.

@@ -146,7 +146,7 @@ function EvalBar({
       <div className="w-full space-y-1">
         <div
           className={`h-4 rounded-full overflow-hidden flex ${
-            isDark ? "bg-white/20" : "bg-[#E8D9B0]"
+            isDark ? "bg-white/20" : "bg-[#ADBC9F]"
           }`}
         >
           <div
@@ -154,14 +154,14 @@ function EvalBar({
             style={{ width: `${whitePercent}%` }}
           />
           <div
-            className="bg-[#1A1A1A] transition-all duration-500 ease-out rounded-r-full flex-1"
+            className="bg-[#12372A] transition-all duration-500 ease-out rounded-r-full flex-1"
           />
         </div>
         <div className="flex justify-between text-[10px] font-mono">
-          <span className={isDark ? "text-white/40" : "text-[#6B6B50]"}>
+          <span className={isDark ? "text-white/40" : "text-[#436850]"}>
             {evalCp >= 0 ? `+${evalDisplay}` : evalDisplay}
           </span>
-          <span className={isDark ? "text-white/40" : "text-[#6B6B50]"}>
+          <span className={isDark ? "text-white/40" : "text-[#436850]"}>
             {evalCp >= 0 ? "White" : "Black"}
           </span>
         </div>
@@ -175,19 +175,19 @@ function EvalBar({
       <span
         className={`text-[10px] font-mono font-bold ${
           evalCp >= 0
-            ? isDark ? "text-white" : "text-[#1A1A1A]"
-            : isDark ? "text-white/60" : "text-[#6B6B50]"
+            ? isDark ? "text-white" : "text-[#12372A]"
+            : isDark ? "text-white/60" : "text-[#436850]"
         }`}
       >
         {evalCp >= 0 ? `+${evalDisplay}` : evalDisplay}
       </span>
       <div
         className={`w-6 flex-1 rounded-full overflow-hidden flex flex-col ${
-          isDark ? "bg-white/20" : "bg-[#E8D9B0]"
+          isDark ? "bg-white/20" : "bg-[#ADBC9F]"
         }`}
       >
         <div
-          className="bg-[#1A1A1A] transition-all duration-500 ease-out rounded-t-full"
+          className="bg-[#12372A] transition-all duration-500 ease-out rounded-t-full"
           style={{ height: `${100 - whitePercent}%` }}
         />
         <div
@@ -248,7 +248,7 @@ function MoveList({
     <div
       ref={scrollRef}
       className={`overflow-y-auto max-h-[300px] lg:max-h-[500px] rounded-xl border ${
-        isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-white"
+        isDark ? "border-white/10 bg-white/5" : "border-[#ADBC9F] bg-white"
       }`}
     >
       <div className="p-2 space-y-0.5">
@@ -256,7 +256,7 @@ function MoveList({
           <div key={pair.number} className="flex items-center gap-1">
             <span
               className={`w-8 text-right text-[11px] font-mono flex-shrink-0 ${
-                isDark ? "text-white/30" : "text-[#6B6B50]"
+                isDark ? "text-white/30" : "text-[#436850]"
               }`}
             >
               {pair.number}.
@@ -269,8 +269,8 @@ function MoveList({
                 className={`flex-1 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-mono transition-all ${
                   pair.white.index === currentIndex
                     ? isDark
-                      ? "bg-[#4D6940] text-white"
-                      : "bg-[#4D6940] text-white"
+                      ? "bg-[#436850] text-white"
+                      : "bg-[#436850] text-white"
                     : pair.white.analysis.classification &&
                         pair.white.analysis.classification !== "best" &&
                         pair.white.analysis.classification !== "good"
@@ -279,7 +279,7 @@ function MoveList({
                         }`
                       : isDark
                         ? "text-white/70 hover:bg-white/5"
-                        : "text-[#1A1A1A]/85 hover:bg-[#FFF3D5]"
+                        : "text-[#12372A]/85 hover:bg-[#FBFADA]"
                 }`}
               >
                 {pair.white.analysis.classification &&
@@ -304,8 +304,8 @@ function MoveList({
                 className={`flex-1 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-mono transition-all ${
                   pair.black.index === currentIndex
                     ? isDark
-                      ? "bg-[#4D6940] text-white"
-                      : "bg-[#4D6940] text-white"
+                      ? "bg-[#436850] text-white"
+                      : "bg-[#436850] text-white"
                     : pair.black.analysis.classification &&
                         pair.black.analysis.classification !== "best" &&
                         pair.black.analysis.classification !== "good"
@@ -314,7 +314,7 @@ function MoveList({
                         }`
                       : isDark
                         ? "text-white/70 hover:bg-white/5"
-                        : "text-[#1A1A1A]/85 hover:bg-[#FFF3D5]"
+                        : "text-[#12372A]/85 hover:bg-[#FBFADA]"
                 }`}
               >
                 {pair.black.analysis.classification &&
@@ -359,12 +359,12 @@ function SummaryPanel({
       {/* Accuracy comparison */}
       <div
         className={`rounded-xl border p-4 ${
-          isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-white"
+          isDark ? "border-white/10 bg-white/5" : "border-[#ADBC9F] bg-white"
         }`}
       >
         <h3
           className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-            isDark ? "text-white/40" : "text-[#6B6B50]"
+            isDark ? "text-white/40" : "text-[#436850]"
           }`}
         >
           Accuracy
@@ -373,10 +373,10 @@ function SummaryPanel({
         {(game.openingName || game.openingEco) && (
           <div
             className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-lg text-xs ${
-              isDark ? "bg-white/5 text-white/70" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
+              isDark ? "bg-white/5 text-white/70" : "bg-[#FBFADA]/70 text-[#436850]"
             }`}
           >
-            <span className="text-[10px] font-bold tracking-wider text-[#4D6940] shrink-0">
+            <span className="text-[10px] font-bold tracking-wider text-[#436850] shrink-0">
               {game.openingEco ?? "ECO"}
             </span>
             <span className="truncate">
@@ -389,21 +389,21 @@ function SummaryPanel({
           {/* White */}
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-white border border-[#E8D9B0]" />
+              <div className="w-3 h-3 rounded-full bg-white border border-[#ADBC9F]" />
               <span
                 className={`text-xs font-medium truncate ${
-                  isDark ? "text-white/70" : "text-[#1A1A1A]/85"
+                  isDark ? "text-white/70" : "text-[#12372A]/85"
                 }`}
               >
                 {game.whitePlayer || "White"}
               </span>
             </div>
-            <div className="text-3xl font-bold text-[#4D6940]">
+            <div className="text-3xl font-bold text-[#436850]">
               {summary.white.accuracy}%
             </div>
             {summary.white.accuracyLabel && (
               <div className={`text-[10px] font-semibold uppercase tracking-wider ${
-                isDark ? "text-white/30" : "text-[#6B6B50]"
+                isDark ? "text-white/30" : "text-[#436850]"
               }`}>
                 {summary.white.accuracyLabel}
               </div>
@@ -449,21 +449,21 @@ function SummaryPanel({
           {/* Black */}
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#1A1A1A] dark:bg-white/40" />
+              <div className="w-3 h-3 rounded-full bg-[#12372A] dark:bg-white/40" />
               <span
                 className={`text-xs font-medium truncate ${
-                  isDark ? "text-white/70" : "text-[#1A1A1A]/85"
+                  isDark ? "text-white/70" : "text-[#12372A]/85"
                 }`}
               >
                 {game.blackPlayer || "Black"}
               </span>
             </div>
-            <div className="text-3xl font-bold text-[#4D6940]">
+            <div className="text-3xl font-bold text-[#436850]">
               {summary.black.accuracy}%
             </div>
             {summary.black.accuracyLabel && (
               <div className={`text-[10px] font-semibold uppercase tracking-wider ${
-                isDark ? "text-white/30" : "text-[#6B6B50]"
+                isDark ? "text-white/30" : "text-[#436850]"
               }`}>
                 {summary.black.accuracyLabel}
               </div>
@@ -512,12 +512,12 @@ function SummaryPanel({
       {/* Game info */}
       <div
         className={`rounded-xl border p-4 ${
-          isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-white"
+          isDark ? "border-white/10 bg-white/5" : "border-[#ADBC9F] bg-white"
         }`}
       >
         <h3
           className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
-            isDark ? "text-white/40" : "text-[#6B6B50]"
+            isDark ? "text-white/40" : "text-[#436850]"
           }`}
         >
           Game Info
@@ -553,12 +553,12 @@ function SummaryPanel({
       {keyMoments.length > 0 && (
         <div
           className={`rounded-xl border p-4 ${
-            isDark ? "border-white/10 bg-white/5" : "border-[#E8D9B0] bg-white"
+            isDark ? "border-white/10 bg-white/5" : "border-[#ADBC9F] bg-white"
           }`}
         >
           <h3
             className={`text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${
-              isDark ? "text-white/40" : "text-[#6B6B50]"
+              isDark ? "text-white/40" : "text-[#436850]"
             }`}
           >
             <Zap className="w-3 h-3" />
@@ -573,7 +573,7 @@ function SummaryPanel({
                   key={i}
                   onClick={() => onSelectMoment(m.moveNumber, m.color)}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors ${
-                    isDark ? "hover:bg-white/5" : "hover:bg-[#FFF3D5]"
+                    isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"
                   }`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
@@ -612,7 +612,7 @@ function StatRow({
     <div className="flex items-center justify-between text-[11px]">
       <div className="flex items-center gap-1.5">
         <span className={`w-1.5 h-1.5 rounded-full ${c?.dot ?? ""}`} />
-        <span className={isDark ? "text-white/50" : "text-[#6B6B50]"}>
+        <span className={isDark ? "text-white/50" : "text-[#436850]"}>
           {label}
         </span>
       </div>
@@ -632,10 +632,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex justify-between">
-      <span className={isDark ? "text-white/40" : "text-[#6B6B50]"}>
+      <span className={isDark ? "text-white/40" : "text-[#436850]"}>
         {label}
       </span>
-      <span className={`font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}>
+      <span className={`font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
         {value}
       </span>
     </div>
@@ -949,16 +949,16 @@ export default function GameAnalysis() {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${
-          isDark ? "bg-[#0d1a0f]" : "bg-[#FFF3D5]/70"
+          isDark ? "bg-[#0d1a0f]" : "bg-[#FBFADA]/70"
         }`}
       >
         <div className="flex flex-col items-center gap-3">
           <Loader2
             className={`w-8 h-8 animate-spin ${
-              isDark ? "text-[#4D6940]" : "text-[#4D6940]"
+              isDark ? "text-[#436850]" : "text-[#436850]"
             }`}
           />
-          <span className={`text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+          <span className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>
             Loading analysis…
           </span>
         </div>
@@ -970,17 +970,17 @@ export default function GameAnalysis() {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${
-          isDark ? "bg-[#0d1a0f]" : "bg-[#FFF3D5]/70"
+          isDark ? "bg-[#0d1a0f]" : "bg-[#FBFADA]/70"
         }`}
       >
         <div className="flex flex-col items-center gap-3 text-center px-4">
           <AlertCircle className="w-8 h-8 text-red-400" />
-          <p className={`text-sm ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
+          <p className={`text-sm ${isDark ? "text-white/60" : "text-[#436850]"}`}>
             {error || "Analysis not found"}
           </p>
           <button
             onClick={() => navigate("/record")}
-            className="text-sm text-[#4D6940] hover:underline"
+            className="text-sm text-[#436850] hover:underline"
           >
             Go back to Game Recorder
           </button>
@@ -1017,20 +1017,20 @@ export default function GameAnalysis() {
       className={`min-h-screen ${
         isDark
           ? "bg-[#0d1a0f] text-white"
-          : "bg-gradient-to-b from-gray-50 to-white text-[#1A1A1A]"
+          : "bg-gradient-to-b from-gray-50 to-white text-[#12372A]"
       }`}
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header
         className={`sticky top-0 z-50 backdrop-blur-xl border-b otb-header-safe ${
-          isDark ? "bg-[#0d1a0f]/80 border-white/10" : "bg-white/80 border-[#E8D9B0]"
+          isDark ? "bg-[#0d1a0f]/80 border-white/10" : "bg-white/80 border-[#ADBC9F]"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate("/record")}
             className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? "hover:bg-white/10" : "hover:bg-[#E8D9B0]/50"
+              isDark ? "hover:bg-white/10" : "hover:bg-[#ADBC9F]/50"
             }`}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -1045,7 +1045,7 @@ export default function GameAnalysis() {
               {data.game.result && data.game.result !== "*" && (
                 <span
                   className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    isDark ? "bg-white/10 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+                    isDark ? "bg-white/10 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
                   }`}
                 >
                   {data.game.result}
@@ -1055,8 +1055,8 @@ export default function GameAnalysis() {
           </div>
           {isAnalyzing && (
             <div className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#4D6940]" />
-              <span className="text-xs text-[#4D6940] font-medium">
+              <Loader2 className="w-4 h-4 animate-spin text-[#436850]" />
+              <span className="text-xs text-[#436850] font-medium">
                 {analysisProgress}%
               </span>
             </div>
@@ -1071,7 +1071,7 @@ export default function GameAnalysis() {
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   : isDark
                     ? "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
-                    : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0] hover:text-[#1A1A1A]"
+                    : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] hover:text-[#12372A]"
               }`}
             >
               {pgnDownloadStatus === "done" ? (
@@ -1100,13 +1100,13 @@ export default function GameAnalysis() {
               <div
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs border ${
                   isDark
-                    ? "bg-[#4D6940]/15 border-[#4D6940]/30 text-[#7ab88a]"
-                    : "bg-[#4D6940]/8 border-[#4D6940]/20 text-[#2d5235]"
+                    ? "bg-[#436850]/15 border-[#436850]/30 text-[#7ab88a]"
+                    : "bg-[#436850]/8 border-[#436850]/20 text-[#2d5235]"
                 }`}
               >
-                <span className="w-2 h-2 rounded-full bg-[#4D6940] animate-pulse flex-shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-[#436850] animate-pulse flex-shrink-0" />
                 <span className="font-medium">Detected position</span>
-                <span className={isDark ? "text-white/40" : "text-[#6B6B50]"}>
+                <span className={isDark ? "text-white/40" : "text-[#436850]"}>
                   — CV snapshot, not from PGN
                 </span>
                 <button
@@ -1114,7 +1114,7 @@ export default function GameAnalysis() {
                   className={`ml-auto text-[10px] px-2 py-0.5 rounded font-medium transition-colors ${
                     isDark
                       ? "bg-white/10 hover:bg-white/20 text-white/60"
-                      : "bg-[#E8D9B0] hover:bg-[#E8D9B0] text-[#6B6B50]"
+                      : "bg-[#ADBC9F] hover:bg-[#ADBC9F] text-[#436850]"
                   }`}
                 >
                   Back to PGN
@@ -1127,15 +1127,15 @@ export default function GameAnalysis() {
               <div
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
                   isDark
-                    ? "bg-[#4D6940]/15 border-[#4D6940]/30 text-[#7ab88a]"
-                    : "bg-[#4D6940]/8 border-[#4D6940]/20 text-[#2d5235]"
+                    ? "bg-[#436850]/15 border-[#436850]/30 text-[#7ab88a]"
+                    : "bg-[#436850]/8 border-[#436850]/20 text-[#2d5235]"
                 }`}
               >
                 <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Analyzing game with Stockfish…</p>
                   <p className={`text-xs mt-0.5 ${
-                    isDark ? "text-white/40" : "text-[#6B6B50]"
+                    isDark ? "text-white/40" : "text-[#436850]"
                   }`}>
                     Move-by-move analysis is running in the background. This page will update automatically.
                   </p>
@@ -1146,8 +1146,8 @@ export default function GameAnalysis() {
               <div
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${
                   isDark
-                    ? "bg-[#4D6940]/10 border-[#4D6940]/20 text-[#7ab88a]"
-                    : "bg-[#4D6940]/6 border-[#4D6940]/15 text-[#2d5235]"
+                    ? "bg-[#436850]/10 border-[#436850]/20 text-[#7ab88a]"
+                    : "bg-[#436850]/6 border-[#436850]/15 text-[#2d5235]"
                 }`}
               >
                 <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
@@ -1155,10 +1155,10 @@ export default function GameAnalysis() {
                   Analyzing… {analysisProgress}% ({data.analyses.length} of {(data.game.totalMoves ?? 0) * 2} moves)
                 </span>
                 <div className={`ml-auto h-1.5 w-24 rounded-full overflow-hidden ${
-                  isDark ? "bg-white/10" : "bg-[#E8D9B0]"
+                  isDark ? "bg-white/10" : "bg-[#ADBC9F]"
                 }`}>
                   <div
-                    className="h-full bg-[#4D6940] rounded-full transition-all duration-500"
+                    className="h-full bg-[#436850] rounded-full transition-all duration-500"
                     style={{ width: `${analysisProgress}%` }}
                   />
                 </div>
@@ -1170,15 +1170,15 @@ export default function GameAnalysis() {
               <div
                 className={`rounded-xl border p-4 ${
                   isDark
-                    ? "bg-[#0f2414] border-[#4D6940]/40"
-                    : "bg-[#f0faf2] border-[#4D6940]/30"
+                    ? "bg-[#0f2414] border-[#436850]/40"
+                    : "bg-[#f0faf2] border-[#436850]/30"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
                     <span className={`text-sm font-semibold ${
-                      isDark ? "text-white" : "text-[#1A1A1A]"
+                      isDark ? "text-white" : "text-[#12372A]"
                     }`}>
                       Analysis complete
                     </span>
@@ -1209,7 +1209,7 @@ export default function GameAnalysis() {
                       className={`text-xs px-2 py-0.5 rounded transition-colors ${
                         isDark
                           ? "text-white/40 hover:text-white/70 hover:bg-white/10"
-                          : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                          : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50"
                       }`}
                     >
                       Dismiss
@@ -1223,18 +1223,18 @@ export default function GameAnalysis() {
                     <div
                       key={label}
                       className={`rounded-lg p-3 ${
-                        isDark ? "bg-white/5" : "bg-white border border-[#E8D9B0]/70"
+                        isDark ? "bg-white/5" : "bg-white border border-[#ADBC9F]/70"
                       }`}
                     >
                       <p className={`text-xs font-semibold mb-2 truncate ${
-                        isDark ? "text-white/70" : "text-[#6B6B50]"
+                        isDark ? "text-white/70" : "text-[#436850]"
                       }`}>{label}</p>
                       <div className="flex items-baseline gap-1 mb-2">
                         <span className={`text-2xl font-bold ${
-                          isDark ? "text-white" : "text-[#1A1A1A]"
+                          isDark ? "text-white" : "text-[#12372A]"
                         }`}>{s.accuracy}%</span>
                         <span className={`text-xs ${
-                          isDark ? "text-white/40" : "text-[#6B6B50]"
+                          isDark ? "text-white/40" : "text-[#436850]"
                         }`}>accuracy</span>
                       </div>
                       <div className="space-y-1">
@@ -1295,7 +1295,7 @@ export default function GameAnalysis() {
                         ? "0 8px 32px rgba(0,0,0,0.4)"
                         : "0 4px 20px rgba(0,0,0,0.1)",
                     },
-                    darkSquareStyle: { backgroundColor: "#4D6940" },
+                    darkSquareStyle: { backgroundColor: "#436850" },
                     lightSquareStyle: { backgroundColor: "#E8E0D5" },
                     // Last-move highlight
                     squareStyles: lastMoveSquares
@@ -1329,7 +1329,7 @@ export default function GameAnalysis() {
             {currentMoveIndex >= 0 && data.analyses[currentMoveIndex] && (
               <div
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl ${
-                  isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
+                  isDark ? "bg-white/5" : "bg-[#FBFADA]/70"
                 }`}
               >
                 {(() => {
@@ -1351,7 +1351,7 @@ export default function GameAnalysis() {
                       {a.bestMove && a.classification !== "best" && (
                         <span
                           className={`ml-auto text-xs ${
-                            isDark ? "text-white/40" : "text-[#6B6B50]"
+                            isDark ? "text-white/40" : "text-[#436850]"
                           }`}
                         >
                           Best: {a.bestMove}
@@ -1370,10 +1370,10 @@ export default function GameAnalysis() {
                 disabled={currentMoveIndex <= -1}
                 className={`p-2 rounded-lg transition-colors ${
                   currentMoveIndex <= -1
-                    ? isDark ? "text-white/20" : "text-[#6B6B50]/70"
+                    ? isDark ? "text-white/20" : "text-[#436850]/70"
                     : isDark
                       ? "text-white/60 hover:bg-white/10"
-                      : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                      : "text-[#436850] hover:bg-[#ADBC9F]/50"
                 }`}
               >
                 <ChevronsLeft className="w-5 h-5" />
@@ -1383,10 +1383,10 @@ export default function GameAnalysis() {
                 disabled={currentMoveIndex <= -1}
                 className={`p-2 rounded-lg transition-colors ${
                   currentMoveIndex <= -1
-                    ? isDark ? "text-white/20" : "text-[#6B6B50]/70"
+                    ? isDark ? "text-white/20" : "text-[#436850]/70"
                     : isDark
                       ? "text-white/60 hover:bg-white/10"
-                      : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                      : "text-[#436850] hover:bg-[#ADBC9F]/50"
                 }`}
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -1398,7 +1398,7 @@ export default function GameAnalysis() {
                 className={`p-2 rounded-lg transition-colors ${
                   isDark
                     ? "text-white/60 hover:bg-white/10"
-                    : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                    : "text-[#436850] hover:bg-[#ADBC9F]/50"
                 }`}
                 title="Flip board (F)"
               >
@@ -1409,10 +1409,10 @@ export default function GameAnalysis() {
                 disabled={currentMoveIndex >= data.analyses.length - 1}
                 className={`p-2 rounded-lg transition-colors ${
                   currentMoveIndex >= data.analyses.length - 1
-                    ? isDark ? "text-white/20" : "text-[#6B6B50]/70"
+                    ? isDark ? "text-white/20" : "text-[#436850]/70"
                     : isDark
                       ? "text-white/60 hover:bg-white/10"
-                      : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                      : "text-[#436850] hover:bg-[#ADBC9F]/50"
                 }`}
               >
                 <ChevronRight className="w-5 h-5" />
@@ -1422,10 +1422,10 @@ export default function GameAnalysis() {
                 disabled={currentMoveIndex >= data.analyses.length - 1}
                 className={`p-2 rounded-lg transition-colors ${
                   currentMoveIndex >= data.analyses.length - 1
-                    ? isDark ? "text-white/20" : "text-[#6B6B50]/70"
+                    ? isDark ? "text-white/20" : "text-[#436850]/70"
                     : isDark
                       ? "text-white/60 hover:bg-white/10"
-                      : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                      : "text-[#436850] hover:bg-[#ADBC9F]/50"
                 }`}
               >
                 <ChevronsRight className="w-5 h-5" />
@@ -1485,14 +1485,14 @@ export default function GameAnalysis() {
                 className={`rounded-2xl border p-4 space-y-3 ${
                   isDark
                     ? "bg-[#0f1f12] border-white/10"
-                    : "bg-white border-[#E8D9B0]"
+                    : "bg-white border-[#ADBC9F]"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[#4D6940]" />
+                  <Zap className="w-4 h-4 text-[#436850]" />
                   <span
                     className={`text-sm font-semibold ${
-                      isDark ? "text-white" : "text-[#1A1A1A]"
+                      isDark ? "text-white" : "text-[#12372A]"
                     }`}
                   >
                     Game Highlight
@@ -1501,7 +1501,7 @@ export default function GameAnalysis() {
                     className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${
                       isDark
                         ? "bg-white/10 text-white/50"
-                        : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+                        : "bg-[#ADBC9F]/40 text-[#436850]"
                     }`}
                   >
                     Move {criticalMoment.analysis.moveNumber}
@@ -1512,7 +1512,7 @@ export default function GameAnalysis() {
 
                 <p
                   className={`text-xs leading-relaxed ${
-                    isDark ? "text-white/50" : "text-[#6B6B50]"
+                    isDark ? "text-white/50" : "text-[#436850]"
                   }`}
                 >
                   The biggest swing of the game —{" "}
@@ -1527,7 +1527,7 @@ export default function GameAnalysis() {
                 {/* Preview thumbnail */}
                 <div
                   className={`rounded-xl overflow-hidden border ${
-                    isDark ? "border-white/10" : "border-[#E8D9B0]"
+                    isDark ? "border-white/10" : "border-[#ADBC9F]"
                   }`}
                   style={{ maxHeight: 200, overflow: "hidden" }}
                 >
@@ -1563,8 +1563,8 @@ export default function GameAnalysis() {
                         : highlightStatus === "generating"
                           ? isDark
                             ? "bg-white/5 text-white/30 cursor-not-allowed"
-                            : "bg-[#E8D9B0]/40 text-[#6B6B50] cursor-not-allowed"
-                          : "bg-[#4D6940] hover:bg-[#4a7d55] text-white"
+                            : "bg-[#ADBC9F]/40 text-[#436850] cursor-not-allowed"
+                          : "bg-[#436850] hover:bg-[#4a7d55] text-white"
                     }`}
                   >
                     {highlightStatus === "generating" ? (
@@ -1587,10 +1587,10 @@ export default function GameAnalysis() {
                       highlightStatus === "generating"
                         ? isDark
                           ? "text-white/20 cursor-not-allowed"
-                          : "text-[#6B6B50]/70 cursor-not-allowed"
+                          : "text-[#436850]/70 cursor-not-allowed"
                         : isDark
                           ? "text-white/50 hover:bg-white/10 hover:text-white"
-                          : "text-[#6B6B50] hover:bg-[#E8D9B0]/50 hover:text-[#1A1A1A]"
+                          : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A]"
                     }`}
                     title="Download PNG"
                   >

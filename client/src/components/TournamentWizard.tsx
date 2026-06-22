@@ -188,7 +188,7 @@ const QUICKSTART_HERO = {
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const T = {
-  green: "#4D6940",
+  green: "#436850",
   greenDark: "#2A4A32",
   greenBg: "rgba(77,105,64,0.08)",
   greenRing: "rgba(77,105,64,0.25)",
@@ -196,9 +196,9 @@ const T = {
   lBg: "#FFFFFF",
   lPanel: "#F7F9F6",
   lBorder: "#E5E7EB",
-  lBorderFocus: "#4D6940",
-  lText: "#1A1A1A",
-  lSub: "#6B6B50",
+  lBorderFocus: "#436850",
+  lText: "#12372A",
+  lSub: "#436850",
   lMuted: "#9CA3AF",
   lInput: "#FFFFFF",
   lInputBorder: "#D1D5DB",
@@ -207,7 +207,7 @@ const T = {
   dPanel: "oklch(0.22 0.06 145)",
   dCard: "oklch(0.25 0.07 145)",
   dBorder: "rgba(255,255,255,0.10)",
-  dBorderFocus: "#4D6940",
+  dBorderFocus: "#436850",
   dText: "#FFFFFF",
   dSub: "rgba(255,255,255,0.55)",
   dMuted: "rgba(255,255,255,0.30)",
@@ -267,7 +267,7 @@ function HeroPanel({
       style={{
         background: isDark
           ? "oklch(0.20 0.08 145)"
-          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #4D6940 100%)",
+          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #436850 100%)",
       }}
     >
       {/* Subtle chess-board texture overlay */}
@@ -475,7 +475,7 @@ function ModeSelect({
       style={{
         background: isDark
           ? "oklch(0.14 0.04 145)"
-          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #4D6940 100%)",
+          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #436850 100%)",
         animation: "wizardFadeIn 0.3s ease both",
       }}
     >
@@ -534,7 +534,7 @@ function ModeSelect({
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.40)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#4D6940";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "#436850";
               (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(77,105,64,0.35)";
             }}
@@ -844,7 +844,7 @@ function QuickstartForm({
       <div
         className="rounded-2xl border overflow-hidden"
         style={{
-          background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5",
+          background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA",
           border: `1.5px solid ${isDark ? "rgba(77,105,64,0.25)" : "rgba(77,105,64,0.18)"}`,
         }}
       >
@@ -1568,7 +1568,7 @@ function StepDetails({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "#6B6B50" }}>Drop an image or click to upload</p>
+            <p className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "#436850" }}>Drop an image or click to upload</p>
             <p className="text-xs" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>JPG, PNG, WebP — shown in the tournament banner</p>
           </button>
         )}
@@ -1699,8 +1699,8 @@ function StepFormat({
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
-                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.50)" : "#6B6B50",
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.50)" : "#436850",
                   }}
                 >
                   <Icon className="w-6 h-6" strokeWidth={1.8} />
@@ -1737,8 +1737,8 @@ function StepFormat({
                   onClick={() => onChange({ rounds: r })}
                   className="w-12 h-12 rounded-xl text-base font-bold transition-all duration-200"
                   style={{
-                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
-                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#436850",
                     boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
                   }}
                 >
@@ -1760,8 +1760,8 @@ function StepFormat({
                   onClick={() => onChange({ maxPlayers: p })}
                   className="h-12 px-4 rounded-xl text-base font-bold transition-all duration-200"
                   style={{
-                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
-                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#436850",
                     boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
                   }}
                 >
@@ -1775,7 +1775,7 @@ function StepFormat({
 
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{ background: isDark ? "rgba(77,105,64,0.12)" : "#FFF3D5", color: isDark ? "rgba(255,255,255,0.55)" : "#6B6B50" }}
+        style={{ background: isDark ? "rgba(77,105,64,0.12)" : "#FBFADA", color: isDark ? "rgba(255,255,255,0.55)" : "#436850" }}
       >
         <Zap className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
@@ -1856,8 +1856,8 @@ function StepTime({
                   <span
                     className="text-[10px] mt-1.5 px-2 py-0.5 rounded-full font-semibold"
                     style={{
-                      background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
-                      color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : "#6B6B50",
+                      background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
+                      color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : "#436850",
                     }}
                   >
                     {p.tag}
@@ -1888,7 +1888,7 @@ function StepTime({
                   type="button"
                   onClick={() => onChange({ [field.key]: Math.max(field.min, field.value - 1) })}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
-                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5", color: isDark ? T.dText : T.lText }}
+                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FBFADA", color: isDark ? T.dText : T.lText }}
                 >
                   −
                 </button>
@@ -1899,7 +1899,7 @@ function StepTime({
                   type="button"
                   onClick={() => onChange({ [field.key]: Math.min(field.max, field.value + 1) })}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
-                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5", color: isDark ? T.dText : T.lText }}
+                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#FBFADA", color: isDark ? T.dText : T.lText }}
                 >
                   +
                 </button>
@@ -1911,7 +1911,7 @@ function StepTime({
 
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{ background: isDark ? "rgba(77,105,64,0.12)" : "#FFF3D5", color: isDark ? "rgba(255,255,255,0.55)" : "#6B6B50" }}
+        style={{ background: isDark ? "rgba(77,105,64,0.12)" : "#FBFADA", color: isDark ? "rgba(255,255,255,0.55)" : "#436850" }}
       >
         <Clock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
@@ -2065,7 +2065,7 @@ function SpectatorShareSection({ data, isDark }: { data: WizardData; isDark: boo
               Live
             </span>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#6B6B50" }}>
+          <p className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#436850" }}>
             Share with coaches, parents &amp; spectators — no account needed.
           </p>
         </div>
@@ -2346,7 +2346,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
               key={step}
               className="flex flex-col items-center text-center gap-2 rounded-2xl p-3"
               style={{
-                background: isDark ? "rgba(77,105,64,0.08)" : "#FFF3D5",
+                background: isDark ? "rgba(77,105,64,0.08)" : "#FBFADA",
                 border: `1.5px solid ${isDark ? "rgba(77,105,64,0.18)" : "#D4E6D8"}`,
               }}
             >
@@ -2370,7 +2370,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
       <div
         className="flex items-start gap-3 rounded-2xl p-4"
         style={{
-          background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5",
+          background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA",
           border: `1.5px solid ${isDark ? "rgba(77,105,64,0.22)" : "#D4E6D8"}`,
         }}
       >
@@ -2398,7 +2398,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
         <div
           className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
           style={{
-            background: isDark ? "rgba(77,105,64,0.10)" : "#FFF3D5",
+            background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA",
             border: `1.5px solid ${isDark ? "rgba(77,105,64,0.30)" : "#C6D9C9"}`,
           }}
         >
@@ -2784,7 +2784,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             className="w-full flex items-center justify-center gap-2 text-base font-semibold rounded-2xl transition-all duration-200"
             style={{
               padding: "14px 24px",
-              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
               color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
               cursor: canAdvance ? "pointer" : "not-allowed",
               boxShadow: canAdvance ? `0 4px 18px rgba(77,105,64,0.35)` : "none",
@@ -2845,7 +2845,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             className="flex items-center gap-2 text-sm font-semibold rounded-xl transition-all duration-200"
             style={{
               padding: "10px 22px",
-              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
               color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
               cursor: canAdvance ? "pointer" : "not-allowed",
               boxShadow: canAdvance ? `0 4px 14px rgba(77,105,64,0.30)` : "none",

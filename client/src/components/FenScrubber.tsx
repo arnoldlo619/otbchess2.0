@@ -85,7 +85,7 @@ export function FenScrubber({
   return (
     <div
       className={`rounded-2xl border p-4 space-y-3 ${
-        isDark ? "bg-[#0f1f12] border-white/10" : "bg-white border-[#E8D9B0]"
+        isDark ? "bg-[#0f1f12] border-white/10" : "bg-white border-[#ADBC9F]"
       }`}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -94,17 +94,17 @@ export function FenScrubber({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Camera className="w-4 h-4 text-[#4D6940]" />
+          <Camera className="w-4 h-4 text-[#436850]" />
           <span
             className={`text-sm font-semibold ${
-              isDark ? "text-white" : "text-[#1A1A1A]"
+              isDark ? "text-white" : "text-[#12372A]"
             }`}
           >
             Detected Positions
           </span>
           <span
             className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-              isDark ? "bg-white/10 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+              isDark ? "bg-white/10 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
             }`}
           >
             {fenTimeline.length} frames
@@ -120,10 +120,10 @@ export function FenScrubber({
               selectedIdx <= 0
                 ? isDark
                   ? "text-white/20"
-                  : "text-[#6B6B50]/70"
+                  : "text-[#436850]/70"
                 : isDark
                   ? "text-white/60 hover:bg-white/10"
-                  : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                  : "text-[#436850] hover:bg-[#ADBC9F]/50"
             }`}
             aria-label="Previous position"
           >
@@ -136,10 +136,10 @@ export function FenScrubber({
               selectedIdx >= fenTimeline.length - 1
                 ? isDark
                   ? "text-white/20"
-                  : "text-[#6B6B50]/70"
+                  : "text-[#436850]/70"
                 : isDark
                   ? "text-white/60 hover:bg-white/10"
-                  : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                  : "text-[#436850] hover:bg-[#ADBC9F]/50"
             }`}
             aria-label="Next position"
           >
@@ -151,7 +151,7 @@ export function FenScrubber({
               className={`ml-1 text-[10px] px-2 py-1 rounded-lg transition-colors font-medium ${
                 isDark
                   ? "bg-white/10 text-white/60 hover:bg-white/20"
-                  : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                  : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
               }`}
             >
               Back to PGN
@@ -165,12 +165,12 @@ export function FenScrubber({
         {/* Progress track */}
         <div
           className={`h-1 rounded-full mb-3 ${
-            isDark ? "bg-white/10" : "bg-[#E8D9B0]"
+            isDark ? "bg-white/10" : "bg-[#ADBC9F]"
           }`}
         >
           {selectedIdx >= 0 && (
             <div
-              className="h-full rounded-full bg-[#4D6940] transition-all duration-200"
+              className="h-full rounded-full bg-[#436850] transition-all duration-200"
               style={{
                 width: `${((selectedIdx + 1) / fenTimeline.length) * 100}%`,
               }}
@@ -215,11 +215,11 @@ export function FenScrubber({
                 className={`flex-shrink-0 flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg transition-all ${
                   isSelected
                     ? isDark
-                      ? "bg-[#4D6940]/30 ring-1 ring-[#4D6940]"
-                      : "bg-[#4D6940]/10 ring-1 ring-[#4D6940]"
+                      ? "bg-[#436850]/30 ring-1 ring-[#436850]"
+                      : "bg-[#436850]/10 ring-1 ring-[#436850]"
                     : isDark
                       ? "hover:bg-white/5"
-                      : "hover:bg-[#FFF3D5]"
+                      : "hover:bg-[#FBFADA]"
                 }`}
                 title={`t=${formatTimestamp(entry.timestampMs)} · confidence ${Math.round(confidence * 100)}%`}
                 aria-pressed={isSelected}
@@ -237,10 +237,10 @@ export function FenScrubber({
                       isSelected
                         ? isDark
                           ? "text-white/80"
-                          : "text-[#1A1A1A]/85"
+                          : "text-[#12372A]/85"
                         : isDark
                           ? "text-white/30"
-                          : "text-[#6B6B50]"
+                          : "text-[#436850]"
                     }`}
                   >
                     {formatTimestamp(entry.timestampMs)}
@@ -256,13 +256,13 @@ export function FenScrubber({
       {selectedEntry && (
         <div
           className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs ${
-            isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
+            isDark ? "bg-white/5" : "bg-[#FBFADA]/70"
           }`}
         >
-          <Clock className="w-3.5 h-3.5 text-[#4D6940] flex-shrink-0" />
-          <span className={isDark ? "text-white/60" : "text-[#6B6B50]"}>
+          <Clock className="w-3.5 h-3.5 text-[#436850] flex-shrink-0" />
+          <span className={isDark ? "text-white/60" : "text-[#436850]"}>
             Position at{" "}
-            <span className={`font-mono font-medium ${isDark ? "text-white/80" : "text-[#1A1A1A]"}`}>
+            <span className={`font-mono font-medium ${isDark ? "text-white/80" : "text-[#12372A]"}`}>
               {formatTimestamp(selectedEntry.timestampMs)}
             </span>
           </span>
@@ -279,7 +279,7 @@ export function FenScrubber({
           </span>
           <span
             className={`text-[10px] px-1.5 py-0.5 rounded font-mono truncate max-w-[120px] ${
-              isDark ? "bg-white/10 text-white/40" : "bg-[#E8D9B0] text-[#6B6B50]"
+              isDark ? "bg-white/10 text-white/40" : "bg-[#ADBC9F] text-[#436850]"
             }`}
             title={selectedEntry.fen}
           >
@@ -289,7 +289,7 @@ export function FenScrubber({
       )}
 
       {/* Hint */}
-      <p className={`text-[10px] ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>
+      <p className={`text-[10px] ${isDark ? "text-white/25" : "text-[#436850]"}`}>
         Click a dot to view the detected board position · ← → to navigate · Esc to return to PGN
       </p>
     </div>

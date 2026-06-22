@@ -190,7 +190,7 @@ export function RoundTimer({
     ? "text-red-400/60"
     : isWarning
     ? isDark ? "text-amber-400/50" : "text-amber-500/50"
-    : isDark ? "text-white/25" : "text-[#6B6B50]/70";
+    : isDark ? "text-white/25" : "text-[#436850]/70";
 
   return (
     <div
@@ -199,7 +199,7 @@ export function RoundTimer({
           ? isDark ? "bg-red-500/08 border-red-500/25" : "bg-red-50 border-red-200"
           : isWarning
           ? isDark ? "bg-amber-500/08 border-amber-500/20" : "bg-amber-50 border-amber-200"
-          : isDark ? "bg-white/05 border-white/10" : "bg-[#FFF3D5]/70 border-[#E8D9B0]"
+          : isDark ? "bg-white/05 border-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F]"
       }`}
     >
       {/* Left: label */}
@@ -208,7 +208,7 @@ export function RoundTimer({
           ? "text-red-400"
           : isWarning
           ? isDark ? "text-amber-400/70" : "text-amber-600/70"
-          : isDark ? "text-white/30" : "text-[#6B6B50]"
+          : isDark ? "text-white/30" : "text-[#436850]"
       }`}>
         {isExpired ? "Time's Up" : running ? "Running" : "Round"}
       </div>
@@ -231,15 +231,15 @@ export function RoundTimer({
               className={`w-14 text-center text-2xl font-black tabular-nums rounded-lg px-1 py-0.5 outline-none border ${
                 isDark
                   ? "bg-white/10 border-white/20 text-white"
-                  : "bg-white border-[#E8D9B0] text-[#1A1A1A]"
+                  : "bg-white border-[#ADBC9F] text-[#12372A]"
               }`}
               style={{ fontFamily: "'Clash Display', monospace" }}
             />
-            <span className={`text-sm font-semibold ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>min</span>
+            <span className={`text-sm font-semibold ${isDark ? "text-white/40" : "text-[#436850]"}`}>min</span>
             <button onClick={commitEdit} className={`p-1 rounded-lg transition-colors ${isDark ? "text-[#4CAF50] hover:bg-[#4CAF50]/15" : "text-[#2D6A35] hover:bg-green-50"}`} title="Save">
               <Check className="w-3.5 h-3.5" />
             </button>
-            <button onClick={cancelEdit} className={`p-1 rounded-lg transition-colors ${isDark ? "text-white/40 hover:bg-white/10" : "text-[#6B6B50] hover:bg-[#E8D9B0]/50"}`} title="Cancel">
+            <button onClick={cancelEdit} className={`p-1 rounded-lg transition-colors ${isDark ? "text-white/40 hover:bg-white/10" : "text-[#436850] hover:bg-[#ADBC9F]/50"}`} title="Cancel">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -262,7 +262,7 @@ export function RoundTimer({
               style={{ fontFamily: "'Clash Display', monospace" }}
             >{ss}</span>
             {!running && !isExpired && (
-              <Pencil className={`w-3 h-3 ml-1.5 opacity-0 group-hover:opacity-60 transition-opacity ${isDark ? "text-white" : "text-[#6B6B50]"}`} />
+              <Pencil className={`w-3 h-3 ml-1.5 opacity-0 group-hover:opacity-60 transition-opacity ${isDark ? "text-white" : "text-[#436850]"}`} />
             )}
           </button>
         )}
@@ -287,7 +287,7 @@ export function RoundTimer({
         <button
           onClick={handleReset}
           className={`p-1.5 rounded-lg transition-all active:scale-90 ${
-            isDark ? "text-white/35 hover:bg-white/10 hover:text-white/60" : "text-[#6B6B50] hover:bg-[#E8D9B0]/50 hover:text-[#6B6B50]"
+            isDark ? "text-white/35 hover:bg-white/10 hover:text-white/60" : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#436850]"
           }`}
           title="Reset timer"
         >

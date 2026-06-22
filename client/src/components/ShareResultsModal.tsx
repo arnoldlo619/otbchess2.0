@@ -169,9 +169,9 @@ function PlayerShareRow({
 
   const rankEmoji = perf.rank === 1 ? "🏆" : perf.rank === 2 ? "🥈" : perf.rank === 3 ? "🥉" : `#${perf.rank}`;
 
-  const rowBg = isDark ? "bg-white/04 hover:bg-white/08" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textSub = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const rowBg = isDark ? "bg-white/04 hover:bg-white/08" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textSub = isDark ? "text-white/40" : "text-[#436850]";
 
   // Server send status indicator
   const statusIcon =
@@ -211,7 +211,7 @@ function PlayerShareRow({
           onClick={handleCopy}
           title="Copy message"
           className={`p-1.5 rounded-lg transition-colors ${
-            isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-[#E8D9B0] text-[#6B6B50] hover:text-[#1A1A1A]"
+            isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-[#ADBC9F] text-[#436850] hover:text-[#12372A]"
           }`}
         >
           {copied ? (
@@ -295,7 +295,7 @@ function QRCodePanel({
     }
   }, [qrValue]);
 
-  const textSub = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const textSub = isDark ? "text-white/40" : "text-[#436850]";
 
   return (
     <div className="flex flex-col items-center gap-5 px-5 py-5">
@@ -417,7 +417,7 @@ function QRCodePanel({
           onClick={handleDownload}
           disabled={downloading}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
           }`}
         >
           {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
@@ -426,7 +426,7 @@ function QRCodePanel({
         <button
           onClick={handleCopyLink}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
           }`}
         >
           {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -436,7 +436,7 @@ function QRCodePanel({
           onClick={() => setProjecting(true)}
           title="Project fullscreen"
           className={`p-2 rounded-xl transition-colors ${
-            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
           }`}
         >
           <Maximize2 className="w-3.5 h-3.5" />
@@ -698,10 +698,10 @@ export function ShareResultsModal({
     }
   }, [smtpConfigured, targets, tournamentName, tournamentId, reportUrl, pdfPlayers, pdfRounds, pdfClubName, pdfClubLogoUrl]);
 
-  const bg = isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-[#E8D9B0]";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textSub = isDark ? "text-white/40" : "text-[#6B6B50]";
-  const divider = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const bg = isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-[#ADBC9F]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textSub = isDark ? "text-white/40" : "text-[#436850]";
+  const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
 
   const isQR = channel === "qr";
   const playersWithEmail = performances.filter((p) => p.player.email).length;
@@ -739,7 +739,7 @@ export function ShareResultsModal({
             <button
               onClick={onClose}
               className={`p-1.5 rounded-xl transition-colors ${
-                isDark ? "hover:bg-white/10 text-white/50" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
+                isDark ? "hover:bg-white/10 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
               }`}
             >
               <X className="w-4 h-4" />
@@ -747,16 +747,16 @@ export function ShareResultsModal({
           </div>
 
           {/* Channel toggle — 2 tabs: Email + QR Code */}
-          <div className={`flex gap-1 mt-4 p-1 rounded-xl ${isDark ? "bg-white/06" : "bg-[#E8D9B0]/40"}`}>
+          <div className={`flex gap-1 mt-4 p-1 rounded-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`}>
             {(["email", "qr"] as ShareChannel[]).map((ch) => {
               const isActive = channel === ch;
               const activeClass =
                 ch === "email"
                   ? "bg-blue-500 text-white shadow-sm"
-                  : "bg-[#4D6940] text-white shadow-sm";
+                  : "bg-[#436850] text-white shadow-sm";
               const inactiveClass = isDark
                 ? "text-white/50 hover:text-white/80"
-                : "text-[#6B6B50] hover:text-[#1A1A1A]";
+                : "text-[#436850] hover:text-[#12372A]";
               return (
                 <button
                   key={ch}
@@ -872,13 +872,13 @@ export function ShareResultsModal({
             {!singlePlayer && smtpConfigured === false && (
               <div
                 className={`flex items-center gap-2 text-xs rounded-xl px-3 py-2 ${
-                  isDark ? "bg-white/05 text-white/40" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
+                  isDark ? "bg-white/05 text-white/40" : "bg-[#FBFADA]/70 text-[#436850]"
                 }`}
               >
                 <Settings size={12} />
                 <span>
                   Configure SMTP in{" "}
-                  <strong className={isDark ? "text-white/60" : "text-[#1A1A1A]/85"}>
+                  <strong className={isDark ? "text-white/60" : "text-[#12372A]/85"}>
                     Settings → Email Settings
                   </strong>{" "}
                   to send emails directly from the platform
@@ -900,7 +900,7 @@ export function ShareResultsModal({
                   smtpConfigured
                     ? isDark
                       ? "bg-white/06 text-white/60 hover:bg-white/10"
-                      : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                      : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
                     : "bg-blue-500 text-white hover:bg-blue-600"
                 }`}
               >
@@ -924,7 +924,7 @@ export function ShareResultsModal({
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
                       isDark
                         ? "bg-white/08 text-white/70 hover:bg-white/14"
-                        : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                        : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
                     }`}
                   >
                     {copiedAll ? (
@@ -937,7 +937,7 @@ export function ShareResultsModal({
                 )}
                 <button
                   onClick={onClose}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4D6940] text-white hover:bg-[#2d5235] transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#436850] text-white hover:bg-[#2d5235] transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   Done

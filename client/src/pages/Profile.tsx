@@ -62,15 +62,15 @@ function StatBadge({
   return (
     <div
       className={`flex flex-col items-center gap-1 px-5 py-4 rounded-2xl ${
-        isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
+        isDark ? "bg-white/5" : "bg-[#FBFADA]/70"
       }`}
     >
       <span
-        className={`text-2xl font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+        className={`text-2xl font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
       >
         {value}
       </span>
-      <span className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+      <span className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
         {label}
       </span>
     </div>
@@ -96,18 +96,18 @@ function BattleStatBadge({
   return (
     <div
       className={`flex flex-col items-center gap-1.5 px-3 py-4 rounded-2xl ${
-        isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
+        isDark ? "bg-white/5" : "bg-[#FBFADA]/70"
       }`}
     >
       {loading ? (
-        <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>—</span>
+        <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>—</span>
       ) : total === 0 ? (
-        <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>—</span>
+        <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>—</span>
       ) : (
         <>
           <div className="flex items-center gap-1.5">
             <span className="text-base font-bold text-[#4ade80]">{wins}W</span>
-            <span className={`text-base font-bold ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{draws}D</span>
+            <span className={`text-base font-bold ${isDark ? "text-white/40" : "text-[#436850]"}`}>{draws}D</span>
             <span className="text-base font-bold text-red-400">{losses}L</span>
           </div>
           {winRate !== null && (
@@ -118,7 +118,7 @@ function BattleStatBadge({
           )}
         </>
       )}
-      <span className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+      <span className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
         Battles
       </span>
     </div>
@@ -136,7 +136,7 @@ function TournamentStatusPill({ status }: { status?: string | null }) {
     registration: { label: "Lobby", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" },
     in_progress:  { label: "Active", bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400" },
     paused:       { label: "Paused", bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400" },
-    completed:    { label: "Complete", bg: "bg-[#E8D9B0]/40 dark:bg-white/10", text: "text-[#6B6B50] dark:text-white/40" },
+    completed:    { label: "Complete", bg: "bg-[#ADBC9F]/40 dark:bg-white/10", text: "text-[#436850] dark:text-white/40" },
   };
   const { label, bg, text } = config[s] ?? config["registration"];
   return (
@@ -455,19 +455,19 @@ export default function ProfilePage() {
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#4D6940]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#436850]" />
       </div>
     );
   }
 
-  const bg = isDark ? "bg-[#0d1f12]" : "bg-[#FFF3D5]/70";
-  const card = isDark ? "bg-white/5 border-white/10" : "bg-white border-[#E8D9B0]";
-  const text = isDark ? "text-white" : "text-[#1A1A1A]";
-  const muted = isDark ? "text-white/50" : "text-[#6B6B50]";
+  const bg = isDark ? "bg-[#0d1f12]" : "bg-[#FBFADA]/70";
+  const card = isDark ? "bg-white/5 border-white/10" : "bg-white border-[#ADBC9F]";
+  const text = isDark ? "text-white" : "text-[#12372A]";
+  const muted = isDark ? "text-white/50" : "text-[#436850]";
   const inputCls = `w-full rounded-xl border px-4 py-3 text-base outline-none transition ${
     isDark
       ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4ade80]"
-      : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]"
+      : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]"
   }`;
 
   // Initials avatar fallback
@@ -485,7 +485,7 @@ export default function ProfilePage() {
       {/* Top nav */}
       <div
         className={`sticky top-0 z-10 flex items-center justify-between px-4 py-4 border-b otb-header-safe ${
-          isDark ? "border-white/10 bg-[#0d1f12]/90" : "border-[#E8D9B0] bg-white/90"
+          isDark ? "border-white/10 bg-[#0d1f12]/90" : "border-[#ADBC9F] bg-white/90"
         } backdrop-blur-sm`}
       >
         <button
@@ -520,12 +520,12 @@ export default function ProfilePage() {
                     className={`w-16 h-16 rounded-2xl object-cover transition ${avatarUploading ? "opacity-50" : ""}`}
                   />
                 ) : (
-                  <div className={`w-16 h-16 rounded-2xl bg-[#4D6940] flex items-center justify-center transition ${avatarUploading ? "opacity-50" : ""}`}>
+                  <div className={`w-16 h-16 rounded-2xl bg-[#436850] flex items-center justify-center transition ${avatarUploading ? "opacity-50" : ""}`}>
                     <span className="text-white text-xl font-bold">{initials}</span>
                   </div>
                 )}
                 {/* Camera upload button — always visible */}
-                <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#4D6940] border-2 border-white flex items-center justify-center cursor-pointer hover:bg-[#245a41] transition" title="Change profile photo">
+                <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#436850] border-2 border-white flex items-center justify-center cursor-pointer hover:bg-[#245a41] transition" title="Change profile photo">
                   {avatarUploading ? (
                     <Loader2 className="w-3 h-3 text-white animate-spin" />
                   ) : (
@@ -550,8 +550,8 @@ export default function ProfilePage() {
                 </div>
                 <p className={`text-sm ${muted}`}>{user.email}</p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Shield className="w-3.5 h-3.5 text-[#4D6940]" />
-                  <span className="text-xs text-[#4D6940] font-medium">Verified account</span>
+                  <Shield className="w-3.5 h-3.5 text-[#436850]" />
+                  <span className="text-xs text-[#436850] font-medium">Verified account</span>
                 </div>
               </div>
             </div>
@@ -563,7 +563,7 @@ export default function ProfilePage() {
               className={`flex items-center gap-1.5 text-sm px-3 py-2 rounded-xl transition ${
                 isDark
                   ? "bg-white/5 text-white/60 hover:bg-white/10"
-                  : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                  : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -674,7 +674,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#4D6940] hover:bg-[#245a41] text-white font-semibold py-3 text-sm transition disabled:opacity-60"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#436850] hover:bg-[#245a41] text-white font-semibold py-3 text-sm transition disabled:opacity-60"
                 >
                   {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                   className={`flex items-center gap-1.5 px-4 rounded-xl text-sm font-medium transition ${
                     isDark
                       ? "bg-white/5 text-white/60 hover:bg-white/10"
-                      : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                      : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
                   }`}
                 >
                   <X className="w-4 h-4" /> Cancel
@@ -708,7 +708,7 @@ export default function ProfilePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
-                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
+                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -720,7 +720,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {user.chesscomElo && (
-                      <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-2 py-0.5 rounded-full">
                         {user.chesscomElo}
                       </span>
                     )}
@@ -730,7 +730,7 @@ export default function ProfilePage() {
               )}
               {user.chesscomUsername && (
                 <div className={`rounded-xl border p-3 ${
-                  isDark ? "bg-[#4ade80]/5 border-[#4ade80]/15" : "bg-[#4D6940]/5 border-[#4D6940]/15"
+                  isDark ? "bg-[#4ade80]/5 border-[#4ade80]/15" : "bg-[#436850]/5 border-[#436850]/15"
                 }`}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -766,7 +766,7 @@ export default function ProfilePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
-                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
+                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -778,7 +778,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {user.lichessElo && (
-                      <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-2 py-0.5 rounded-full">
                         {user.lichessElo}
                       </span>
                     )}
@@ -788,7 +788,7 @@ export default function ProfilePage() {
               )}
               {user.lichessUsername && (
                 <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-                  isDark ? "bg-[#4ade80]/5 border border-[#4ade80]/15" : "bg-[#4D6940]/5 border border-[#4D6940]/15"
+                  isDark ? "bg-[#4ade80]/5 border border-[#4ade80]/15" : "bg-[#436850]/5 border border-[#436850]/15"
                 }`}>
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
                   <p className="text-xs text-[#4ade80]">
@@ -802,11 +802,11 @@ export default function ProfilePage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
-                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
+                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Link2 className="w-5 h-5 text-[#4D6940]" />
+                    <Link2 className="w-5 h-5 text-[#436850]" />
                     <div>
                       <p className={`text-sm font-medium ${text}`}>FIDE Profile</p>
                       <p className={`text-xs ${muted}`}>ID: {user.fideId}</p>
@@ -820,7 +820,7 @@ export default function ProfilePage() {
                   No chess platform linked yet.{" "}
                   <button
                     onClick={() => setEditing(true)}
-                    className="text-[#4D6940] font-medium hover:underline"
+                    className="text-[#436850] font-medium hover:underline"
                   >
                     Add one
                   </button>
@@ -841,10 +841,10 @@ export default function ProfilePage() {
         {/* Tournaments card */}
         <div className={`rounded-3xl border p-6 ${card}`}>
           <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-[#4D6940]" />
+            <Trophy className="w-5 h-5 text-[#436850]" />
             <h2 className={`text-base font-bold ${text}`}>Your Tournaments</h2>
             {tournamentsLoading && (
-              <Loader2 className="w-4 h-4 animate-spin text-[#4D6940] ml-auto" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#436850] ml-auto" />
             )}
           </div>
           {tournamentCount === 0 ? (
@@ -852,7 +852,7 @@ export default function ProfilePage() {
               <p className={`text-sm ${muted}`}>No tournaments yet.</p>
               <button
                 onClick={() => navigate("/")}
-                className="mt-3 text-sm text-[#4D6940] font-medium hover:underline"
+                className="mt-3 text-sm text-[#436850] font-medium hover:underline"
               >
                 Host your first tournament →
               </button>
@@ -884,7 +884,7 @@ export default function ProfilePage() {
                           <button
                             onClick={() => setConfirmDeleteId(null)}
                             className={`text-xs px-2.5 py-1 rounded-lg font-medium transition ${
-                              isDark ? "bg-white/10 text-white/70 hover:bg-white/20" : "bg-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]"
+                              isDark ? "bg-white/10 text-white/70 hover:bg-white/20" : "bg-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]"
                             }`}
                           >
                             Cancel
@@ -901,7 +901,7 @@ export default function ProfilePage() {
                     <a
                       href={`/tournament/${t.id}/manage`}
                       className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
-                        isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
+                        isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
                       } ${confirmDeleteId === t.id ? "opacity-0 pointer-events-none" : ""}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -919,7 +919,7 @@ export default function ProfilePage() {
                             className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
                               isDark
                                 ? "text-white/30 hover:text-red-400 hover:bg-red-500/10"
-                                : "text-[#6B6B50]/70 hover:text-red-500 hover:bg-red-50"
+                                : "text-[#436850]/70 hover:text-red-500 hover:bg-red-50"
                             } ${deletingId === t.id ? "opacity-100" : ""}`}
                           >
                             {deletingId === t.id
@@ -935,7 +935,7 @@ export default function ProfilePage() {
               {tournamentCount > 5 && (
                 <a
                   href="/tournaments"
-                  className={`block text-center text-sm py-2 ${muted} hover:text-[#4D6940] transition`}
+                  className={`block text-center text-sm py-2 ${muted} hover:text-[#436850] transition`}
                 >
                   View all {tournamentCount} tournaments →
                 </a>
@@ -949,13 +949,13 @@ export default function ProfilePage() {
           {/* Header row */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+              <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
               <h2 className={`text-base font-bold ${text}`}>Battle History</h2>
             </div>
             <a
               href="/battle/history"
               className={`flex items-center gap-1 text-xs font-medium transition ${
-                isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#4D6940]/70 hover:text-[#4D6940]"
+                isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#436850]/70 hover:text-[#436850]"
               }`}
             >
               View all
@@ -969,13 +969,13 @@ export default function ProfilePage() {
             const winRate = total > 0 ? Math.round((battleWins / total) * 100) : 0;
             return (
               <div className={`rounded-2xl p-4 mb-5 ${
-                isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"
+                isDark ? "bg-white/5" : "bg-[#FBFADA]/70"
               }`}>
                 {/* W / D / L counts */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {[
                     { label: "Wins",   value: battleWins,   color: "text-emerald-400", bg: isDark ? "bg-emerald-900/30" : "bg-emerald-50" },
-                    { label: "Draws",  value: battleDraws,  color: muted,              bg: isDark ? "bg-white/5"        : "bg-[#E8D9B0]/40"   },
+                    { label: "Draws",  value: battleDraws,  color: muted,              bg: isDark ? "bg-white/5"        : "bg-[#ADBC9F]/40"   },
                     { label: "Losses", value: battleLosses, color: "text-red-400",     bg: isDark ? "bg-red-900/20"     : "bg-red-50"     },
                   ].map(({ label, value, color, bg }) => (
                     <div key={label} className={`flex flex-col items-center py-2.5 rounded-xl ${bg}`}>
@@ -987,7 +987,7 @@ export default function ProfilePage() {
                 {/* Win-rate bar */}
                 <div className="flex items-center gap-2">
                   <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${
-                    isDark ? "bg-white/10" : "bg-[#E8D9B0]"
+                    isDark ? "bg-white/10" : "bg-[#ADBC9F]"
                   }`}>
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-700"
@@ -1008,7 +1008,7 @@ export default function ProfilePage() {
 
           {battleHistoryLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-[#4D6940]" />
+              <Loader2 className="w-5 h-5 animate-spin text-[#436850]" />
             </div>
           ) : !battleHistory || battleHistory.length === 0 ? (
             <div className={`flex flex-col items-center gap-3 py-8 ${muted}`}>
@@ -1019,7 +1019,7 @@ export default function ProfilePage() {
                 className={`mt-1 text-xs px-4 py-2 rounded-xl font-medium transition ${
                   isDark
                     ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25"
-                    : "bg-[#4D6940]/10 text-[#4D6940] hover:bg-[#4D6940]/20"
+                    : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
                 }`}
               >
                 Start a Battle
@@ -1031,7 +1031,7 @@ export default function ProfilePage() {
                 const outcomeConfig = {
                   win:  { label: "WIN",  bg: isDark ? "bg-emerald-900/40" : "bg-emerald-50",  text: "text-emerald-500",  border: isDark ? "border-emerald-800/50" : "border-emerald-200" },
                   loss: { label: "LOSS", bg: isDark ? "bg-red-900/30"     : "bg-red-50",      text: "text-red-400",     border: isDark ? "border-red-900/40"     : "border-red-200"     },
-                  draw: { label: "DRAW", bg: isDark ? "bg-white/5"        : "bg-[#FFF3D5]/70",     text: muted,             border: isDark ? "border-white/10"       : "border-[#E8D9B0]"    },
+                  draw: { label: "DRAW", bg: isDark ? "bg-white/5"        : "bg-[#FBFADA]/70",     text: muted,             border: isDark ? "border-white/10"       : "border-[#ADBC9F]"    },
                 }[b.outcome];
                 const opponentInitials = b.opponent
                   ? b.opponent.displayName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -1055,7 +1055,7 @@ export default function ProfilePage() {
                         <img src={b.opponent.avatarUrl} alt={b.opponent.displayName} className="w-8 h-8 rounded-xl object-cover" />
                       ) : (
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
-                          isDark ? "bg-white/10 text-white/60" : "bg-[#E8D9B0] text-[#6B6B50]"
+                          isDark ? "bg-white/10 text-white/60" : "bg-[#ADBC9F] text-[#436850]"
                         }`}>
                           {opponentInitials}
                         </div>
@@ -1117,7 +1117,7 @@ export default function ProfilePage() {
             <div className="space-y-3">
               {[0, 1, 2].map((i) => (
                 <div key={i} className={`h-20 rounded-2xl animate-pulse ${
-                  isDark ? "bg-white/5" : "bg-[#E8D9B0]/40"
+                  isDark ? "bg-white/5" : "bg-[#ADBC9F]/40"
                 }`} />
               ))}
             </div>
@@ -1135,7 +1135,7 @@ export default function ProfilePage() {
           {analysedGames.status === "success" && analysedGames.games.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                isDark ? "bg-white/5" : "bg-[#E8D9B0]/40"
+                isDark ? "bg-white/5" : "bg-[#ADBC9F]/40"
               }`}>
                 <TrendingUp className={`w-6 h-6 ${muted}`} />
               </div>
@@ -1167,9 +1167,9 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between px-5 pt-5 pb-3">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                isDark ? "bg-[#4CAF50]/15" : "bg-[#4D6940]/10"
+                isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/10"
               }`}>
-                <Users className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+                <Users className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
               </div>
               <div>
                 <p className={`text-sm font-semibold ${text}`}>My Clubs</p>
@@ -1181,7 +1181,7 @@ export default function ProfilePage() {
             <a
               href="/clubs"
               className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl transition ${
-                isDark ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50] hover:text-[#1A1A1A]"
+                isDark ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850] hover:text-[#12372A]"
               }`}
             >
               <ExternalLink className="w-3 h-3" />
@@ -1206,13 +1206,13 @@ export default function ProfilePage() {
           ) : !myClubs || myClubs.length === 0 ? (
             <div className="px-5 pb-5">
               <div className={`rounded-2xl border border-dashed p-6 text-center ${
-                isDark ? "border-white/10" : "border-[#E8D9B0]"
+                isDark ? "border-white/10" : "border-[#ADBC9F]"
               }`}>
                 <p className={`text-sm ${muted} mb-3`}>You haven't joined any clubs yet.</p>
                 <a
                   href="/clubs"
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl transition ${
-                    isDark ? "bg-[#4CAF50]/20 hover:bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#4D6940]/10 hover:bg-[#4D6940]/20 text-[#4D6940]"
+                    isDark ? "bg-[#4CAF50]/20 hover:bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#436850]/10 hover:bg-[#436850]/20 text-[#436850]"
                   }`}
                 >
                   Browse Clubs
@@ -1228,13 +1228,13 @@ export default function ProfilePage() {
                 const confirmingLeave = confirmLeaveClubId === club.id;
                 return (
                   <div key={club.id} className={`px-5 py-3.5 ${
-                    isDark ? "hover:bg-white/3" : "hover:bg-[#FFF3D5]"
+                    isDark ? "hover:bg-white/3" : "hover:bg-[#FBFADA]"
                   } transition`}>
                     <div className="flex items-center gap-3">
                       {/* Club avatar */}
                       <div
                         className="w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-sm font-bold"
-                        style={{ backgroundColor: club.accentColor ?? "#4D6940" }}
+                        style={{ backgroundColor: club.accentColor ?? "#436850" }}
                       >
                         {club.name.charAt(0).toUpperCase()}
                       </div>
@@ -1259,7 +1259,7 @@ export default function ProfilePage() {
                           <a
                             href={`/clubs/${club.slug ?? club.id}`}
                             className={`p-1.5 rounded-xl transition ${
-                              isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50] hover:text-[#1A1A1A]"
+                              isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#12372A]"
                             }`}
                             title="View club"
                           >
@@ -1294,7 +1294,7 @@ export default function ProfilePage() {
                               onClick={() => setConfirmDeleteClubId(club.id)}
                               disabled={isDeleting}
                               className={`p-1.5 rounded-xl transition ${
-                                isDark ? "hover:bg-red-500/20 text-white/30 hover:text-red-400" : "hover:bg-red-50 text-[#6B6B50]/70 hover:text-red-500"
+                                isDark ? "hover:bg-red-500/20 text-white/30 hover:text-red-400" : "hover:bg-red-50 text-[#436850]/70 hover:text-red-500"
                               }`}
                               title="Delete club"
                             >
@@ -1305,7 +1305,7 @@ export default function ProfilePage() {
                               onClick={() => setConfirmLeaveClubId(club.id)}
                               disabled={isDeleting}
                               className={`p-1.5 rounded-xl transition text-xs font-medium ${
-                                isDark ? "hover:bg-white/10 text-white/30 hover:text-white/70" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]/70 hover:text-[#6B6B50]"
+                                isDark ? "hover:bg-white/10 text-white/30 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850]/70 hover:text-[#436850]"
                               }`}
                               title="Leave club"
                             >
@@ -1334,7 +1334,7 @@ export default function ProfilePage() {
                           <button
                             onClick={() => setConfirmDeleteClubId(null)}
                             className={`flex-1 text-xs font-medium py-1.5 rounded-xl transition ${
-                              isDark ? "bg-white/10 hover:bg-white/15 text-white/70" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
+                              isDark ? "bg-white/10 hover:bg-white/15 text-white/70" : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850]"
                             }`}
                           >
                             Cancel
@@ -1361,7 +1361,7 @@ export default function ProfilePage() {
                           <button
                             onClick={() => setConfirmLeaveClubId(null)}
                             className={`flex-1 text-xs font-medium py-1.5 rounded-xl transition ${
-                              isDark ? "bg-white/10 hover:bg-white/15 text-white/70" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
+                              isDark ? "bg-white/10 hover:bg-white/15 text-white/70" : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850]"
                             }`}
                           >
                             Cancel
@@ -1379,7 +1379,7 @@ export default function ProfilePage() {
                   className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl text-xs font-semibold border border-dashed transition ${
                     isDark
                       ? "border-[#4CAF50]/30 text-[#4CAF50]/70 hover:border-[#4CAF50]/60 hover:text-[#4CAF50] hover:bg-[#4CAF50]/5"
-                      : "border-[#4D6940]/30 text-[#4D6940]/70 hover:border-[#4D6940]/60 hover:text-[#4D6940] hover:bg-[#4D6940]/5"
+                      : "border-[#436850]/30 text-[#436850]/70 hover:border-[#436850]/60 hover:text-[#436850] hover:bg-[#436850]/5"
                   }`}
                 >
                   + Create a new club

@@ -73,7 +73,7 @@ export default function Training() {
 
   return (
     <div className={`relative min-h-screen ${isDark ? "bg-[#0a1409]" : "bg-[#f8faf8]"}`}>
-      <BGPattern variant="checkerboard" mask="fade-top" fill={isDark ? "#5B9A6A" : "#4D6940"} size={32} />
+      <BGPattern variant="checkerboard" mask="fade-top" fill={isDark ? "#5B9A6A" : "#436850"} size={32} />
       <AppNavBar defaultActive="Training" />
 
       <div className="max-w-5xl mx-auto px-4 pt-32 pb-24">
@@ -81,12 +81,12 @@ export default function Training() {
         {/* ── Page Header ── */}
         <div className="text-center mb-12">
           <h1
-            className={`text-3xl sm:text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+            className={`text-3xl sm:text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             Training
           </h1>
-          <p className={`text-base leading-relaxed max-w-md mx-auto ${isDark ? "text-white/70" : "text-[#6B6B50]"}`}>
+          <p className={`text-base leading-relaxed max-w-md mx-auto ${isDark ? "text-white/70" : "text-[#436850]"}`}>
             Study openings, build your repertoire, and scout your next opponent — everything you need to prepare and improve.
           </p>
         </div>
@@ -101,16 +101,16 @@ export default function Training() {
 
         {/* ── Coming Soon teaser ── */}
         <div className={`mt-10 rounded-2xl border border-dashed p-5 text-center ${
-          isDark ? "border-white/08 bg-white/02" : "border-[#E8D9B0] bg-[#FFF3D5]/70/50"
+          isDark ? "border-white/08 bg-white/02" : "border-[#ADBC9F] bg-[#FBFADA]/70/50"
         }`}>
           <div className="flex items-center justify-center gap-2 mb-1.5">
-            <Brain className={`w-4 h-4 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
-            <Zap className={`w-4 h-4 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
+            <Brain className={`w-4 h-4 ${isDark ? "text-white/20" : "text-[#436850]/70"}`} />
+            <Zap className={`w-4 h-4 ${isDark ? "text-white/20" : "text-[#436850]/70"}`} />
           </div>
-          <p className={`text-sm font-medium mb-0.5 ${isDark ? "text-white/55" : "text-[#6B6B50]"}`}>
+          <p className={`text-sm font-medium mb-0.5 ${isDark ? "text-white/55" : "text-[#436850]"}`}>
             More training tools coming soon
           </p>
-          <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             Endgame drills · Tactics trainer · Personalized study plans
           </p>
         </div>

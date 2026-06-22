@@ -178,12 +178,12 @@ export function SmtpSettingsCard({ isDark }: Props) {
   }
 
   // ── Styles ────────────────────────────────────────────────────────────────
-  const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#E8D9B0]/70";
-  const labelCls = `text-xs font-medium mb-1 block ${isDark ? "text-white/50" : "text-[#6B6B50]"}`;
+  const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70";
+  const labelCls = `text-xs font-medium mb-1 block ${isDark ? "text-white/50" : "text-[#436850]"}`;
   const inputCls = `w-full text-sm rounded-lg px-3 py-2 border outline-none transition-colors ${
     isDark
       ? "bg-white/05 border-white/10 text-white placeholder-white/25 focus:border-[oklch(0.7_0.2_145)]"
-      : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder-gray-400 focus:border-green-500"
+      : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder-gray-400 focus:border-green-500"
   }`;
 
   return (
@@ -192,13 +192,13 @@ export function SmtpSettingsCard({ isDark }: Props) {
       <button
         onClick={() => setExpanded((e) => !e)}
         className={`w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors ${
-          isDark ? "hover:bg-white/04" : "hover:bg-[#FFF3D5]"
+          isDark ? "hover:bg-white/04" : "hover:bg-[#FBFADA]"
         }`}
       >
         <div className="flex items-center gap-2.5">
           <Mail size={15} className={isDark ? "text-[oklch(0.7_0.2_145)]" : "text-green-600"} />
           <span
-            className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#1A1A1A]/85"}`}
+            className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             Email Settings (SMTP)
@@ -210,17 +210,17 @@ export function SmtpSettingsCard({ isDark }: Props) {
           )}
         </div>
         {expanded ? (
-          <ChevronUp size={15} className={isDark ? "text-white/30" : "text-[#6B6B50]"} />
+          <ChevronUp size={15} className={isDark ? "text-white/30" : "text-[#436850]"} />
         ) : (
-          <ChevronDown size={15} className={isDark ? "text-white/30" : "text-[#6B6B50]"} />
+          <ChevronDown size={15} className={isDark ? "text-white/30" : "text-[#436850]"} />
         )}
       </button>
 
       {/* ── Body ────────────────────────────────────────────────────────── */}
       {expanded && (
-        <div className={`px-5 pb-5 pt-3 border-t ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+        <div className={`px-5 pb-5 pt-3 border-t ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
           {/* Description */}
-          <p className={`text-xs mb-4 leading-relaxed ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs mb-4 leading-relaxed ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             Connect your own email account so results are sent directly from your address — no copy-paste required.
             Gmail users: use an{" "}
             <a
@@ -247,7 +247,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
                       : "bg-green-50 border-green-300 text-green-700"
                     : isDark
                     ? "border-white/10 text-white/50 hover:border-white/20"
-                    : "border-[#E8D9B0] text-[#6B6B50] hover:border-[#E8D9B0]"
+                    : "border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F]"
                 }`}
               >
                 {p.label}
@@ -283,7 +283,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
               <button
                 onClick={() => field("secure", !config.secure)}
                 className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
-                  config.secure ? "bg-green-500" : isDark ? "bg-white/15" : "bg-[#E8D9B0]"
+                  config.secure ? "bg-green-500" : isDark ? "bg-white/15" : "bg-[#ADBC9F]"
                 }`}
               >
                 <span
@@ -292,7 +292,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
                   }`}
                 />
               </button>
-              <span className={`text-xs ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+              <span className={`text-xs ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                 Use SSL/TLS (port 465) — leave off for STARTTLS (port 587)
               </span>
             </div>
@@ -323,7 +323,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
                   type="button"
                   onClick={() => setShowPass((s) => !s)}
                   className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${
-                    isDark ? "text-white/30" : "text-[#6B6B50]"
+                    isDark ? "text-white/30" : "text-[#436850]"
                   }`}
                 >
                   {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -392,7 +392,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
                 className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg border transition-colors ${
                   isDark
                     ? "border-white/15 text-white/60 hover:bg-white/05"
-                    : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
+                    : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"
                 } disabled:opacity-50`}
               >
                 {testing ? <Loader2 size={12} className="animate-spin" /> : <Server size={12} />}
@@ -402,7 +402,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
           </div>
 
           {/* Hint */}
-          <p className={`text-xs mt-3 ${isDark ? "text-white/25" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs mt-3 ${isDark ? "text-white/25" : "text-[#436850]"}`}>
             Your password is encrypted with AES-256 before storage and never exposed in plain text.
           </p>
         </div>

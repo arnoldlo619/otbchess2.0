@@ -81,7 +81,7 @@ export function UndoSnackbar({
         ${
           isDark
             ? "bg-[oklch(0.22_0.06_145)] border-white/12 text-white"
-            : "bg-white border-[#E8D9B0] text-[#1A1A1A]"
+            : "bg-white border-[#ADBC9F] text-[#12372A]"
         }
       `}
       role="status"
@@ -114,14 +114,14 @@ export function UndoSnackbar({
             strokeLinecap="round"
             strokeDasharray={RING_CIRC}
             strokeDashoffset={dashOffset}
-            className={isDark ? "stroke-[#4CAF50]" : "stroke-[#4D6940]"}
+            className={isDark ? "stroke-[#4CAF50]" : "stroke-[#436850]"}
             style={{ transition: "stroke-dashoffset 0.05s linear" }}
           />
         </svg>
         {/* Seconds label */}
         <span
           className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums ${
-            isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
+            isDark ? "text-[#4CAF50]" : "text-[#436850]"
           }`}
         >
           {secondsLeft}
@@ -132,14 +132,14 @@ export function UndoSnackbar({
       <div className="min-w-0 flex-1">
         <p
           className={`text-xs font-semibold uppercase tracking-wide ${
-            isDark ? "text-white/40" : "text-[#6B6B50]"
+            isDark ? "text-white/40" : "text-[#436850]"
           }`}
         >
           Result recorded
         </p>
         <p
           className={`text-sm font-bold truncate max-w-[200px] ${
-            isDark ? "text-white" : "text-[#1A1A1A]"
+            isDark ? "text-white" : "text-[#12372A]"
           }`}
         >
           {pending?.label}
@@ -154,8 +154,8 @@ export function UndoSnackbar({
           transition-all active:scale-95 flex-shrink-0
           ${
             isDark
-              ? "bg-[#4D6940]/40 text-[#4CAF50] hover:bg-[#4D6940]/60"
-              : "bg-[#4D6940]/10 text-[#4D6940] hover:bg-[#4D6940]/20"
+              ? "bg-[#436850]/40 text-[#4CAF50] hover:bg-[#436850]/60"
+              : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
           }
         `}
         aria-label="Undo result"
@@ -172,7 +172,7 @@ export function UndoSnackbar({
           ${
             isDark
               ? "text-white/30 hover:text-white/60 hover:bg-white/08"
-              : "text-[#6B6B50]/70 hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+              : "text-[#436850]/70 hover:text-[#436850] hover:bg-[#ADBC9F]/50"
           }
         `}
         aria-label="Dismiss"

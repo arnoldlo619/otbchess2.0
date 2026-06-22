@@ -32,7 +32,7 @@ const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: stri
 
 const SIDE_ICONS: Record<string, React.ReactNode> = {
   white: <div className="w-3 h-3 rounded-full bg-white border border-white/30" />,
-  black: <div className="w-3 h-3 rounded-full bg-[#1A1A1A] border border-white/20" />,
+  black: <div className="w-3 h-3 rounded-full bg-[#12372A] border border-white/20" />,
 };
 
 // ── Mini Board Thumbnail ──────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ export default function OpeningsLibraryDemo() {
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-[#FFF3D5]/70"}`}>
+    <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-[#FBFADA]/70"}`}>
       {/* Demo banner */}
       <DemoModeBanner onExitDemo={onExitDemo} />
 
@@ -342,7 +342,7 @@ export default function OpeningsLibraryDemo() {
                   label="Black"
                   active={sideFilter === "black"}
                   onClick={() => setSideFilter(sideFilter === "black" ? null : "black")}
-                  icon={<div className="w-2.5 h-2.5 rounded-full bg-[#1A1A1A] border border-white/20" />}
+                  icon={<div className="w-2.5 h-2.5 rounded-full bg-[#12372A] border border-white/20" />}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">

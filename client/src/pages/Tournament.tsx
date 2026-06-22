@@ -92,7 +92,7 @@ function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
 function TitleBadge({ title }: { title?: string }) {
   if (!title) return null;
   return (
-    <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 border border-[#4D6940]/20 px-1.5 py-0.5 rounded">
+    <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 border border-[#436850]/20 px-1.5 py-0.5 rounded">
       {title}
     </span>
   );
@@ -168,7 +168,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
             className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
-                : "border-[#EEEED2] text-[#4B5563] hover:bg-[#FFF3D5]"
+                : "border-[#EEEED2] text-[#436850] hover:bg-[#FBFADA]"
             }`}
           >
             <Share2 className="w-4 h-4" />
@@ -178,8 +178,8 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
             href={`/tournament/${tournamentId}/manage`}
             className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
-                ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4D6940]/20"
-                : "border-[#4D6940]/30 text-[#4D6940] hover:bg-[#4D6940]/08"
+                ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#436850]/20"
+                : "border-[#436850]/30 text-[#436850] hover:bg-[#436850]/08"
             }`}
           >
             <Shield className="w-4 h-4" />
@@ -190,7 +190,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
             className={`hidden sm:flex touch-target items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
-                : "border-[#EEEED2] text-[#4B5563] hover:bg-[#FFF3D5]"
+                : "border-[#EEEED2] text-[#436850] hover:bg-[#FBFADA]"
             }`}
           >
             <Printer className="w-4 h-4" />
@@ -256,7 +256,7 @@ function TournamentHeader({
         <div
           className="absolute inset-0"
           style={{
-            background: isDark ? "oklch(0.22 0.06 145)" : "#FFF3D5",
+            background: isDark ? "oklch(0.22 0.06 145)" : "#FBFADA",
           }}
         />
       )}
@@ -313,9 +313,9 @@ function TournamentHeader({
                   key={i}
                   className={`h-2 rounded-full transition-all ${
                     i < currentRound - 1
-                      ? "w-5 bg-[#4D6940]"
+                      ? "w-5 bg-[#436850]"
                       : i === currentRound - 1
-                      ? "w-5 bg-[#4D6940] animate-pulse"
+                      ? "w-5 bg-[#436850] animate-pulse"
                       : isDark ? "w-5 bg-white/15" : "w-5 bg-[#EEEED2]"
                   }`}
                 />
@@ -376,7 +376,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
     if (rank === 1) return "text-amber-400";
     if (rank === 2) return "text-slate-400";
     if (rank === 3) return "text-amber-600";
-    return "text-[#4D6940]";
+    return "text-[#436850]";
   };
 
   const medals = ["🥇", "🥈", "🥉"];
@@ -399,12 +399,12 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
         }`}
       >
         <div className="flex items-center gap-2.5">
-          <Trophy className="w-5 h-5 text-[#4D6940]" />
+          <Trophy className="w-5 h-5 text-[#436850]" />
           <span className="text-base font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Standings
           </span>
           <span className={`text-sm px-2.5 py-0.5 rounded-full ${
-            isDark ? "bg-white/10 text-white/50" : "bg-[#FFF3D5] text-[#6B7280]"
+            isDark ? "bg-white/10 text-white/50" : "bg-[#FBFADA] text-[#6B7280]"
           }`}>
             {standingRows.length} players
           </span>
@@ -447,8 +447,8 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
                 className={`flex items-center gap-3 px-5 py-4 border-b last:border-0 transition-colors relative ${
                   isMe
                     ? isDark
-                      ? "bg-[#4D6940]/12 border-[#4D6940]/30"
-                      : "bg-[#F0F8F2] border-[#4D6940]/20"
+                      ? "bg-[#436850]/12 border-[#436850]/30"
+                      : "bg-[#F0F8F2] border-[#436850]/20"
                     : isLeader
                     ? isDark
                       ? "bg-amber-500/05 border-white/06"
@@ -460,7 +460,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
               >
                 {/* Green left-border accent for participant's own row */}
                 {isMe && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-[#4D6940]" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-[#436850]" />
                 )}
                 <span className={`text-base font-bold w-7 text-center flex-shrink-0 ${medalColor(rank)}`}>
                   {rank <= 3 ? medals[rank - 1] : rank}
@@ -490,7 +490,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
           {myRankEntry && !myRowVisible && (
             <div
               className={`sticky bottom-0 z-10 border-t ${
-                isDark ? "border-[#4D6940]/40" : "border-[#4D6940]/25"
+                isDark ? "border-[#436850]/40" : "border-[#436850]/25"
               }`}
             >
               <button
@@ -503,18 +503,18 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
                 }`}
               >
                 {/* Green left accent stripe */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4D6940]" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#436850]" />
 
                 {/* "My Rank" label */}
                 <span className={`text-xs font-semibold uppercase tracking-wider flex-shrink-0 ${
-                  isDark ? "text-[#4D6940]" : "text-[#4D6940]"
+                  isDark ? "text-[#436850]" : "text-[#436850]"
                 }`}>
                   My Rank
                 </span>
 
                 {/* Rank badge */}
                 <span className={`text-base font-bold flex-shrink-0 ${
-                  myRankEntry.rank <= 3 ? medalColor(myRankEntry.rank) : "text-[#4D6940]"
+                  myRankEntry.rank <= 3 ? medalColor(myRankEntry.rank) : "text-[#436850]"
                 }`}>
                   {rankLabel(myRankEntry.rank)}
                 </span>
@@ -536,7 +536,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
                 </span>
 
                 {/* Scroll hint arrow */}
-                <ChevronRight className="w-4 h-4 text-[#4D6940] flex-shrink-0 rotate-[-90deg]" />
+                <ChevronRight className="w-4 h-4 text-[#436850] flex-shrink-0 rotate-[-90deg]" />
               </button>
             </div>
           )}
@@ -594,17 +594,17 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
   return (
     <div className="flex flex-col gap-4">
       {/* Round Tabs — scrollable on mobile */}
-      <div className={`flex gap-1.5 p-1.5 rounded-2xl overflow-x-auto scrollbar-none ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#FFF3D5]"}`}>
+      <div className={`flex gap-1.5 p-1.5 rounded-2xl overflow-x-auto scrollbar-none ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#FBFADA]"}`}>
         {rounds.map((r) => (
           <button
             key={r.number}
             onClick={() => setActiveRound(r.number)}
             className={`flex-shrink-0 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 ${
               activeRound === r.number
-                ? "bg-[#4D6940] text-white shadow-sm"
+                ? "bg-[#436850] text-white shadow-sm"
                 : isDark
                 ? "text-white/60 hover:text-white hover:bg-white/08"
-                : "text-[#6B7280] hover:text-[#1A1A1A] hover:bg-white"
+                : "text-[#6B7280] hover:text-[#12372A] hover:bg-white"
             }`}
           >
             R{r.number}
@@ -612,7 +612,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             )}
             {r.status === "completed" && (
-              <span className={`w-2 h-2 rounded-full ${activeRound === r.number ? "bg-white/60" : "bg-[#4D6940]"}`} />
+              <span className={`w-2 h-2 rounded-full ${activeRound === r.number ? "bg-white/60" : "bg-[#436850]"}`} />
             )}
           </button>
         ))}
@@ -638,7 +638,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
             round.status === "in_progress"
               ? "text-amber-600 bg-amber-500/10 border-amber-500/20"
               : round.status === "completed"
-              ? isDark ? "text-white/50 bg-white/05 border-white/10" : "text-[#6B7280] bg-[#FFF3D5] border-[#EEEED2]"
+              ? isDark ? "text-white/50 bg-white/05 border-white/10" : "text-[#6B7280] bg-[#FBFADA] border-[#EEEED2]"
               : "text-muted-foreground bg-muted border-border"
           }`}>
             {round.status === "in_progress" ? "In Progress" : round.status === "completed" ? "Completed" : "Upcoming"}
@@ -648,7 +648,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
 
       {/* Empty state */}
       {!round && (
-        <div className={`text-center py-12 rounded-xl border border-dashed ${isDark ? "border-white/10 text-white/30" : "border-[#E8D9B0] text-[#6B6B50]"}`}>
+        <div className={`text-center py-12 rounded-xl border border-dashed ${isDark ? "border-white/10 text-white/30" : "border-[#ADBC9F] text-[#436850]"}`}>
           <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30" />
           <p className="text-sm">No pairings yet for this round</p>
         </div>
@@ -679,14 +679,14 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
             {/* Board number + status */}
             <div className={`flex items-center justify-between px-5 py-3 border-b text-sm font-semibold ${
               isMyGame
-                ? isDark ? "border-[#4D6940]/40 bg-[#4D6940]/10" : "border-[#4D6940]/20 bg-[#F0F8F2]"
+                ? isDark ? "border-[#436850]/40 bg-[#436850]/10" : "border-[#436850]/20 bg-[#F0F8F2]"
                 : isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"
             }`}>
               <div className="flex items-center gap-2">
-                <span className={`tracking-widest uppercase ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>Board {game.board}</span>
+                <span className={`tracking-widest uppercase ${isDark ? "text-white/50" : "text-[#436850]"}`}>Board {game.board}</span>
                 {isMyGame && (
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    isDark ? "bg-[#4D6940]/30 text-emerald-400" : "bg-[#4D6940]/10 text-[#4D6940]"
+                    isDark ? "bg-[#436850]/30 text-emerald-400" : "bg-[#436850]/10 text-[#436850]"
                   }`}>
                     Your Game
                   </span>
@@ -708,7 +708,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
               {/* White */}
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
-                  isDark ? "bg-white/90 border-white/20 text-[#1A1A1A]" : "bg-white border-[#EEEED2] text-[#1A1A1A]"
+                  isDark ? "bg-white/90 border-white/20 text-[#12372A]" : "bg-white border-[#EEEED2] text-[#12372A]"
                 }`}>
                   ♝
                 </div>
@@ -734,7 +734,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
               {/* Black */}
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
-                  isDark ? "bg-[oklch(0.18_0.05_145)] border-white/15 text-white" : "bg-[#1A1A1A] border-[#333] text-white"
+                  isDark ? "bg-[oklch(0.18_0.05_145)] border-white/15 text-white" : "bg-[#12372A] border-[#333] text-white"
                 }`}>
                   ♚
                 </div>
@@ -784,7 +784,7 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
 
       {/* Header row */}
       <div className={`grid ${isDoubleSwiss ? "grid-cols-[2rem_1fr_auto_auto_auto]" : "grid-cols-[2rem_1fr_auto_auto]"} gap-3 items-center px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground uppercase tracking-wider ${
-        isDark ? "bg-white/05" : "bg-[#FFF3D5]"
+        isDark ? "bg-white/05" : "bg-[#FBFADA]"
       }`}>
         <span>#</span>
         <span>Player</span>
@@ -807,20 +807,20 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
             className={`grid ${isDoubleSwiss ? "grid-cols-[2rem_1fr_auto_auto_auto]" : "grid-cols-[2rem_1fr_auto_auto]"} gap-3 items-center px-4 py-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] relative overflow-hidden ${
               row.player.id === myPlayerId
                 ? isDark
-                  ? "border-[#4D6940]/50 bg-[#4D6940]/10 ring-1 ring-[#4D6940]/30"
-                  : "border-[#4D6940]/30 bg-[#F0F8F2] ring-1 ring-[#4D6940]/20"
+                  ? "border-[#436850]/50 bg-[#436850]/10 ring-1 ring-[#436850]/30"
+                  : "border-[#436850]/30 bg-[#F0F8F2] ring-1 ring-[#436850]/20"
                 : isLeader
                 ? isDark
                   ? "border-amber-500/30 bg-amber-500/05"
                   : "border-amber-400/40 bg-amber-50/60"
                 : isDark
                 ? "border-white/08 bg-[oklch(0.25_0.07_145)] hover:border-white/15"
-                : "border-[#EEEED2] bg-white hover:border-[#4D6940]/20"
+                : "border-[#EEEED2] bg-white hover:border-[#436850]/20"
             }`}
           >
             {/* Green left-border accent for participant's own row */}
             {row.player.id === myPlayerId && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#4D6940] rounded-r-sm" />
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#436850] rounded-r-sm" />
             )}
             {/* Rank */}
             <span className={`text-base font-bold ${medalColor(rank)}`}>
@@ -922,7 +922,7 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
   return (
     <div
       ref={sectionRef}
-      className={`rounded-2xl border p-5 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#FFF3D5]"}`}
+      className={`rounded-2xl border p-5 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#FBFADA]"}`}
     >
       <div className="flex items-center justify-between mb-4 gap-2">
         <h3 className="font-semibold text-foreground flex-shrink-0" style={{ fontFamily: "'Clash Display', sans-serif" }}>
@@ -986,8 +986,8 @@ function RegistrationState({ tournamentName, playerCount, tournamentId }: { tour
   return (
     <div className={`min-h-[60vh] flex items-center justify-center ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       <div className="text-center max-w-md px-6">
-        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"}`}>
-          <Trophy className={`w-8 h-8 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? "bg-[#436850]/20" : "bg-[#436850]/10"}`}>
+          <Trophy className={`w-8 h-8 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {tournamentName}
@@ -1005,14 +1005,14 @@ function RegistrationState({ tournamentName, playerCount, tournamentId }: { tour
               href={`/tournament/${tournamentId}/play?username=${encodeURIComponent(reg.username)}`}
               className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
                 isDark
-                  ? "bg-[#4D6940] text-white hover:bg-[#4CAF50]"
-                  : "bg-[#4D6940] text-white hover:bg-[#2A4A32]"
+                  ? "bg-[#436850] text-white hover:bg-[#4CAF50]"
+                  : "bg-[#436850] text-white hover:bg-[#2A4A32]"
               }`}
             >
               <Crown className="w-4 h-4" />
               Go to My Board
             </Link>
-            <p className={`text-xs mt-2 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <p className={`text-xs mt-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               Registered as @{reg.username}
             </p>
           </div>
@@ -1112,7 +1112,7 @@ function NewRoundFlash({ round, onDismiss }: { round: number; onDismiss: () => v
   }, [onDismiss]);
   return (
     <div className="fixed top-20 inset-x-0 z-50 flex justify-center pointer-events-none px-4">
-      <div className="pointer-events-auto flex items-center gap-3 bg-[#4D6940] text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/20 animate-in slide-in-from-top-4 duration-300">
+      <div className="pointer-events-auto flex items-center gap-3 bg-[#436850] text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/20 animate-in slide-in-from-top-4 duration-300">
         <Zap className="w-5 h-5 text-emerald-300 flex-shrink-0" />
         <span className="font-bold text-base">Round {round} pairings are live!</span>
         <button onClick={onDismiss} className="ml-2 text-white/60 hover:text-white text-lg leading-none">×</button>
@@ -1625,8 +1625,8 @@ export default function TournamentPage() {
                   href={`/tournament/${tournamentId}/manage`}
                   className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
                     isDark
-                      ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4D6940]/20"
-                      : "border-[#4D6940]/30 text-[#4D6940] hover:bg-[#4D6940]/08"
+                      ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#436850]/20"
+                      : "border-[#436850]/30 text-[#436850] hover:bg-[#436850]/08"
                   }`}
                 >
                   <Shield className="w-4 h-4" />
@@ -1649,7 +1649,7 @@ export default function TournamentPage() {
         />
         <div style={{ height: 56 }} aria-hidden />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 pt-28">
-          <div className="w-10 h-10 rounded-full border-2 border-[#4D6940] border-t-transparent animate-spin" />
+          <div className="w-10 h-10 rounded-full border-2 border-[#436850] border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground font-medium">Loading tournament…</p>
         </div>
       </div>
@@ -1680,8 +1680,8 @@ export default function TournamentPage() {
                 href={`/tournament/${tournamentId}/manage`}
                 className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
                   isDark
-                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4D6940]/20"
-                    : "border-[#4D6940]/30 text-[#4D6940] hover:bg-[#4D6940]/08"
+                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#436850]/20"
+                    : "border-[#436850]/30 text-[#436850] hover:bg-[#436850]/08"
                 }`}
               >
                 <Shield className="w-4 h-4" />
@@ -1710,8 +1710,8 @@ export default function TournamentPage() {
                 className={`touch-target flex items-center justify-center w-9 h-9 rounded-xl border transition-all active:scale-90 ${
                   isPushSubscribed
                     ? isDark
-                      ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#4D6940]/20 hover:bg-[#4D6940]/30"
-                      : "border-[#4D6940]/40 text-[#4D6940] bg-[#4D6940]/08 hover:bg-[#4D6940]/15"
+                      ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#436850]/20 hover:bg-[#436850]/30"
+                      : "border-[#436850]/40 text-[#436850] bg-[#436850]/08 hover:bg-[#436850]/15"
                     : pushStatus === "denied"
                     ? isDark
                       ? "border-red-500/30 text-red-400/60 cursor-not-allowed"
@@ -1772,7 +1772,7 @@ export default function TournamentPage() {
           {displayState.status !== "registration" && (
             <>
               {/* Live clock banner */}
-              <div className="bg-[#4D6940] py-2.5">
+              <div className="bg-[#436850] py-2.5">
                 <div className="container flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-white/80 text-sm min-w-0">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
@@ -1809,7 +1809,7 @@ export default function TournamentPage() {
               </div>
               {/* Round progress bar — shows X/N boards completed */}
               {displayState.status === "in_progress" && (
-                <div className="bg-[#4D6940]">
+                <div className="bg-[#436850]">
                   <RoundProgressBar
                     rounds={displayState.rounds}
                     currentRound={displayState.currentRound}
@@ -1912,7 +1912,7 @@ export default function TournamentPage() {
 
             {/* ── Mobile tab bar (hidden on lg+) ─────────────────── */}
             <div className="flex lg:hidden mb-4 rounded-2xl overflow-hidden border p-1 gap-1"
-              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#FFF3D5", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#EEEED2" }}>
+              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#FBFADA", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#EEEED2" }}>
               {MOBILE_TABS.map((tab) => (
                 <button
                   key={tab}
@@ -1920,11 +1920,11 @@ export default function TournamentPage() {
                   className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 capitalize relative ${
                     mobileTab === tab
                       ? isDark
-                        ? "bg-[#4D6940] text-white shadow-sm"
-                        : "bg-white text-[#4D6940] shadow-sm"
+                        ? "bg-[#436850] text-white shadow-sm"
+                        : "bg-white text-[#436850] shadow-sm"
                       : isDark
                       ? "text-white/45 hover:text-white/70"
-                      : "text-[#6B6B50] hover:text-[#6B6B50]"
+                      : "text-[#436850] hover:text-[#436850]"
                   }`}
                 >
                   {tab === "bracket" ? "Bracket" : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -2005,11 +2005,11 @@ export default function TournamentPage() {
                   {displayState.players.map((p) => (
                     <div key={p.id} className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border ${
                       p.id === myPlayerId
-                        ? isDark ? "border-[#4D6940]/50 bg-[#4D6940]/10" : "border-[#4D6940]/30 bg-[#F0F8F2]"
+                        ? isDark ? "border-[#436850]/50 bg-[#436850]/10" : "border-[#436850]/30 bg-[#F0F8F2]"
                         : isDark ? "border-white/08 bg-[oklch(0.25_0.07_145)]" : "border-[#EEEED2] bg-white"
                     }`}>
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                        isDark ? "bg-white/10 text-white/70" : "bg-[#FFF3D5] text-[#4D6940]"
+                        isDark ? "bg-white/10 text-white/70" : "bg-[#FBFADA] text-[#436850]"
                       }`}>{p.name.charAt(0).toUpperCase()}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -2023,7 +2023,7 @@ export default function TournamentPage() {
                       </div>
                       {p.id === myPlayerId && (
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          isDark ? "bg-[#4D6940]/30 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
+                          isDark ? "bg-[#436850]/30 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
                         }`}>You</span>
                       )}
                     </div>
@@ -2101,7 +2101,7 @@ export default function TournamentPage() {
       <footer className={`border-t py-6 mt-8 transition-colors duration-300 ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
         <div className="container flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-[#4D6940] rounded flex items-center justify-center">
+            <div className="w-5 h-5 bg-[#436850] rounded flex items-center justify-center">
               <Crown className="w-3 h-3 text-white" strokeWidth={2} />
             </div>
             <span>OTB Chess · Tournament Management Platform</span>

@@ -76,7 +76,7 @@ function StatusBadge({ status, syncState }: { status: Broadcast["status"]; syncS
     );
   }
   const map: Record<string, { label: string; cls: string }> = {
-    ready:    { label: "Ready",    cls: "bg-[#6B6B50]/20 text-[#6B6B50]/70 border-[#6B6B50]/30" },
+    ready:    { label: "Ready",    cls: "bg-[#436850]/20 text-[#436850]/70 border-[#436850]/30" },
     live:     { label: "● LIVE",   cls: "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" },
     paused:   { label: "Paused",   cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
     finished: { label: "Finished", cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
@@ -616,7 +616,7 @@ export default function BroadcastControl() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0d1a0f]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-[#4D6940] border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-[#436850] border-t-transparent animate-spin" />
           <span className="text-sm text-white/50">Loading broadcast…</span>
         </div>
       </div>
@@ -695,12 +695,12 @@ export default function BroadcastControl() {
             <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider">Players</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-white flex items-center justify-center text-[10px] font-bold text-[#1A1A1A]">W</div>
+                <div className="w-6 h-6 rounded bg-white flex items-center justify-center text-[10px] font-bold text-[#12372A]">W</div>
                 <span className="text-sm font-medium truncate">{broadcast.whitePlayerName}</span>
                 {broadcast.whitePlayerElo && <span className="text-xs text-white/40">{broadcast.whitePlayerElo}</span>}
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-[#1A1A1A] flex items-center justify-center text-[10px] font-bold text-white">B</div>
+                <div className="w-6 h-6 rounded bg-[#12372A] flex items-center justify-center text-[10px] font-bold text-white">B</div>
                 <span className="text-sm font-medium truncate">{broadcast.blackPlayerName}</span>
                 {broadcast.blackPlayerElo && <span className="text-xs text-white/40">{broadcast.blackPlayerElo}</span>}
               </div>
@@ -838,7 +838,7 @@ export default function BroadcastControl() {
           {/* Turn indicator */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${chess.turn() === "w" ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.4)]" : "bg-[#1A1A1A] border border-white/20"}`} />
+              <div className={`w-3 h-3 rounded-full ${chess.turn() === "w" ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.4)]" : "bg-[#12372A] border border-white/20"}`} />
               <span className="text-sm font-medium text-white/70">{turnLabel}</span>
               {broadcast.lastMoveSan && (
                 <span className="text-xs text-white/40 font-mono">Last: {broadcast.lastMoveSan}</span>

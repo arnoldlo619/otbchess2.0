@@ -216,7 +216,7 @@ function StatusBadge({ status, errorMsg, isDark }: { status: RowStatus; errorMsg
     </span>
   );
   if (status === "duplicate") return (
-    <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+    <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
       <Info className="w-3 h-3" /> Already added
     </span>
   );
@@ -226,7 +226,7 @@ function StatusBadge({ status, errorMsg, isDark }: { status: RowStatus; errorMsg
     </span>
   );
   return (
-    <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+    <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>
       Pending
     </span>
   );
@@ -255,12 +255,12 @@ function Checkbox({
       onClick={onChange}
       className={`w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-all ${
         disabled
-          ? isDark ? "border-white/10 opacity-30 cursor-not-allowed" : "border-[#E8D9B0] opacity-30 cursor-not-allowed"
+          ? isDark ? "border-white/10 opacity-30 cursor-not-allowed" : "border-[#ADBC9F] opacity-30 cursor-not-allowed"
           : checked || indeterminate
-          ? "bg-[#4D6940] border-[#4D6940]"
+          ? "bg-[#436850] border-[#436850]"
           : isDark
           ? "border-white/20 hover:border-white/40"
-          : "border-[#E8D9B0] hover:border-[#4D6940]/40"
+          : "border-[#ADBC9F] hover:border-[#436850]/40"
       }`}
     >
       {indeterminate ? (
@@ -493,29 +493,29 @@ export function UploadRSVPModal({
         className={`relative z-10 w-full max-w-2xl my-auto flex flex-col rounded-2xl shadow-2xl border overflow-hidden ${
           isDark
             ? "bg-[oklch(0.18_0.05_145)] border-white/10"
-            : "bg-white border-[#E8D9B0]"
+            : "bg-white border-[#ADBC9F]"
         }`}
         style={{ marginTop: "max(1rem, 8vh)", marginBottom: "max(1rem, 8vh)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-6 py-4 border-b ${
-          isDark ? "border-white/08" : "border-[#E8D9B0]/70"
+          isDark ? "border-white/08" : "border-[#ADBC9F]/70"
         }`}>
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-              isDark ? "bg-[#4D6940]/30" : "bg-[#4D6940]/10"
+              isDark ? "bg-[#436850]/30" : "bg-[#436850]/10"
             }`}>
               <FileSpreadsheet className="w-4.5 h-4.5 text-[#4CAF50]" />
             </div>
             <div>
               <h2
-                className={`text-base font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+                className={`text-base font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Upload RSVPs
               </h2>
-              <p className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+              <p className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                 Bulk-register players from a spreadsheet
               </p>
             </div>
@@ -523,7 +523,7 @@ export function UploadRSVPModal({
           <button
             onClick={handleClose}
             className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? "text-white/40 hover:text-white/70 hover:bg-white/08" : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+              isDark ? "text-white/40 hover:text-white/70 hover:bg-white/08" : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50"
             }`}
           >
             <X className="w-4 h-4" />
@@ -534,7 +534,7 @@ export function UploadRSVPModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* Platform selector */}
           <div className="flex items-center gap-3">
-            <span className={`text-xs font-medium ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>Platform:</span>
+            <span className={`text-xs font-medium ${isDark ? "text-white/50" : "text-[#436850]"}`}>Platform:</span>
             {(["chesscom", "lichess"] as Platform[]).map((p) => (
               <button
                 key={p}
@@ -542,11 +542,11 @@ export function UploadRSVPModal({
                 className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
                   platform === p
                     ? isDark
-                      ? "bg-[#4D6940]/30 border-[#4CAF50]/40 text-[#4CAF50]"
-                      : "bg-[#4D6940]/10 border-[#4D6940]/40 text-[#4D6940]"
+                      ? "bg-[#436850]/30 border-[#4CAF50]/40 text-[#4CAF50]"
+                      : "bg-[#436850]/10 border-[#436850]/40 text-[#436850]"
                     : isDark
                     ? "border-white/10 text-white/40 hover:text-white/60"
-                    : "border-[#E8D9B0] text-[#6B6B50] hover:text-[#6B6B50]"
+                    : "border-[#ADBC9F] text-[#436850] hover:text-[#436850]"
                 }`}
               >
                 {p === "chesscom" ? "chess.com" : "Lichess"}
@@ -563,24 +563,24 @@ export function UploadRSVPModal({
             className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-10 cursor-pointer transition-all ${
               isDragging
                 ? isDark
-                  ? "border-[#4CAF50]/60 bg-[#4D6940]/20"
-                  : "border-[#4D6940]/50 bg-[#4D6940]/05"
+                  ? "border-[#4CAF50]/60 bg-[#436850]/20"
+                  : "border-[#436850]/50 bg-[#436850]/05"
                 : isDark
                 ? "border-white/10 hover:border-white/20 hover:bg-white/03"
-                : "border-[#E8D9B0] hover:border-[#E8D9B0] hover:bg-[#FFF3D5]"
+                : "border-[#ADBC9F] hover:border-[#ADBC9F] hover:bg-[#FBFADA]"
             }`}
           >
-            <Upload className={`w-8 h-8 ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`} />
+            <Upload className={`w-8 h-8 ${isDark ? "text-white/30" : "text-[#436850]/70"}`} />
             <div className="text-center">
-              <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
+              <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>
                 {fileName ? fileName : "Drop your spreadsheet here"}
               </p>
-              <p className={`text-xs mt-1 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+              <p className={`text-xs mt-1 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                 Supports .csv, .xlsx, .xls · Column named "username" or first column
               </p>
             </div>
             <span className={`text-xs px-3 py-1.5 rounded-lg border font-medium ${
-              isDark ? "border-white/10 text-white/40" : "border-[#E8D9B0] text-[#6B6B50]"
+              isDark ? "border-white/10 text-white/40" : "border-[#ADBC9F] text-[#436850]"
             }`}>
               Browse files
             </span>
@@ -599,13 +599,13 @@ export function UploadRSVPModal({
 
           {/* Template download hint */}
           <div className={`flex items-start gap-2 text-xs rounded-xl px-4 py-3 ${
-            isDark ? "bg-white/04 text-white/40" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
+            isDark ? "bg-white/04 text-white/40" : "bg-[#FBFADA]/70 text-[#436850]"
           }`}>
             <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
             <span>
               Your spreadsheet should have a column header containing "username". Each row should have one {platform === "chesscom" ? "chess.com" : "Lichess"} username.
               {" "}<button
-                className={`underline underline-offset-2 ${isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#4D6940] hover:text-[#2A4A32]"}`}
+                className={`underline underline-offset-2 ${isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#436850] hover:text-[#2A4A32]"}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   const csv = "username\nhikaru\nmagnus\nalireza\n";
@@ -629,7 +629,7 @@ export function UploadRSVPModal({
               {/* Summary row */}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
+                  <span className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>
                     {rows.length} usernames found
                   </span>
                   {readyRows.length > 0 && (
@@ -655,7 +655,7 @@ export function UploadRSVPModal({
                     className={`flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer select-none ${
                       isDark
                         ? "text-white/50 hover:text-white/80"
-                        : "text-[#6B6B50] hover:text-[#1A1A1A]"
+                        : "text-[#436850] hover:text-[#12372A]"
                     }`}
                   >
                     <Checkbox
@@ -671,11 +671,11 @@ export function UploadRSVPModal({
 
               {/* Table */}
               <div className={`rounded-xl border overflow-hidden ${
-                isDark ? "border-white/08" : "border-[#E8D9B0]/70"
+                isDark ? "border-white/08" : "border-[#ADBC9F]/70"
               }`}>
                 {/* Column headers */}
                 <div className={`grid text-xs font-semibold px-4 py-2 border-b ${
-                  isDark ? "bg-white/04 text-white/40 border-white/08" : "bg-[#FFF3D5]/70 text-[#6B6B50] border-[#E8D9B0]/70"
+                  isDark ? "bg-white/04 text-white/40 border-white/08" : "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]/70"
                 }`} style={{ gridTemplateColumns: "1.5rem 1fr 1fr 4rem 4rem auto" }}>
                   <span />
                   <span>Username</span>
@@ -695,12 +695,12 @@ export function UploadRSVPModal({
                           ? `cursor-pointer ${
                               row.selected
                                 ? isDark ? "bg-emerald-900/15" : "bg-emerald-50/70"
-                                : isDark ? "hover:bg-white/03" : "hover:bg-[#FFF3D5]"
+                                : isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]"
                             }`
                           : row.status === "error"
                           ? isDark ? "bg-red-900/10" : "bg-red-50/40"
                           : row.status === "duplicate"
-                          ? isDark ? "bg-white/02" : "bg-[#FFF3D5]/70/60"
+                          ? isDark ? "bg-white/02" : "bg-[#FBFADA]/70/60"
                           : ""
                       }`}
                       style={{ gridTemplateColumns: "1.5rem 1fr 1fr 4rem 4rem auto" }}
@@ -716,20 +716,20 @@ export function UploadRSVPModal({
                       </div>
 
                       {/* Username */}
-                      <span className={`font-mono truncate ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>
+                      <span className={`font-mono truncate ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>
                         {row.rawUsername}
                       </span>
 
                       {/* Name */}
-                      <span className={`truncate ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+                      <span className={`truncate ${isDark ? "text-white/50" : "text-[#436850]"}`}>
                         {row.player ? row.player.name : "—"}
                       </span>
 
                       {/* Rapid ELO */}
                       <span className={`text-center font-mono font-semibold ${
                         row.player?.rapidElo
-                          ? isDark ? "text-[#6FCF7F]" : "text-[#4D6940]"
-                          : isDark ? "text-white/20" : "text-[#6B6B50]/70"
+                          ? isDark ? "text-[#6FCF7F]" : "text-[#436850]"
+                          : isDark ? "text-white/20" : "text-[#436850]/70"
                       }`}>
                         {row.player?.rapidElo ?? "—"}
                       </span>
@@ -738,7 +738,7 @@ export function UploadRSVPModal({
                       <span className={`text-center font-mono font-semibold ${
                         row.player?.blitzElo
                           ? isDark ? "text-amber-400" : "text-amber-600"
-                          : isDark ? "text-white/20" : "text-[#6B6B50]/70"
+                          : isDark ? "text-white/20" : "text-[#436850]/70"
                       }`}>
                         {row.player?.blitzElo ?? "—"}
                       </span>
@@ -752,7 +752,7 @@ export function UploadRSVPModal({
 
               {/* Selection count hint */}
               {readyRows.length > 0 && !isLookingUp && (
-                <p className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                <p className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                   {selectedReadyRows.length} of {readyRows.length} ready player{readyRows.length !== 1 ? "s" : ""} selected for import
                 </p>
               )}
@@ -763,14 +763,14 @@ export function UploadRSVPModal({
         {/* Footer */}
         {rows.length > 0 && (
           <div className={`flex items-center justify-between gap-3 px-6 py-4 border-t ${
-            isDark ? "border-white/08 bg-white/02" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70"
+            isDark ? "border-white/08 bg-white/02" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"
           }`}>
             <button
               onClick={handleClose}
               className={`text-sm font-medium px-4 py-2 rounded-xl border transition-colors ${
                 isDark
                   ? "border-white/10 text-white/50 hover:text-white/70"
-                  : "border-[#E8D9B0] text-[#6B6B50] hover:text-[#1A1A1A]"
+                  : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A]"
               }`}
             >
               Cancel
@@ -783,8 +783,8 @@ export function UploadRSVPModal({
                   onClick={handleLookup}
                   className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border transition-all ${
                     isDark
-                      ? "border-[#4CAF50]/40 text-[#4CAF50] hover:bg-[#4D6940]/20"
-                      : "border-[#4D6940]/40 text-[#4D6940] hover:bg-[#4D6940]/08"
+                      ? "border-[#4CAF50]/40 text-[#4CAF50] hover:bg-[#436850]/20"
+                      : "border-[#436850]/40 text-[#436850] hover:bg-[#436850]/08"
                   }`}
                 >
                   <Search className="w-3.5 h-3.5" />
@@ -809,7 +809,7 @@ export function UploadRSVPModal({
               )}
 
               {isLookingUp && (
-                <span className={`flex items-center gap-2 text-sm ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                <span className={`flex items-center gap-2 text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   Looking up players…
                 </span>
@@ -821,10 +821,10 @@ export function UploadRSVPModal({
                 disabled={selectedReadyRows.length === 0}
                 className={`flex items-center gap-2 text-sm font-semibold px-5 py-2 rounded-xl transition-all ${
                   selectedReadyRows.length > 0
-                    ? "bg-[#4D6940] text-white hover:bg-[#2A4A32] shadow-sm"
+                    ? "bg-[#436850] text-white hover:bg-[#2A4A32] shadow-sm"
                     : isDark
                     ? "bg-white/08 text-white/20 cursor-not-allowed"
-                    : "bg-[#E8D9B0]/40 text-[#6B6B50]/70 cursor-not-allowed"
+                    : "bg-[#ADBC9F]/40 text-[#436850]/70 cursor-not-allowed"
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />

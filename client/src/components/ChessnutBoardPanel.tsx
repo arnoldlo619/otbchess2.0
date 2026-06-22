@@ -214,11 +214,11 @@ export function ChessnutBoardPanel({
   const isTracking = engineState?.trackingEnabled ?? false;
 
   // ─── Theme ────────────────────────────────────────────────────────────────
-  const bg = isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-[#FFF3D5]/70 border-[#E8D9B0]";
-  const textPrimary = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const borderMuted = isDark ? "border-white/08" : "border-[#E8D9B0]";
-  const bgMuted = isDark ? "bg-white/04" : "bg-[#E8D9B0]/40";
+  const bg = isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F]";
+  const textPrimary = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const borderMuted = isDark ? "border-white/08" : "border-[#ADBC9F]";
+  const bgMuted = isDark ? "bg-white/04" : "bg-[#ADBC9F]/40";
 
   return (
     <div className={`rounded-xl border overflow-hidden ${bg}`}>
@@ -795,11 +795,11 @@ function ProgressStrip({ step }: { step: SetupStep }) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatBox({ label, value, isDark, color }: { label: string; value: string; isDark: boolean; color?: "emerald" | "amber" }) {
-  const valueColor = color === "emerald" ? "text-emerald-400" : color === "amber" ? "text-amber-400" : isDark ? "text-white/80" : "text-[#1A1A1A]";
+  const valueColor = color === "emerald" ? "text-emerald-400" : color === "amber" ? "text-amber-400" : isDark ? "text-white/80" : "text-[#12372A]";
   return (
-    <div className={`rounded-md px-2 py-2 text-center ${isDark ? "bg-white/04 border border-white/06" : "bg-[#E8D9B0]/40 border border-[#E8D9B0]"}`}>
+    <div className={`rounded-md px-2 py-2 text-center ${isDark ? "bg-white/04 border border-white/06" : "bg-[#ADBC9F]/40 border border-[#ADBC9F]"}`}>
       <div className={`text-lg font-bold font-mono ${valueColor}`}>{value}</div>
-      <div className={`text-[10px] ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>{label}</div>
+      <div className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>{label}</div>
     </div>
   );
 }
@@ -810,7 +810,7 @@ function ChecklistItem({ label, checked, isDark }: { label: string; checked: boo
       {checked
         ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
         : <Circle className="w-3.5 h-3.5 text-white/20 flex-shrink-0" />}
-      <span className={checked ? (isDark ? "text-white/70" : "text-[#1A1A1A]/85") : (isDark ? "text-white/30" : "text-[#6B6B50]")}>
+      <span className={checked ? (isDark ? "text-white/70" : "text-[#12372A]/85") : (isDark ? "text-white/30" : "text-[#436850]")}>
         {label}
       </span>
     </div>

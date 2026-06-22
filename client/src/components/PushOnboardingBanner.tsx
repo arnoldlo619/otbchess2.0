@@ -141,8 +141,8 @@ export function PushOnboardingBanner({
         className={`
           relative flex items-start gap-3 px-4 py-3.5 rounded-2xl border
           ${isDark
-            ? "bg-[oklch(0.25_0.08_145)] border-[#4D6940]/40 text-white"
-            : "bg-[#F0F8F2] border-[#4D6940]/25 text-[#1a2e1e]"
+            ? "bg-[oklch(0.25_0.08_145)] border-[#436850]/40 text-white"
+            : "bg-[#F0F8F2] border-[#436850]/25 text-[#1a2e1e]"
           }
         `}
       >
@@ -150,11 +150,11 @@ export function PushOnboardingBanner({
         <div
           className={`
             flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center mt-0.5
-            ${isDark ? "bg-[#4D6940]/40" : "bg-[#4D6940]/12"}
+            ${isDark ? "bg-[#436850]/40" : "bg-[#436850]/12"}
           `}
         >
           <Bell
-            className={`w-4 h-4 ${isDark ? "text-[#7EC98A]" : "text-[#4D6940]"}`}
+            className={`w-4 h-4 ${isDark ? "text-[#7EC98A]" : "text-[#436850]"}`}
           />
         </div>
 
@@ -163,7 +163,7 @@ export function PushOnboardingBanner({
           <p className={`text-sm font-semibold leading-snug ${isDark ? "text-white" : "text-[#1a2e1e]"}`}>
             Get notified when the next round starts
           </p>
-          <p className={`text-xs mt-0.5 leading-snug ${isDark ? "text-white/55" : "text-[#4D6940]/70"}`}>
+          <p className={`text-xs mt-0.5 leading-snug ${isDark ? "text-white/55" : "text-[#436850]/70"}`}>
             Tap the bell in the header — or enable notifications below — so you never miss your pairing.
           </p>
 
@@ -177,8 +177,8 @@ export function PushOnboardingBanner({
                 transition-all duration-150 active:scale-95
                 ${isLoading ? "opacity-60 cursor-not-allowed" : ""}
                 ${isDark
-                  ? "bg-[#4D6940] text-white hover:bg-[#4a7d56]"
-                  : "bg-[#4D6940] text-white hover:bg-[#2e5236]"
+                  ? "bg-[#436850] text-white hover:bg-[#4a7d56]"
+                  : "bg-[#436850] text-white hover:bg-[#2e5236]"
                 }
               `}
               aria-label="Enable push notifications"
@@ -195,7 +195,7 @@ export function PushOnboardingBanner({
               onClick={handleDismiss}
               className={`
                 text-xs font-medium px-2 py-1.5 rounded-lg transition-colors duration-150
-                ${isDark ? "text-white/40 hover:text-white/60" : "text-[#6B6B50] hover:text-[#6B6B50]"}
+                ${isDark ? "text-white/40 hover:text-white/60" : "text-[#436850] hover:text-[#436850]"}
               `}
               aria-label="Dismiss notification prompt"
             >
@@ -210,7 +210,7 @@ export function PushOnboardingBanner({
           className={`
             flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5
             transition-colors duration-150
-            ${isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-[#6B6B50]/70 hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"}
+            ${isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-[#436850]/70 hover:text-[#436850] hover:bg-[#ADBC9F]/50"}
           `}
           aria-label="Close notification prompt"
         >

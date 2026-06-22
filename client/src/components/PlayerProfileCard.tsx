@@ -39,7 +39,7 @@ function PlatformBadge({ platform }: { platform?: "chesscom" | "lichess" }) {
       Lichess
     </span>
   ) : (
-    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#81b64c]/15 text-[#4D6940]">
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#81b64c]/15 text-[#436850]">
       <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
       </svg>
@@ -53,8 +53,8 @@ function ColorChip({ color }: { color: "W" | "B" }) {
     <div
       className={`w-5 h-5 rounded-sm border text-[9px] font-bold flex items-center justify-center ${
         color === "W"
-          ? "bg-white border-[#E8D9B0] text-[#6B6B50]"
-          : "bg-[#E8D9B0]/40 border-[#E8D9B0] text-[#6B6B50]/70"
+          ? "bg-white border-[#ADBC9F] text-[#436850]"
+          : "bg-[#ADBC9F]/40 border-[#ADBC9F] text-[#436850]/70"
       }`}
     >
       {color}
@@ -324,7 +324,7 @@ function SparklineSkeleton({ isDark }: { isDark: boolean }) {
   return (
     <div
       className={`h-11 rounded-lg animate-pulse ${
-        isDark ? "bg-white/05" : "bg-[#E8D9B0]/40"
+        isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"
       }`}
     />
   );
@@ -351,10 +351,10 @@ function TCPill({
   onClick: () => void;
 }) {
   const base = "text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer transition-all select-none";
-  const activeStyle = "bg-[#4D6940] text-white";
+  const activeStyle = "bg-[#436850] text-white";
   const inactiveStyle = isDark
     ? "bg-white/08 text-white/50 hover:bg-white/15 hover:text-white/80"
-    : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0] hover:text-[#6B6B50]";
+    : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] hover:text-[#436850]";
   return (
     <button
       type="button"
@@ -387,8 +387,8 @@ function SparklineSection({
     enabled: visible && !!player.username,
   });
 
-  const textSub = isDark ? "text-white/40" : "text-[#6B6B50]";
-  const divider = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textSub = isDark ? "text-white/40" : "text-[#436850]";
+  const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
 
   // Don't render the section at all if there's an error and no data
   if (status === "error") return null;
@@ -472,11 +472,11 @@ function CardContent({
 
   const bg = isDark
     ? "bg-[oklch(0.22_0.06_145)] border-white/10"
-    : "bg-white border-[#E8D9B0]";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textSub = isDark ? "text-white/40" : "text-[#6B6B50]";
-  const divider = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
-  const statBg = isDark ? "bg-white/05" : "bg-[#FFF3D5]/70";
+    : "bg-white border-[#ADBC9F]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textSub = isDark ? "text-white/40" : "text-[#436850]";
+  const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
+  const statBg = isDark ? "bg-white/05" : "bg-[#FBFADA]/70";
 
   return (
     <div
@@ -499,7 +499,7 @@ function CardContent({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               {player.title && (
-                <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1.5 py-0.5 rounded">
+                <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">
                   {player.title}
                 </span>
               )}
@@ -532,7 +532,7 @@ function CardContent({
         </div>
         <div className={`px-4 py-3 ${statBg}`}>
           <p className={`text-[10px] uppercase tracking-wider font-semibold ${textSub}`}>Points</p>
-          <p className={`text-xl font-bold tabular-nums text-[#4D6940]`}>{player.points}</p>
+          <p className={`text-xl font-bold tabular-nums text-[#436850]`}>{player.points}</p>
         </div>
       </div>
 
@@ -593,8 +593,8 @@ function CardContent({
                 <div
                   className={`w-5 h-5 rounded-sm border-2 border-dashed text-[9px] font-bold flex items-center justify-center opacity-50 ${
                     player.colorHistory[player.colorHistory.length - 1] === "W"
-                      ? "border-[#E8D9B0] text-[#6B6B50]"
-                      : "border-[#E8D9B0] text-[#6B6B50]"
+                      ? "border-[#ADBC9F] text-[#436850]"
+                      : "border-[#ADBC9F] text-[#436850]"
                   }`}
                 >
                   {player.colorHistory[player.colorHistory.length - 1] === "W" ? "B" : "W"}

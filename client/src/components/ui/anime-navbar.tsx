@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 
 // ─── OTB design tokens ────────────────────────────────────────────────────────
 const _OTB_GREEN       = "#4CAF50"
-const _OTB_GREEN_DARK  = "#4D6940"
+const _OTB_GREEN_DARK  = "#436850"
 const OTB_GREEN_GLOW  = "rgba(61,107,71,"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -251,15 +251,15 @@ export function AnimeNavBar({
     : "0 2px 16px rgba(61,107,71,0.10), 0 1px 4px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.90)"
 
   // Tab text
-  const tabActiveText   = isDark ? "text-white"     : "text-[#1A1A1A]"
-  const tabInactiveText = isDark ? "text-white/60 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"
+  const tabActiveText   = isDark ? "text-white"     : "text-[#12372A]"
+  const tabInactiveText = isDark ? "text-white/60 hover:text-white" : "text-[#436850] hover:text-[#12372A]"
 
   // Dropdown caret & tooltip backgrounds
   const dropdownCaretBg = isDark ? "rgba(10,31,10,0.95)"  : "rgba(255,255,255,0.98)"
-  const dropdownCaretBorder = isDark ? "border-white/12" : "border-[#E8D9B0]/80"
+  const dropdownCaretBorder = isDark ? "border-white/12" : "border-[#ADBC9F]/80"
   const tooltipBg       = isDark ? "rgba(10,31,10,0.92)"  : "rgba(255,255,255,0.96)"
-  const tooltipText     = isDark ? "text-white/90"         : "text-[#1A1A1A]"
-  const tooltipBorder   = isDark ? "border-white/12"       : "border-[#E8D9B0]/70"
+  const tooltipText     = isDark ? "text-white/90"         : "text-[#12372A]"
+  const tooltipBorder   = isDark ? "border-white/12"       : "border-[#ADBC9F]/70"
 
   return (
     <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
@@ -386,7 +386,7 @@ export function AnimeNavBar({
                             exit={{ opacity: 0, scale: 0.85 }}
                             className={cn(
                               "absolute inset-0 rounded-full -z-10",
-                              isDark ? "bg-white/[0.07]" : "bg-[#E8D9B0]/40"
+                              isDark ? "bg-white/[0.07]" : "bg-[#ADBC9F]/40"
                             )}
                           />
                         )}

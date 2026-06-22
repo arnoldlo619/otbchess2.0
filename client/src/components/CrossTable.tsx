@@ -76,8 +76,8 @@ function ResultCell({ cell, isDark }: { cell: Cell; isDark: boolean }) {
   if (cell.result === "self") {
     return (
       <td className="p-0.5">
-        <div className={`w-10 h-10 flex items-center justify-center rounded-md ${isDark ? "bg-white/04" : "bg-[#E8D9B0]/40"}`}>
-          <div className={`w-4 h-0.5 rounded-full ${isDark ? "bg-white/15" : "bg-[#E8D9B0]"}`} />
+        <div className={`w-10 h-10 flex items-center justify-center rounded-md ${isDark ? "bg-white/04" : "bg-[#ADBC9F]/40"}`}>
+          <div className={`w-4 h-0.5 rounded-full ${isDark ? "bg-white/15" : "bg-[#ADBC9F]"}`} />
         </div>
       </td>
     );
@@ -86,8 +86,8 @@ function ResultCell({ cell, isDark }: { cell: Cell; isDark: boolean }) {
   if (cell.result === "none") {
     return (
       <td className="p-0.5">
-        <div className={`w-10 h-10 flex items-center justify-center rounded-md ${isDark ? "bg-white/02" : "bg-[#FFF3D5]/70"}`}>
-          <span className={`text-sm ${isDark ? "text-white/15" : "text-[#6B6B50]/50"}`}>·</span>
+        <div className={`w-10 h-10 flex items-center justify-center rounded-md ${isDark ? "bg-white/02" : "bg-[#FBFADA]/70"}`}>
+          <span className={`text-sm ${isDark ? "text-white/15" : "text-[#436850]/50"}`}>·</span>
         </div>
       </td>
     );
@@ -95,14 +95,14 @@ function ResultCell({ cell, isDark }: { cell: Cell; isDark: boolean }) {
 
   const colorMap = {
     win:  isDark
-      ? "bg-[#4D6940]/35 text-[#5DC467] border border-[#4CAF50]/25 shadow-[0_0_8px_rgba(76,175,80,0.15)]"
+      ? "bg-[#436850]/35 text-[#5DC467] border border-[#4CAF50]/25 shadow-[0_0_8px_rgba(76,175,80,0.15)]"
       : "bg-emerald-50 text-emerald-700 border border-emerald-200",
     loss: isDark
       ? "bg-red-900/25 text-red-400 border border-red-500/20"
       : "bg-red-50 text-red-600 border border-red-200",
     draw: isDark
       ? "bg-white/06 text-white/45 border border-white/08"
-      : "bg-[#FFF3D5]/70 text-[#6B6B50] border border-[#E8D9B0]",
+      : "bg-[#FBFADA]/70 text-[#436850] border border-[#ADBC9F]",
   };
 
   const cls = colorMap[cell.result as "win" | "loss" | "draw"];
@@ -146,10 +146,10 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
   }, [isDark, tournamentName]);
 
   const bg      = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const border  = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
-  const rowHover = isDark ? "hover:bg-white/03" : "hover:bg-[#FFF3D5]/70";
+  const border  = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/40" : "text-[#436850]";
+  const rowHover = isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]/70";
 
   return (
     <div className={`rounded-2xl border overflow-hidden ${bg} ${border}`}>
@@ -171,8 +171,8 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
           {/* Legend */}
           <div className="hidden sm:flex items-center gap-3">
             {[
-              { label: "Win",  score: "1", cls: isDark ? "bg-[#4D6940]/35 text-[#5DC467] border border-[#4CAF50]/25" : "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-              { label: "Draw", score: "½", cls: isDark ? "bg-white/06 text-white/45 border border-white/08" : "bg-[#FFF3D5]/70 text-[#6B6B50] border border-[#E8D9B0]" },
+              { label: "Win",  score: "1", cls: isDark ? "bg-[#436850]/35 text-[#5DC467] border border-[#4CAF50]/25" : "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+              { label: "Draw", score: "½", cls: isDark ? "bg-white/06 text-white/45 border border-white/08" : "bg-[#FBFADA]/70 text-[#436850] border border-[#ADBC9F]" },
               { label: "Loss", score: "0", cls: isDark ? "bg-red-900/25 text-red-400 border border-red-500/20" : "bg-red-50 text-red-600 border border-red-200" },
             ].map(({ label, score, cls }) => (
               <div key={label} className="flex items-center gap-1.5">
@@ -190,7 +190,7 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               isDark
                 ? "bg-white/08 hover:bg-white/12 text-white/70"
-                : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
+                : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850]"
             }`}
           >
             {exporting ? (
@@ -217,7 +217,7 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                 {players.map((_, j) => (
                   <th
                     key={j}
-                    className={`pb-3 text-center text-xs font-bold w-11 ${isDark ? "text-white/35" : "text-[#6B6B50]"} ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}
+                    className={`pb-3 text-center text-xs font-bold w-11 ${isDark ? "text-white/35" : "text-[#436850]"} ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}
                   >
                     {j + 1}
                   </th>
@@ -239,15 +239,15 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                   className={`group transition-colors ${rowHover}`}
                 >
                   {/* Rank + Player name — sticky */}
-                  <td className={`pr-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#E8D9B0]/70"} sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)] group-hover:bg-[oklch(0.24_0.06_145)]" : "bg-white group-hover:bg-[#FFF3D5]/70"}`}>
+                  <td className={`pr-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#ADBC9F]/70"} sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)] group-hover:bg-[oklch(0.24_0.06_145)]" : "bg-white group-hover:bg-[#FBFADA]/70"}`}>
                     <div className="flex items-center gap-2.5">
                       {/* Rank number */}
                       <span
                         className={`w-6 text-center text-xs font-black flex-shrink-0 tabular-nums ${
                           i === 0 ? (isDark ? "text-yellow-400" : "text-yellow-600")
-                          : i === 1 ? (isDark ? "text-[#6B6B50]/70" : "text-[#6B6B50]")
+                          : i === 1 ? (isDark ? "text-[#436850]/70" : "text-[#436850]")
                           : i === 2 ? (isDark ? "text-amber-600" : "text-amber-700")
-                          : (isDark ? "text-white/25" : "text-[#6B6B50]/70")
+                          : (isDark ? "text-white/25" : "text-[#436850]/70")
                         }`}
                       >
                         {i + 1}
@@ -260,11 +260,11 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
                           {player.title && (
-                            <span className="text-[9px] font-bold text-[#4D6940] bg-[#4D6940]/12 px-1.5 py-0.5 rounded leading-none flex-shrink-0">
+                            <span className="text-[9px] font-bold text-[#436850] bg-[#436850]/12 px-1.5 py-0.5 rounded leading-none flex-shrink-0">
                               {player.title}
                             </span>
                           )}
-                          <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                          <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
                             {player.name}
                           </span>
                         </div>
@@ -279,9 +279,9 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                   ))}
 
                   {/* Score */}
-                  <td className={`pl-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#E8D9B0]/70"} text-right`}>
+                  <td className={`pl-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#ADBC9F]/70"} text-right`}>
                     <span
-                      className={`text-base font-black tabular-nums ${isDark ? "text-[#5DC467]" : "text-[#4D6940]"}`}
+                      className={`text-base font-black tabular-nums ${isDark ? "text-[#5DC467]" : "text-[#436850]"}`}
                       style={{ fontFamily: "'Clash Display', sans-serif" }}
                     >
                       {player.points}
@@ -289,7 +289,7 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                   </td>
 
                   {/* Buchholz */}
-                  <td className={`pl-3 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#E8D9B0]/70"} text-right`}>
+                  <td className={`pl-3 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#ADBC9F]/70"} text-right`}>
                     <span className={`text-sm tabular-nums font-medium ${textMuted}`}>
                       {player.buchholz.toFixed(1)}
                     </span>
@@ -304,8 +304,8 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
       {/* Mobile legend */}
       <div className={`flex sm:hidden items-center gap-4 px-6 py-3 border-t ${border}`}>
         {[
-          { label: "Win",  score: "1", cls: isDark ? "bg-[#4D6940]/35 text-[#5DC467] border border-[#4CAF50]/25" : "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-          { label: "Draw", score: "½", cls: isDark ? "bg-white/06 text-white/45 border border-white/08" : "bg-[#FFF3D5]/70 text-[#6B6B50] border border-[#E8D9B0]" },
+          { label: "Win",  score: "1", cls: isDark ? "bg-[#436850]/35 text-[#5DC467] border border-[#4CAF50]/25" : "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+          { label: "Draw", score: "½", cls: isDark ? "bg-white/06 text-white/45 border border-white/08" : "bg-[#FBFADA]/70 text-[#436850] border border-[#ADBC9F]" },
           { label: "Loss", score: "0", cls: isDark ? "bg-red-900/25 text-red-400 border border-red-500/20" : "bg-red-50 text-red-600 border border-red-200" },
         ].map(({ label, score, cls }) => (
           <div key={label} className="flex items-center gap-1.5">

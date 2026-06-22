@@ -121,9 +121,9 @@ function LiveStandingsPanel({
 }) {
   const standings = getStandings(players);
   const medals = ["🥇", "🥈", "🥉"];
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
 
   return (
     <div className="space-y-2">
@@ -139,17 +139,17 @@ function LiveStandingsPanel({
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
               isMe
                 ? isDark
-                  ? "bg-[#4D6940]/30 border border-[#4CAF50]/40"
-                  : "bg-[#4D6940]/08 border border-[#4D6940]/25"
+                  ? "bg-[#436850]/30 border border-[#4CAF50]/40"
+                  : "bg-[#436850]/08 border border-[#436850]/25"
                 : i < 3
-                ? isDark ? "bg-white/04" : "bg-[#FFF3D5]/70"
+                ? isDark ? "bg-white/04" : "bg-[#FBFADA]/70"
                 : ""
             }`}
           >
             <span className="text-base w-7 text-center flex-shrink-0">
               {i < 3
                 ? medals[i]
-                : <span className={`text-sm font-bold ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>{i + 1}</span>
+                : <span className={`text-sm font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>{i + 1}</span>
               }
             </span>
             <PlayerAvatar
@@ -167,7 +167,7 @@ function LiveStandingsPanel({
                   {isMe && <span className={`ml-1 text-xs ${accent}`}>(you)</span>}
                 </span>
                 {p.title && (
-                  <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1 py-0.5 rounded flex-shrink-0">
+                  <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1 py-0.5 rounded flex-shrink-0">
                     {p.title}
                   </span>
                 )}
@@ -195,9 +195,9 @@ function LiveStandingsPanel({
 // ─── Rejoin Link Card ─────────────────────────────────────────────────────────
 function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
-  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FFF3D5]/70";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
+  const textMuted = isDark ? "text-white/40" : "text-[#436850]";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(rejoinUrl);
@@ -210,14 +210,14 @@ function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: bool
       <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>Your Rejoin Link</p>
       <p className={`text-xs ${textMuted}`}>Bookmark this to jump straight back to your board.</p>
       <div className="flex justify-center">
-        <div className={`p-2 rounded-xl ${isDark ? "bg-white" : "bg-white border border-[#E8D9B0]/70"}`}>
+        <div className={`p-2 rounded-xl ${isDark ? "bg-white" : "bg-white border border-[#ADBC9F]/70"}`}>
           <QRCodeSVG value={rejoinUrl} size={96} bgColor="#ffffff" fgColor="#1a2e1e" level="M" />
         </div>
       </div>
       <button
         onClick={handleCopy}
         className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-          isDark ? "bg-white/08 hover:bg-white/12 text-white/70" : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]"
+          isDark ? "bg-white/08 hover:bg-white/12 text-white/70" : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850]"
         }`}
       >
         {copied
@@ -245,9 +245,9 @@ function PushPromptCard({
   const cardBg = isDark
     ? "bg-[#1a2e1e] border border-[#4CAF50]/20"
     : "bg-emerald-50 border border-emerald-200";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/60" : "text-[#6B6B50]";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/60" : "text-[#436850]";
 
   return (
     <div className={`mx-4 mt-3 rounded-2xl px-4 py-3.5 flex items-start gap-3 ${cardBg}`}>
@@ -265,7 +265,7 @@ function PushPromptCard({
           className={`mt-2.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
             isDark
               ? "bg-[#4CAF50] text-black hover:bg-[#5DBF61] disabled:opacity-50"
-              : "bg-[#4D6940] text-white hover:bg-[#2d5237] disabled:opacity-50"
+              : "bg-[#436850] text-white hover:bg-[#2d5237] disabled:opacity-50"
           }`}
         >
           {isLoading ? "Enabling…" : "Enable Notifications"}
@@ -274,7 +274,7 @@ function PushPromptCard({
       <button
         onClick={() => setDismissed(true)}
         className={`flex-shrink-0 p-1 rounded-lg transition-colors ${
-          isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-[#6B6B50] hover:text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+          isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50"
         }`}
         aria-label="Dismiss"
       >
@@ -327,15 +327,15 @@ function LobbyScreen({
   };
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FFF3D5]/70";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
-  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
+  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
-      <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+      <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
         <div className="flex items-center justify-between">
           <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
           <ConnectionBadge connected={connected} isDark={isDark} />
@@ -395,7 +395,7 @@ function LobbyScreen({
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95 disabled:opacity-60 ${
               isDark
                 ? "bg-white/08 text-white/70 hover:bg-white/12 border border-white/10"
-                : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0] border border-[#E8D9B0]"
+                : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] border border-[#ADBC9F]"
             }`}
           >
             <RefreshCw className={`w-4 h-4 transition-transform ${refreshing ? "animate-spin" : ""}`} />
@@ -423,10 +423,10 @@ function WaitingRoundScreen({
   }, []);
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
-  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
+  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
   const rank = myRank(username, players);
   const myScore = getStandings(players).find(
     (p) => p.username.toLowerCase() === username.toLowerCase()
@@ -434,14 +434,14 @@ function WaitingRoundScreen({
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
-      <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+      <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
         <div className="flex items-center justify-between">
           <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
       </div>
       <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4 flex items-center gap-4`}>
-        <div className={`w-10 h-10 rounded-full ${isDark ? "bg-[#4CAF50]/20" : "bg-[#4D6940]/12"} flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-10 h-10 rounded-full ${isDark ? "bg-[#4CAF50]/20" : "bg-[#436850]/12"} flex items-center justify-center flex-shrink-0`}>
           <Clock className={`w-5 h-5 ${accent}`} />
         </div>
         <div>
@@ -462,7 +462,7 @@ function WaitingRoundScreen({
       </div>
       <PushPromptCard tournamentId={tournamentId} isDark={isDark} chessUsername={username} />
       {rank > 0 && (
-        <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FFF3D5]/70"} px-5 py-4`}>
+        <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70"} px-5 py-4`}>
           <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-2`}>Your Standing</p>
           <div className="flex items-center gap-3">
             <span className="text-3xl">{rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`}</span>
@@ -473,7 +473,7 @@ function WaitingRoundScreen({
           </div>
         </div>
       )}
-      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FFF3D5]/70"} px-4 py-4 flex-1 overflow-y-auto pb-safe`}>
+      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70"} px-4 py-4 flex-1 overflow-y-auto pb-safe`}>
         <LiveStandingsPanel
           players={players}
           username={username}
@@ -531,12 +531,12 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
     ? isDark ? "#ef4444" : "#dc2626"
     : isLow
     ? isDark ? "#f59e0b" : "#d97706"
-    : isDark ? "#4CAF50" : "#4D6940";
+    : isDark ? "#4CAF50" : "#436850";
   const textColor = isExpired
     ? isDark ? "text-red-400" : "text-red-600"
     : isLow
     ? isDark ? "text-amber-400" : "text-amber-700"
-    : isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
+    : isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const bgCard = isExpired
     ? isDark ? "bg-red-500/08 border border-red-500/20" : "bg-red-50/60 border border-red-200"
     : isLow
@@ -579,8 +579,8 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
             <X className={`w-5 h-5 ${textColor}`} />
           ) : isPaused ? (
             <div className="flex gap-0.5">
-              <div className={`w-1 h-4 rounded-full ${isDark ? "bg-white/40" : "bg-[#6B6B50]/60"}`} />
-              <div className={`w-1 h-4 rounded-full ${isDark ? "bg-white/40" : "bg-[#6B6B50]/60"}`} />
+              <div className={`w-1 h-4 rounded-full ${isDark ? "bg-white/40" : "bg-[#436850]/60"}`} />
+              <div className={`w-1 h-4 rounded-full ${isDark ? "bg-white/40" : "bg-[#436850]/60"}`} />
             </div>
           ) : (
             <Clock className={`w-5 h-5 ${textColor}`} />
@@ -590,14 +590,14 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
       {/* Time display */}
       <div className="flex-1 min-w-0">
-          <p className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <p className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           {isExpired ? "Time's Up" : isPaused ? "Round Timer — Paused" : "Round Timer"}
         </p>
         <p className={`text-3xl font-black font-mono leading-none tracking-tight ${textColor}`}>
           {isExpired ? "0:00" : display}
         </p>
           {!isExpired && !isPaused && remaining > 0 && (
-          <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+          <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
             {Math.round(fraction * 100)}% remaining
           </p>
         )}
@@ -605,7 +605,7 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
       {/* Status badge */}
       {isPaused && (
-        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>Paused</span>
+        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>Paused</span>
       )}
       {isExpired && (
         <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>Ended</span>
@@ -690,12 +690,12 @@ function MyBoardScreen({
     touchStartY.current = null;
   };
 
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FFF3D5]/70";
-  const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
-  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08";
-  const divider = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
+  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
+  const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const colorLabel = myColor === "white" ? "White ♔" : "Black ♚";
   const rank = myRank(username, players);
@@ -760,7 +760,7 @@ function MyBoardScreen({
             onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
             className={`flex-1 py-3 text-sm font-semibold transition-colors ${
               activeTab === tab
-                ? `${accent} border-b-2 ${isDark ? "border-[#4CAF50]" : "border-[#4D6940]"}`
+                ? `${accent} border-b-2 ${isDark ? "border-[#4CAF50]" : "border-[#436850]"}`
                 : textMuted
             }`}
           >
@@ -776,8 +776,8 @@ function MyBoardScreen({
             onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
             className={`rounded-full transition-all duration-300 ${
               activeTab === tab
-                ? `w-5 h-1.5 ${isDark ? "bg-[#4CAF50]" : "bg-[#4D6940]"}`
-                : `w-1.5 h-1.5 ${isDark ? "bg-white/20" : "bg-[#E8D9B0]"}`
+                ? `w-5 h-1.5 ${isDark ? "bg-[#4CAF50]" : "bg-[#436850]"}`
+                : `w-1.5 h-1.5 ${isDark ? "bg-white/20" : "bg-[#ADBC9F]"}`
             }`}
             aria-label={`Go to ${tab} tab`}
           />
@@ -810,8 +810,8 @@ function MyBoardScreen({
                 </div>
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${
                   myColor === "black"
-                    ? isDark ? "bg-white/05 text-[#1A1A1A]" : "bg-[#1A1A1A] text-white"
-                    : isDark ? "bg-white/10 text-white" : "bg-white text-[#1A1A1A]"
+                    ? isDark ? "bg-white/05 text-[#12372A]" : "bg-[#12372A] text-white"
+                    : isDark ? "bg-white/10 text-white" : "bg-white text-[#12372A]"
                 }`}>
                   {myColor === "white" ? "♔" : "♚"}
                 </div>
@@ -848,7 +848,7 @@ function MyBoardScreen({
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className={`text-sm font-semibold ${accent}`}>{oppRating} Rating</span>
                         {oppRank > 0 && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/08 text-white/60" : "bg-[#E8D9B0]/40 text-[#6B6B50]"}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/08 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
                             #{oppRank} of {players.length}
                           </span>
                         )}
@@ -883,17 +883,17 @@ function MyBoardScreen({
                           <p className="text-base font-black text-emerald-500">{oppWins}</p>
                           <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>W</p>
                         </div>
-                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
                         <div className="text-center">
                           <p className={`text-base font-black ${isDark ? "text-blue-400" : "text-blue-500"}`}>{oppDraws}</p>
                           <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>D</p>
                         </div>
-                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
                         <div className="text-center">
                           <p className="text-base font-black text-red-500">{oppLosses}</p>
                           <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>L</p>
                         </div>
-                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
                         <div className="text-center">
                           <p className={`text-base font-black ${accent}`}>{oppPoints}</p>
                           <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>pts</p>
@@ -978,12 +978,12 @@ function MyBoardScreen({
                 return `${base}&p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}&myColor=${myColor}`;
               })()}
               className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
-                isDark ? "bg-white/05 hover:bg-white/08" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50"
+                isDark ? "bg-white/05 hover:bg-white/08" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
               } transition-colors`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/15" : "bg-[#4D6940]/08"
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/08"
                 }`}>
                   <Timer className={`w-5 h-5 ${accent}`} />
                 </div>
@@ -999,11 +999,11 @@ function MyBoardScreen({
               <button
                 onClick={() => setShowStreamSheet(true)}
                 className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-colors ${
-                  isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50 active:bg-[#E8D9B0]/70"
+                  isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F]/70"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#4D6940]/08"}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/08"}`}>
                     <MonitorPlay className={`w-5 h-5 ${accent}`} />
                   </div>
                   <div className="text-left">
@@ -1028,12 +1028,12 @@ function MyBoardScreen({
             <button
               onClick={() => setShowFilmSheet(true)}
               className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-colors ${
-                isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-[#FFF3D5]/70 hover:bg-[#E8D9B0]/50 active:bg-[#E8D9B0]/70"
+                isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F]/70"
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/15" : "bg-[#4D6940]/08"
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/08"
                 }`}>
                   <Video className={`w-5 h-5 ${accent}`} />
                 </div>
@@ -1071,17 +1071,17 @@ function MyBoardScreen({
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div
             className={`relative w-full rounded-t-3xl border-t overflow-hidden ${
-              isDark ? "bg-[oklch(0.18_0.06_145)] border-white/10" : "bg-white border-[#E8D9B0]"
+              isDark ? "bg-[oklch(0.18_0.06_145)] border-white/10" : "bg-white border-[#ADBC9F]"
             } animate-slide-up-fade safe-bottom`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
-              <div className={`w-10 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-[#E8D9B0]"}`} />
+              <div className={`w-10 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-[#ADBC9F]"}`} />
             </div>
             {/* Header */}
             <div className={`flex items-center justify-between px-5 py-3 border-b ${
-              isDark ? "border-white/06" : "border-[#E8D9B0]/70"
+              isDark ? "border-white/06" : "border-[#ADBC9F]/70"
             }`}>
               <div className="flex items-center gap-2">
                 <MonitorPlay className={`w-4 h-4 ${accent}`} />
@@ -1097,7 +1097,7 @@ function MyBoardScreen({
               </div>
               <button
                 onClick={() => setShowStreamSheet(false)}
-                className={`p-2 rounded-xl ${isDark ? "hover:bg-white/08" : "hover:bg-[#E8D9B0]/50"}`}
+                className={`p-2 rounded-xl ${isDark ? "hover:bg-white/08" : "hover:bg-[#ADBC9F]/50"}`}
               >
                 <X className={`w-4 h-4 ${textMuted}`} />
               </button>
@@ -1323,8 +1323,8 @@ export default function PlayerView() {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div className="space-y-3">
-          <p className="text-lg font-bold text-[#1A1A1A]">Missing tournament or username.</p>
-          <Link href="/join" className="text-sm text-[#4D6940] underline">Go back to Join</Link>
+          <p className="text-lg font-bold text-[#12372A]">Missing tournament or username.</p>
+          <Link href="/join" className="text-sm text-[#436850] underline">Go back to Join</Link>
         </div>
       </div>
     );
@@ -1348,8 +1348,8 @@ export default function PlayerView() {
 
   if (screen === "new_round_flash") {
     const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
-    const accent = isDark ? "text-[#4CAF50]" : "text-[#4D6940]";
-    const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#4D6940]/08";
+    const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
+    const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
     return (
       <div className={`min-h-screen ${bg} flex flex-col items-center justify-center px-6 gap-6 text-center`}>
         <div className="relative flex items-center justify-center">
@@ -1360,9 +1360,9 @@ export default function PlayerView() {
           </div>
         </div>
         <div className="space-y-2">
-          <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>New Round!</h2>
+          <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-[#12372A]"}`}>New Round!</h2>
           <p className={`text-base font-semibold ${accent}`}>{newRoundFlashLabel}</p>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>Finding your board assignment…</p>
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Finding your board assignment…</p>
         </div>
       </div>
     );
@@ -1410,10 +1410,10 @@ export default function PlayerView() {
       const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
       return (
         <div className={`min-h-screen ${bg} flex flex-col items-center justify-center px-6 gap-4 text-center`}>
-          <RotateCcw className={`w-10 h-10 ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`} />
-          <p className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>You're not in the pairings yet.</p>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>Ask the director to check your registration.</p>
-          <Link href={`/tournament/${tournamentId}`} className="text-sm text-[#4D6940] underline">View standings</Link>
+          <RotateCcw className={`w-10 h-10 ${isDark ? "text-white/30" : "text-[#436850]/70"}`} />
+          <p className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>You're not in the pairings yet.</p>
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Ask the director to check your registration.</p>
+          <Link href={`/tournament/${tournamentId}`} className="text-sm text-[#436850] underline">View standings</Link>
         </div>
       );
     }

@@ -280,12 +280,12 @@ export function ChessnutChromeBTPanel({
   const isUnsupported = status === "unsupported";
   const isBusy = ["picker_opened", "connecting", "discovering_services"].includes(status);
 
-  const bg = isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-[#FFF3D5]/70 border-[#E8D9B0]";
-  const textPrimary = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const textDim = isDark ? "text-white/30" : "text-[#6B6B50]";
-  const borderMuted = isDark ? "border-white/08" : "border-[#E8D9B0]";
-  const bgMuted = isDark ? "bg-white/04" : "bg-[#E8D9B0]/40";
+  const bg = isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F]";
+  const textPrimary = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const textDim = isDark ? "text-white/30" : "text-[#436850]";
+  const borderMuted = isDark ? "border-white/08" : "border-[#ADBC9F]";
+  const bgMuted = isDark ? "bg-white/04" : "bg-[#ADBC9F]/40";
 
   return (
     <div className={`rounded-xl border p-4 space-y-4 ${bg}`}>
@@ -410,7 +410,7 @@ export function ChessnutChromeBTPanel({
                 onClick={handleRejectPendingMove}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   isDark ? "bg-white/06 border border-white/10 text-white/50 hover:bg-white/10"
-                         : "bg-[#E8D9B0]/40 border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]"
+                         : "bg-[#ADBC9F]/40 border border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]"
                 }`}
               >
                 Reject
@@ -501,7 +501,7 @@ export function ChessnutChromeBTPanel({
             onClick={onSwitchToManual}
             className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
               isDark ? "bg-white/06 border border-white/10 text-white/60 hover:bg-white/10"
-                     : "bg-[#E8D9B0]/40 border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]"
+                     : "bg-[#ADBC9F]/40 border border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]"
             }`}
           >
             <Cpu className="w-3.5 h-3.5" /> Switch to Manual Mode
@@ -560,7 +560,7 @@ export function ChessnutChromeBTPanel({
                   onChange={e => setTestFen(e.target.value)}
                   className={`w-full text-xs font-mono px-2 py-1.5 rounded-lg border ${
                     isDark ? "bg-white/05 border-white/10 text-white/80 placeholder-white/20"
-                           : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A]"
+                           : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A]"
                   }`}
                   placeholder="FEN string"
                 />
@@ -587,7 +587,7 @@ export function ChessnutChromeBTPanel({
               </div>
               {testResult && (
                 <div className={`text-xs font-mono px-2 py-1.5 rounded-lg ${
-                  isDark ? "bg-white/05 text-white/70" : "bg-[#E8D9B0]/40 text-[#1A1A1A]/85"
+                  isDark ? "bg-white/05 text-white/70" : "bg-[#ADBC9F]/40 text-[#12372A]/85"
                 }`}>
                   {testResult}
                 </div>
@@ -609,7 +609,7 @@ export function ChessnutChromeBTPanel({
               Raw BLE Payloads
               {adapterState.rawPayloads.length > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  isDark ? "bg-white/10 text-white/50" : "bg-[#E8D9B0] text-[#6B6B50]"
+                  isDark ? "bg-white/10 text-white/50" : "bg-[#ADBC9F] text-[#436850]"
                 }`}>{adapterState.rawPayloads.length}</span>
               )}
             </span>
@@ -624,7 +624,7 @@ export function ChessnutChromeBTPanel({
                   onClick={handleCopyRawPayloads}
                   className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-all ${
                     isDark ? "bg-white/06 border border-white/10 text-white/50 hover:bg-white/10"
-                           : "bg-[#E8D9B0]/40 border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]"
+                           : "bg-[#ADBC9F]/40 border border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]"
                   }`}
                 >
                   {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -637,7 +637,7 @@ export function ChessnutChromeBTPanel({
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {adapterState.rawPayloads.map((p, i) => (
                     <div key={i} className={`text-[10px] font-mono px-2 py-1 rounded ${
-                      isDark ? "bg-white/04 text-white/40" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
+                      isDark ? "bg-white/04 text-white/40" : "bg-[#FBFADA]/70 text-[#436850]"
                     }`}>
                       <span className="opacity-50">{new Date(p.ts).toISOString().slice(11, 23)}</span>{" "}
                       <span className="opacity-40">[{p.length}B]</span>{" "}
@@ -685,7 +685,7 @@ function DiagnosticsGrid({
   textPrimary: string;
   bgMuted: string;
 }) {
-  const borderMuted = isDark ? "border-white/08" : "border-[#E8D9B0]";
+  const borderMuted = isDark ? "border-white/08" : "border-[#ADBC9F]";
 
   return (
     <div className="space-y-3">
@@ -777,14 +777,14 @@ function ServiceCard({
         <div className={`border-t ${borderMuted} p-2 space-y-1`}>
           {svc.characteristics.map((ch) => (
             <div key={ch.uuid} className={`text-[10px] font-mono px-2 py-1 rounded ${
-              isDark ? "bg-white/04 text-white/50" : "bg-white text-[#6B6B50]"
+              isDark ? "bg-white/04 text-white/50" : "bg-white text-[#436850]"
             }`}>
               <div className="flex items-center justify-between">
                 <span>{ch.uuid}</span>
                 <span className={`text-[9px] ${textMuted}`}>{ch.properties.join(", ")}</span>
               </div>
               {ch.lastNotification && (
-                <div className={`mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                <div className={`mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                   ↳ {ch.lastNotification}
                   {ch.lastNotificationAt && (
                     <span className="ml-2 opacity-50">
@@ -794,7 +794,7 @@ function ServiceCard({
                 </div>
               )}
               {ch.lastValue && !ch.lastNotification && (
-                <div className={`mt-0.5 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                <div className={`mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                   read: {ch.lastValue}
                 </div>
               )}

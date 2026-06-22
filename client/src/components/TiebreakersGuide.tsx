@@ -49,18 +49,18 @@ function getNote(w: number, d: number, l: number, pts: number): string {
 }
 
 export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
-  const card = `guide-card rounded-2xl border overflow-hidden ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`;
-  const cardHeader = `guide-card-header px-5 py-4 border-b ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-[#E8D9B0]/70 bg-[#FFF3D5]"}`;
-  const title = `font-bold text-base ${isDark ? "text-white" : "text-[#1A1A1A]"}`;
-  const sub = `text-sm mt-1.5 ${isDark ? "text-white/50" : "text-[#6B6B50]"}`;
-  const innerTable = `rounded-xl overflow-hidden border ${isDark ? "border-white/06" : "border-[#E8D9B0]/70"}`;
-  const thead = isDark ? "bg-white/04" : "bg-[#FFF3D5]/70";
-  const th = `px-3 py-2.5 text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B6B50]"}`;
-  const tdBorder = `border-t ${isDark ? "border-white/06" : "border-[#E8D9B0]/70"}`;
-  const muted = isDark ? "text-white/50" : "text-[#6B6B50]";
+  const card = `guide-card rounded-2xl border overflow-hidden ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`;
+  const cardHeader = `guide-card-header px-5 py-4 border-b ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-[#ADBC9F]/70 bg-[#FBFADA]"}`;
+  const title = `font-bold text-base ${isDark ? "text-white" : "text-[#12372A]"}`;
+  const sub = `text-sm mt-1.5 ${isDark ? "text-white/50" : "text-[#436850]"}`;
+  const innerTable = `rounded-xl overflow-hidden border ${isDark ? "border-white/06" : "border-[#ADBC9F]/70"}`;
+  const thead = isDark ? "bg-white/04" : "bg-[#FBFADA]/70";
+  const th = `px-3 py-2.5 text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#436850]"}`;
+  const tdBorder = `border-t ${isDark ? "border-white/06" : "border-[#ADBC9F]/70"}`;
+  const muted = isDark ? "text-white/50" : "text-[#436850]";
   const pill = (color: string) =>
     `text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${color}`;
-  const formulaBox = `rounded-xl p-4 text-center ${isDark ? "bg-white/04" : "bg-[#FFF3D5]/70"}`;
+  const formulaBox = `rounded-xl p-4 text-center ${isDark ? "bg-white/04" : "bg-[#FBFADA]/70"}`;
 
   // ── Determine whether we have enough real data ──────────────────────────────
   const hasRealData = !!standings && standings.length >= 3 &&
@@ -153,7 +153,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
             const oppScore = oppRow.points;
             const contrib = oppScore * myResult;
             const resultLabel = myResult === 1 ? "Win (×1)" : myResult === 0.5 ? "Draw (×0.5)" : "Loss (×0)";
-            const color = myResult === 1 ? "text-emerald-500" : myResult === 0.5 ? "text-blue-500" : (isDark ? "text-white/30" : "text-[#6B6B50]/70");
+            const color = myResult === 1 ? "text-emerald-500" : myResult === 0.5 ? "text-blue-500" : (isDark ? "text-white/30" : "text-[#436850]/70");
             built.push({
               rnd: `R${round.number}`,
               opp: `${oppRow.player.name} (${fmt(oppScore)} pts)`,
@@ -179,14 +179,14 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
       {/* Header */}
       <div>
         <h2
-          className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+          className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           How Tiebreakers Work
         </h2>
         <p className={`text-sm mt-0.5 ${muted}`}>
           When players finish with the same number of points, these systems determine final ranking order. Applied in the order shown below.
-          {isLive && <span className={`ml-2 text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>· Examples use this tournament's actual data</span>}
+          {isLive && <span className={`ml-2 text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>· Examples use this tournament's actual data</span>}
         </p>
       </div>
 
@@ -194,9 +194,9 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
       <div className={card}>
         <div className={cardHeader}>
           <div className="flex items-center gap-3">
-            <span className={pill(isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#4D6940]/12 text-[#4D6940]")}>Pts</span>
+            <span className={pill(isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/12 text-[#436850]")}>Pts</span>
             <span className={title} style={{ fontFamily: "'Clash Display', sans-serif" }}>Points</span>
-            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>(Primary criterion)</span>
+            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>(Primary criterion)</span>
           </div>
           <p className={sub}>The main ranking criterion. Win = 1 pt, Draw = 0.5 pts, Loss = 0 pts.</p>
         </div>
@@ -231,7 +231,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
                     example: isLive && standings && standings.length > 0
                       ? `${standings[standings.length - 1].player.name} loses → earns 0 pts`
                       : "Grant H loses → Grant H earns 0 pts",
-                    color: isDark ? "text-white/30" : "text-[#6B6B50]/70",
+                    color: isDark ? "text-white/30" : "text-[#436850]/70",
                   },
                 ].map((row, i) => (
                   <tr key={i} className={tdBorder}>
@@ -252,7 +252,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full text-emerald-500 ${isDark ? "bg-emerald-500/15" : "bg-emerald-50"}`}>W</span>
             <span className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full text-blue-500 ${isDark ? "bg-blue-500/15" : "bg-blue-50"}`}>D</span>
-            <span className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full ${isDark ? "text-white/40 bg-white/08" : "text-[#6B6B50] bg-[#E8D9B0]/40"}`}>L</span>
+            <span className={`text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full ${isDark ? "text-white/40 bg-white/08" : "text-[#436850] bg-[#ADBC9F]/40"}`}>L</span>
             <span className={`${title} ml-1`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Wins / Draws / Losses</span>
           </div>
           <p className={sub}>A breakdown of each player's individual game outcomes across all rounds.</p>
@@ -270,11 +270,11 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
               <tbody>
                 {wdlRows.map((row, i) => (
                   <tr key={i} className={tdBorder}>
-                    <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{row.name}</td>
-                    <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{fmt(row.pts)}</td>
+                    <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</td>
+                    <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>{fmt(row.pts)}</td>
                     <td className="px-3 py-3 text-center font-semibold tabular-nums text-emerald-500">{row.w}</td>
                     <td className="px-3 py-3 text-center font-semibold tabular-nums text-blue-500">{row.d}</td>
-                    <td className={`px-3 py-3 text-center font-semibold tabular-nums ${isDark ? "text-white/30" : "text-[#6B6B50]/70"}`}>{row.l}</td>
+                    <td className={`px-3 py-3 text-center font-semibold tabular-nums ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>{row.l}</td>
                     <td className={`px-3 py-3 text-xs ${muted}`}>{row.note}</td>
                   </tr>
                 ))}
@@ -290,7 +290,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
           <div className="flex items-center gap-3">
             <span className={pill(isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600")}>Bch</span>
             <span className={title} style={{ fontFamily: "'Clash Display', sans-serif" }}>Buchholz</span>
-            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>(1st tiebreak)</span>
+            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>(1st tiebreak)</span>
           </div>
           <p className={sub}>
             The sum of all your opponents' final scores. Playing stronger opponents gives a higher Buchholz.
@@ -298,13 +298,13 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
         </div>
         <div className="p-5 space-y-4">
           <div className={formulaBox}>
-            <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Formula</p>
-            <p className={`text-base font-mono font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+            <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>Formula</p>
+            <p className={`text-base font-mono font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
               Bch = Opp₁ pts + Opp₂ pts + Opp₃ pts + …
             </p>
           </div>
           <div>
-            <p className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+            <p className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
               {isLive
                 ? `Real example — ${bchRows[0]?.name} vs ${bchRows[1]?.name} (both ${fmt(bchRows[0]?.pts ?? 0)} pts, Bch separates them)`
                 : "Real example — cdchi94 vs Felix Schlesinger (both 4 pts, Bch separates them)"}
@@ -321,17 +321,17 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
                 <tbody>
                   {bchRows.map((row, i) => (
                     <tr key={i} className={tdBorder}>
-                      <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{row.name}</td>
-                      <td className={`px-3 py-3 text-center font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{fmt(row.pts)}</td>
+                      <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</td>
+                      <td className={`px-3 py-3 text-center font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>{fmt(row.pts)}</td>
                       <td className={`px-3 py-3 text-xs ${muted}`}>{row.opps}</td>
                       <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-amber-400" : "text-amber-600"}`}>{row.bch}</td>
-                      <td className={`px-3 py-3 text-center font-bold ${i === 0 ? "text-emerald-500" : (isDark ? "text-white/40" : "text-[#6B6B50]")}`}>{row.rank}</td>
+                      <td className={`px-3 py-3 text-center font-bold ${i === 0 ? "text-emerald-500" : (isDark ? "text-white/40" : "text-[#436850]")}`}>{row.rank}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className={`text-xs mt-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>{bchNote}</p>
+            <p className={`text-xs mt-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>{bchNote}</p>
           </div>
         </div>
       </div>
@@ -342,7 +342,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
           <div className="flex items-center gap-3">
             <span className={pill(isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-orange-600")}>Bch1</span>
             <span className={title} style={{ fontFamily: "'Clash Display', sans-serif" }}>Buchholz Cut-1</span>
-            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>(2nd tiebreak)</span>
+            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>(2nd tiebreak)</span>
           </div>
           <p className={sub}>
             Same as Buchholz, but the lowest-scoring opponent is removed. Reduces the impact of a lucky pairing against a very weak player.
@@ -350,8 +350,8 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
         </div>
         <div className="p-5 space-y-4">
           <div className={formulaBox}>
-            <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Formula</p>
-            <p className={`text-base font-mono font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+            <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>Formula</p>
+            <p className={`text-base font-mono font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
               Bch1 = Bch − min(opponent score)
             </p>
           </div>
@@ -373,10 +373,10 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
                   <tbody>
                     {[p1, p2].map((row, i) => (
                       <tr key={i} className={tdBorder}>
-                        <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>{row.player.name}</td>
+                        <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.player.name}</td>
                         <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-amber-400" : "text-amber-600"}`}>{fmt(row.buchholz)}</td>
                         <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-orange-400" : "text-orange-600"}`}>{fmt(row.buchholzCut1)}</td>
-                        <td className={`px-3 py-3 text-center font-bold ${i === 0 ? "text-emerald-500" : (isDark ? "text-white/40" : "text-[#6B6B50]")}`}>#{row.rank}</td>
+                        <td className={`px-3 py-3 text-center font-bold ${i === 0 ? "text-emerald-500" : (isDark ? "text-white/40" : "text-[#436850]")}`}>#{row.rank}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -384,12 +384,12 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
               </div>
             );
           })()}
-          <div className={`guide-highlight flex gap-3 rounded-xl p-4 ${isDark ? "bg-white/04" : "bg-[#FFF3D5]/70"}`}>
+          <div className={`guide-highlight flex gap-3 rounded-xl p-4 ${isDark ? "bg-white/04" : "bg-[#FBFADA]/70"}`}>
             <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-orange-600"}`}>
               ⚠️
             </div>
             <div>
-              <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>Why remove the lowest?</p>
+              <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>Why remove the lowest?</p>
               <p className={`text-xs mt-0.5 ${muted}`}>
                 A player might be paired against a very weak opponent who scores 0 points all tournament.
                 Removing that score prevents an easy pairing from unfairly hurting your tiebreak ranking.
@@ -405,7 +405,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
           <div className="flex items-center gap-3">
             <span className={pill(isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-50 text-purple-600")}>SB</span>
             <span className={title} style={{ fontFamily: "'Clash Display', sans-serif" }}>Sonneborn-Berger</span>
-            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>(3rd tiebreak)</span>
+            <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>(3rd tiebreak)</span>
           </div>
           <p className={sub}>
             Rewards beating strong opponents more than weak ones. Multiply each opponent's score by your result (1 = win, 0.5 = draw, 0 = loss).
@@ -413,12 +413,12 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
         </div>
         <div className="p-5 space-y-4">
           <div className={formulaBox}>
-            <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>Formula</p>
-            <p className={`text-base font-mono font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+            <p className={`text-xs uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>Formula</p>
+            <p className={`text-base font-mono font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
               SB = Σ (opponent score × your result)
             </p>
           </div>
-          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#436850]"}`}>
             {isLive ? `${sbPlayerName}'s round-by-round SB breakdown` : `${sbPlayerName}'s round-by-round SB breakdown (first 3 rounds shown)`}
           </p>
           <div className={innerTable}>
@@ -433,14 +433,14 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
               <tbody>
                 {sbRows.map((row, i) => (
                   <tr key={i} className={tdBorder}>
-                    <td className={`px-3 py-3 text-center text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{row.rnd}</td>
-                    <td className={`px-3 py-3 text-sm ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>{row.opp}</td>
-                    <td className={`px-3 py-3 text-center font-mono font-bold ${isDark ? "text-white/70" : "text-[#1A1A1A]/85"}`}>{row.oppScore}</td>
+                    <td className={`px-3 py-3 text-center text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>{row.rnd}</td>
+                    <td className={`px-3 py-3 text-sm ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>{row.opp}</td>
+                    <td className={`px-3 py-3 text-center font-mono font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>{row.oppScore}</td>
                     <td className={`px-3 py-3 text-center font-semibold ${row.color}`}>{row.result}</td>
                     <td className="px-3 py-3 text-center font-bold tabular-nums text-purple-500">{row.contrib}</td>
                   </tr>
                 ))}
-                <tr className={`border-t-2 ${isDark ? "border-white/12" : "border-[#E8D9B0]"}`}>
+                <tr className={`border-t-2 ${isDark ? "border-white/12" : "border-[#ADBC9F]"}`}>
                   <td colSpan={4} className={`px-3 py-3 text-right font-bold text-sm ${muted}`}>
                     {sbPlayerName}'s SB Total{!isLive ? " (3 rounds shown)" : ""}
                   </td>
@@ -449,30 +449,30 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
               </tbody>
             </table>
           </div>
-          <p className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+          <p className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>
             Beating a player who scored more points contributes more than beating a player who scored fewer — quality of wins matters.
           </p>
         </div>
       </div>
 
       {/* ── Tiebreak Order Summary ── */}
-      <div className={`rounded-2xl border p-5 ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+      <div className={`rounded-2xl border p-5 ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
         <h3
-          className={`font-bold text-sm mb-4 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+          className={`font-bold text-sm mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           Tiebreak Order Applied in This Tournament
         </h3>
         <div className="space-y-2">
           {[
-            { rank: 1, label: "Pts", desc: "Points — primary criterion", color: isDark ? "text-[#4CAF50]" : "text-[#4D6940]" },
+            { rank: 1, label: "Pts", desc: "Points — primary criterion", color: isDark ? "text-[#4CAF50]" : "text-[#436850]" },
             { rank: 2, label: "Bch", desc: "Buchholz — sum of all opponent scores", color: isDark ? "text-amber-400" : "text-amber-600" },
             { rank: 3, label: "Bch1", desc: "Buchholz Cut-1 — lowest opponent score removed", color: isDark ? "text-orange-400" : "text-orange-600" },
             { rank: 4, label: "SB", desc: "Sonneborn-Berger — quality of wins weighted", color: "text-purple-500" },
             { rank: 5, label: "W", desc: "Number of wins — final fallback", color: "text-emerald-500" },
           ].map((row) => (
-            <div key={row.rank} className={`guide-list-item flex items-center gap-3 rounded-xl px-4 py-3 ${isDark ? "bg-white/04" : "bg-[#FFF3D5]/70"}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isDark ? "bg-white/08 text-white/40" : "bg-[#E8D9B0] text-[#6B6B50]"}`}>
+            <div key={row.rank} className={`guide-list-item flex items-center gap-3 rounded-xl px-4 py-3 ${isDark ? "bg-white/04" : "bg-[#FBFADA]/70"}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isDark ? "bg-white/08 text-white/40" : "bg-[#ADBC9F] text-[#436850]"}`}>
                 {row.rank}
               </span>
               <span className={`text-sm font-bold w-10 flex-shrink-0 ${row.color}`}>{row.label}</span>

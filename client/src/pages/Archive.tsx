@@ -55,7 +55,7 @@ function titleColor(title: string | null) {
     case "GM": return "bg-amber-500 text-white";
     case "IM": return "bg-orange-500 text-white";
     case "FM": return "bg-blue-500 text-white";
-    case "NM": return "bg-[#4D6940] text-white";
+    case "NM": return "bg-[#436850] text-white";
     case "CM": return "bg-purple-500 text-white";
     default: return "";
   }
@@ -63,10 +63,10 @@ function titleColor(title: string | null) {
 
 function formatBadge(format: string) {
   switch (format) {
-    case "Swiss": return { color: "bg-[#4D6940]/10 text-[#4D6940] border-[#4D6940]/20", icon: "⚙" };
+    case "Swiss": return { color: "bg-[#436850]/10 text-[#436850] border-[#436850]/20", icon: "⚙" };
     case "Round Robin": return { color: "bg-blue-50 text-blue-700 border-blue-200", icon: "⟳" };
     case "Elimination": return { color: "bg-red-50 text-red-700 border-red-200", icon: "⚔" };
-    default: return { color: "bg-[#FFF3D5]/70 text-[#6B6B50] border-[#E8D9B0]", icon: "•" };
+    default: return { color: "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]", icon: "•" };
   }
 }
 
@@ -107,12 +107,12 @@ function WinnerBadge({ player, isDark }: { player: ArchivePlayer; isDark: boolea
               {player.title}
             </span>
           )}
-          <span className={`font-semibold text-sm truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+          <span className={`font-semibold text-sm truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
             {player.name}
           </span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className={`text-xs ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+          <span className={`text-xs ${isDark ? "text-white/50" : "text-[#436850]"}`}>
             @{player.username}
           </span>
           <span className={`text-xs font-medium ${isDark ? "text-amber-400" : "text-amber-700"}`}>
@@ -121,10 +121,10 @@ function WinnerBadge({ player, isDark }: { player: ArchivePlayer; isDark: boolea
         </div>
       </div>
       <div className={`ml-auto text-right flex-shrink-0`}>
-        <div className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+        <div className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
           {player.elo}
         </div>
-        <div className={`text-[10px] ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>ELO</div>
+        <div className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>ELO</div>
       </div>
     </motion.div>
   );
@@ -148,7 +148,7 @@ function PodiumCard({ player, isDark }: { player: ArchivePlayer; isDark: boolean
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className={`text-xs font-medium ${isDark ? "text-white/50" : "text-[#6B6B50]"}`}>
+      <div className={`text-xs font-medium ${isDark ? "text-white/50" : "text-[#436850]"}`}>
         {player.title && (
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded mr-1 ${titleColor(player.title)}`}>
             {player.title}
@@ -156,7 +156,7 @@ function PodiumCard({ player, isDark }: { player: ArchivePlayer; isDark: boolean
         )}
         {player.name.split(" ")[0]}
       </div>
-      <div className={`text-sm font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+      <div className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
         {player.score}
       </div>
       <div
@@ -194,7 +194,7 @@ function TournamentCard({
       className={`rounded-2xl border overflow-hidden transition-shadow ${
         isDark
           ? "bg-[oklch(0.18_0.05_145)] border-white/08 hover:border-white/14"
-          : "bg-white border-[#E8D9B0]/70 hover:border-[#4D6940]/30 hover:shadow-md"
+          : "bg-white border-[#ADBC9F]/70 hover:border-[#436850]/30 hover:shadow-md"
       }`}
     >
       {/* Card Header */}
@@ -212,7 +212,7 @@ function TournamentCard({
                   className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
                     isDark
                       ? "bg-white/05 border-white/10 text-white/50"
-                      : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50]"
+                      : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850]"
                   }`}
                 >
                   {tag}
@@ -225,14 +225,14 @@ function TournamentCard({
 
             {/* Title */}
             <h3
-              className={`text-lg font-bold leading-tight mb-1 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+              className={`text-lg font-bold leading-tight mb-1 ${isDark ? "text-white" : "text-[#12372A]"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {tournament.name}
             </h3>
 
             {/* Meta row */}
-            <div className={`flex flex-wrap items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <div className={`flex flex-wrap items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" /> {tournament.date}
               </span>
@@ -254,7 +254,7 @@ function TournamentCard({
           {/* Expand toggle */}
           <button
             className={`flex-shrink-0 p-2 rounded-lg transition-colors ${
-              isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
+              isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
             }`}
           >
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -277,11 +277,11 @@ function TournamentCard({
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className={`border-t px-5 pb-5 pt-4 ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+            <div className={`border-t px-5 pb-5 pt-4 ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
               {/* Podium — top 3 */}
               {tournament.standings.length >= 3 && (
                 <div className="mb-5">
-                  <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                  <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                     Podium
                   </p>
                   <div className="grid grid-cols-3 gap-2 items-end">
@@ -296,14 +296,14 @@ function TournamentCard({
               )}
 
               {/* Full standings table */}
-              <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+              <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                 Final Standings
               </p>
-              <div className={`rounded-xl overflow-hidden border ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
+              <div className={`rounded-xl overflow-hidden border ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
                 {/* Table header */}
                 <div
                   className={`grid gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${
-                    isDark ? "bg-white/04 text-white/30" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
+                    isDark ? "bg-white/04 text-white/30" : "bg-[#FBFADA]/70 text-[#436850]"
                   }`}
                   style={{ gridTemplateColumns: "2rem 1fr 3.5rem 3.5rem 4rem 4rem" }}
                 >
@@ -322,14 +322,14 @@ function TournamentCard({
                     className={`grid gap-2 px-3 py-2.5 items-center text-sm border-t ${
                       isDark
                         ? `border-white/05 ${i === 0 ? "bg-amber-500/05" : ""}`
-                        : `border-[#E8D9B0]/50 ${i === 0 ? "bg-amber-50/50" : ""}`
+                        : `border-[#ADBC9F]/50 ${i === 0 ? "bg-amber-50/50" : ""}`
                     }`}
                     style={{ gridTemplateColumns: "2rem 1fr 3.5rem 3.5rem 4rem 4rem" }}
                   >
                     {/* Rank */}
                     <div className="flex items-center justify-center">
                       {rankMedal(player.rank) || (
-                        <span className={`text-xs font-medium ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                        <span className={`text-xs font-medium ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                           {player.rank}
                         </span>
                       )}
@@ -343,36 +343,36 @@ function TournamentCard({
                         </span>
                       )}
                       <div className="min-w-0">
-                        <div className={`font-medium truncate text-xs ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                        <div className={`font-medium truncate text-xs ${isDark ? "text-white" : "text-[#12372A]"}`}>
                           {player.name}
                         </div>
-                        <div className={`text-[10px] truncate ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                        <div className={`text-[10px] truncate ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                           @{player.username}
                         </div>
                       </div>
                     </div>
 
                     {/* Score */}
-                    <div className={`text-right font-bold text-xs ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+                    <div className={`text-right font-bold text-xs ${isDark ? "text-white" : "text-[#12372A]"}`}>
                       {player.score}
                     </div>
 
                     {/* ELO */}
-                    <div className={`text-right text-xs font-medium ${isDark ? "text-white/60" : "text-[#6B6B50]"}`}>
+                    <div className={`text-right text-xs font-medium ${isDark ? "text-white/60" : "text-[#436850]"}`}>
                       {player.elo}
                     </div>
 
                     {/* Performance */}
                     <div className={`text-right text-xs hidden sm:block ${
                       player.performanceRating > player.elo
-                        ? "text-[#4D6940] font-medium"
-                        : isDark ? "text-white/40" : "text-[#6B6B50]"
+                        ? "text-[#436850] font-medium"
+                        : isDark ? "text-white/40" : "text-[#436850]"
                     }`}>
                       {player.performanceRating > player.elo ? "▲ " : ""}{player.performanceRating}
                     </div>
 
                     {/* W/D/L */}
-                    <div className={`text-right text-[10px] hidden sm:block ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                    <div className={`text-right text-[10px] hidden sm:block ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                       {player.wins}/{player.draws}/{player.losses}
                     </div>
                   </div>
@@ -381,7 +381,7 @@ function TournamentCard({
 
               {/* Tournament details footer */}
               <div className={`mt-4 pt-4 border-t flex flex-wrap gap-4 text-xs ${
-                isDark ? "border-white/08 text-white/40" : "border-[#E8D9B0]/70 text-[#6B6B50]"
+                isDark ? "border-white/08 text-white/40" : "border-[#ADBC9F]/70 text-[#436850]"
               }`}>
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" /> {tournament.venue}, {tournament.city}
@@ -424,14 +424,14 @@ function UserTournamentCard({
   const winner = standings[0];
   const statusLabel = state?.status === "completed" ? "Completed" : state?.status === "in_progress" ? "In Progress" : "Registration";
   const statusColor = state?.status === "completed"
-    ? isDark ? "bg-[#4D6940]/20 text-[#4CAF50] border-[#4D6940]/30" : "bg-[#4D6940]/08 text-[#4D6940] border-[#4D6940]/20"
+    ? isDark ? "bg-[#436850]/20 text-[#4CAF50] border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border-[#436850]/20"
     : state?.status === "in_progress"
     ? isDark ? "bg-amber-500/15 text-amber-400 border-amber-500/25" : "bg-amber-50 text-amber-700 border-amber-200"
-    : isDark ? "bg-white/05 text-white/40 border-white/10" : "bg-[#FFF3D5]/70 text-[#6B6B50] border-[#E8D9B0]";
+    : isDark ? "bg-white/05 text-white/40 border-white/10" : "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]";
   const formatLabel = config.format === "swiss" ? "Swiss" : config.format === "roundrobin" ? "Round Robin" : "Elimination";
   return (
     <div className={`rounded-2xl border overflow-hidden ${
-      isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#E8D9B0]/70"
+      isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
     }`}>
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -441,16 +441,16 @@ function UserTournamentCard({
                 {statusLabel}
               </span>
               <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
-                isDark ? "bg-[#4D6940]/10 text-[#4CAF50] border-[#4D6940]/20" : "bg-[#4D6940]/08 text-[#4D6940] border-[#4D6940]/20"
+                isDark ? "bg-[#436850]/10 text-[#4CAF50] border-[#436850]/20" : "bg-[#436850]/08 text-[#436850] border-[#436850]/20"
               }`}>
                 {formatLabel}
               </span>
             </div>
-            <h3 className={`text-lg font-bold leading-tight mb-1 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+            <h3 className={`text-lg font-bold leading-tight mb-1 ${isDark ? "text-white" : "text-[#12372A]"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {config.name}
             </h3>
-            <div className={`flex flex-wrap items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <div className={`flex flex-wrap items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               {config.date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{config.date}</span>}
               {config.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{config.venue}</span>}
               <span className="flex items-center gap-1"><Users className="w-3 h-3" />{state?.players.length ?? 0} players</span>
@@ -460,7 +460,7 @@ function UserTournamentCard({
           </div>
           <Link href={`/tournament/${config.id}`}>
             <button className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              isDark ? "bg-[#4D6940]/20 text-[#4CAF50] hover:bg-[#4D6940]/30" : "bg-[#4D6940]/08 text-[#4D6940] hover:bg-[#4D6940]/15"
+              isDark ? "bg-[#436850]/20 text-[#4CAF50] hover:bg-[#436850]/30" : "bg-[#436850]/08 text-[#436850] hover:bg-[#436850]/15"
             }`}>
               {state?.status === "registration" ? "Manage" : "View"}
             </button>
@@ -472,20 +472,20 @@ function UserTournamentCard({
           }`}>
             <Crown className="w-4 h-4 text-amber-500 flex-shrink-0" />
             <div className="min-w-0">
-              <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1A1A1A]"}`}>
+              <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
                 {winner.player.name}
               </span>
               <span className={`text-xs ml-1.5 ${isDark ? "text-amber-400" : "text-amber-700"}`}>
                 {winner.points} pts
               </span>
             </div>
-            <span className={`ml-auto text-xs font-medium ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+            <span className={`ml-auto text-xs font-medium ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               {winner.player.elo} ELO
             </span>
           </div>
         ) : (
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs ${
-            isDark ? "bg-white/04 text-white/30" : "bg-[#FFF3D5]/70 text-[#6B6B50]"
+            isDark ? "bg-white/04 text-white/30" : "bg-[#FBFADA]/70 text-[#436850]"
           }`}>
             <Trophy className="w-3.5 h-3.5" />
              {state?.status === "registration" ? "Waiting for players to register" : "No results yet"}
@@ -496,7 +496,7 @@ function UserTournamentCard({
       <div className="flex gap-2 px-5 pb-4">
         <Link href={`/tournament/${config.id}/manage`} className="flex-1">
           <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-            isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-[#FFF3D5]/70 border border-[#E8D9B0] text-[#1A1A1A]/85 hover:bg-[#E8D9B0]/50"
+            isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-[#FBFADA]/70 border border-[#ADBC9F] text-[#12372A]/85 hover:bg-[#ADBC9F]/50"
           }`}>
             <BarChart2 className="w-3.5 h-3.5" /> Manage
           </button>
@@ -505,11 +505,11 @@ function UserTournamentCard({
           <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
             state?.status === "completed"
               ? isDark
-                ? "bg-[#4D6940]/20 text-[#7ec89a] hover:bg-[#4D6940]/35"
-                : "bg-[#4D6940]/10 border border-[#4D6940]/30 text-[#3a5230] hover:bg-[#4D6940]/20"
+                ? "bg-[#436850]/20 text-[#7ec89a] hover:bg-[#436850]/35"
+                : "bg-[#436850]/10 border border-[#436850]/30 text-[#3a5230] hover:bg-[#436850]/20"
               : isDark
                 ? "bg-white/08 text-white/60 hover:bg-white/12"
-                : "bg-[#FFF3D5]/70 border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                : "bg-[#FBFADA]/70 border border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50"
           }`}>
             <Trophy className="w-3.5 h-3.5" /> View Report
           </button>
@@ -526,7 +526,7 @@ function UserTournamentCard({
             className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
               isDark
                 ? "bg-white/08 text-white/60 hover:bg-white/14 hover:text-white/90"
-                : "bg-[#FFF3D5]/70 border border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]/50"
+                : "bg-[#FBFADA]/70 border border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50"
             }`}
           >
             <Download className="w-3.5 h-3.5" />
@@ -584,7 +584,7 @@ function UserTournamentCard({
               onClick={() => setConfirmDelete(false)}
               disabled={isDeleting}
               className={`flex-1 text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${
-                isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-[#E8D9B0]/40 text-[#6B6B50] hover:bg-[#E8D9B0]"
+                isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
               }`}
             >
               Cancel
@@ -611,20 +611,20 @@ function StatCard({
   return (
     <div
       className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${
-        isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#E8D9B0]/70"
+        isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
       }`}
     >
-      <div className={`p-2 rounded-lg ${isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/08"}`}>
-        <div className="text-[#4D6940]">{icon}</div>
+      <div className={`p-2 rounded-lg ${isDark ? "bg-[#436850]/20" : "bg-[#436850]/08"}`}>
+        <div className="text-[#436850]">{icon}</div>
       </div>
       <div>
         <div
-          className={`text-xl font-black ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+          className={`text-xl font-black ${isDark ? "text-white" : "text-[#12372A]"}`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           {value}
         </div>
-        <div className={`text-xs ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>{label}</div>
+        <div className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>{label}</div>
       </div>
     </div>
   );
@@ -747,7 +747,7 @@ export default function Archive() {
         className={`sticky top-0 z-40 border-b backdrop-blur-md otb-header-safe ${
           isDark
             ? "bg-[oklch(0.14_0.04_145)]/90 border-white/08"
-            : "bg-[#F8FAF8]/90 border-[#E8D9B0]/60"
+            : "bg-[#F8FAF8]/90 border-[#ADBC9F]/60"
         }`}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
@@ -755,20 +755,20 @@ export default function Archive() {
             <Link href="/">
               <button
                 className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                  isDark ? "text-white/50 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"
+                  isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Back</span>
               </button>
             </Link>
-            <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#E8D9B0]"}`} />
+            <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
             <NavLogo />
           </div>
 
           <Link href="/">
             <button
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#4D6940] text-white hover:bg-[#3a5230] transition-colors"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#436850] text-white hover:bg-[#3a5230] transition-colors"
             >
               Create Tournament
             </button>
@@ -787,17 +787,17 @@ export default function Archive() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1
-                className={`text-4xl sm:text-5xl font-black leading-none mb-2 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+                className={`text-4xl sm:text-5xl font-black leading-none mb-2 ${isDark ? "text-white" : "text-[#12372A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Archive
               </h1>
-              <p className={`text-sm ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+              <p className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                 Every tournament. Every result. Every champion.
               </p>
             </div>
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium ${
-              isDark ? "bg-[#4D6940]/15 border-[#4D6940]/30 text-[#4CAF50]" : "bg-[#4D6940]/08 border-[#4D6940]/20 text-[#4D6940]"
+              isDark ? "bg-[#436850]/15 border-[#436850]/30 text-[#4CAF50]" : "bg-[#436850]/08 border-[#436850]/20 text-[#436850]"
             }`}>
               <Star className="w-3 h-3" />
               {ARCHIVE_STATS.totalTournaments} events recorded
@@ -828,22 +828,22 @@ export default function Archive() {
           <div className="flex gap-2">
             {/* Search */}
             <div className={`relative flex-1 rounded-xl border overflow-hidden ${
-              isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-white border-[#E8D9B0]"
+              isDark ? "bg-[oklch(0.18_0.05_145)] border-white/10" : "bg-white border-[#ADBC9F]"
             }`}>
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`} />
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
               <input
                 type="text"
                 placeholder="Search tournaments, clubs, players…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={`w-full pl-9 pr-4 py-2.5 text-sm bg-transparent outline-none ${
-                  isDark ? "text-white placeholder:text-white/25" : "text-[#1A1A1A] placeholder:text-[#6B6B50]/60"
+                  isDark ? "text-white placeholder:text-white/25" : "text-[#12372A] placeholder:text-[#436850]/60"
                 }`}
               />
               {search && (
                 <button
                   onClick={() => setSearch("")}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-white/30 hover:text-white/60" : "text-[#6B6B50]/70 hover:text-[#6B6B50]"}`}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-white/30 hover:text-white/60" : "text-[#436850]/70 hover:text-[#436850]"}`}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -855,10 +855,10 @@ export default function Archive() {
               onClick={() => setShowFilters(!showFilters)}
               className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
                 showFilters || activeFilters > 0
-                  ? "bg-[#4D6940] border-[#4D6940] text-white"
+                  ? "bg-[#436850] border-[#436850] text-white"
                   : isDark
                   ? "bg-[oklch(0.18_0.05_145)] border-white/10 text-white/60 hover:border-white/20"
-                  : "bg-white border-[#E8D9B0] text-[#6B6B50] hover:border-[#E8D9B0]"
+                  : "bg-white border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F]"
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -882,12 +882,12 @@ export default function Archive() {
                 className="overflow-hidden"
               >
                 <div className={`rounded-xl border p-4 space-y-4 ${
-                  isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#E8D9B0]/70"
+                  isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
                 }`}>
                   <div className="flex flex-wrap gap-4">
                     {/* Format filter */}
                     <div>
-                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                         Format
                       </p>
                       <div className="flex flex-wrap gap-1.5">
@@ -897,10 +897,10 @@ export default function Archive() {
                             onClick={() => setFormatFilter(f)}
                             className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
                               formatFilter === f
-                                ? "bg-[#4D6940] border-[#4D6940] text-white"
+                                ? "bg-[#436850] border-[#436850] text-white"
                                 : isDark
                                 ? "bg-white/04 border-white/10 text-white/50 hover:border-white/20"
-                                : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50] hover:border-[#E8D9B0]"
+                                : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F]"
                             }`}
                           >
                             {f}
@@ -911,7 +911,7 @@ export default function Archive() {
 
                     {/* Sort */}
                     <div>
-                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
                         Sort By
                       </p>
                       <div className="flex flex-wrap gap-1.5">
@@ -925,10 +925,10 @@ export default function Archive() {
                             onClick={() => setSortKey(key as typeof sortKey)}
                             className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
                               sortKey === key
-                                ? "bg-[#4D6940] border-[#4D6940] text-white"
+                                ? "bg-[#436850] border-[#436850] text-white"
                                 : isDark
                                 ? "bg-white/04 border-white/10 text-white/50 hover:border-white/20"
-                                : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50] hover:border-[#E8D9B0]"
+                                : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F]"
                             }`}
                           >
                             {label}
@@ -943,7 +943,7 @@ export default function Archive() {
                     <button
                       onClick={() => { setSearch(""); setFormatFilter("All"); }}
                       className={`text-xs font-medium flex items-center gap-1 ${
-                        isDark ? "text-white/40 hover:text-white/70" : "text-[#6B6B50] hover:text-[#6B6B50]"
+                        isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"
                       }`}
                     >
                       <X className="w-3 h-3" /> Clear all filters
@@ -966,13 +966,13 @@ export default function Archive() {
             <div className="flex items-center justify-between">
               <h2
                 className={`text-sm font-bold uppercase tracking-widest ${
-                  isDark ? "text-white/40" : "text-[#6B6B50]"
+                  isDark ? "text-white/40" : "text-[#436850]"
                 }`}
               >
                 Your Tournaments
               </h2>
               <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                isDark ? "bg-[#4D6940]/15 border-[#4D6940]/30 text-[#4CAF50]" : "bg-[#4D6940]/08 border-[#4D6940]/20 text-[#4D6940]"
+                isDark ? "bg-[#436850]/15 border-[#436850]/30 text-[#4CAF50]" : "bg-[#436850]/08 border-[#436850]/20 text-[#436850]"
               }`}>
                 {userTournaments.length} created
               </span>
@@ -983,12 +983,12 @@ export default function Archive() {
               ))}
             </div>
             <div className={`border-b ${
-              isDark ? "border-white/08" : "border-[#E8D9B0]/70"
+              isDark ? "border-white/08" : "border-[#ADBC9F]/70"
             }`} />
           </motion.div>
         )}
         {/* ── Results count ───────────────────────────────────────────────── */}
-        <div className={`text-xs ${isDark ? "text-white/30" : "text-[#6B6B50]"}`}>
+        <div className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>
           Showing {filtered.length} of {ARCHIVE_TOURNAMENTS.length} tournaments
         </div>
 
@@ -1014,14 +1014,14 @@ export default function Archive() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className={`flex flex-col items-center justify-center py-20 rounded-2xl border ${
-                  isDark ? "border-white/08 text-white/30" : "border-[#E8D9B0]/70 text-[#6B6B50]/70"
+                  isDark ? "border-white/08 text-white/30" : "border-[#ADBC9F]/70 text-[#436850]/70"
                 }`}
               >
                 <Trophy className="w-10 h-10 mb-3" />
                 <p className="text-sm font-medium">No tournaments found</p>
                 <button
                   onClick={() => { setSearch(""); setFormatFilter("All"); }}
-                  className="mt-3 text-xs text-[#4D6940] hover:underline"
+                  className="mt-3 text-xs text-[#436850] hover:underline"
                 >
                   Clear filters
                 </button>
@@ -1038,21 +1038,21 @@ export default function Archive() {
           className={`rounded-2xl border p-6 text-center ${
             isDark
               ? "bg-[oklch(0.18_0.05_145)] border-white/08"
-              : "bg-white border-[#E8D9B0]/70"
+              : "bg-white border-[#ADBC9F]/70"
           }`}
         >
-          <Trophy className={`w-8 h-8 mx-auto mb-3 ${isDark ? "text-white/20" : "text-[#6B6B50]/50"}`} />
+          <Trophy className={`w-8 h-8 mx-auto mb-3 ${isDark ? "text-white/20" : "text-[#436850]/50"}`} />
           <h3
-            className={`text-xl font-bold mb-1 ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+            className={`text-xl font-bold mb-1 ${isDark ? "text-white" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             Ready to make history?
           </h3>
-          <p className={`text-sm mb-4 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <p className={`text-sm mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             Your next tournament will appear right here.
           </p>
           <Link href="/">
-            <button className="px-5 py-2.5 rounded-xl bg-[#4D6940] text-white text-sm font-semibold hover:bg-[#3a5230] transition-colors">
+            <button className="px-5 py-2.5 rounded-xl bg-[#436850] text-white text-sm font-semibold hover:bg-[#3a5230] transition-colors">
               Create Tournament →
             </button>
           </Link>

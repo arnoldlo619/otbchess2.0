@@ -155,7 +155,7 @@ export default function Pricing() {
           <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-4 ${isDark ? "text-white" : "text-[#1a1a1a]"}`}>
             Simple, honest pricing.
           </h1>
-          <p className={`text-lg max-w-xl mx-auto leading-relaxed ${isDark ? "text-white/50" : "text-[#4B5563]"}`}>
+          <p className={`text-lg max-w-xl mx-auto leading-relaxed ${isDark ? "text-white/50" : "text-[#436850]"}`}>
             Start free and grow with your club. Pro unlocks the full toolkit —
             openings, analysis, and unlimited everything.
           </p>
@@ -175,11 +175,11 @@ export default function Pricing() {
             className={`rounded-2xl border p-7 cursor-default backdrop-blur-sm transition-shadow duration-300 hover:shadow-xl ${
               isDark
                 ? "bg-white/[0.03] border-white/[0.10] hover:border-white/20 hover:shadow-black/40"
-                : "bg-white/80 border-[#4D6940]/15 hover:border-[#4D6940]/30 hover:shadow-[#4D6940]/10"
+                : "bg-white/80 border-[#436850]/15 hover:border-[#436850]/30 hover:shadow-[#436850]/10"
             }`}
           >
             <div className="mb-5">
-              <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#4B5563]"}`}>Free</p>
+              <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Free</p>
               <div className="flex items-baseline gap-1.5">
                 <span className={`text-4xl font-bold ${isDark ? "text-white" : "text-[#1a1a1a]"}`}>$0</span>
                 <span className={`text-sm ${isDark ? "text-white/30" : "text-[#9CA3AF]"}`}>/ month</span>
@@ -192,7 +192,7 @@ export default function Pricing() {
               <button className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border group ${
                 isDark
                   ? "border-white/10 text-white/70 hover:bg-white/[0.07] hover:border-white/20 hover:text-white"
-                  : "border-[#4D6940]/20 text-[#4D6940] hover:bg-[#4D6940]/08 hover:border-[#4D6940]/40"
+                  : "border-[#436850]/20 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/40"
               }`}>
                 Get started free
               </button>
@@ -265,9 +265,9 @@ export default function Pricing() {
             Full feature breakdown
           </h2>
 
-          <div className={`rounded-2xl border overflow-hidden backdrop-blur-sm ${isDark ? "border-white/[0.08] bg-black/20" : "border-[#4D6940]/12 bg-white/70"}`}>
+          <div className={`rounded-2xl border overflow-hidden backdrop-blur-sm ${isDark ? "border-white/[0.08] bg-black/20" : "border-[#436850]/12 bg-white/70"}`}>
             {/* Table header */}
-            <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.03] border-white/[0.07]" : "bg-[#4D6940]/[0.04] border-[#4D6940]/10"}`}>
+            <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.03] border-white/[0.07]" : "bg-[#436850]/[0.04] border-[#436850]/10"}`}>
               <div className={`px-5 py-3.5 text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B7280]"}`}>
                 Feature
               </div>
@@ -285,7 +285,7 @@ export default function Pricing() {
               return (
                 <div key={cat}>
                   {/* Category header */}
-                  <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.02] border-white/[0.05]" : "bg-[#4D6940]/[0.025] border-[#4D6940]/08"} ${catIdx > 0 ? "border-t" : ""}`}>
+                  <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.02] border-white/[0.05]" : "bg-[#436850]/[0.025] border-[#436850]/08"} ${catIdx > 0 ? "border-t" : ""}`}>
                     <div className={`px-5 py-2 text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-white/25" : "text-[#9CA3AF]"}`}>
                       {cat}
                     </div>
@@ -302,11 +302,11 @@ export default function Pricing() {
                         className={`group grid grid-cols-[1fr_100px_100px] items-center border-b transition-colors duration-150 ${
                           isDark
                             ? `border-white/[0.04] hover:bg-white/[0.03] ${rowIdx % 2 === 0 ? "" : "bg-white/[0.01]"}`
-                            : `border-[#4D6940]/06 hover:bg-[#4D6940]/[0.04] ${rowIdx % 2 === 0 ? "" : "bg-[#4D6940]/[0.015]"}`
+                            : `border-[#436850]/06 hover:bg-[#436850]/[0.04] ${rowIdx % 2 === 0 ? "" : "bg-[#436850]/[0.015]"}`
                         }`}
                       >
                         <div className="flex items-center gap-2.5 px-5 py-3">
-                          <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${isDark ? "text-white/25 group-hover:text-[#22c55e]/60" : "text-[#9CA3AF] group-hover:text-[#4D6940]/70"}`} />
+                          <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${isDark ? "text-white/25 group-hover:text-[#22c55e]/60" : "text-[#9CA3AF] group-hover:text-[#436850]/70"}`} />
                           <span className={`text-sm transition-colors ${isDark ? "text-white/65 group-hover:text-white/85" : "text-[#374151] group-hover:text-[#1a1a1a]"}`}>
                             {row.label}
                           </span>
@@ -325,11 +325,11 @@ export default function Pricing() {
             })}
 
             {/* Footer row */}
-            <div className={`grid grid-cols-[1fr_100px_100px] ${isDark ? "bg-white/[0.025]" : "bg-[#4D6940]/[0.025]"}`}>
+            <div className={`grid grid-cols-[1fr_100px_100px] ${isDark ? "bg-white/[0.025]" : "bg-[#436850]/[0.025]"}`}>
               <div className="px-5 py-4" />
               <div className="px-3 py-4 flex justify-center">
                 <Link href="/join">
-                  <button className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-200 ${isDark ? "border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.06]" : "border-[#4D6940]/20 text-[#4D6940] hover:bg-[#4D6940]/08 hover:border-[#4D6940]/35"}`}>
+                  <button className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-200 ${isDark ? "border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.06]" : "border-[#436850]/20 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/35"}`}>
                     Get free
                   </button>
                 </Link>
@@ -383,7 +383,7 @@ export default function Pricing() {
               className={`rounded-xl border p-5 cursor-default backdrop-blur-sm transition-shadow duration-300 hover:shadow-lg ${
                 isDark
                   ? "bg-white/[0.03] border-white/[0.08] hover:border-white/15 hover:shadow-black/30"
-                  : "bg-white/80 border-[#4D6940]/10 hover:border-[#4D6940]/25 hover:shadow-[#4D6940]/08"
+                  : "bg-white/80 border-[#436850]/10 hover:border-[#436850]/25 hover:shadow-[#436850]/08"
               }`}
             >
               <div className="w-9 h-9 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center mb-3 transition-colors group-hover:bg-[#22c55e]/15">
@@ -398,7 +398,7 @@ export default function Pricing() {
         {/* ── Back to home ──────────────────────────────────────────────────── */}
         <div className="mt-14 text-center">
           <Link href="/">
-            <button className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? "text-white/30 hover:text-white/60" : "text-[#9CA3AF] hover:text-[#4B5563]"}`}>
+            <button className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? "text-white/30 hover:text-white/60" : "text-[#9CA3AF] hover:text-[#436850]"}`}>
               ← Back to home
             </button>
           </Link>

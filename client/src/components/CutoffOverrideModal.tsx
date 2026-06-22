@@ -104,23 +104,23 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
     overlay: "fixed inset-0 z-50 flex items-center justify-center p-4",
     card: isDark
       ? "bg-[oklch(0.18_0.06_145)] border-white/10"
-      : "bg-white border-[#E8D9B0]",
-    title: isDark ? "text-white" : "text-[#1A1A1A]",
-    subtitle: isDark ? "text-white/50" : "text-[#6B6B50]",
-    label: isDark ? "text-white/70" : "text-[#1A1A1A]/85",
-    divider: isDark ? "border-white/08" : "border-[#E8D9B0]/70",
-    infoCard: isDark ? "bg-white/04" : "bg-[#FFF3D5]/70",
-    infoLabel: isDark ? "text-white/40" : "text-[#6B6B50]",
-    infoValue: isDark ? "text-white/85" : "text-[#1A1A1A]",
+      : "bg-white border-[#ADBC9F]",
+    title: isDark ? "text-white" : "text-[#12372A]",
+    subtitle: isDark ? "text-white/50" : "text-[#436850]",
+    label: isDark ? "text-white/70" : "text-[#12372A]/85",
+    divider: isDark ? "border-white/08" : "border-[#ADBC9F]/70",
+    infoCard: isDark ? "bg-white/04" : "bg-[#FBFADA]/70",
+    infoLabel: isDark ? "text-white/40" : "text-[#436850]",
+    infoValue: isDark ? "text-white/85" : "text-[#12372A]",
     closeBtn: isDark
       ? "hover:bg-white/08 text-white/40 hover:text-white/70"
-      : "hover:bg-[#E8D9B0]/50 text-[#6B6B50] hover:text-[#6B6B50]",
+      : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]",
     confirmBtn: isDark
       ? "bg-[#4CAF50]/90 hover:bg-[#4CAF50] text-white disabled:opacity-40 disabled:cursor-not-allowed"
-      : "bg-[#4D6940] hover:bg-[#3a5230] text-white disabled:opacity-40 disabled:cursor-not-allowed",
+      : "bg-[#436850] hover:bg-[#3a5230] text-white disabled:opacity-40 disabled:cursor-not-allowed",
     cancelBtn: isDark
       ? "bg-white/06 hover:bg-white/10 text-white/60"
-      : "bg-[#E8D9B0]/40 hover:bg-[#E8D9B0] text-[#6B6B50]",
+      : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F] text-[#436850]",
   };
 
   return (
@@ -146,8 +146,8 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
               isDark ? "bg-[#4CAF50]/15" : "bg-green-50"
             }`}>
               {isGenerate
-                ? <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
-                : <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+                ? <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                : <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
               }
             </div>
             <p
@@ -222,7 +222,7 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
                         : "bg-green-50 border-green-400 text-green-700"
                       : isDark
                         ? "bg-white/04 border-white/08 text-white/60 hover:bg-white/08 hover:border-white/15"
-                        : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]/50 hover:border-[#E8D9B0]"
+                        : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50 hover:border-[#ADBC9F]"
                   }`}
                 >
                   <span
@@ -234,13 +234,13 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
                   <span className={`text-[10px] mt-0.5 font-medium ${
                     isActive
                       ? isDark ? "text-[#4CAF50]/70" : "text-green-600"
-                      : isDark ? "text-white/30" : "text-[#6B6B50]"
+                      : isDark ? "text-white/30" : "text-[#436850]"
                   }`}>
                     {elimRoundsNeeded(size)}R elim
                   </span>
                   {isDefault && (
                     <span className={`absolute top-1 right-1.5 text-[9px] font-bold ${
-                      isDark ? "text-white/25" : "text-[#6B6B50]/70"
+                      isDark ? "text-white/25" : "text-[#436850]/70"
                     }`}>
                       {isGenerate ? "rec." : "auto"}
                     </span>

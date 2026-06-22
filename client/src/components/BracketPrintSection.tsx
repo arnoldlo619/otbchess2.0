@@ -96,10 +96,10 @@ function MatchCard({
   isDark: boolean;
   isComplete: boolean;
 }) {
-  const borderColor = isDark ? "border-white/15" : "border-[#E8D9B0]";
+  const borderColor = isDark ? "border-white/15" : "border-[#ADBC9F]";
   const bgCard = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/40" : "text-[#436850]";
 
   const renderPlayer = (
     player: Player | null,
@@ -112,11 +112,11 @@ function MatchCard({
 
     if (isBye) {
       return (
-        <div className={`flex items-center gap-2 px-3 py-2 ${isDark ? "bg-white/04" : "bg-[#FFF3D5]/70/60"}`}>
+        <div className={`flex items-center gap-2 px-3 py-2 ${isDark ? "bg-white/04" : "bg-[#FBFADA]/70/60"}`}>
           <div className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs font-bold ${
             side === "white"
-              ? isDark ? "bg-white/80 border-white/20 text-[#1A1A1A]" : "bg-white border-[#E8D9B0] text-[#6B6B50]"
-              : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10 text-white/40" : "bg-[#4D6940] border-[#3a5230] text-white"
+              ? isDark ? "bg-white/80 border-white/20 text-[#12372A]" : "bg-white border-[#ADBC9F] text-[#436850]"
+              : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10 text-white/40" : "bg-[#436850] border-[#3a5230] text-white"
           }`}>
             {side === "white" ? "W" : "B"}
           </div>
@@ -128,14 +128,14 @@ function MatchCard({
     return (
       <div className={`flex items-center gap-2 px-3 py-2 transition-colors ${
         isWinner
-          ? isDark ? "bg-[#4D6940]/25" : "bg-[#4D6940]/08"
-          : isDark ? "bg-white/04" : "bg-[#FFF3D5]/70/60"
+          ? isDark ? "bg-[#436850]/25" : "bg-[#436850]/08"
+          : isDark ? "bg-white/04" : "bg-[#FBFADA]/70/60"
       }`}>
         {/* Color indicator */}
         <div className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs font-bold ${
           side === "white"
-            ? isDark ? "bg-white/80 border-white/20 text-[#1A1A1A]" : "bg-white border-[#E8D9B0] text-[#6B6B50]"
-            : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10 text-white/40" : "bg-[#4D6940] border-[#3a5230] text-white"
+            ? isDark ? "bg-white/80 border-white/20 text-[#12372A]" : "bg-white border-[#ADBC9F] text-[#436850]"
+            : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10 text-white/40" : "bg-[#436850] border-[#3a5230] text-white"
         }`}>
           {side === "white" ? "W" : "B"}
         </div>
@@ -146,7 +146,7 @@ function MatchCard({
             {isWinner && <Trophy className="w-3 h-3 text-[#4CAF50] flex-shrink-0" />}
             <span className={`text-xs font-semibold truncate ${
               isWinner
-                ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
+                ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
                 : isLoser
                 ? textMuted
                 : textMain
@@ -156,7 +156,7 @@ function MatchCard({
               {player?.name ?? playerId}
             </span>
             {player?.title && (
-              <span className="text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-1 py-0.5 rounded flex-shrink-0">
+              <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1 py-0.5 rounded flex-shrink-0">
                 {player.title}
               </span>
             )}
@@ -170,7 +170,7 @@ function MatchCard({
         {isComplete && (
           <span className={`text-xs font-bold tabular-nums flex-shrink-0 ${
             isWinner
-              ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
+              ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
               : textMuted
           }`}>
             {isWinner ? "1" : "0"}
@@ -188,13 +188,13 @@ function MatchCard({
       {/* White */}
       {renderPlayer(match.whitePlayer, match.whiteId, "white")}
       {/* Divider */}
-      <div className={`h-px ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`} />
+      <div className={`h-px ${isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"}`} />
       {/* Black */}
       {renderPlayer(match.blackPlayer, match.blackId, "black")}
       {/* Result badge */}
       {match.result !== "*" && !match.isBye && (
         <div className={`px-3 py-1 text-center text-xs font-mono font-bold ${
-          isDark ? "bg-white/04 text-white/30 border-t border-white/08" : "bg-[#FFF3D5]/70 text-[#6B6B50] border-t border-[#E8D9B0]/70"
+          isDark ? "bg-white/04 text-white/30 border-t border-white/08" : "bg-[#FBFADA]/70 text-[#436850] border-t border-[#ADBC9F]/70"
         }`}>
           {match.result}
         </div>
@@ -209,28 +209,28 @@ function ChampionBanner({ player, isDark }: { player: Player; isDark: boolean })
   return (
     <div className={`flex flex-col items-center justify-center gap-3 px-6 py-8 rounded-2xl border-2 ${
       isDark
-        ? "border-[#4CAF50]/30 bg-[#4D6940]/15"
-        : "border-[#4D6940]/30 bg-[#4D6940]/06"
+        ? "border-[#4CAF50]/30 bg-[#436850]/15"
+        : "border-[#436850]/30 bg-[#436850]/06"
     }`} style={{ minWidth: 180, maxWidth: 220 }}>
-      <div className="w-12 h-12 rounded-full bg-[#4D6940] flex items-center justify-center shadow-lg shadow-[#4D6940]/30">
+      <div className="w-12 h-12 rounded-full bg-[#436850] flex items-center justify-center shadow-lg shadow-[#436850]/30">
         <Crown className="w-6 h-6 text-white" strokeWidth={2} />
       </div>
       <div className="text-center">
-        <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
+        <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>
           Champion
         </p>
         <p
-          className={`text-base font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+          className={`text-base font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           {player.name}
         </p>
         {player.title && (
-          <span className="inline-block text-xs font-bold text-[#4D6940] bg-[#4D6940]/10 px-2 py-0.5 rounded mt-1">
+          <span className="inline-block text-xs font-bold text-[#436850] bg-[#436850]/10 px-2 py-0.5 rounded mt-1">
             {player.title}
           </span>
         )}
-        <p className={`text-xs mt-1 ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+        <p className={`text-xs mt-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           {player.elo} ELO
         </p>
       </div>
@@ -341,12 +341,12 @@ export function BracketPrintSection({
 
   if (bracketRounds.length === 0) {
     return (
-      <div className={`rounded-xl border px-6 py-10 text-center ${isDark ? "border-white/08 bg-[oklch(0.22_0.06_145)]" : "border-[#E8D9B0]/70 bg-white"}`}>
-        <Trophy className={`w-8 h-8 mx-auto mb-3 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
-        <p className={`text-sm ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+      <div className={`rounded-xl border px-6 py-10 text-center ${isDark ? "border-white/08 bg-[oklch(0.22_0.06_145)]" : "border-[#ADBC9F]/70 bg-white"}`}>
+        <Trophy className={`w-8 h-8 mx-auto mb-3 ${isDark ? "text-white/20" : "text-[#436850]/70"}`} />
+        <p className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           No elimination rounds have been generated yet.
         </p>
-        <p className={`text-xs mt-1 ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
+        <p className={`text-xs mt-1 ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
           The bracket will appear here once the director advances to the elimination phase.
         </p>
       </div>
@@ -363,15 +363,15 @@ export function BracketPrintSection({
   const CARD_HEIGHT = 80; // px — approximate rendered height of a MatchCard
   const CARD_GAP = 12;    // px — gap between cards in a column
 
-  const textMuted = isDark ? "text-white/40" : "text-[#6B6B50]";
-  const borderColor = isDark ? "border-white/08" : "border-[#E8D9B0]/70";
+  const textMuted = isDark ? "text-white/40" : "text-[#436850]";
+  const borderColor = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
 
   return (
     <div className="space-y-6 print-section">
       {/* Section header */}
       <div>
         <h2
-          className={`text-lg font-bold ${isDark ? "text-white" : "text-[#1A1A1A]"}`}
+          className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           Elimination Bracket
@@ -384,7 +384,7 @@ export function BracketPrintSection({
 
       {/* Bracket tree — horizontal scroll on small screens */}
       <div
-        className={`rounded-2xl border overflow-x-auto ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-[#E8D9B0]/70 bg-[#F7FAF8]"}`}
+        className={`rounded-2xl border overflow-x-auto ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-[#ADBC9F]/70 bg-[#F7FAF8]"}`}
         style={{ padding: "24px 20px" }}
       >
         <div className="flex items-start gap-0" style={{ minWidth: "max-content" }}>
@@ -405,8 +405,8 @@ export function BracketPrintSection({
                     <span
                       className={`inline-block text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full ${
                         round.label === "Final"
-                          ? isDark ? "bg-[#4D6940]/30 text-[#4CAF50]" : "bg-[#4D6940]/10 text-[#4D6940]"
-                          : isDark ? "bg-white/08 text-white/50" : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+                          ? isDark ? "bg-[#436850]/30 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
+                          : isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
                       }`}
                     >
                       {round.label}
@@ -475,7 +475,7 @@ export function BracketPrintSection({
 
       {/* Print separator */}
       <div className={`border-t pt-4 ${borderColor}`}>
-        <p className={`text-xs ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`}>
+        <p className={`text-xs ${isDark ? "text-white/20" : "text-[#436850]/70"}`}>
           Generated by OTB Chess · otbchess.club · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
         </p>
       </div>

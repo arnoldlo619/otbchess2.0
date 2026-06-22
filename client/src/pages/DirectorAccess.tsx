@@ -92,12 +92,12 @@ export default function DirectorAccessPage() {
 
   // Style tokens
   const bg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/45" : "text-[#6B6B50]";
-  const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#E8D9B0]/70";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/45" : "text-[#436850]";
+  const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70";
   const inputBg = isDark
     ? "bg-[oklch(0.26_0.06_145)] border-white/12 text-white placeholder:text-white/25 focus:border-[#4CAF50] focus:shadow-[0_0_0_3px_oklch(0.55_0.13_145/0.20)]"
-    : "bg-white border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/70 focus:border-[#4D6940] focus:shadow-[0_0_0_3px_oklch(0.44_0.12_145/0.10)]";
+    : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/70 focus:border-[#436850] focus:shadow-[0_0_0_3px_oklch(0.44_0.12_145/0.10)]";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -128,7 +128,7 @@ export default function DirectorAccessPage() {
     >
       {/* Header */}
       <header className={`flex items-center justify-between px-4 pt-4 pb-3 border-b ${
-        isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-[#E8D9B0]/70 bg-[#F7FAF8]"
+        isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-[#ADBC9F]/70 bg-[#F7FAF8]"
       }`}>
         <NavLogo />
         <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ export default function DirectorAccessPage() {
             <button className={`text-sm font-medium px-3 py-1.5 rounded-xl transition-colors ${
               isDark
                 ? "text-white/60 hover:text-white hover:bg-white/06"
-                : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
+                : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
             }`}>
               Join as Player
             </button>
@@ -177,7 +177,7 @@ export default function DirectorAccessPage() {
                 </label>
                 <div className="relative">
                   <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${
-                    isDark ? "text-white/25" : "text-[#6B6B50]/70"
+                    isDark ? "text-white/25" : "text-[#436850]/70"
                   }`} />
                   <input
                     ref={inputRef}
@@ -198,7 +198,7 @@ export default function DirectorAccessPage() {
                     type="button"
                     onClick={() => setShowCode((v) => !v)}
                     className={`absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors ${
-                      isDark ? "text-white/30 hover:text-white/60" : "text-[#6B6B50]/70 hover:text-[#6B6B50]"
+                      isDark ? "text-white/30 hover:text-white/60" : "text-[#436850]/70 hover:text-[#436850]"
                     }`}
                     tabIndex={-1}
                   >
@@ -221,8 +221,8 @@ export default function DirectorAccessPage() {
                 disabled={!code.trim() || status === "loading"}
                 className={`w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold transition-all duration-200 ${
                   !code.trim() || status === "loading"
-                    ? isDark ? "bg-white/08 text-white/25 cursor-not-allowed" : "bg-[#E8D9B0]/40 text-[#6B6B50]/70 cursor-not-allowed"
-                    : "bg-[#4D6940] text-white hover:bg-[#2d5235] active:scale-[0.98] shadow-lg shadow-[#4D6940]/25"
+                    ? isDark ? "bg-white/08 text-white/25 cursor-not-allowed" : "bg-[#ADBC9F]/40 text-[#436850]/70 cursor-not-allowed"
+                    : "bg-[#436850] text-white hover:bg-[#2d5235] active:scale-[0.98] shadow-lg shadow-[#436850]/25"
                 }`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
@@ -246,7 +246,7 @@ export default function DirectorAccessPage() {
               className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
                 isDark
                   ? "text-white/40 hover:text-white/70"
-                  : "text-[#6B6B50] hover:text-[#6B6B50]"
+                  : "text-[#436850] hover:text-[#436850]"
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5" />
@@ -268,7 +268,7 @@ export default function DirectorAccessPage() {
           <p className={`text-center text-sm ${textMuted}`}>
             Are you a player?{" "}
             <Link href="/join">
-              <span className={`font-semibold cursor-pointer ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
+              <span className={`font-semibold cursor-pointer ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>
                 Join a tournament →
               </span>
             </Link>
@@ -289,7 +289,7 @@ export default function DirectorAccessPage() {
           >
             {/* Modal header */}
             <div className={`flex items-center justify-between px-6 py-5 border-b ${
-              isDark ? "border-white/08" : "border-[#E8D9B0]/70"
+              isDark ? "border-white/08" : "border-[#ADBC9F]/70"
             }`}>
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${
@@ -307,7 +307,7 @@ export default function DirectorAccessPage() {
               <button
                 onClick={() => setShowForgot(false)}
                 className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
-                  isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#E8D9B0]/50 text-[#6B6B50]"
+                  isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
                 }`}
               >
                 <X className="w-4 h-4" />
@@ -319,14 +319,14 @@ export default function DirectorAccessPage() {
               {myTournaments.length === 0 ? (
                 <div className="text-center py-10 space-y-3">
                   <div className={`w-14 h-14 rounded-3xl flex items-center justify-center mx-auto ${
-                    isDark ? "bg-white/06" : "bg-[#FFF3D5]/70"
+                    isDark ? "bg-white/06" : "bg-[#FBFADA]/70"
                   }`}>
-                    <Trophy className={`w-6 h-6 ${isDark ? "text-white/20" : "text-[#6B6B50]/70"}`} />
+                    <Trophy className={`w-6 h-6 ${isDark ? "text-white/20" : "text-[#436850]/70"}`} />
                   </div>
-                  <p className={`text-sm font-medium ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+                  <p className={`text-sm font-medium ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                     No tournaments found on this device
                   </p>
-                  <p className={`text-xs ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
+                  <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
                     Director codes are only stored on the device used to create the tournament.
                   </p>
                 </div>
@@ -338,7 +338,7 @@ export default function DirectorAccessPage() {
                     <div
                       key={t.id}
                       className={`rounded-2xl border p-4 space-y-3 transition-colors ${
-                        isDark ? "bg-[oklch(0.26_0.06_145)] border-white/08" : "bg-[#FFF3D5]/70 border-[#E8D9B0]/70"
+                        isDark ? "bg-[oklch(0.26_0.06_145)] border-white/08" : "bg-[#FBFADA]/70 border-[#ADBC9F]/70"
                       }`}
                     >
                       {/* Tournament name + date */}
@@ -356,7 +356,7 @@ export default function DirectorAccessPage() {
                           className={`flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-xl transition-colors ${
                             isDark
                               ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25"
-                              : "bg-[#4D6940]/10 text-[#4D6940] hover:bg-[#4D6940]/20"
+                              : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
                           }`}
                         >
                           Use this
@@ -370,14 +370,14 @@ export default function DirectorAccessPage() {
                         <span className={`flex-1 font-mono text-sm font-semibold tracking-widest ${
                           isRevealed
                             ? isDark ? "text-amber-300" : "text-amber-700"
-                            : isDark ? "text-white/20" : "text-[#6B6B50]/50"
+                            : isDark ? "text-white/20" : "text-[#436850]/50"
                         }`}>
                           {isRevealed ? t.directorCode : "DIR-••••••"}
                         </span>
                         <button
                           onClick={() => toggleReveal(t.id)}
                           className={`p-1 rounded-lg transition-colors ${
-                            isDark ? "text-white/30 hover:text-white/60" : "text-[#6B6B50]/70 hover:text-[#6B6B50]"
+                            isDark ? "text-white/30 hover:text-white/60" : "text-[#436850]/70 hover:text-[#436850]"
                           }`}
                           title={isRevealed ? "Hide code" : "Reveal code"}
                         >
@@ -388,8 +388,8 @@ export default function DirectorAccessPage() {
                             onClick={() => copyCode(t)}
                             className={`p-1 rounded-lg transition-colors ${
                               isCopied
-                                ? isDark ? "text-[#4CAF50]" : "text-[#4D6940]"
-                                : isDark ? "text-white/30 hover:text-white/60" : "text-[#6B6B50]/70 hover:text-[#6B6B50]"
+                                ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
+                                : isDark ? "text-white/30 hover:text-white/60" : "text-[#436850]/70 hover:text-[#436850]"
                             }`}
                             title="Copy code"
                           >
@@ -404,8 +404,8 @@ export default function DirectorAccessPage() {
             </div>
 
             {/* Modal footer */}
-            <div className={`px-6 py-4 border-t ${isDark ? "border-white/08" : "border-[#E8D9B0]/70"}`}>
-              <p className={`text-xs text-center ${isDark ? "text-white/25" : "text-[#6B6B50]/70"}`}>
+            <div className={`px-6 py-4 border-t ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
+              <p className={`text-xs text-center ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
                 Director codes are stored locally on this device only.
               </p>
             </div>

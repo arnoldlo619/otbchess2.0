@@ -54,9 +54,9 @@ export const SpinBorderButton = React.forwardRef<
           // ── Light mode (base) ──────────────────────────────────────────────
           "border border-black/10 text-[#2A4A32]",
           "bg-white/70 backdrop-blur-md",
-          "hover:bg-white/90 hover:border-[#4D6940]/30 hover:text-[#1f3826]",
+          "hover:bg-white/90 hover:border-[#436850]/30 hover:text-[#1f3826]",
           "hover:shadow-[0_2px_16px_rgba(61,107,71,0.12)]",
-          "focus-visible:ring-[#4D6940]/40",
+          "focus-visible:ring-[#436850]/40",
 
           // ── Dark mode overrides ────────────────────────────────────────────
           "dark:border-white/20 dark:text-white",

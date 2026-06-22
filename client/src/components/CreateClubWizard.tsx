@@ -90,7 +90,7 @@ const DEFAULT_DATA: WizardData = {
   location: "",
   country: "US",
   description: "",
-  accentColor: "#4D6940",
+  accentColor: "#436850",
   website: "",
   discord: "",
   instagram: "",
@@ -488,15 +488,15 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
 
   // ── Colour palette ──────────────────────────────────────────────────────────
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-white";
-  const heroBg = isDark ? "bg-[#1a2e1d]" : "bg-[#4D6940]";
+  const heroBg = isDark ? "bg-[#1a2e1d]" : "bg-[#436850]";
   const inputBg = isDark
     ? "bg-white/6 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]"
-    : "bg-[#FFF3D5]/70 border-[#E8D9B0] text-[#1A1A1A] placeholder:text-[#6B6B50]/60 focus:border-[#4D6940]";
-  const textMain = isDark ? "text-white" : "text-[#1A1A1A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#6B6B50]";
-  const labelCls = isDark ? "text-white/60" : "text-[#6B6B50]";
-  const divider = isDark ? "border-white/8" : "border-[#E8D9B0]/70";
-  const cardBorder = isDark ? "border-white/8" : "border-[#E8D9B0]";
+    : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]";
+  const textMain = isDark ? "text-white" : "text-[#12372A]";
+  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const labelCls = isDark ? "text-white/60" : "text-[#436850]";
+  const divider = isDark ? "border-white/8" : "border-[#ADBC9F]/70";
+  const cardBorder = isDark ? "border-white/8" : "border-[#ADBC9F]";
 
   // Progress bar width
   const progressPct = step === TOTAL_STEPS ? 100 : ((step - 1) / 6) * 100;
@@ -518,7 +518,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
       aria-label="Create Club"
     >
       {/* ── Progress bar ─────────────────────────────────────────────────── */}
-      <div className={`h-0.5 w-full ${isDark ? "bg-white/8" : "bg-[#E8D9B0]/40"}`}>
+      <div className={`h-0.5 w-full ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/40"}`}>
         <div
           className="h-full bg-[#4CAF50] transition-all duration-500 ease-out"
           style={{ width: `${progressPct}%` }}
@@ -530,7 +530,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         <button
           onClick={handleBack}
           className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-            isDark ? "text-white/50 hover:text-white" : "text-[#6B6B50] hover:text-[#1A1A1A]"
+            isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"
           }`}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -548,7 +548,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
                   ? "w-5 h-2 bg-[#4CAF50]"
                   : isDark
                   ? "w-2 h-2 bg-white/15"
-                  : "w-2 h-2 bg-[#E8D9B0]"
+                  : "w-2 h-2 bg-[#ADBC9F]"
               }`}
             />
           ))}
@@ -557,7 +557,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         <button
           onClick={onClose}
           className={`p-2 rounded-xl transition-colors ${
-            isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#6B6B50] hover:text-[#1A1A1A] hover:bg-[#E8D9B0]/50"
+            isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
           }`}
         >
           <X className="w-4 h-4" />
@@ -596,7 +596,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
             <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 lg:px-12 py-8 max-w-xl lg:max-w-none mx-auto w-full">
 
               {/* Mobile step label */}
-              <p className={`lg:hidden text-xs font-semibold uppercase tracking-widest mb-2 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`}>
+              <p className={`lg:hidden text-xs font-semibold uppercase tracking-widest mb-2 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>
                 {hero.eyebrow}
               </p>
               <h2
@@ -692,7 +692,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
               <button
                 onClick={handleNext}
                 disabled={creating}
-                className="mt-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#4D6940] text-white hover:bg-[#3a5230] active:scale-98 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#436850] text-white hover:bg-[#3a5230] active:scale-98 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {creating ? (
                   <>
@@ -806,7 +806,7 @@ function Step1Identity({
       </div>
 
       {/* Visibility toggle */}
-      <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl border ${isDark ? "border-white/8 bg-white/3" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70"}`}>
+      <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl border ${isDark ? "border-white/8 bg-white/3" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"}`}>
         <div className="min-w-0">
           <p className={`text-sm font-semibold ${textMain}`}>
             {data.isPublic ? "Public club" : "Private club"}
@@ -824,7 +824,7 @@ function Step1Identity({
           className={`relative flex-shrink-0 w-12 h-7 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
             data.isPublic
               ? "bg-[#4CAF50]"
-              : isDark ? "bg-white/20" : "bg-[#E8D9B0]"
+              : isDark ? "bg-white/20" : "bg-[#ADBC9F]"
           }`}
         >
           <span
@@ -863,17 +863,17 @@ function Step2Category({
               selected
                 ? isDark
                   ? "border-[#4CAF50] bg-[#4CAF50]/10"
-                  : "border-[#4D6940] bg-[#4D6940]/8"
-                : `${cardBorder} ${isDark ? "hover:bg-white/4" : "hover:bg-[#FFF3D5]"}`
+                  : "border-[#436850] bg-[#436850]/8"
+                : `${cardBorder} ${isDark ? "hover:bg-white/4" : "hover:bg-[#FBFADA]"}`
             }`}
           >
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
                 selected
-                  ? "bg-[#4D6940] text-white"
+                  ? "bg-[#436850] text-white"
                   : isDark
                   ? "bg-white/8 text-white/50"
-                  : "bg-[#E8D9B0]/40 text-[#6B6B50]"
+                  : "bg-[#ADBC9F]/40 text-[#436850]"
               }`}
             >
               {cat.icon}
@@ -945,7 +945,7 @@ function Step3Location({
               </option>
             ))}
           </select>
-          <div className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? "text-white/40" : "text-[#6B6B50]"}`}>
+          <div className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             ▾
           </div>
         </div>
@@ -953,8 +953,8 @@ function Step3Location({
 
       {/* Location preview */}
       {data.location && (
-        <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl ${isDark ? "bg-white/5" : "bg-[#FFF3D5]/70"}`}>
-          <MapPin className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#4D6940]"}`} />
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl ${isDark ? "bg-white/5" : "bg-[#FBFADA]/70"}`}>
+          <MapPin className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
           <span className={`text-sm font-medium ${textMain}`}>
             {data.location}{data.country && data.country !== "OTHER" ? `, ${COUNTRIES.find(c => c.code === data.country)?.name ?? ""}` : ""}
           </span>
@@ -1080,12 +1080,12 @@ function Step5Share({
   onShare: () => void;
   onViewClub: () => void;
 }) {
-  const card = isDark ? "bg-[#1a2e1d]" : "bg-[#FFF3D5]/70";
+  const card = isDark ? "bg-[#1a2e1d]" : "bg-[#FBFADA]/70";
 
   return (
     <div className="flex flex-col items-center justify-center min-h-full px-4 py-12 text-center max-w-md mx-auto">
       {/* Success icon */}
-      <div className="w-20 h-20 rounded-3xl bg-[#4D6940] flex items-center justify-center mb-6 shadow-xl shadow-[#4D6940]/30">
+      <div className="w-20 h-20 rounded-3xl bg-[#436850] flex items-center justify-center mb-6 shadow-xl shadow-[#436850]/30">
         <Check className="w-10 h-10 text-white" strokeWidth={2.5} />
       </div>
 
@@ -1114,7 +1114,7 @@ function Step5Share({
                 ? "bg-[#4CAF50]/15 text-[#4CAF50]"
                 : isDark
                 ? "bg-white/8 text-white/70 hover:bg-white/15"
-                : "bg-[#E8D9B0] text-[#6B6B50] hover:bg-[#E8D9B0]"
+                : "bg-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]"
             }`}
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1127,7 +1127,7 @@ function Step5Share({
       <div className="w-full space-y-3">
         <button
           onClick={onViewClub}
-          className="group w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#4D6940] text-white hover:bg-[#3a5230] transition-colors"
+          className="group w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#436850] text-white hover:bg-[#3a5230] transition-colors"
         >
           View Club Page
           <ArrowRight className="w-5 h-5 transition-transform duration-200 ease-out group-hover:translate-x-1" />
@@ -1137,7 +1137,7 @@ function Step5Share({
           className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold transition-colors border ${
             isDark
               ? "border-white/10 text-white/70 hover:bg-white/5"
-              : "border-[#E8D9B0] text-[#6B6B50] hover:bg-[#FFF3D5]"
+              : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"
           }`}
         >
           <Share2 className="w-4 h-4" />
@@ -1314,10 +1314,10 @@ function Step6Membership({
                   selected
                     ? isDark
                       ? "border-[#4CAF50]/60 bg-[#4CAF50]/10"
-                      : "border-[#4D6940]/50 bg-[#4D6940]/8"
+                      : "border-[#436850]/50 bg-[#436850]/8"
                     : isDark
                     ? "border-white/8 hover:border-white/20"
-                    : "border-[#E8D9B0] hover:border-[#E8D9B0]"
+                    : "border-[#ADBC9F] hover:border-[#ADBC9F]"
                 }`}
               >
                 <div className={`mt-0.5 flex-shrink-0 ${selected ? "text-[#4CAF50]" : textMuted}`}>
@@ -1349,7 +1349,7 @@ function Step6Membership({
             type="button"
             onClick={() => patch({ isPublic: !data.isPublic })}
             className={`relative w-11 h-6 rounded-full transition-colors ${
-              data.isPublic ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-[#E8D9B0]"
+              data.isPublic ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-[#ADBC9F]"
             }`}
           >
             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
@@ -1374,10 +1374,10 @@ function Step6Membership({
                   selected
                     ? isDark
                       ? "border-[#4CAF50]/60 bg-[#4CAF50]/10"
-                      : "border-[#4D6940]/50 bg-[#4D6940]/8"
+                      : "border-[#436850]/50 bg-[#436850]/8"
                     : isDark
                     ? "border-white/8 hover:border-white/20"
-                    : "border-[#E8D9B0] hover:border-[#E8D9B0]"
+                    : "border-[#ADBC9F] hover:border-[#ADBC9F]"
                 }`}
               >
                 {s === "published" ? (
@@ -1398,7 +1398,7 @@ function Step6Membership({
       </div>
 
       {/* Summary card */}
-      <div className={`rounded-2xl border ${cardBorder} ${isDark ? "bg-white/3" : "bg-[#FFF3D5]/70"} p-4`}>
+      <div className={`rounded-2xl border ${cardBorder} ${isDark ? "bg-white/3" : "bg-[#FBFADA]/70"} p-4`}>
         <p className={`text-xs font-semibold uppercase tracking-wider mb-2 ${textMuted}`}>Summary</p>
         <p className={`text-sm font-bold ${textMain}`}>{data.name || "—"}</p>
         <p className={`text-xs mt-0.5 ${textMuted}`}>{data.tagline || "No tagline"}</p>

@@ -83,7 +83,7 @@ export interface BulkUpsertPayload {
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-const G = "#4D6940";
+const G = "#436850";
 const G_RING = "rgba(77,105,64,0.25)";
 const G_BG = "rgba(77,105,64,0.08)";
 const AMBER = "#D97706";
@@ -461,7 +461,7 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
             fontSize: 12,
             background: isDark ? "oklch(0.25 0.07 145)" : "#FAFAFA",
             border: textAreaBorder,
-            color: isDark ? "#FFFFFF" : "#1A1A1A",
+            color: isDark ? "#FFFFFF" : "#12372A",
             lineHeight: 1.6,
           }}
           onFocus={(e) => { e.target.style.borderColor = G; e.target.style.boxShadow = `0 0 0 3px ${G_RING}`; }}
@@ -584,7 +584,7 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
                               </span>
                             </div>
                           ) : (
-                            <span className="font-medium truncate block" style={{ color: isDark ? "#FFFFFF" : "#1A1A1A" }}>
+                            <span className="font-medium truncate block" style={{ color: isDark ? "#FFFFFF" : "#12372A" }}>
                               {row.name || <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
                             </span>
                           )}
@@ -924,7 +924,7 @@ export function AddPlayerModal({
             <div>
               <span
                 className="text-sm font-bold"
-                style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? "#FFFFFF" : "#1A1A1A" }}
+                style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? "#FFFFFF" : "#12372A" }}
               >
                 {isCsvMode ? "Import Players" : "Add Player"}
               </span>
@@ -1020,7 +1020,7 @@ export function AddPlayerModal({
                           padding: "10px 14px 10px 38px", fontSize: 14,
                           background: isDark ? "oklch(0.25 0.07 145)" : "#FAFAFA",
                           border: `1.5px solid ${isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"}`,
-                          color: isDark ? "#FFFFFF" : "#1A1A1A",
+                          color: isDark ? "#FFFFFF" : "#12372A",
                         }}
                         onFocus={(e) => { e.target.style.borderColor = G; e.target.style.boxShadow = `0 0 0 3px ${G_RING}`; }}
                         onBlur={(e) => { e.target.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"; e.target.style.boxShadow = "none"; }}
@@ -1033,7 +1033,7 @@ export function AddPlayerModal({
                       className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
                       style={{
                         padding: "10px 18px",
-                        background: username.trim() ? G : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+                        background: username.trim() ? G : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
                         color: username.trim() ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
                         cursor: username.trim() ? "pointer" : "not-allowed",
                       }}
@@ -1055,7 +1055,7 @@ export function AddPlayerModal({
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: isDark ? "#FFFFFF" : "#1A1A1A" }}>
+                        <p className="text-sm font-semibold truncate" style={{ color: isDark ? "#FFFFFF" : "#12372A" }}>
                           {lookupResult.title && <span className="text-amber-500 mr-1">{lookupResult.title}</span>}
                           {lookupResult.name || lookupResult.username}
                         </p>
@@ -1141,7 +1141,7 @@ export function AddPlayerModal({
                       onKeyDown={handleManualNameKeyDown}
                       placeholder="e.g. Magnus Carlsen"
                       className="w-full rounded-xl border outline-none transition-all duration-200"
-                      style={{ padding: "10px 14px", fontSize: 14, background: isDark ? "oklch(0.25 0.07 145)" : "#FAFAFA", border: `1.5px solid ${isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"}`, color: isDark ? "#FFFFFF" : "#1A1A1A" }}
+                      style={{ padding: "10px 14px", fontSize: 14, background: isDark ? "oklch(0.25 0.07 145)" : "#FAFAFA", border: `1.5px solid ${isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"}`, color: isDark ? "#FFFFFF" : "#12372A" }}
                       onFocus={(e) => { e.target.style.borderColor = G; e.target.style.boxShadow = `0 0 0 3px ${G_RING}`; }}
                       onBlur={(e) => { e.target.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"; e.target.style.boxShadow = "none"; }}
                     />
@@ -1159,7 +1159,7 @@ export function AddPlayerModal({
                       placeholder="e.g. 1500"
                       min={100} max={3500}
                       className="w-full rounded-xl border outline-none transition-all duration-200"
-                      style={{ padding: "10px 14px", fontSize: 14, background: isDark ? "oklch(0.25 0.07 145)" : "#FAFAFA", border: `1.5px solid ${isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"}`, color: isDark ? "#FFFFFF" : "#1A1A1A" }}
+                      style={{ padding: "10px 14px", fontSize: 14, background: isDark ? "oklch(0.25 0.07 145)" : "#FAFAFA", border: `1.5px solid ${isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"}`, color: isDark ? "#FFFFFF" : "#12372A" }}
                       onFocus={(e) => { e.target.style.borderColor = G; e.target.style.boxShadow = `0 0 0 3px ${G_RING}`; }}
                       onBlur={(e) => { e.target.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"; e.target.style.boxShadow = "none"; }}
                     />
@@ -1198,7 +1198,7 @@ export function AddPlayerModal({
               className="flex items-center gap-2 text-sm font-semibold rounded-xl transition-all duration-200"
               style={{
                 padding: "10px 22px",
-                background: canAdd ? G : isDark ? "rgba(255,255,255,0.08)" : "#FFF3D5",
+                background: canAdd ? G : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
                 color: canAdd ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
                 cursor: canAdd ? "pointer" : "not-allowed",
                 boxShadow: canAdd ? `0 4px 14px ${G_RING}` : "none",

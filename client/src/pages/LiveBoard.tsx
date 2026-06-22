@@ -37,7 +37,7 @@ type ConnectionState = "connected" | "connecting" | "disconnected";
 
 function StatusPill({ status }: { status: Broadcast["status"] }) {
   const map: Record<string, { label: string; cls: string }> = {
-    ready:    { label: "Starting Soon", cls: "bg-[#6B6B50]/20 text-[#6B6B50]/70 border-[#6B6B50]/30" },
+    ready:    { label: "Starting Soon", cls: "bg-[#436850]/20 text-[#436850]/70 border-[#436850]/30" },
     live:     { label: "● LIVE",        cls: "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" },
     paused:   { label: "Paused",        cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
     finished: { label: "Game Over",     cls: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
@@ -320,7 +320,7 @@ export default function LiveBoard() {
         {/* Black player (top) */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#1A1A1A] border border-white/10 flex items-center justify-center text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-[#12372A] border border-white/10 flex items-center justify-center text-xs font-bold">
               {broadcast.blackPlayerName.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -360,7 +360,7 @@ export default function LiveBoard() {
         {/* White player (bottom) */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/90 border border-white/20 flex items-center justify-center text-xs font-bold text-[#1A1A1A]">
+            <div className="w-8 h-8 rounded-full bg-white/90 border border-white/20 flex items-center justify-center text-xs font-bold text-[#12372A]">
               {broadcast.whitePlayerName.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -419,7 +419,7 @@ export default function LiveBoard() {
                 <div className="text-[9px] uppercase tracking-widest text-white/20 font-bold">vs</div>
                 {broadcast.status === "live" && (
                   <div className={`w-1 h-1 rounded-full ${
-                    clockSideToMove === "w" ? "bg-white" : "bg-[#1A1A1A]"
+                    clockSideToMove === "w" ? "bg-white" : "bg-[#12372A]"
                   }`} />
                 )}
               </div>
@@ -441,7 +441,7 @@ export default function LiveBoard() {
                     }`} />
                   )}
                   <span className="text-[10px] uppercase tracking-widest font-bold text-white/35">{broadcast.blackPlayerName.split(" ")[0]}</span>
-                  <div className="w-3 h-3 rounded-full bg-[#1A1A1A] border border-white/15 flex-shrink-0" />
+                  <div className="w-3 h-3 rounded-full bg-[#12372A] border border-white/15 flex-shrink-0" />
                 </div>
                 <div className={`font-mono font-black tabular-nums leading-none ${
                   displayedBlackMs !== null && displayedBlackMs < 10_000 ? "text-red-300 text-2xl animate-pulse" :

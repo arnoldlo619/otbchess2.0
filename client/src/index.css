@@ -5,17 +5,19 @@
  * Core Principles:
  * - Radical whitespace — sections breathe, nothing is crowded
  * - One primary action per screen — every page has a single clear CTA
- * - Olive Green as primary brand color, Beige Cream as the canvas
+ * - Forest Green as primary brand color, Nature Cream as the canvas
  * - Illustrations do the heavy lifting — minimal explanatory text
  * 
- * Color System (Light Mode):
- * - Background: #FFF3D5 (Beige Cream)
- * - Card Surface: #FFF8E8 (warm cream)
- * - Primary / Headings: #4D6940 (Olive Green)
- * - Body Text: #1A1A1A (near-black)
- * - Muted Text: #6B6B50 (warm olive-grey)
- * - Border: #E8D9B0 (warm tan)
- * - Board Pattern: warm cream + olive tones
+ * Color System (Light Mode — Nature Palette):
+ * - Background: #FBFADA (nature cream-white)
+ * - Card Surface: #F0F5E8 (soft sage-tinted cream)
+ * - Sage Accent: #ADBC9F (sage green)
+ * - Primary / Brand: #436850 (forest green)
+ * - Deep / Headings: #12372A (dark forest green)
+ * - Body Text: #12372A (dark forest green)
+ * - Muted Text: #436850 (medium forest green)
+ * - Border: #ADBC9F / 0.50 (sage green border)
+ * - Board Pattern: nature cream + sage tones
  * 
  * Typography:
  * - Display: Clash Display (bold, geometric, edgy)
@@ -75,62 +77,62 @@
 }
 
 :root {
-  /* OTB Chess Brand Colors — Light Mode: Beige Cream + Olive Green */
-  --chess-green: oklch(0.42 0.10 140);        /* #4D6940 olive green */
-  --chess-green-dark: oklch(0.30 0.09 140);   /* #2E4228 darker olive */
-  --chess-green-light: oklch(0.54 0.11 140);  /* #6B8A5E lighter olive */
-  --chess-cream: oklch(0.96 0.04 85);         /* #FFF3D5 beige cream */
-  --chess-cream-dark: oklch(0.93 0.05 85);    /* #F5E5B8 slightly darker cream */
-  --chess-sage: oklch(0.98 0.02 85);          /* #FFF8E8 warm card surface */
+  /* OTB Chess Brand Colors — Light Mode: Nature Palette */
+  --chess-green: oklch(0.41 0.09 152);        /* #436850 forest green */
+  --chess-green-dark: oklch(0.24 0.07 155);   /* #12372A dark forest green */
+  --chess-green-light: oklch(0.73 0.07 145);  /* #ADBC9F sage green */
+  --chess-cream: oklch(0.98 0.02 105);        /* #FBFADA nature cream-white */
+  --chess-cream-dark: oklch(0.95 0.03 130);   /* #F0F5E8 soft sage-tinted cream */
+  --chess-sage: oklch(0.95 0.03 130);         /* #F0F5E8 card surface */
 
   /* ── Dropdown / Popover semantic tokens (light mode) ── */
-  --dropdown-bg: oklch(0.98 0.02 85 / 0.97); /* warm cream panel */
-  --dropdown-border: oklch(0.87 0.05 85 / 0.60);
-  --dropdown-text-primary: oklch(0.12 0.01 145);
-  --dropdown-text-secondary: oklch(0.30 0.04 140);
-  --dropdown-text-muted: oklch(0.45 0.04 100);
-  --dropdown-item-hover-bg: oklch(0.93 0.04 85 / 0.70);
-  --dropdown-item-active-bg: oklch(0.42 0.10 140 / 0.12);
-  --dropdown-icon-bg: oklch(0.93 0.04 85 / 0.80);
-  --dropdown-icon-color: oklch(0.42 0.10 140);
-  --dropdown-section-label: oklch(0.45 0.04 100);
-  --dropdown-divider: oklch(0.87 0.05 85 / 0.50);
-  --dropdown-toggle-track: oklch(0.87 0.05 85 / 0.70);
+  --dropdown-bg: oklch(0.98 0.02 105 / 0.97); /* nature cream panel */
+  --dropdown-border: oklch(0.73 0.07 145 / 0.50);
+  --dropdown-text-primary: oklch(0.24 0.07 155);
+  --dropdown-text-secondary: oklch(0.35 0.08 152);
+  --dropdown-text-muted: oklch(0.41 0.09 152);
+  --dropdown-item-hover-bg: oklch(0.95 0.03 130 / 0.80);
+  --dropdown-item-active-bg: oklch(0.41 0.09 152 / 0.12);
+  --dropdown-icon-bg: oklch(0.95 0.03 130 / 0.80);
+  --dropdown-icon-color: oklch(0.41 0.09 152);
+  --dropdown-section-label: oklch(0.41 0.09 152);
+  --dropdown-divider: oklch(0.73 0.07 145 / 0.40);
+  --dropdown-toggle-track: oklch(0.73 0.07 145 / 0.50);
 
   /* Semantic tokens */
   --primary: var(--chess-green);
   --primary-foreground: oklch(1 0 0);
   --secondary: var(--chess-sage);
-  --secondary-foreground: oklch(0.2 0.06 140);
+  --secondary-foreground: oklch(0.24 0.07 155);
   --sidebar-primary: var(--chess-green);
   --sidebar-primary-foreground: oklch(1 0 0);
   --chart-1: var(--chess-green);
   --chart-2: var(--chess-green-light);
   --chart-3: var(--chess-cream);
-  --chart-4: oklch(0.60 0.09 140);
-  --chart-5: oklch(0.70 0.07 140);
+  --chart-4: oklch(0.55 0.09 150);
+  --chart-5: oklch(0.65 0.07 148);
 
   --radius: 0.5rem;
-  --background: oklch(0.96 0.04 85);          /* #FFF3D5 beige cream */
-  --foreground: oklch(0.12 0.01 145);         /* #1A1A1A near-black */
-  --card: oklch(0.98 0.02 85);               /* #FFF8E8 warm card surface */
-  --card-foreground: oklch(0.12 0.01 145);
-  --popover: oklch(0.98 0.02 85);
-  --popover-foreground: oklch(0.12 0.01 145);
-  --muted: oklch(0.93 0.04 85);              /* warm muted surface */
-  --muted-foreground: oklch(0.45 0.04 100);  /* #6B6B50 warm olive-grey */
-  --accent: oklch(0.93 0.04 85);
-  --accent-foreground: oklch(0.2 0.06 140);
+  --background: oklch(0.98 0.02 105);         /* #FBFADA nature cream-white */
+  --foreground: oklch(0.24 0.07 155);         /* #12372A dark forest green */
+  --card: oklch(0.95 0.03 130);              /* #F0F5E8 soft sage-tinted cream */
+  --card-foreground: oklch(0.24 0.07 155);
+  --popover: oklch(0.97 0.02 110);
+  --popover-foreground: oklch(0.24 0.07 155);
+  --muted: oklch(0.93 0.04 135);             /* sage-tinted muted surface */
+  --muted-foreground: oklch(0.41 0.09 152);  /* #436850 forest green */
+  --accent: oklch(0.93 0.04 135);
+  --accent-foreground: oklch(0.24 0.07 155);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.87 0.05 85);             /* #E8D9B0 warm tan border */
-  --input: oklch(0.87 0.05 85);
+  --border: oklch(0.73 0.07 145 / 0.50);     /* #ADBC9F sage border at 50% */
+  --input: oklch(0.73 0.07 145 / 0.40);
   --ring: var(--chess-green);
-  --sidebar: oklch(0.94 0.04 85);            /* slightly deeper cream sidebar */
-  --sidebar-foreground: oklch(0.12 0.01 145);
-  --sidebar-accent: oklch(0.91 0.05 85);
-  --sidebar-accent-foreground: oklch(0.2 0.06 140);
-  --sidebar-border: oklch(0.87 0.05 85);
+  --sidebar: oklch(0.96 0.03 120);           /* sage-cream sidebar */
+  --sidebar-foreground: oklch(0.24 0.07 155);
+  --sidebar-accent: oklch(0.93 0.04 135);
+  --sidebar-accent-foreground: oklch(0.24 0.07 155);
+  --sidebar-border: oklch(0.73 0.07 145 / 0.40);
   --sidebar-ring: var(--chess-green);
 }
 
@@ -260,8 +262,8 @@
   .chess-board-bg {
     background-image: 
       repeating-conic-gradient(
-        oklch(0.91 0.05 85 / 0.80) 0% 25%,   /* warm cream square */
-        oklch(0.42 0.10 140 / 0.12) 0% 50%   /* olive tint square */
+        oklch(0.97 0.02 110 / 0.90) 0% 25%,  /* nature cream square */
+        oklch(0.73 0.07 145 / 0.20) 0% 50%   /* sage tint square */
       );
     background-size: 40px 40px;
   }

@@ -46,8 +46,8 @@ function ColorChip({ color }: { color: "W" | "B" }) {
     <div
       className={`w-5 h-5 rounded-sm border text-[9px] font-bold flex items-center justify-center flex-shrink-0 ${
         color === "W"
-          ? "bg-white border-[#E8D9B0] text-[#6B6B50]"
-          : "bg-[#1A1A1A]/80 border-[#4D6940]/40 text-[#6B6B50]/70"
+          ? "bg-white border-[#ADBC9F] text-[#436850]"
+          : "bg-[#12372A]/80 border-[#436850]/40 text-[#436850]/70"
       }`}
     >
       {color}

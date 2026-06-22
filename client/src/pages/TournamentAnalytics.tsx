@@ -138,8 +138,8 @@ function MetricCard({
       className={`rounded-2xl border p-4 sm:p-5 transition-all ${
         accent
           ? isDark
-            ? "border-[#4D6940]/40 bg-[#4D6940]/10"
-            : "border-[#4D6940]/20 bg-[#F0F8F2]"
+            ? "border-[#436850]/40 bg-[#436850]/10"
+            : "border-[#436850]/20 bg-[#F0F8F2]"
           : isDark
           ? "border-white/10 bg-[oklch(0.22_0.06_145)]"
           : "border-[#EEEED2] bg-white"
@@ -148,10 +148,10 @@ function MetricCard({
       <div className="flex items-center gap-2 mb-2 sm:mb-3">
         <div
           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${
-            isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"
+            isDark ? "bg-[#436850]/20" : "bg-[#436850]/10"
           }`}
         >
-          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4D6940]" />
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#436850]" />
         </div>
         <span className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider">
           {label}
@@ -186,7 +186,7 @@ function SmallStat({
   return (
     <div
       className={`rounded-xl border p-3 text-center ${
-        isDark ? "border-white/08 bg-white/03" : "border-[#E8D9B0]/70 bg-[#FFF3D5]/70"
+        isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"
       }`}
     >
       <p
@@ -211,7 +211,7 @@ function ProgressRow({
   label,
   value,
   total,
-  color = "#4D6940",
+  color = "#436850",
   isDark,
   suffix = "",
 }: {
@@ -235,7 +235,7 @@ function ProgressRow({
       </div>
       <div
         className={`h-2 rounded-full overflow-hidden ${
-          isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"
+          isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"
         }`}
       >
         <div
@@ -267,18 +267,18 @@ function FunnelStep({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="w-3.5 h-3.5 text-[#4D6940]" />
+          <Icon className="w-3.5 h-3.5 text-[#436850]" />
           <span className="text-xs font-medium text-foreground">{label}</span>
         </div>
         <span className="text-xs font-bold text-foreground tabular-nums">{value}</span>
       </div>
       <div
         className={`h-2 rounded-full overflow-hidden ${
-          isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"
+          isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"
         }`}
       >
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#4D6940] to-[#5A9A68] transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-[#436850] to-[#5A9A68] transition-all duration-500"
           style={{ width: `${Math.max(pct, 2)}%` }}
         />
       </div>
@@ -304,7 +304,7 @@ function TimelineChart({
     return (
       <div
         className={`text-center py-8 text-sm text-muted-foreground ${
-          isDark ? "bg-white/03" : "bg-[#FFF3D5]/70"
+          isDark ? "bg-white/03" : "bg-[#FBFADA]/70"
         } rounded-xl`}
       >
         No timeline data yet
@@ -329,12 +329,12 @@ function TimelineChart({
             <div className="flex-1 flex items-center gap-0.5">
               <div
                 className={`h-5 rounded-md overflow-hidden flex ${
-                  isDark ? "bg-white/05" : "bg-[#FFF3D5]/70"
+                  isDark ? "bg-white/05" : "bg-[#FBFADA]/70"
                 }`}
                 style={{ width: "100%" }}
               >
                 <div
-                  className="h-full bg-[#4D6940]/70 transition-all duration-300"
+                  className="h-full bg-[#436850]/70 transition-all duration-300"
                   style={{
                     width: `${
                       maxVal > 0
@@ -365,7 +365,7 @@ function TimelineChart({
       })}
       <div className="flex items-center gap-4 pt-2">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-[#4D6940]/70" />
+          <div className="w-3 h-3 rounded-sm bg-[#436850]/70" />
           <span className="text-[10px] text-muted-foreground">Views</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -434,11 +434,11 @@ function Section({
       <button
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 transition-colors ${
-          isDark ? "hover:bg-white/03" : "hover:bg-[#FFF3D5]"
+          isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]"
         }`}
       >
         <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-[#4D6940]" />
+          <Icon className="w-4 h-4 text-[#436850]" />
           <h2 className="text-sm font-bold text-foreground">{title}</h2>
         </div>
         {open ? (
@@ -588,7 +588,7 @@ export default function TournamentAnalytics() {
   // ─── Loading State ─────────────────────────────────────────────────────────
 
   if (loading) {
-    const shimmer = isDark ? "bg-white/08" : "bg-[#E8D9B0]";
+    const shimmer = isDark ? "bg-white/08" : "bg-[#ADBC9F]";
     return (
       <div
         className={`min-h-screen ${
@@ -651,7 +651,7 @@ export default function TournamentAnalytics() {
           </p>
           <Link
             href={`/tournament/${id}/manage`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#4D6940] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#436850] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Director
@@ -706,10 +706,10 @@ export default function TournamentAnalytics() {
           </div>
           <div
             className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-              isDark ? "bg-[#4D6940]/20" : "bg-[#4D6940]/10"
+              isDark ? "bg-[#436850]/20" : "bg-[#436850]/10"
             }`}
           >
-            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-[#4D6940]" />
+            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-[#436850]" />
           </div>
         </div>
 
@@ -831,7 +831,7 @@ export default function TournamentAnalytics() {
                     label="Pre-Registered"
                     value={data.attendanceBreakdown.preRegistered}
                     total={data.attendanceBreakdown.finalField}
-                    color="#4D6940"
+                    color="#436850"
                     isDark={isDark}
                   />
                   <ProgressRow
@@ -852,8 +852,8 @@ export default function TournamentAnalytics() {
                   )}
                 </div>
               )}
-              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03" : "bg-[#FFF3D5]/70"}`}>
-                <UserCheck className="w-3.5 h-3.5 text-[#4D6940] flex-shrink-0 mt-0.5" />
+              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03" : "bg-[#FBFADA]/70"}`}>
+                <UserCheck className="w-3.5 h-3.5 text-[#436850] flex-shrink-0 mt-0.5" />
                 <p className="text-muted-foreground">
                   {data.attendanceBreakdown.walkInRate}% of players registered on the day.
                   Walk-in rate above 30% suggests strong word-of-mouth but may strain pairing capacity — consider capping early.
@@ -886,13 +886,13 @@ export default function TournamentAnalytics() {
                     label="Returning Players"
                     value={data.repeatEventGrowth.returningPlayers}
                     total={data.repeatEventGrowth.newPlayers + data.repeatEventGrowth.returningPlayers}
-                    color="#4D6940"
+                    color="#436850"
                     isDark={isDark}
                   />
                 </div>
               )}
-              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03" : "bg-[#FFF3D5]/70"}`}>
-                <UserPlus className="w-3.5 h-3.5 text-[#4D6940] flex-shrink-0 mt-0.5" />
+              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03" : "bg-[#FBFADA]/70"}`}>
+                <UserPlus className="w-3.5 h-3.5 text-[#436850] flex-shrink-0 mt-0.5" />
                 <p className="text-muted-foreground">
                   {data.repeatEventGrowth.returningPlayers > 0
                     ? `${data.repeatEventGrowth.returningPlayers} player${data.repeatEventGrowth.returningPlayers !== 1 ? "s" : ""} have attended a previous event by this organizer. Retention is the strongest signal of a healthy tournament series.`
@@ -917,7 +917,7 @@ export default function TournamentAnalytics() {
               </div>
               {data.overview.totalViews > 0 && (
                 <div className="space-y-3">
-                  <ProgressRow label="Email Opt-In" value={data.postEventConversion.emailsOptedIn} total={data.overview.totalViews} color="#4D6940" isDark={isDark} />
+                  <ProgressRow label="Email Opt-In" value={data.postEventConversion.emailsOptedIn} total={data.overview.totalViews} color="#436850" isDark={isDark} />
                   <ProgressRow label="Card Claims" value={data.postEventConversion.cardsClaimed} total={data.overview.totalViews} color="#5A9A68" isDark={isDark} />
                   <ProgressRow label="Club Join Clicks" value={data.postEventConversion.joinClubClicks} total={data.overview.totalViews} color="#8BC4A0" isDark={isDark} />
                 </div>
@@ -945,8 +945,8 @@ export default function TournamentAnalytics() {
                 <SmallStat label="Account Clicks" value={data.clubGrowth.createAccountClicks} isDark={isDark} />
                 <SmallStat label="Lead Conv. Rate" value={data.clubGrowth.leadConversionRate} suffix="%" isDark={isDark} />
               </div>
-              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-[#4D6940]/08 border border-[#4D6940]/15" : "bg-[#F0F8F2] border border-[#4D6940]/15"}`}>
-                <Sprout className="w-3.5 h-3.5 text-[#4D6940] flex-shrink-0 mt-0.5" />
+              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-[#436850]/08 border border-[#436850]/15" : "bg-[#F0F8F2] border border-[#436850]/15"}`}>
+                <Sprout className="w-3.5 h-3.5 text-[#436850] flex-shrink-0 mt-0.5" />
                 <p className="text-muted-foreground">
                   This tournament contributed{" "}
                   <span className="font-semibold text-foreground">
@@ -985,20 +985,20 @@ export default function TournamentAnalytics() {
                           <span className="font-mono font-bold text-foreground tabular-nums">{evt.playerCount}p</span>
                         </div>
                       </div>
-                      <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`}>
-                        <div className="h-full rounded-full bg-[#4D6940]/50 transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%` }} />
+                      <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"}`}>
+                        <div className="h-full rounded-full bg-[#436850]/50 transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%` }} />
                       </div>
                     </div>
                   );
                 })}
                 <div className="space-y-1 mt-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#4D6940] font-semibold">This Event</span>
-                    <span className="font-mono font-bold text-[#4D6940] tabular-nums">{data.attendance.registered}p</span>
+                    <span className="text-[#436850] font-semibold">This Event</span>
+                    <span className="font-mono font-bold text-[#436850] tabular-nums">{data.attendance.registered}p</span>
                   </div>
-                  <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#E8D9B0]/40"}`}>
+                  <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"}`}>
                     <div
-                      className="h-full rounded-full bg-[#4D6940] transition-all duration-500"
+                      className="h-full rounded-full bg-[#436850] transition-all duration-500"
                       style={{
                         width: `${Math.max(Math.round((data.attendance.registered / Math.max(
                           ...data.tournamentComparison.pastEvents.map((e) => e.playerCount),
@@ -1097,17 +1097,17 @@ export default function TournamentAnalytics() {
                 <div
                   key={i}
                   className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs ${
-                    isDark ? "bg-white/03" : "bg-[#FFF3D5]/70"
+                    isDark ? "bg-white/03" : "bg-[#FBFADA]/70"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span
                       className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                         i < 3
-                          ? "bg-[#4D6940]/15 text-[#4D6940]"
+                          ? "bg-[#436850]/15 text-[#436850]"
                           : isDark
                           ? "bg-white/08 text-muted-foreground"
-                          : "bg-[#E8D9B0]/40 text-muted-foreground"
+                          : "bg-[#ADBC9F]/40 text-muted-foreground"
                       }`}
                     >
                       {i + 1}
@@ -1138,7 +1138,7 @@ export default function TournamentAnalytics() {
                 <div
                   key={i}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
-                    isDark ? "bg-white/03" : "bg-[#FFF3D5]/70"
+                    isDark ? "bg-white/03" : "bg-[#FBFADA]/70"
                   }`}
                 >
                   <Mail className="w-3 h-3 text-muted-foreground flex-shrink-0" />
@@ -1176,7 +1176,7 @@ export default function TournamentAnalytics() {
             Analytics powered by{" "}
             <a
               href="https://chessotb.club"
-              className="text-[#4D6940] hover:underline font-medium"
+              className="text-[#436850] hover:underline font-medium"
             >
               ChessOTB
             </a>
