@@ -1,7 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Calendar, ArrowRight, Tag } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { AnimeNavBar } from "@/components/ui/anime-navbar";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { useAuthContext } from "@/context/AuthContext";
+import { getAllRegistrations } from "@/lib/registrationStore";
+import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { Calendar, ArrowRight, Tag, Building2, LayoutDashboard, Trophy, GraduationCap } from "lucide-react";
 
 // ─── Blog post data ───────────────────────────────────────────────────────────
 export interface BlogPost {
@@ -192,6 +198,83 @@ export default function Blog() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeCategory, setActiveCategory] = useState("All");
+  const { user } = useAuthContext();
+
+  // ── League smart routing ──────────────────────────────────────────────────
+  interface MyLeague { id: string; name: string; status: string; }
+  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
+  const isGuest = !user || user.isGuest;
+  useEffect(() => {
+    if (isGuest) { setMyLeagues([]); return; }
+    fetch("/api/leagues/mine", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: MyLeague[]) => setMyLeagues(Array.isArray(data) ? data : []))
+      .catch(() => setMyLeagues([]));
+  }, [isGuest]);
+  const leagueNavUrl = (() => {
+    if (!myLeagues.length) return "/league-demo";
+    const active = myLeagues.find((l) => l.status === "active");
+    const target = active ?? myLeagues[0];
+    return `/leagues/${target.id}`;
+  })();
+
+  // ── Dashboard smart routing ───────────────────────────────────────────────
+  const getDashboardUrl = (): string => {
+    const allTournaments = listTournaments();
+    const getTournamentStatus = (id: string): string => {
+      try {
+        const raw = localStorage.getItem(`otb-director-state-v2-${id}`);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { status?: string };
+          return parsed.status ?? "unknown";
+        }
+      } catch { /* ignore */ }
+      return "unknown";
+    };
+    const directedTournament = allTournaments.find((t) => {
+      if (!hasDirectorSession(t.id)) return false;
+      const status = getTournamentStatus(t.id);
+      return status !== "completed";
+    });
+    if (directedTournament) return `/tournament/${directedTournament.id}/manage`;
+    const registrations = getAllRegistrations();
+    for (const reg of registrations) {
+      const config = resolveTournament(reg.tournamentId);
+      const tournamentId = config?.id ?? reg.tournamentId;
+      const status = getTournamentStatus(tournamentId);
+      if (status !== "completed") return `/tournament/${tournamentId}`;
+    }
+    return "/join";
+  };
+
+  // ── Nav items ─────────────────────────────────────────────────────────────
+  const navItems = [
+    { name: "Clubs",       url: "/clubs",         icon: Building2 },
+    { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
+    { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
+    { name: "Training",    url: "/training",     icon: GraduationCap },
+  ];
+
+  const logoEl = (
+    <Link href="/" className="flex items-center">
+      <img
+        src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+        alt="OTB Chess"
+        className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+      />
+    </Link>
+  );
+
+  const rightSlotEl = (
+    <div className="flex items-center gap-2">
+      <ThemeToggle />
+      <AvatarNavDropdown
+        currentPage="Blog"
+        dashboardUrl={getDashboardUrl()}
+        leagueUrl={leagueNavUrl}
+      />
+    </div>
+  );
 
   const filtered = useMemo(
     () =>
@@ -217,6 +300,15 @@ export default function Blog() {
     >
       {/* Chess board background pattern (dark mode) */}
       {isDark && <div className="fixed inset-0 chess-board-bg opacity-[0.03] pointer-events-none" />}
+
+      {/* ── Platform nav bar ── */}
+      <AnimeNavBar
+        items={navItems}
+        defaultActive="Blog"
+        logo={logoEl}
+        rightSlot={rightSlotEl}
+        isDark={isDark}
+      />
 
       <div className="container max-w-6xl mx-auto px-4 py-16 sm:py-24">
         {/* ── Header ── */}
@@ -268,7 +360,7 @@ export default function Blog() {
           </div>
         )}
 
-        {/* ── Empty state CTA ── */}
+        {/* ── Contribute CTA ── */}
         <div
           className={`mt-16 rounded-2xl p-8 text-center border ${
             isDark

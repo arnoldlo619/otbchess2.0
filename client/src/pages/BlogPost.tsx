@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { ArrowLeft, Calendar, Clock, ChevronRight, ExternalLink } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { AnimeNavBar } from "@/components/ui/anime-navbar";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { useAuthContext } from "@/context/AuthContext";
+import { getAllRegistrations } from "@/lib/registrationStore";
+import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { ArrowLeft, Calendar, Clock, ChevronRight, ExternalLink, Building2, LayoutDashboard, Trophy, GraduationCap } from "lucide-react";
 
 // ─── Shared post data (mirrors Blog.tsx POSTS, extended with content) ─────────
 export interface BlogPostData {
@@ -623,6 +629,83 @@ export default function BlogPost() {
   const isDark = theme === "dark";
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
+  const { user } = useAuthContext();
+
+  // ── League smart routing ──────────────────────────────────────────────────
+  interface MyLeague { id: string; name: string; status: string; }
+  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
+  const isGuest = !user || user.isGuest;
+  useEffect(() => {
+    if (isGuest) { setMyLeagues([]); return; }
+    fetch("/api/leagues/mine", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: MyLeague[]) => setMyLeagues(Array.isArray(data) ? data : []))
+      .catch(() => setMyLeagues([]));
+  }, [isGuest]);
+  const leagueNavUrl = (() => {
+    if (!myLeagues.length) return "/league-demo";
+    const active = myLeagues.find((l) => l.status === "active");
+    const target = active ?? myLeagues[0];
+    return `/leagues/${target.id}`;
+  })();
+
+  // ── Dashboard smart routing ───────────────────────────────────────────────
+  const getDashboardUrl = (): string => {
+    const allTournaments = listTournaments();
+    const getTournamentStatus = (id: string): string => {
+      try {
+        const raw = localStorage.getItem(`otb-director-state-v2-${id}`);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { status?: string };
+          return parsed.status ?? "unknown";
+        }
+      } catch { /* ignore */ }
+      return "unknown";
+    };
+    const directedTournament = allTournaments.find((t) => {
+      if (!hasDirectorSession(t.id)) return false;
+      const status = getTournamentStatus(t.id);
+      return status !== "completed";
+    });
+    if (directedTournament) return `/tournament/${directedTournament.id}/manage`;
+    const registrations = getAllRegistrations();
+    for (const reg of registrations) {
+      const config = resolveTournament(reg.tournamentId);
+      const tournamentId = config?.id ?? reg.tournamentId;
+      const status = getTournamentStatus(tournamentId);
+      if (status !== "completed") return `/tournament/${tournamentId}`;
+    }
+    return "/join";
+  };
+
+  // ── Nav items ─────────────────────────────────────────────────────────────
+  const navItems = [
+    { name: "Clubs",       url: "/clubs",         icon: Building2 },
+    { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
+    { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
+    { name: "Training",    url: "/training",     icon: GraduationCap },
+  ];
+
+  const logoEl = (
+    <Link href="/" className="flex items-center">
+      <img
+        src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+        alt="OTB Chess"
+        className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+      />
+    </Link>
+  );
+
+  const rightSlotEl = (
+    <div className="flex items-center gap-2">
+      <ThemeToggle />
+      <AvatarNavDropdown
+        currentPage="Blog"
+        dashboardUrl={getDashboardUrl()}
+        leagueUrl={leagueNavUrl}
+      />
+    </div>
+  );
 
   const post = POSTS.find((p) => p.slug === slug);
 
@@ -660,12 +743,19 @@ export default function BlogPost() {
   // ── 404 state ──
   if (!post) {
     return (
-      <div
-        className={`min-h-screen flex flex-col items-center justify-center gap-6 ${
-          isDark ? "bg-background text-white" : "bg-[#FBFADA] text-[#12372A]"
-        }`}
-      >
-        <p className="text-6xl font-black opacity-20">404</p>
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center gap-6 ${
+        isDark ? "bg-background text-white" : "bg-[#FBFADA] text-[#12372A]"
+      }`}
+    >
+      <AnimeNavBar
+        items={navItems}
+        defaultActive="Blog"
+        logo={logoEl}
+        rightSlot={rightSlotEl}
+        isDark={isDark}
+      />
+      <p className="text-6xl font-black opacity-20">404</p>
         <p className="text-xl font-semibold">Post not found</p>
         <Link
           href="/blog"
@@ -684,6 +774,15 @@ export default function BlogPost() {
       }`}
     >
       {isDark && <div className="fixed inset-0 chess-board-bg opacity-[0.03] pointer-events-none" />}
+
+      {/* ── Platform nav bar ── */}
+      <AnimeNavBar
+        items={navItems}
+        defaultActive="Blog"
+        logo={logoEl}
+        rightSlot={rightSlotEl}
+        isDark={isDark}
+      />
 
       <div className="max-w-6xl mx-auto px-4 py-10 sm:py-16">
 
