@@ -812,7 +812,7 @@ function ParallaxStep({
       >
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:gap-4">
           <div
-            className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group cursor-pointer"
             style={{
               transform: inView
                 ? "translateY(0) scale(1)"
@@ -821,11 +821,13 @@ function ParallaxStep({
               opacity: inView ? 1 : 0,
             }}
           >
-            <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+            <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
+              <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+            </div>
           </div>
           {imageSrc2 && (
             <div
-              className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group cursor-pointer"
               style={{
                 transform: inView
                   ? "translateY(0) scale(1)"
@@ -834,7 +836,9 @@ function ParallaxStep({
                 opacity: inView ? 1 : 0,
               }}
             >
-              <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} />
+              <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
+                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} />
+              </div>
             </div>
           )}
         </div>
