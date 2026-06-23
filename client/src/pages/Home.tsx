@@ -643,7 +643,7 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
 }
 
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
-function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
+function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: string; isDark: boolean; objectPosition?: string }) {
   // Responsive sizing: clamp between 220px (small mobile) and 320px (desktop)
   // Height maintains the 320:650 (≈1:2.03) aspect ratio
   return (
@@ -691,7 +691,8 @@ function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: 
         <img
           src={src}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-cover object-top"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: objectPosition ?? "center top" }}
           loading="lazy"
         />
 
@@ -717,6 +718,8 @@ function ParallaxStep({
   imageAlt,
   imageSrc2,
   imageAlt2,
+  objectPosition,
+  objectPosition2,
   phoneLeft,
   isDark,
   mockupType,
@@ -729,6 +732,8 @@ function ParallaxStep({
   imageAlt: string;
   imageSrc2?: string;
   imageAlt2?: string;
+  objectPosition?: string;
+  objectPosition2?: string;
   phoneLeft: boolean;
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
@@ -822,7 +827,7 @@ function ParallaxStep({
             }}
           >
             <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
-              <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+              <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} />
             </div>
           </div>
           {imageSrc2 && (
@@ -837,7 +842,7 @@ function ParallaxStep({
               }}
             >
               <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
-                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} />
+                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} />
               </div>
             </div>
           )}
@@ -921,6 +926,7 @@ function HowItWorks() {
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
       imageSrc: "/manus-storage/tournament-complete-podium-clean_ceb6666c.webp",
       imageAlt: "Tournament complete screen with final podium",
+      objectPosition: "65% top",
       imageSrc2: "/manus-storage/otb-board-pairings_41832e9e.webp",
       imageAlt2: "Board pairings screen showing matchups",
       phoneLeft: true,
@@ -971,6 +977,8 @@ function HowItWorks() {
             imageAlt={step.imageAlt}
             imageSrc2={(step as any).imageSrc2}
             imageAlt2={(step as any).imageAlt2}
+            objectPosition={(step as any).objectPosition}
+            objectPosition2={(step as any).objectPosition2}
             phoneLeft={step.phoneLeft}
             isDark={isDark}
             mockupType={step.mockupType}
