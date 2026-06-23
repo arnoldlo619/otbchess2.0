@@ -310,7 +310,7 @@ export default function Blog() {
         isDark={isDark}
       />
 
-      <div className="container max-w-6xl mx-auto px-4 py-16 sm:py-24">
+      <div className="container max-w-6xl mx-auto px-4 pt-28 pb-16 sm:pt-32 sm:pb-24">
         {/* ── Header ── */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-3">
