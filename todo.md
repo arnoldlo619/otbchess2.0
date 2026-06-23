@@ -6616,3 +6616,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] App.tsx updated
 - [x] TypeScript: 0 errors
 - [x] All new tests passing (41 tests)
+
+## Blog
+
+- [x] Blog index page (Blog.tsx) — category filter pills, 3-column card grid, 6 seeded posts, footer link
+- [x] Blog post detail page (BlogPost.tsx) — two-column layout, sticky sidebar, author card, TOC, CTA card, full article content for all 6 posts
+- [x] /blog/:slug route added to App.tsx (before /blog to avoid wouter conflict)

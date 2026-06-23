@@ -64,6 +64,7 @@ const ConnectBoard = lazy(() => import("./pages/ConnectBoard"));
 const GameJoin = lazy(() => import("./pages/GameJoin"));
 const OtbLeaderboard = lazy(() => import("./pages/OtbLeaderboard"));
 const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -142,6 +143,7 @@ function Router() {
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/pro/success"} component={ProSuccess} />
         <Route path={"/admin/staff"} component={AdminStaff} />
+        <Route path={"/blog/:slug"} component={BlogPost} />
         <Route path={"/blog"} component={Blog} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/dashboard/tools/chessnut-bluetooth-test-lab"} component={ChessnutTestLab} />
