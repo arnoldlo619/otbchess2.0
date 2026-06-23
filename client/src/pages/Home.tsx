@@ -691,7 +691,7 @@ function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: 
         <img
           src={src}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-contain object-top"
+          className="absolute inset-0 w-full h-full object-cover object-top"
           loading="lazy"
         />
 
