@@ -1909,7 +1909,7 @@ function Footer() {
     Company: [
       { label: "About", href: "/#how-it-works" },
       { label: "Contact", href: "mailto:info@chessotb.club" },
-      { label: "Privacy", href: "/privacy" },
+      { label: "Blog", href: "/blog" },
       { label: "Terms", href: "/terms" },
     ],
   };
