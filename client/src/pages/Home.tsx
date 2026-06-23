@@ -810,7 +810,7 @@ function ParallaxStep({
       <div
         className="flex-1 flex justify-center lg:justify-end w-full"
       >
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:gap-4">
+        <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-8">
           <div
             className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group cursor-pointer"
             style={{
