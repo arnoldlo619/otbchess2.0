@@ -924,8 +924,8 @@ function HowItWorks() {
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
       imageSrc: "/manus-storage/tournament-complete-podium-clean_ceb6666c.webp",
       imageAlt: "Tournament complete screen with final podium",
-      imageSrc2: "/manus-storage/otb-board-pairings_41832e9e.webp",
-      imageAlt2: "Board pairings screen showing matchups",
+      imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
+      imageAlt2: "Live board pairings screen with player matchups and result entry",
       phoneLeft: true,
     },
   ];
