@@ -1037,6 +1037,7 @@ function HowItWorks() {
       imageAlt2: "Live board pairings screen with player matchups and result entry",
       phoneLeft: true,
       objectFit: "contain",
+      objectPosition: "right top",
     },
   ];
 
