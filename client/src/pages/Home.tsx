@@ -807,7 +807,7 @@ function ParallaxStep({
     >
       {/* Phone mockup(s) */}
       <div
-        className="flex-1 flex justify-center lg:justify-end w-full"
+        className={`flex-1 flex w-full justify-center ${phoneLeft ? "lg:justify-start" : "lg:justify-end"}`}
       >
         <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-8">
           <div
