@@ -423,7 +423,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             <AnnouncementBanner
               label="NEW"
               text="Chicago Chess Club Highlight!"
-              href="/blog"
+              href="/blog/chicago-chess-club-highlight"
               isDark={isDark}
             />
           </div>

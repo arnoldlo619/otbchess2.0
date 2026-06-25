@@ -23,6 +23,16 @@ export interface BlogPost {
 
 const POSTS: BlogPost[] = [
   {
+    slug: "chicago-chess-club-highlight",
+    title: "Building Community Through the Board: A Q&A with The Kid from Pilsen",
+    excerpt: "William Guerrero — DJ, artist, and chess streamer — built the Chicago Chess Club on radical inclusivity. We sat down with him after he hosted a 70-player OTB tournament powered by ChessOTB.club.",
+    category: "Community",
+    date: "June 25, 2026",
+    image: "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=800&q=80",
+    readTime: "6 min read",
+    author: "ChessOTB Team",
+  },
+  {
     slug: "introducing-chessotb-club",
     title: "Introducing ChessOTB.club: The Home for Over-the-Board Chess Communities",
     excerpt: "We built ChessOTB.club to solve the biggest pain point in OTB chess: running tournaments and clubs without the paperwork. Here's the story behind the platform.",

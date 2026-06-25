@@ -35,8 +35,106 @@ type ContentBlock =
   | { type: "callout"; text: string }
   | { type: "subheading"; text: string };
 
-// ─── Full article content for all 6 posts ────────────────────────────────────
+// ─── Full article content for all 7 posts ────────────────────────────────────
 const POSTS: BlogPostData[] = [
+  // ── Chicago Chess Club Highlight ──────────────────────────────────────────
+  {
+    slug: "chicago-chess-club-highlight",
+    title: "Building Community Through the Board: A Q&A with The Kid from Pilsen",
+    excerpt:
+      "William Guerrero — DJ, artist, and chess streamer — built the Chicago Chess Club on radical inclusivity. We sat down with him after he hosted a 70-player OTB tournament powered by ChessOTB.club.",
+    category: "Community",
+    date: "June 25, 2026",
+    image: "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=1200&q=80",
+    readTime: "6 min read",
+    author: "ChessOTB Team",
+    authorRole: "Platform Builders",
+    authorAvatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&q=80",
+    authorBio:
+      "The ChessOTB.club team is a group of OTB chess enthusiasts and engineers on a mission to bring over-the-board chess into the digital age.",
+    sections: [
+      {
+        id: "intro",
+        heading: "Redefining Local Chess Culture",
+        content: [
+          {
+            type: "paragraph",
+            text: "Grassroots chess is experiencing a massive resurgence, and in Chicago, William Guerrero — better known as the Kid from Pilsen — is driving the culture forward. As a DJ, artist, and chess streamer, Guerrero founded the Chicago Chess Club with a simple premise: chess should be accessible, social, and entirely welcoming.",
+          },
+          {
+            type: "paragraph",
+            text: "Historically, competitive chess has carried a reputation for being hyper-serious, dead silent, and intimidating to newcomers. The Chicago Chess Club flips that script. Whether meeting at a local park, a library, or a bar, Guerrero enforces a strict zero-tolerance policy for condescension or trash talk. The focus is entirely on education, community building, and playing great games in a low-pressure environment.",
+          },
+          {
+            type: "callout",
+            text: "\"We want everyone to know they are there to learn, uplift one another, and play great games. It's always going to be a beginner-friendly environment.\"",
+          },
+        ],
+      },
+      {
+        id: "tournament",
+        heading: "Scaling the Experience: The 70-Player Tournament",
+        content: [
+          {
+            type: "paragraph",
+            text: "What started as a handful of people gathering to make friends quickly evolved. Recognizing the demand, Guerrero booked the space at Southside Social in Back of the Yards to host a major over-the-board tournament in April. The turnout of over 70 players proved the appetite for community-driven chess in Chicago.",
+          },
+          {
+            type: "paragraph",
+            text: "To keep the atmosphere competitive but forgiving, the tournament utilized a hybrid format designed to give every player meaningful games regardless of their rating:",
+          },
+          {
+            type: "list",
+            items: [
+              "<strong>Calibration phase:</strong> Four initial rounds of Swiss pairings to accurately group players by skill level",
+              "<strong>The Final Shot:</strong> A transition into a single-elimination knockout bracket, ensuring every player got a chance to compete for the finish",
+            ],
+          },
+        ],
+      },
+      {
+        id: "logistics",
+        heading: "Streamlining the Logistics",
+        content: [
+          {
+            type: "paragraph",
+            text: "Running a hybrid format with 70+ players traditionally requires complex manual bracket management and extensive time between rounds to announce table assignments. To handle the load, the Chicago Chess Club utilized ChessOTB.club to automate the flow.",
+          },
+          {
+            type: "paragraph",
+            text: "The highest-impact feature? QR-code pairings. Instead of a tournament director manually shouting out board numbers — a massive bottleneck at large events — players simply scanned a QR code on their phones to instantly see their next opponent and table assignment.",
+          },
+          {
+            type: "callout",
+            text: "\"At my first tournament, I was telling players where to go... that took a lot of time. When players scan the QR code to see what table they sit at next, it runs flawlessly and saves a massive amount of hassle.\"",
+          },
+          {
+            type: "paragraph",
+            text: "The result was a dramatically smoother event experience. Round transitions that previously ate 10–15 minutes of dead time were reduced to under two minutes, keeping energy high and players engaged throughout the day.",
+          },
+        ],
+      },
+      {
+        id: "whats-next",
+        heading: "What's Next for the Chicago Chess Club",
+        content: [
+          {
+            type: "paragraph",
+            text: "One year into the project, Guerrero envisions the club partnering with more local organizations and eventually securing a permanent home, ideally in Pilsen. The goal remains the same: a space where players can raise their USCF or FIDE ratings without the intimidation factor of traditional chess halls.",
+          },
+          {
+            type: "paragraph",
+            text: "With the right tools and a fiercely welcoming culture, the Chicago chess scene is well-positioned for massive growth. The Chicago Chess Club is proof that when you lower the barrier to entry and build genuine community, the players will come — and keep coming back.",
+          },
+          {
+            type: "callout",
+            text: "Want to host your own community tournament? ChessOTB.club makes it free and easy — Swiss pairings, QR check-in, live standings, and more. Start your event in under 5 minutes.",
+          },
+        ],
+      },
+    ],
+  },
+  // ── Original posts below ───────────────────────────────────────────────────
   {
     slug: "introducing-chessotb-club",
     title: "Introducing ChessOTB.club: The Home for Over-the-Board Chess Communities",
