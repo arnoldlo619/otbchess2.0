@@ -710,7 +710,7 @@ function ContentBlock({ block, isDark }: { block: ContentBlock; isDark: boolean 
         <img
           src={block.src}
           alt={block.alt}
-          className="w-full rounded-xl object-cover max-h-[480px]"
+          className="w-full rounded-xl object-contain"
           loading="lazy"
         />
         {block.caption && (
