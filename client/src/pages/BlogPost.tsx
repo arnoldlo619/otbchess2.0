@@ -1022,11 +1022,15 @@ export default function BlogPost() {
               }`}
             >
               <div className="flex items-center gap-3 mb-3">
-                <img
-                  src={post.authorAvatar}
-                  alt={post.author}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  isDark ? "bg-[#12372A]" : "bg-[#12372A]"
+                }`}>
+                  <img
+                    src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                    alt="OTB!!"
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
                 <div>
                   <p className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
                     {post.author}
