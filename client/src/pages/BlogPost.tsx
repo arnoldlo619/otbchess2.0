@@ -1024,8 +1024,8 @@ export default function BlogPost() {
             </div>
           </article>
 
-          {/* ── Sticky sidebar ── */}
-          <aside className="lg:sticky lg:top-24 flex flex-col gap-5 w-full">
+          {/* ── Sidebar ── */}
+          <aside className="flex flex-col gap-5 w-full lg:pl-6">
 
             {/* Author card */}
             <div
