@@ -17,7 +17,7 @@
 
 import React from "react";
 import { Link } from "wouter";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AnnouncementBannerProps {
@@ -59,7 +59,14 @@ export function AnnouncementBanner({
             : "bg-[#12372A] text-white"
         )}
       >
-        <Sparkles className="w-3 h-3" />
+        {/* Premium chess king crown icon */}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" aria-hidden="true">
+          <path d="M3 18h18v2H3v-2z" fill="currentColor" opacity="0.7"/>
+          <path d="M5 16l2-8 5 4 5-4 2 8H5z" fill="currentColor"/>
+          <circle cx="3" cy="8" r="2" fill="currentColor"/>
+          <circle cx="12" cy="5" r="2" fill="currentColor"/>
+          <circle cx="21" cy="8" r="2" fill="currentColor"/>
+        </svg>
         {label}
       </span>
 
