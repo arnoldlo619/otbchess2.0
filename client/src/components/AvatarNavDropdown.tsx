@@ -35,6 +35,7 @@ import {
   Trophy,
   Wrench,
   FlaskConical,
+  BookOpen,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
@@ -50,7 +51,8 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "Chess Clock",  href: "/clock",       icon: Timer },
+  { name: "Blog",        href: "/blog",        icon: BookOpen },
+  { name: "Chess Clock", href: "/clock",       icon: Timer },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -546,8 +548,16 @@ export function AvatarNavDropdown({
                   className="mx-3 my-1 h-px"
                   style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
                 />
-                {/* Chess Clock shortcut */}
-                <div className="px-2 pb-2">
+                {/* Blog + Chess Clock shortcuts */}
+                <div className="px-2 pb-2 flex flex-col gap-0.5">
+                  <Link
+                    href="/blog"
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
+                  >
+                    <BookOpen className="w-4 h-4 flex-shrink-0" />
+                    <span>Blog</span>
+                  </Link>
                   <Link
                     href="/clock"
                     onClick={() => setOpen(false)}
