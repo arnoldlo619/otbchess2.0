@@ -445,8 +445,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
           >
             <span className="sm:hidden">Players sign up with their chess.com username — we generate optimal pairings automatically.</span>
-            <span className="hidden sm:inline">Players sign up with their chess.com username, 
-We generate optimal pairings automatically.</span>
+            <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
           </h2>
 
           <div
