@@ -689,8 +689,8 @@ function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: 
         <img
           src={src}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-contain"
-          style={{ objectPosition: objectPosition ?? "center center" }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: objectPosition ?? "center top" }}
           loading="lazy"
         />
 
