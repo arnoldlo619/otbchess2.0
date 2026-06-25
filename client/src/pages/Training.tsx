@@ -84,7 +84,7 @@ export default function Training() {
             className={`text-3xl sm:text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            Training
+            Chess OTB Tools
           </h1>
           <p className={`text-base leading-relaxed max-w-md mx-auto ${isDark ? "text-white/70" : "text-[#436850]"}`}>
             Study openings, build your repertoire, and scout your next opponent — everything you need to prepare and improve.
