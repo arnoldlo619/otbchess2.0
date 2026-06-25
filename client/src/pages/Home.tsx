@@ -689,8 +689,8 @@ function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: 
         <img
           src={src}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: objectPosition ?? "center top" }}
+          className="absolute inset-0 w-full h-full object-contain"
+          style={{ objectPosition: objectPosition ?? "center center" }}
           loading="lazy"
         />
 
@@ -924,7 +924,6 @@ function HowItWorks() {
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
       imageSrc: "/manus-storage/tournament-complete-podium-clean_ceb6666c.webp",
       imageAlt: "Tournament complete screen with final podium",
-      objectPosition: "65% top",
       imageSrc2: "/manus-storage/otb-board-pairings_41832e9e.webp",
       imageAlt2: "Board pairings screen showing matchups",
       phoneLeft: true,
