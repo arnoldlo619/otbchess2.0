@@ -100,6 +100,12 @@ const POSTS: BlogPostData[] = [
             type: "paragraph",
             text: "To keep things competitive without knocking beginners out early, he used a hybrid format. The first four rounds ran as Swiss pairings, which sorted players roughly by strength while guaranteeing everyone a full slate of games. Only then did the field move into a single-elimination bracket, so the late rounds carried real weight.",
           },
+          {
+            type: "image",
+            src: "/manus-storage/d4d34b6d-0b9d-4ffc-aba2-d50e7be2c131_f40bd0bc.png",
+            alt: "Chicago Chess Club Top 10 final standings leaderboard",
+            caption: "The final Top 10 standings — results provided by ChessOTB.club.",
+          },
         ],
       },
       {
@@ -136,9 +142,15 @@ const POSTS: BlogPostData[] = [
           },
           {
             type: "image",
+            src: "/manus-storage/07973273-c56a-4ec8-b3d0-f28da1ee83b6_3326b798.png",
+            alt: "Chicago Chess Club tournament results — Champion Manoj Changaiah Nandakumar, Runner Up Poker Cris, Semifinalist Elias Leverett",
+            caption: "Official tournament results: Champion Manoj CN (829 ELO) · Runner Up Poker Cris (1456 ELO) · Semifinalist Elias Leverett (1426 ELO).",
+          },
+          {
+            type: "image",
             src: "/manus-storage/SnapInsta.to_682706390_18400500265198871_7003724544739875915_n_4047c5f0.jpg",
             alt: "William Guerrero and top finishers with medals and Chicago Chess Club merchandise",
-            caption: "William Guerrero (center) with the top finishers — medals, a ChessUp board, and club merch.",
+            caption: "William Guerrero (center) with the top finishers \u2014 medals, a ChessUp board, and club merch.",
           },
         ],
       },
