@@ -732,7 +732,7 @@ function ParallaxStep({
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
 }) {
-  const { ref, inView } = useInView(0.2);
+  const { ref, inView } = useInView(0.08);
   const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#436850]/10";
 
@@ -811,13 +811,13 @@ function ParallaxStep({
       >
         <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-8">
           <div
-            className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group cursor-pointer"
+            className="group cursor-pointer"
             style={{
-              transform: inView
-                ? "translateY(0) scale(1)"
-                : `translateY(60px) scale(0.92)`,
-              transitionDelay: "100ms",
+              transform: inView ? "translateY(0) scale(1)" : "translateY(60px) scale(0.92)",
               opacity: inView ? 1 : 0,
+              transition: "transform 900ms cubic-bezier(0.16,1,0.3,1), opacity 700ms ease-out",
+              transitionDelay: "80ms",
+              willChange: "transform, opacity",
             }}
           >
             <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
@@ -826,14 +826,14 @@ function ParallaxStep({
           </div>
           {imageSrc2 && (
             <div
-              className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] group cursor-pointer"
-              style={{
-                transform: inView
-                  ? "translateY(0) scale(1)"
-                  : `translateY(80px) scale(0.90)`,
-                transitionDelay: "220ms",
-                opacity: inView ? 1 : 0,
-              }}
+            className="group cursor-pointer"
+            style={{
+              transform: inView ? "translateY(0) scale(1)" : "translateY(80px) scale(0.90)",
+              opacity: inView ? 1 : 0,
+              transition: "transform 900ms cubic-bezier(0.16,1,0.3,1), opacity 700ms ease-out",
+              transitionDelay: "220ms",
+              willChange: "transform, opacity",
+            }}
             >
               <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
                 <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} />
@@ -845,10 +845,14 @@ function ParallaxStep({
 
       {/* Text content */}
       <div
-        className={`flex-1 w-full max-w-md transition-all duration-700 ease-out px-2 sm:px-0 ${
-          inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
-        style={{ transitionDelay: "150ms" }}
+        className="flex-1 w-full max-w-md px-2 sm:px-0"
+        style={{
+          opacity: inView ? 1 : 0,
+          transform: inView ? "translateY(0)" : "translateY(32px)",
+          transition: "opacity 700ms ease-out, transform 700ms cubic-bezier(0.16,1,0.3,1)",
+          transitionDelay: "160ms",
+          willChange: "transform, opacity",
+        }}
       >
         {/* Step badge */}
         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}>
