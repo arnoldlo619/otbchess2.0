@@ -694,11 +694,7 @@ function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: 
           loading="lazy"
         />
 
-        {/* Dynamic island notch — overlaid on top of screenshot */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: 12, width: 120, height: 32, background: "#000", borderRadius: 20, zIndex: 10 }}
-        />
+
 
 
       </div>
