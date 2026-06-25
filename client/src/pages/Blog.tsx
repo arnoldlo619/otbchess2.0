@@ -28,7 +28,7 @@ const POSTS: BlogPost[] = [
     excerpt: "William Guerrero — DJ, artist, and chess streamer — built the Chicago Chess Club on radical inclusivity. We sat down with him after he hosted a 70-player OTB tournament powered by ChessOTB.club.",
     category: "Community",
     date: "June 25, 2026",
-    image: "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=800&q=80",
+    image: "/manus-storage/5FE28E81-FABF-4AA3-8EC4-6C0D5A8788A5_0ff2749c.JPG",
     readTime: "6 min read",
     author: "ChessOTB Team",
   },
