@@ -98,7 +98,7 @@ export default function NotFound() {
             <div className="flex flex-wrap gap-2 justify-center">
               {[
                 { label: "Join a Tournament", href: "/join" },
-                { label: "Training", href: "/training" },
+                { label: "Tools", href: "/training" },
                 { label: "Clubs", href: "/clubs" },
                 { label: "Demo Tournament", href: "/tournament/otb-demo-2026" },
                 { label: "League Demo", href: "/league-demo" },

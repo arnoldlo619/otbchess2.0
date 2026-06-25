@@ -308,7 +308,7 @@ export default function RepertoireList() {
                 </div>
               )}
             </div>
-            <AvatarNavDropdown currentPage="Training" />
+            <AvatarNavDropdown currentPage="Tools" />
           </div>
         </div>
       </div>

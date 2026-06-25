@@ -2062,7 +2062,7 @@ export default function Home() {
     { name: "Clubs",       url: "/clubs",         icon: Building2,      sectionId: "for-clubs" },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "League",      url: leagueNavUrl,    icon: Trophy,         tooltip: myLeagues.length ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name) : "View League Demo", onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
-    { name: "Training",    url: "/training",     icon: GraduationCap },
+    { name: "Tools",    url: "/training",     icon: GraduationCap },
   ];
 
   const logoEl = (

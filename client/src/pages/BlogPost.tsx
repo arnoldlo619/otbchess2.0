@@ -683,7 +683,7 @@ export default function BlogPost() {
     { name: "Clubs",       url: "/clubs",         icon: Building2 },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
-    { name: "Training",    url: "/training",     icon: GraduationCap },
+    { name: "Tools",    url: "/training",     icon: GraduationCap },
   ];
 
   const logoEl = (

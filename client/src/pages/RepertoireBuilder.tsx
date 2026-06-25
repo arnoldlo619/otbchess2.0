@@ -1713,7 +1713,7 @@ export default function RepertoireBuilder() {
             }`}>
               {color === "white" ? "♜ White" : "♚ Black"}
             </span>
-            <AvatarNavDropdown currentPage="Training" />
+            <AvatarNavDropdown currentPage="Tools" />
           </div>
         </div>
       </div>

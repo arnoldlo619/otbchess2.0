@@ -18,7 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 const NAV_ITEMS = [
   { name: "League",      href: "/league-demo", icon: Trophy },
   { name: "Clubs",       href: "/clubs",       icon: Building2 },
-  { name: "Training",   href: "/training",    icon: GraduationCap },
+  { name: "Tools",   href: "/training",    icon: GraduationCap },
   { name: "Chess Clock",href: "/clock",       icon: Timer },
 ] as const;
 

@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   { name: "League",      href: "/league-demo", icon: Trophy },
   { name: "Tournaments", href: "/join",         icon: LayoutDashboard },
   { name: "Clubs",       href: "/clubs",        icon: Building2 },
-  { name: "Training",    href: "/training",     icon: GraduationCap },
+  { name: "Tools",    href: "/training",     icon: GraduationCap },
 ] as const;
 
 const OTB_GREEN      = "#4CAF50";

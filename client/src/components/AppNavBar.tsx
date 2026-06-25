@@ -146,7 +146,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       },
     },
     { name: "Clubs",    url: "/clubs",    icon: Building2 },
-    { name: "Training", url: "/training", icon: GraduationCap, dropdown: <TrainingDropdown /> },
+    { name: "Tools", url: "/training", icon: GraduationCap, dropdown: <TrainingDropdown /> },
   ];
 
   const logoEl = (

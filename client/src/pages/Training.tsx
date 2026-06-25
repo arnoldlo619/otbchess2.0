@@ -74,7 +74,7 @@ export default function Training() {
   return (
     <div className={`relative min-h-screen ${isDark ? "bg-[#0a1409]" : "bg-[#f8faf8]"}`}>
       <BGPattern variant="checkerboard" mask="fade-top" fill={isDark ? "#5B9A6A" : "#436850"} size={32} />
-      <AppNavBar defaultActive="Training" />
+      <AppNavBar defaultActive="Tools" />
 
       <div className="max-w-5xl mx-auto px-4 pt-32 pb-24">
 
