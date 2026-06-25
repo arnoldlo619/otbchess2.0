@@ -7,7 +7,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { useAuthContext } from "@/context/AuthContext";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
-import { Calendar, ArrowRight, Tag, Building2, LayoutDashboard, Trophy, GraduationCap } from "lucide-react";
+import { ArrowUpRight, Building2, LayoutDashboard, Trophy, GraduationCap } from "lucide-react";
 
 // ─── Blog post data ───────────────────────────────────────────────────────────
 export interface BlogPost {
@@ -95,108 +95,126 @@ const POSTS: BlogPost[] = [
 ];
 
 const ALL_CATEGORIES = ["All", ...Array.from(new Set(POSTS.map((p) => p.category))).sort()];
+const POSTS_PER_PAGE = 6;
 
 // ─── Category pill ────────────────────────────────────────────────────────────
-function CategoryPill({
-  label,
-  count,
-  active,
-  isDark,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  isDark: boolean;
-  onClick: () => void;
-}) {
+function CategoryTag({ label, isDark }: { label: string; isDark: boolean }) {
   return (
-    <button
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
-        active
-          ? "bg-[#12372A] text-white border-[#12372A] shadow-sm"
-          : isDark
-          ? "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
-          : "bg-white text-[#436850] border-[#ADBC9F] hover:bg-[#ADBC9F]/20 hover:border-[#436850]"
+    <span
+      className={`inline-block px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider rounded-full border ${
+        isDark
+          ? "border-white/20 text-white/60 bg-white/5"
+          : "border-[#12372A]/20 text-[#12372A]/70 bg-[#12372A]/5"
       }`}
     >
       {label}
-      <span
-        className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-          active
-            ? "bg-white/20 text-white"
-            : isDark
-            ? "bg-white/10 text-white/50"
-            : "bg-[#ADBC9F]/40 text-[#436850]"
-        }`}
-      >
-        {count}
-      </span>
-    </button>
+    </span>
   );
 }
 
-// ─── Blog card ────────────────────────────────────────────────────────────────
+// ─── Featured hero post ───────────────────────────────────────────────────────
+function FeaturedPost({ post, isDark }: { post: BlogPost; isDark: boolean }) {
+  return (
+    <Link href={`/blog/${post.slug}`}>
+      <article className="group relative overflow-hidden rounded-xl cursor-pointer" style={{ aspectRatio: "16/7" }}>
+        {/* Full-bleed image */}
+        <img
+          src={post.image}
+          alt={post.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03] ${
+            isDark ? "" : "grayscale"
+          }`}
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+        {/* Checkerboard accent (top-right corner) — mirrors reference */}
+        <div className="absolute top-0 right-0 w-12 h-12 grid grid-cols-2 grid-rows-2 opacity-80">
+          <div className="bg-[#12372A]" />
+          <div className="bg-transparent" />
+          <div className="bg-transparent" />
+          <div className="bg-[#12372A]" />
+        </div>
+
+        {/* Content overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+          <CategoryTag label={post.category} isDark={true} />
+          <h2
+            className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight max-w-3xl"
+            style={{ fontFamily: "'Clash Display', Georgia, serif" }}
+          >
+            {post.title}
+          </h2>
+          <p className="mt-2 text-white/70 text-sm sm:text-base max-w-2xl line-clamp-2 leading-relaxed">
+            {post.excerpt}
+          </p>
+          <div className="mt-4 flex items-center gap-4 text-white/60 text-xs">
+            <span>Written by <strong className="text-white/90">{post.author}</strong></span>
+            <span>·</span>
+            <span>Published on <strong className="text-white/90">{post.date}</strong></span>
+            <span>·</span>
+            <span>{post.readTime}</span>
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+// ─── Grid card ────────────────────────────────────────────────────────────────
 function BlogCard({ post, isDark }: { post: BlogPost; isDark: boolean }) {
   return (
     <Link href={`/blog/${post.slug}`}>
       <article
-        className={`group flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-xl ${
-          isDark
-            ? "bg-white/5 border-white/10 hover:border-white/20 hover:shadow-black/30"
-            : "bg-white border-[#ADBC9F]/60 hover:border-[#436850]/40 hover:shadow-[#ADBC9F]/30"
+        className={`group flex flex-col cursor-pointer border-b transition-colors duration-200 pb-6 ${
+          isDark ? "border-white/10" : "border-[#12372A]/12"
         }`}
       >
         {/* Image */}
-        <div className="relative overflow-hidden aspect-[16/9]">
+        <div className="relative overflow-hidden rounded-lg aspect-[4/3] mb-4">
           <img
             src={post.image}
             alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+              isDark ? "" : "grayscale group-hover:grayscale-0"
+            }`}
             loading="lazy"
           />
-          {/* Category badge overlay */}
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#12372A]/90 text-white backdrop-blur-sm">
-            {post.category}
-          </span>
         </div>
 
-        {/* Content */}
-        <div className="flex flex-col flex-1 p-5 gap-3">
+        {/* Title row */}
+        <div className="flex items-start justify-between gap-2 mb-2">
           <h2
-            className={`text-base font-bold leading-snug line-clamp-2 group-hover:text-[#436850] transition-colors ${
-              isDark ? "text-white" : "text-[#12372A]"
+            className={`text-[15px] font-bold leading-snug line-clamp-2 flex-1 transition-colors duration-200 ${
+              isDark
+                ? "text-white group-hover:text-[#ADBC9F]"
+                : "text-[#12372A] group-hover:text-[#436850]"
             }`}
           >
             {post.title}
           </h2>
-          <p
-            className={`text-sm leading-relaxed line-clamp-3 flex-1 ${
-              isDark ? "text-white/60" : "text-[#436850]/80"
+          <ArrowUpRight
+            className={`w-4 h-4 shrink-0 mt-0.5 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
+              isDark ? "text-white/30 group-hover:text-white/70" : "text-[#12372A]/30 group-hover:text-[#12372A]/70"
             }`}
-          >
-            {post.excerpt}
-          </p>
+          />
+        </div>
 
-          {/* Footer row */}
-          <div
-            className={`flex items-center justify-between pt-3 border-t text-xs ${
-              isDark ? "border-white/10 text-white/40" : "border-[#ADBC9F]/50 text-[#6B6B50]"
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{post.date}</span>
-              <span className="mx-1">·</span>
-              <span>{post.readTime}</span>
-            </div>
-            <ArrowRight
-              className={`w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 ${
-                isDark ? "text-white/40" : "text-[#436850]/60"
-              }`}
-            />
-          </div>
+        {/* Excerpt */}
+        <p
+          className={`text-sm leading-relaxed line-clamp-2 mb-3 flex-1 ${
+            isDark ? "text-white/55" : "text-[#12372A]/60"
+          }`}
+        >
+          {post.excerpt}
+        </p>
+
+        {/* Tags row */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <CategoryTag label={post.category} isDark={isDark} />
+          <span className={`text-[11px] ${isDark ? "text-white/30" : "text-[#12372A]/40"}`}>
+            · {post.readTime}
+          </span>
         </div>
       </article>
     </Link>
@@ -208,6 +226,7 @@ export default function Blog() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeCategory, setActiveCategory] = useState("All");
+  const [page, setPage] = useState(1);
   const { user } = useAuthContext();
 
   // ── League smart routing ──────────────────────────────────────────────────
@@ -262,7 +281,7 @@ export default function Blog() {
     { name: "Clubs",       url: "/clubs",         icon: Building2 },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
-    { name: "Tools",    url: "/training",     icon: GraduationCap },
+    { name: "Tools",       url: "/training",     icon: GraduationCap },
   ];
 
   const logoEl = (
@@ -286,28 +305,41 @@ export default function Blog() {
     </div>
   );
 
-  const filtered = useMemo(
-    () =>
-      activeCategory === "All"
-        ? POSTS
-        : POSTS.filter((p) => p.category === activeCategory),
-    [activeCategory]
-  );
+  // ── Filtering + pagination ────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    setPage(1);
+    return activeCategory === "All"
+      ? POSTS
+      : POSTS.filter((p) => p.category === activeCategory);
+  }, [activeCategory]);
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { All: POSTS.length };
-    POSTS.forEach((p) => {
-      counts[p.category] = (counts[p.category] ?? 0) + 1;
-    });
-    return counts;
-  }, []);
+  // Featured = first post of the filtered set (always Chicago highlight when "All")
+  const featuredPost = filtered[0];
+  const gridPosts = filtered.slice(1);
+  const totalPages = Math.ceil(gridPosts.length / POSTS_PER_PAGE);
+  const pagedPosts = gridPosts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
+
+  // Light mode: off-white parchment bg + grid paper texture
+  const lightBg = "bg-[#F5F0E8]";
+  const lightText = "text-[#12372A]";
 
   return (
     <div
       className={`min-h-screen transition-colors duration-300 ${
-        isDark ? "bg-background text-white" : "bg-[#FBFADA] text-[#12372A]"
+        isDark ? "bg-background text-white" : `${lightBg} ${lightText}`
       }`}
     >
+      {/* Grid-paper texture overlay (light mode) */}
+      {!isDark && (
+        <div
+          className="fixed inset-0 pointer-events-none opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "linear-gradient(#12372A18 1px, transparent 1px), linear-gradient(90deg, #12372A18 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+      )}
       {/* Chess board background pattern (dark mode) */}
       {isDark && <div className="fixed inset-0 chess-board-bg opacity-[0.03] pointer-events-none" />}
 
@@ -320,76 +352,156 @@ export default function Blog() {
         isDark={isDark}
       />
 
-      <div className="container max-w-6xl mx-auto px-4 pt-28 pb-16 sm:pt-32 sm:pb-24">
-        {/* ── Header ── */}
-        <div className="mb-10">
-          <div className="flex items-center gap-2 mb-3">
-            <Tag className="w-4 h-4 text-[#436850]" />
-            <span className={`text-sm font-semibold uppercase tracking-widest ${isDark ? "text-white/50" : "text-[#436850]"}`}>
-              ChessOTB.club
-            </span>
-          </div>
-          <h1
-            className={`text-4xl sm:text-5xl font-black tracking-tight mb-3 ${
-              isDark ? "text-white" : "text-[#12372A]"
+      <div className="relative z-10 container max-w-6xl mx-auto px-4 pt-28 pb-20 sm:pt-32 sm:pb-28">
+
+        {/* ── Journal header ── */}
+        <div
+          className={`mb-8 pb-6 border-b ${
+            isDark ? "border-white/10" : "border-[#12372A]/15"
+          }`}
+        >
+          <span
+            className={`inline-block text-[11px] font-semibold uppercase tracking-[0.2em] px-3 py-1 rounded-full border mb-4 ${
+              isDark
+                ? "border-white/20 text-white/50 bg-white/5"
+                : "border-[#12372A]/25 text-[#12372A]/60 bg-[#12372A]/5"
             }`}
           >
-            Blog
+            Chess Journal
+          </span>
+          <h1
+            className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-3 ${
+              isDark ? "text-white" : "text-[#12372A]"
+            }`}
+            style={{ fontFamily: "'Clash Display', Georgia, serif" }}
+          >
+            The ChessOTB.club<br />
+            <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}>
+              Journal &amp; Community
+            </span>
           </h1>
-          <p className={`text-lg ${isDark ? "text-white/60" : "text-[#436850]/80"}`}>
-            Company updates, chess strategy, and community stories.
+          <p className={`text-base sm:text-lg max-w-xl leading-relaxed ${isDark ? "text-white/55" : "text-[#12372A]/60"}`}>
+            Club spotlights, tournament strategy, platform updates, and community stories from the OTB chess world.
           </p>
         </div>
 
-        {/* ── Category filter pills ── */}
-        <div className="flex flex-wrap gap-2 mb-10">
-          {ALL_CATEGORIES.map((cat) => (
-            <CategoryPill
-              key={cat}
-              label={cat}
-              count={categoryCounts[cat] ?? 0}
-              active={activeCategory === cat}
-              isDark={isDark}
-              onClick={() => setActiveCategory(cat)}
-            />
-          ))}
+        {/* ── Featured hero post ── */}
+        {featuredPost && (
+          <div className="mb-10">
+            <FeaturedPost post={featuredPost} isDark={isDark} />
+          </div>
+        )}
+
+        {/* ── Category filter tabs ── */}
+        <div
+          className={`flex flex-wrap gap-1.5 mb-8 pb-6 border-b ${
+            isDark ? "border-white/10" : "border-[#12372A]/12"
+          }`}
+        >
+          {ALL_CATEGORIES.map((cat) => {
+            const count = cat === "All" ? POSTS.length : POSTS.filter((p) => p.category === cat).length;
+            const active = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 border ${
+                  active
+                    ? isDark
+                      ? "bg-white text-[#12372A] border-white"
+                      : "bg-[#12372A] text-white border-[#12372A]"
+                    : isDark
+                    ? "bg-transparent text-white/55 border-white/15 hover:border-white/30 hover:text-white/80"
+                    : "bg-transparent text-[#12372A]/60 border-[#12372A]/18 hover:border-[#12372A]/40 hover:text-[#12372A]"
+                }`}
+              >
+                {cat}
+                <span
+                  className={`text-[11px] px-1.5 py-0.5 rounded-full font-semibold ${
+                    active
+                      ? isDark ? "bg-[#12372A]/20 text-[#12372A]" : "bg-white/20 text-white"
+                      : isDark ? "bg-white/10 text-white/40" : "bg-[#12372A]/10 text-[#12372A]/50"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* ── Post grid ── */}
-        {filtered.length === 0 ? (
+        {pagedPosts.length === 0 && !featuredPost ? (
           <div className="text-center py-24">
-            <p className={isDark ? "text-white/40" : "text-[#436850]/50"}>
-              No posts in this category yet.
-            </p>
+            <p className={isDark ? "text-white/40" : "text-[#12372A]/40"}>No posts in this category yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((post) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+            {pagedPosts.map((post) => (
               <BlogCard key={post.slug} post={post} isDark={isDark} />
             ))}
           </div>
         )}
 
-        {/* ── Contribute CTA ── */}
+        {/* ── Pagination ── */}
+        {totalPages > 1 && (
+          <div
+            className={`flex items-center justify-between mt-12 pt-6 border-t text-sm font-medium ${
+              isDark ? "border-white/10 text-white/50" : "border-[#12372A]/12 text-[#12372A]/60"
+            }`}
+          >
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={`flex items-center gap-1.5 transition-colors disabled:opacity-30 ${
+                isDark ? "hover:text-white" : "hover:text-[#12372A]"
+              }`}
+            >
+              ← Previous
+            </button>
+            <span>Page {page} of {totalPages}</span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className={`flex items-center gap-1.5 transition-colors disabled:opacity-30 ${
+                isDark ? "hover:text-white" : "hover:text-[#12372A]"
+              }`}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+
+        {/* ── CTA banner ── */}
         <div
-          className={`mt-16 rounded-2xl p-8 text-center border ${
-            isDark
-              ? "bg-white/5 border-white/10"
-              : "bg-[#ADBC9F]/20 border-[#ADBC9F]/50"
+          className={`mt-16 rounded-xl p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden ${
+            isDark ? "bg-white/5 border border-white/10" : "bg-[#12372A] text-white"
           }`}
         >
-          <h3 className={`text-lg font-bold mb-2 ${isDark ? "text-white" : "text-[#12372A]"}`}>
-            Want to contribute?
-          </h3>
-          <p className={`text-sm mb-4 ${isDark ? "text-white/60" : "text-[#436850]/80"}`}>
-            Have a chess story, club spotlight, or tournament recap to share? Reach out to us.
-          </p>
-          <a
-            href="mailto:info@chessotb.club"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#12372A] text-white text-sm font-semibold hover:bg-[#436850] transition-colors"
-          >
-            Get in touch <ArrowRight className="w-4 h-4" />
-          </a>
+          {/* Checkerboard accent */}
+          <div className="absolute top-0 right-0 w-16 h-16 grid grid-cols-2 grid-rows-2 opacity-30">
+            <div className="bg-white" />
+            <div className="bg-transparent" />
+            <div className="bg-transparent" />
+            <div className="bg-white" />
+          </div>
+          <div>
+            <p
+              className={`text-2xl sm:text-3xl font-bold leading-tight mb-1 ${isDark ? "text-white" : "text-white"}`}
+              style={{ fontFamily: "'Clash Display', Georgia, serif" }}
+            >
+              Host your own tournament
+            </p>
+            <p className={`text-sm ${isDark ? "text-white/55" : "text-white/70"}`}>
+              Free for chess clubs. Swiss pairings, QR check-in, live standings.
+            </p>
+          </div>
+          <Link href="/create">
+            <button className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/40 text-white text-sm font-semibold hover:bg-white hover:text-[#12372A] transition-all duration-200 whitespace-nowrap">
+              Start your free trial
+              <ArrowUpRight className="w-4 h-4" />
+            </button>
+          </Link>
         </div>
       </div>
     </div>
