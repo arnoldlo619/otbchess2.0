@@ -33,7 +33,8 @@ type ContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "list"; items: string[] }
   | { type: "callout"; text: string }
-  | { type: "subheading"; text: string };
+  | { type: "subheading"; text: string }
+  | { type: "image"; src: string; caption?: string; alt: string };
 
 // ─── Full article content for all 7 posts ────────────────────────────────────
 const POSTS: BlogPostData[] = [
@@ -66,6 +67,12 @@ const POSTS: BlogPostData[] = [
             text: "William Guerrero — a DJ and artist who streams chess as the Kid from Pilsen — built the club around a stubborn belief: the game gets better when more people feel welcome to play it. We caught up with him about the club's first year, the 70-player tournament he pulled off in April, and the small fixes that made running it possible.",
           },
           {
+            type: "image",
+            src: "/manus-storage/SnapInsta.to_681312551_18400500286198871_7955030113972660691_n_eef20724.jpg",
+            alt: "Players packed into Southside Social for the Chicago Chess Club tournament",
+            caption: "The afternoon session at Southside Social — every table full.",
+          },
+          {
             type: "paragraph",
             text: "Competitive chess has a reputation — quiet halls, hard stares, not much patience for newcomers. Guerrero wanted the opposite. The club meets wherever it can, whether that's a park, a library, or a bar, and it runs on one firm rule: no condescension, no trash talk. Beat someone, and you're expected to help them see what went wrong.",
           },
@@ -84,6 +91,12 @@ const POSTS: BlogPostData[] = [
             text: "The club started as a handful of people meeting up to make friends over the board, and it grew fast. By April, Guerrero had booked Southside Social in Back of the Yards for a full over-the-board tournament. More than 70 players turned up.",
           },
           {
+            type: "image",
+            src: "/manus-storage/SnapInsta.to_682083143_18400500307198871_5618929597672296626_n_17eee505.jpg",
+            alt: "Rows of players competing at the Chicago Chess Club tournament under evening lights",
+            caption: "Evening rounds at Southside Social — 70+ players, zero empty boards.",
+          },
+          {
             type: "paragraph",
             text: "To keep things competitive without knocking beginners out early, he used a hybrid format. The first four rounds ran as Swiss pairings, which sorted players roughly by strength while guaranteeing everyone a full slate of games. Only then did the field move into a single-elimination bracket, so the late rounds carried real weight.",
           },
@@ -96,6 +109,12 @@ const POSTS: BlogPostData[] = [
           {
             type: "paragraph",
             text: "Running a 70-person bracket by hand is a slog. Someone has to redo the pairings after every round and then read out who sits where while the whole room waits. Guerrero leaned on tournament software to take that off his plate, and the feature that mattered most turned out to be the simplest one: QR-code pairings.",
+          },
+          {
+            type: "image",
+            src: "/manus-storage/SnapInsta.to_683971647_18400500295198871_8156976984609460739_n_ef4ced93.jpg",
+            alt: "Two players focused across board 25 at the Chicago Chess Club tournament",
+            caption: "Board 25 — the numbered table markers made round transitions instant.",
           },
           {
             type: "paragraph",
@@ -114,6 +133,12 @@ const POSTS: BlogPostData[] = [
           {
             type: "paragraph",
             text: "A year in, Guerrero wants to partner with more local organizations and, eventually, find the club a permanent home — ideally back in Pilsen. The goal hasn't shifted since the first meetup: a place where players can chase a higher USCF or FIDE rating without feeling like they have to earn the right to be in the room.",
+          },
+          {
+            type: "image",
+            src: "/manus-storage/SnapInsta.to_682706390_18400500265198871_7003724544739875915_n_4047c5f0.jpg",
+            alt: "William Guerrero and top finishers with medals and Chicago Chess Club merchandise",
+            caption: "William Guerrero (center) with the top finishers — medals, a ChessUp board, and club merch.",
           },
         ],
       },
@@ -665,6 +690,25 @@ function ContentBlock({ block, isDark }: { block: ContentBlock; isDark: boolean 
       <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? "text-white" : "text-[#12372A]"}`}>
         {block.text}
       </h3>
+    );
+  }
+  if (block.type === "image") {
+    return (
+      <figure className="my-6 -mx-1">
+        <img
+          src={block.src}
+          alt={block.alt}
+          className="w-full rounded-xl object-cover max-h-[480px]"
+          loading="lazy"
+        />
+        {block.caption && (
+          <figcaption className={`mt-2 text-center text-sm italic ${
+            isDark ? "text-white/50" : "text-[#436850]/70"
+          }`}>
+            {block.caption}
+          </figcaption>
+        )}
+      </figure>
     );
   }
   return null;
