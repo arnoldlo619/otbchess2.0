@@ -68,6 +68,7 @@ import {
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { GlassButton } from "@/components/ui/apple-tahoe-liquid-glass-button";
 
@@ -419,15 +420,12 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center py-24 lg:py-32">
           <div className="opacity-0-init animate-fade-in-up flex justify-center mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
-            <HoverBorderGradient
-              as="span"
-              containerClassName={isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#EEF5EE]"}
-              className={`text-[11px] font-semibold tracking-[0.18em] uppercase leading-none ${
-                isDark ? "text-white/75 bg-[oklch(0.18_0.05_145)]" : "text-[#436850] bg-[#EEF5EE]"
-              }`}
-            >
-              For Chess Clubs &amp; Communities
-            </HoverBorderGradient>
+            <AnnouncementBanner
+              label="NEW"
+              text="Chicago Chess Club Highlight!"
+              href="/blog"
+              isDark={isDark}
+            />
           </div>
 
           <h1
