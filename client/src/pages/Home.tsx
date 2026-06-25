@@ -16,7 +16,7 @@
  * 10. Footer
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { Link } from "wouter";
 import { toast } from "sonner";
@@ -640,20 +640,110 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
   );
 }
 
+// ─── Phone Lightbox Modal ──────────────────────────────────────────────────
+function PhoneLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(12px)" }}
+      onClick={onClose}
+    >
+      {/* Close button */}
+      <button
+        className="absolute top-5 right-5 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors duration-200"
+        onClick={onClose}
+        aria-label="Close lightbox"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M2 2L16 16M16 2L2 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </button>
+
+      {/* Screenshot in phone frame */}
+      <div
+        className="relative flex items-center justify-center"
+        style={{ maxHeight: "90vh", maxWidth: "min(420px, 90vw)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Subtle glow behind the modal phone */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            inset: -16,
+            borderRadius: 70,
+            boxShadow: "0 0 60px 16px oklch(0.65 0.18 145 / 0.28), 0 0 120px 32px oklch(0.55 0.14 145 / 0.14)",
+          }}
+        />
+        {/* Phone shell */}
+        <div
+          style={{
+            width: "min(380px, 88vw)",
+            aspectRatio: "320 / 650",
+            borderRadius: 50,
+            border: "10px solid #1c1c1e",
+            boxShadow: "0 0 0 1px #3a3a3a, 0 40px 120px rgba(0,0,0,0.9)",
+            background: "#0a0a0a",
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
+          <img
+            src={src}
+            alt={alt}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              objectPosition: "center top",
+              display: "block",
+            }}
+            draggable={false}
+          />
+        </div>
+        {/* Caption */}
+        <p
+          className="absolute -bottom-8 left-0 right-0 text-center text-white/50 text-xs tracking-wide"
+        >
+          {alt} · Click outside or press Esc to close
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
 function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: string; isDark: boolean; objectPosition?: string }) {
   const [hovered, setHovered] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const handleClose = useCallback(() => setLightboxOpen(false), []);
   // Responsive sizing: clamp between 220px (small mobile) and 320px (desktop)
   // Height maintains the 320:650 (≈1:2.03) aspect ratio
   return (
+    <>
+    {lightboxOpen && <PhoneLightbox src={src} alt={alt} onClose={handleClose} />}
     <div
-      className="relative mx-auto select-none"
+      className="relative mx-auto select-none cursor-pointer"
       style={{
         width: "clamp(200px, min(80vw, 320px), 320px)",
         height: "clamp(406px, min(162.5vw, 650px), 650px)",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => setLightboxOpen(true)}
+      role="button"
+      aria-label={`View ${alt} full screen`}
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setLightboxOpen(true); }}
     >
       {/* Gradient glow ring — soft green halo on hover */}
       <div
@@ -715,6 +805,7 @@ function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: 
 
       </div>
     </div>
+    </>
   );
 }
 
