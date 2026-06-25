@@ -24,8 +24,8 @@ export interface BlogPost {
 const POSTS: BlogPost[] = [
   {
     slug: "chicago-chess-club-highlight",
-    title: "Building Community Through the Board: A Q&A with The Kid from Pilsen",
-    excerpt: "William Guerrero — DJ, artist, and chess streamer — built the Chicago Chess Club on radical inclusivity. We sat down with him after he hosted a 70-player OTB tournament powered by ChessOTB.club.",
+    title: "Building Community Through the Board",
+    excerpt: "William Guerrero turned a few park meetups into a 70-player tournament — by making chess less intimidating, not more.",
     category: "Community",
     date: "June 25, 2026",
     image: "/manus-storage/5FE28E81-FABF-4AA3-8EC4-6C0D5A8788A5_0ff2749c.JPG",

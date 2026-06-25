@@ -40,9 +40,9 @@ const POSTS: BlogPostData[] = [
   // ── Chicago Chess Club Highlight ──────────────────────────────────────────
   {
     slug: "chicago-chess-club-highlight",
-    title: "Building Community Through the Board: A Q&A with The Kid from Pilsen",
+    title: "Building Community Through the Board",
     excerpt:
-      "William Guerrero — DJ, artist, and chess streamer — built the Chicago Chess Club on radical inclusivity. We sat down with him after he hosted a 70-player OTB tournament powered by ChessOTB.club.",
+      "William Guerrero turned a few park meetups into a 70-player tournament — by making chess less intimidating, not more.",
     category: "Community",
     date: "June 25, 2026",
     image: "/manus-storage/5FE28E81-FABF-4AA3-8EC4-6C0D5A8788A5_0ff2749c.JPG",
@@ -55,15 +55,19 @@ const POSTS: BlogPostData[] = [
     sections: [
       {
         id: "intro",
-        heading: "Redefining Local Chess Culture",
+        heading: "A room where talking is the point",
         content: [
           {
             type: "paragraph",
-            text: "Grassroots chess is experiencing a massive resurgence, and in Chicago, William Guerrero — better known as the Kid from Pilsen — is driving the culture forward. As a DJ, artist, and chess streamer, Guerrero founded the Chicago Chess Club with a simple premise: chess should be accessible, social, and entirely welcoming.",
+            text: "In a lot of chess rooms, talking is discouraged. At the Chicago Chess Club, it's the whole idea.",
           },
           {
             type: "paragraph",
-            text: "Historically, competitive chess has carried a reputation for being hyper-serious, dead silent, and intimidating to newcomers. The Chicago Chess Club flips that script. Whether meeting at a local park, a library, or a bar, Guerrero enforces a strict zero-tolerance policy for condescension or trash talk. The focus is entirely on education, community building, and playing great games in a low-pressure environment.",
+            text: "William Guerrero — a DJ and artist who streams chess as the Kid from Pilsen — built the club around a stubborn belief: the game gets better when more people feel welcome to play it. We caught up with him about the club's first year, the 70-player tournament he pulled off in April, and the small fixes that made running it possible.",
+          },
+          {
+            type: "paragraph",
+            text: "Competitive chess has a reputation — quiet halls, hard stares, not much patience for newcomers. Guerrero wanted the opposite. The club meets wherever it can, whether that's a park, a library, or a bar, and it runs on one firm rule: no condescension, no trash talk. Beat someone, and you're expected to help them see what went wrong.",
           },
           {
             type: "callout",
@@ -73,62 +77,43 @@ const POSTS: BlogPostData[] = [
       },
       {
         id: "tournament",
-        heading: "Scaling the Experience: The 70-Player Tournament",
+        heading: "From a few friends to seventy players",
         content: [
           {
             type: "paragraph",
-            text: "What started as a handful of people gathering to make friends quickly evolved. Recognizing the demand, Guerrero booked the space at Southside Social in Back of the Yards to host a major over-the-board tournament in April. The turnout of over 70 players proved the appetite for community-driven chess in Chicago.",
+            text: "The club started as a handful of people meeting up to make friends over the board, and it grew fast. By April, Guerrero had booked Southside Social in Back of the Yards for a full over-the-board tournament. More than 70 players turned up.",
           },
           {
             type: "paragraph",
-            text: "To keep the atmosphere competitive but forgiving, the tournament utilized a hybrid format designed to give every player meaningful games regardless of their rating:",
-          },
-          {
-            type: "list",
-            items: [
-              "<strong>Calibration phase:</strong> Four initial rounds of Swiss pairings to accurately group players by skill level",
-              "<strong>The Final Shot:</strong> A transition into a single-elimination knockout bracket, ensuring every player got a chance to compete for the finish",
-            ],
+            text: "To keep things competitive without knocking beginners out early, he used a hybrid format. The first four rounds ran as Swiss pairings, which sorted players roughly by strength while guaranteeing everyone a full slate of games. Only then did the field move into a single-elimination bracket, so the late rounds carried real weight.",
           },
         ],
       },
       {
         id: "logistics",
-        heading: "Streamlining the Logistics",
+        heading: "Pairings without the shouting match",
         content: [
           {
             type: "paragraph",
-            text: "Running a hybrid format with 70+ players traditionally requires complex manual bracket management and extensive time between rounds to announce table assignments. To handle the load, the Chicago Chess Club utilized ChessOTB.club to automate the flow.",
+            text: "Running a 70-person bracket by hand is a slog. Someone has to redo the pairings after every round and then read out who sits where while the whole room waits. Guerrero leaned on tournament software to take that off his plate, and the feature that mattered most turned out to be the simplest one: QR-code pairings.",
           },
           {
             type: "paragraph",
-            text: "The highest-impact feature? QR-code pairings. Instead of a tournament director manually shouting out board numbers — a massive bottleneck at large events — players simply scanned a QR code on their phones to instantly see their next opponent and table assignment.",
+            text: "Instead of the director calling board numbers one by one, players scanned a code on their phones and saw their next opponent and table immediately.",
           },
           {
             type: "callout",
             text: "\"At my first tournament, I was telling players where to go... that took a lot of time. When players scan the QR code to see what table they sit at next, it runs flawlessly and saves a massive amount of hassle.\"",
           },
-          {
-            type: "paragraph",
-            text: "The result was a dramatically smoother event experience. Round transitions that previously ate 10–15 minutes of dead time were reduced to under two minutes, keeping energy high and players engaged throughout the day.",
-          },
         ],
       },
       {
         id: "whats-next",
-        heading: "What's Next for the Chicago Chess Club",
+        heading: "What comes next",
         content: [
           {
             type: "paragraph",
-            text: "One year into the project, Guerrero envisions the club partnering with more local organizations and eventually securing a permanent home, ideally in Pilsen. The goal remains the same: a space where players can raise their USCF or FIDE ratings without the intimidation factor of traditional chess halls.",
-          },
-          {
-            type: "paragraph",
-            text: "With the right tools and a fiercely welcoming culture, the Chicago chess scene is well-positioned for massive growth. The Chicago Chess Club is proof that when you lower the barrier to entry and build genuine community, the players will come — and keep coming back.",
-          },
-          {
-            type: "callout",
-            text: "Want to host your own community tournament? ChessOTB.club makes it free and easy — Swiss pairings, QR check-in, live standings, and more. Start your event in under 5 minutes.",
+            text: "A year in, Guerrero wants to partner with more local organizations and, eventually, find the club a permanent home — ideally back in Pilsen. The goal hasn't shifted since the first meetup: a place where players can chase a higher USCF or FIDE rating without feeling like they have to earn the right to be in the room.",
           },
         ],
       },
