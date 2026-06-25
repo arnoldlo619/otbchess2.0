@@ -911,7 +911,7 @@ export default function BlogPost() {
         isDark={isDark}
       />
 
-      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-16">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 sm:pt-32 sm:pb-16">
 
         {/* ── Breadcrumb ── */}
         <nav className="flex items-center gap-2 mb-6 flex-wrap">
