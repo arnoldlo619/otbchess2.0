@@ -642,6 +642,7 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
 
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
 function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: string; isDark: boolean; objectPosition?: string }) {
+  const [hovered, setHovered] = useState(false);
   // Responsive sizing: clamp between 220px (small mobile) and 320px (desktop)
   // Height maintains the 320:650 (≈1:2.03) aspect ratio
   return (
@@ -651,7 +652,22 @@ function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: 
         width: "clamp(200px, min(80vw, 320px), 320px)",
         height: "clamp(406px, min(162.5vw, 650px), 650px)",
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
+      {/* Gradient glow ring — soft green halo on hover */}
+      <div
+        className="absolute pointer-events-none z-0"
+        style={{
+          inset: -3,
+          borderRadius: 54,
+          opacity: hovered ? 1 : 0,
+          boxShadow: hovered
+            ? "0 0 28px 4px oklch(0.65 0.18 145 / 0.32), 0 0 56px 10px oklch(0.55 0.14 145 / 0.16), inset 0 0 0 1.5px oklch(0.72 0.22 145 / 0.5)"
+            : "none",
+          transition: "opacity 350ms ease, box-shadow 350ms ease",
+        }}
+      />
       {/* Side buttons — left (positions scale with the container via percentage) */}
       <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "21.5%", width: 3, height: "6.15%", background: "#2a2a2a" }} />
       <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "30%", width: 3, height: "9.85%", background: "#2a2a2a" }} />
