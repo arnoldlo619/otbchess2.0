@@ -722,7 +722,7 @@ function PhoneLightbox({ src, alt, onClose }: { src: string; alt: string; onClos
 }
 
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
-function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: string; isDark: boolean; objectPosition?: string }) {
+function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: string; alt: string; isDark: boolean; objectPosition?: string; objectFit?: string }) {
   const [hovered, setHovered] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const handleClose = useCallback(() => setLightboxOpen(false), []);
@@ -795,8 +795,8 @@ function IPhoneMockup({ src, alt, isDark, objectPosition }: { src: string; alt: 
         <img
           src={src}
           alt={alt}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: objectPosition ?? "center top" }}
+          className="absolute inset-0 w-full h-full"
+          style={{ objectFit: (objectFit ?? "cover") as React.CSSProperties["objectFit"], objectPosition: objectPosition ?? "center top" }}
           loading="lazy"
         />
 
@@ -821,6 +821,7 @@ function ParallaxStep({
   imageAlt2,
   objectPosition,
   objectPosition2,
+  objectFit,
   phoneLeft,
   isDark,
   mockupType,
@@ -835,6 +836,7 @@ function ParallaxStep({
   imageAlt2?: string;
   objectPosition?: string;
   objectPosition2?: string;
+  objectFit?: string;
   phoneLeft: boolean;
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
@@ -928,7 +930,7 @@ function ParallaxStep({
             }}
           >
             <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
-              <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} />
+              <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} objectFit={(objectFit as string | undefined)} />
             </div>
           </div>
           {imageSrc2 && (
@@ -943,7 +945,7 @@ function ParallaxStep({
             }}
             >
               <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
-                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} />
+                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit as string | undefined)} />
               </div>
             </div>
           )}
@@ -1034,6 +1036,7 @@ function HowItWorks() {
       imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
       imageAlt2: "Live board pairings screen with player matchups and result entry",
       phoneLeft: true,
+      objectFit: "contain",
     },
   ];
 
