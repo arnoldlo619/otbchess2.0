@@ -6622,3 +6622,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Blog index page (Blog.tsx) — category filter pills, 3-column card grid, 6 seeded posts, footer link
 - [x] Blog post detail page (BlogPost.tsx) — two-column layout, sticky sidebar, author card, TOC, CTA card, full article content for all 6 posts
 - [x] /blog/:slug route added to App.tsx (before /blog to avoid wouter conflict)
+
+## Clubs Growth OS V1
+
+### Priority 1
+- [ ] Club Admin Dashboard (/clubs/:id/manage) — overview metrics, quick actions, setup checklist, recent activity, admin alerts
+- [ ] Onboarding checklist with progress tracking — logo, description, location, schedule, socials, invite, event, tournament, share
+- [ ] Club Profile Editing flow — consolidated form with club type, skill level, venue, validation, success toast
+- [ ] Invite/Share/QR system — copy link, QR code generation/download, social share modal (X, FB, WhatsApp, Email)
+- [ ] Public Club Landing Page improvements — hero badges, Why Join section, Next Up section, social proof, better CTAs
+- [ ] Auth modal with return-to-action — show sign-in modal for protected actions, redirect back after auth
+
+### Priority 2
+- [ ] Member management improvements — search, filter by role/date/activity, approve/reject join requests
+- [ ] Announcements system — title, body, link, pin, edit, delete, timestamps, admin badge
+- [ ] Events V1 improvements — event types, capacity, public/private toggle, better cards
+- [ ] Club-associated tournament creation — pre-fill club info, show on club page and feed
