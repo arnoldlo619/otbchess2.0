@@ -1541,6 +1541,29 @@ function QuickstartForm({
           } catch { return data.date; }
         })();
 
+        // ── Estimated duration ──────────────────────────────────────────────
+        // Formula: each game = (timeBase * 2 + timeIncrement * 40) minutes
+        // (40 moves per side is the standard FIDE average game length estimate)
+        // Add 5 min per round for setup/pairing overhead, plus 10 min overall admin buffer.
+        const minutesPerGame = data.timeBase * 2 + data.timeIncrement * 40 / 60 * 60;
+        // Simpler, cleaner: game time = base * 2 (both players) + increment * 40 moves
+        const gameMinutes = data.timeBase * 2 + Math.round((data.timeIncrement * 40) / 60);
+        const roundOverhead = 5; // pairing + board setup per round
+        const adminBuffer  = 10; // opening remarks + closing
+        const totalMinutes = data.rounds * (gameMinutes + roundOverhead) + adminBuffer;
+        const durationLabel = (() => {
+          if (totalMinutes < 60) return `~${totalMinutes} min`;
+          const h = Math.floor(totalMinutes / 60);
+          const m = totalMinutes % 60;
+          return m === 0 ? `~${h}h` : `~${h}h ${m}m`;
+        })();
+        // Pace descriptor
+        const paceLabel =
+          totalMinutes <= 60  ? "Quick session" :
+          totalMinutes <= 120 ? "Half-day event" :
+          totalMinutes <= 210 ? "Full afternoon" : "Full-day event";
+        void minutesPerGame; // suppress unused warning
+
         const chips: { icon: React.ReactNode; label: string; value: string; highlight?: boolean }[] = [
           {
             icon: <Trophy className="w-3 h-3" />,
@@ -1652,6 +1675,35 @@ function QuickstartForm({
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Estimated Total Duration — full-width accent row */}
+            <div
+              className="flex items-center justify-between rounded-xl px-3 py-2.5"
+              style={{
+                background: isDark ? "rgba(77,105,64,0.20)" : "rgba(77,105,64,0.10)",
+                border: `1px solid ${isDark ? "rgba(77,105,64,0.40)" : "rgba(77,105,64,0.25)"}`,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
+                <div>
+                  <p className="text-[10px] leading-none mb-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                    Estimated Total Duration
+                  </p>
+                  <p className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                    {data.rounds} rounds × {gameMinutes} min/game + {roundOverhead} min setup + {adminBuffer} min admin
+                  </p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0 ml-3">
+                <p className="text-sm font-bold" style={{ color: T.green }}>
+                  {durationLabel}
+                </p>
+                <p className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                  {paceLabel}
+                </p>
+              </div>
             </div>
           </div>
         );
