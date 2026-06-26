@@ -747,6 +747,7 @@ function QuickstartForm({
   // Recommended Schedule
   const [startTime, setStartTime] = useState("10:00");
   const [showSchedule, setShowSchedule] = useState(false);
+  const [roundBuffer, setRoundBuffer] = useState(5); // extra minutes between rounds (on top of setup overhead)
   // Custom breaks: keyed by "after round N"
   type BreakEntry = { label: string; duration: number }; // duration in minutes
   const [breaks, setBreaks] = useState<Record<number, BreakEntry>>({});
@@ -1557,7 +1558,7 @@ function QuickstartForm({
         const minutesPerGame = data.timeBase * 2 + data.timeIncrement * 40 / 60 * 60;
         // Simpler, cleaner: game time = base * 2 (both players) + increment * 40 moves
         const gameMinutes = data.timeBase * 2 + Math.round((data.timeIncrement * 40) / 60);
-        const roundOverhead = 5; // pairing + board setup per round
+        const roundOverhead = roundBuffer; // user-configurable buffer between rounds
         const adminBuffer  = 10; // opening remarks + closing
         const totalMinutes = data.rounds * (gameMinutes + roundOverhead) + adminBuffer;
         const durationLabel = (() => {
@@ -1701,7 +1702,7 @@ function QuickstartForm({
                     Estimated Total Duration
                   </p>
                   <p className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                    {data.rounds} rounds × {gameMinutes} min/game + {roundOverhead} min setup + {adminBuffer} min admin
+                    {data.rounds} rounds × {gameMinutes} min/game + {roundOverhead} min buffer + {adminBuffer} min admin
                   </p>
                 </div>
               </div>
@@ -1839,6 +1840,73 @@ function QuickstartForm({
                           colorScheme: isDark ? "dark" : "light",
                         }}
                       />
+                    </div>
+
+                    {/* Round Buffer Time control */}
+                    <div className="flex items-center gap-3 px-1">
+                      <label
+                        className="text-[11px] font-medium whitespace-nowrap"
+                        style={{ color: isDark ? T.dMuted : T.lMuted }}
+                      >
+                        Round buffer
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        {[0, 5, 10, 15, 20].map((val) => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setRoundBuffer(val)}
+                            className="text-[10px] font-semibold px-2 py-1 rounded-lg transition-all"
+                            style={{
+                              background: roundBuffer === val
+                                ? isDark ? "rgba(77,105,64,0.30)" : "rgba(77,105,64,0.18)"
+                                : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                              color: roundBuffer === val
+                                ? T.green
+                                : isDark ? T.dMuted : T.lMuted,
+                              border: `1px solid ${
+                                roundBuffer === val
+                                  ? isDark ? "rgba(77,105,64,0.45)" : "rgba(77,105,64,0.30)"
+                                  : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
+                              }`,
+                            }}
+                          >
+                            {val === 0 ? "None" : `${val}m`}
+                          </button>
+                        ))}
+                        {/* Custom value input */}
+                        {![0, 5, 10, 15, 20].includes(roundBuffer) && (
+                          <span
+                            className="text-[10px] font-semibold px-2 py-1 rounded-lg"
+                            style={{
+                              background: isDark ? "rgba(77,105,64,0.30)" : "rgba(77,105,64,0.18)",
+                              color: T.green,
+                              border: `1px solid ${isDark ? "rgba(77,105,64,0.45)" : "rgba(77,105,64,0.30)"}`,
+                            }}
+                          >
+                            {roundBuffer}m
+                          </span>
+                        )}
+                        <input
+                          type="number"
+                          min={0}
+                          max={60}
+                          value={roundBuffer}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value, 10);
+                            if (!isNaN(v) && v >= 0 && v <= 60) setRoundBuffer(v);
+                          }}
+                          className="w-12 rounded-lg border px-2 py-1 text-xs text-center"
+                          style={{
+                            background: isDark ? T.dCard : "#FFFFFF",
+                            border: `1px solid ${isDark ? T.dBorder : T.lBorder}`,
+                            color: isDark ? T.dText : T.lText,
+                            outline: "none",
+                          }}
+                          title="Custom buffer in minutes"
+                        />
+                        <span className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>min</span>
+                      </div>
                     </div>
 
                     {/* Schedule rows */}
