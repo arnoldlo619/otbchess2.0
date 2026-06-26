@@ -34,7 +34,7 @@ type ContentBlock =
   | { type: "list"; items: string[] }
   | { type: "callout"; text: string }
   | { type: "subheading"; text: string }
-  | { type: "image"; src: string; caption?: string; alt: string };
+  | { type: "image"; src: string; caption?: string; alt: string; size?: "full" | "wide" | "medium" | "small"; float?: "left" | "right" };
 
 // ─── Full article content for all 7 posts ────────────────────────────────────
 const POSTS: BlogPostData[] = [
@@ -71,6 +71,7 @@ const POSTS: BlogPostData[] = [
             src: "/manus-storage/SnapInsta.to_681312551_18400500286198871_7955030113972660691_n_eef20724.jpg",
             alt: "Players packed into Southside Social for the Chicago Chess Club tournament",
             caption: "The afternoon session at Southside Social — every table full.",
+            size: "wide",
           },
           {
             type: "paragraph",
@@ -95,6 +96,7 @@ const POSTS: BlogPostData[] = [
             src: "/manus-storage/SnapInsta.to_682083143_18400500307198871_5618929597672296626_n_17eee505.jpg",
             alt: "Rows of players competing at the Chicago Chess Club tournament under evening lights",
             caption: "Evening rounds at Southside Social — 70+ players, zero empty boards.",
+            size: "full",
           },
           {
             type: "paragraph",
@@ -105,6 +107,7 @@ const POSTS: BlogPostData[] = [
             src: "/manus-storage/d4d34b6d-0b9d-4ffc-aba2-d50e7be2c131_f40bd0bc.png",
             alt: "Chicago Chess Club Top 10 final standings leaderboard",
             caption: "The final Top 10 standings — results provided by ChessOTB.club.",
+            size: "medium",
           },
         ],
       },
@@ -121,6 +124,7 @@ const POSTS: BlogPostData[] = [
             src: "/manus-storage/SnapInsta.to_683971647_18400500295198871_8156976984609460739_n_ef4ced93.jpg",
             alt: "Two players focused across board 25 at the Chicago Chess Club tournament",
             caption: "Board 25 — the numbered table markers made round transitions instant.",
+            float: "right",
           },
           {
             type: "paragraph",
@@ -145,12 +149,14 @@ const POSTS: BlogPostData[] = [
             src: "/manus-storage/07973273-c56a-4ec8-b3d0-f28da1ee83b6_3326b798.png",
             alt: "Chicago Chess Club tournament results — Champion Manoj Changaiah Nandakumar, Runner Up Poker Cris, Semifinalist Elias Leverett",
             caption: "Official tournament results: Champion Manoj CN (829 ELO) · Runner Up Poker Cris (1456 ELO) · Semifinalist Elias Leverett (1426 ELO).",
+            float: "left",
           },
           {
             type: "image",
             src: "/manus-storage/SnapInsta.to_682706390_18400500265198871_7003724544739875915_n_4047c5f0.jpg",
             alt: "William Guerrero and top finishers with medals and Chicago Chess Club merchandise",
             caption: "William Guerrero (center) with the top finishers \u2014 medals, a ChessUp board, and club merch.",
+            size: "wide",
           },
         ],
       },
@@ -705,17 +711,50 @@ function ContentBlock({ block, isDark }: { block: ContentBlock; isDark: boolean 
     );
   }
   if (block.type === "image") {
+    // size → controls max-width; float → wraps text around the figure
+    const size = block.size ?? "wide";
+    const float = block.float;
+
+    // Size classes: full bleeds edge-to-edge, wide is 80% centered, medium is half-col, small is a third
+    const sizeClass =
+      size === "full" ? "w-full" :
+      size === "wide" ? "w-full max-w-[85%] mx-auto" :
+      size === "medium" ? "w-full max-w-[60%] mx-auto" :
+      /* small */ "w-full max-w-[42%] mx-auto";
+
+    // Float classes: pull figure left or right, let text wrap
+    const floatClass =
+      float === "left" ? "float-left mr-6 mb-3 w-[45%] max-w-[320px] clear-left" :
+      float === "right" ? "float-right ml-6 mb-3 w-[45%] max-w-[320px] clear-right" :
+      "";
+
+    // Aspect ratio: landscape photos get 16/9, result graphics (PNG) get auto
+    const isGraphic = block.src.endsWith(".png");
+    const imgClass = isGraphic
+      ? "w-full rounded-xl object-contain"
+      : "w-full rounded-xl object-cover aspect-[4/3]";
+
+    if (float) {
+      return (
+        <figure className={`${floatClass} my-2`}>
+          <img src={block.src} alt={block.alt} className={imgClass} loading="lazy" />
+          {block.caption && (
+            <figcaption className={`mt-1.5 text-xs italic leading-snug ${
+              isDark ? "text-white/45" : "text-[#436850]/60"
+            }`}>
+              {block.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
+    }
+
     return (
-      <figure className="my-6 -mx-1">
-        <img
-          src={block.src}
-          alt={block.alt}
-          className="w-full rounded-xl object-contain"
-          loading="lazy"
-        />
+      <figure className={`my-7 ${sizeClass}`}>
+        <img src={block.src} alt={block.alt} className={imgClass} loading="lazy" />
         {block.caption && (
-          <figcaption className={`mt-2 text-center text-sm italic ${
-            isDark ? "text-white/50" : "text-[#436850]/70"
+          <figcaption className={`mt-2 text-center text-xs italic leading-snug ${
+            isDark ? "text-white/45" : "text-[#436850]/60"
           }`}>
             {block.caption}
           </figcaption>
