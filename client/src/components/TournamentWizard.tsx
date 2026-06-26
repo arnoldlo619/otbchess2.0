@@ -744,6 +744,9 @@ function QuickstartForm({
   const [showPreview, setShowPreview] = useState(false);
   // Platform dropdown open state
   const [platformOpen, setPlatformOpen] = useState(false);
+  // Recommended Schedule
+  const [startTime, setStartTime] = useState("10:00");
+  const [showSchedule, setShowSchedule] = useState(false);
 
   // Apply smart defaults when toggle is turned on
   const handleSmartDefaultsToggle = (on: boolean) => {
@@ -1704,6 +1707,158 @@ function QuickstartForm({
                   {paceLabel}
                 </p>
               </div>
+            </div>
+
+            {/* Recommended Schedule — collapsible */}
+            <div>
+              {/* Toggle header */}
+              <button
+                type="button"
+                onClick={() => setShowSchedule((v) => !v)}
+                className="w-full flex items-center justify-between rounded-xl px-3 py-2.5 transition-colors"
+                style={{
+                  background: showSchedule
+                    ? isDark ? "rgba(255,255,255,0.06)" : "rgba(67,104,80,0.07)"
+                    : "transparent",
+                  border: `1px solid ${showSchedule
+                    ? isDark ? "rgba(255,255,255,0.10)" : "rgba(67,104,80,0.15)"
+                    : isDark ? "rgba(255,255,255,0.06)" : "rgba(67,104,80,0.10)"}`,
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" style={{ color: showSchedule ? T.green : isDark ? T.dMuted : T.lMuted }} />
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: showSchedule ? T.green : isDark ? T.dMuted : T.lMuted }}
+                  >
+                    Recommended Schedule
+                  </span>
+                </div>
+                <ChevronDown
+                  className="w-3.5 h-3.5 transition-transform duration-200"
+                  style={{
+                    color: isDark ? T.dMuted : T.lMuted,
+                    transform: showSchedule ? "rotate(180deg)" : "rotate(0deg)",
+                  }}
+                />
+              </button>
+
+              {showSchedule && (() => {
+                // Parse start time
+                const [startH, startM] = startTime.split(":").map(Number);
+                const startTotalMin = (startH || 0) * 60 + (startM || 0);
+
+                // Build per-round schedule
+                // Each round: game time + 5 min setup overhead
+                const minPerRound = gameMinutes + roundOverhead;
+
+                const formatTime = (totalMin: number) => {
+                  const h = Math.floor(totalMin / 60) % 24;
+                  const m = totalMin % 60;
+                  const period = h >= 12 ? "PM" : "AM";
+                  const h12 = h % 12 === 0 ? 12 : h % 12;
+                  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+                };
+
+                const rounds = Array.from({ length: data.rounds }, (_, i) => {
+                  const roundStart = startTotalMin + i * minPerRound;
+                  const roundEnd   = roundStart + gameMinutes;
+                  return {
+                    round: i + 1,
+                    start: formatTime(roundStart),
+                    end:   formatTime(roundEnd),
+                    isLast: i === data.rounds - 1,
+                  };
+                });
+                const wrapUpTime = formatTime(startTotalMin + data.rounds * minPerRound + adminBuffer);
+
+                return (
+                  <div className="mt-2 space-y-2">
+                    {/* Start time input */}
+                    <div className="flex items-center gap-3 px-1">
+                      <label
+                        className="text-[11px] font-medium whitespace-nowrap"
+                        style={{ color: isDark ? T.dMuted : T.lMuted }}
+                      >
+                        Tournament starts at
+                      </label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="rounded-lg border px-2.5 py-1 text-sm font-semibold"
+                        style={{
+                          background: isDark ? T.dCard : "#FFFFFF",
+                          border: `1.5px solid ${isDark ? T.dBorderFocus : T.lBorderFocus}`,
+                          color: isDark ? T.dText : T.lText,
+                          outline: "none",
+                          colorScheme: isDark ? "dark" : "light",
+                        }}
+                      />
+                    </div>
+
+                    {/* Round rows */}
+                    <div
+                      className="rounded-xl overflow-hidden"
+                      style={{ border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(67,104,80,0.12)"}` }}
+                    >
+                      {rounds.map((r, idx) => (
+                        <div
+                          key={r.round}
+                          className="flex items-center justify-between px-3 py-2"
+                          style={{
+                            background: idx % 2 === 0
+                              ? isDark ? "rgba(255,255,255,0.02)" : "rgba(67,104,80,0.03)"
+                              : "transparent",
+                            borderTop: idx > 0 ? `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(67,104,80,0.08)"}` : "none",
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                              style={{
+                                background: r.isLast ? T.green : isDark ? "rgba(255,255,255,0.08)" : "rgba(67,104,80,0.10)",
+                                color: r.isLast ? "#FFFFFF" : isDark ? T.dMuted : T.lSub,
+                              }}
+                            >
+                              {r.round}
+                            </span>
+                            <span className="text-xs font-medium" style={{ color: isDark ? T.dText : T.lText }}>
+                              Round {r.round}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+                              {r.start}
+                            </span>
+                            <span className="text-[10px] ml-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                              – {r.end}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Wrap-up row */}
+                      <div
+                        className="flex items-center justify-between px-3 py-2"
+                        style={{
+                          borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(67,104,80,0.08)"}`,
+                          background: isDark ? "rgba(77,105,64,0.10)" : "rgba(77,105,64,0.06)",
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
+                          <span className="text-xs font-medium" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                            Awards &amp; wrap-up
+                          </span>
+                        </div>
+                        <span className="text-xs font-semibold" style={{ color: T.green }}>
+                          ~{wrapUpTime}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         );
