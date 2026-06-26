@@ -796,7 +796,7 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
           src={src}
           alt={alt}
           className="absolute inset-0 w-full h-full"
-          style={{ objectFit: (objectFit ?? "cover") as React.CSSProperties["objectFit"], objectPosition: objectPosition ?? "center top" }}
+          style={{ objectFit: (objectFit ?? 'fill') as React.CSSProperties["objectFit"], objectPosition: objectPosition ?? "center top" }}
           loading="lazy"
         />
 
