@@ -45,7 +45,7 @@ import {
   Copy,
   Share2,
   Shuffle,
-  BarChart3 as _BarChart3,
+  BarChart3,
   Zap,
   ArrowRight,
   Shield as _Shield,
@@ -1510,6 +1510,152 @@ function QuickstartForm({
           </div>
         )}
       </div>
+
+      {/* ── Real-time configuration summary ───────────────────────────── */}
+      {data.name.trim().length > 0 && (() => {
+        const formatLabel =
+          data.format === "swiss" ? "Swiss" :
+          data.format === "doubleswiss" ? "Double Swiss" :
+          data.format === "roundrobin" ? "Round Robin" :
+          data.format === "swiss_elim" ? "Swiss + Elim" : "Elimination";
+
+        const timeLabel = (() => {
+          const base = data.timeBase;
+          const inc  = data.timeIncrement;
+          const preset = inc > 0 ? `${base}+${inc}` : `${base} min`;
+          const cat = data.ratingType === "blitz" ? "Blitz" : base >= 30 ? "Classical" : "Rapid";
+          return `${preset} · ${cat}`;
+        })();
+
+        const platformLabel =
+          data.ratingSystem === "chess.com" ? "Chess.com" :
+          data.ratingSystem === "lichess"   ? "Lichess" :
+          data.ratingSystem === "fide"      ? "FIDE" : "Unrated";
+
+        const dateLabel = (() => {
+          if (!data.date) return null;
+          try {
+            return new Date(data.date + "T00:00:00").toLocaleDateString("en-US", {
+              weekday: "short", month: "short", day: "numeric",
+            });
+          } catch { return data.date; }
+        })();
+
+        const chips: { icon: React.ReactNode; label: string; value: string; highlight?: boolean }[] = [
+          {
+            icon: <Trophy className="w-3 h-3" />,
+            label: "Format",
+            value: formatLabel,
+            highlight: data.format !== "swiss",
+          },
+          {
+            icon: <Shuffle className="w-3 h-3" />,
+            label: "Rounds",
+            value: `${data.rounds} rounds`,
+            highlight: data.rounds !== 5,
+          },
+          {
+            icon: <Users className="w-3 h-3" />,
+            label: "Max Players",
+            value: `${data.maxPlayers} players`,
+            highlight: data.maxPlayers !== 16,
+          },
+          {
+            icon: <Clock className="w-3 h-3" />,
+            label: "Time Control",
+            value: timeLabel,
+            highlight: data.timePreset !== "10+5",
+          },
+          {
+            icon: <BarChart3 className="w-3 h-3" />,
+            label: "Platform",
+            value: platformLabel,
+            highlight: data.ratingSystem !== "chess.com",
+          },
+          ...(dateLabel ? [{
+            icon: <Calendar className="w-3 h-3" />,
+            label: "Date",
+            value: dateLabel,
+            highlight: false,
+          }] : []),
+        ];
+
+        return (
+          <div
+            className="rounded-2xl border p-4 lg:p-5 space-y-3"
+            style={{
+              background: isDark ? "rgba(255,255,255,0.03)" : "rgba(67,104,80,0.04)",
+              border: `1.5px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(67,104,80,0.12)"}`,
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
+              <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: T.green }}>
+                Tournament Summary
+              </span>
+              {data.venue && (
+                <span
+                  className="ml-auto text-[11px] font-medium flex items-center gap-1"
+                  style={{ color: isDark ? T.dMuted : T.lMuted }}
+                >
+                  <MapPin className="w-3 h-3" />
+                  {data.venue}
+                </span>
+              )}
+            </div>
+
+            {/* Tournament name headline */}
+            <p
+              className="text-base font-bold leading-tight"
+              style={{ color: isDark ? T.dText : T.lText, fontFamily: "'Clash Display', sans-serif" }}
+            >
+              {data.name}
+            </p>
+
+            {/* Config chips grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {chips.map((chip) => (
+                <div
+                  key={chip.label}
+                  className="flex items-start gap-2 rounded-xl px-3 py-2"
+                  style={{
+                    background: chip.highlight
+                      ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
+                      : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                    border: `1px solid ${
+                      chip.highlight
+                        ? isDark ? "rgba(77,105,64,0.35)" : "rgba(77,105,64,0.20)"
+                        : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
+                    }`,
+                  }}
+                >
+                  <span
+                    className="mt-0.5 flex-shrink-0"
+                    style={{ color: chip.highlight ? T.green : isDark ? T.dMuted : T.lMuted }}
+                  >
+                    {chip.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <p
+                      className="text-[10px] leading-none mb-0.5"
+                      style={{ color: isDark ? T.dMuted : T.lMuted }}
+                    >
+                      {chip.label}
+                    </p>
+                    <p
+                      className="text-xs font-semibold truncate"
+                      style={{ color: chip.highlight ? T.green : isDark ? T.dText : T.lText }}
+                    >
+                      {chip.value}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
