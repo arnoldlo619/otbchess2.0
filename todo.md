@@ -6626,12 +6626,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Clubs Growth OS V1
 
 ### Priority 1
-- [ ] Club Admin Dashboard (/clubs/:id/manage) — overview metrics, quick actions, setup checklist, recent activity, admin alerts
-- [ ] Onboarding checklist with progress tracking — logo, description, location, schedule, socials, invite, event, tournament, share
-- [ ] Club Profile Editing flow — consolidated form with club type, skill level, venue, validation, success toast
-- [ ] Invite/Share/QR system — copy link, QR code generation/download, social share modal (X, FB, WhatsApp, Email)
-- [ ] Public Club Landing Page improvements — hero badges, Why Join section, Next Up section, social proof, better CTAs
-- [ ] Auth modal with return-to-action — show sign-in modal for protected actions, redirect back after auth
+- [x] Club Admin Dashboard (/clubs/:id/manage) — overview metrics, quick actions, setup checklist, recent activity, admin alerts
+- [x] Onboarding checklist with progress tracking — logo, description, location, schedule, socials, invite, event, tournament, share
+- [x] Club Profile Editing flow — consolidated form with club type, skill level, venue, validation, success toast
+- [x] Invite/Share/QR system — copy link, QR code generation/download, social share modal (X, FB, WhatsApp, Email)
+- [x] Public Club Landing Page improvements — hero badges, Why Join section, Next Up section, social proof, better CTAs
+- [x] Auth modal with return-to-action — show sign-in modal for protected actions, redirect back after auth
 
 ### Priority 2
 - [ ] Member management improvements — search, filter by role/date/activity, approve/reject join requests

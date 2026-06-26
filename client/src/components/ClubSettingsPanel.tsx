@@ -3,7 +3,7 @@
  * Covers: logo upload, banner upload, accent color picker, club info editing.
  */
 import React, { useState, useRef } from "react";
-import { Settings2, Save, Globe, Lock, MapPin, FileText, Type, Palette, Check } from "lucide-react";
+import { Settings2, Save, Globe, Lock, MapPin, FileText, Type, Palette, Check, Link2, Instagram, MessageCircle, Phone, Mail, Calendar, Megaphone, Tag, Flag } from "lucide-react";
 import { ClubAvatarUpload } from "./ClubAvatarUpload";
 import { ClubBannerUpload } from "./ClubBannerUpload";
 import { toast } from "sonner";
@@ -83,9 +83,28 @@ interface ClubSettingsPanelProps {
 export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSettingsPanelProps) {
   // Club info form state
   const [name, setName] = useState(club.name);
+  const [tagline, setTagline] = useState(club.tagline ?? "");
   const [description, setDescription] = useState(club.description ?? "");
   const [location, setLocation] = useState(club.location ?? "");
+  const [country, setCountry] = useState(club.country ?? "");
+  const [category, setCategory] = useState<string>(club.category ?? "club");
   const [isPublic, setIsPublic] = useState(club.isPublic);
+  // Social links
+  const [website, setWebsite] = useState(club.website ?? "");
+  const [instagram, setInstagram] = useState(club.instagram ?? "");
+  const [discord, setDiscord] = useState(club.discord ?? "");
+  const [twitter, setTwitter] = useState(club.twitter ?? "");
+  const [tiktok, setTiktok] = useState(club.tiktok ?? "");
+  const [youtube, setYoutube] = useState(club.youtube ?? "");
+  // Contact
+  const [contactEmail, setContactEmail] = useState(club.contactEmail ?? "");
+  const [contactPhone, setContactPhone] = useState(club.contactPhone ?? "");
+  // Schedule
+  const [meetingDay, setMeetingDay] = useState(club.meetingDay ?? "");
+  const [meetingTime, setMeetingTime] = useState(club.meetingTime ?? "");
+  const [meetingNotes, setMeetingNotes] = useState(club.meetingNotes ?? "");
+  // Announcement
+  const [announcement, setAnnouncement] = useState(club.announcement ?? "");
   const [saving, setSaving] = useState(false);
 
   // Accent color state
@@ -150,23 +169,54 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
     if (!name.trim()) { toast.error("Club name cannot be empty."); return; }
     setSaving(true);
     try {
+      const payload = {
+        name: name.trim(),
+        tagline: tagline.trim() || null,
+        description: description.trim() || null,
+        location: location.trim() || null,
+        country: country.trim() || null,
+        category: category || null,
+        isPublic,
+        website: website.trim() || null,
+        instagram: instagram.trim() || null,
+        discord: discord.trim() || null,
+        twitter: twitter.trim() || null,
+        tiktok: tiktok.trim() || null,
+        youtube: youtube.trim() || null,
+        contactEmail: contactEmail.trim() || null,
+        contactPhone: contactPhone.trim() || null,
+        meetingDay: meetingDay.trim() || null,
+        meetingTime: meetingTime.trim() || null,
+        meetingNotes: meetingNotes.trim() || null,
+        announcement: announcement.trim() || null,
+      };
       const res = await authFetch(`/api/clubs/${club.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || null,
-          location: location.trim() || null,
-          isPublic,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
       onClubChange({
         name: name.trim(),
+        tagline: tagline.trim() || undefined,
         description: description.trim() || undefined,
         location: location.trim() || undefined,
+        country: country.trim() || undefined,
+        category: (category as any) || undefined,
         isPublic,
+        website: website.trim() || undefined,
+        instagram: instagram.trim() || undefined,
+        discord: discord.trim() || undefined,
+        twitter: twitter.trim() || undefined,
+        tiktok: tiktok.trim() || undefined,
+        youtube: youtube.trim() || undefined,
+        contactEmail: contactEmail.trim() || undefined,
+        contactPhone: contactPhone.trim() || undefined,
+        meetingDay: meetingDay.trim() || undefined,
+        meetingTime: meetingTime.trim() || undefined,
+        meetingNotes: meetingNotes.trim() || undefined,
+        announcement: announcement.trim() || undefined,
       });
       toast.success("Club info saved!");
     } catch {
@@ -405,6 +455,54 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
             />
           </div>
 
+          {/* Tagline */}
+          <div>
+            <label className={labelCls}>
+              <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Tagline</span>
+            </label>
+            <input
+              className={inputCls}
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              maxLength={100}
+              placeholder="e.g. Where Chicago plays chess"
+            />
+            <p className={`text-[10px] mt-1 text-right ${isDark ? "text-white/25" : "text-[#436850]"}`}>{tagline.length}/100</p>
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className={labelCls}>
+              <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Club Type</span>
+            </label>
+            <select
+              className={inputCls}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="club">Club</option>
+              <option value="school">School</option>
+              <option value="university">University</option>
+              <option value="online">Online</option>
+              <option value="community">Community</option>
+              <option value="professional">Professional</option>
+            </select>
+          </div>
+
+          {/* Country */}
+          <div>
+            <label className={labelCls}>
+              <span className="flex items-center gap-1.5"><Flag className="w-3 h-3" /> Country</span>
+            </label>
+            <input
+              className={inputCls}
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              maxLength={60}
+              placeholder="e.g. United States"
+            />
+          </div>
+
           {/* Visibility */}
           <div>
             <label className={labelCls}>Visibility</label>
@@ -451,6 +549,108 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
           >
             <Save className="w-3.5 h-3.5" />
             {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Social Links ── */}
+      <div className={cardCls}>
+        <h3 className={sectionTitle}>
+          <span className="flex items-center gap-1.5"><Link2 className="w-3 h-3" /> Social & Links</span>
+        </h3>
+        <div className="space-y-3">
+          {([
+            { label: "Website", value: website, setter: setWebsite, placeholder: "https://yourclub.com", icon: <Globe className="w-3 h-3" /> },
+            { label: "Instagram", value: instagram, setter: setInstagram, placeholder: "@yourclub", icon: <Instagram className="w-3 h-3" /> },
+            { label: "Discord", value: discord, setter: setDiscord, placeholder: "discord.gg/invite", icon: <MessageCircle className="w-3 h-3" /> },
+            { label: "X / Twitter", value: twitter, setter: setTwitter, placeholder: "@yourclub", icon: <Link2 className="w-3 h-3" /> },
+            { label: "TikTok", value: tiktok, setter: setTiktok, placeholder: "@yourclub", icon: <Link2 className="w-3 h-3" /> },
+            { label: "YouTube", value: youtube, setter: setYoutube, placeholder: "youtube.com/c/yourclub", icon: <Link2 className="w-3 h-3" /> },
+          ] as const).map(({ label, value, setter, placeholder, icon }) => (
+            <div key={label}>
+              <label className={labelCls}><span className="flex items-center gap-1.5">{icon} {label}</span></label>
+              <input className={inputCls} value={value} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} placeholder={placeholder} maxLength={200} />
+            </div>
+          ))}
+        </div>
+        <div className="pt-2">
+          <button onClick={handleSaveInfo} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50" style={{ background: accentColor, color: contrastText(accentColor) }}>
+            <Save className="w-3.5 h-3.5" />{saving ? "Saving…" : "Save Links"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Contact Info ── */}
+      <div className={cardCls}>
+        <h3 className={sectionTitle}>
+          <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> Contact Info</span>
+        </h3>
+        <div className="space-y-3">
+          <div>
+            <label className={labelCls}><span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> Email</span></label>
+            <input className={inputCls} type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="chess@yourclub.com" maxLength={120} />
+          </div>
+          <div>
+            <label className={labelCls}><span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> Phone</span></label>
+            <input className={inputCls} type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+1 (312) 555-0100" maxLength={30} />
+          </div>
+        </div>
+        <div className="pt-2">
+          <button onClick={handleSaveInfo} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50" style={{ background: accentColor, color: contrastText(accentColor) }}>
+            <Save className="w-3.5 h-3.5" />{saving ? "Saving…" : "Save Contact"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Meeting Schedule ── */}
+      <div className={cardCls}>
+        <h3 className={sectionTitle}>
+          <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Meeting Schedule</span>
+        </h3>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Day</label>
+              <select className={inputCls} value={meetingDay} onChange={(e) => setMeetingDay(e.target.value)}>
+                <option value="">Select day…</option>
+                {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Time</label>
+              <input className={inputCls} value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} placeholder="7:00 PM" maxLength={20} />
+            </div>
+          </div>
+          <div>
+            <label className={labelCls}>Notes</label>
+            <textarea className={`${inputCls} resize-none`} rows={2} value={meetingNotes} onChange={(e) => setMeetingNotes(e.target.value)} placeholder="e.g. Every Thursday at Southside Social, Back of the Yards" maxLength={200} />
+          </div>
+        </div>
+        <div className="pt-2">
+          <button onClick={handleSaveInfo} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50" style={{ background: accentColor, color: contrastText(accentColor) }}>
+            <Save className="w-3.5 h-3.5" />{saving ? "Saving…" : "Save Schedule"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Pinned Announcement ── */}
+      <div className={cardCls}>
+        <h3 className={sectionTitle}>
+          <span className="flex items-center gap-1.5"><Megaphone className="w-3 h-3" /> Pinned Announcement</span>
+        </h3>
+        <p className={`text-xs mb-3 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Shown prominently at the top of your public club page.</p>
+        <textarea
+          className={`${inputCls} resize-none`}
+          rows={3}
+          value={announcement}
+          onChange={(e) => setAnnouncement(e.target.value)}
+          maxLength={280}
+          placeholder="e.g. Next tournament: July 12 at Southside Social — sign up now!"
+        />
+        <p className={`text-[10px] mt-1 text-right ${isDark ? "text-white/25" : "text-[#436850]"}`}>{announcement.length}/280</p>
+        <div className="pt-2">
+          <button onClick={handleSaveInfo} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50" style={{ background: accentColor, color: contrastText(accentColor) }}>
+            <Save className="w-3.5 h-3.5" />{saving ? "Saving…" : "Save Announcement"}
           </button>
         </div>
       </div>

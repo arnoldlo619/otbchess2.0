@@ -127,6 +127,7 @@ import { ContactOwnerModal } from "@/components/ContactOwnerModal";
 import { apiFetch } from "@/lib/apiFetch";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { EditClubDetailsModal } from "@/components/EditClubDetailsModal";
+import { ClubShareModal } from "@/components/ClubShareModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1547,6 +1548,87 @@ export default function ClubProfile() {
                     )}
                   </div>
                 </div>
+
+        {/* ── Why Join + Next Up (public landing, non-members only) ──────── */}
+        {!joined && !isOwner && !isDirector && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-1">
+            {/* Why Join */}
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
+              <h2 className={`text-sm font-bold mb-3 ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Why Join?</h2>
+              <ul className="space-y-2.5">
+                {[
+                  { icon: "♟", text: `Play with ${club.memberCount}+ members` },
+                  club.beginnerFriendly && { icon: "🌱", text: "Beginner-friendly environment" },
+                  club.tournamentCount > 0 && { icon: "🏆", text: `${club.tournamentCount} tournaments hosted` },
+                  club.location && { icon: "📍", text: `Based in ${club.location}` },
+                  club.website && { icon: "🌐", text: "Active online community" },
+                  { icon: "📈", text: "Track your OTB rating & progress" },
+                ].filter(Boolean).slice(0, 5).map((item, i) => (
+                  <li key={i} className={`flex items-center gap-2.5 text-xs ${textMuted}`}>
+                    <span className="text-base leading-none">{(item as { icon: string; text: string }).icon}</span>
+                    <span>{(item as { icon: string; text: string }).text}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={handleJoin}
+                className="mt-4 w-full py-2 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+                style={{ background: accent, color: "#fff" }}
+              >
+                {club.isPublic ? "Join Club" : "Request to Join"}
+              </button>
+            </div>
+            {/* Next Up */}
+            {(() => {
+              const nextEvent = [...clubEvents, ...upcomingTournaments]
+                .filter((e) => {
+                  const d = "startAt" in e ? e.startAt : (e as { scheduledAt?: string }).scheduledAt;
+                  return d && new Date(d) > new Date();
+                })
+                .sort((a, b) => {
+                  const da = "startAt" in a ? a.startAt : (a as { scheduledAt?: string }).scheduledAt ?? "";
+                  const db = "startAt" in b ? b.startAt : (b as { scheduledAt?: string }).scheduledAt ?? "";
+                  return new Date(da).getTime() - new Date(db).getTime();
+                })[0];
+              if (!nextEvent) return null;
+              const isEvent = "startAt" in nextEvent;
+              const dateStr = isEvent ? nextEvent.startAt : (nextEvent as { scheduledAt?: string }).scheduledAt ?? "";
+              const title = isEvent ? nextEvent.title : (nextEvent as { name?: string }).name ?? "Upcoming Tournament";
+              const formatted = dateStr ? new Date(dateStr).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+              return (
+                <div className={`rounded-3xl border ${cardBorder} ${card} p-5 flex flex-col`}>
+                  <h2 className={`text-sm font-bold mb-3 ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Next Up</h2>
+                  <div className="flex-1">
+                    <div
+                      className="rounded-2xl p-4 flex flex-col gap-2"
+                      style={{ background: `${accent}15`, border: `1px solid ${accent}33` }}
+                    >
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full w-fit"
+                        style={{ background: `${accent}22`, color: accent }}
+                      >
+                        {isEvent ? "Event" : "Tournament"}
+                      </span>
+                      <p className={`text-sm font-bold leading-tight ${textMain}`}>{title}</p>
+                      {formatted && (
+                        <p className={`text-xs ${textMuted} flex items-center gap-1`}>
+                          <span>📅</span> {formatted}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleJoin}
+                    className="mt-4 w-full py-2 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+                    style={{ background: accent, color: "#fff" }}
+                  >
+                    Join to RSVP
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (() => {
@@ -3572,60 +3654,18 @@ export default function ClubProfile() {
           </div>
         </div>
       )}
-      {/* Share modal with QR code and copy link */}
-      {showShareModal && club && (() => {
-        const shareUrl = `https://chessotb.club/clubs/${club.slug || club.id}`;
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.65)" }}
-            onClick={() => setShowShareModal(false)}
-          >
-            <div
-              className={`w-full max-w-sm rounded-3xl border ${cardBorder} ${card} p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h2 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Share {club.name}</h2>
-                <button onClick={() => setShowShareModal(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              {/* QR Code */}
-              <div className="flex justify-center mb-4">
-                <div className="p-3 rounded-2xl bg-white">
-                  <QRCodeSVG value={shareUrl} size={160} />
-                </div>
-              </div>
-              {/* URL copy row */}
-              <div className={`flex items-center gap-2 rounded-xl border ${isDark ? "border-white/10 bg-white/5" : "border-[#ADBC9F] bg-[#FBFADA]/70"} px-3 py-2.5 mb-4`}>
-                <span className={`flex-1 text-xs truncate ${textMuted}`}>{shareUrl}</span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(shareUrl).then(() => toast.success("Link copied!"));
-                  }}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 ${
-                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-[#ADBC9F] text-[#12372A] hover:bg-[#ADBC9F]"
-                  }`}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Copy
-                </button>
-              </div>
-              {/* Native share */}
-              {navigator.share && (
-                <button
-                  onClick={() => navigator.share({ title: club.name, text: club.tagline || `Join ${club.name} on ChessOTB.club`, url: shareUrl })}
-                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
-                >
-                  Share via…
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })()}
+      {/* Share modal */}
+      {showShareModal && club && (
+        <ClubShareModal
+          clubName={club.name}
+          clubSlug={club.slug || ""}
+          clubId={club.id}
+          tagline={club.tagline}
+          accentColor={club.accentColor}
+          isDark={isDark}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
 
       {/* Auth modal — shown when guest tries to join, follow, or request a league */}
       <AuthModal

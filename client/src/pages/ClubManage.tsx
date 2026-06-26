@@ -21,6 +21,7 @@ import {
   CheckCircle2, Circle, AlertTriangle, ArrowRight, QrCode, Link2,
   TrendingUp, UserPlus, Clock, ChevronRight, LayoutDashboard
 } from "lucide-react";
+import { ClubShareModal } from "@/components/ClubShareModal";
 
 // ── Onboarding Checklist Steps ───────────────────────────────────────────────
 interface ChecklistStep {
@@ -112,6 +113,7 @@ export default function ClubManage() {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>>([]);
 
   // ── Load club data ─────────────────────────────────────────────────────────
@@ -218,7 +220,7 @@ export default function ClubManage() {
     { icon: Trophy, label: "Create Tournament", action: () => navigate(`/clubs/${id}/home?tab=events&action=tournament`) },
     { icon: Megaphone, label: "Post Announcement", action: () => navigate(`/clubs/${id}/home?tab=feed`) },
     { icon: Eye, label: "View Public Page", action: () => navigate(`/clubs/${id}`) },
-    { icon: Share2, label: "Share Club", action: () => { if (navigator.share) navigator.share({ title: club.name, url: `${window.location.origin}/clubs/${id}` }); else navigator.clipboard.writeText(`${window.location.origin}/clubs/${id}`); } },
+    { icon: Share2, label: "Share Club", action: () => setShowShareModal(true) },
     { icon: QrCode, label: "QR Code", action: () => navigate(`/clubs/${id}/home?tab=qr`) },
   ];
 
@@ -467,6 +469,19 @@ export default function ClubManage() {
           </p>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <ClubShareModal
+          clubName={club.name}
+          clubSlug={club.slug || ""}
+          clubId={club.id}
+          tagline={club.tagline}
+          accentColor={club.accentColor}
+          isDark={isDark}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }
