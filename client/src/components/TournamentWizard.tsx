@@ -747,6 +747,12 @@ function QuickstartForm({
   // Recommended Schedule
   const [startTime, setStartTime] = useState("10:00");
   const [showSchedule, setShowSchedule] = useState(false);
+  // Custom breaks: keyed by "after round N"
+  type BreakEntry = { label: string; duration: number }; // duration in minutes
+  const [breaks, setBreaks] = useState<Record<number, BreakEntry>>({});
+  const [addingBreakAfter, setAddingBreakAfter] = useState<number | null>(null);
+  const [breakLabel, setBreakLabel] = useState("Lunch");
+  const [breakDuration, setBreakDuration] = useState("30");
 
   // Apply smart defaults when toggle is turned on
   const handleSmartDefaultsToggle = (on: boolean) => {
@@ -1747,9 +1753,6 @@ function QuickstartForm({
                 // Parse start time
                 const [startH, startM] = startTime.split(":").map(Number);
                 const startTotalMin = (startH || 0) * 60 + (startM || 0);
-
-                // Build per-round schedule
-                // Each round: game time + 5 min setup overhead
                 const minPerRound = gameMinutes + roundOverhead;
 
                 const formatTime = (totalMin: number) => {
@@ -1760,17 +1763,58 @@ function QuickstartForm({
                   return `${h12}:${String(m).padStart(2, "0")} ${period}`;
                 };
 
-                const rounds = Array.from({ length: data.rounds }, (_, i) => {
-                  const roundStart = startTotalMin + i * minPerRound;
-                  const roundEnd   = roundStart + gameMinutes;
-                  return {
+                // Build schedule entries accounting for breaks
+                type ScheduleEntry =
+                  | { type: "round"; round: number; start: string; end: string; isLast: boolean }
+                  | { type: "break"; afterRound: number; label: string; duration: number; start: string; end: string };
+
+                const entries: ScheduleEntry[] = [];
+                let cursor = startTotalMin;
+                for (let i = 0; i < data.rounds; i++) {
+                  const roundStart = cursor;
+                  const roundEnd   = cursor + gameMinutes;
+                  entries.push({
+                    type: "round",
                     round: i + 1,
                     start: formatTime(roundStart),
                     end:   formatTime(roundEnd),
                     isLast: i === data.rounds - 1,
-                  };
-                });
-                const wrapUpTime = formatTime(startTotalMin + data.rounds * minPerRound + adminBuffer);
+                  });
+                  cursor = roundEnd + roundOverhead; // setup gap after each round
+                  // Insert break if one exists after this round (and it's not the last round)
+                  const brk = breaks[i + 1];
+                  if (brk && i < data.rounds - 1) {
+                    const brkStart = cursor;
+                    const brkEnd   = cursor + brk.duration;
+                    entries.push({
+                      type: "break",
+                      afterRound: i + 1,
+                      label: brk.label,
+                      duration: brk.duration,
+                      start: formatTime(brkStart),
+                      end:   formatTime(brkEnd),
+                    });
+                    cursor = brkEnd;
+                  }
+                }
+                const wrapUpTime = formatTime(cursor + adminBuffer);
+
+                const removeBreak = (afterRound: number) => {
+                  setBreaks((prev) => {
+                    const next = { ...prev };
+                    delete next[afterRound];
+                    return next;
+                  });
+                };
+
+                const confirmBreak = (afterRound: number) => {
+                  const dur = parseInt(breakDuration, 10);
+                  if (!dur || dur < 1) return;
+                  setBreaks((prev) => ({ ...prev, [afterRound]: { label: breakLabel.trim() || "Break", duration: dur } }));
+                  setAddingBreakAfter(null);
+                  setBreakLabel("Lunch");
+                  setBreakDuration("30");
+                };
 
                 return (
                   <div className="mt-2 space-y-2">
@@ -1797,46 +1841,237 @@ function QuickstartForm({
                       />
                     </div>
 
-                    {/* Round rows */}
+                    {/* Schedule rows */}
                     <div
                       className="rounded-xl overflow-hidden"
                       style={{ border: `1px solid ${isDark ? "rgba(255,255,255,0.07)" : "rgba(67,104,80,0.12)"}` }}
                     >
-                      {rounds.map((r, idx) => (
-                        <div
-                          key={r.round}
-                          className="flex items-center justify-between px-3 py-2"
-                          style={{
-                            background: idx % 2 === 0
-                              ? isDark ? "rgba(255,255,255,0.02)" : "rgba(67,104,80,0.03)"
-                              : "transparent",
-                            borderTop: idx > 0 ? `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(67,104,80,0.08)"}` : "none",
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                      {entries.map((entry, idx) => {
+                        if (entry.type === "break") {
+                          return (
+                            <div
+                              key={`break-${entry.afterRound}`}
+                              className="flex items-center justify-between px-3 py-2"
                               style={{
-                                background: r.isLast ? T.green : isDark ? "rgba(255,255,255,0.08)" : "rgba(67,104,80,0.10)",
-                                color: r.isLast ? "#FFFFFF" : isDark ? T.dMuted : T.lSub,
+                                borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(67,104,80,0.08)"}`,
+                                background: isDark ? "rgba(255,200,50,0.06)" : "rgba(255,200,50,0.08)",
                               }}
                             >
-                              {r.round}
-                            </span>
-                            <span className="text-xs font-medium" style={{ color: isDark ? T.dText : T.lText }}>
-                              Round {r.round}
-                            </span>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded font-bold"
+                                  style={{ background: isDark ? "rgba(255,200,50,0.15)" : "rgba(255,200,50,0.20)", color: isDark ? "#FCD34D" : "#92400E" }}
+                                >
+                                  BREAK
+                                </span>
+                                <span className="text-xs font-medium" style={{ color: isDark ? "#FCD34D" : "#92400E" }}>
+                                  {entry.label}
+                                </span>
+                                <span className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                                  {entry.duration} min
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                                  {entry.start} – {entry.end}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeBreak(entry.afterRound)}
+                                  className="w-4 h-4 flex items-center justify-center rounded-full transition-colors"
+                                  style={{ color: isDark ? T.dMuted : T.lMuted }}
+                                  aria-label="Remove break"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Round row
+                        const r = entry;
+                        return (
+                          <div key={`round-${r.round}`}>
+                            <div
+                              className="flex items-center justify-between px-3 py-2"
+                              style={{
+                                background: idx % 2 === 0
+                                  ? isDark ? "rgba(255,255,255,0.02)" : "rgba(67,104,80,0.03)"
+                                  : "transparent",
+                                borderTop: idx > 0 ? `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(67,104,80,0.08)"}` : "none",
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                                  style={{
+                                    background: r.isLast ? T.green : isDark ? "rgba(255,255,255,0.08)" : "rgba(67,104,80,0.10)",
+                                    color: r.isLast ? "#FFFFFF" : isDark ? T.dMuted : T.lSub,
+                                  }}
+                                >
+                                  {r.round}
+                                </span>
+                                <span className="text-xs font-medium" style={{ color: isDark ? T.dText : T.lText }}>
+                                  Round {r.round}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="text-right">
+                                  <span className="text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+                                    {r.start}
+                                  </span>
+                                  <span className="text-[10px] ml-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                                    – {r.end}
+                                  </span>
+                                </div>
+                                {/* Add break button — only between rounds (not after last) */}
+                                {!r.isLast && !breaks[r.round] && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setAddingBreakAfter(r.round);
+                                      setBreakLabel("Lunch");
+                                      setBreakDuration("30");
+                                    }}
+                                    className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md transition-all"
+                                    style={{
+                                      background: isDark ? "rgba(255,255,255,0.06)" : "rgba(67,104,80,0.08)",
+                                      color: isDark ? T.dMuted : T.lMuted,
+                                      border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(67,104,80,0.12)"}`,
+                                    }}
+                                    title={`Add break after Round ${r.round}`}
+                                  >
+                                    + Break
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Inline break editor — appears below the round row */}
+                            {addingBreakAfter === r.round && (
+                              <div
+                                className="px-3 py-3 space-y-2"
+                                style={{
+                                  borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "rgba(67,104,80,0.08)"}`,
+                                  background: isDark ? "rgba(255,200,50,0.05)" : "rgba(255,200,50,0.07)",
+                                }}
+                              >
+                                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isDark ? "#FCD34D" : "#92400E" }}>
+                                  Break after Round {r.round}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  {/* Label presets */}
+                                  {["Lunch", "Break", "Dinner"].map((preset) => (
+                                    <button
+                                      key={preset}
+                                      type="button"
+                                      onClick={() => setBreakLabel(preset)}
+                                      className="text-[10px] font-semibold px-2 py-1 rounded-lg transition-all"
+                                      style={{
+                                        background: breakLabel === preset
+                                          ? isDark ? "rgba(255,200,50,0.25)" : "rgba(255,200,50,0.30)"
+                                          : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                                        color: breakLabel === preset
+                                          ? isDark ? "#FCD34D" : "#92400E"
+                                          : isDark ? T.dMuted : T.lMuted,
+                                        border: `1px solid ${breakLabel === preset
+                                          ? isDark ? "rgba(255,200,50,0.35)" : "rgba(255,200,50,0.40)"
+                                          : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+                                      }}
+                                    >
+                                      {preset}
+                                    </button>
+                                  ))}
+                                  {/* Custom label input */}
+                                  <input
+                                    type="text"
+                                    value={breakLabel}
+                                    onChange={(e) => setBreakLabel(e.target.value)}
+                                    placeholder="Custom"
+                                    maxLength={20}
+                                    className="flex-1 min-w-0 rounded-lg border px-2 py-1 text-xs"
+                                    style={{
+                                      background: isDark ? T.dCard : "#FFFFFF",
+                                      border: `1px solid ${isDark ? T.dBorder : T.lBorder}`,
+                                      color: isDark ? T.dText : T.lText,
+                                      outline: "none",
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <label className="text-[10px] font-medium whitespace-nowrap" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                                    Duration
+                                  </label>
+                                  {[15, 30, 45, 60].map((d) => (
+                                    <button
+                                      key={d}
+                                      type="button"
+                                      onClick={() => setBreakDuration(String(d))}
+                                      className="text-[10px] font-semibold px-2 py-1 rounded-lg transition-all"
+                                      style={{
+                                        background: breakDuration === String(d)
+                                          ? isDark ? "rgba(255,200,50,0.25)" : "rgba(255,200,50,0.30)"
+                                          : isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                                        color: breakDuration === String(d)
+                                          ? isDark ? "#FCD34D" : "#92400E"
+                                          : isDark ? T.dMuted : T.lMuted,
+                                        border: `1px solid ${breakDuration === String(d)
+                                          ? isDark ? "rgba(255,200,50,0.35)" : "rgba(255,200,50,0.40)"
+                                          : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+                                      }}
+                                    >
+                                      {d}m
+                                    </button>
+                                  ))}
+                                  <input
+                                    type="number"
+                                    min={5}
+                                    max={180}
+                                    value={breakDuration}
+                                    onChange={(e) => setBreakDuration(e.target.value)}
+                                    className="w-14 rounded-lg border px-2 py-1 text-xs text-center"
+                                    style={{
+                                      background: isDark ? T.dCard : "#FFFFFF",
+                                      border: `1px solid ${isDark ? T.dBorder : T.lBorder}`,
+                                      color: isDark ? T.dText : T.lText,
+                                      outline: "none",
+                                    }}
+                                  />
+                                  <span className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>min</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => confirmBreak(r.round)}
+                                    disabled={!breakDuration || parseInt(breakDuration, 10) < 1}
+                                    className="flex-1 text-xs font-semibold py-1.5 rounded-lg transition-all"
+                                    style={{
+                                      background: T.green,
+                                      color: "#FFFFFF",
+                                      opacity: !breakDuration || parseInt(breakDuration, 10) < 1 ? 0.5 : 1,
+                                    }}
+                                  >
+                                    Add Break
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setAddingBreakAfter(null)}
+                                    className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                                    style={{
+                                      background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                                      color: isDark ? T.dMuted : T.lMuted,
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div className="text-right">
-                            <span className="text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
-                              {r.start}
-                            </span>
-                            <span className="text-[10px] ml-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                              – {r.end}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
+
                       {/* Wrap-up row */}
                       <div
                         className="flex items-center justify-between px-3 py-2"
