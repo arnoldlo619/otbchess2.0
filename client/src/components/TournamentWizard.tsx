@@ -727,8 +727,9 @@ function QuickstartForm({
   /** Called when the user presses Enter in a text field and the form is valid. */
   onSubmit?: () => void;
 }) {
-  const [showRatingPicker, setShowRatingPicker] = useState(false);
-  // inline pickers inside the Smart Defaults card
+  // Smart Defaults toggle — OFF by default, user opts in
+  const [smartDefaults, setSmartDefaults] = useState(false);
+  // inline pickers inside the settings card
   type InlinePicker = "rounds" | "cap" | "time" | "format" | null;
   const [inlinePicker, setInlinePicker] = useState<InlinePicker>(null);
   const toggleInline = (p: InlinePicker) =>
@@ -741,6 +742,27 @@ function QuickstartForm({
   // rounds suggestion banner: shown after user picks a new cap that implies a different optimal rounds
   const [roundsSuggestion, setRoundsSuggestion] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  // Platform dropdown open state
+  const [platformOpen, setPlatformOpen] = useState(false);
+
+  // Apply smart defaults when toggle is turned on
+  const handleSmartDefaultsToggle = (on: boolean) => {
+    setSmartDefaults(on);
+    if (on) {
+      onChange({
+        format: "swiss",
+        rounds: 5,
+        maxPlayers: 16,
+        timeBase: 10,
+        timeIncrement: 5,
+        timePreset: "10+5",
+        ratingSystem: "chess.com",
+        ratingType: "rapid",
+      });
+      setInlinePicker(null);
+      setTcCategory(null);
+    }
+  };
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -776,14 +798,11 @@ function QuickstartForm({
   const DEFAULT_CAP = 16;
 
   // Display label for the currently selected rating system
-  const activeRating = ratingOptions.find((o) => o.value === data.ratingSystem);
   const activeTime = timeControlOptions.find((o) => o.preset === data.timePreset);
   const isNonDefaultRating = data.ratingSystem !== "chess.com";
   const isNonDefaultRounds = data.rounds !== DEFAULT_ROUNDS;
   const isNonDefaultTime = data.timePreset !== DEFAULT_TIME_PRESET;
   const isNonDefaultCap = data.maxPlayers !== DEFAULT_CAP;
-  // keep old alias for existing JSX references
-  const isNonDefault = isNonDefaultRating;
 
   // Recommended rounds hint — based on maxPlayers (default 16)
   const optimalRounds = recommendedRounds(data.maxPlayers);
@@ -840,7 +859,7 @@ function QuickstartForm({
         />
       </div>
 
-      {/* Smart Defaults — interactive inline card */}
+      {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
       <div
         className="rounded-2xl border overflow-hidden"
         style={{
@@ -848,15 +867,26 @@ function QuickstartForm({
           border: `1.5px solid ${isDark ? "rgba(77,105,64,0.25)" : "rgba(77,105,64,0.18)"}`,
         }}
       >
-        {/* Card header */}
+        {/* Card header with Smart Defaults toggle */}
         <div className="flex items-center gap-2 px-5 lg:px-6 pt-4 lg:pt-5 pb-3">
           <Zap className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
           <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.green }}>
-            Smart Defaults Applied
+            Tournament Settings
           </span>
-          <span className="ml-auto text-[10px] font-medium" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-            tap to edit
-          </span>
+          {/* Smart Defaults toggle pill */}
+          <button
+            type="button"
+            onClick={() => handleSmartDefaultsToggle(!smartDefaults)}
+            className="ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-all duration-200"
+            style={{
+              background: smartDefaults ? T.green : isDark ? "rgba(255,255,255,0.08)" : "rgba(77,105,64,0.10)",
+              color: smartDefaults ? "#FFFFFF" : isDark ? T.dMuted : T.lSub,
+              border: `1px solid ${smartDefaults ? T.green : isDark ? "rgba(255,255,255,0.12)" : "rgba(77,105,64,0.20)"}`,
+            }}
+          >
+            <Zap className="w-2.5 h-2.5" />
+            Smart Defaults
+          </button>
         </div>
 
         {/* Format row — editable */}
@@ -1371,18 +1401,78 @@ function QuickstartForm({
           </p>
         </div>
 
-        {/* Rating System row — static display (editable via separate toggle below) */}
+        {/* Platform row — dropdown selector */}
         <div
-          className="flex items-center justify-between px-5 lg:px-6 py-2.5"
+          className="relative"
           style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
         >
-          <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
-          <span
-            className="text-xs lg:text-sm font-semibold"
-            style={{ color: isNonDefaultRating ? T.green : isDark ? T.dText : T.lText }}
+          <button
+            type="button"
+            onClick={() => setPlatformOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
+            style={{
+              background: platformOpen
+                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
+                : "transparent",
+            }}
           >
-            {activeRating?.label ?? "chess.com"}
-          </span>
+            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className="text-xs lg:text-sm font-semibold"
+                style={{ color: isNonDefaultRating ? T.green : isDark ? T.dText : T.lText }}
+              >
+                {data.ratingSystem === "chess.com" ? "Chess.com" : data.ratingSystem === "lichess" ? "Lichess" : data.ratingSystem === "fide" ? "FIDE" : "Unrated"}
+              </span>
+              <ChevronDown
+                className="w-3.5 h-3.5 transition-transform duration-200"
+                style={{
+                  color: isDark ? T.dMuted : T.lMuted,
+                  transform: platformOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </div>
+          </button>
+          {platformOpen && (
+            <div
+              className="px-5 lg:px-6 pb-4"
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+            >
+              <div className="grid grid-cols-2 gap-2 pt-3">
+                {([
+                  { value: "chess.com" as const, label: "Chess.com", sub: "Rapid / Blitz ELO" },
+                  { value: "lichess" as const,   label: "Lichess",   sub: "Lichess rating" },
+                  { value: "fide" as const,      label: "FIDE",      sub: "Classical rating" },
+                  { value: "unrated" as const,   label: "Unrated",   sub: "No ELO required" },
+                ]).map((opt) => {
+                  const active = data.ratingSystem === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        onChange({ ratingSystem: opt.value });
+                        setPlatformOpen(false);
+                      }}
+                      className="flex flex-col items-start rounded-xl border text-left transition-all duration-150 px-3 py-2.5"
+                      style={{
+                        background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                        border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                        boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                      }}
+                    >
+                      <span className="text-sm font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                        {opt.label}
+                      </span>
+                      <span className="text-[10px] mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                        {opt.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1421,56 +1511,6 @@ function QuickstartForm({
         )}
       </div>
 
-      {/* Optional rating system toggle */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowRatingPicker((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-          style={{ color: isNonDefault ? T.green : isDark ? T.dMuted : T.lMuted }}
-        >
-          <ChevronDown
-            className="w-3.5 h-3.5 transition-transform duration-200"
-            style={{ transform: showRatingPicker ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-          {isNonDefault
-            ? `Rating: ${activeRating?.label} · Change`
-            : "Not using chess.com? Change rating system"}
-        </button>
-
-        {showRatingPicker && (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {ratingOptions.map((opt) => {
-              const active = data.ratingSystem === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    onChange({ ratingSystem: opt.value });
-                    // Collapse picker after selection (unless already collapsed)
-                    if (active) setShowRatingPicker(false);
-                  }}
-                  className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
-                  style={{
-                    padding: "10px 14px",
-                    background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                    border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
-                    boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
-                  }}
-                >
-                  <span className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                    {opt.label}
-                  </span>
-                  <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                    {opt.sub}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
