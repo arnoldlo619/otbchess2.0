@@ -1590,13 +1590,17 @@ function QuickstartForm({
         // ── Estimated duration ──────────────────────────────────────────────
         // Formula: each game = (timeBase * 2 + timeIncrement * 40) minutes
         // (40 moves per side is the standard FIDE average game length estimate)
-        // Add 5 min per round for setup/pairing overhead, plus 10 min overall admin buffer.
-        const minutesPerGame = data.timeBase * 2 + data.timeIncrement * 40 / 60 * 60;
-        // Simpler, cleaner: game time = base * 2 (both players) + increment * 40 moves
-        const gameMinutes = data.timeBase * 2 + Math.round((data.timeIncrement * 40) / 60);
+        // Double Swiss: each round contains 2 games per player (play both colors back-to-back),
+        // so the round duration is 2× the single-game time plus a short inter-game gap (5 min).
+        const isDoubleSwiss = data.format === "doubleswiss";
+        const singleGameMinutes = data.timeBase * 2 + Math.round((data.timeIncrement * 40) / 60);
+        const gameMinutes = isDoubleSwiss
+          ? singleGameMinutes * 2 + 5   // 2 games + 5 min color-swap gap
+          : singleGameMinutes;
         const roundOverhead = roundBuffer; // user-configurable buffer between rounds
         const adminBuffer  = 10; // opening remarks + closing
         const totalMinutes = data.rounds * (gameMinutes + roundOverhead) + adminBuffer;
+        const minutesPerGame = gameMinutes; // alias for legacy void suppression
         const durationLabel = (() => {
           if (totalMinutes < 60) return `~${totalMinutes} min`;
           const h = Math.floor(totalMinutes / 60);
@@ -1738,7 +1742,7 @@ function QuickstartForm({
                     Estimated Total Duration
                   </p>
                   <p className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                    {data.rounds} rounds × {gameMinutes} min/game + {roundOverhead} min buffer + {adminBuffer} min admin
+                    {data.rounds} rounds × {gameMinutes} min/round{isDoubleSwiss ? ' (2 games × ' + singleGameMinutes + 'min + 5min gap)' : ''} + {roundOverhead} min buffer + {adminBuffer} min admin
                   </p>
                 </div>
               </div>
