@@ -197,6 +197,10 @@ interface SlideProps {
   format?: SlideFormat;
   /** Champion's chess.com avatar URL (proxied for CORS-safe export) */
   championAvatarUrl?: string | null;
+  /** Logo size multiplier — 0.5 (small) to 2.0 (large), default 1.0 */
+  logoScale?: number;
+  /** Logo position in the footer bar */
+  logoPosition?: "left" | "center" | "right";
 }
 
 /** Shared slide wrapper — themed background with chess board texture */
@@ -287,13 +291,30 @@ function OTBBrand({
   clubName,
   hostLogoUrl,
   theme = DEFAULT_THEME,
+  logoScale: logoScaleProp = 1,
+  logoPosition = "center",
 }: {
   scale?: number;
   clubName?: string | null;
   hostLogoUrl?: string | null;
   theme?: SlideTheme;
+  logoScale?: number;
+  logoPosition?: "left" | "center" | "right";
 }) {
   const s = scale;
+  const ls = logoScaleProp;
+  const logoH = 38 * s * ls;
+  const logoMaxW = 110 * s * ls;
+
+  // Determine footer layout justification based on position
+  const justifyMap = { left: "flex-start", center: "center", right: "flex-end" } as const;
+  const justify = justifyMap[logoPosition];
+
+  // When logo is left/right, OTB!! mark goes to the opposite side
+  const logoLeft = logoPosition === "left";
+  const logoRight = logoPosition === "right";
+  const splitLayout = logoLeft || logoRight;
+
   return (
     <div
       style={{
@@ -304,24 +325,30 @@ function OTBBrand({
         height: 80 * s,
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: splitLayout ? "space-between" : justify,
         gap: 14 * s,
+        paddingLeft: 48 * s,
+        paddingRight: 48 * s,
         borderTop: `1px solid rgba(255,255,255,0.06)`,
         background: "rgba(0,0,0,0.18)",
         backdropFilter: "blur(4px)",
       }}
     >
-      {hostLogoUrl && (
-        <>
-          <img
-            src={hostLogoUrl}
-            alt="Host logo"
-            style={{ height: 38 * s, maxWidth: 110 * s, objectFit: "contain", borderRadius: 4 * s }}
-            crossOrigin="anonymous"
-          />
-          <div style={{ width: 1, height: 28 * s, background: "rgba(255,255,255,0.18)" }} />
-        </>
+      {/* Logo — rendered first (left) or last (right) depending on position */}
+      {hostLogoUrl && (logoLeft || !splitLayout) && (
+        <img
+          src={hostLogoUrl}
+          alt="Host logo"
+          style={{ height: logoH, maxWidth: logoMaxW, objectFit: "contain", borderRadius: 4 * s }}
+          crossOrigin="anonymous"
+        />
       )}
+
+      {/* Center group: divider + OTB!! (only shown when logo is not center) */}
+      {!splitLayout && hostLogoUrl && (
+        <div style={{ width: 1, height: 28 * s, background: "rgba(255,255,255,0.18)" }} />
+      )}
+
       <div
         style={{
           fontWeight: 900,
@@ -333,6 +360,17 @@ function OTBBrand({
       >
         OTB!!
       </div>
+
+      {/* Logo on the right side */}
+      {hostLogoUrl && logoRight && (
+        <img
+          src={hostLogoUrl}
+          alt="Host logo"
+          style={{ height: logoH, maxWidth: logoMaxW, objectFit: "contain", borderRadius: 4 * s }}
+          crossOrigin="anonymous"
+        />
+      )}
+
       {!hostLogoUrl && clubName && (
         <>
           <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.18)" }} />
@@ -360,7 +398,7 @@ const TOTAL_SLIDES = 6;
 
 // ─── Slide 1 — Cover ─────────────────────────────────────────────────────────
 
-function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", championAvatarUrl }: SlideProps) {
+function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", championAvatarUrl, logoScale = 1, logoPosition = "center" }: SlideProps) {
   const s = scale;
   const champion = rows[0]?.player;
   const clubName = config?.clubName;
@@ -639,14 +677,14 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
         </div>
       )}
 
-      <OTBBrand scale={scale} clubName={null} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={null} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
 
 // ─── Slide 2 — Podium ────────────────────────────────────────────────────────
 
-function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square" }: SlideProps) {
+function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
   const s = scale;
   const top3 = rows.slice(0, 3);
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
@@ -753,14 +791,14 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
         })}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
 
 // ─── Slide 3 — Final Standings ────────────────────────────────────────────────
 
-function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square" }: SlideProps) {
+function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const FOOTER = 80 * s;
@@ -875,14 +913,14 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
         </div>
       )}
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
 
 // ─── Slide 4 — Stats ─────────────────────────────────────────────────────────
 
-function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square" }: SlideProps) {
+function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const totalGames = totalRounds * Math.floor(rows.length / 2);
@@ -1038,14 +1076,14 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
         )}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
 
 // ─── Slide 5 — CTA ───────────────────────────────────────────────────────────
 
-function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square" }: SlideProps) {
+function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const clubName = config?.clubName;
@@ -1153,7 +1191,7 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
         )}
       </div>
 
-      <OTBBrand scale={scale} clubName={clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={clubName} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
@@ -1208,7 +1246,7 @@ function buildRoundGrid(
   return grid;
 }
 
-function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, rounds = [], format = "square" }: SlideProps) {
+function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, rounds = [], format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const FOOTER = 80 * s;
@@ -1402,12 +1440,12 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
         ))}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
 
-// ─── Slide 7 — Bracket Results ───────────────────────────────────────────────
+// ─── Slide 7 ─── placeholder to avoid duplicate match — Bracket Results ───────────────────────────────────────────────
 
 /**
  * Extract bracket results from elimination rounds.
@@ -1506,6 +1544,8 @@ function Slide7BracketResults({
   theme = DEFAULT_THEME,
   rounds = [],
   format = "square",
+  logoScale = 1,
+  logoPosition = "center",
 }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
@@ -1849,7 +1889,7 @@ function Slide7BracketResults({
         </div>
       )}
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} logoScale={logoScale} logoPosition={logoPosition} />
     </SlideWrapper>
   );
 }
@@ -1892,6 +1932,8 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [hostLogoUrl, setHostLogoUrl] = useState<string | null>(clubLogoUrl ?? null);
+  const [logoScale, setLogoScale] = useState<number>(1.0);
+  const [logoPosition, setLogoPosition] = useState<"left" | "center" | "right">("center");
   const [championAvatarUrl, setChampionAvatarUrl] = useState<string | null>(null);
 
   // Fetch champion avatar when modal opens or champion changes
@@ -1936,6 +1978,8 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     rounds,
     format: slideFormat,
     championAvatarUrl,
+    logoScale,
+    logoPosition,
   };
 
   // Dynamic slide list — adds Bracket slide for elimination formats
@@ -2274,6 +2318,62 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                   <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-[#436850]"}`}>Upload logo (PNG, SVG, JPG)</span>
                   <span className={`text-[10px] ${isDark ? "text-white/20" : "text-[#436850]/70"}`}>Click or drag &amp; drop</span>
                 </button>
+              )}
+
+              {/* ── Logo size + position controls (visible when logo is uploaded) ── */}
+              {hostLogoUrl && (
+                <div className="mt-3 space-y-3">
+                  {/* Size slider */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className={`text-[10px] font-semibold ${isDark ? "text-white/40" : "text-[#436850]"}`}>Logo Size</span>
+                      <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-white/50" : "text-[#12372A]/70"}`}>{Math.round(logoScale * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={40}
+                      max={220}
+                      step={5}
+                      value={Math.round(logoScale * 100)}
+                      onChange={(e) => setLogoScale(Number(e.target.value) / 100)}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#769656]"
+                      style={{ background: `linear-gradient(to right, #769656 ${Math.round(logoScale * 100 / 2.2)}%, rgba(255,255,255,0.12) ${Math.round(logoScale * 100 / 2.2)}%)` }}
+                    />
+                    <div className={`flex justify-between mt-0.5 text-[9px] ${isDark ? "text-white/20" : "text-[#436850]/50"}`}>
+                      <span>Small</span><span>Default</span><span>Large</span>
+                    </div>
+                  </div>
+
+                  {/* Position picker */}
+                  <div>
+                    <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Logo Position</span>
+                    <div className="flex gap-1.5">
+                      {(["left", "center", "right"] as const).map((pos) => {
+                        const labels = { left: "Left", center: "Center", right: "Right" };
+                        const icons = {
+                          left: <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="3" width="6" height="4" rx="1" fill="currentColor"/><rect x="8" y="4" width="4" height="2" rx="0.5" fill="currentColor" opacity="0.35"/></svg>,
+                          center: <svg width="14" height="10" viewBox="0 0 14 10"><rect x="4" y="3" width="6" height="4" rx="1" fill="currentColor"/><rect x="0" y="4" width="3" height="2" rx="0.5" fill="currentColor" opacity="0.35"/><rect x="11" y="4" width="3" height="2" rx="0.5" fill="currentColor" opacity="0.35"/></svg>,
+                          right: <svg width="14" height="10" viewBox="0 0 14 10"><rect x="8" y="3" width="6" height="4" rx="1" fill="currentColor"/><rect x="2" y="4" width="4" height="2" rx="0.5" fill="currentColor" opacity="0.35"/></svg>,
+                        };
+                        const isActive = logoPosition === pos;
+                        return (
+                          <button
+                            key={pos}
+                            onClick={() => setLogoPosition(pos)}
+                            className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border text-[9px] font-semibold transition-all ${
+                              isActive
+                                ? isDark ? "border-[#769656] bg-[#769656]/15 text-[#9bc46a]" : "border-[#436850] bg-[#436850]/10 text-[#12372A]"
+                                : isDark ? "border-white/08 bg-white/03 text-white/30 hover:border-white/15" : "border-[#ADBC9F] bg-transparent text-[#436850]/60 hover:border-[#436850]"
+                            }`}
+                          >
+                            <span className={isActive ? (isDark ? "text-[#9bc46a]" : "text-[#12372A]") : (isDark ? "text-white/25" : "text-[#436850]/40")}>{icons[pos]}</span>
+                            {labels[pos]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               )}
 
               <input
