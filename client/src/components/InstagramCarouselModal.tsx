@@ -24,6 +24,7 @@ import type { StandingRow } from "@/lib/swiss";
 import type { TournamentConfig } from "@/lib/tournamentRegistry";
 import type { Round } from "@/lib/tournamentData";
 import { logger } from "@/lib/logger";
+import { fetchAvatar, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -194,6 +195,8 @@ interface SlideProps {
   rounds?: Round[];
   /** Slide format — square (1080×1080) or story (1080×1920) */
   format?: SlideFormat;
+  /** Champion's chess.com avatar URL (proxied for CORS-safe export) */
+  championAvatarUrl?: string | null;
 }
 
 /** Shared slide wrapper — themed background with chess board texture */
@@ -357,7 +360,7 @@ const TOTAL_SLIDES = 6;
 
 // ─── Slide 1 — Cover ─────────────────────────────────────────────────────────
 
-function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square" }: SlideProps) {
+function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", championAvatarUrl }: SlideProps) {
   const s = scale;
   const champion = rows[0]?.player;
   const clubName = config?.clubName;
@@ -366,6 +369,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
   const PAD = 64 * s;
   const isStory = format === "story";
   const _H = SLIDE_H[format] * s;
+  const hasAvatar = !!championAvatarUrl;
 
   // Dynamic font size for tournament name — fills width
   const nameFontSize = Math.min(
@@ -477,85 +481,138 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
             left: PAD,
             right: PAD,
             display: "flex",
-            flexDirection: "column" as const,
-            gap: 0,
+            flexDirection: "row" as const,
+            alignItems: "flex-end",
+            gap: hasAvatar ? 36 * s : 0,
           }}
         >
-          {/* CHAMPION label */}
-          <div style={{ display: "flex", alignItems: "center", gap: 14 * s, marginBottom: 16 * s }}>
-            <div style={{ fontSize: isStory ? 56 * s : 42 * s, lineHeight: 1 }}>🏆</div>
-            <div style={{ fontSize: 13 * s, color: BRAND.gold, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" as const }}>
-              Champion
+          {/* ── Avatar portrait (right side, tall) ── */}
+          {hasAvatar && (
+            <div
+              style={{
+                flexShrink: 0,
+                order: 2,
+                marginLeft: "auto",
+                position: "relative",
+              }}
+            >
+              {/* Glow ring behind avatar */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: -(8 * s),
+                  borderRadius: "50%",
+                  background: `radial-gradient(circle, ${theme.accentLight}55 0%, transparent 70%)`,
+                }}
+              />
+              <img
+                src={championAvatarUrl!}
+                alt={champion.name}
+                crossOrigin="anonymous"
+                style={{
+                  width: isStory ? 260 * s : 200 * s,
+                  height: isStory ? 260 * s : 200 * s,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: `${4 * s}px solid ${BRAND.gold}`,
+                  boxShadow: `0 0 ${40 * s}px ${theme.accentLight}50`,
+                  display: "block",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              />
             </div>
-          </div>
+          )}
 
-          {/* Champion name — massive */}
+          {/* ── Text column (left side) ── */}
           <div
             style={{
-              fontSize: clampFont(isStory ? 130 * s : 110 * s, champion.name, 12),
-              fontWeight: 900,
-              color: BRAND.white,
-              lineHeight: 0.95,
-              letterSpacing: "-0.03em",
-              marginBottom: 20 * s,
+              order: 1,
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column" as const,
+              gap: 0,
             }}
           >
-            {champion.name}
-          </div>
-
-          {/* Username + ELO + score */}
-          <div style={{ display: "flex", alignItems: "center", gap: 20 * s, flexWrap: "wrap" as const }}>
-            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: theme.accentLight, fontWeight: 700 }}>
-              @{champion.username}
-            </div>
-            <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.2)" }} />
-            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: BRAND.gold, fontWeight: 800 }}>
-              {champion.elo} ELO
-            </div>
-            <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.2)" }} />
-            <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
-              {rows[0]?.points ?? 0} / {totalRounds} pts
-            </div>
-          </div>
-
-          {/* Date + format meta — only in square (story shows it in middle) */}
-          {!isStory && (date || rows.length) && (
-            <div style={{ marginTop: 24 * s, display: "flex", gap: 20 * s, flexWrap: "wrap" as const }}>
-              {date && (
-                <div style={{ fontSize: 16 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{date}</div>
-              )}
-              <div style={{ fontSize: 16 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-                {rows.length} Players · {totalRounds} Rounds
+            {/* CHAMPION label */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 * s, marginBottom: 16 * s }}>
+              <div style={{ fontSize: isStory ? 56 * s : 42 * s, lineHeight: 1 }}>🏆</div>
+              <div style={{ fontSize: 13 * s, color: BRAND.gold, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" as const }}>
+                Champion
               </div>
             </div>
-          )}
 
-          {/* Story: runner-up + 3rd place mini cards */}
-          {isStory && rows.length >= 2 && (
-            <div style={{ marginTop: 48 * s, display: "flex", gap: 20 * s }}>
-              {rows.slice(1, 3).map((row, idx) => (
-                <div
-                  key={row.player.id}
-                  style={{
-                    flex: 1,
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    borderRadius: 16 * s,
-                    padding: `${20 * s}px ${24 * s}px`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14 * s,
-                  }}
-                >
-                  <div style={{ fontSize: 32 * s }}>{idx === 0 ? "🥈" : "🥉"}</div>
-                  <div>
-                    <div style={{ fontSize: 20 * s, fontWeight: 800, color: BRAND.white }}>{row.player.name}</div>
-                    <div style={{ fontSize: 15 * s, color: "rgba(255,255,255,0.40)", marginTop: 2 * s }}>{row.points} pts</div>
-                  </div>
-                </div>
-              ))}
+            {/* Champion name — massive */}
+            <div
+              style={{
+                fontSize: clampFont(isStory ? 130 * s : 110 * s, champion.name, hasAvatar ? 10 : 12),
+                fontWeight: 900,
+                color: BRAND.white,
+                lineHeight: 0.95,
+                letterSpacing: "-0.03em",
+                marginBottom: 20 * s,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: hasAvatar ? "nowrap" as const : "normal" as const,
+              }}
+            >
+              {champion.name}
             </div>
-          )}
+
+            {/* Username + ELO + score */}
+            <div style={{ display: "flex", alignItems: "center", gap: 20 * s, flexWrap: "wrap" as const }}>
+              <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: theme.accentLight, fontWeight: 700 }}>
+                @{champion.username}
+              </div>
+              <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.2)" }} />
+              <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: BRAND.gold, fontWeight: 800 }}>
+                {champion.elo} ELO
+              </div>
+              <div style={{ width: 1, height: 20 * s, background: "rgba(255,255,255,0.2)" }} />
+              <div style={{ fontSize: isStory ? 28 * s : 22 * s, color: "rgba(255,255,255,0.55)", fontWeight: 600 }}>
+                {rows[0]?.points ?? 0} / {totalRounds} pts
+              </div>
+            </div>
+            {/* Date + format meta — only in square (story shows it in middle) */}
+            {!isStory && (date || rows.length) && (
+              <div style={{ marginTop: 24 * s, display: "flex", gap: 20 * s, flexWrap: "wrap" as const }}>
+                {date && (
+                  <div style={{ fontSize: 16 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{date}</div>
+                )}
+                <div style={{ fontSize: 16 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                  {rows.length} Players · {totalRounds} Rounds
+                </div>
+              </div>
+            )}
+
+            {/* Story: runner-up + 3rd place mini cards */}
+            {isStory && rows.length >= 2 && (
+              <div style={{ marginTop: 48 * s, display: "flex", gap: 20 * s }}>
+                {rows.slice(1, 3).map((row, idx) => (
+                  <div
+                    key={row.player.id}
+                    style={{
+                      flex: 1,
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      borderRadius: 16 * s,
+                      padding: `${20 * s}px ${24 * s}px`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14 * s,
+                    }}
+                  >
+                    <div style={{ fontSize: 32 * s }}>{idx === 0 ? "🥈" : "🥉"}</div>
+                    <div>
+                      <div style={{ fontSize: 20 * s, fontWeight: 800, color: BRAND.white }}>{row.player.name}</div>
+                      <div style={{ fontSize: 15 * s, color: "rgba(255,255,255,0.40)", marginTop: 2 * s }}>{row.points} pts</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1835,6 +1892,19 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [hostLogoUrl, setHostLogoUrl] = useState<string | null>(clubLogoUrl ?? null);
+  const [championAvatarUrl, setChampionAvatarUrl] = useState<string | null>(null);
+
+  // Fetch champion avatar when modal opens or champion changes
+  useEffect(() => {
+    if (!open) return;
+    const username = rows[0]?.player?.username;
+    if (!username) { setChampionAvatarUrl(null); return; }
+    let cancelled = false;
+    fetchAvatar(username).then((url) => {
+      if (!cancelled) setChampionAvatarUrl(url ? toProxiedAvatarUrl(url) : null);
+    });
+    return () => { cancelled = true; };
+  }, [open, rows]);
 
   // When the club avatar loads asynchronously (useClubAvatar hook), pre-seed it
   // only if the director hasn't manually set or cleared a custom logo yet.
@@ -1865,6 +1935,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     theme: activeTheme,
     rounds,
     format: slideFormat,
+    championAvatarUrl,
   };
 
   // Dynamic slide list — adds Bracket slide for elimination formats
