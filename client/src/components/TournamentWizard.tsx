@@ -59,6 +59,10 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
+  Hash,
+  Users2,
+  Timer,
+  Globe,
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
@@ -871,19 +875,12 @@ function QuickstartForm({
       </div>
 
       {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
-      <div
-        className="rounded-2xl border overflow-hidden"
-        style={{
-          background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA",
-          border: `1.5px solid ${isDark ? "rgba(77,105,64,0.25)" : "rgba(77,105,64,0.18)"}`,
-        }}
-      >
-        {/* Card header with Smart Defaults toggle */}
-        <div className="flex items-center gap-2 px-5 lg:px-6 pt-4 lg:pt-5 pb-3">
-          <Zap className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.green }}>
+      <div>
+        {/* Section header — matches the Label component style */}
+        <div className="flex items-baseline gap-2 mb-3 lg:mb-4">
+          <label className="text-base lg:text-lg font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
             Tournament Settings
-          </span>
+          </label>
           {/* Smart Defaults toggle pill */}
           <button
             type="button"
@@ -899,29 +896,36 @@ function QuickstartForm({
             Smart Defaults
           </button>
         </div>
+        <div className="space-y-3">
 
-        {/* Format row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
+        {/* Format row — TextInput-style field */}
+        <div
+          className="rounded-2xl border transition-all duration-200 overflow-hidden"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${inlinePicker === "format" ? T.green : isDark ? T.dInputBorder : T.lInputBorder}`,
+            boxShadow: inlinePicker === "format" ? `0 0 0 3px ${T.greenRing}` : "none",
+          }}
+        >
           <button
             type="button"
             onClick={() => toggleInline("format")}
-            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
-            style={{
-              background: inlinePicker === "format"
-                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
-                : "transparent",
-            }}
+            className="w-full flex items-center justify-between transition-colors"
+            style={{ padding: "16px 18px" }}
           >
-            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
+            <div className="flex items-center gap-3">
+              <Trophy className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
+            </div>
             <div className="flex items-center gap-1.5">
               <span
-                className="text-xs lg:text-sm font-semibold"
+                className="text-base font-semibold"
                 style={{ color: data.format !== "swiss" ? T.green : isDark ? T.dText : T.lText }}
               >
                 {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : "Elimination"}
               </span>
               <ChevronDown
-                className="w-3.5 h-3.5 transition-transform duration-200"
+                className="w-4 h-4 transition-transform duration-200"
                 style={{
                   color: isDark ? T.dMuted : T.lMuted,
                   transform: inlinePicker === "format" ? "rotate(180deg)" : "rotate(0deg)",
@@ -931,8 +935,8 @@ function QuickstartForm({
           </button>
           {inlinePicker === "format" && (
             <div
-              className="px-5 lg:px-6 pb-4 space-y-3"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+              className="px-4 pb-4 space-y-3"
+              style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="grid grid-cols-2 gap-2 pt-3">
                 {([
@@ -1023,28 +1027,34 @@ function QuickstartForm({
           </div>
         )}
 
-        {/* Rounds row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
+        {/* Rounds row — TextInput-style field */}
+        <div
+          className="rounded-2xl border transition-all duration-200 overflow-hidden"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${inlinePicker === "rounds" ? T.green : isDark ? T.dInputBorder : T.lInputBorder}`,
+            boxShadow: inlinePicker === "rounds" ? `0 0 0 3px ${T.greenRing}` : "none",
+          }}
+        >
           <button
             type="button"
             onClick={() => toggleInline("rounds")}
-            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
-            style={{
-              background: inlinePicker === "rounds"
-                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
-                : "transparent",
-            }}
+            className="w-full flex items-center justify-between transition-colors"
+            style={{ padding: "16px 18px" }}
           >
-            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Rounds</span>
+            <div className="flex items-center gap-3">
+              <Hash className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Rounds</span>
+            </div>
             <div className="flex items-center gap-1.5">
               <span
-                className="text-xs lg:text-sm font-semibold"
+                className="text-base font-semibold"
                 style={{ color: isNonDefaultRounds ? T.green : isDark ? T.dText : T.lText }}
               >
                 {data.rounds}
               </span>
               <ChevronDown
-                className="w-3.5 h-3.5 transition-transform duration-200"
+                className="w-4 h-4 transition-transform duration-200"
                 style={{
                   color: isDark ? T.dMuted : T.lMuted,
                   transform: inlinePicker === "rounds" ? "rotate(180deg)" : "rotate(0deg)",
@@ -1054,8 +1064,8 @@ function QuickstartForm({
           </button>
           {inlinePicker === "rounds" && (
             <div
-              className="px-5 lg:px-6 pb-4 space-y-3"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+              className="px-4 pb-4 space-y-3"
+              style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
                 {roundOptions.map((r) => {
@@ -1106,28 +1116,34 @@ function QuickstartForm({
           )}
         </div>
 
-        {/* Max Players row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
+        {/* Max Players row — TextInput-style field */}
+        <div
+          className="rounded-2xl border transition-all duration-200 overflow-hidden"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${inlinePicker === "cap" ? T.green : isDark ? T.dInputBorder : T.lInputBorder}`,
+            boxShadow: inlinePicker === "cap" ? `0 0 0 3px ${T.greenRing}` : "none",
+          }}
+        >
           <button
             type="button"
             onClick={() => toggleInline("cap")}
-            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
-            style={{
-              background: inlinePicker === "cap"
-                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
-                : "transparent",
-            }}
+            className="w-full flex items-center justify-between transition-colors"
+            style={{ padding: "16px 18px" }}
           >
-            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Max Players</span>
+            <div className="flex items-center gap-3">
+              <Users2 className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Max Players</span>
+            </div>
             <div className="flex items-center gap-1.5">
               <span
-                className="text-xs lg:text-sm font-semibold"
+                className="text-base font-semibold"
                 style={{ color: isNonDefaultCap ? T.green : isDark ? T.dText : T.lText }}
               >
                 {data.maxPlayers}
               </span>
               <ChevronDown
-                className="w-3.5 h-3.5 transition-transform duration-200"
+                className="w-4 h-4 transition-transform duration-200"
                 style={{
                   color: isDark ? T.dMuted : T.lMuted,
                   transform: inlinePicker === "cap" ? "rotate(180deg)" : "rotate(0deg)",
@@ -1137,8 +1153,8 @@ function QuickstartForm({
           </button>
           {inlinePicker === "cap" && (
             <div
-              className="px-5 lg:px-6 pb-4 space-y-3"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+              className="px-4 pb-4 space-y-3"
+              style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
                 {capOptions.map((cap) => {
@@ -1191,22 +1207,28 @@ function QuickstartForm({
           )}
         </div>
 
-        {/* Time Control row — editable */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
+        {/* Time Control row — TextInput-style field */}
+        <div
+          className="rounded-2xl border transition-all duration-200 overflow-hidden"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${inlinePicker === "time" ? T.green : isDark ? T.dInputBorder : T.lInputBorder}`,
+            boxShadow: inlinePicker === "time" ? `0 0 0 3px ${T.greenRing}` : "none",
+          }}
+        >
           <button
             type="button"
             onClick={() => toggleInline("time")}
-            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
-            style={{
-              background: inlinePicker === "time"
-                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
-                : "transparent",
-            }}
+            className="w-full flex items-center justify-between transition-colors"
+            style={{ padding: "16px 18px" }}
           >
-            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Time Control</span>
+            <div className="flex items-center gap-3">
+              <Timer className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Time Control</span>
+            </div>
             <div className="flex items-center gap-1.5">
               <span
-                className="text-xs lg:text-sm font-semibold"
+                className="text-base font-semibold"
                 style={{ color: isNonDefaultTime ? T.green : isDark ? T.dText : T.lText }}
               >
                 {activeTime
@@ -1217,7 +1239,7 @@ function QuickstartForm({
                   }
               </span>
               <ChevronDown
-                className="w-3.5 h-3.5 transition-transform duration-200"
+                className="w-4 h-4 transition-transform duration-200"
                 style={{
                   color: isDark ? T.dMuted : T.lMuted,
                   transform: inlinePicker === "time" ? "rotate(180deg)" : "rotate(0deg)",
@@ -1227,8 +1249,8 @@ function QuickstartForm({
           </button>
           {inlinePicker === "time" && (
             <div
-              className="px-5 lg:px-6 pb-4"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+              className="px-4 pb-4"
+              style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               {/* Level 1 — Category buttons (no caption text) */}
               {!tcCategory && (
@@ -1383,10 +1405,19 @@ function QuickstartForm({
           )}
         </div>
 
-        {/* Rating Type row — Rapid vs Blitz toggle */}
-        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}>
-          <div className="flex items-center justify-between px-5 lg:px-6 py-2.5">
-            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>ELO Rating</span>
+        {/* ELO Rating row — TextInput-style field */}
+        <div
+          className="rounded-2xl border transition-all duration-200 overflow-hidden"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+          }}
+        >
+          <div className="flex items-center justify-between" style={{ padding: "16px 18px" }}>
+            <div className="flex items-center gap-3">
+              <BarChart3 className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>ELO Rating</span>
+            </div>
             <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}` }}>
               {(["rapid", "blitz"] as const).map((rt) => {
                 const active = data.ratingType === rt;
@@ -1395,7 +1426,7 @@ function QuickstartForm({
                     key={rt}
                     type="button"
                     onClick={() => onChange({ ratingType: rt })}
-                    className="px-3 py-1 text-xs font-semibold transition-all duration-150"
+                    className="px-3 py-1.5 text-sm font-semibold transition-all duration-150"
                     style={{
                       background: active ? T.green : "transparent",
                       color: active ? "#FFFFFF" : isDark ? T.dMuted : T.lMuted,
@@ -1407,36 +1438,39 @@ function QuickstartForm({
               })}
             </div>
           </div>
-          <p className="px-5 lg:px-6 pb-2 text-[10px] leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.35)" : "#9CA3AF" }}>
-            Both Rapid &amp; Blitz are fetched automatically. This sets which one is used for pairings. Auto-set by time control — changeable later in Settings.
+          <p className="pb-3 text-[11px] leading-relaxed" style={{ padding: "0 18px 12px 52px", color: isDark ? "rgba(255,255,255,0.35)" : "#9CA3AF" }}>
+            Both Rapid &amp; Blitz are fetched automatically. Auto-set by time control — changeable later in Settings.
           </p>
         </div>
 
-        {/* Platform row — dropdown selector */}
+        {/* Platform row — TextInput-style field */}
         <div
-          className="relative"
-          style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+          className="rounded-2xl border transition-all duration-200 overflow-hidden"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${platformOpen ? T.green : isDark ? T.dInputBorder : T.lInputBorder}`,
+            boxShadow: platformOpen ? `0 0 0 3px ${T.greenRing}` : "none",
+          }}
         >
           <button
             type="button"
             onClick={() => setPlatformOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
-            style={{
-              background: platformOpen
-                ? isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.08)"
-                : "transparent",
-            }}
+            className="w-full flex items-center justify-between transition-colors"
+            style={{ padding: "16px 18px" }}
           >
-            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
+            <div className="flex items-center gap-3">
+              <Globe className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
+            </div>
             <div className="flex items-center gap-1.5">
               <span
-                className="text-xs lg:text-sm font-semibold"
+                className="text-base font-semibold"
                 style={{ color: isNonDefaultRating ? T.green : isDark ? T.dText : T.lText }}
               >
                 {data.ratingSystem === "chess.com" ? "Chess.com" : data.ratingSystem === "lichess" ? "Lichess" : data.ratingSystem === "fide" ? "FIDE" : "Unrated"}
               </span>
               <ChevronDown
-                className="w-3.5 h-3.5 transition-transform duration-200"
+                className="w-4 h-4 transition-transform duration-200"
                 style={{
                   color: isDark ? T.dMuted : T.lMuted,
                   transform: platformOpen ? "rotate(180deg)" : "rotate(0deg)",
@@ -1446,8 +1480,8 @@ function QuickstartForm({
           </button>
           {platformOpen && (
             <div
-              className="px-5 lg:px-6 pb-4"
-              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(77,105,64,0.10)"}` }}
+              className="px-4 pb-4"
+              style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="grid grid-cols-2 gap-2 pt-3">
                 {([
@@ -1485,7 +1519,8 @@ function QuickstartForm({
             </div>
           )}
         </div>
-      </div>
+      </div>{/* end space-y-3 */}
+      </div>{/* end Tournament Settings outer div */}
 
       {/* Structure Preview — collapsible panel */}
       <div>
