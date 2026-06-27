@@ -66,6 +66,7 @@ const GameJoin = lazy(() => import("./pages/GameJoin"));
 const OtbLeaderboard = lazy(() => import("./pages/OtbLeaderboard"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
+const JoinClub = lazy(() => import("./pages/JoinClub"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -113,6 +114,7 @@ function Router() {
         <Route path={"/clubs/:clubId/meetup/:eventId"} component={MeetupEventPage} />
         <Route path={"/checkin/:eventId"} component={CheckInPage} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
+        <Route path={"/join-club/:clubId"} component={JoinClub} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/tournament/:id/broadcast-console"} component={BroadcastConsole} />
         <Route path={"/tournament/:id/connect-board"} component={ConnectBoard} />

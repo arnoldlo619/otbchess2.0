@@ -121,7 +121,10 @@ import {
   Crown,
   Shield,
   CheckCircle2,
+  Check,
+  Download,
   Clock,
+  UserCheck,
   Zap,
   Star,
   MessageSquare,
@@ -136,7 +139,6 @@ import {
   X,
   Megaphone,
   PartyPopper,
-  UserCheck,
   ArrowRight,
   Lock,
   MoreVertical,
@@ -2341,6 +2343,9 @@ export default function ClubDashboard() {
   // ── QR Tools state ────────────────────────────────────────────────────────
   const [qrEventId, setQrEventId] = useState<string | null>(null);
   const [qrMode, setQrMode] = useState<"join" | "rsvp" | "checkin">("join");
+  // ── Join Club QR modal (header button) ───────────────────────────────────
+  const [showJoinQRModal, setShowJoinQRModal] = useState(false);
+  const [joinQRCopied, setJoinQRCopied] = useState(false);
   // ── RSVP management state ─────────────────────────────────────────────────
   const [rsvpPanelEventId, setRsvpPanelEventId] = useState<string | null>(null);
   const [eventRsvpList, setEventRsvpList] = useState<ClubEventRSVP[]>([]);
@@ -3238,11 +3243,143 @@ export default function ClubDashboard() {
                 {club.name}
               </span>
             </div>
+            {/* Center: Join Club QR button — owner/director only */}
+            {isOwnerOrDirector && (
+              <div className="absolute left-1/2 -translate-x-1/2">
+                <button
+                  onClick={() => setShowJoinQRModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
+                  style={{
+                    background: `${accent}22`,
+                    border: `1px solid ${accent}55`,
+                    color: accent,
+                  }}
+                >
+                  <QrCode size={12} />
+                  <span>Join Club QR</span>
+                </button>
+              </div>
+            )}
             {/* Right side: avatar dropdown */}
             <div className="flex items-center gap-3 ml-auto">
               <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>
+
+          {/* ── JOIN CLUB QR MODAL ────────────────────────────────────────── */}
+          {showJoinQRModal && club && (() => {
+            const joinUrl = `${window.location.origin}/join-club/${club.id}`;
+            async function handleCopyJoinLink() {
+              await navigator.clipboard.writeText(joinUrl);
+              setJoinQRCopied(true);
+              setTimeout(() => setJoinQRCopied(false), 2000);
+            }
+            function handleDownloadJoinQR() {
+              const svg = document.getElementById("club-join-qr");
+              if (!svg) return;
+              const svgData = new XMLSerializer().serializeToString(svg);
+              const canvas = document.createElement("canvas");
+              canvas.width = 400; canvas.height = 400;
+              const ctx = canvas.getContext("2d");
+              if (!ctx) return;
+              const img = new Image();
+              img.onload = () => {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, 400, 400);
+                ctx.drawImage(img, 0, 0, 400, 400);
+                const a = document.createElement("a");
+                a.download = `${(club?.name ?? "club").toLowerCase().replace(/\s+/g, "-")}-join-qr.png`;
+                a.href = canvas.toDataURL("image/png");
+                a.click();
+              };
+              img.src = "data:image/svg+xml;base64," + btoa(svgData);
+            }
+            return (
+              <div className="modal-overlay z-50" onClick={() => setShowJoinQRModal(false)}>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowJoinQRModal(false)} />
+                <div
+                  className="relative z-10 w-full max-w-sm my-auto rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
+                  style={{ background: "oklch(0.22 0.06 145)", marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Accent bar */}
+                  <div className="h-1" style={{ background: `linear-gradient(90deg, ${accent}88, ${accent}, ${accent}88)` }} />
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/08">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${accent}33` }}>
+                        <QrCode className="w-4 h-4" style={{ color: accent }} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-white leading-tight" style={{ fontFamily: "'Clash Display', sans-serif" }}>Join Club QR Code</p>
+                        <p className="text-xs text-white/40">{club.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowJoinQRModal(false)}
+                      className="flex items-center gap-1.5 h-11 px-3 rounded-xl font-semibold text-sm bg-white/10 text-white hover:bg-white/18 border border-white/15 transition-all active:scale-95"
+                    >
+                      <X className="w-4 h-4" strokeWidth={2.5} />
+                      <span>Close</span>
+                    </button>
+                  </div>
+                  {/* QR Code */}
+                  <div className="px-5 py-6 flex flex-col items-center gap-5">
+                    <div className="relative">
+                      <div className="p-4 bg-white rounded-2xl shadow-lg">
+                        <QRCodeSVG
+                          id="club-join-qr"
+                          value={joinUrl}
+                          size={200}
+                          level="H"
+                          includeMargin={false}
+                          fgColor="#1a1a1a"
+                          bgColor="#ffffff"
+                        />
+                      </div>
+                      {/* Corner decorations */}
+                      {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos) => (
+                        <div
+                          key={pos}
+                          className={`absolute ${pos} w-5 h-5 ${pos.includes("top") && pos.includes("left") ? "border-t-2 border-l-2 rounded-tl-xl" : pos.includes("top") && pos.includes("right") ? "border-t-2 border-r-2 rounded-tr-xl" : pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-xl" : "border-b-2 border-r-2 rounded-br-xl"}`}
+                          style={{ borderColor: accent }}
+                        />
+                      ))}
+                    </div>
+                    {/* Info */}
+                    <div className="w-full rounded-xl px-4 py-3 flex items-start gap-3" style={{ background: `${accent}15` }}>
+                      <Users size={14} className="mt-0.5 flex-shrink-0" style={{ color: accent }} />
+                      <p className="text-xs leading-relaxed text-white/60">
+                        Members scan this code to join <span className="text-white/80 font-semibold">{club.name}</span>. If they're not signed in, they'll be prompted to create an account first — then automatically added.
+                      </p>
+                    </div>
+                    {/* Actions */}
+                    <div className="w-full grid grid-cols-2 gap-2">
+                      <button
+                        onClick={handleCopyJoinLink}
+                        className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+                          joinQRCopied
+                            ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#436850]/15"
+                            : "border-white/10 text-white/70 hover:bg-white/05"
+                        }`}
+                      >
+                        {joinQRCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        {joinQRCopied ? "Copied!" : "Copy Link"}
+                      </button>
+                      <button
+                        onClick={handleDownloadJoinQR}
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        style={{ background: accent }}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Save QR
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-20 lg:pb-6">
