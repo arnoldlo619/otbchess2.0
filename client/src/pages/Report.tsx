@@ -51,7 +51,14 @@ import {
   Palette,
   ChevronRight,
   FileText,
+  Instagram,
+  Expand,
 } from "lucide-react";
+
+/** True on touch-primary devices (phones/tablets). */
+const isTouchDevice = () =>
+  typeof window !== "undefined" &&
+  ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 type ReportTab = "cards" | "crosstable" | "rounds";
@@ -440,9 +447,10 @@ function ExportableCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [showExpanded, setShowExpanded] = useState(false);
+  // Track whether the device is touch-primary so we can show actions persistently
+  const [isTouch] = useState(() => isTouchDevice());
 
   const handleExport = useCallback(async () => {
-    // Prefer the hidden high-res forExport card; fall back to visible card
     const target = exportRef.current ?? cardRef.current;
     if (!target) return;
     setExporting(true);
@@ -450,6 +458,24 @@ function ExportableCard({
       const filename = `${perf.player.username}-${tournamentName.toLowerCase().replace(/\s+/g, "-")}.png`;
       await exportCardAsPng(target, filename);
       toast.success(`Card saved for ${perf.player.name}`);
+    } catch {
+      toast.error("Export failed — try again");
+    } finally {
+      setExporting(false);
+    }
+  }, [perf, tournamentName, exportRef]);
+
+  // Instagram-optimised download: 1080×1350 PNG (4:5 portrait, ideal for feed + carousel)
+  const handleInstagramDownload = useCallback(async () => {
+    const target = exportRef.current ?? cardRef.current;
+    if (!target) return;
+    setExporting(true);
+    try {
+      const filename = `${perf.player.username}-instagram-${tournamentName.toLowerCase().replace(/\s+/g, "-")}.png`;
+      await exportCardAsPng(target, filename);
+      toast.success("Instagram card saved!", {
+        description: "1080×1350 · Perfect for feed posts and carousel slides.",
+      });
     } catch {
       toast.error("Export failed — try again");
     } finally {
@@ -483,6 +509,51 @@ function ExportableCard({
     }
   }, [perf, tournamentName, exportRef]);
 
+  // Action buttons shared between the hover overlay (desktop) and the persistent bar (mobile)
+  const ActionButtons = (
+    <>
+      <button
+        onClick={() => setShowExpanded(true)}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors border border-white/20 text-white hover:bg-white/10 active:scale-95"
+        style={{ background: accentColor + "22" }}
+      >
+        <Expand className="w-4 h-4" />
+        View Full Card
+      </button>
+      <button
+        onClick={handleInstagramDownload}
+        disabled={exporting}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white font-semibold text-sm transition-all disabled:opacity-60 active:scale-95"
+      >
+        {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Instagram className="w-4 h-4" />}
+        Save for Instagram
+      </button>
+      <button
+        onClick={handleExport}
+        disabled={exporting}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#12372A] font-semibold text-sm hover:bg-[#ADBC9F]/50 transition-colors disabled:opacity-60 active:scale-95"
+      >
+        {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageDown className="w-4 h-4" />}
+        Download PNG
+      </button>
+      <button
+        onClick={handleShare}
+        disabled={exporting}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 text-white font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30 disabled:opacity-60 active:scale-95"
+      >
+        <Share2 className="w-4 h-4" />
+        Share Image
+      </button>
+      <button
+        onClick={() => onShareSingle(perf)}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366]/20 text-[#25D366] font-semibold text-sm hover:bg-[#25D366]/30 transition-colors border border-[#25D366]/30 active:scale-95"
+      >
+        <MessageCircle className="w-4 h-4" />
+        Send via WhatsApp / Email
+      </button>
+    </>
+  );
+
   return (
     <div className="group relative">
       {/* The visible card */}
@@ -508,44 +579,19 @@ function ExportableCard({
         />
       )}
 
-      {/* Overlay controls — appear on hover (desktop shortcut) */}
-      <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
-        <button
-          onClick={() => setShowExpanded(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors border border-white/20 text-white hover:bg-white/10"
-          style={{ background: accentColor + "22" }}
-        >
-          <BarChart3 className="w-4 h-4" />
-          View Full Card
-        </button>
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#12372A] font-semibold text-sm hover:bg-[#ADBC9F]/50 transition-colors disabled:opacity-60"
-        >
-          {exporting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <ImageDown className="w-4 h-4" />
-          )}
-          Download PNG
-        </button>
-        <button
-          onClick={handleShare}
-          disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 text-white font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30 disabled:opacity-60"
-        >
-          <Share2 className="w-4 h-4" />
-          Share Image
-        </button>
-        <button
-          onClick={() => onShareSingle(perf)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366]/20 text-[#25D366] font-semibold text-sm hover:bg-[#25D366]/30 transition-colors border border-[#25D366]/30"
-        >
-          <MessageCircle className="w-4 h-4" />
-          Send via WhatsApp / Email
-        </button>
-      </div>
+      {/* Desktop hover overlay — hidden on touch devices */}
+      {!isTouch && (
+        <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
+          {ActionButtons}
+        </div>
+      )}
+
+      {/* Mobile persistent action bar — shown below the card on touch devices */}
+      {isTouch && (
+        <div className="mt-3 flex flex-col gap-2">
+          {ActionButtons}
+        </div>
+      )}
 
       {/* ── Below-card controls: name label + color picker + share button ── */}
       <div className="mt-2">
@@ -566,15 +612,17 @@ function ExportableCard({
           isDark={isDark}
         />
 
-        {/* Native share button */}
-        <div className="mt-2">
-          <NativeShareButton
-            perf={perf}
-            tournamentName={tournamentName}
-            exportRef={exportRef}
-            isDark={isDark}
-          />
-        </div>
+        {/* Native share button — shown on desktop only; mobile uses the persistent action bar above */}
+        {!isTouch && (
+          <div className="mt-2">
+            <NativeShareButton
+              perf={perf}
+              tournamentName={tournamentName}
+              exportRef={exportRef}
+              isDark={isDark}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
