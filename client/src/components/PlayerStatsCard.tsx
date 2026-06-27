@@ -697,6 +697,59 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               </p>
             </div>
           </div>
+
+          {/* ── Brand footer: tournament name + website URL ── */}
+          <div
+            style={{
+              marginTop: forExport ? 48 : 16,
+              paddingTop: forExport ? 24 : 8,
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: forExport ? 20 : 8,
+            }}
+          >
+            {/* Tournament name */}
+            <p
+              style={{
+                fontSize: forExport ? 17 : 8,
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.30)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {tournamentName}
+            </p>
+
+            {/* Divider dot */}
+            <span
+              style={{
+                flexShrink: 0,
+                width: forExport ? 4 : 2,
+                height: forExport ? 4 : 2,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.18)",
+              }}
+            />
+
+            {/* Website URL */}
+            <p
+              style={{
+                fontSize: forExport ? 17 : 8,
+                fontWeight: 700,
+                color: accentColor,
+                flexShrink: 0,
+                letterSpacing: forExport ? "0.03em" : "0.01em",
+              }}
+            >
+              ChessOTB.club
+            </p>
+          </div>
         </div>
       </div>
     );
