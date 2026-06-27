@@ -94,16 +94,22 @@ function SettingsPanel({
   config,
   onApply,
   onClose,
+  opponentUsername = "",
+  onOpponentUsernameChange,
 }: {
   config: ClockConfig;
   onApply: (cfg: ClockConfig) => void;
   onClose: () => void;
+  opponentUsername?: string;
+  onOpponentUsernameChange?: (username: string) => void;
 }) {
   const [baseMin, setBaseMin] = useState(Math.round(config.baseMs / 60000));
   const [incSec, setIncSec] = useState(Math.round(config.incrementMs / 1000));
+  const [localOpponent, setLocalOpponent] = useState(opponentUsername);
 
   const apply = () => {
     onApply({ baseMs: baseMin * 60 * 1000, incrementMs: incSec * 1000 });
+    onOpponentUsernameChange?.(localOpponent.trim());
     onClose();
   };
 
@@ -152,6 +158,29 @@ function SettingsPanel({
             </div>
           </div>
         </div>
+        {/* Opponent username — only shown in standalone mode (no URL p2 param) */}
+        {onOpponentUsernameChange && (
+          <div className="mb-6">
+            <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Opponent (chess.com username)</p>
+            <input
+              type="text"
+              value={localOpponent}
+              onChange={(e) => setLocalOpponent(e.target.value)}
+              placeholder="e.g. gothamchess"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              className="w-full px-4 py-3 rounded-xl text-white text-sm font-medium placeholder-white/30 outline-none"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(34,197,94,0.25)",
+              }}
+            />
+            <p className="text-white/30 text-[10px] mt-1.5 leading-snug">
+              Their avatar and ratings will appear on the top half of the clock.
+            </p>
+          </div>
+        )}
         <button onClick={apply} className="w-full py-4 rounded-2xl text-white text-base font-bold" style={{ background: GREEN_ACTIVE }}>
           Apply & Reset
         </button>
@@ -184,8 +213,8 @@ function IdentityCard({
       style={{
         position: "absolute",
         ...(flipped
-          ? { top: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "top right" }
-          : { bottom: "1rem", right: "1rem" }),
+          ? { top: "1rem", left: "1rem", transform: "rotate(180deg)", transformOrigin: "top left" }
+          : { bottom: "1rem", left: "1rem" }),
         zIndex: 2,
         maxWidth: 260,
       }}
@@ -590,10 +619,35 @@ export default function ChessClock() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Standalone mode: opponent username entered via Settings panel ──────────
+  // Allows the top half (P2) to show an identity card when not in tournament mode.
+  const [standaloneOpponentUsername, setStandaloneOpponentUsername] = useState<string>("");
+  const [standaloneP2Identity, setStandaloneP2Identity] = useState<PlayerIdentity | null>(null);
+
+  useEffect(() => {
+    if (urlP2) return; // tournament mode handles P2 via URL params
+    const username = standaloneOpponentUsername.trim();
+    if (!username) { setStandaloneP2Identity(null); return; }
+    fetchFromChessCom(username)
+      .then((p) => {
+        setStandaloneP2Identity({
+          username,
+          avatarUrl: p.avatar ? (toProxiedAvatarUrl(p.avatar) ?? p.avatar) : null,
+          rapid: p.rapid > 0 ? p.rapid : undefined,
+          blitz: p.blitz > 0 ? p.blitz : undefined,
+          colorLabel: "Black",
+        });
+      })
+      .catch(() => {
+        // Show card with just the username if fetch fails
+        setStandaloneP2Identity({ username, avatarUrl: null, colorLabel: "Black" });
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [standaloneOpponentUsername]);
+
   // ── Standalone mode: auto-populate P1 (bottom half) from signed-in user ──
   // If the user is signed in and has a linked chess.com account, fetch their
   // profile and show the identity card on their half (bottom = P1).
-  // The top half (P2 / opponent) shows no card — it's the other device.
   const [authP1Identity, setAuthP1Identity] = useState<PlayerIdentity | null>(null);
 
   useEffect(() => {
@@ -654,7 +708,7 @@ export default function ChessClock() {
 
   const p2Identity: PlayerIdentity | undefined = urlP2
     ? { username: urlP2, avatarUrl: p2AvatarUrl, rapid: p2Ratings?.rapid, blitz: p2Ratings?.blitz, colorLabel: "Black" }
-    : undefined;
+    : standaloneP2Identity ?? undefined;
 
   // ── RegisterGameModal state ───────────────────────────────────────────────
   const [showRegisterGame, setShowRegisterGame] = useState(() => {
@@ -936,6 +990,10 @@ export default function ChessClock() {
           config={clockConfig}
           onApply={handleApplySettings}
           onClose={() => setShowSettings(false)}
+          {...(!urlP2 ? {
+            opponentUsername: standaloneOpponentUsername,
+            onOpponentUsernameChange: setStandaloneOpponentUsername,
+          } : {})}
         />
       )}
 
