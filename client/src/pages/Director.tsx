@@ -1829,6 +1829,14 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
               </div>
             ))}
           </div>
+          {/* Warning for brackets with very few players */}
+          {brackets.some(b => b.playerCount <= 1) && (
+            <p className={`text-xs font-medium px-3 py-2 rounded-lg ${
+              isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
+            }`}>
+              ⚠️ {brackets.filter(b => b.playerCount <= 1).length === 1 ? 'One bracket has' : 'Some brackets have'} 1 or fewer players. Consider adjusting thresholds.
+            </p>
+          )}
           {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
           <div className="flex items-center gap-2">
             <button
@@ -2091,8 +2099,10 @@ export default function Director() {
     if (!isBracketParent || !bracketGroupId) return;
     setBracketLoading(true);
     authFetch(`/api/brackets/${encodeURIComponent(bracketGroupId)}/brackets`)
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: { tournamentId: string; label: string; order: number; format: string; rounds: number; status: string; playerCount: number }[]) => setChildBrackets(data))
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { brackets?: { tournamentId: string; label: string; order: number; format: string; rounds: number; status: string; playerCount: number }[] } | null) => {
+        setChildBrackets(data?.brackets ?? []);
+      })
       .catch(() => setChildBrackets([]))
       .finally(() => setBracketLoading(false));
   }, [isBracketParent, bracketGroupId]);

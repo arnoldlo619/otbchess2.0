@@ -6638,3 +6638,25 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Announcements system — title, body, link, pin, edit, delete, timestamps, admin badge
 - [ ] Events V1 improvements — event types, capacity, public/private toggle, better cards
 - [ ] Club-associated tournament creation — pre-fill club info, show on club page and feed
+
+## Multi-Tournament Brackets Feature
+
+- [x] DB schema: bracket_groups table, parentBracketGroupId/bracketLabel/bracketOrder columns on user_tournaments
+- [x] Brackets API router (server/brackets.ts): CRUD, auto-sort, suggest, reassign, spawn, list endpoints
+- [x] Creation wizard: 4th mode card "Multi-Tournament Brackets" with 3-step flow (Details → Bracket Editor → Share)
+- [x] "Split by Rating" toggle in Quickstart and Schedule wizard paths
+- [x] Director dashboard: bracket selector strip on parent tournaments, back-to-parent nav + bracket label badge on child brackets
+- [x] BracketSortPanel: ELO distribution, auto-suggest, custom thresholds, bracket review cards, spawn action
+- [x] Player-facing bracket badge (amber pill) + "Back to main event" link in TournamentHeader
+- [x] Bracket metadata (bracketLabel, parentBracketGroupId, parentTournamentId) exposed from /api/tournament/:id/live-state
+- [x] Report page: bracket selector strip for parent tournaments (navigate to child bracket reports)
+- [x] Report page: "Back to main event reports" link for child bracket report pages
+- [x] Report page: bracket label badge in header for child brackets
+- [x] Instagram carousel works per-bracket (already scoped to current tournamentId)
+- [x] Live stream + QR tools per-bracket scoped (all use current tournamentId from URL params)
+- [x] Child brackets inherit parent's isPublic setting when spawned
+- [x] Fixed state JSON to use parentBracketGroupId (not bracketGroupId) for live-state endpoint compatibility
+- [x] Fixed Director.tsx bracket list fetch to correctly destructure data.brackets from API response
+- [x] Warning for brackets with 1 or fewer players in BracketSortPanel review step
+- [x] Unrated players (null ELO) assigned to lowest bracket by default
+- [x] Tests: bracketReportSelector.test.ts (12 tests passing)

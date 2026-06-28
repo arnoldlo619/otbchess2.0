@@ -462,6 +462,7 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
 
     // Get the parent tournament state for shared config
     let parentState: Record<string, any> = {};
+    let parentIsPublic = 0;
     if (group.parentTournamentId) {
       const [stateRow] = await db
         .select()
@@ -471,6 +472,13 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
       if (stateRow?.stateJson) {
         parentState = JSON.parse(stateRow.stateJson);
       }
+      // Inherit parent's public visibility setting
+      const [parentTournament] = await db
+        .select({ isPublic: userTournaments.isPublic })
+        .from(userTournaments)
+        .where(eq(userTournaments.tournamentId, group.parentTournamentId))
+        .limit(1);
+      if (parentTournament) parentIsPublic = parentTournament.isPublic;
     }
 
     const spawnedTournaments: { tournamentId: string; label: string; order: number }[] = [];
@@ -502,6 +510,7 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
         parentBracketGroupId: group.id,
         bracketLabel: bracket.label,
         bracketOrder: bracket.order,
+        isPublic: parentIsPublic,
         createdAt: new Date(),
       });
 
@@ -519,7 +528,8 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
           pairings: [],
           results: [],
           bracketLabel: bracket.label,
-          bracketGroupId: group.id,
+          parentBracketGroupId: group.id,
+          parentTournamentId: group.parentTournamentId ?? null,
         }),
         revision: 1,
         updatedAt: new Date(),

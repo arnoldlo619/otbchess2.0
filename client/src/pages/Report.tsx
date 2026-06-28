@@ -11,7 +11,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useChessAvatars, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { toast } from "sonner";
 
@@ -665,11 +665,38 @@ export default function ReportPage() {
 
   // Prefer server state (authoritative full roster) over localStorage
   const rawState = serverState ?? localState;
+  const [, navigate] = useLocation();
 
   const players = isDemo ? DEMO_TOURNAMENT.players : (rawState?.players ?? []);
   const rounds = isDemo ? DEMO_TOURNAMENT.roundData : (rawState?.rounds ?? []);
   const tournamentName = config?.name ?? rawState?.tournamentName ?? DEMO_TOURNAMENT.name;
   const tournamentDate = config?.date ?? "";
+
+  // ── Multi-Tournament Bracket context ────────────────────────────────────────
+  const isBracketParent = !!config?.isBracketParent;
+  const bracketGroupId = config?.bracketGroupId ?? null;
+  const bracketLabel = config?.bracketLabel ?? (rawState as any)?.bracketLabel ?? null;
+  const parentBracketGroupId = config?.parentBracketGroupId ?? (rawState as any)?.parentBracketGroupId ?? null;
+  // For child brackets, find the parent tournament to link back
+  const parentTournamentId = (() => {
+    if (!parentBracketGroupId) return null;
+    // Try to find parent from localStorage registry
+    const registry = JSON.parse(localStorage.getItem("otb-tournaments") ?? "[]") as { id: string; bracketGroupId?: string; isBracketParent?: boolean }[];
+    const parent = registry.find((t) => t.bracketGroupId === parentBracketGroupId && t.isBracketParent);
+    return parent?.id ?? null;
+  })();
+
+  type ChildBracket = { tournamentId: string; label: string; order: number; format: string; rounds: number; status: string; playerCount: number };
+  const [childBrackets, setChildBrackets] = useState<ChildBracket[]>([]);
+  useEffect(() => {
+    if (!isBracketParent || !bracketGroupId) return;
+    fetch(`/api/brackets/${encodeURIComponent(bracketGroupId)}/brackets`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { brackets?: ChildBracket[] } | null) => {
+        if (data?.brackets) setChildBrackets(data.brackets);
+      })
+      .catch(() => {});
+  }, [isBracketParent, bracketGroupId]);
 
   const performances = computeAllPerformances(players, rounds);
 
@@ -934,8 +961,8 @@ export default function ReportPage() {
           {/* Divider */}
           <div className={`w-px h-4 flex-shrink-0 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
 
-          {/* Title + tournament badge */}
-          <div className="flex items-baseline gap-2 min-w-0">
+          {/* Title + tournament badge + bracket label */}
+          <div className="flex items-center gap-2 min-w-0">
             <span
               className={`text-sm font-bold leading-none flex-shrink-0 ${
                 isDark ? "text-white/90" : "text-[#12372A]"
@@ -951,6 +978,13 @@ export default function ReportPage() {
             >
               {tournamentName}
             </span>
+            {bracketLabel && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md flex-shrink-0 ${
+                isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/25" : "bg-amber-50 text-amber-700 border border-amber-200"
+              }`}>
+                {bracketLabel}
+              </span>
+            )}
           </div>
 
           {/* Spacer */}
@@ -1016,6 +1050,75 @@ export default function ReportPage() {
           <TabBar activeTab={activeTab} onTabChange={setActiveTab} isDark={isDark} />
         </div>
       </header>
+
+      {/* ── Bracket selector strip (parent tournament) ── */}
+      {isBracketParent && childBrackets.length > 0 && (
+        <div className={`border-b ${
+          isDark ? "bg-[oklch(0.18_0.05_145/0.94)] border-white/06" : "bg-white/92 border-[#ADBC9F]/40"
+        }`}>
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
+                Rating Brackets
+              </span>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
+                {childBrackets.length}
+              </span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+              {/* Overview pill — current parent page */}
+              <button
+                className={`flex-shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 text-xs font-bold transition-all active:scale-95 ${
+                  isDark
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                    : "bg-amber-50 border-amber-400 text-amber-700 shadow-sm"
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                Overview
+              </button>
+              {/* One pill per child bracket */}
+              {childBrackets.map((b) => (
+                <button
+                  key={b.tournamentId}
+                  onClick={() => navigate(`/tournament/${b.tournamentId}/report`)}
+                  className={`flex-shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
+                    isDark
+                      ? "bg-white/06 border-white/12 text-white/80 hover:bg-white/10 hover:border-white/20"
+                      : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#f0f9f1] hover:border-[#436850] shadow-sm"
+                  }`}
+                >
+                  <span>{b.label}</span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    isDark ? "bg-white/10 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
+                  }`}>
+                    {b.playerCount}p
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Back to main event (child bracket) ── */}
+      {bracketLabel && parentTournamentId && (
+        <div className={`border-b ${
+          isDark ? "bg-[oklch(0.18_0.05_145/0.94)] border-white/06" : "bg-white/92 border-[#ADBC9F]/40"
+        }`}>
+          <div className="max-w-6xl mx-auto px-4 py-2">
+            <button
+              onClick={() => navigate(`/tournament/${parentTournamentId}/report`)}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-all active:scale-95 ${
+                isDark ? "text-amber-400 hover:bg-amber-500/10" : "text-amber-600 hover:bg-amber-50"
+              }`}
+            >
+              <ChevronLeft className="w-3 h-3" />
+              Back to main event reports
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Content ── */}
       <main className="max-w-6xl mx-auto px-4 py-6">
