@@ -4,12 +4,12 @@
  * Deep-link landing page for the "Join Club" QR code.
  * Flow:
  *   1. Load club info (name, avatar, accent) for a branded splash
- *   2. If user is NOT signed in → show AuthModal; on success → auto-join → redirect to club
- *   3. If user IS signed in → immediately join → redirect to club dashboard
+ *   2. If user is NOT signed in → show AuthModal; on success → auto-join → confetti → redirect
+ *   3. If user IS signed in → immediately join → confetti → redirect to club dashboard
  *   4. If user is already a member → skip join, go straight to club dashboard
  */
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import AuthModal from "@/components/AuthModal";
@@ -18,8 +18,29 @@ import { apiJoinClub } from "@/lib/clubsApi";
 import { joinClub, getClub, getClubBySlug } from "@/lib/clubRegistry";
 import { toast } from "sonner";
 import { Users, CheckCircle2, Loader2 } from "lucide-react";
+import confetti from "canvas-confetti";
 
 type Phase = "loading" | "auth" | "joining" | "done" | "error";
+
+/** Fire a multi-burst confetti celebration anchored to the center of the screen */
+function fireConfetti(accentHex: string) {
+  const count = 180;
+  const defaults = {
+    origin: { y: 0.6 },
+    colors: [accentHex, "#ffffff", "#a3e635", "#fbbf24", accentHex],
+    zIndex: 9999,
+  };
+
+  function fire(particleRatio: number, opts: confetti.Options) {
+    confetti({ ...defaults, ...opts, particleCount: Math.floor(count * particleRatio) });
+  }
+
+  fire(0.25, { spread: 26, startVelocity: 55 });
+  fire(0.2, { spread: 60 });
+  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+  fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+  fire(0.1, { spread: 120, startVelocity: 45 });
+}
 
 export default function JoinClub() {
   const { clubId } = useParams<{ clubId: string }>();
@@ -30,12 +51,12 @@ export default function JoinClub() {
   const [club, setClub] = useState<{ id: string; name: string; avatarUrl?: string | null; accentColor?: string | null } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [authOpen, setAuthOpen] = useState(false);
+  const confettiFired = useRef(false);
 
   // ── Resolve club info ──────────────────────────────────────────────────────
   useEffect(() => {
     async function resolveClub() {
       if (!clubId) { setPhase("error"); setErrorMsg("No club ID provided."); return; }
-      // Try local registry first (fast), then server
       let found = getClub(clubId) ?? getClubBySlug(clubId) ?? null;
       if (!found) {
         try {
@@ -45,7 +66,6 @@ export default function JoinClub() {
       }
       if (!found) { setPhase("error"); setErrorMsg("Club not found."); return; }
       setClub(found);
-      // Now decide next step
       if (user) {
         setPhase("joining");
       } else {
@@ -62,26 +82,37 @@ export default function JoinClub() {
     if (!club || !user) return;
     setPhase("joining");
     try {
-      await apiJoinClub(club.id, {      // server — idempotent (409 = already member)
+      await apiJoinClub(club.id, {
         displayName: user.displayName ?? "Player",
         chesscomUsername: user.chesscomUsername ?? null,
         lichessUsername: user.lichessUsername ?? null,
         avatarUrl: user.avatarUrl ?? null,
       });
-      joinClub(club.id, {               // local registry
+      joinClub(club.id, {
         userId: user.id,
         displayName: user.displayName ?? "Player",
         chesscomUsername: user.chesscomUsername ?? null,
         lichessUsername: user.lichessUsername ?? null,
         avatarUrl: user.avatarUrl ?? null,
-      }); // role is set internally by joinClub
-      toast.success(`Welcome to ${club.name}!`);
+      });
+
+      // Confetti + toast — fire once
+      if (!confettiFired.current) {
+        confettiFired.current = true;
+        const accent = club.accentColor ?? "#4CAF50";
+        fireConfetti(accent);
+        toast.success(`🎉 Welcome to ${club.name}!`, {
+          description: "You're now a member. Taking you to the club…",
+          duration: 3500,
+        });
+      }
+
       setPhase("done");
-      setTimeout(() => navigate(`/clubs/${club.id}/home`), 900);
+      setTimeout(() => navigate(`/clubs/${club.id}/home`), 2000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to join club.";
-      // 409 = already a member — treat as success
       if (msg.includes("409") || msg.toLowerCase().includes("already")) {
+        // Already a member — silent redirect
         setPhase("done");
         setTimeout(() => navigate(`/clubs/${club.id}/home`), 900);
       } else {
@@ -91,12 +122,10 @@ export default function JoinClub() {
     }
   }, [club, user, navigate]);
 
-  // Trigger join when phase becomes "joining"
   useEffect(() => {
     if (phase === "joining") doJoin();
   }, [phase, doJoin]);
 
-  // After auth modal succeeds, user state will update → trigger join
   useEffect(() => {
     if (user && phase === "auth") {
       setAuthOpen(false);
@@ -113,7 +142,10 @@ export default function JoinClub() {
       style={{ background: "oklch(0.18 0.06 145)" }}
     >
       {/* Gradient overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 40%, ${accent}22 0%, transparent 70%)` }} />
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 50% 40%, ${accent}22 0%, transparent 70%)` }}
+      />
 
       <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-sm">
         <NavLogo />
@@ -159,7 +191,8 @@ export default function JoinClub() {
 
                 {phase === "auth" && (
                   <div className="rounded-2xl border border-white/08 bg-white/04 px-4 py-3 text-sm text-white/50 leading-relaxed">
-                    Sign in or create a free account to join <span className="text-white/80 font-semibold">{club.name}</span>. You'll be added automatically.
+                    Sign in or create a free account to join{" "}
+                    <span className="text-white/80 font-semibold">{club.name}</span>. You'll be added automatically.
                   </div>
                 )}
 
@@ -171,9 +204,13 @@ export default function JoinClub() {
                 )}
 
                 {phase === "done" && (
-                  <div className="flex items-center justify-center gap-2 py-3 text-sm font-semibold" style={{ color: accent }}>
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span>Joined! Taking you to the club…</span>
+                  <div
+                    className="flex flex-col items-center gap-1.5 py-4"
+                    style={{ color: accent }}
+                  >
+                    <CheckCircle2 className="w-8 h-8" />
+                    <span className="text-sm font-bold">You're in!</span>
+                    <span className="text-xs text-white/40">Taking you to the club…</span>
                   </div>
                 )}
 
@@ -204,7 +241,7 @@ export default function JoinClub() {
           </div>
         )}
 
-        {/* Loading skeleton when club not yet resolved */}
+        {/* Loading skeleton */}
         {!club && phase === "loading" && (
           <div className="w-full rounded-3xl border border-white/08 bg-white/04 p-8 flex flex-col items-center gap-4 animate-pulse">
             <div className="w-16 h-16 rounded-2xl bg-white/08" />
@@ -214,17 +251,15 @@ export default function JoinClub() {
         )}
       </div>
 
-      {/* Auth modal — opens automatically for unauthenticated users */}
+      {/* Auth modal */}
       <AuthModal
         isOpen={authOpen}
         onClose={() => {
           setAuthOpen(false);
-          // If user closed without signing in, show the sign-in CTA
           if (!user) setPhase("auth");
         }}
         onSuccess={() => {
           setAuthOpen(false);
-          // user context will update → useEffect above triggers join
         }}
       />
     </div>
