@@ -68,7 +68,7 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type WizardMode = "select" | "quickstart" | "schedule" | "large_event";
+type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets";
 
 interface WizardData {
   name: string;
@@ -255,7 +255,7 @@ function HeroPanel({
 }: {
   step: number;
   isDark: boolean;
-  mode: "quickstart" | "schedule" | "large_event";
+  mode: "quickstart" | "schedule" | "large_event" | "brackets";
   onClose?: () => void;
 }) {
   const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
@@ -470,7 +470,7 @@ function ModeSelect({
   onClose,
 }: {
   isDark: boolean;
-  onSelect: (mode: "quickstart" | "schedule" | "large_event") => void;
+  onSelect: (mode: "quickstart" | "schedule" | "large_event" | "brackets") => void;
   onClose: () => void;
 }) {
   return (
@@ -524,7 +524,7 @@ function ModeSelect({
         </div>
 
         {/* Mode cards */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* Quickstart */}
           <button
             type="button"
@@ -709,6 +709,71 @@ function ModeSelect({
             <ArrowRight
               className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
               style={{ color: "rgba(255,255,255,0.25)" }}
+            />
+          </button>
+
+          {/* Multi-Tournament Brackets */}
+          <button
+            type="button"
+            onClick={() => onSelect("brackets")}
+            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            style={{
+              padding: "24px 24px",
+              background: "rgba(255,180,50,0.08)",
+              border: "2px solid rgba(255,180,50,0.30)",
+              backdropFilter: "blur(8px)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.16)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.50)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(255,180,50,0.20)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.30)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+            }}
+          >
+            {/* Badge */}
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+              style={{ background: "rgba(255,180,50,0.20)", color: "#FFB432" }}
+            >
+              New
+            </span>
+
+            {/* Icon */}
+            <div
+              className="flex w-14 h-14 rounded-2xl items-center justify-center"
+              style={{ background: "rgba(255,180,50,0.15)" }}
+            >
+              <BarChart3 className="w-6 h-6" style={{ color: "#FFB432" }} strokeWidth={1.8} />
+            </div>
+
+            <div>
+              <h3
+                className="text-xl font-bold text-white mb-1.5"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Rating Brackets
+              </h3>
+              <p className="text-white/55 text-base leading-relaxed">
+                Auto-split players by ELO into separate tournaments. U1000, U1500, 1500+ — each runs independently.
+              </p>
+            </div>
+
+            {/* Details */}
+            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,180,50,0.60)" }}>
+              <BarChart3 className="w-3.5 h-3.5" />
+              Multi-bracket management
+            </div>
+
+            {/* Arrow */}
+            <ArrowRight
+              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+              style={{ color: "rgba(255,180,50,0.45)" }}
             />
           </button>
         </div>
@@ -3208,6 +3273,413 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
   );
 }
 
+// ─── Brackets Step 1: Details ─────────────────────────────────────────────────
+
+function BracketsStepDetails({
+  data,
+  onChange,
+  isDark,
+}: {
+  data: WizardData;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <Label isDark={isDark}>Event Name</Label>
+      <TextInput
+        value={data.name}
+        onChange={(v) => onChange({ name: v })}
+        placeholder="e.g. Saturday Rated Brackets"
+        isDark={isDark}
+        icon={Trophy}
+      />
+
+      <Label isDark={isDark} hint="optional">Location</Label>
+      <TextInput
+        value={data.venue}
+        onChange={(v) => onChange({ venue: v })}
+        placeholder="e.g. SD Chess Club"
+        isDark={isDark}
+        icon={MapPin}
+      />
+
+      <Label isDark={isDark}>Date</Label>
+      <TextInput
+        value={data.date}
+        onChange={(v) => onChange({ date: v })}
+        placeholder="YYYY-MM-DD"
+        isDark={isDark}
+        type="date"
+        icon={Calendar}
+      />
+    </div>
+  );
+}
+
+// ─── Brackets Step 2: Bracket Editor ──────────────────────────────────────────
+
+interface BracketDef {
+  label: string;
+  minElo: number;
+  maxElo: number;
+}
+
+const BRACKET_PRESETS: { label: string; brackets: BracketDef[] }[] = [
+  {
+    label: "2 Brackets",
+    brackets: [
+      { label: "Under 1500", minElo: 0, maxElo: 1499 },
+      { label: "1500+", minElo: 1500, maxElo: 9999 },
+    ],
+  },
+  {
+    label: "3 Brackets",
+    brackets: [
+      { label: "Under 1000", minElo: 0, maxElo: 999 },
+      { label: "1000–1500", minElo: 1000, maxElo: 1499 },
+      { label: "1500+", minElo: 1500, maxElo: 9999 },
+    ],
+  },
+  {
+    label: "4 Brackets",
+    brackets: [
+      { label: "Under 800", minElo: 0, maxElo: 799 },
+      { label: "800–1200", minElo: 800, maxElo: 1199 },
+      { label: "1200–1600", minElo: 1200, maxElo: 1599 },
+      { label: "1600+", minElo: 1600, maxElo: 9999 },
+    ],
+  },
+];
+
+function BracketsStepEditor({
+  data,
+  onChange,
+  isDark,
+}: {
+  data: WizardData;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
+}) {
+  const [brackets, setBrackets] = useState<BracketDef[]>(
+    BRACKET_PRESETS[1].brackets // default: 3 brackets
+  );
+  const [selectedPreset, setSelectedPreset] = useState(1);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+
+  // Shared tournament settings for all brackets
+  const [format, setFormat] = useState<WizardData["format"]>(data.format);
+  const [rounds, setRounds] = useState(data.rounds);
+  const [timeBase, setTimeBase] = useState(data.timeBase);
+  const [timeIncrement, setTimeIncrement] = useState(data.timeIncrement);
+  const [ratingPlatform, setRatingPlatform] = useState<WizardData["ratingSystem"]>(data.ratingSystem);
+
+  // Sync back to parent data
+  useEffect(() => {
+    onChange({
+      format,
+      rounds,
+      timeBase,
+      timeIncrement,
+      ratingSystem: ratingPlatform,
+      ratingType: timeBase < 10 ? "blitz" : "rapid",
+    });
+  }, [format, rounds, timeBase, timeIncrement, ratingPlatform]);
+
+  const applyPreset = (idx: number) => {
+    setSelectedPreset(idx);
+    setBrackets(BRACKET_PRESETS[idx].brackets);
+    setEditingIdx(null);
+  };
+
+  const updateBracket = (idx: number, field: keyof BracketDef, value: string | number) => {
+    setBrackets((prev) => prev.map((b, i) => i === idx ? { ...b, [field]: value } : b));
+    setSelectedPreset(-1); // custom
+  };
+
+  const addBracket = () => {
+    const last = brackets[brackets.length - 1];
+    const newMin = last ? last.maxElo + 1 : 0;
+    setBrackets((prev) => [...prev, { label: `${newMin}+`, minElo: newMin, maxElo: 9999 }]);
+    setSelectedPreset(-1);
+  };
+
+  const removeBracket = (idx: number) => {
+    if (brackets.length <= 2) return;
+    setBrackets((prev) => prev.filter((_, i) => i !== idx));
+    setSelectedPreset(-1);
+  };
+
+  const formatOptions: { value: WizardData["format"]; label: string }[] = [
+    { value: "swiss", label: "Swiss" },
+    { value: "doubleswiss", label: "Double Swiss" },
+    { value: "roundrobin", label: "Round Robin" },
+    { value: "elimination", label: "Elimination" },
+  ];
+
+  const timePresets = [
+    { label: "3+2 Blitz", base: 3, inc: 2 },
+    { label: "5+0 Blitz", base: 5, inc: 0 },
+    { label: "5+3 Blitz", base: 5, inc: 3 },
+    { label: "10+0 Rapid", base: 10, inc: 0 },
+    { label: "10+5 Rapid", base: 10, inc: 5 },
+    { label: "15+10 Rapid", base: 15, inc: 10 },
+    { label: "30+0 Classical", base: 30, inc: 0 },
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Bracket Presets */}
+      <div>
+        <Label isDark={isDark}>Number of Brackets</Label>
+        <div className="flex gap-2 mt-3">
+          {BRACKET_PRESETS.map((p, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => applyPreset(i)}
+              className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+              style={{
+                background: selectedPreset === i ? T.green : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                color: selectedPreset === i ? "#FFF" : isDark ? T.dSub : T.lSub,
+                border: `2px solid ${selectedPreset === i ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`,
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => { setSelectedPreset(-1); }}
+            className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+            style={{
+              background: selectedPreset === -1 ? "rgba(255,180,50,0.15)" : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+              color: selectedPreset === -1 ? "#FFB432" : isDark ? T.dSub : T.lSub,
+              border: `2px solid ${selectedPreset === -1 ? "rgba(255,180,50,0.40)" : isDark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`,
+            }}
+          >
+            Custom
+          </button>
+        </div>
+      </div>
+
+      {/* Bracket Definitions */}
+      <div>
+        <Label isDark={isDark}>Bracket Thresholds</Label>
+        <div className="space-y-3 mt-3">
+          {brackets.map((b, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-2xl transition-all duration-200"
+              style={{
+                padding: "14px 16px",
+                background: isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB",
+                border: `2px solid ${editingIdx === i ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}`,
+              }}
+            >
+              {/* Order badge */}
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                style={{ background: "rgba(255,180,50,0.15)", color: "#FFB432" }}
+              >
+                {i + 1}
+              </div>
+
+              {/* Label */}
+              {editingIdx === i ? (
+                <input
+                  type="text"
+                  value={b.label}
+                  onChange={(e) => updateBracket(i, "label", e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-sm font-semibold"
+                  style={{ color: isDark ? T.dText : T.lText }}
+                  autoFocus
+                />
+              ) : (
+                <span
+                  className="flex-1 text-sm font-semibold cursor-pointer"
+                  style={{ color: isDark ? T.dText : T.lText }}
+                  onClick={() => setEditingIdx(i)}
+                >
+                  {b.label}
+                </span>
+              )}
+
+              {/* ELO range */}
+              {editingIdx === i ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={b.minElo}
+                    onChange={(e) => updateBracket(i, "minElo", parseInt(e.target.value) || 0)}
+                    className="w-16 text-center text-xs rounded-lg py-1.5 bg-transparent outline-none"
+                    style={{ border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB"}`, color: isDark ? T.dText : T.lText }}
+                  />
+                  <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>–</span>
+                  <input
+                    type="number"
+                    value={b.maxElo === 9999 ? "" : b.maxElo}
+                    placeholder="∞"
+                    onChange={(e) => updateBracket(i, "maxElo", parseInt(e.target.value) || 9999)}
+                    className="w-16 text-center text-xs rounded-lg py-1.5 bg-transparent outline-none"
+                    style={{ border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB"}`, color: isDark ? T.dText : T.lText }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditingIdx(null)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: T.green, color: "#FFF" }}
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <span
+                  className="text-xs font-medium cursor-pointer"
+                  style={{ color: isDark ? T.dMuted : T.lMuted }}
+                  onClick={() => setEditingIdx(i)}
+                >
+                  {b.minElo}–{b.maxElo === 9999 ? "∞" : b.maxElo}
+                </span>
+              )}
+
+              {/* Remove */}
+              {brackets.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => removeBracket(i)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ color: isDark ? "rgba(255,255,255,0.35)" : "#9CA3AF" }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+
+          {/* Add bracket */}
+          <button
+            type="button"
+            onClick={addBracket}
+            className="w-full py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
+            style={{
+              border: `2px dashed ${isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"}`,
+              color: isDark ? T.dSub : T.lSub,
+            }}
+          >
+            + Add Bracket
+          </button>
+        </div>
+      </div>
+
+      {/* Shared Settings */}
+      <div>
+        <Label isDark={isDark}>Shared Tournament Settings</Label>
+        <p className="text-xs mt-1 mb-3" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          Applied to all brackets. Each bracket runs as its own independent tournament.
+        </p>
+
+        {/* Format */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {formatOptions.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFormat(f.value)}
+              className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
+              style={{
+                background: format === f.value ? T.green : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                color: format === f.value ? "#FFF" : isDark ? T.dSub : T.lSub,
+                border: `2px solid ${format === f.value ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}`,
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Rounds */}
+        <div className="flex items-center justify-between mb-4 rounded-xl py-3 px-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB", border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}` }}>
+          <span className="text-sm font-medium" style={{ color: isDark ? T.dText : T.lText }}>Rounds</span>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setRounds(Math.max(1, rounds - 1))} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB", color: isDark ? T.dText : T.lText }}>−</button>
+            <span className="text-sm font-bold w-6 text-center" style={{ color: isDark ? T.dText : T.lText }}>{rounds}</span>
+            <button type="button" onClick={() => setRounds(Math.min(15, rounds + 1))} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB", color: isDark ? T.dText : T.lText }}>+</button>
+          </div>
+        </div>
+
+        {/* Time Control */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {timePresets.map((tp) => (
+            <button
+              key={tp.label}
+              type="button"
+              onClick={() => { setTimeBase(tp.base); setTimeIncrement(tp.inc); }}
+              className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
+              style={{
+                background: timeBase === tp.base && timeIncrement === tp.inc ? T.green : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                color: timeBase === tp.base && timeIncrement === tp.inc ? "#FFF" : isDark ? T.dSub : T.lSub,
+                border: `2px solid ${timeBase === tp.base && timeIncrement === tp.inc ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}`,
+              }}
+            >
+              {tp.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Rating Platform */}
+        <div className="flex items-center justify-between rounded-xl py-3 px-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB", border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}` }}>
+          <span className="text-sm font-medium" style={{ color: isDark ? T.dText : T.lText }}>Rating Platform</span>
+          <div className="flex gap-1.5">
+            {(["chess.com", "lichess"] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setRatingPlatform(p)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: ratingPlatform === p ? T.green : "transparent",
+                  color: ratingPlatform === p ? "#FFF" : isDark ? T.dSub : T.lSub,
+                }}
+              >
+                {p === "chess.com" ? "Chess.com" : "Lichess"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div
+        className="rounded-2xl p-4"
+        style={{
+          background: isDark ? "rgba(255,180,50,0.06)" : "rgba(255,180,50,0.08)",
+          border: `1px solid rgba(255,180,50,0.20)`,
+        }}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <BarChart3 className="w-4 h-4" style={{ color: "#FFB432" }} />
+          <span className="text-sm font-bold" style={{ color: "#FFB432" }}>Bracket Summary</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {brackets.map((b, i) => (
+            <span
+              key={i}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background: "rgba(255,180,50,0.15)", color: "#FFB432" }}
+            >
+              {b.label}
+            </span>
+          ))}
+        </div>
+        <p className="text-xs mt-2" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          {brackets.length} brackets · {format} · {rounds} rounds · {timeBase}+{timeIncrement} · {ratingPlatform === "chess.com" ? "Chess.com" : "Lichess"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Wizard ──────────────────────────────────────────────────────────────
 
 interface TournamentWizardProps {
@@ -3257,7 +3729,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   }, [open, initialClubId, initialClubName]);
 
   // When entering quickstart mode, auto-fill today's date
-  const handleSelectMode = (m: "quickstart" | "schedule" | "large_event") => {
+  const handleSelectMode = (m: "quickstart" | "schedule" | "large_event" | "brackets") => {
     if (m === "quickstart") {
       setData((d) => ({ ...d, date: todayIso() }));
     }
@@ -3278,6 +3750,13 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       setDirection(1);
       return;
     }
+    if (m === "brackets") {
+      setData((d) => ({ ...d, date: todayIso() }));
+      setMode("brackets");
+      setStep(0);
+      setDirection(1);
+      return;
+    }
     setMode(m);
     setStep(0);
     setDirection(1);
@@ -3288,12 +3767,17 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
   const scheduleStepCount = SCHEDULE_STEPS.length; // 4
   const quickstartStepCount = 2; // form + share
+  const bracketsStepCount = 3; // details + bracket editor + share
 
-  const totalSteps = mode === "quickstart" ? quickstartStepCount : scheduleStepCount;
+  const totalSteps = mode === "brackets" ? bracketsStepCount : mode === "quickstart" ? quickstartStepCount : scheduleStepCount;
 
   const canAdvance =
     mode === "select"
       ? false
+      : mode === "brackets"
+      ? step === 0
+        ? data.name.trim().length > 0
+        : true
       : mode === "quickstart"
       ? step === 0
         ? data.name.trim().length > 0
@@ -3372,7 +3856,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       // QR code is valid even before the director clicks "Go to Tournament".
       const reachingShareStep =
         (mode === "quickstart" && next === 1) ||
-        (mode === "schedule" && next === SCHEDULE_STEPS.length - 1);
+        (mode === "schedule" && next === SCHEDULE_STEPS.length - 1) ||
+        (mode === "brackets" && next === 2);
       if (reachingShareStep) {
         registerTournamentNow();
         setTimeout(() => fireConfetti(130), 300);
@@ -3438,26 +3923,33 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   // ── Determine which step component to render ──────────────────────────────
   const isShareStep =
     (mode === "quickstart" && step === 1) ||
-    (mode === "schedule" && step === SCHEDULE_STEPS.length - 1);
+    (mode === "schedule" && step === SCHEDULE_STEPS.length - 1) ||
+    (mode === "brackets" && step === 2);
 
   const heroStep = mode === "schedule" ? step : 0;
 
   const stepLabel =
-    mode === "quickstart"
+    mode === "brackets"
+      ? ["Details", "Brackets", "Share"][step]
+      : mode === "quickstart"
       ? step === 0
         ? "Quickstart"
         : "Share"
       : SCHEDULE_STEPS[step].label;
 
   const stepEyebrow =
-    mode === "quickstart"
+    mode === "brackets"
+      ? `Step ${step + 1} of 3`
+      : mode === "quickstart"
       ? step === 0
         ? "Quickstart"
         : ""
       : SCHEDULE_STEPS[step].hero.eyebrow;
 
   const stepTitle =
-    mode === "quickstart"
+    mode === "brackets"
+      ? ["Name your event", "Define brackets", ""][step]
+      : mode === "quickstart"
       ? step === 0
         ? "Start in\nseconds"
         : ""
@@ -3564,6 +4056,11 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             {mode === "schedule" && step === 1 && <StepFormat data={data} onChange={patch} isDark={isDark} />}
             {mode === "schedule" && step === 2 && <StepTime data={data} onChange={patch} isDark={isDark} />}
             {mode === "schedule" && step === 3 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
+
+            {/* Brackets path */}
+            {mode === "brackets" && step === 0 && <BracketsStepDetails data={data} onChange={patch} isDark={isDark} />}
+            {mode === "brackets" && step === 1 && <BracketsStepEditor data={data} onChange={patch} isDark={isDark} />}
+            {mode === "brackets" && step === 2 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
           </div>
         </div>
 
