@@ -507,7 +507,7 @@ function ModeSelect({
       </button>
 
       {/* Content */}
-      <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 py-8 sm:py-12 flex flex-col items-center gap-6 sm:gap-8 min-h-full justify-center">
+      <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 pt-16 pb-12 sm:pt-20 sm:pb-16 flex flex-col items-center gap-6 sm:gap-8">
         {/* Logo */}
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
