@@ -105,14 +105,42 @@ export default function JoinClub() {
           navigator.vibrate([40, 60, 80]);
         }
         fireConfetti(accent);
-        toast.success(`🎉 Welcome to ${club.name}!`, {
-          description: "You're now a member. Taking you to the club…",
-          duration: 4500,
-          action: {
-            label: "View Upcoming Tournaments",
-            onClick: () => navigate(`/clubs/${club.id}/home?tab=events`),
-          },
-        });
+        toast.custom(
+          (t) => (
+            <div
+              className="flex items-center gap-3 w-full max-w-sm rounded-2xl border border-white/10 shadow-xl px-4 py-3"
+              style={{ background: "oklch(0.22 0.06 145)", borderColor: `${accent}44` }}
+            >
+              {/* Club avatar */}
+              <div
+                className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center"
+                style={{ background: `${accent}22`, border: `1.5px solid ${accent}55` }}
+              >
+                {club.avatarUrl ? (
+                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Users className="w-5 h-5" style={{ color: accent }} />
+                )}
+              </div>
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white leading-tight">
+                  🎉 Welcome to {club.name}!
+                </p>
+                <p className="text-xs text-white/50 mt-0.5">You're now a member.</p>
+              </div>
+              {/* Action */}
+              <button
+                onClick={() => { toast.dismiss(t); navigate(`/clubs/${club.id}/home?tab=events`); }}
+                className="flex-shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all hover:opacity-90 active:scale-95"
+                style={{ background: accent, color: "#fff" }}
+              >
+                Events
+              </button>
+            </div>
+          ),
+          { duration: 4500 }
+        );
       }
 
       setPhase("done");
