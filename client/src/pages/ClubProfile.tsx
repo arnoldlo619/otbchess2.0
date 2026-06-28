@@ -1691,15 +1691,7 @@ export default function ClubProfile() {
               );
             })()}
 
-            {/* Quick Stats bar */}
-            <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-              <StatPill icon={<Users size={16} />} value={club.memberCount} label="Members" isDark={isDark} />
-              <StatPill icon={<Trophy size={16} />} value={club.tournamentCount} label="Tournaments" isDark={isDark} />
-              {club.eventCount != null && club.eventCount > 0 && (
-                <StatPill icon={<Calendar size={16} />} value={club.eventCount} label="Events" isDark={isDark} />
-              )}
-              <StatPill icon={<Star size={16} />} value={formatYear(club.foundedAt)} label="Founded" isDark={isDark} />
-            </div>
+
 
             {/* Club Description & Details (Feed tab only) */}
             {/* Description */}
