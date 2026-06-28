@@ -510,9 +510,9 @@ function ModeSelect({
       <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 pt-16 pb-12 sm:pt-20 sm:pb-16 flex flex-col items-center gap-6 sm:gap-8">
         {/* Logo */}
         <img
-          src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
-          alt="OTB Chess"
-          style={{ height: 32, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
+          src="/manus-storage/otbchesslogo_brilliant_v2_04cf93cb.webp"
+          alt="OTB!!"
+          style={{ height: 56, width: "auto", objectFit: "contain" }}
         />
 
         {/* Headline */}
