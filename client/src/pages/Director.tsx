@@ -1823,6 +1823,22 @@ export default function Director() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
+  // ── Multi-Tournament Brackets: parent detection + child bracket list ──────
+  const isBracketParent = !!tournamentConfig?.isBracketParent;
+  const bracketGroupId = tournamentConfig?.bracketGroupId ?? null;
+  const [childBrackets, setChildBrackets] = useState<{ tournamentId: string; label: string; order: number; format: string; rounds: number; status: string; playerCount: number }[]>([]);
+  const [bracketLoading, setBracketLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isBracketParent || !bracketGroupId) return;
+    setBracketLoading(true);
+    authFetch(`/api/brackets/${encodeURIComponent(bracketGroupId)}/brackets`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: { tournamentId: string; label: string; order: number; format: string; rounds: number; status: string; playerCount: number }[]) => setChildBrackets(data))
+      .catch(() => setChildBrackets([]))
+      .finally(() => setBracketLoading(false));
+  }, [isBracketParent, bracketGroupId]);
+
   // ── Check-in roster state ─────────────────────────────────────────────────
   const [rosterSearch, setRosterSearch] = useState("");
   const [walkInName, setWalkInName] = useState("");
@@ -2577,6 +2593,36 @@ export default function Director() {
                     </span>
                   )}
                 </div>
+                {/* Bracket child: back-to-parent link + bracket label badge */}
+                {tournamentConfig?.bracketLabel && tournamentConfig?.parentBracketGroupId && (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <button
+                      onClick={() => {
+                        // Navigate to the parent bracket group's tournament manage page
+                        const parentConfig = Object.entries(localStorage).find(([k, v]) => {
+                          try { const c = JSON.parse(v); return c.bracketGroupId === tournamentConfig.parentBracketGroupId && c.isBracketParent; } catch { return false; }
+                        });
+                        if (parentConfig) {
+                          const parentId = JSON.parse(parentConfig[1]).tournamentId || parentConfig[0].replace('otb-tournament-', '');
+                          navigate(`/tournament/${parentId}/manage`);
+                        } else {
+                          window.history.back();
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg transition-all active:scale-95 ${
+                        isDark ? "text-amber-400 hover:bg-amber-500/10" : "text-amber-600 hover:bg-amber-50"
+                      }`}
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                      All Brackets
+                    </button>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                      isDark ? "bg-amber-500/15 text-amber-300 border border-amber-500/25" : "bg-amber-50 text-amber-700 border border-amber-200"
+                    }`}>
+                      {tournamentConfig.bracketLabel}
+                    </span>
+                  </div>
+                )}
                 {/* Command Center — operational status strip */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                   {/* Format + Time */}
@@ -2657,6 +2703,58 @@ export default function Director() {
                   tournamentId={state.tournamentId}
                   onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
                 />
+              </div>
+            )}
+
+            {/* ── Bracket Selector Strip (bracket-parent only) ──────────────── */}
+            {isBracketParent && childBrackets.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
+                    Rating Brackets
+                  </span>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
+                    {childBrackets.length}
+                  </span>
+                </div>
+                <div className={`flex gap-2 overflow-x-auto scrollbar-none pb-1`}>
+                  {/* Overview pill — stays on this parent page */}
+                  <button
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-95 ${
+                      isDark
+                        ? "bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                        : "bg-amber-50 border-amber-400 text-amber-700 shadow-sm"
+                    }`}
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    Overview
+                  </button>
+                  {/* One pill per child bracket */}
+                  {childBrackets.map((b) => (
+                    <button
+                      key={b.tournamentId}
+                      onClick={() => navigate(`/tournament/${b.tournamentId}/manage`)}
+                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all active:scale-95 ${
+                        isDark
+                          ? "bg-white/06 border-white/12 text-white/80 hover:bg-white/10 hover:border-white/20"
+                          : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#f0f9f1] hover:border-[#436850] shadow-sm"
+                      }`}
+                    >
+                      <span>{b.label}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                        isDark ? "bg-white/10 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
+                      }`}>
+                        {b.playerCount}p
+                      </span>
+                      {b.status === "active" && (
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
