@@ -1637,8 +1637,12 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
   // Derive live player counts from overrides
   const liveCounts = brackets.map((_, i) => players.filter(p => getPlayerBracketIndex(p) === i).length);
 
-  // Players sorted by ELO desc for the reassignment list
+  // Players sorted by ELO desc for the kanban board
   const sortedPlayers = [...players].sort((a, b) => b.elo - a.elo);
+
+  // Drag-and-drop state
+  const [dragPlayerId, setDragPlayerId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<number | null>(null);
 
   const enterReview = (newBrackets: typeof brackets) => {
     setBrackets(newBrackets);
@@ -1827,154 +1831,193 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
         </div>
       )}
 
-      {/* Step: Review — bracket summary + per-player reassignment */}
+      {/* Step: Review — drag-and-drop kanban board */}
       {step === 'review' && (
         <div className="space-y-3">
-          {/* Bracket summary cards */}
-          <div className="space-y-2">
-            {brackets.map((b, i) => (
-              <div key={i} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
-                isDark ? "bg-white/04 border-white/08" : "bg-white border-[#ADBC9F]/50"
-              }`}>
-                <div className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${
-                    isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"
-                  }`}>{i + 1}</span>
-                  <div>
-                    <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>{b.label}</span>
-                    <span className={`block text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/60"}`}>
-                      {b.minElo === 0 ? '0' : b.minElo}–{b.maxElo === 9999 ? '∞' : b.maxElo} ELO
+          {/* Instruction hint */}
+          <p className={`text-[11px] text-center font-medium ${
+            isDark ? "text-white/35" : "text-[#436850]/55"
+          }`}>
+            Drag players between columns to reassign • {Object.keys(playerOverrides).length > 0 && (
+              <span className={isDark ? "text-amber-400" : "text-amber-600"}>
+                {Object.keys(playerOverrides).length} manual override{Object.keys(playerOverrides).length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </p>
+
+          {/* Kanban columns */}
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: `repeat(${Math.min(brackets.length, 4)}, minmax(0, 1fr))` }}
+          >
+            {brackets.map((b, colIdx) => {
+              const colPlayers = sortedPlayers.filter(p => getPlayerBracketIndex(p) === colIdx);
+              const isDragTarget = dragOverCol === colIdx;
+              const hasWarning = liveCounts[colIdx] <= 1;
+              return (
+                <div
+                  key={colIdx}
+                  onDragOver={e => { e.preventDefault(); setDragOverCol(colIdx); }}
+                  onDragLeave={e => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCol(null);
+                  }}
+                  onDrop={e => {
+                    e.preventDefault();
+                    if (dragPlayerId !== null) {
+                      setPlayerOverrides(prev => ({ ...prev, [dragPlayerId]: colIdx }));
+                    }
+                    setDragPlayerId(null);
+                    setDragOverCol(null);
+                  }}
+                  className={`flex flex-col rounded-xl border transition-all duration-150 ${
+                    isDragTarget
+                      ? isDark
+                        ? "border-amber-400/60 bg-amber-500/10 shadow-lg shadow-amber-500/10"
+                        : "border-amber-400 bg-amber-50/80 shadow-lg shadow-amber-200/60"
+                      : hasWarning
+                      ? isDark
+                        ? "border-red-500/30 bg-red-500/05"
+                        : "border-red-300/60 bg-red-50/40"
+                      : isDark
+                      ? "border-white/08 bg-white/03"
+                      : "border-[#ADBC9F]/50 bg-white/60"
+                  }`}
+                >
+                  {/* Column header */}
+                  <div className={`px-3 py-2.5 border-b flex items-center justify-between ${
+                    isDark ? "border-white/06" : "border-[#ADBC9F]/30"
+                  }`}>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-black flex-shrink-0 ${
+                          isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
+                        }`}>{colIdx + 1}</span>
+                        <span className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
+                          {b.label}
+                        </span>
+                      </div>
+                      <p className={`text-[9px] mt-0.5 pl-6.5 ${
+                        isDark ? "text-white/25" : "text-[#436850]/50"
+                      }`}>
+                        {b.minElo === 0 ? '0' : b.minElo}–{b.maxElo === 9999 ? '∞' : b.maxElo}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${
+                      hasWarning
+                        ? isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"
+                        : isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
+                    }`}>
+                      {liveCounts[colIdx]}
                     </span>
                   </div>
-                </div>
-                <span className={`text-sm font-bold px-2.5 py-1 rounded-lg ${
-                  liveCounts[i] <= 1
-                    ? isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"
-                    : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
-                }`}>
-                  {liveCounts[i]} player{liveCounts[i] !== 1 ? 's' : ''}
-                </span>
-              </div>
-            ))}
-          </div>
 
-          {/* Player reassignment section */}
-          <div className={`rounded-xl border overflow-hidden ${
-            isDark ? "border-white/08" : "border-[#ADBC9F]/40"
-          }`}>
-            {/* Toggle header */}
-            <button
-              onClick={() => setShowPlayerList(v => !v)}
-              className={`w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold transition-colors ${
-                isDark ? "bg-white/04 hover:bg-white/06 text-white/60" : "bg-[#ADBC9F]/20 hover:bg-[#ADBC9F]/30 text-[#436850]"
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                <UserPlus className="w-3.5 h-3.5" />
-                Manually reassign players
-                {Object.keys(playerOverrides).length > 0 && (
-                  <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
-                  }`}>
-                    {Object.keys(playerOverrides).length} override{Object.keys(playerOverrides).length !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </span>
-              <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/50"}`}>
-                {showPlayerList ? '▲ collapse' : '▼ expand'}
-              </span>
-            </button>
-
-            {/* Player list with per-player bracket dropdown */}
-            {showPlayerList && (
-              <div className={`divide-y ${
-                isDark ? "divide-white/06" : "divide-[#ADBC9F]/30"
-              }`}>
-                {sortedPlayers.map(p => {
-                  const currentIdx = getPlayerBracketIndex(p);
-                  const isOverridden = playerOverrides[p.id] !== undefined;
-                  return (
-                    <div key={p.id} className={`flex items-center justify-between px-4 py-2.5 ${
-                      isDark ? "bg-white/02" : "bg-white"
-                    }`}>
-                      {/* Player info */}
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
-                          isDark ? "bg-white/08 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
-                        }`}>
-                          {p.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
-                            {p.name}
-                            {isOverridden && (
-                              <span className={`ml-1.5 text-[9px] font-bold px-1 py-0.5 rounded ${
-                                isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
-                              }`}>moved</span>
-                            )}
-                          </p>
-                          <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/60"}`}>
-                            {p.elo > 0 ? `${p.elo} ELO` : 'Unrated'}
-                          </p>
-                        </div>
-                      </div>
-                      {/* Bracket selector dropdown */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <select
-                          value={currentIdx}
-                          onChange={e => {
-                            const newIdx = parseInt(e.target.value);
-                            setPlayerOverrides(prev => ({ ...prev, [p.id]: newIdx }));
+                  {/* Player cards */}
+                  <div className="flex-1 p-2 space-y-1.5 min-h-[80px]">
+                    {colPlayers.map(p => {
+                      const isOverridden = playerOverrides[p.id] !== undefined;
+                      const isDragging = dragPlayerId === p.id;
+                      return (
+                        <div
+                          key={p.id}
+                          draggable
+                          onDragStart={e => {
+                            setDragPlayerId(p.id);
+                            e.dataTransfer.effectAllowed = 'move';
                           }}
-                          className={`text-xs font-semibold rounded-lg px-2 py-1.5 border appearance-none cursor-pointer transition-colors ${
+                          onDragEnd={() => { setDragPlayerId(null); setDragOverCol(null); }}
+                          className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-grab active:cursor-grabbing select-none transition-all ${
+                            isDragging
+                              ? "opacity-40 scale-95"
+                              : "opacity-100"
+                          } ${
                             isOverridden
                               ? isDark
-                                ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
-                                : "bg-amber-50 border-amber-300 text-amber-700"
+                                ? "bg-amber-500/12 border-amber-500/30"
+                                : "bg-amber-50 border-amber-200"
                               : isDark
-                              ? "bg-white/06 border-white/10 text-white/70"
-                              : "bg-white border-[#ADBC9F] text-[#12372A]"
+                              ? "bg-white/05 border-white/08 hover:bg-white/08"
+                              : "bg-white border-[#ADBC9F]/40 hover:bg-[#ADBC9F]/10"
                           }`}
                         >
-                          {brackets.map((b, i) => (
-                            <option key={i} value={i}>{b.label}</option>
-                          ))}
-                        </select>
-                        {isOverridden && (
-                          <button
-                            onClick={() => setPlayerOverrides(prev => {
-                              const next = { ...prev };
-                              delete next[p.id];
-                              return next;
-                            })}
-                            title="Reset to auto-assignment"
-                            className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
-                              isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-[#436850]/40 hover:text-[#436850] hover:bg-[#ADBC9F]/30"
-                            }`}
-                          >
-                            ×
-                          </button>
-                        )}
+                          {/* Drag handle dots */}
+                          <div className={`flex flex-col gap-[3px] flex-shrink-0 ${
+                            isDark ? "text-white/20" : "text-[#436850]/30"
+                          }`}>
+                            <div className="flex gap-[3px]">
+                              <div className="w-[3px] h-[3px] rounded-full bg-current" />
+                              <div className="w-[3px] h-[3px] rounded-full bg-current" />
+                            </div>
+                            <div className="flex gap-[3px]">
+                              <div className="w-[3px] h-[3px] rounded-full bg-current" />
+                              <div className="w-[3px] h-[3px] rounded-full bg-current" />
+                            </div>
+                            <div className="flex gap-[3px]">
+                              <div className="w-[3px] h-[3px] rounded-full bg-current" />
+                              <div className="w-[3px] h-[3px] rounded-full bg-current" />
+                            </div>
+                          </div>
+                          {/* Avatar */}
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black flex-shrink-0 ${
+                            isDark ? "bg-white/10 text-white/70" : "bg-[#436850]/15 text-[#436850]"
+                          }`}>
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
+                          {/* Name + ELO */}
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-[11px] font-semibold truncate leading-tight ${
+                              isDark ? "text-white" : "text-[#12372A]"
+                            }`}>{p.name}</p>
+                            <p className={`text-[9px] leading-tight ${
+                              isDark ? "text-white/30" : "text-[#436850]/55"
+                            }`}>{p.elo > 0 ? `${p.elo}` : 'Unrated'}</p>
+                          </div>
+                          {/* Moved indicator + reset */}
+                          {isOverridden && (
+                            <button
+                              onClick={() => setPlayerOverrides(prev => {
+                                const next = { ...prev }; delete next[p.id]; return next;
+                              })}
+                              title="Reset to auto-assignment"
+                              className={`w-4 h-4 rounded flex items-center justify-center text-[10px] flex-shrink-0 transition-colors ${
+                                isDark
+                                  ? "text-amber-400/60 hover:text-amber-400 hover:bg-amber-500/15"
+                                  : "text-amber-600/60 hover:text-amber-700 hover:bg-amber-100"
+                              }`}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {/* Drop zone hint when column is empty */}
+                    {colPlayers.length === 0 && (
+                      <div className={`flex items-center justify-center h-12 rounded-lg border-2 border-dashed text-[10px] font-medium ${
+                        isDragTarget
+                          ? isDark ? "border-amber-400/50 text-amber-400/70" : "border-amber-400 text-amber-600"
+                          : isDark ? "border-white/10 text-white/20" : "border-[#ADBC9F]/40 text-[#436850]/30"
+                      }`}>
+                        {isDragTarget ? 'Drop here' : 'Empty'}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Warning for brackets with very few players */}
           {liveCounts.some(c => c <= 1) && (
             <p className={`text-xs font-medium px-3 py-2 rounded-lg ${
-              isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
+              isDark ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-red-50 text-red-600 border border-red-200"
             }`}>
-              ⚠️ {liveCounts.filter(c => c <= 1).length === 1 ? 'One bracket has' : 'Some brackets have'} 1 or fewer players. Consider reassigning.
+              ⚠️ {liveCounts.filter(c => c <= 1).length === 1 ? 'One bracket has' : 'Some brackets have'} 1 or fewer players — drag players to balance.
             </p>
           )}
           {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setStep('idle'); setBrackets([]); setPlayerOverrides({}); }}
+              onClick={() => { setStep('idle'); setBrackets([]); setPlayerOverrides({}); setDragPlayerId(null); setDragOverCol(null); }}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 isDark ? "bg-white/06 text-white/60 hover:bg-white/10" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]/60"
               }`}
