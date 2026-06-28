@@ -507,7 +507,7 @@ function ModeSelect({
       </button>
 
       {/* Content */}
-      <div className="relative w-full max-w-4xl mx-auto px-6 sm:px-10 py-8 sm:py-12 flex flex-col items-center gap-6 sm:gap-8 min-h-full justify-center">
+      <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 py-8 sm:py-12 flex flex-col items-center gap-6 sm:gap-8 min-h-full justify-center">
         {/* Logo */}
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
@@ -526,258 +526,277 @@ function ModeSelect({
           <p className="text-white/50 text-base">How would you like to get started?</p>
         </div>
 
-        {/* Mode cards */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Mode cards — premium 2×2 grid on desktop */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 lg:max-w-5xl">
           {/* Quickstart */}
           <button
             type="button"
             onClick={() => onSelect("quickstart")}
-            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
             style={{
-              padding: "24px 24px",
-              background: "rgba(77,105,64,0.25)",
-              border: "2px solid rgba(77,105,64,0.55)",
-              backdropFilter: "blur(8px)",
+              padding: "32px 32px 40px",
+              background: "rgba(77,105,64,0.22)",
+              border: "2px solid rgba(77,105,64,0.50)",
+              backdropFilter: "blur(12px)",
+              minHeight: "280px",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.40)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.38)";
               (e.currentTarget as HTMLButtonElement).style.borderColor = "#436850";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(77,105,64,0.35)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(77,105,64,0.30), 0 0 0 1px rgba(77,105,64,0.15)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.25)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(77,105,64,0.55)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.22)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(77,105,64,0.50)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
-            {/* Badge */}
-            <span
-              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-              style={{ background: T.green, color: "#FFFFFF" }}
-            >
-              Recommended
-            </span>
+            {/* Top row: badge + number */}
+            <div className="flex items-center justify-between w-full mb-5">
+              <span
+                className="text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase"
+                style={{ background: T.green, color: "#FFFFFF" }}
+              >
+                Recommended
+              </span>
+              <span className="text-white/20 text-sm font-bold font-mono">01</span>
+            </div>
 
             {/* Icon */}
             <div
-             className="flex w-14 h-14 rounded-2xl items-center justify-center"
-            style={{ background: "rgba(255,255,255,0.15)" }}
-          >
-            <Bolt className="w-6 h-6 text-white" strokeWidth={1.8} />
+              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              style={{ background: "rgba(255,255,255,0.12)" }}
+            >
+              <Bolt className="w-7 h-7 text-white" strokeWidth={1.8} />
             </div>
 
-            <div>
+            <div className="flex-1">
               <h3
-                className="text-xl font-bold text-white mb-1.5"
+                className="text-[22px] sm:text-2xl font-black text-white mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Quickstart
               </h3>
-              <p className="text-white/55 text-base leading-relaxed">
+              <p className="text-white/50 text-[15px] leading-relaxed">
                 Fill in just a name and location. We handle the rest — perfect for same-day tournaments.
               </p>
             </div>
 
-            {/* Time estimate */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
-              <Clock className="w-3.5 h-3.5" />
-              Ready in under 30 seconds
+            {/* Footer */}
+            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
+                <Clock className="w-3.5 h-3.5" />
+                Ready in under 30 seconds
+              </div>
+              <ArrowRight
+                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+                style={{ color: "rgba(255,255,255,0.35)" }}
+              />
             </div>
-
-            {/* Arrow */}
-            <ArrowRight
-              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            />
           </button>
 
           {/* Schedule Tournament */}
           <button
             type="button"
             onClick={() => onSelect("schedule")}
-            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
             style={{
-              padding: "24px 24px",
-              background: "rgba(255,255,255,0.06)",
-              border: "2px solid rgba(255,255,255,0.12)",
-              backdropFilter: "blur(8px)",
+              padding: "32px 32px 40px",
+              background: "rgba(255,255,255,0.05)",
+              border: "2px solid rgba(255,255,255,0.10)",
+              backdropFilter: "blur(12px)",
+              minHeight: "280px",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
-            {/* Icon */}
-            <div
-              className="flex w-14 h-14 rounded-2xl items-center justify-center mt-0 sm:mt-7"
-              style={{ background: "rgba(255,255,255,0.10)" }}
-            >
-              <Calendar className="w-6 h-6 text-white" strokeWidth={1.8} />
+            {/* Top row: number */}
+            <div className="flex items-center justify-between w-full mb-5">
+              <span />
+              <span className="text-white/20 text-sm font-bold font-mono">02</span>
             </div>
 
-            <div>
+            {/* Icon */}
+            <div
+              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              style={{ background: "rgba(255,255,255,0.08)" }}
+            >
+              <Calendar className="w-7 h-7 text-white" strokeWidth={1.8} />
+            </div>
+
+            <div className="flex-1">
               <h3
-                className="text-xl font-bold text-white mb-1.5"
+                className="text-[22px] sm:text-2xl font-black text-white mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Schedule Tournament
               </h3>
-              <p className="text-white/55 text-base leading-relaxed">
+              <p className="text-white/50 text-[15px] leading-relaxed">
                 Full setup wizard — choose format, rounds, time control, and rating system.
               </p>
             </div>
 
-            {/* Time estimate */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
-              <Clock className="w-3.5 h-3.5" />
-              ~2 minutes · 4 steps
+            {/* Footer */}
+            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <Clock className="w-3.5 h-3.5" />
+                ~2 minutes · 4 steps
+              </div>
+              <ArrowRight
+                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+                style={{ color: "rgba(255,255,255,0.25)" }}
+              />
             </div>
-
-            {/* Arrow */}
-            <ArrowRight
-              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-            />
           </button>
 
           {/* Large Event */}
           <button
             type="button"
             onClick={() => onSelect("large_event")}
-            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
             style={{
-              padding: "24px 24px",
-              background: "rgba(255,255,255,0.06)",
-              border: "2px solid rgba(255,255,255,0.12)",
-              backdropFilter: "blur(8px)",
+              padding: "32px 32px 40px",
+              background: "rgba(255,255,255,0.05)",
+              border: "2px solid rgba(255,255,255,0.10)",
+              backdropFilter: "blur(12px)",
+              minHeight: "280px",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
-            {/* Badge */}
-            <span
-              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-              style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.70)" }}
-            >
-              New
-            </span>
+            {/* Top row: badge + number */}
+            <div className="flex items-center justify-between w-full mb-5">
+              <span
+                className="text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)" }}
+              >
+                New
+              </span>
+              <span className="text-white/20 text-sm font-bold font-mono">03</span>
+            </div>
 
             {/* Icon */}
             <div
-              className="flex w-14 h-14 rounded-2xl items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.10)" }}
+              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              style={{ background: "rgba(255,255,255,0.08)" }}
             >
-              <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
+              <img src={OTB_LOGO_URL} alt="OTB" className="w-7 h-7 object-contain drop-shadow-sm" />
             </div>
 
-            <div>
+            <div className="flex-1">
               <h3
-                className="text-xl font-bold text-white mb-1.5"
+                className="text-[22px] sm:text-2xl font-black text-white mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Large Event
               </h3>
-              <p className="text-white/55 text-base leading-relaxed">
+              <p className="text-white/50 text-[15px] leading-relaxed">
                 Swiss rounds to seed players, then a single-elimination bracket. Built for 30+ player events.
               </p>
             </div>
 
-            {/* Details */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
-              <Users className="w-3.5 h-3.5" />
-              Up to 100 players
+            {/* Footer */}
+            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <Users className="w-3.5 h-3.5" />
+                Up to 100 players
+              </div>
+              <ArrowRight
+                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+                style={{ color: "rgba(255,255,255,0.25)" }}
+              />
             </div>
-
-            {/* Arrow */}
-            <ArrowRight
-              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-              style={{ color: "rgba(255,255,255,0.25)" }}
-            />
           </button>
 
           {/* Multi-Tournament Brackets */}
           <button
             type="button"
             onClick={() => onSelect("brackets")}
-            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
             style={{
-              padding: "24px 24px",
-              background: "rgba(255,180,50,0.08)",
-              border: "2px solid rgba(255,180,50,0.30)",
-              backdropFilter: "blur(8px)",
+              padding: "32px 32px 40px",
+              background: "rgba(255,180,50,0.06)",
+              border: "2px solid rgba(255,180,50,0.25)",
+              backdropFilter: "blur(12px)",
+              minHeight: "280px",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.16)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.50)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(255,180,50,0.20)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.14)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.45)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(255,180,50,0.15), 0 0 0 1px rgba(255,180,50,0.08)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.08)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.30)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
-            {/* Badge */}
-            <span
-              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-              style={{ background: "rgba(255,180,50,0.20)", color: "#FFB432" }}
-            >
-              New
-            </span>
+            {/* Top row: badge + number */}
+            <div className="flex items-center justify-between w-full mb-5">
+              <span
+                className="text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(255,180,50,0.18)", color: "#FFB432" }}
+              >
+                New
+              </span>
+              <span className="text-[#FFB432]/20 text-sm font-bold font-mono">04</span>
+            </div>
 
             {/* Icon */}
             <div
-              className="flex w-14 h-14 rounded-2xl items-center justify-center"
-              style={{ background: "rgba(255,180,50,0.15)" }}
+              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              style={{ background: "rgba(255,180,50,0.12)" }}
             >
-              <BarChart3 className="w-6 h-6" style={{ color: "#FFB432" }} strokeWidth={1.8} />
+              <BarChart3 className="w-7 h-7" style={{ color: "#FFB432" }} strokeWidth={1.8} />
             </div>
 
-            <div>
+            <div className="flex-1">
               <h3
-                className="text-xl font-bold text-white mb-1.5"
+                className="text-[22px] sm:text-2xl font-black text-white mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Rating Brackets
               </h3>
-              <p className="text-white/55 text-base leading-relaxed">
+              <p className="text-white/50 text-[15px] leading-relaxed">
                 Auto-split players by ELO into separate tournaments. U1000, U1500, 1500+ — each runs independently.
               </p>
             </div>
 
-            {/* Details */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,180,50,0.60)" }}>
-              <BarChart3 className="w-3.5 h-3.5" />
-              Multi-bracket management
+            {/* Footer */}
+            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,180,50,0.12)" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,180,50,0.55)" }}>
+                <BarChart3 className="w-3.5 h-3.5" />
+                Multi-bracket management
+              </div>
+              <ArrowRight
+                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+                style={{ color: "rgba(255,180,50,0.40)" }}
+              />
             </div>
-
-            {/* Arrow */}
-            <ArrowRight
-              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-              style={{ color: "rgba(255,180,50,0.45)" }}
-            />
           </button>
         </div>
       </div>

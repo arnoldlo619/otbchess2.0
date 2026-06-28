@@ -6660,3 +6660,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Warning for brackets with 1 or fewer players in BracketSortPanel review step
 - [x] Unrated players (null ELO) assigned to lowest bracket by default
 - [x] Tests: bracketReportSelector.test.ts (12 tests passing)
+
+## Create Tournament Page — Card Redesign
+
+- [x] Redesign 4 tournament type cards (Quickstart, Schedule, Large Event, Rating Brackets) to be more premium and spacious on desktop
+- [x] Cards should have more generous padding, larger typography, stronger visual hierarchy
+- [x] Inspired by reference: bold card layout with visual weight, not skinny/cramped
