@@ -99,6 +99,8 @@ interface WizardData {
   customSlug: string;
   /** Optional cover image data URL for the tournament hero banner. */
   coverImageUrl: string;
+  /** Whether this tournament will be split into rating brackets post-registration. */
+  isBracketParent?: boolean;
 }
 
 function todayIso(): string {
@@ -128,6 +130,7 @@ const DEFAULT_DATA: WizardData = {
   clubName: null,
   customSlug: "",
   coverImageUrl: "",
+  isBracketParent: false,
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -1587,6 +1590,44 @@ function QuickstartForm({
       </div>{/* end space-y-3 */}
       </div>{/* end Tournament Settings outer div */}
 
+      {/* Rating Brackets Toggle */}
+      <div
+        className="rounded-2xl transition-all duration-200"
+        style={{
+          padding: "16px 18px",
+          background: data.isBracketParent ? (isDark ? "rgba(255,180,50,0.08)" : "rgba(255,180,50,0.06)") : (isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB"),
+          border: `2px solid ${data.isBracketParent ? "rgba(255,180,50,0.30)" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}`,
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: data.isBracketParent ? "rgba(255,180,50,0.15)" : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6" }}>
+              <BarChart3 className="w-4.5 h-4.5" style={{ color: data.isBracketParent ? "#FFB432" : isDark ? T.dMuted : T.lMuted }} />
+            </div>
+            <div>
+              <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>Split by Rating</span>
+              <p className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>Auto-group players into ELO brackets after registration</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange({ isBracketParent: !data.isBracketParent })}
+            className="relative w-11 h-6 rounded-full transition-all duration-200"
+            style={{ background: data.isBracketParent ? T.green : isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB" }}
+          >
+            <div
+              className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200"
+              style={{ left: data.isBracketParent ? "calc(100% - 22px)" : "2px" }}
+            />
+          </button>
+        </div>
+        {data.isBracketParent && (
+          <p className="text-xs mt-3 pl-12" style={{ color: "#FFB432" }}>
+            After players register, you'll be able to define bracket thresholds and auto-sort players from the tournament dashboard.
+          </p>
+        )}
+      </div>
+
       {/* Structure Preview — collapsible panel */}
       <div>
         <button
@@ -2647,6 +2688,44 @@ function StepFormat({
             ? `Round Robin · ${data.maxPlayers} players = ${(data.maxPlayers * (data.maxPlayers - 1)) / 2} total games.`
             : `Single elimination bracket for up to ${data.maxPlayers} players.`}
         </span>
+      </div>
+
+      {/* Rating Brackets Toggle */}
+      <div
+        className="rounded-2xl transition-all duration-200"
+        style={{
+          padding: "16px 18px",
+          background: data.isBracketParent ? (isDark ? "rgba(255,180,50,0.08)" : "rgba(255,180,50,0.06)") : (isDark ? "rgba(255,255,255,0.03)" : "#F9FAFB"),
+          border: `2px solid ${data.isBracketParent ? "rgba(255,180,50,0.30)" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}`,
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: data.isBracketParent ? "rgba(255,180,50,0.15)" : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6" }}>
+              <BarChart3 className="w-4.5 h-4.5" style={{ color: data.isBracketParent ? "#FFB432" : isDark ? T.dMuted : T.lMuted }} />
+            </div>
+            <div>
+              <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>Split by Rating</span>
+              <p className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>Auto-group players into ELO brackets after registration</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange({ isBracketParent: !data.isBracketParent })}
+            className="relative w-11 h-6 rounded-full transition-all duration-200"
+            style={{ background: data.isBracketParent ? T.green : isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB" }}
+          >
+            <div
+              className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200"
+              style={{ left: data.isBracketParent ? "calc(100% - 22px)" : "2px" }}
+            />
+          </button>
+        </div>
+        {data.isBracketParent && (
+          <p className="text-xs mt-3 pl-12" style={{ color: "#FFB432" }}>
+            After players register, you'll be able to define bracket thresholds and auto-sort players from the tournament dashboard.
+          </p>
+        )}
       </div>
     </div>
   );
