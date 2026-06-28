@@ -1899,6 +1899,9 @@ export function createApp() {
         swissRounds?: number;
         format?: string;
         elimCutoff?: number;
+        bracketLabel?: string;
+        parentBracketGroupId?: string;
+        parentTournamentId?: string;
       };
       // Return all rounds so fresh-device spectators get the full round history.
       // Also include current round's games separately for backwards compatibility.
@@ -1917,6 +1920,10 @@ export function createApp() {
         swissRounds: s.swissRounds ?? null,
         format: s.format ?? null,
         elimCutoff: s.elimCutoff ?? null,
+        // Bracket metadata for child bracket-tournaments
+        bracketLabel: s.bracketLabel ?? null,
+        parentBracketGroupId: s.parentBracketGroupId ?? null,
+        parentTournamentId: s.parentTournamentId ?? null,
         updatedAt: rows[0].updatedAt,
       });
     } catch (err) {

@@ -213,6 +213,8 @@ function TournamentHeader({
   totalRounds,
   currentRound,
   coverImageUrl,
+  bracketLabel,
+  parentTournamentId,
 }: {
   name: string;
   date: string;
@@ -223,6 +225,8 @@ function TournamentHeader({
   totalRounds: number;
   currentRound: number;
   coverImageUrl?: string | null;
+  bracketLabel?: string | null;
+  parentTournamentId?: string | null;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -263,12 +267,42 @@ function TournamentHeader({
       <div className="container relative z-10 py-6 sm:py-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="min-w-0">
-            <h1
-              className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 tracking-tight ${coverImageUrl ? "text-white" : "text-foreground"}`}
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              {name}
-            </h1>
+            {/* Bracket back-link */}
+            {parentTournamentId && (
+              <Link
+                href={`/tournament/${parentTournamentId}`}
+                className={`inline-flex items-center gap-1 text-xs font-medium mb-1.5 transition-colors ${
+                  coverImageUrl ? "text-white/60 hover:text-white/90" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to main event
+              </Link>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1
+                className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight ${coverImageUrl ? "text-white" : "text-foreground"}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                {name}
+              </h1>
+              {bracketLabel && (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
+                  coverImageUrl
+                    ? "bg-white/15 text-white border border-white/20 backdrop-blur-sm"
+                    : isDark
+                    ? "bg-amber-500/15 text-amber-400 border border-amber-500/25"
+                    : "bg-amber-100 text-amber-700 border border-amber-200"
+                }`}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M3 12h12M3 20h6" />
+                  </svg>
+                  {bracketLabel}
+                </span>
+              )}
+            </div>
             <div className={`flex flex-wrap items-center gap-2 sm:gap-3 text-sm ${coverImageUrl ? "text-white/80" : "text-muted-foreground"}`}>
               {date && (
                 <span className="flex items-center gap-1">
@@ -1761,6 +1795,8 @@ export default function TournamentPage() {
         totalRounds={displayState.totalRounds}
         currentRound={displayState.currentRound}
         coverImageUrl={config?.coverImageUrl}
+        bracketLabel={(config as any)?.bracketLabel ?? null}
+        parentTournamentId={(config as any)?.parentBracketGroupId ? (config as any)?.parentTournamentId ?? null : null}
       />
 
       {/* Registration waiting state */}
