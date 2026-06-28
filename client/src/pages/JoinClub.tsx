@@ -96,10 +96,14 @@ export default function JoinClub() {
         avatarUrl: user.avatarUrl ?? null,
       });
 
-      // Confetti + toast — fire once
+      // Confetti + haptic + toast — fire once
       if (!confettiFired.current) {
         confettiFired.current = true;
         const accent = club.accentColor ?? "#4CAF50";
+        // Haptic: short-pause-long pattern (supported on iOS Safari 13+ and Android Chrome)
+        if (navigator.vibrate) {
+          navigator.vibrate([40, 60, 80]);
+        }
         fireConfetti(accent);
         toast.success(`🎉 Welcome to ${club.name}!`, {
           description: "You're now a member. Taking you to the club…",
