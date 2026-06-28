@@ -2976,34 +2976,58 @@ export default function Director() {
 
             {/* ── Bracket Selector Strip (bracket-parent only) ──────────────── */}
             {isBracketParent && childBrackets.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
-                    Rating Brackets
-                  </span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
-                    {childBrackets.length}
-                  </span>
+              <div className={`rounded-2xl border p-4 space-y-3 ${
+                isDark ? "bg-amber-500/06 border-amber-500/25" : "bg-amber-50/80 border-amber-200"
+              }`}>
+                {/* Header row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                      isDark ? "bg-amber-500/20" : "bg-amber-100"
+                    }`}>
+                      <BarChart3 className={`w-3.5 h-3.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                    </div>
+                    <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
+                      style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      Rating Brackets
+                    </span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-100 text-amber-700"
+                    }`}>
+                      {childBrackets.length} brackets
+                    </span>
+                  </div>
+                  {/* Status indicator */}
+                  {childBrackets.every(b => b.status === "lobby") && (
+                    <span className={`text-[11px] font-semibold px-2 py-1 rounded-lg ${
+                      isDark ? "bg-white/06 text-white/40" : "bg-white text-[#436850]/60"
+                    }`}>
+                      Not started
+                    </span>
+                  )}
+                  {childBrackets.some(b => b.status === "active") && (
+                    <span className="flex items-center gap-1.5 text-[11px] font-semibold text-green-500">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                      </span>
+                      Live
+                    </span>
+                  )}
                 </div>
-                <div className={`flex gap-2 overflow-x-auto scrollbar-none pb-1`}>
-                  {/* Overview pill — stays on this parent page */}
-                  <button
-                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all active:scale-95 ${
-                      isDark
-                        ? "bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
-                        : "bg-amber-50 border-amber-400 text-amber-700 shadow-sm"
-                    }`}
-                  >
-                    <BarChart3 className="w-3.5 h-3.5" />
-                    Overview
-                  </button>
-                  {/* One pill per child bracket */}
+
+                {/* Bracket pills */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-0.5">
                   {childBrackets.map((b) => (
                     <button
                       key={b.tournamentId}
                       onClick={() => navigate(`/tournament/${b.tournamentId}/manage`)}
                       className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all active:scale-95 ${
-                        isDark
+                        b.status === "active"
+                          ? isDark
+                            ? "bg-green-500/15 border-green-500/30 text-green-300 hover:bg-green-500/20"
+                            : "bg-green-50 border-green-300 text-green-700 hover:bg-green-100"
+                          : isDark
                           ? "bg-white/06 border-white/12 text-white/80 hover:bg-white/10 hover:border-white/20"
                           : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#f0f9f1] hover:border-[#436850] shadow-sm"
                       }`}
@@ -3023,6 +3047,34 @@ export default function Director() {
                     </button>
                   ))}
                 </div>
+
+                {/* CTA: open first bracket to start (all in lobby state) */}
+                {childBrackets.every(b => b.status === "lobby") && (
+                  <div className={`rounded-xl p-3 flex items-center justify-between gap-3 ${
+                    isDark ? "bg-white/04 border border-white/08" : "bg-white border border-[#ADBC9F]/50"
+                  }`}>
+                    <div>
+                      <p className={`text-xs font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
+                        Brackets ready — open each to start
+                      </p>
+                      <p className={`text-[11px] ${isDark ? "text-white/40" : "text-[#436850]/70"}`}>
+                        Click a bracket above to open its director dashboard and start it independently
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => childBrackets[0] && navigate(`/tournament/${childBrackets[0].tournamentId}/manage`)}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all"
+                      style={{
+                        background: "#d97706",
+                        color: "#fff",
+                        boxShadow: "0 2px 8px rgba(217,119,6,0.3)",
+                      }}
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      Open {childBrackets[0]?.label}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -3506,20 +3558,22 @@ export default function Director() {
                       </div>
                       {/* ── Bracket Sort Panel — shown for bracket-parent tournaments before spawning ── */}
                       {isBracketParent && childBrackets.length === 0 && state.players.length >= 2 && (
-                        <BracketSortPanel
-                          players={state.players}
-                          tournamentId={tournamentId}
-                          bracketGroupId={tournamentConfig?.bracketGroupId ?? undefined}
-                          isDark={isDark}
-                          onSpawned={() => {
-                            // Refresh child brackets
-                            if (tournamentConfig?.bracketGroupId) {
-                              fetch(`/api/brackets/${tournamentConfig.bracketGroupId}/brackets`)
-                                .then(r => r.json())
-                                .then(data => setChildBrackets(data.brackets || []));
-                            }
-                          }}
-                        />
+                        <div id="bracket-sort-panel">
+                          <BracketSortPanel
+                            players={state.players}
+                            tournamentId={tournamentId}
+                            bracketGroupId={tournamentConfig?.bracketGroupId ?? undefined}
+                            isDark={isDark}
+                            onSpawned={() => {
+                              // Refresh child brackets
+                              if (tournamentConfig?.bracketGroupId) {
+                                fetch(`/api/brackets/${tournamentConfig.bracketGroupId}/brackets`)
+                                  .then(r => r.json())
+                                  .then(data => setChildBrackets(data.brackets || []));
+                              }
+                            }}
+                          />
+                        </div>
                       )}
 
                       {/* Action buttons */}
@@ -3535,26 +3589,36 @@ export default function Director() {
                           <UserPlus className="w-4 h-4" />
                           Add Player
                         </button>
-                        <button
-                          onClick={() => canStart && setShowStartConfirm(true)}
-                          disabled={!canStart}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
-                            canStart
-                              ? "bg-[#436850] hover:bg-[#2d5235] text-white shadow-lg shadow-[#436850]/25 active:scale-[0.98]"
-                              : isDark
-                              ? "bg-white/06 text-white/20 cursor-not-allowed"
-                              : "bg-[#ADBC9F]/40 text-[#436850]/70 cursor-not-allowed"
-                          }`}
-                        >
-                          <Zap className="w-4 h-4" />
-                          {canStart
-                            ? `Start Tournament — Generate Round 1`
-                            : state.players.length === 0
-                            ? "Add players to start"
-                            : state.players.length === 1
-                            ? "Need at least 2 players"
-                            : "Need at least 2 players"}
-                        </button>
+                        {/* Bracket-parent: hide Start and show scroll-to-assign hint */}
+                        {isBracketParent && childBrackets.length === 0 ? (
+                          <div className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm ${
+                            isDark ? "bg-amber-500/10 text-amber-300 border border-amber-500/25" : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}>
+                            <BarChart3 className="w-4 h-4" />
+                            {state.players.length < 2 ? "Add players, then assign brackets" : "↑ Assign brackets above to continue"}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => canStart && setShowStartConfirm(true)}
+                            disabled={!canStart}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
+                              canStart
+                                ? "bg-[#436850] hover:bg-[#2d5235] text-white shadow-lg shadow-[#436850]/25 active:scale-[0.98]"
+                                : isDark
+                                ? "bg-white/06 text-white/20 cursor-not-allowed"
+                                : "bg-[#ADBC9F]/40 text-[#436850]/70 cursor-not-allowed"
+                            }`}
+                          >
+                            <Zap className="w-4 h-4" />
+                            {canStart
+                              ? `Start Tournament — Generate Round 1`
+                              : state.players.length === 0
+                              ? "Add players to start"
+                              : state.players.length === 1
+                              ? "Need at least 2 players"
+                              : "Need at least 2 players"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -5053,7 +5117,9 @@ export default function Director() {
               {isRegistration && (
                 <div
                   className={`rounded-xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                    isDark
+                    isBracketParent && childBrackets.length === 0
+                      ? isDark ? "bg-amber-500/08 border-amber-500/30" : "bg-amber-50 border-amber-300"
+                      : isDark
                       ? "bg-[oklch(0.22_0.06_145)] border-[#4CAF50]/25"
                       : "bg-[#F0FDF4] border-[#436850]/20"
                   }`}
@@ -5061,9 +5127,11 @@ export default function Director() {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: "#436850" }}
+                      style={{ background: isBracketParent && childBrackets.length === 0 ? "#d97706" : "#436850" }}
                     >
-                      <PlayCircle className="w-5 h-5 text-white" />
+                      {isBracketParent && childBrackets.length === 0
+                        ? <BarChart3 className="w-5 h-5 text-white" />
+                        : <PlayCircle className="w-5 h-5 text-white" />}
                     </div>
                     <div>
                       <p
@@ -5072,32 +5140,63 @@ export default function Director() {
                         }`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
                       >
-                        {canStart ? "Ready to start" : "Waiting for players"}
+                        {isBracketParent && childBrackets.length === 0
+                          ? (state.players.length < 2 ? "Add players first" : "Step 2: Assign Rating Brackets")
+                          : (canStart ? "Ready to start" : "Waiting for players")}
                       </p>
                       <p className={`text-xs ${
                         isDark ? "text-white/40" : "text-[#436850]"
                       }`}>
-                        {canStart
-                          ? `${state.players.length} player${state.players.length !== 1 ? "s" : ""} registered · ${state.totalRounds} rounds`
-                          : `Need at least 2 players to start`}
+                        {isBracketParent && childBrackets.length === 0
+                          ? (state.players.length < 2
+                              ? "Need at least 2 players to assign brackets"
+                              : `${state.players.length} players ready · Go to Players tab to auto-assign brackets`)
+                          : (canStart
+                              ? `${state.players.length} player${state.players.length !== 1 ? "s" : ""} registered · ${state.totalRounds} rounds`
+                              : `Need at least 2 players to start`)}
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => canStart && setShowStartConfirm(true)}
-                    disabled={!canStart}
-                    className="flex items-center gap-2 text-sm font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
-                    style={{
-                      padding: "11px 24px",
-                      background: canStart ? "#436850" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
-                      color: canStart ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
-                      cursor: canStart ? "pointer" : "not-allowed",
-                      boxShadow: canStart ? "0 4px 16px rgba(61,107,71,0.35)" : "none",
-                    }}
-                  >
-                    <PlayCircle className="w-4 h-4" />
-                    Start Tournament
-                  </button>
+                  {isBracketParent && childBrackets.length === 0 ? (
+                    <button
+                      onClick={() => {
+                        // Switch to Players tab so the BracketSortPanel is visible
+                        setActiveTab("players");
+                        setTimeout(() => {
+                          const el = document.getElementById("bracket-sort-panel");
+                          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }, 100);
+                      }}
+                      disabled={state.players.length < 2}
+                      className="flex items-center gap-2 text-sm font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
+                      style={{
+                        padding: "11px 24px",
+                        background: state.players.length >= 2 ? "#d97706" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
+                        color: state.players.length >= 2 ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
+                        cursor: state.players.length >= 2 ? "pointer" : "not-allowed",
+                        boxShadow: state.players.length >= 2 ? "0 4px 16px rgba(217,119,6,0.35)" : "none",
+                      }}
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      Assign Brackets
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => canStart && setShowStartConfirm(true)}
+                      disabled={!canStart}
+                      className="flex items-center gap-2 text-sm font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
+                      style={{
+                        padding: "11px 24px",
+                        background: canStart ? "#436850" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
+                        color: canStart ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
+                        cursor: canStart ? "pointer" : "not-allowed",
+                        boxShadow: canStart ? "0 4px 16px rgba(61,107,71,0.35)" : "none",
+                      }}
+                    >
+                      <PlayCircle className="w-4 h-4" />
+                      Start Tournament
+                    </button>
+                  )}
                 </div>
               )}
             </div>
