@@ -107,7 +107,11 @@ export default function JoinClub() {
         fireConfetti(accent);
         toast.success(`🎉 Welcome to ${club.name}!`, {
           description: "You're now a member. Taking you to the club…",
-          duration: 3500,
+          duration: 4500,
+          action: {
+            label: "View Upcoming Tournaments",
+            onClick: () => navigate(`/clubs/${club.id}/home?tab=events`),
+          },
         });
       }
 
