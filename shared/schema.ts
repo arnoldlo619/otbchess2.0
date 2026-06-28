@@ -208,6 +208,15 @@ export const userTournaments = mysqlTable(
     isPublic: tinyint("is_public").notNull().default(0),
     /** Timestamp when the tournament transitioned to in_progress (used for 24h auto-expiry) */
     startedAt: timestamp("started_at"),
+
+    // ── Multi-Tournament Bracket fields ──
+    /** If this tournament is a child bracket, links to the parent bracket_groups row */
+    parentBracketGroupId: varchar("parent_bracket_group_id", { length: 36 }),
+    /** Human-readable bracket label, e.g. "Under 1000" */
+    bracketLabel: varchar("bracket_label", { length: 100 }),
+    /** Sort order within the bracket group (0-indexed) */
+    bracketOrder: int("bracket_order"),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
@@ -218,6 +227,72 @@ export const userTournaments = mysqlTable(
 
 export type UserTournament = typeof userTournaments.$inferSelect;
 export type NewUserTournament = typeof userTournaments.$inferInsert;
+
+// ─── bracket_groups ──────────────────────────────────────────────────────────
+// A bracket group represents a multi-bracket event where players are split by
+// rating into independent sub-tournaments. The parent group holds the shared
+// registration pool and bracket threshold configuration. Each child bracket is
+// a full tournament row in user_tournaments with parentBracketGroupId set.
+export const bracketGroups = mysqlTable(
+  "bracket_groups",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    // Owner (director who created the multi-bracket event)
+    userId: varchar("user_id", { length: 36 }).notNull(),
+
+    // Human-readable event name (e.g. "Saturday Blitz — Rating Brackets")
+    name: varchar("name", { length: 255 }).notNull(),
+
+    // Venue and date (denormalised from the parent tournament for display)
+    venue: varchar("venue", { length: 255 }),
+    date: varchar("date", { length: 20 }),
+
+    // JSON array of bracket definitions:
+    // [{ label: "Under 1000", minElo: 0, maxElo: 999 }, { label: "1000-1500", minElo: 1000, maxElo: 1499 }, ...]
+    bracketsJson: text("brackets_json").notNull(),
+
+    // Rating platform used for sorting: "chess.com" | "lichess" | "fide"
+    ratingPlatform: varchar("rating_platform", { length: 20 }).notNull().default("chess.com"),
+
+    // Which rating category to use: "rapid" | "blitz" | "bullet"
+    ratingType: varchar("rating_type", { length: 20 }).notNull().default("rapid"),
+
+    // Shared format/time control applied to all child brackets
+    format: varchar("format", { length: 50 }),
+    rounds: int("rounds"),
+    timeBase: int("time_base"),
+    timeIncrement: int("time_increment"),
+
+    // The parent tournament ID (the registration hub — no rounds run on it)
+    parentTournamentId: varchar("parent_tournament_id", { length: 255 }),
+
+    // Lifecycle: draft | assigned | in_progress | completed
+    status: varchar("status", { length: 20 }).notNull().default("draft"),
+
+    // Optional club linkage
+    clubId: varchar("club_id", { length: 36 }),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("bg_user_id_idx").on(table.userId),
+    parentTournamentIdx: index("bg_parent_tournament_idx").on(table.parentTournamentId),
+  })
+);
+
+export type BracketGroup = typeof bracketGroups.$inferSelect;
+export type NewBracketGroup = typeof bracketGroups.$inferInsert;
+
+// ─── Bracket definition type (used in bracketsJson) ──────────────────────────
+export interface BracketDefinition {
+  label: string;       // e.g. "Under 1000", "1000-1500", "Over 1500"
+  minElo: number;      // inclusive lower bound
+  maxElo: number;      // inclusive upper bound (use 9999 for open-ended)
+  order: number;       // display order (0-indexed)
+  tournamentId?: string; // set after child tournament is spawned
+}
 
 // ─── recording_sessions ─────────────────────────────────────────────────────
 // One row per OTB game recording attempt.

@@ -40,6 +40,18 @@ export interface TournamentConfig {
   customSlug?: string | null;
   /** Optional cover image (data URL or remote URL) shown in the tournament hero banner. */
   coverImageUrl?: string | null;
+
+  // ── Multi-Tournament Bracket fields ──
+  /** If this is a child bracket-tournament, the parent bracket group ID */
+  parentBracketGroupId?: string | null;
+  /** Human-readable bracket label, e.g. "Under 1000" */
+  bracketLabel?: string | null;
+  /** Sort order within the bracket group (0-indexed) */
+  bracketOrder?: number | null;
+  /** Whether this tournament is the registration hub for a bracket group */
+  isBracketParent?: boolean;
+  /** The bracket group ID (set on the parent tournament) */
+  bracketGroupId?: string | null;
 }
 
 const REGISTRY_KEY = "otb-tournament-registry-v1";
