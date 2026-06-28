@@ -1615,14 +1615,36 @@ interface BracketSortPanelProps {
 function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpawned }: BracketSortPanelProps) {
   const [step, setStep] = useState<'idle' | 'suggesting' | 'review' | 'spawning' | 'done'>('idle');
   const [brackets, setBrackets] = useState<Array<{ label: string; minElo: number; maxElo: number; playerCount: number }>>([]);
+  // Manual overrides: map from player id -> bracket index (0-based)
+  const [playerOverrides, setPlayerOverrides] = useState<Record<string, number>>({});
   const [customThresholds, setCustomThresholds] = useState<string>('');
   const [error, setError] = useState('');
+  const [showPlayerList, setShowPlayerList] = useState(false);
 
   const sortedElos = players.map(p => p.elo).filter(e => e > 0).sort((a, b) => a - b);
   const minElo = sortedElos[0] || 0;
   const maxElo = sortedElos[sortedElos.length - 1] || 0;
   const avgElo = sortedElos.length ? Math.round(sortedElos.reduce((a, b) => a + b, 0) / sortedElos.length) : 0;
   const spread = maxElo - minElo;
+
+  // Compute effective bracket index for each player (override wins, else ELO range)
+  const getPlayerBracketIndex = (p: { id: string; elo: number }) => {
+    if (playerOverrides[p.id] !== undefined) return playerOverrides[p.id];
+    const idx = brackets.findIndex(b => p.elo >= b.minElo && p.elo <= b.maxElo);
+    return idx >= 0 ? idx : 0;
+  };
+
+  // Derive live player counts from overrides
+  const liveCounts = brackets.map((_, i) => players.filter(p => getPlayerBracketIndex(p) === i).length);
+
+  // Players sorted by ELO desc for the reassignment list
+  const sortedPlayers = [...players].sort((a, b) => b.elo - a.elo);
+
+  const enterReview = (newBrackets: typeof brackets) => {
+    setBrackets(newBrackets);
+    setPlayerOverrides({});
+    setStep('review');
+  };
 
   const handleSuggest = async () => {
     setStep('suggesting');
@@ -1635,29 +1657,24 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
       });
       const data = await res.json();
       if (data.brackets) {
-        setBrackets(data.brackets);
-        setStep('review');
+        enterReview(data.brackets);
       } else {
-        // Fallback: simple 2-bracket split at median
         const median = sortedElos[Math.floor(sortedElos.length / 2)] || 1000;
         const lower = players.filter(p => p.elo < median);
         const upper = players.filter(p => p.elo >= median);
-        setBrackets([
+        enterReview([
           { label: `Under ${median}`, minElo: 0, maxElo: median - 1, playerCount: lower.length },
           { label: `${median}+`, minElo: median, maxElo: 9999, playerCount: upper.length },
         ]);
-        setStep('review');
       }
     } catch {
-      // Fallback: client-side split
       const median = sortedElos[Math.floor(sortedElos.length / 2)] || 1000;
       const lower = players.filter(p => p.elo < median);
       const upper = players.filter(p => p.elo >= median);
-      setBrackets([
+      enterReview([
         { label: `Under ${median}`, minElo: 0, maxElo: median - 1, playerCount: lower.length },
         { label: `${median}+`, minElo: median, maxElo: 9999, playerCount: upper.length },
       ]);
-      setStep('review');
     }
   };
 
@@ -1674,20 +1691,28 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
       result.push({ label, minElo: lo, maxElo: hi, playerCount: count });
       prev = i < thresholds.length ? thresholds[i] : prev;
     }
-    setBrackets(result.filter(b => b.playerCount > 0));
-    setStep('review');
+    enterReview(result.filter(b => b.playerCount > 0));
     setError('');
   };
 
   const handleSpawn = async () => {
     setStep('spawning');
     try {
+      // Build the final player list with overridden bracket assignments
+      // We pass each player with a bracketIndex so the server can place them correctly
+      const playersWithBracket = players.map(p => ({
+        id: p.id,
+        name: p.name,
+        elo: p.elo,
+        username: p.username,
+        bracketIndex: getPlayerBracketIndex(p),
+      }));
       const res = await fetch(`/api/brackets/${bracketGroupId}/spawn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           brackets: brackets.map((b, i) => ({ label: b.label, minElo: b.minElo, maxElo: b.maxElo, order: i })),
-          players: players.map(p => ({ id: p.id, name: p.name, elo: p.elo, username: p.username })),
+          players: playersWithBracket,
         }),
       });
       if (res.ok) {
@@ -1802,9 +1827,10 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
         </div>
       )}
 
-      {/* Step: Review — show suggested brackets with player counts */}
+      {/* Step: Review — bracket summary + per-player reassignment */}
       {step === 'review' && (
         <div className="space-y-3">
+          {/* Bracket summary cards */}
           <div className="space-y-2">
             {brackets.map((b, i) => (
               <div key={i} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
@@ -1822,25 +1848,133 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
                   </div>
                 </div>
                 <span className={`text-sm font-bold px-2.5 py-1 rounded-lg ${
-                  isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
+                  liveCounts[i] <= 1
+                    ? isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"
+                    : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
                 }`}>
-                  {b.playerCount} players
+                  {liveCounts[i]} player{liveCounts[i] !== 1 ? 's' : ''}
                 </span>
               </div>
             ))}
           </div>
+
+          {/* Player reassignment section */}
+          <div className={`rounded-xl border overflow-hidden ${
+            isDark ? "border-white/08" : "border-[#ADBC9F]/40"
+          }`}>
+            {/* Toggle header */}
+            <button
+              onClick={() => setShowPlayerList(v => !v)}
+              className={`w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold transition-colors ${
+                isDark ? "bg-white/04 hover:bg-white/06 text-white/60" : "bg-[#ADBC9F]/20 hover:bg-[#ADBC9F]/30 text-[#436850]"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <UserPlus className="w-3.5 h-3.5" />
+                Manually reassign players
+                {Object.keys(playerOverrides).length > 0 && (
+                  <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {Object.keys(playerOverrides).length} override{Object.keys(playerOverrides).length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </span>
+              <span className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/50"}`}>
+                {showPlayerList ? '▲ collapse' : '▼ expand'}
+              </span>
+            </button>
+
+            {/* Player list with per-player bracket dropdown */}
+            {showPlayerList && (
+              <div className={`divide-y ${
+                isDark ? "divide-white/06" : "divide-[#ADBC9F]/30"
+              }`}>
+                {sortedPlayers.map(p => {
+                  const currentIdx = getPlayerBracketIndex(p);
+                  const isOverridden = playerOverrides[p.id] !== undefined;
+                  return (
+                    <div key={p.id} className={`flex items-center justify-between px-4 py-2.5 ${
+                      isDark ? "bg-white/02" : "bg-white"
+                    }`}>
+                      {/* Player info */}
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                          isDark ? "bg-white/08 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
+                        }`}>
+                          {p.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
+                            {p.name}
+                            {isOverridden && (
+                              <span className={`ml-1.5 text-[9px] font-bold px-1 py-0.5 rounded ${
+                                isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
+                              }`}>moved</span>
+                            )}
+                          </p>
+                          <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/60"}`}>
+                            {p.elo > 0 ? `${p.elo} ELO` : 'Unrated'}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Bracket selector dropdown */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <select
+                          value={currentIdx}
+                          onChange={e => {
+                            const newIdx = parseInt(e.target.value);
+                            setPlayerOverrides(prev => ({ ...prev, [p.id]: newIdx }));
+                          }}
+                          className={`text-xs font-semibold rounded-lg px-2 py-1.5 border appearance-none cursor-pointer transition-colors ${
+                            isOverridden
+                              ? isDark
+                                ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
+                                : "bg-amber-50 border-amber-300 text-amber-700"
+                              : isDark
+                              ? "bg-white/06 border-white/10 text-white/70"
+                              : "bg-white border-[#ADBC9F] text-[#12372A]"
+                          }`}
+                        >
+                          {brackets.map((b, i) => (
+                            <option key={i} value={i}>{b.label}</option>
+                          ))}
+                        </select>
+                        {isOverridden && (
+                          <button
+                            onClick={() => setPlayerOverrides(prev => {
+                              const next = { ...prev };
+                              delete next[p.id];
+                              return next;
+                            })}
+                            title="Reset to auto-assignment"
+                            className={`w-5 h-5 rounded flex items-center justify-center text-[10px] transition-colors ${
+                              isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-[#436850]/40 hover:text-[#436850] hover:bg-[#ADBC9F]/30"
+                            }`}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Warning for brackets with very few players */}
-          {brackets.some(b => b.playerCount <= 1) && (
+          {liveCounts.some(c => c <= 1) && (
             <p className={`text-xs font-medium px-3 py-2 rounded-lg ${
               isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
             }`}>
-              ⚠️ {brackets.filter(b => b.playerCount <= 1).length === 1 ? 'One bracket has' : 'Some brackets have'} 1 or fewer players. Consider adjusting thresholds.
+              ⚠️ {liveCounts.filter(c => c <= 1).length === 1 ? 'One bracket has' : 'Some brackets have'} 1 or fewer players. Consider reassigning.
             </p>
           )}
           {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setStep('idle'); setBrackets([]); }}
+              onClick={() => { setStep('idle'); setBrackets([]); setPlayerOverrides({}); }}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 isDark ? "bg-white/06 text-white/60 hover:bg-white/10" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]/60"
               }`}

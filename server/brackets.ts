@@ -553,6 +553,66 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
       })
       .where(eq(bracketGroups.id, group.id));
 
+    // ── Assign players to child tournaments ──────────────────────────────
+    // The client sends players with an optional bracketIndex override.
+    // If bracketIndex is provided, it takes priority over ELO range matching.
+    const reqPlayers: Array<{
+      id: string;
+      name: string;
+      elo: number;
+      username?: string;
+      bracketIndex?: number;
+    }> = req.body.players ?? [];
+
+    if (reqPlayers.length > 0) {
+      // Get the actual DB player rows from the parent tournament
+      const parentPlayers = group.parentTournamentId
+        ? await db
+            .select()
+            .from(tournamentPlayers)
+            .where(eq(tournamentPlayers.tournamentId, group.parentTournamentId))
+        : [];
+
+      const parentPlayerMap = new Map(
+        parentPlayers.map((p) => [p.id, p])
+      );
+
+      for (const rp of reqPlayers) {
+        // Determine target bracket index
+        let targetIdx: number;
+        if (rp.bracketIndex !== undefined && rp.bracketIndex >= 0 && rp.bracketIndex < spawnedTournaments.length) {
+          targetIdx = rp.bracketIndex;
+        } else {
+          // Fallback: ELO range matching
+          const bracketIdx = brackets.findIndex(
+            (b) => rp.elo >= b.minElo && rp.elo <= b.maxElo
+          );
+          targetIdx = bracketIdx >= 0 ? bracketIdx : 0;
+        }
+
+        const targetTournamentId = spawnedTournaments[targetIdx]?.tournamentId;
+        if (!targetTournamentId) continue;
+
+        // Find the DB player row (by id or username)
+        const dbPlayer = parentPlayerMap.get(rp.id)
+          ?? parentPlayers.find((p) => p.username === rp.username);
+
+        if (dbPlayer) {
+          // Insert into child tournament (skip if already present)
+          await db
+            .insert(tournamentPlayers)
+            .values({
+              id: nanoid(12),
+              tournamentId: targetTournamentId,
+              username: dbPlayer.username,
+              playerJson: dbPlayer.playerJson,
+              joinedAt: new Date(),
+            })
+            .onDuplicateKeyUpdate({ set: { playerJson: dbPlayer.playerJson } });
+        }
+      }
+    }
+
     res.json({ tournaments: spawnedTournaments });
   } catch (err) {
     logger.error("[brackets] Spawn error:", err);
