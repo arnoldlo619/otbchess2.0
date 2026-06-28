@@ -1603,6 +1603,264 @@ function SpectatorCodeCard({ spectatorUrl, isDark }: { spectatorUrl: string; isD
   );
 }
 
+// ─── Bracket Sort Panel ─────────────────────────────────────────────────────
+interface BracketSortPanelProps {
+  players: Array<{ id: string; name: string; elo: number; username?: string }>;
+  tournamentId: string;
+  bracketGroupId?: string;
+  isDark: boolean;
+  onSpawned: () => void;
+}
+
+function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpawned }: BracketSortPanelProps) {
+  const [step, setStep] = useState<'idle' | 'suggesting' | 'review' | 'spawning' | 'done'>('idle');
+  const [brackets, setBrackets] = useState<Array<{ label: string; minElo: number; maxElo: number; playerCount: number }>>([]);
+  const [customThresholds, setCustomThresholds] = useState<string>('');
+  const [error, setError] = useState('');
+
+  const sortedElos = players.map(p => p.elo).filter(e => e > 0).sort((a, b) => a - b);
+  const minElo = sortedElos[0] || 0;
+  const maxElo = sortedElos[sortedElos.length - 1] || 0;
+  const avgElo = sortedElos.length ? Math.round(sortedElos.reduce((a, b) => a + b, 0) / sortedElos.length) : 0;
+  const spread = maxElo - minElo;
+
+  const handleSuggest = async () => {
+    setStep('suggesting');
+    setError('');
+    try {
+      const res = await fetch(`/api/brackets/${bracketGroupId}/suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ players: players.map(p => ({ id: p.id, name: p.name, elo: p.elo, username: p.username })) }),
+      });
+      const data = await res.json();
+      if (data.brackets) {
+        setBrackets(data.brackets);
+        setStep('review');
+      } else {
+        // Fallback: simple 2-bracket split at median
+        const median = sortedElos[Math.floor(sortedElos.length / 2)] || 1000;
+        const lower = players.filter(p => p.elo < median);
+        const upper = players.filter(p => p.elo >= median);
+        setBrackets([
+          { label: `Under ${median}`, minElo: 0, maxElo: median - 1, playerCount: lower.length },
+          { label: `${median}+`, minElo: median, maxElo: 9999, playerCount: upper.length },
+        ]);
+        setStep('review');
+      }
+    } catch {
+      // Fallback: client-side split
+      const median = sortedElos[Math.floor(sortedElos.length / 2)] || 1000;
+      const lower = players.filter(p => p.elo < median);
+      const upper = players.filter(p => p.elo >= median);
+      setBrackets([
+        { label: `Under ${median}`, minElo: 0, maxElo: median - 1, playerCount: lower.length },
+        { label: `${median}+`, minElo: median, maxElo: 9999, playerCount: upper.length },
+      ]);
+      setStep('review');
+    }
+  };
+
+  const handleCustomSplit = () => {
+    const thresholds = customThresholds.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)).sort((a, b) => a - b);
+    if (thresholds.length === 0) { setError('Enter at least one threshold (e.g. 1000, 1500)'); return; }
+    const result: typeof brackets = [];
+    let prev = 0;
+    for (let i = 0; i <= thresholds.length; i++) {
+      const lo = prev;
+      const hi = i < thresholds.length ? thresholds[i] - 1 : 9999;
+      const label = i === 0 ? `Under ${thresholds[0]}` : i === thresholds.length ? `${thresholds[i - 1]}+` : `${prev}–${thresholds[i] - 1}`;
+      const count = players.filter(p => p.elo >= lo && p.elo <= hi).length;
+      result.push({ label, minElo: lo, maxElo: hi, playerCount: count });
+      prev = i < thresholds.length ? thresholds[i] : prev;
+    }
+    setBrackets(result.filter(b => b.playerCount > 0));
+    setStep('review');
+    setError('');
+  };
+
+  const handleSpawn = async () => {
+    setStep('spawning');
+    try {
+      const res = await fetch(`/api/brackets/${bracketGroupId}/spawn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brackets: brackets.map((b, i) => ({ label: b.label, minElo: b.minElo, maxElo: b.maxElo, order: i })),
+          players: players.map(p => ({ id: p.id, name: p.name, elo: p.elo, username: p.username })),
+        }),
+      });
+      if (res.ok) {
+        setStep('done');
+        toast.success(`${brackets.length} bracket tournaments created!`);
+        onSpawned();
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to spawn brackets');
+        setStep('review');
+      }
+    } catch {
+      setError('Network error — try again');
+      setStep('review');
+    }
+  };
+
+  if (step === 'done') return null;
+
+  return (
+    <div className={`w-full rounded-2xl border p-4 sm:p-5 space-y-4 ${
+      isDark ? "bg-amber-500/05 border-amber-500/20" : "bg-amber-50/60 border-amber-200"
+    }`}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+            isDark ? "bg-amber-500/15" : "bg-amber-100"
+          }`}>
+            <BarChart3 className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+          </div>
+          <div>
+            <h4 className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
+              style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              Rating Brackets
+            </h4>
+            <p className={`text-[11px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+              Split players into skill-level groups
+            </p>
+          </div>
+        </div>
+        {/* ELO spread badge */}
+        <div className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${
+          spread > 500
+            ? isDark ? "bg-red-500/15 text-red-400 border border-red-500/25" : "bg-red-50 text-red-600 border border-red-200"
+            : spread > 200
+            ? isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/25" : "bg-amber-50 text-amber-600 border border-amber-200"
+            : isDark ? "bg-green-500/15 text-green-400 border border-green-500/25" : "bg-green-50 text-green-600 border border-green-200"
+        }`}>
+          {spread} ELO spread
+        </div>
+      </div>
+
+      {/* ELO distribution bar */}
+      <div className={`rounded-xl p-3 space-y-2 ${
+        isDark ? "bg-white/04" : "bg-white"
+      }`}>
+        <div className="flex items-center justify-between text-[10px] font-semibold">
+          <span className={isDark ? "text-white/40" : "text-[#436850]"}>{minElo}</span>
+          <span className={isDark ? "text-white/40" : "text-[#436850]"}>avg {avgElo}</span>
+          <span className={isDark ? "text-white/40" : "text-[#436850]"}>{maxElo}</span>
+        </div>
+        <div className={`h-2 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-[#ADBC9F]/30"}`}>
+          <div className="h-full rounded-full bg-gradient-to-r from-green-500 via-amber-400 to-red-500"
+            style={{ width: '100%' }} />
+        </div>
+        <p className={`text-[10px] text-center ${isDark ? "text-white/30" : "text-[#436850]/60"}`}>
+          {players.length} players · {sortedElos.filter(e => e < 1000).length} under 1000 · {sortedElos.filter(e => e >= 1000 && e < 1500).length} 1000–1499 · {sortedElos.filter(e => e >= 1500).length} 1500+
+        </p>
+      </div>
+
+      {/* Step: Idle — show action buttons */}
+      {step === 'idle' && (
+        <div className="space-y-3">
+          <button
+            onClick={handleSuggest}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
+              isDark ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/25" : "bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200"
+            }`}
+          >
+            <Zap className="w-4 h-4" />
+            Auto-Suggest Brackets
+          </button>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={customThresholds}
+              onChange={e => setCustomThresholds(e.target.value)}
+              placeholder="Custom thresholds (e.g. 1000, 1500)"
+              className={`flex-1 px-3 py-2.5 rounded-xl text-sm border ${
+                isDark ? "bg-white/05 border-white/10 text-white placeholder:text-white/30" : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/40"
+              }`}
+            />
+            <button
+              onClick={handleCustomSplit}
+              className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
+              }`}
+            >
+              Split
+            </button>
+          </div>
+          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+        </div>
+      )}
+
+      {/* Step: Suggesting — loading */}
+      {step === 'suggesting' && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+          <span className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Analyzing player ratings...</span>
+        </div>
+      )}
+
+      {/* Step: Review — show suggested brackets with player counts */}
+      {step === 'review' && (
+        <div className="space-y-3">
+          <div className="space-y-2">
+            {brackets.map((b, i) => (
+              <div key={i} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
+                isDark ? "bg-white/04 border-white/08" : "bg-white border-[#ADBC9F]/50"
+              }`}>
+                <div className="flex items-center gap-3">
+                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${
+                    isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"
+                  }`}>{i + 1}</span>
+                  <div>
+                    <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>{b.label}</span>
+                    <span className={`block text-[10px] ${isDark ? "text-white/30" : "text-[#436850]/60"}`}>
+                      {b.minElo === 0 ? '0' : b.minElo}–{b.maxElo === 9999 ? '∞' : b.maxElo} ELO
+                    </span>
+                  </div>
+                </div>
+                <span className={`text-sm font-bold px-2.5 py-1 rounded-lg ${
+                  isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
+                }`}>
+                  {b.playerCount} players
+                </span>
+              </div>
+            ))}
+          </div>
+          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setStep('idle'); setBrackets([]); }}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                isDark ? "bg-white/06 text-white/60 hover:bg-white/10" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]/60"
+              }`}
+            >
+              Adjust
+            </button>
+            <button
+              onClick={handleSpawn}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-[#436850] text-white hover:bg-[#2d5235] shadow-lg shadow-[#436850]/25 transition-all active:scale-[0.98]"
+            >
+              <Zap className="w-4 h-4" />
+              Create {brackets.length} Brackets
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step: Spawning — loading */}
+      {step === 'spawning' && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <div className="w-4 h-4 border-2 border-[#436850] border-t-transparent rounded-full animate-spin" />
+          <span className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Creating bracket tournaments...</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Director() {
   const { theme } = useTheme();
@@ -3236,6 +3494,24 @@ export default function Director() {
                           Walk-in
                         </button>
                       </div>
+                      {/* ── Bracket Sort Panel — shown for bracket-parent tournaments before spawning ── */}
+                      {isBracketParent && childBrackets.length === 0 && state.players.length >= 2 && (
+                        <BracketSortPanel
+                          players={state.players}
+                          tournamentId={tournamentId}
+                          bracketGroupId={tournamentConfig?.bracketGroupId ?? undefined}
+                          isDark={isDark}
+                          onSpawned={() => {
+                            // Refresh child brackets
+                            if (tournamentConfig?.bracketGroupId) {
+                              fetch(`/api/brackets/${tournamentConfig.bracketGroupId}/brackets`)
+                                .then(r => r.json())
+                                .then(data => setChildBrackets(data.brackets || []));
+                            }
+                          }}
+                        />
+                      )}
+
                       {/* Action buttons */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <button
