@@ -17,7 +17,7 @@
  * Mobile: uses Web Share API for individual slide downloads on mobile
  */
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { X, Download, Instagram, ChevronLeft, ChevronRight, Loader2, Share2, LayoutGrid, Smartphone } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { StandingRow } from "@/lib/swiss";
@@ -74,6 +74,42 @@ export interface SlideTheme {
   glow: string;
   swatch: string;
 }
+
+// ─── Font options ────────────────────────────────────────────────────────────
+
+export interface SlideFont {
+  id: string;
+  label: string;
+  family: string;
+  googleUrl: string;
+  italic?: boolean;
+}
+
+export const SLIDE_FONTS: SlideFont[] = [
+  { id: "anton", label: "Anton", family: "'Anton', sans-serif", googleUrl: "https://fonts.googleapis.com/css2?family=Anton&display=swap", italic: true },
+  { id: "bebas", label: "Bebas Neue", family: "'Bebas Neue', sans-serif", googleUrl: "https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" },
+  { id: "oswald", label: "Oswald", family: "'Oswald', sans-serif", googleUrl: "https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap", italic: true },
+  { id: "barlow", label: "Barlow Cond", family: "'Barlow Condensed', sans-serif", googleUrl: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&display=swap", italic: true },
+  { id: "inter", label: "Inter", family: "'Inter', sans-serif", googleUrl: "https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" },
+];
+
+const DEFAULT_FONT = SLIDE_FONTS[0]; // Anton
+const DEFAULT_HEADING_SIZE = 144;
+const DEFAULT_HEADING_COLOR = "#FFFFFF";
+const DEFAULT_BODY_COLOR = "rgba(255,255,255,0.75)";
+
+// ─── Background options ───────────────────────────────────────────────────────
+
+export type BgType = "gradient" | "solid" | "image";
+
+export const GRADIENT_PRESETS = [
+  { id: "default", label: "Theme", value: null }, // uses theme bg
+  { id: "pitch-black", label: "Pitch", value: "linear-gradient(160deg, #000000 0%, #0a0a0a 100%)" },
+  { id: "forest", label: "Forest", value: "linear-gradient(160deg, #0d2b0f 0%, #1a4a1e 100%)" },
+  { id: "night-sky", label: "Night", value: "linear-gradient(160deg, #050a1a 0%, #0a1535 100%)" },
+  { id: "ember", label: "Ember", value: "linear-gradient(160deg, #1a0505 0%, #3a0a0a 100%)" },
+  { id: "royal", label: "Royal", value: "linear-gradient(160deg, #0d0520 0%, #1a0a3a 100%)" },
+];
 
 export const SLIDE_THEMES: SlideTheme[] = [
   {
@@ -144,6 +180,45 @@ export const SLIDE_THEMES: SlideTheme[] = [
   },
 ];
 
+// Add 3 more premium themes
+const EXTRA_THEMES: SlideTheme[] = [
+  {
+    id: "pitch-black",
+    label: "Pitch",
+    bg: "#050505",
+    bgDark: "#000000",
+    accent: "#1a1a1a",
+    accentLight: "#4CAF50",
+    accentBright: "#76FF03",
+    glow: "#1a3a1a",
+    swatch: "#050505",
+  },
+  {
+    id: "chalk-board",
+    label: "Chalk",
+    bg: "#1a3a1e",
+    bgDark: "#0a1e0d",
+    accent: "#2a5a2e",
+    accentLight: "#FFFFFF",
+    accentBright: "#FFFFFF",
+    glow: "#2a5a2e",
+    swatch: "#1a3a1e",
+  },
+  {
+    id: "neon-night",
+    label: "Neon",
+    bg: "#080808",
+    bgDark: "#000000",
+    accent: "#0a2a0a",
+    accentLight: "#39FF14",
+    accentBright: "#39FF14",
+    glow: "#0a2a0a",
+    swatch: "#080808",
+  },
+];
+
+const ALL_THEMES = [...SLIDE_THEMES, ...EXTRA_THEMES];
+
 const DEFAULT_THEME = SLIDE_THEMES[0];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -201,6 +276,18 @@ interface SlideProps {
   logoScale?: number;
   /** Logo position in the footer bar */
   logoPosition?: "left" | "center" | "right";
+  /** Heading font family string */
+  headingFont?: SlideFont;
+  /** Heading font size in px at 1× scale */
+  headingSize?: number;
+  /** Heading text color */
+  headingColor?: string;
+  /** Body / secondary text color */
+  bodyColor?: string;
+  /** Custom background type */
+  bgType?: BgType;
+  /** Custom background value — CSS gradient string, hex color, or data URL */
+  bgValue?: string | null;
 }
 
 /** Shared slide wrapper — themed background with chess board texture */
@@ -209,26 +296,51 @@ function SlideWrapper({
   scale = 1,
   theme = DEFAULT_THEME,
   format = "square",
+  headingFont,
+  bgType,
+  bgValue,
 }: {
   children: React.ReactNode;
   scale?: number;
   theme?: SlideTheme;
   format?: SlideFormat;
+  headingFont?: SlideFont;
+  bgType?: BgType;
+  bgValue?: string | null;
 }) {
   const w = SLIDE_W * scale;
   const h = SLIDE_H[format] * scale;
+
+  // Resolve background
+  let bgStyle: string;
+  if (bgType === "image" && bgValue) {
+    bgStyle = `url(${bgValue}) center/cover no-repeat`;
+  } else if (bgType === "solid" && bgValue) {
+    bgStyle = bgValue;
+  } else if (bgType === "gradient" && bgValue) {
+    bgStyle = bgValue;
+  } else {
+    bgStyle = `linear-gradient(145deg, ${theme.bg} 0%, ${theme.bgDark} 100%)`;
+  }
+
+  const fontFamily = headingFont?.family ?? "'Inter', 'Helvetica Neue', Arial, sans-serif";
+
   return (
     <div
       style={{
         width: w,
         height: h,
-        background: `linear-gradient(145deg, ${theme.bg} 0%, ${theme.bgDark} 100%)`,
+        background: bgStyle,
         position: "relative",
         overflow: "hidden",
-        fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+        fontFamily,
         flexShrink: 0,
       }}
     >
+      {/* Dark overlay for image backgrounds to ensure text readability */}
+      {bgType === "image" && bgValue && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.52)", zIndex: 0 }} />
+      )}
       {/* Chess board texture overlay */}
       <div
         style={{
@@ -398,7 +510,7 @@ const TOTAL_SLIDES = 6;
 
 // ─── Slide 1 — Cover ─────────────────────────────────────────────────────────
 
-function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", championAvatarUrl, logoScale = 1, logoPosition = "center" }: SlideProps) {
+function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", championAvatarUrl, logoScale = 1, logoPosition = "center", headingFont = DEFAULT_FONT, headingSize = DEFAULT_HEADING_SIZE, headingColor = DEFAULT_HEADING_COLOR, bodyColor = DEFAULT_BODY_COLOR, bgType, bgValue }: SlideProps) {
   const s = scale;
   const champion = rows[0]?.player;
   const clubName = config?.clubName;
@@ -408,15 +520,16 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
   const isStory = format === "story";
   const _H = SLIDE_H[format] * s;
   const hasAvatar = !!championAvatarUrl;
+  const isAntonLike = headingFont.italic !== false;
 
   // Dynamic font size for tournament name — fills width
   const nameFontSize = Math.min(
-    isStory ? 108 * s : 96 * s,
+    headingSize * s,
     (SLIDE_W * s * 0.88) / Math.max(1, tournamentName.length * 0.52)
   );
 
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={1} total={TOTAL_SLIDES} scale={scale} />
 
       {/* ── TOP SECTION: Club pill + Tournament name ── */}
@@ -469,9 +582,11 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
           style={{
             fontSize: nameFontSize,
             fontWeight: 900,
-            color: BRAND.white,
-            lineHeight: 1.0,
-            letterSpacing: "-0.025em",
+            fontStyle: isAntonLike ? "italic" : "normal",
+            fontFamily: headingFont.family,
+            color: headingColor,
+            lineHeight: 0.95,
+            letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.02em",
             textTransform: "uppercase" as const,
           }}
         >
@@ -684,7 +799,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
 
 // ─── Slide 2 — Podium ────────────────────────────────────────────────────────
 
-function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
+function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center", headingFont = DEFAULT_FONT, headingSize = DEFAULT_HEADING_SIZE, headingColor = DEFAULT_HEADING_COLOR, bodyColor = DEFAULT_BODY_COLOR, bgType, bgValue }: SlideProps) {
   const s = scale;
   const top3 = rows.slice(0, 3);
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
@@ -697,11 +812,12 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
   const HEADER_H = isStory ? 220 * s : 160 * s;
   const H = SLIDE_H[format] * s;
   const availH = H - FOOTER - HEADER_H;
-  // Story: taller podium blocks
   const podiumHeightFrac = isStory ? [0.28, 0.38, 0.22] : [0.30, 0.40, 0.24];
+  const isAntonLike = headingFont.italic !== false;
+  const hSize = Math.min(headingSize, isStory ? 88 : 72) * s;
 
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={2} total={TOTAL_SLIDES} scale={scale} />
 
       {/* Header */}
@@ -709,7 +825,7 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
         <div style={{ fontSize: 13 * s, color: "rgba(255,255,255,0.32)", letterSpacing: "0.2em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 10 * s }}>
           {tournamentName}
         </div>
-        <div style={{ fontSize: isStory ? 88 * s : 72 * s, fontWeight: 900, color: BRAND.white, letterSpacing: "-0.025em", lineHeight: 1 }}>
+        <div style={{ fontSize: hSize, fontWeight: 900, fontStyle: isAntonLike ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.02em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
           Top Players
         </div>
         {isStory && (
@@ -798,7 +914,7 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
 
 // ─── Slide 3 — Final Standings ────────────────────────────────────────────────
 
-function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
+function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center", headingFont = DEFAULT_FONT, headingSize = DEFAULT_HEADING_SIZE, headingColor = DEFAULT_HEADING_COLOR, bodyColor = DEFAULT_BODY_COLOR, bgType, bgValue }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const FOOTER = 80 * s;
@@ -816,8 +932,11 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
   const rankColors: Record<number, string> = { 1: BRAND.gold, 2: BRAND.silver, 3: BRAND.bronze };
   const medals: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
+  const isAntonLike3 = headingFont.italic !== false;
+  const hSize3 = Math.min(headingSize, isStory ? 96 : 80) * s;
+
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={3} total={TOTAL_SLIDES} scale={scale} />
 
       {/* Header — larger title matching Slide 1 weight */}
@@ -825,7 +944,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
         <div style={{ fontSize: 15 * s, color: "rgba(255,255,255,0.38)", letterSpacing: "0.22em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 12 * s }}>
           {tournamentName}
         </div>
-        <div style={{ fontSize: isStory ? 96 * s : 80 * s, fontWeight: 900, color: BRAND.white, letterSpacing: "-0.03em", lineHeight: 1 }}>
+        <div style={{ fontSize: hSize3, fontWeight: 900, fontStyle: isAntonLike3 ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.03em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
           Final Standings
         </div>
       </div>
@@ -920,7 +1039,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds: _totalRoun
 
 // ─── Slide 4 — Stats ─────────────────────────────────────────────────────────
 
-function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
+function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center", headingFont = DEFAULT_FONT, headingSize = DEFAULT_HEADING_SIZE, headingColor = DEFAULT_HEADING_COLOR, bodyColor = DEFAULT_BODY_COLOR, bgType, bgValue }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const totalGames = totalRounds * Math.floor(rows.length / 2);
@@ -940,8 +1059,11 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
     { label: "Games", value: String(totalGames), sub: "played" },
   ];
 
+  const isAntonLike4 = headingFont.italic !== false;
+  const hSize4 = Math.min(headingSize, isStory ? 88 : 72) * s;
+
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={4} total={TOTAL_SLIDES} scale={scale} />
 
       {/* Header */}
@@ -949,7 +1071,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
         <div style={{ fontSize: 13 * s, color: "rgba(255,255,255,0.32)", letterSpacing: "0.2em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 10 * s }}>
           {tournamentName}
         </div>
-        <div style={{ fontSize: isStory ? 88 * s : 72 * s, fontWeight: 900, color: BRAND.white, letterSpacing: "-0.025em", lineHeight: 1 }}>
+        <div style={{ fontSize: hSize4, fontWeight: 900, fontStyle: isAntonLike4 ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.025em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
           By the Numbers
         </div>
       </div>
@@ -1083,15 +1205,18 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
 
 // ─── Slide 5 — CTA ───────────────────────────────────────────────────────────
 
-function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
+function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, totalRounds: _totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, format = "square", logoScale = 1, logoPosition = "center", headingFont = DEFAULT_FONT, headingSize = DEFAULT_HEADING_SIZE, headingColor = DEFAULT_HEADING_COLOR, bodyColor = DEFAULT_BODY_COLOR, bgType, bgValue }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const clubName = config?.clubName;
   const inviteCode = config?.inviteCode;
   const headline = clubName ? `Play at\n${clubName}` : "Play Over\nThe Board";
 
+  const isAntonLike5 = headingFont.italic !== false;
+  const hSize5 = Math.min(headingSize, isStory ? 130 : 100) * s;
+
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={5} total={TOTAL_SLIDES} scale={scale} />
 
       {/* Giant OTB watermark — fills the background */}
@@ -1137,12 +1262,15 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
         {/* Headline */}
         <div
           style={{
-            fontSize: clampFont(isStory ? 130 * s : 100 * s, headline, 14),
+            fontSize: clampFont(hSize5, headline, 14),
             fontWeight: 900,
-            color: BRAND.white,
+            fontStyle: isAntonLike5 ? "italic" : "normal",
+            fontFamily: headingFont.family,
+            color: headingColor,
             lineHeight: 0.95,
-            letterSpacing: "-0.03em",
+            letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.03em",
             whiteSpace: "pre-line" as const,
+            textTransform: "uppercase" as const,
           }}
         >
           {headline}
@@ -1246,7 +1374,7 @@ function buildRoundGrid(
   return grid;
 }
 
-function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, rounds = [], format = "square", logoScale = 1, logoPosition = "center" }: SlideProps) {
+function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, rounds = [], format = "square", logoScale = 1, logoPosition = "center", headingFont = DEFAULT_FONT, headingSize = DEFAULT_HEADING_SIZE, headingColor = DEFAULT_HEADING_COLOR, bodyColor = DEFAULT_BODY_COLOR, bgType, bgValue }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
   const FOOTER = 80 * s;
@@ -1280,8 +1408,11 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
     return { background: "transparent", color: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.06)" };
   };
 
+  const isAntonLike6 = headingFont.italic !== false;
+  const hSize6 = Math.min(headingSize, isStory ? 88 : 74) * s;
+
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={6} total={TOTAL_SLIDES} scale={scale} />
 
       {/* Header — larger title matching Slide 3 */}
@@ -1289,7 +1420,7 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
         <div style={{ fontSize: 15 * s, color: "rgba(255,255,255,0.38)", letterSpacing: "0.22em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 12 * s }}>
           {tournamentName}
         </div>
-        <div style={{ fontSize: isStory ? 88 * s : 74 * s, fontWeight: 900, color: BRAND.white, letterSpacing: "-0.03em", lineHeight: 1 }}>
+        <div style={{ fontSize: hSize6, fontWeight: 900, fontStyle: isAntonLike6 ? "italic" : "normal", fontFamily: headingFont.family, color: headingColor, letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.03em", lineHeight: 0.95, textTransform: "uppercase" as const }}>
           Round by Round
         </div>
       </div>
@@ -1546,6 +1677,12 @@ function Slide7BracketResults({
   format = "square",
   logoScale = 1,
   logoPosition = "center",
+  headingFont = DEFAULT_FONT,
+  headingSize = DEFAULT_HEADING_SIZE,
+  headingColor = DEFAULT_HEADING_COLOR,
+  bodyColor = DEFAULT_BODY_COLOR,
+  bgType,
+  bgValue,
 }: SlideProps) {
   const s = scale;
   const isStory = format === "story";
@@ -1553,6 +1690,8 @@ function Slide7BracketResults({
   const PAD = 56 * s;
   const H = SLIDE_H[format] * s;
   const W = SLIDE_W * s;
+  const isAntonLike7 = headingFont.italic !== false;
+  const hSize7 = Math.min(headingSize, isStory ? 88 : 72) * s;
 
   // Compute elimStartRound — for swiss_elim, elim rounds start after swiss rounds
   const swissRounds = (config as (typeof config & { swissRounds?: number }))?.swissRounds ?? 0;
@@ -1582,7 +1721,7 @@ function Slide7BracketResults({
   const SEMI_W = (CHAMP_W - CARD_GAP) / 2;
 
   return (
-    <SlideWrapper scale={scale} theme={theme} format={format}>
+    <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
       <SlideCounter current={7} total={7} scale={scale} />
 
       {/* ── Header ── */}
@@ -1608,11 +1747,14 @@ function Slide7BracketResults({
         </div>
         <div
           style={{
-            fontSize: isStory ? 88 * s : 72 * s,
+            fontSize: hSize7,
             fontWeight: 900,
-            color: BRAND.white,
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
+            fontStyle: isAntonLike7 ? "italic" : "normal",
+            fontFamily: headingFont.family,
+            color: headingColor,
+            letterSpacing: headingFont.id === "anton" ? "0.01em" : "-0.03em",
+            lineHeight: 0.95,
+            textTransform: "uppercase" as const,
           }}
         >
           Final Results
@@ -1966,6 +2108,45 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const bgImageInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Typography customization ─────────────────────────────────────────────────
+  const [headingFont, setHeadingFont] = useState<SlideFont>(DEFAULT_FONT);
+  const [headingSize, setHeadingSize] = useState<number>(DEFAULT_HEADING_SIZE);
+  const [headingColor, setHeadingColor] = useState<string>(DEFAULT_HEADING_COLOR);
+  const [bodyColor, setBodyColor] = useState<string>(DEFAULT_BODY_COLOR);
+
+  // ── Background customization ─────────────────────────────────────────────────
+  const [bgType, setBgType] = useState<BgType>("gradient");
+  const [bgValue, setBgValue] = useState<string | null>(null); // null = use theme
+  const [bgDragging, setBgDragging] = useState(false);
+  const [selectedGradientId, setSelectedGradientId] = useState<string>("default");
+  const [solidBgColor, setSolidBgColor] = useState<string>("#0d2b0f");
+
+  // Inject Google Font link for the selected heading font
+  useEffect(() => {
+    if (!open) return;
+    const id = `carousel-font-${headingFont.id}`;
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = headingFont.googleUrl;
+      document.head.appendChild(link);
+    }
+  }, [open, headingFont]);
+
+  // Load Anton on mount (default font)
+  useEffect(() => {
+    const id = "carousel-font-anton";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Anton&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
 
   const slideProps: SlideProps = {
     rows,
@@ -1980,6 +2161,12 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     championAvatarUrl,
     logoScale,
     logoPosition,
+    headingFont,
+    headingSize,
+    headingColor,
+    bodyColor,
+    bgType,
+    bgValue,
   };
 
   // Dynamic slide list — adds Bracket slide for elimination formats
@@ -2393,7 +2580,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             <div className={`w-full rounded-2xl border p-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
               <p className={`text-xs font-bold mb-3 ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Slide Colour Theme</p>
               <div className="flex items-center gap-2 flex-wrap">
-                {SLIDE_THEMES.map((t) => {
+                {ALL_THEMES.map((t) => {
                   const isActive = activeTheme.id === t.id;
                   return (
                     <button
@@ -2424,6 +2611,228 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                   );
                 })}
               </div>
+            </div>
+
+            {/* ── Typography Panel ── */}
+            <div className={`w-full rounded-2xl border p-4 space-y-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+              <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Typography</p>
+
+              {/* Font family */}
+              <div>
+                <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Font</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {SLIDE_FONTS.map((f) => {
+                    const isActive = headingFont.id === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setHeadingFont(f)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                          isActive
+                            ? isDark ? "border-[#769656] bg-[#769656]/20 text-[#9bc46a]" : "border-[#436850] bg-[#436850]/10 text-[#12372A]"
+                            : isDark ? "border-white/08 bg-white/03 text-white/40 hover:border-white/15" : "border-[#ADBC9F] bg-transparent text-[#436850]/60 hover:border-[#436850]"
+                        }`}
+                        style={{ fontFamily: f.family, fontStyle: f.italic ? "italic" : "normal" }}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Heading size */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`text-[10px] font-semibold ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Size</span>
+                  <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-white/50" : "text-[#12372A]/70"}`}>{headingSize}px</span>
+                </div>
+                <input
+                  type="range"
+                  min={60}
+                  max={200}
+                  step={4}
+                  value={headingSize}
+                  onChange={(e) => setHeadingSize(Number(e.target.value))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#769656]"
+                  style={{ background: `linear-gradient(to right, #769656 ${((headingSize - 60) / 140) * 100}%, rgba(255,255,255,0.12) ${((headingSize - 60) / 140) * 100}%)` }}
+                />
+                <div className={`flex justify-between mt-0.5 text-[9px] ${isDark ? "text-white/20" : "text-[#436850]/50"}`}>
+                  <span>Small</span><span>Default</span><span>Large</span>
+                </div>
+              </div>
+
+              {/* Heading color */}
+              <div>
+                <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Colour</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={headingColor}
+                    onChange={(e) => setHeadingColor(e.target.value)}
+                    className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0.5 bg-transparent"
+                  />
+                  <div className="flex gap-1.5">
+                    {["#FFFFFF", "#4CAF50", "#39FF14", "#FFD700", "#FF6B35", "#00BFFF"].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setHeadingColor(c)}
+                        className="w-6 h-6 rounded-full border-2 transition-all"
+                        style={{
+                          background: c,
+                          borderColor: headingColor === c ? "white" : "transparent",
+                          boxShadow: headingColor === c ? "0 0 0 1px rgba(255,255,255,0.4)" : "none",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Background Panel ── */}
+            <div className={`w-full rounded-2xl border p-4 space-y-4 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+              <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Background</p>
+
+              {/* BG type tabs */}
+              <div className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-white/05" : "bg-[#ADBC9F]/20"}`}>
+                {(["gradient", "solid", "image"] as BgType[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      setBgType(t);
+                      if (t === "gradient") {
+                        setBgValue(selectedGradientId === "default" ? null : GRADIENT_PRESETS.find(p => p.id === selectedGradientId)?.value ?? null);
+                      } else if (t === "solid") {
+                        setBgValue(solidBgColor);
+                      }
+                    }}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-all ${
+                      bgType === t
+                        ? isDark ? "bg-white/10 text-white" : "bg-white text-[#12372A] shadow-sm"
+                        : isDark ? "text-white/35 hover:text-white/55" : "text-[#436850]/60 hover:text-[#436850]"
+                    }`}
+                  >
+                    {t === "gradient" ? "Gradient" : t === "solid" ? "Solid" : "Image"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Gradient presets */}
+              {bgType === "gradient" && (
+                <div className="flex gap-2 flex-wrap">
+                  {GRADIENT_PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedGradientId(p.id);
+                        setBgValue(p.value);
+                      }}
+                      className="flex flex-col items-center gap-1 group"
+                    >
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          background: p.value ?? `linear-gradient(145deg, ${activeTheme.bg} 0%, ${activeTheme.bgDark} 100%)`,
+                          border: selectedGradientId === p.id ? "2.5px solid #769656" : isDark ? "2px solid rgba(255,255,255,0.12)" : "2px solid rgba(0,0,0,0.10)",
+                          boxShadow: selectedGradientId === p.id ? "0 0 0 2px #76965644" : "none",
+                        }}
+                      />
+                      <span className={`text-[9px] font-semibold ${selectedGradientId === p.id ? (isDark ? "text-white/80" : "text-[#12372A]") : (isDark ? "text-white/30" : "text-[#436850]")}`}>{p.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Solid color picker */}
+              {bgType === "solid" && (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={solidBgColor}
+                    onChange={(e) => { setSolidBgColor(e.target.value); setBgValue(e.target.value); }}
+                    className="w-10 h-10 rounded-xl cursor-pointer border-0 p-0.5 bg-transparent"
+                  />
+                  <div className="flex gap-1.5">
+                    {["#000000", "#0d2b0f", "#0a1535", "#1a0505", "#1a1a1a", "#0d0520"].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => { setSolidBgColor(c); setBgValue(c); }}
+                        className="w-7 h-7 rounded-lg border-2 transition-all"
+                        style={{
+                          background: c,
+                          borderColor: solidBgColor === c ? "#769656" : "rgba(255,255,255,0.15)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Image upload */}
+              {bgType === "image" && (
+                <div>
+                  {bgValue ? (
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="rounded-xl overflow-hidden flex-shrink-0"
+                        style={{ width: 64, height: 64, background: `url(${bgValue}) center/cover no-repeat` }}
+                      />
+                      <div>
+                        <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Background image set</p>
+                        <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>Dark overlay applied for readability</p>
+                        <button onClick={() => setBgValue(null)} className={`text-[10px] mt-1 ${isDark ? "text-red-400 hover:text-red-300" : "text-red-500"}`}>Remove image</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => bgImageInputRef.current?.click()}
+                      onDragOver={(e) => { e.preventDefault(); setBgDragging(true); }}
+                      onDragLeave={() => setBgDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setBgDragging(false);
+                        const file = e.dataTransfer.files[0];
+                        if (file?.type.startsWith("image/")) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => { if (typeof ev.target?.result === "string") setBgValue(ev.target.result); };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className={`w-full rounded-xl border-2 border-dashed py-4 flex flex-col items-center gap-1.5 transition-colors ${
+                        bgDragging
+                          ? isDark ? "border-[#769656] bg-[#769656]/10" : "border-[#436850] bg-[#436850]/05"
+                          : isDark ? "border-white/10 hover:border-white/20" : "border-[#ADBC9F] hover:border-[#ADBC9F]"
+                      }`}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? "text-white/30" : "text-[#436850]"}>
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-[#436850]"}`}>Upload background image</span>
+                      <span className={`text-[10px] ${isDark ? "text-white/20" : "text-[#436850]/70"}`}>Click or drag &amp; drop · JPG, PNG, WebP</span>
+                    </button>
+                  )}
+                  <input
+                    ref={bgImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file?.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => { if (typeof ev.target?.result === "string") setBgValue(ev.target.result); };
+                        reader.readAsDataURL(file);
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Mobile share hint */}
