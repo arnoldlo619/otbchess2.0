@@ -102,6 +102,22 @@ const DEFAULT_BODY_COLOR = "rgba(255,255,255,0.75)";
 
 export type BgType = "gradient" | "solid" | "image";
 
+/** Persisted custom style template */
+export interface CarouselTemplate {
+  id: string;
+  name: string;
+  createdAt: string;
+  themeId: string;
+  headingFontId: string;
+  headingSize: number;
+  headingColor: string;
+  bodyColor: string;
+  bgType: BgType;
+  bgValue: string | null;
+  selectedGradientId: string;
+  solidBgColor: string;
+}
+
 export const GRADIENT_PRESETS = [
   { id: "default", label: "Theme", value: null }, // uses theme bg
   { id: "pitch-black", label: "Pitch", value: "linear-gradient(160deg, #000000 0%, #0a0a0a 100%)" },
@@ -2110,6 +2126,64 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bgImageInputRef = useRef<HTMLInputElement>(null);
 
+  // ── Custom templates (localStorage persistence) ──────────────────────────────
+  const TEMPLATES_KEY = "otb_carousel_templates_v1";
+  const loadTemplates = (): CarouselTemplate[] => {
+    try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) ?? "[]"); } catch { return []; }
+  };
+  const [savedTemplates, setSavedTemplates] = useState<CarouselTemplate[]>(loadTemplates);
+  const [templateName, setTemplateName] = useState("");
+  const [templateSaved, setTemplateSaved] = useState(false);
+
+  const persistTemplates = (list: CarouselTemplate[]) => {
+    setSavedTemplates(list);
+    localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list));
+  };
+
+  const handleSaveTemplate = () => {
+    const name = templateName.trim() || `Template ${savedTemplates.length + 1}`;
+    const tpl: CarouselTemplate = {
+      id: `tpl_${Date.now()}`,
+      name,
+      createdAt: new Date().toISOString(),
+      themeId: activeTheme.id,
+      headingFontId: headingFont.id,
+      headingSize,
+      headingColor,
+      bodyColor,
+      bgType,
+      bgValue: bgType === "image" ? null : bgValue, // don't persist base64 images
+      selectedGradientId,
+      solidBgColor,
+    };
+    const existing = savedTemplates.findIndex((t) => t.name === name);
+    const updated = existing >= 0
+      ? savedTemplates.map((t, i) => (i === existing ? tpl : t))
+      : [tpl, ...savedTemplates];
+    persistTemplates(updated);
+    setTemplateName("");
+    setTemplateSaved(true);
+    setTimeout(() => setTemplateSaved(false), 2000);
+  };
+
+  const handleLoadTemplate = (tpl: CarouselTemplate) => {
+    const theme = ALL_THEMES.find((t) => t.id === tpl.themeId) ?? DEFAULT_THEME;
+    const font = SLIDE_FONTS.find((f) => f.id === tpl.headingFontId) ?? DEFAULT_FONT;
+    setActiveTheme(theme);
+    setHeadingFont(font);
+    setHeadingSize(tpl.headingSize);
+    setHeadingColor(tpl.headingColor);
+    setBodyColor(tpl.bodyColor);
+    setBgType(tpl.bgType);
+    setBgValue(tpl.bgValue ?? null);
+    setSelectedGradientId(tpl.selectedGradientId);
+    setSolidBgColor(tpl.solidBgColor);
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    persistTemplates(savedTemplates.filter((t) => t.id !== id));
+  };
+
   // ── Typography customization ─────────────────────────────────────────────────
   const [headingFont, setHeadingFont] = useState<SlideFont>(DEFAULT_FONT);
   const [headingSize, setHeadingSize] = useState<number>(DEFAULT_HEADING_SIZE);
@@ -2834,6 +2908,117 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                 </div>
               )}
             </div>
+
+            {/* ── Save as Custom Template ── */}
+            <div className={`w-full rounded-2xl border p-4 space-y-3 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+              <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Save as Custom Template</p>
+              <p className={`text-[10px] leading-relaxed ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>
+                Save your current font, colour, and background settings to reuse in future tournaments.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveTemplate(); }}
+                  placeholder="Template name (optional)"
+                  maxLength={40}
+                  className={`flex-1 rounded-xl px-3 py-2 text-xs font-medium outline-none border transition-colors ${
+                    isDark
+                      ? "bg-white/05 border-white/10 text-white placeholder:text-white/25 focus:border-[#769656]/60"
+                      : "bg-white/60 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/40 focus:border-[#436850]"
+                  }`}
+                />
+                <button
+                  onClick={handleSaveTemplate}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    templateSaved
+                      ? "bg-[#4CAF50] text-white"
+                      : isDark
+                        ? "bg-[#769656]/20 border border-[#769656]/40 text-[#9bc46a] hover:bg-[#769656]/30"
+                        : "bg-[#436850]/10 border border-[#436850]/30 text-[#12372A] hover:bg-[#436850]/20"
+                  }`}
+                >
+                  {templateSaved ? (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                      Saved!
+                    </>
+                  ) : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* ── Saved Templates ── */}
+            {savedTemplates.length > 0 && (
+              <div className={`w-full rounded-2xl border p-4 space-y-3 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+                <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>My Templates</p>
+                <div className="space-y-2">
+                  {savedTemplates.map((tpl) => {
+                    const tplTheme = ALL_THEMES.find((t) => t.id === tpl.themeId);
+                    const tplFont = SLIDE_FONTS.find((f) => f.id === tpl.headingFontId);
+                    return (
+                      <div
+                        key={tpl.id}
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-colors ${
+                          isDark ? "border-white/06 bg-white/03 hover:bg-white/05" : "border-[#ADBC9F]/60 bg-white/30 hover:bg-white/50"
+                        }`}
+                      >
+                        {/* Colour swatch */}
+                        <div
+                          className="flex-shrink-0 rounded-lg"
+                          style={{
+                            width: 28,
+                            height: 28,
+                            background: tpl.bgType === "solid" && tpl.bgValue
+                              ? tpl.bgValue
+                              : tpl.bgType === "gradient" && tpl.bgValue
+                                ? tpl.bgValue
+                                : tplTheme
+                                  ? `linear-gradient(135deg, ${tplTheme.bg} 0%, ${tplTheme.bgDark} 100%)`
+                                  : "#1a3a1e",
+                            border: isDark ? "1.5px solid rgba(255,255,255,0.10)" : "1.5px solid rgba(0,0,0,0.08)",
+                          }}
+                        />
+                        {/* Name + meta */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-bold truncate ${isDark ? "text-white/80" : "text-[#12372A]"}`}>{tpl.name}</p>
+                          <p className={`text-[9px] mt-0.5 truncate ${isDark ? "text-white/25" : "text-[#436850]/60"}`}>
+                            {tplFont?.label ?? tpl.headingFontId} · {tpl.headingSize}px
+                          </p>
+                        </div>
+                        {/* Load button */}
+                        <button
+                          onClick={() => handleLoadTemplate(tpl)}
+                          className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                            isDark
+                              ? "bg-[#769656]/15 text-[#9bc46a] hover:bg-[#769656]/25"
+                              : "bg-[#436850]/10 text-[#12372A] hover:bg-[#436850]/20"
+                          }`}
+                        >
+                          Apply
+                        </button>
+                        {/* Delete button */}
+                        <button
+                          onClick={() => handleDeleteTemplate(tpl.id)}
+                          className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg transition-colors ${
+                            isDark ? "text-white/20 hover:text-red-400 hover:bg-red-400/10" : "text-[#436850]/30 hover:text-red-500 hover:bg-red-50"
+                          }`}
+                          title="Delete template"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Mobile share hint */}
             {canShare && (
