@@ -2960,36 +2960,66 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                 <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>My Templates</p>
                 <div className="space-y-2">
                   {savedTemplates.map((tpl) => {
-                    const tplTheme = ALL_THEMES.find((t) => t.id === tpl.themeId);
-                    const tplFont = SLIDE_FONTS.find((f) => f.id === tpl.headingFontId);
+                    const tplTheme = ALL_THEMES.find((t) => t.id === tpl.themeId) ?? DEFAULT_THEME;
+                    const tplFont = SLIDE_FONTS.find((f) => f.id === tpl.headingFontId) ?? DEFAULT_FONT;
+                    // Thumbnail: render Slide1Cover at scale=1 inside a 56×56 clipped container
+                    // SLIDE_W=1080, so scale = 56/1080 ≈ 0.0519
+                    const THUMB_SIZE = 56;
+                    const thumbScale = THUMB_SIZE / SLIDE_W;
                     return (
                       <div
                         key={tpl.id}
-                        className={`flex items-center gap-2 rounded-xl px-3 py-2.5 border transition-colors ${
+                        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-colors ${
                           isDark ? "border-white/06 bg-white/03 hover:bg-white/05" : "border-[#ADBC9F]/60 bg-white/30 hover:bg-white/50"
                         }`}
                       >
-                        {/* Colour swatch */}
+                        {/* Miniature slide thumbnail */}
                         <div
-                          className="flex-shrink-0 rounded-lg"
+                          className="flex-shrink-0 rounded-lg overflow-hidden"
                           style={{
-                            width: 28,
-                            height: 28,
-                            background: tpl.bgType === "solid" && tpl.bgValue
-                              ? tpl.bgValue
-                              : tpl.bgType === "gradient" && tpl.bgValue
-                                ? tpl.bgValue
-                                : tplTheme
-                                  ? `linear-gradient(135deg, ${tplTheme.bg} 0%, ${tplTheme.bgDark} 100%)`
-                                  : "#1a3a1e",
+                            width: THUMB_SIZE,
+                            height: THUMB_SIZE,
                             border: isDark ? "1.5px solid rgba(255,255,255,0.10)" : "1.5px solid rgba(0,0,0,0.08)",
+                            position: "relative",
                           }}
-                        />
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              transformOrigin: "top left",
+                              transform: `scale(${thumbScale})`,
+                              pointerEvents: "none",
+                              userSelect: "none",
+                            }}
+                          >
+                            <Slide1Cover
+                              rows={rows}
+                              config={config}
+                              tournamentName={tournamentName}
+                              totalRounds={totalRounds}
+                              scale={1}
+                              hostLogoUrl={null}
+                              theme={tplTheme}
+                              format="square"
+                              championAvatarUrl={null}
+                              logoScale={1}
+                              logoPosition="center"
+                              headingFont={tplFont}
+                              headingSize={tpl.headingSize}
+                              headingColor={tpl.headingColor}
+                              bodyColor={tpl.bodyColor}
+                              bgType={tpl.bgType}
+                              bgValue={tpl.bgValue}
+                            />
+                          </div>
+                        </div>
                         {/* Name + meta */}
                         <div className="flex-1 min-w-0">
                           <p className={`text-xs font-bold truncate ${isDark ? "text-white/80" : "text-[#12372A]"}`}>{tpl.name}</p>
                           <p className={`text-[9px] mt-0.5 truncate ${isDark ? "text-white/25" : "text-[#436850]/60"}`}>
-                            {tplFont?.label ?? tpl.headingFontId} · {tpl.headingSize}px
+                            {tplFont.label} · {tpl.headingSize}px
                           </p>
                         </div>
                         {/* Load button */}
