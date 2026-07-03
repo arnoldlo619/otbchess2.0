@@ -1179,13 +1179,19 @@ export default function ClubProfile() {
     <div className={`min-h-screen ${bg}`}>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── LEFT SIDEBAR — Partiful-style icon-only rail ─── */}
+        {/* ── LEFT SIDEBAR — Partiful-style icon-only rail with hover expand ─── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[70px] flex-shrink-0 h-full relative"
+          className="hidden lg:flex flex-col items-center flex-shrink-0 h-full relative group/sidebar"
           style={{
+            width: "70px",
+            transition: "width 0.28s cubic-bezier(0.4,0,0.2,1)",
             background: isDark ? "#0f1117" : "#111827",
             borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
+            overflow: "visible",
+            zIndex: 40,
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.width = "160px"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.width = "70px"; }}
         >
           {/* Top: club logo */}
           <div className="pt-5 pb-4 flex flex-col items-center">
@@ -1206,8 +1212,8 @@ export default function ClubProfile() {
           {/* Divider */}
           <div className="w-8 h-px mb-2" style={{ background: "rgba(255,255,255,0.10)" }} />
 
-          {/* Nav items — icon-only with hover tooltips */}
-          <nav className="flex flex-col items-center gap-1 flex-1">
+          {/* Nav items — centered vertically, expand with label on sidebar hover */}
+          <nav className="flex flex-col items-center gap-1 flex-1 justify-center">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
                 feed: <Megaphone size={18} />,
@@ -1235,8 +1241,12 @@ export default function ClubProfile() {
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
+                  className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] group/navbtn"
                   style={{
+                    width: "44px",
+                    minHeight: "44px",
+                    paddingTop: "8px",
+                    paddingBottom: "8px",
                     background: isActive ? accent : "transparent",
                     color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "rgba(255,255,255,0.45)",
                   }}
@@ -1244,19 +1254,21 @@ export default function ClubProfile() {
                   onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; } }}
                   aria-label={labelMap[t]}
                 >
-                  {iconMap[t]}
-                  {badge > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                      style={{ background: "#ef4444", color: "#fff" }}
-                    >
-                      {badge > 9 ? "9+" : badge}
-                    </span>
-                  )}
-                  {/* Hover tooltip */}
+                  <span className="relative flex-shrink-0">
+                    {iconMap[t]}
+                    {badge > 0 && (
+                      <span
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                        style={{ background: "#ef4444", color: "#fff" }}
+                      >
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                    )}
+                  </span>
+                  {/* Label — hidden by default, fades in when sidebar is expanded */}
                   <span
-                    className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                    style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}
+                    className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100"
+                    style={{ color: "inherit" }}
                   >
                     {labelMap[t]}
                   </span>
@@ -1272,41 +1284,41 @@ export default function ClubProfile() {
 
             <button
               onClick={handleShare}
-              className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
-              style={{ color: "rgba(255,255,255,0.45)" }}
+              className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
               aria-label="Share Club"
             >
-              <Share2 size={18} />
-              <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>Share Club</span>
+              <Share2 size={18} className="flex-shrink-0" />
+              <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Share</span>
             </button>
 
             {user && !isOwner && !isDirector && (
               <button
                 onClick={() => setShowContactOwner(true)}
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
-                style={{ color: "rgba(255,255,255,0.45)" }}
+                className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
                 aria-label="Contact Owner"
               >
-                <MessageSquare size={18} />
-                <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>Contact Owner</span>
+                <MessageSquare size={18} className="flex-shrink-0" />
+                <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Contact</span>
               </button>
             )}
 
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
-                style={{ color: "rgba(255,255,255,0.45)" }}
+                className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
                 aria-label="Settings"
               >
-                <MoreHorizontal size={18} />
-                <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>Settings</span>
+                <MoreHorizontal size={18} className="flex-shrink-0" />
+                <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Settings</span>
               </button>
             )}
 
@@ -1314,20 +1326,20 @@ export default function ClubProfile() {
             {user && (
               <button
                 onClick={() => navigate(`/profile/${user.id}`)}
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group mt-1"
-                style={{ color: "rgba(255,255,255,0.45)" }}
+                className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] mt-1"
+                style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 aria-label={user.displayName ?? "Profile"}
               >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
                     user.displayName?.charAt(0).toUpperCase() ?? "?"
                   )}
                 </div>
-                <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>{user.displayName ?? "Profile"}</span>
+                <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "rgba(255,255,255,0.6)" }}>{user.displayName?.split(" ")[0] ?? "Profile"}</span>
               </button>
             )}
           </div>
