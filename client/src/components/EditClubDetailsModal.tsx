@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Globe, Instagram } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface EditClubDetailsModalProps {
@@ -8,21 +8,27 @@ interface EditClubDetailsModalProps {
   clubId: string;
   currentDescription: string;
   currentLocation: string;
-  onSave: (description: string, location: string) => Promise<void>;
+  currentWebsite?: string;
+  currentInstagram?: string;
+  onSave: (description: string, location: string, website: string, instagram: string) => Promise<void>;
 }
 
 export function EditClubDetailsModal({
   isOpen,
   onClose,
-  clubId,
+  clubId: _clubId,
   currentDescription,
   currentLocation,
+  currentWebsite = "",
+  currentInstagram = "",
   onSave,
 }: EditClubDetailsModalProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [description, setDescription] = useState(currentDescription);
   const [location, setLocation] = useState(currentLocation);
+  const [website, setWebsite] = useState(currentWebsite);
+  const [instagram, setInstagram] = useState(currentInstagram);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +45,7 @@ export function EditClubDetailsModal({
 
     setIsSaving(true);
     try {
-      await onSave(description.trim(), location.trim());
+      await onSave(description.trim(), location.trim(), website.trim(), instagram.trim());
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save changes");
@@ -56,7 +62,6 @@ export function EditClubDetailsModal({
   const textMuted = isDark ? "text-white/60" : "text-[#436850]";
   const inputBg = isDark ? "bg-white/5" : "bg-[#FBFADA]/70";
   const inputBorder = isDark ? "border-white/10" : "border-[#ADBC9F]";
-  const accent = "#4CAF50";
 
   return (
     <>
@@ -114,6 +119,40 @@ export function EditClubDetailsModal({
                 placeholder="e.g., San Francisco, CA"
                 className={`w-full px-4 py-3 rounded-xl border ${inputBorder} ${inputBg} ${textColor} placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500`}
               />
+            </div>
+
+            {/* Website Field */}
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${textColor} flex items-center gap-2`}>
+                <Globe className="w-4 h-4 opacity-60" />
+                Website
+              </label>
+              <input
+                type="url"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://yourclub.com"
+                className={`w-full px-4 py-3 rounded-xl border ${inputBorder} ${inputBg} ${textColor} placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500`}
+              />
+            </div>
+
+            {/* Instagram Field */}
+            <div>
+              <label className={`block text-sm font-semibold mb-2 ${textColor} flex items-center gap-2`}>
+                <Instagram className="w-4 h-4 opacity-60" />
+                Instagram
+              </label>
+              <div className="relative">
+                <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold ${textMuted}`}>@</span>
+                <input
+                  type="text"
+                  value={instagram.replace(/^@/, "")}
+                  onChange={(e) => setInstagram(e.target.value.replace(/^@/, ""))}
+                  placeholder="yourclub"
+                  className={`w-full pl-8 pr-4 py-3 rounded-xl border ${inputBorder} ${inputBg} ${textColor} placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500`}
+                />
+              </div>
+              <p className={`text-xs mt-1 ${textMuted}`}>Enter your Instagram handle without the @ symbol</p>
             </div>
 
             {/* Error Message */}

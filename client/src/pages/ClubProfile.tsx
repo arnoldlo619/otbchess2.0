@@ -34,7 +34,7 @@ import {
   type ClubMember,
   type ClubTournament,
 } from "@/lib/clubRegistry";
-import { apiJoinClub, apiLeaveClub } from "@/lib/clubsApi";
+import { apiJoinClub, apiLeaveClub, apiUpdateClub } from "@/lib/clubsApi";
 import { useClubPresence } from "@/hooks/useClubPresence";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
@@ -119,6 +119,7 @@ import {
   Mail,
   Phone,
   Video,
+  Instagram,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -1461,13 +1462,42 @@ export default function ClubProfile() {
                           <Trophy size={11} style={{ color: accent }} />
                           <span className="font-semibold text-white">{club.tournamentCount}</span> tournaments
                         </span>
-                        {club.location && (
+                          {club.location && (
                           <span className="hidden sm:flex items-center gap-1">
                             <MapPin size={11} />
                             {flag} {club.location}
                           </span>
                         )}
                       </div>
+                      {/* Website + Instagram links */}
+                      {(club.website || club.instagram) && (
+                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                          {club.website && (
+                            <a
+                              href={club.website.startsWith("http") ? club.website : `https://${club.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+                              style={{ color: accent }}
+                            >
+                              <Globe size={11} />
+                              {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                            </a>
+                          )}
+                          {club.instagram && (
+                            <a
+                              href={`https://instagram.com/${club.instagram.replace(/^@/, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+                              style={{ color: "oklch(0.75 0.14 0)" }}
+                            >
+                              <Instagram size={11} />
+                              @{club.instagram.replace(/^@/, "")}
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {/* Banner upload overlay (owners/directors only) */}
                     {(isOwner || isDirector) && (
@@ -2013,24 +2043,6 @@ export default function ClubProfile() {
                 </div>
               );
             })()}
-
-            {/* ── Share CTA — compact inline ─────────────────────────────── */}
-            <div className={`rounded-2xl border ${cardBorder} ${card} px-5 py-3.5 flex items-center justify-between`}>
-              <div className="flex items-center gap-3">
-                <Share2 className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                <span className={`text-sm font-medium ${textMain}`}>Share this club</span>
-              </div>
-              <button
-                onClick={handleShare}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  isDark
-                    ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/25 hover:bg-[#4CAF50]/25"
-                    : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20 hover:bg-[#436850]/20"
-                }`}
-              >
-                Share
-              </button>
-            </div>
 
             {/* ── Feed event list ────────────────────────────────────────────── */}
             {feedEvents.length === 0 ? (
@@ -3614,12 +3626,24 @@ export default function ClubProfile() {
           clubId={club.id}
           currentDescription={club.description}
           currentLocation={club.location}
-          onSave={async (description, location) => {
+          currentWebsite={club.website ?? ""}
+          currentInstagram={club.instagram ?? ""}
+          onSave={async (description, location, website, instagram) => {
             try {
-              const updated = await updateClub(club.id, { description, location });
-              if (updated) {
-                setClub(updated);
+              // Persist to server (DB)
+              const serverUpdated = await apiUpdateClub(club.id, {
+                description,
+                location,
+                website: website || undefined,
+                instagram: instagram || undefined,
+              });
+              if (serverUpdated) {
+                // Also update local registry for immediate UI
+                updateClub(club.id, { description, location, website: website || undefined, instagram: instagram || undefined });
+                setClub(serverUpdated);
                 toast.success("Club details updated successfully");
+              } else {
+                throw new Error("Server update failed");
               }
             } catch (e) {
               toast.error(e instanceof Error ? e.message : "Failed to update club details");
