@@ -479,19 +479,21 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     discord: "https://discord.gg/nycchess",
   },
   {
-    name: "Stanford Chess Team",
-    tagline: "Competing at the collegiate level since 1972.",
+    name: "Harvard Chess Club",
+    tagline: "Crimson pieces, championship minds.",
     description:
-      "Stanford's official intercollegiate chess team. We compete in the Pan-American Intercollegiate Chess Championship and host the annual Bay Area Collegiate Open. Open to all Stanford students.",
-    location: "Stanford, CA",
+      "The Harvard Chess Club is one of the oldest collegiate chess clubs in the United States, bringing together Harvard students, faculty, and the broader Cambridge community. We host weekly casual play, intercollegiate matches, and the annual Harvard Open tournament. All skill levels welcome — from first-time players to titled competitors.",
+    location: "Cambridge, MA",
     country: "US",
     category: "university",
     avatarUrl: null,
-    bannerUrl: null,
-    accentColor: "#8C1515",
+    bannerUrl: "/manus-storage/HCC_twitter_logo4_-_crimson__black_8df617be.jpg",
+    accentColor: "#A51C30",
     ownerId: "seed",
-    ownerName: "Alex Chen",
+    ownerName: "Harvard Chess Club",
     isPublic: true,
+    website: "https://www.harvardchess.com",
+    announcement: "\u265f\ufe0f Harvard Open 2026 registration is open. All skill levels welcome.",
   },
   {
     name: "Berlin Schachclub",
@@ -629,10 +631,11 @@ const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
     { userId: "seed-m7", displayName: "DeShawn Williams", chesscomUsername: "deshawnw", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2024-06-15T10:00:00Z", tournamentsPlayed: 10, bestFinish: 2 },
     { userId: "seed-m8", displayName: "Aisha Johnson", chesscomUsername: null, lichessUsername: "aishaj", avatarUrl: null, role: "member", joinedAt: "2024-07-01T10:00:00Z", tournamentsPlayed: 6, bestFinish: 3 },
   ],
-  // Stanford Chess Team
+  // Harvard Chess Club
   [
-    { userId: "seed-m9", displayName: "Alex Chen", chesscomUsername: "alexchen2025", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2024-09-01T10:00:00Z", tournamentsPlayed: 9, bestFinish: 1 },
-    { userId: "seed-m10", displayName: "Priya Patel", chesscomUsername: null, lichessUsername: "priyap", avatarUrl: null, role: "member", joinedAt: "2024-09-15T10:00:00Z", tournamentsPlayed: 4, bestFinish: 2 },
+    { userId: "seed-m9", displayName: "Harvard Chess Club", chesscomUsername: null, lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2022-09-01T10:00:00Z", tournamentsPlayed: 22, bestFinish: 1 },
+    { userId: "seed-m10", displayName: "Priya Patel", chesscomUsername: null, lichessUsername: "priyap", avatarUrl: null, role: "director", joinedAt: "2023-09-01T10:00:00Z", tournamentsPlayed: 14, bestFinish: 2 },
+    { userId: "seed-m10b", displayName: "Marcus Webb", chesscomUsername: "marcuswebb", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2024-02-10T10:00:00Z", tournamentsPlayed: 8, bestFinish: 3 },
   ],
   // Berlin Schachclub
   [
@@ -711,10 +714,11 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
     { tournamentId: "nyc-april-2026", name: "Brooklyn Blitz April", date: "2026-04-05", format: "Swiss", playerCount: 0, rounds: 5, status: "upcoming" },
     { tournamentId: "nyc-march-2026", name: "Manhattan Open March", date: "2026-03-01", format: "Swiss", playerCount: 28, rounds: 5, status: "completed", winnerName: "Maria Santos" },
   ],
-  // Stanford Chess Team
+  // Harvard Chess Club
   [
-    { tournamentId: "stanford-collegiate-2026", name: "Bay Area Collegiate Open 2026", date: "2026-05-10", format: "Swiss", playerCount: 0, rounds: 6, status: "upcoming" },
-    { tournamentId: "stanford-fall-2025", name: "Fall Invitational 2025", date: "2025-11-08", format: "Round Robin", playerCount: 12, rounds: 11, status: "completed", winnerName: "Alex Chen" },
+    { tournamentId: "harvard-open-2026", name: "Harvard Open 2026", date: "2026-10-18", format: "Swiss", playerCount: 0, rounds: 7, status: "upcoming" },
+    { tournamentId: "harvard-pan-am-2026", name: "Pan-American Intercollegiate 2026", date: "2026-01-10", format: "Swiss", playerCount: 64, rounds: 7, status: "completed", winnerName: "Priya Patel" },
+    { tournamentId: "harvard-fall-2025", name: "Fall Invitational 2025", date: "2025-11-15", format: "Round Robin", playerCount: 16, rounds: 15, status: "completed", winnerName: "Marcus Webb" },
   ],
   // Berlin Schachclub
   [
@@ -763,7 +767,7 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
 ];
 
-const SEED_KEY = "otb-clubs-seeded-v6";
+const SEED_KEY = "otb-clubs-seeded-v7";
 
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {
