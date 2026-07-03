@@ -1194,28 +1194,29 @@ export default function ClubProfile() {
           onMouseLeave={(e) => { e.currentTarget.style.width = "64px"; }}
         >
           {/* Top: !! thumbnail icon + OTB!! logo on hover */}
-          <div className="pt-5 pb-3 px-3 flex-shrink-0 flex flex-row items-center gap-2">
+          {/* Logo crossfade: !! thumbnail fades out, OTB!! logo fades in on hover */}
+          <div className="pt-5 pb-3 px-3 flex-shrink-0">
             <button
               onClick={() => navigate("/clubs")}
-              className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-opacity hover:opacity-80 overflow-hidden bg-transparent"
+              className="relative flex items-center justify-start bg-transparent border-none p-0 cursor-pointer"
+              style={{ width: "36px", height: "36px", transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)" }}
               title="ChessOTB.Club — Back to Clubs"
+              onMouseEnter={(e) => { e.currentTarget.style.width = "90px"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.width = "36px"; }}
             >
+              {/* !! thumbnail — fades out on sidebar hover */}
               <img
                 src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
                 alt="!!"
-                className="w-full h-full object-contain"
+                className="absolute left-0 top-0 w-9 h-9 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
               />
-            </button>
-            {/* OTB!! logo image — slides in on sidebar hover */}
-            <span
-              className="flex items-center overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100"
-            >
+              {/* OTB!! logo — fades in on sidebar hover */}
               <img
                 src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="h-7 w-auto object-contain"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
               />
-            </span>
+            </button>
           </div>
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
