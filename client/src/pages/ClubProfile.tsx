@@ -1193,20 +1193,23 @@ export default function ClubProfile() {
           onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
           onMouseLeave={(e) => { e.currentTarget.style.width = "64px"; }}
         >
-          {/* Top: club avatar — fixed, not part of expand */}
-          <div className="pt-5 pb-3 px-3 flex-shrink-0">
+          {/* Top: OTB!! logo + ChessOTB.Club title on hover */}
+          <div className="pt-5 pb-3 px-3 flex-shrink-0 flex flex-row items-center gap-3">
             <button
               onClick={() => navigate("/clubs")}
-              className="w-9 h-9 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md transition-opacity hover:opacity-80"
-              style={{ background: accent }}
-              title={club.name + " — Back to Clubs"}
+              className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-base shadow-md transition-opacity hover:opacity-80"
+              style={{ background: "#1a2e1a", color: "#4ade80", border: "1.5px solid rgba(74,222,128,0.25)", letterSpacing: "-0.02em" }}
+              title="ChessOTB.Club — Back to Clubs"
             >
-              {club.avatarUrl && !avatarBroken ? (
-                <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
-              ) : (
-                <span>{flag}</span>
-              )}
+              !!
             </button>
+            {/* ChessOTB.Club title — slides in on sidebar hover */}
+            <span
+              className="text-base font-bold whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[160px] group-hover/sidebar:opacity-100"
+              style={{ color: "#4ade80", letterSpacing: "-0.02em" }}
+            >
+              ChessOTB.Club
+            </span>
           </div>
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
@@ -1265,7 +1268,7 @@ export default function ClubProfile() {
                   </span>
                   {/* Label — slides in to the right, stays on same row as icon */}
                   <span
-                    className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
+                    className="text-base font-semibold whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
                     style={{ color: "inherit" }}
                   >
                     {labelMap[t]}
