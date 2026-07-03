@@ -6679,3 +6679,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add club-card-hover CSS class with translateY lift and shadow on hover
 - [x] Enhance category filter chips with glow active state and better hover transitions
 - [x] Increase grid gap for better card spacing
+
+## Club Dashboard Layout Redesign — Partiful-Style (Jul 3 2026)
+
+- [x] Convert sidebar to Partiful-style narrow icon-only rail (~70px) with tooltip labels on hover
+- [x] Remove max-w-4xl constraint from main content area — content fills full width (now max-w-6xl, no mx-auto)
+- [x] Reduce excessive padding/margins so content connects to sidebar seamlessly
+- [x] Widen content cards to fill available space (no narrow central strip)
+- [x] Match Partiful's content padding (~40-48px horizontal padding from edges)
+- [x] Remove top bar redundancy — streamline header to minimal height
+- [x] Ensure hero/banner section spans full content width edge-to-edge
+- [x] Cards and sections use full available width with consistent internal padding

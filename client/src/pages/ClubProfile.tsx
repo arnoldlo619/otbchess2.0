@@ -705,7 +705,7 @@ export default function ClubProfile() {
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
   const [activeTab, setActiveTab] = useState<"events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Sidebar is now always icon-only (Partiful-style rail)
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
@@ -1178,42 +1178,35 @@ export default function ClubProfile() {
     <div className={`min-h-screen ${bg}`}>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── LEFT SIDEBAR (Partiful-style: wide with icon+label rows) ─── */}
+        {/* ── LEFT SIDEBAR — Partiful-style icon-only rail ─── */}
         <aside
-          className="hidden lg:flex flex-col flex-shrink-0 h-full relative transition-all duration-300 ease-in-out"
+          className="hidden lg:flex flex-col items-center w-[70px] flex-shrink-0 h-full relative"
           style={{
-            width: sidebarCollapsed ? "60px" : "200px",
             background: isDark ? "#0f1117" : "#111827",
             borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
           }}
         >
-          {/* Top: club logo + name */}
-          <div className="px-3 pt-5 pb-4 overflow-hidden">
+          {/* Top: club logo */}
+          <div className="pt-5 pb-4 flex flex-col items-center">
             <button
               onClick={() => navigate("/clubs")}
-              className="flex items-center gap-2.5 w-full group"
-              title={sidebarCollapsed ? club.name + " — Back to My Clubs" : "Back to My Clubs"}
+              className="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md transition-opacity hover:opacity-80"
+              style={{ background: accent }}
+              title={club.name + " — Back to Clubs"}
             >
-              <div
-                className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md"
-                style={{ background: accent }}
-              >
-                {club.avatarUrl && !avatarBroken ? (
-                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
-                ) : (
-                  <span>{flag}</span>
-                )}
-              </div>
-              {!sidebarCollapsed && (
-                <span className="text-white font-semibold text-sm truncate group-hover:opacity-80 transition-opacity">
-                  {club.name}
-                </span>
+              {club.avatarUrl && !avatarBroken ? (
+                <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
+              ) : (
+                <span>{flag}</span>
               )}
             </button>
           </div>
 
-          {/* Nav items */}
-          <nav className="flex flex-col gap-0.5 px-2 flex-1">
+          {/* Divider */}
+          <div className="w-8 h-px mb-2" style={{ background: "rgba(255,255,255,0.10)" }} />
+
+          {/* Nav items — icon-only with hover tooltips */}
+          <nav className="flex flex-col items-center gap-1 flex-1">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
                 feed: <Megaphone size={18} />,
@@ -1241,124 +1234,99 @@ export default function ClubProfile() {
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
-                  className="relative flex items-center w-full rounded-xl transition-all duration-150"
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
                   style={{
-                    background: isActive ? "rgba(255,255,255,0.10)" : "transparent",
-                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.50)",
-                    justifyContent: sidebarCollapsed ? "center" : "flex-start",
-                    gap: sidebarCollapsed ? 0 : "12px",
-                    padding: sidebarCollapsed ? "10px 0" : "10px 12px",
+                    background: isActive ? accent : "transparent",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "rgba(255,255,255,0.45)",
                   }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
-                  title={sidebarCollapsed ? labelMap[t] : undefined}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; } }}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; } }}
                   aria-label={labelMap[t]}
                 >
-                  <span className="flex-shrink-0 relative">
-                    {iconMap[t]}
-                    {badge > 0 && sidebarCollapsed && (
-                      <span
-                        className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
-                        style={{ background: "#ef4444", color: "#fff" }}
-                      >
-                        {badge > 9 ? "9+" : badge}
-                      </span>
-                    )}
-                  </span>
-                  {!sidebarCollapsed && (
-                    <>
-                      <span className="text-sm font-medium">{labelMap[t]}</span>
-                      {badge > 0 && (
-                        <span
-                          className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-                          style={{ background: "#ef4444", color: "#fff" }}
-                        >
-                          {badge}
-                        </span>
-                      )}
-                    </>
+                  {iconMap[t]}
+                  {badge > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                      style={{ background: "#ef4444", color: "#fff" }}
+                    >
+                      {badge > 9 ? "9+" : badge}
+                    </span>
                   )}
+                  {/* Hover tooltip */}
+                  <span
+                    className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                    style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}
+                  >
+                    {labelMap[t]}
+                  </span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Bottom: share / settings / profile */}
-          <div className="px-2 pb-4 flex flex-col gap-0.5">
+          {/* Bottom: utility icons */}
+          <div className="pb-4 flex flex-col items-center gap-1">
             {/* Divider */}
-            <div className="mx-3 my-2 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+            <div className="w-8 h-px mb-2" style={{ background: "rgba(255,255,255,0.08)" }} />
 
             <button
               onClick={handleShare}
-              className="flex items-center w-full rounded-xl transition-all duration-150"
-              style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
-              title={sidebarCollapsed ? "Share Club" : undefined}
+              className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+              aria-label="Share Club"
             >
-              <Share2 size={18} className="flex-shrink-0" />
-              {!sidebarCollapsed && <span className="text-sm font-medium">Share Club</span>}
+              <Share2 size={18} />
+              <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>Share Club</span>
             </button>
 
             {user && !isOwner && !isDirector && (
               <button
                 onClick={() => setShowContactOwner(true)}
-                className="flex items-center w-full rounded-xl transition-all duration-150"
-                style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
-                title={sidebarCollapsed ? "Contact Owner" : undefined}
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
+                style={{ color: "rgba(255,255,255,0.45)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                aria-label="Contact Owner"
               >
-                <MessageSquare size={18} className="flex-shrink-0" />
-                {!sidebarCollapsed && <span className="text-sm font-medium">Contact Owner</span>}
+                <MessageSquare size={18} />
+                <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>Contact Owner</span>
               </button>
             )}
 
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                className="flex items-center w-full rounded-xl transition-all duration-150"
-                style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
-                title={sidebarCollapsed ? "Settings" : undefined}
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group"
+                style={{ color: "rgba(255,255,255,0.45)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                aria-label="Settings"
               >
-                <MoreHorizontal size={18} className="flex-shrink-0" />
-                {!sidebarCollapsed && <span className="text-sm font-medium">Settings</span>}
+                <MoreHorizontal size={18} />
+                <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>Settings</span>
               </button>
             )}
 
-            {/* Collapse/Expand toggle — clean bottom row */}
-            <button
-              onClick={() => setSidebarCollapsed((c) => !c)}
-              className="flex items-center w-full rounded-xl transition-all duration-150"
-              style={{ color: "rgba(255,255,255,0.35)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.70)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {sidebarCollapsed ? <ChevronRight size={18} className="flex-shrink-0" /> : <ChevronLeft size={18} className="flex-shrink-0" />}
-              {!sidebarCollapsed && <span className="text-sm font-medium">Collapse</span>}
-            </button>
-
-            {/* Profile row */}
+            {/* Profile avatar */}
             {user && (
               <button
                 onClick={() => navigate(`/profile/${user.id}`)}
-                className="flex items-center w-full rounded-xl transition-all duration-150 mt-1"
-                style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
-                title={sidebarCollapsed ? (user.displayName ?? "Profile") : undefined}
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 group mt-1"
+                style={{ color: "rgba(255,255,255,0.45)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                aria-label={user.displayName ?? "Profile"}
               >
-                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-white/20 flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-xs font-bold text-white">
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
                     user.displayName?.charAt(0).toUpperCase() ?? "?"
                   )}
                 </div>
-                {!sidebarCollapsed && <span className="text-sm font-medium truncate">{user.displayName ?? "Profile"}</span>}
+                <span className="absolute left-full ml-3 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "oklch(0.22 0.06 145)", color: "#fff", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>{user.displayName ?? "Profile"}</span>
               </button>
             )}
           </div>
@@ -1368,11 +1336,10 @@ export default function ClubProfile() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
-            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
+            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-10 xl:px-14 py-2 otb-header-safe"
             style={{
-              background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
-              backdropFilter: "blur(12px)",
-              borderBottom: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)"}`,
+              background: isDark ? "oklch(0.12 0.03 145 / 0.98)" : "#0f1f14",
+              borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
             }}
           >
             {/* Mobile back button */}
@@ -1389,6 +1356,8 @@ export default function ClubProfile() {
                 {club.name}
               </span>
             </div>
+            {/* Desktop: club name */}
+            <span className="hidden lg:block text-sm font-semibold text-white/80 truncate max-w-[220px]">{club.name}</span>
             {/* Right side: stats + avatar */}
             <div className="flex items-center gap-3 ml-auto">
               <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
@@ -1412,13 +1381,13 @@ export default function ClubProfile() {
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-            <div className="px-4 lg:px-6 py-4">
-              <div className="max-w-4xl mx-auto">
+            <div className="px-4 lg:px-10 xl:px-14 py-5">
+              <div className="max-w-6xl">
                 {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
                 <div
-                  className={`relative rounded-3xl overflow-hidden mb-5${!club.bannerUrl ? " chess-board-bg" : ""}`}
+                  className={`relative rounded-2xl overflow-hidden mb-6${!club.bannerUrl ? " chess-board-bg" : ""}`}
                   style={{
-                    minHeight: "160px",
+                    minHeight: "180px",
                     ...(club.bannerUrl ? {
                       backgroundImage: `url(${club.bannerUrl})`,
                       backgroundSize: "cover",
@@ -1447,11 +1416,11 @@ export default function ClubProfile() {
                     />
                   )}
                   {/* Content */}
-                  <div className="relative z-10 flex items-center gap-5 p-5 sm:p-6">
+                  <div className="relative z-10 flex items-center gap-5 p-6 sm:p-8">
                     {/* Club avatar */}
                     <div
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg"
-                      style={{ background: accent, border: `2px solid ${accent}66` }}
+                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
+                      style={{ background: accent, border: `2px solid ${accent}44` }}
                     >
                       {club.avatarUrl && !avatarBroken ? (
                         <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
@@ -1462,7 +1431,7 @@ export default function ClubProfile() {
                     {/* Club identity */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white truncate">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white truncate">
                           {club.name}
                         </h1>
                         {club.isPublic ? (
@@ -3205,7 +3174,7 @@ export default function ClubProfile() {
             })()}
           </div>
         )}
-              </div>{/* close max-w-4xl */}
+              </div>{/* close max-w-6xl */}
             </div>{/* close px wrapper */}
           </div>{/* close scrollable */}
         </div>{/* close main content area */}
