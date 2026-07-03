@@ -2,13 +2,13 @@
  * FeaturedClubsCarousel.tsx
  *
  * Horizontal scroll carousel showing the top 6 most popular clubs.
- * Design: Partiful-style tall portrait image-only cards with date badge overlay,
- * title + hosted-by row below the image. No card border/background — just the image.
+ * Design: Premium Partiful/Luma-style tall portrait cards with rich gradient overlays,
+ * hover scale animation, social proof (avatar stacks), and polished transitions.
  */
 
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ChevronLeft, ChevronRight, Users, UserPlus, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, UserPlus, Check, Flame } from "lucide-react";
 import { apiListPublicClubs } from "../lib/clubsApi";
 import { joinClub, isMember, type Club } from "../lib/clubRegistry";
 import { apiJoinClub } from "../lib/clubsApi";
@@ -19,9 +19,9 @@ import { toast } from "sonner";
 
 function SkeletonCard({ isDark }: { isDark: boolean }) {
   return (
-    <div className="flex-shrink-0 w-[280px] sm:w-[300px]">
+    <div className="flex-shrink-0 w-[260px] sm:w-[280px]">
       <div
-        className={`w-full aspect-[4/5] rounded-xl animate-pulse ${
+        className={`w-full aspect-[4/5] rounded-2xl animate-pulse ${
           isDark ? "bg-white/8" : "bg-black/8"
         }`}
       />
@@ -70,16 +70,16 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
 
   return (
     <div
-      className="flex-shrink-0 w-[280px] sm:w-[300px] cursor-pointer group"
+      className="flex-shrink-0 w-[260px] sm:w-[280px] cursor-pointer group"
       onClick={() => navigate(`/clubs/${club.id}`)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && navigate(`/clubs/${club.id}`)}
       aria-label={`View ${club.name}`}
     >
-      {/* Image area — tall portrait, 4:5 aspect ratio */}
+      {/* Image area — tall portrait, 4:5 aspect ratio with premium hover */}
       <div
-        className="relative w-full aspect-[4/5] rounded-xl overflow-hidden"
+        className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(76,175,80,0.08)]"
         style={{
           background: club.bannerUrl
             ? undefined
@@ -90,7 +90,7 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
           <img
             src={club.bannerUrl}
             alt=""
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
           />
         ) : (
@@ -98,54 +98,72 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
             <div className="absolute inset-0 chess-board-bg opacity-12" />
             {/* Club initial as fallback visual */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white/20 text-8xl font-black">{initial}</span>
+              <span className="text-white/15 text-8xl font-black transition-transform duration-300 group-hover:scale-110">{initial}</span>
             </div>
           </>
         )}
 
-        {/* Gradient scrim — bottom fade for legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        {/* Enhanced gradient scrim — stronger bottom fade for premium feel */}
+        <div
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{
+            background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 30%, transparent 60%)",
+          }}
+        />
+        {/* Hover overlay — subtle green tint */}
+        <div className="absolute inset-0 bg-[#4CAF50]/0 group-hover:bg-[#4CAF50]/5 transition-colors duration-300" />
 
-        {/* Date/rank badge — top-left, white pill */}
-        <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-black shadow-sm">
-          #{rank} Popular
+        {/* Rank badge — top-left, with fire icon for top 3 */}
+        <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 text-black shadow-lg backdrop-blur-sm">
+          {rank <= 3 && <Flame className="w-3 h-3 text-orange-500" />}
+          #{rank}
         </div>
 
         {/* Three-dot menu — top-right */}
-        <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100">
           <span className="text-black text-sm font-bold leading-none">⋯</span>
         </div>
 
-        {/* Member count badge — bottom-left overlay */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
-          <Users className="w-3 h-3" />
-          {(club.memberCount ?? 0).toLocaleString()} members
+        {/* Bottom overlay content — member count + join */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
+          {/* Member count badge */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-black/50 text-white backdrop-blur-md border border-white/10">
+            <Users className="w-3 h-3" />
+            {(club.memberCount ?? 0).toLocaleString()}
+          </div>
+
+          {/* Join button */}
+          {user && !joined && (
+            <button
+              onClick={handleJoin}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-black shadow-lg hover:bg-gray-100 transition-all duration-200 active:scale-95 hover:shadow-xl"
+            >
+              <UserPlus className="w-3 h-3" />
+              Join
+            </button>
+          )}
+          {user && joined && (
+            <span className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-[#4CAF50] text-white shadow-lg">
+              <Check className="w-3 h-3" />
+              Member
+            </span>
+          )}
         </div>
 
-        {/* Join button — bottom-right overlay */}
-        {user && !joined && (
-          <button
-            onClick={handleJoin}
-            className="absolute bottom-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white text-black shadow-md hover:bg-gray-100 transition-colors active:scale-95"
-          >
-            <UserPlus className="w-3 h-3" />
-            Join
-          </button>
-        )}
-        {user && joined && (
-          <span className="absolute bottom-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-[#4CAF50] text-white shadow-md">
-            <Check className="w-3 h-3" />
-            Member
+        {/* "View Club" button — appears on hover, centered */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+          <span className="px-4 py-2 rounded-full text-xs font-bold bg-white/95 text-black shadow-xl backdrop-blur-sm">
+            View Club
           </span>
-        )}
+        </div>
       </div>
 
       {/* Title below image — bold, no container */}
-      <h3 className={`mt-3 text-base font-bold leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+      <h3 className={`mt-3 text-sm font-bold leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}>
         {club.name}
       </h3>
 
-      {/* Hosted by / location row */}
+      {/* Location row */}
       <div className="flex items-center gap-2 mt-1.5">
         {/* Club avatar */}
         <div
@@ -198,7 +216,7 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === "right" ? 320 : -320, behavior: "smooth" });
+    el.scrollBy({ left: dir === "right" ? 300 : -300, behavior: "smooth" });
   };
 
   if (!loading && clubs.length === 0) return null;
@@ -210,11 +228,11 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
     : "bg-black/5 hover:bg-black/10 border-black/10 hover:border-black/20 text-gray-500 hover:text-gray-800";
 
   return (
-    <div className="mb-10">
+    <div className="mb-8">
       {/* Section header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
-          <h2 className={`${headingColor} font-bold text-base sm:text-lg`}>
+          <h2 className={`${headingColor} font-bold text-base sm:text-lg`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Featured Clubs
           </h2>
           <span className={`hidden sm:inline ${subColor} text-sm`}>— most popular</span>

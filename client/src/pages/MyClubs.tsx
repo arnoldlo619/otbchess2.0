@@ -121,12 +121,12 @@ function ClubCard({
   const initial = club.name.charAt(0).toUpperCase();
 
   return (
-    <div className="relative group">
+    <div className="relative group club-card-hover rounded-2xl">
     <Link href={toDashboard ? `/clubs/${club.id}/home` : `/clubs/${club.id}`}>
       <div className="cursor-pointer">
         {/* Image area — tall portrait, 4:5 aspect ratio, borderless */}
         <div
-          className="relative w-full aspect-[4/5] rounded-xl overflow-hidden"
+          className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden"
           style={{
             background: club.bannerUrl
               ? undefined
@@ -138,7 +138,7 @@ function ClubCard({
               src={club.bannerUrl}
               alt=""
               role="presentation"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
@@ -150,45 +150,50 @@ function ClubCard({
             </>
           )}
 
-          {/* Gradient scrim */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          {/* Enhanced gradient scrim — stronger bottom fade */}
+          <div
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 35%, transparent 60%)" }}
+          />
+          {/* Hover tint overlay */}
+          <div className="absolute inset-0 bg-[#4CAF50]/0 group-hover:bg-[#4CAF50]/5 transition-colors duration-300" />
 
           {/* Owner badge — top-left */}
           {isOwned && (
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-black shadow-sm">
-              <Crown className="w-3 h-3" />
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 text-black shadow-lg backdrop-blur-sm">
+              <Crown className="w-3 h-3 text-amber-500" />
               Owner
             </div>
           )}
 
           {/* Trending badge — top-left (if not owner) */}
           {!isOwned && isTrending && (
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-black shadow-sm">
-              <Zap className="w-3 h-3" />
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 text-black shadow-lg backdrop-blur-sm">
+              <Zap className="w-3 h-3 text-orange-500" />
               Trending
             </div>
           )}
 
           {/* Three-dot menu — top-right */}
-          <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 group-hover:scale-100">
             <span className="text-black text-sm font-bold leading-none">⋯</span>
           </div>
 
-          {/* Member count — bottom-left */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
-            <Users className="w-3 h-3" />
-            {club.memberCount.toLocaleString()}
-          </div>
-
-          {/* Category badge — bottom-right */}
-          <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
-            {CATEGORY_ICONS[club.category]}
-            {CATEGORY_LABELS[club.category]}
+          {/* Bottom overlay — member count + category */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-black/50 text-white backdrop-blur-md border border-white/10">
+              <Users className="w-3 h-3" />
+              {club.memberCount.toLocaleString()}
+            </div>
+            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-black/50 text-white backdrop-blur-md border border-white/10">
+              {CATEGORY_ICONS[club.category]}
+              {CATEGORY_LABELS[club.category]}
+            </div>
           </div>
         </div>
 
         {/* Title below image */}
-        <h3 className={`mt-3 text-base font-bold leading-tight truncate ${textMain}`}>
+        <h3 className={`mt-3 text-sm font-bold leading-tight truncate ${textMain}`}>
           {club.name}
         </h3>
 
@@ -835,18 +840,30 @@ export default function MyClubs() {
           }}
         />
         {/* Checkered pattern overlay */}
-        <div className="absolute inset-0 chess-board-bg" style={{ opacity: isDark ? 0.06 : 0.04 }} />
-        {/* Subtle radial glow */}
+        <div className="absolute inset-0 chess-board-bg" style={{ opacity: isDark ? 0.08 : 0.05 }} />
+        {/* Animated shimmer overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: isDark
+              ? "linear-gradient(120deg, transparent 30%, rgba(76,175,80,0.04) 50%, transparent 70%)"
+              : "linear-gradient(120deg, transparent 30%, rgba(67,104,80,0.03) 50%, transparent 70%)",
+            backgroundSize: "200% 100%",
+            animation: "shimmerBg 8s ease-in-out infinite",
+          }}
+        />
+        {/* Radial glow */}
         <div
           className="absolute inset-0"
           style={{
             background: isDark
-              ? "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(76,175,80,0.12) 0%, transparent 70%)"
-              : "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(67,104,80,0.08) 0%, transparent 70%)",
+              ? "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(76,175,80,0.15) 0%, transparent 70%)"
+              : "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(67,104,80,0.10) 0%, transparent 70%)",
           }}
         />
 
-        <div className="relative max-w-5xl mx-auto px-4 pt-10 pb-8 sm:pt-14 sm:pb-10">
+        <div className="relative max-w-5xl mx-auto px-4 pt-12 pb-10 sm:pt-16 sm:pb-12">
+          {/* Headline */}
           <h1
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -856,10 +873,53 @@ export default function MyClubs() {
           <p className="text-sm sm:text-base mt-2 text-white/60 max-w-lg">
             {user
               ? "Your chess communities and upcoming events"
-              : "Find and join chess clubs from around the world"}
+              : "Find your chess community"}
           </p>
 
-          {/* Tab bar — integrated into hero */}
+          {/* Integrated search bar — inside hero for non-logged-in users */}
+          {!user && (
+            <div className="relative mt-6 max-w-xl">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search clubs by name, location, or category..."
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-white/15 bg-white/8 backdrop-blur-sm text-sm text-white placeholder:text-white/35 outline-none transition-all focus:border-[#4CAF50]/60 focus:bg-white/12 focus:shadow-[0_0_20px_rgba(76,175,80,0.1)]"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white/80 bg-white/10 transition-colors"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Stats bar — social proof */}
+          {!user && (
+            <div className="flex items-center gap-4 sm:gap-6 mt-5">
+              <div className="flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-[#4CAF50]" />
+                <span className="text-sm font-semibold text-white/80">{discoverTotal > 0 ? `${discoverTotal}+` : "18"} clubs</span>
+              </div>
+              <div className="w-px h-4 bg-white/15" />
+              <div className="flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-[#4CAF50]" />
+                <span className="text-sm font-semibold text-white/80">5 countries</span>
+              </div>
+              <div className="w-px h-4 bg-white/15" />
+              <div className="flex items-center gap-1.5">
+                <Trophy className="w-4 h-4 text-[#4CAF50]" />
+                <span className="text-sm font-semibold text-white/80">1,200+ players</span>
+              </div>
+            </div>
+          )}
+
+          {/* Tab bar — integrated into hero (signed-in users) */}
           {user && (
             <div className="flex gap-1.5 mt-6 flex-wrap">
               <button
@@ -1049,10 +1109,14 @@ export default function MyClubs() {
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
                   categoryFilter === cat
-                    ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20"
-                    : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-[#ADBC9F]/40 text-[#436850] hover:text-[#12372A] border border-transparent"
+                    ? isDark
+                      ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/40 shadow-[0_0_12px_rgba(76,175,80,0.15)]"
+                      : "bg-[#436850]/12 text-[#436850] border border-[#436850]/30 shadow-sm"
+                    : isDark
+                      ? "bg-white/5 text-white/50 hover:text-white hover:bg-white/10 border border-white/8 hover:border-white/15"
+                      : "bg-[#ADBC9F]/30 text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50 border border-transparent"
                 }`}
               >
                 {cat !== "all" && CATEGORY_ICONS[cat]}
@@ -1113,7 +1177,7 @@ export default function MyClubs() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {discoverClubs.map((club) => (
                 <ClubCard key={club.id} club={club} isDark={isDark} />
               ))}

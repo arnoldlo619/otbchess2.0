@@ -1427,7 +1427,7 @@ export default function ClubProfile() {
                 <div
                   className={`relative rounded-3xl overflow-hidden mb-5${!club.bannerUrl ? " chess-board-bg" : ""}`}
                   style={{
-                    minHeight: "120px",
+                    minHeight: "160px",
                     ...(club.bannerUrl ? {
                       backgroundImage: `url(${club.bannerUrl})`,
                       backgroundSize: "cover",
@@ -1435,15 +1435,26 @@ export default function ClubProfile() {
                     } : {}),
                   }}
                 >
-                  {/* Dark gradient overlay */}
+                  {/* Enhanced gradient overlay — deeper, more cinematic */}
                   <div
                     className="absolute inset-0"
                     style={{
                       background: club.bannerUrl
-                        ? `linear-gradient(135deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.65) 100%)`
+                        ? `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.75) 100%)`
                         : `linear-gradient(135deg, ${accent}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)`,
                     }}
                   />
+                  {/* Subtle animated shimmer */}
+                  {!club.bannerUrl && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: "linear-gradient(120deg, transparent 30%, rgba(76,175,80,0.04) 50%, transparent 70%)",
+                        backgroundSize: "200% 100%",
+                        animation: "shimmerBg 8s ease-in-out infinite",
+                      }}
+                    />
+                  )}
                   {/* Content */}
                   <div className="relative z-10 flex items-center gap-5 p-5 sm:p-6">
                     {/* Club avatar */}
@@ -1764,6 +1775,7 @@ export default function ClubProfile() {
 
             {/* Club Description & Details (Feed tab only) */}
             {/* Description */}
+            {/* Combined About & Details — consolidated into a single card */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
@@ -1782,21 +1794,29 @@ export default function ClubProfile() {
                   </button>
                 )}
               </div>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
-                {club.description}
-              </p>
-            </div>
-
-            {/* Details grid */}
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                Details
-              </h2>
-              <div className="space-y-3">
-                <DetailRow icon={<MapPin className="w-4 h-4" />} label="Location" value={`${flag} ${club.location}`} isDark={isDark} />
-                <DetailRow icon={<Hash className="w-4 h-4" />} label="Type" value={categoryLabel} isDark={isDark} />
-                <DetailRow icon={<Calendar className="w-4 h-4" />} label="Founded" value={formatDate(club.foundedAt)} isDark={isDark} />
-                <DetailRow icon={<Crown className="w-4 h-4" />} label="Director" value={club.ownerName} isDark={isDark} />
+              {club.description && (
+                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
+                  {club.description}
+                </p>
+              )}
+              {/* Inline details grid */}
+              <div className={`grid grid-cols-2 gap-3 pt-3 border-t ${isDark ? "border-white/8" : "border-[#ADBC9F]/50"}`}>
+                <div className="flex items-center gap-2">
+                  <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{flag} {club.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Hash className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{categoryLabel}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{formatDate(club.foundedAt)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Crown className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.ownerName}</span>
+                </div>
               </div>
             </div>
 
@@ -2035,68 +2055,22 @@ export default function ClubProfile() {
               );
             })()}
 
-            {/* ── Organizer / Club Director card ────────────────────────────── */}
-            {(() => {
-              const ownerMember = members.find((m) => m.role === "owner") ?? members.find((m) => m.role === "director");
-              const ownerName = club.ownerName || ownerMember?.displayName || "Club Director";
-              const ownerAvatar = ownerMember?.avatarUrl ?? null;
-              const ownerChesscom = ownerMember?.chesscomUsername ?? null;
-              return (
-                <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Organized by</h2>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0 overflow-hidden ${
-                      isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
-                    }`}>
-                      {ownerAvatar ? (
-                        <img src={ownerAvatar} alt={ownerName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      ) : (
-                        ownerName.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-base font-bold truncate ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{ownerName}</p>
-                      {ownerChesscom && (
-                        <p className={`text-xs ${textMuted} mt-0.5`}>chess.com/{ownerChesscom}</p>
-                      )}
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <Crown className={`w-3.5 h-3.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                        <span className={`text-xs font-medium ${isDark ? "text-amber-400" : "text-amber-600"}`}>Club Director</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setShowContactOwner(true)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex-shrink-0 ${
-                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#12372A]/85 hover:bg-[#ADBC9F]"
-                      }`}
-                    >
-                      <Mail className="w-3.5 h-3.5" />
-                      Contact
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* ── Share / QR teaser ─────────────────────────────────────────── */}
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className={`text-sm font-semibold ${textMain}`}>Share this club</h2>
-                  <p className={`text-xs mt-0.5 ${textMuted}`}>Invite friends or post to social media</p>
-                </div>
-                <button
-                  onClick={handleShare}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    isDark
-                      ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/25 hover:bg-[#4CAF50]/25"
-                      : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20 hover:bg-[#436850]/20"
-                  }`}
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  Share
-                </button>
+            {/* ── Share CTA — compact inline ─────────────────────────────── */}
+            <div className={`rounded-2xl border ${cardBorder} ${card} px-5 py-3.5 flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <Share2 className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                <span className={`text-sm font-medium ${textMain}`}>Share this club</span>
               </div>
+              <button
+                onClick={handleShare}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  isDark
+                    ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/25 hover:bg-[#4CAF50]/25"
+                    : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20 hover:bg-[#436850]/20"
+                }`}
+              >
+                Share
+              </button>
             </div>
 
             {/* ── Feed event list ────────────────────────────────────────────── */}

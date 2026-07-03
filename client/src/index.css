@@ -1770,6 +1770,21 @@ select {
   50%       { opacity: 0.9; }
 }
 
+/* ── Clubs page: hero shimmer background animation ── */
+@keyframes shimmerBg {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+}
+
+/* ── Clubs page: directory card hover elevation ── */
+.club-card-hover {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.club-card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(76, 175, 80, 0.08);
+}
+
 /* ── Chess Clock: tournament identity card hover animation ── */
 .clock-identity-card:hover {
   transform: translateY(-2px) scale(1.015);

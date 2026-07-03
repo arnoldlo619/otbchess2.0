@@ -6666,3 +6666,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Redesign 4 tournament type cards (Quickstart, Schedule, Large Event, Rating Brackets) to be more premium and spacious on desktop
 - [x] Cards should have more generous padding, larger typography, stronger visual hierarchy
 - [x] Inspired by reference: bold card layout with visual weight, not skinny/cramped
+
+## Sprint 1: Clubs UI/UX Enhancement (Jul 3 2026)
+
+- [x] Redesign /clubs hero section with immersive background, integrated search bar, and stats bar (18+ clubs, 5 countries, 1,200+ players)
+- [x] Enhance Featured Clubs Carousel with ranking badges, gradient overlays, hover scale, and "View Club" CTA
+- [x] Redesign club dashboard hero with deeper cinematic gradient overlay and shimmer animation
+- [x] Consolidate About + Details into a single card with 2-column inline details grid
+- [x] Remove redundant standalone Organizer card (info already in hero)
+- [x] Compact Share CTA into a slim inline row
+- [x] Polish directory grid cards: enhanced gradient scrim, backdrop-blur badges, hover tint overlay, scale animation
+- [x] Add club-card-hover CSS class with translateY lift and shadow on hover
+- [x] Enhance category filter chips with glow active state and better hover transitions
+- [x] Increase grid gap for better card spacing
