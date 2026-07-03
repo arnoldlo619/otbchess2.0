@@ -115,26 +115,22 @@ function ClubCard({
 }) {
   const [, navigate] = useLocation();
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
-  const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
-  const cardBorder = isDark ? "border-white/8" : "border-[#ADBC9F]/70";
-  const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/70" : "text-[#436850]";
-  // Showcase clubs seeded as seed-club-7 through seed-club-11
+  const textMain = isDark ? "text-white" : "text-gray-900";
+  const textMuted = isDark ? "text-white/50" : "text-gray-500";
   const isTrending = /^seed-club-(7|8|9|10|11)$/.test(club.id);
+  const initial = club.name.charAt(0).toUpperCase();
 
   return (
-    <div className="relative">
+    <div className="relative group">
     <Link href={toDashboard ? `/clubs/${club.id}/home` : `/clubs/${club.id}`}>
-      <div
-        className={`group rounded-3xl border ${cardBorder} ${card} overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
-      >
-        {/* Banner — full-width, tall enough to show custom images properly */}
+      <div className="cursor-pointer">
+        {/* Image area — tall portrait, 4:5 aspect ratio, borderless */}
         <div
-          className="h-36 relative overflow-hidden"
+          className="relative w-full aspect-[4/5] rounded-xl overflow-hidden"
           style={{
             background: club.bannerUrl
               ? undefined
-              : `linear-gradient(135deg, ${club.accentColor}dd 0%, ${club.accentColor}55 100%)`,
+              : `linear-gradient(145deg, ${club.accentColor}dd 0%, ${club.accentColor}55 60%, ${isDark ? '#0d1a0f' : '#1a2e1d'}ee 100%)`,
           }}
         >
           {club.bannerUrl ? (
@@ -142,110 +138,88 @@ function ClubCard({
               src={club.bannerUrl}
               alt=""
               role="presentation"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
-            <div className="absolute inset-0 chess-board-bg opacity-15" />
+            <>
+              <div className="absolute inset-0 chess-board-bg opacity-12" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white/15 text-7xl font-black">{initial}</span>
+              </div>
+            </>
           )}
-          {/* Dark scrim for text legibility */}
+
+          {/* Gradient scrim */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          {/* Owner crown badge */}
+
+          {/* Owner badge — top-left */}
           {isOwned && (
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/90 text-black backdrop-blur-sm">
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-black shadow-sm">
               <Crown className="w-3 h-3" />
               Owner
             </div>
           )}
-          {/* Trending badge */}
-          {isTrending && (
-            <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/90 text-black backdrop-blur-sm">
+
+          {/* Trending badge — top-left (if not owner) */}
+          {!isOwned && isTrending && (
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-black shadow-sm">
               <Zap className="w-3 h-3" />
               Trending
             </div>
           )}
+
+          {/* Three-dot menu — top-right */}
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-black text-sm font-bold leading-none">⋯</span>
+          </div>
+
+          {/* Member count — bottom-left */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
+            <Users className="w-3 h-3" />
+            {club.memberCount.toLocaleString()}
+          </div>
+
+          {/* Category badge — bottom-right */}
+          <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/60 text-white backdrop-blur-sm">
+            {CATEGORY_ICONS[club.category]}
+            {CATEGORY_LABELS[club.category]}
+          </div>
         </div>
 
-        {/* Avatar — overlaps banner bottom edge, raised above banner via z-index */}
-        <div className="px-5 relative z-10">
+        {/* Title below image */}
+        <h3 className={`mt-3 text-base font-bold leading-tight truncate ${textMain}`}>
+          {club.name}
+        </h3>
+
+        {/* Location / tagline row */}
+        <div className="flex items-center gap-2 mt-1.5">
           <div
-            className="-mt-8 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-xl border-2 border-white/30 overflow-hidden"
-            style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
+            className="w-5 h-5 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center text-[9px] font-bold text-white"
+            style={{ background: club.accentColor }}
           >
             {club.avatarUrl ? (
-              <img
-                src={club.avatarUrl}
-                alt={club.name}
-                role="presentation"
-                className="w-full h-full object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-              />
+              <img src={club.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
               <span>{flag}</span>
             )}
           </div>
-        </div>
-
-        {/* Content */}
-        <div className="px-5 pt-3 pb-5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3
-                className={`text-lg font-bold leading-tight truncate ${textMain}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                {club.name}
-              </h3>
-              <div className={`flex items-center gap-1.5 mt-0.5 text-xs ${textMuted}`}>
-                <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate">{club.location}</span>
-              </div>
-            </div>
-            <span
-              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold mt-0.5 ${
-                isDark ? "bg-white/8 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
-              }`}
-            >
-              {CATEGORY_ICONS[club.category]}
-              {CATEGORY_LABELS[club.category]}
-            </span>
-          </div>
-
-          <p className={`text-sm mt-2.5 leading-relaxed line-clamp-2 ${textMuted}`}>
-            {club.tagline}
-          </p>
-
-          {/* Stats */}
-          <div className={`flex items-center gap-5 mt-4 pt-3.5 border-t ${isDark ? "border-white/6" : "border-[#ADBC9F]/70"}`}>
-            <span className={`flex items-center gap-1.5 text-xs font-semibold ${textMuted}`}>
-              <Users className="w-3.5 h-3.5" />
-              {club.memberCount.toLocaleString()}
-            </span>
-            <span className={`flex items-center gap-1.5 text-xs font-semibold ${textMuted}`}>
-              <Trophy className="w-3.5 h-3.5" />
-              {club.tournamentCount}
-            </span>
-            {club.announcement && (
-              <span className={`flex items-center gap-1 text-[10px] font-bold ml-auto ${
-                isDark ? "text-amber-400" : "text-amber-600"
-              }`}>
-                <Zap className="w-3 h-3" />
-                Active
-              </span>
-            )}
-          </div>
+          <span className={`text-xs truncate ${textMuted}`}>
+            {club.location || club.tagline || "Chess community"}
+          </span>
         </div>
       </div>
     </Link>
-    {/* Owner action buttons — floats below card for owned clubs */}
+
+    {/* Owner action buttons */}
     {isOwned && (
       <div className="mt-3 flex gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/clubs/${club.id}?settings=1`); }}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
             isDark
-              ? "bg-white/6 text-white/60 hover:bg-white/10 hover:text-white/80"
-              : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] hover:text-[#12372A]"
+              ? "bg-white/8 text-white/60 hover:bg-white/12 hover:text-white/80"
+              : "bg-black/5 text-gray-600 hover:bg-black/10 hover:text-gray-800"
           }`}
         >
           <Crown className="w-3.5 h-3.5" />
@@ -253,10 +227,10 @@ function ClubCard({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/clubs/${club.id}?create=1`); }}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
             isDark
-              ? "bg-white/6 text-white/60 hover:bg-white/10 hover:text-white/80"
-              : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] hover:text-[#12372A]"
+              ? "bg-white/8 text-white/60 hover:bg-white/12 hover:text-white/80"
+              : "bg-black/5 text-gray-600 hover:bg-black/10 hover:text-gray-800"
           }`}
         >
           <PlusCircle className="w-3.5 h-3.5" />
@@ -1139,7 +1113,7 @@ export default function MyClubs() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {discoverClubs.map((club) => (
                 <ClubCard key={club.id} club={club} isDark={isDark} />
               ))}

@@ -1240,7 +1240,6 @@ export default function ClubProfile() {
                   aria-label={t.charAt(0).toUpperCase() + t.slice(1)}
                 >
                   {iconMap[t]}
-                  <span className="text-[9px] font-medium leading-none">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
                   {badge > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
