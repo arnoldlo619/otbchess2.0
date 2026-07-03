@@ -446,21 +446,21 @@ export function clearClubRegistry(): void {
 
 const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" | "foundedAt">[] = [
   {
-    name: "London Chess Club",
-    tagline: "The oldest chess club in the world, still playing strong.",
+    name: "Knight Club Chess",
+    tagline: "London's chess nightlife — where the board meets the dancefloor.",
     description:
-      "Founded in 1807, London Chess Club is one of the world's oldest and most prestigious chess clubs. We host weekly rapid tournaments, monthly classical events, and an annual open championship attracting players from across Europe.",
+      "Knight Club Chess is London's premier chess nightlife collective, hosting high-energy evening events that blend competitive OTB chess with live music, DJs, and a vibrant social scene. From casual open play to speed chess tournaments, Knight Club brings together players of all levels in some of London's most iconic venues. Follow @knightclubchess on Instagram for upcoming events.",
     location: "London, UK",
     country: "GB",
-    category: "club",
+    category: "community",
     avatarUrl: null,
-    bannerUrl: null,
-    accentColor: "#1a3a5c",
+    bannerUrl: "/manus-storage/681287088_17881618377555133_2847493176513169793_n_f0dcf8c6.jpg",
+    accentColor: "#2233CC",
     ownerId: "seed",
-    ownerName: "James Whitmore",
+    ownerName: "Knight Club Chess",
     isPublic: true,
-    website: "https://londonchessclub.org",
-    announcement: "Spring Open 2026 registrations now open — 64 player cap, Swiss 7 rounds.",
+    website: "https://www.instagram.com/knightclubchess/",
+    announcement: "♟️ Next event: Seoul to London collab night — chess, live DJs, all levels welcome. Follow @knightclubchess for tickets.",
   },
   {
     name: "NYC Chess Collective",
@@ -613,13 +613,13 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
 ];
 
 const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
-  // London Chess Club
+  // Knight Club Chess
   [
-    { userId: "seed-m1", displayName: "James Whitmore", chesscomUsername: "jwhitmore", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2024-01-15T10:00:00Z", tournamentsPlayed: 12, bestFinish: 1 },
-    { userId: "seed-m2", displayName: "Sophie Clarke", chesscomUsername: "sophieclark", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2024-02-01T10:00:00Z", tournamentsPlayed: 8, bestFinish: 2 },
-    { userId: "seed-m3", displayName: "Oliver Bennett", chesscomUsername: null, lichessUsername: "obennett", avatarUrl: null, role: "member", joinedAt: "2024-03-10T10:00:00Z", tournamentsPlayed: 5, bestFinish: 3 },
-    { userId: "seed-m4", displayName: "Emma Walsh", chesscomUsername: "emmawalsh99", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2024-04-22T10:00:00Z", tournamentsPlayed: 3, bestFinish: 4 },
-    { userId: "seed-m5", displayName: "Liam Foster", chesscomUsername: null, lichessUsername: "lfoster", avatarUrl: null, role: "member", joinedAt: "2024-05-05T10:00:00Z", tournamentsPlayed: 7, bestFinish: 1 },
+    { userId: "seed-m1", displayName: "Knight Club Chess", chesscomUsername: null, lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2023-06-01T10:00:00Z", tournamentsPlayed: 24, bestFinish: 1 },
+    { userId: "seed-m2", displayName: "Taeyoon K.", chesscomUsername: "taeyoonk", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2023-07-01T10:00:00Z", tournamentsPlayed: 18, bestFinish: 2 },
+    { userId: "seed-m3", displayName: "Youngin P.", chesscomUsername: null, lichessUsername: "younginp", avatarUrl: null, role: "member", joinedAt: "2023-08-10T10:00:00Z", tournamentsPlayed: 12, bestFinish: 3 },
+    { userId: "seed-m4", displayName: "Pianwooo", chesscomUsername: "pianwooo", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2023-09-22T10:00:00Z", tournamentsPlayed: 9, bestFinish: 2 },
+    { userId: "seed-m5", displayName: "Santo R.", chesscomUsername: null, lichessUsername: "santor", avatarUrl: null, role: "member", joinedAt: "2023-10-05T10:00:00Z", tournamentsPlayed: 14, bestFinish: 1 },
   ],
   // NYC Chess Collective
   [
@@ -696,12 +696,12 @@ const SEED_FOUNDED_DATES = [
 ];
 
 const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
-  // London Chess Club
+  // Knight Club Chess
   [
-    { tournamentId: "lcc-spring-2026", name: "Spring Open 2026", date: "2026-04-12", format: "Swiss", playerCount: 0, rounds: 7, status: "upcoming" },
-    { tournamentId: "lcc-winter-2025", name: "Winter Classic 2025", date: "2025-12-14", format: "Swiss", playerCount: 48, rounds: 7, status: "completed", winnerName: "Liam Foster" },
-    { tournamentId: "lcc-autumn-2025", name: "Autumn Rapid 2025", date: "2025-10-05", format: "Swiss", playerCount: 32, rounds: 5, status: "completed", winnerName: "Sophie Clarke" },
-    { tournamentId: "lcc-summer-2025", name: "Summer Blitz 2025", date: "2025-07-20", format: "Swiss", playerCount: 24, rounds: 5, status: "completed", winnerName: "James Whitmore" },
+    { tournamentId: "kcc-seoul-london-2026", name: "Seoul to London Collab Night", date: "2026-05-05", format: "Swiss", playerCount: 0, rounds: 5, status: "upcoming" },
+    { tournamentId: "kcc-blitz-apr-2026", name: "Knight Club Blitz April", date: "2026-04-11", format: "Swiss", playerCount: 64, rounds: 7, status: "completed", winnerName: "Santo R." },
+    { tournamentId: "kcc-speed-mar-2026", name: "Speed Chess Night March", date: "2026-03-14", format: "Swiss", playerCount: 48, rounds: 5, status: "completed", winnerName: "Taeyoon K." },
+    { tournamentId: "kcc-winter-2025", name: "Winter Blitz Night 2025", date: "2025-12-06", format: "Swiss", playerCount: 40, rounds: 5, status: "completed", winnerName: "Youngin P." },
   ],
   // NYC Chess Collective
   [
@@ -759,7 +759,7 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
 ];
 
-const SEED_KEY = "otb-clubs-seeded-v4";
+const SEED_KEY = "otb-clubs-seeded-v5";
 
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {
