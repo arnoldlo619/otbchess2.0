@@ -446,7 +446,7 @@ function UpcomingEventsTab({
             <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>{group}</h2>
             <div className={`flex-1 h-px ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/40"}`} />
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups[group].map((ev) => (
               <EventCard
                 key={ev.id}
@@ -531,7 +531,7 @@ function EventCard({
   isDark,
   textMain,
   textMuted,
-  card,
+  card: _card,
   cardBorder,
   onRsvpChange,
 }: {
@@ -555,83 +555,112 @@ function EventCard({
   };
 
   return (
-    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden flex`}>
-      {/* Cover image or gradient strip */}
-      {event.coverImageUrl ? (
-        <div className="w-24 sm:w-32 flex-shrink-0 relative overflow-hidden">
-          <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
-        </div>
-      ) : (
-        <div
-          className="w-3 flex-shrink-0"
-          style={{ background: `linear-gradient(180deg, ${event.clubAccent}cc, ${event.clubAccent}44)` }}
-        />
-      )}
-
-      {/* Main content */}
-      <div className="flex flex-1 min-w-0 gap-4 p-4">
-        {/* Date block */}
-        <div className="flex-shrink-0 text-center w-12">
-          <div className={`text-xs font-bold uppercase tracking-wider`} style={{ color: event.clubAccent }}>{month}</div>
-          <div className={`text-2xl font-black leading-none ${textMain}`}>{day}</div>
-          <div className={`text-xs ${textMuted} mt-0.5`}>{weekday}</div>
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className={`text-sm font-bold truncate ${textMain}`}>{event.title}</p>
-              <div className="flex items-center gap-3 mt-1 flex-wrap">
-                <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
-                  <Clock className="w-3 h-3" />{time}
-                </span>
-                {event.venue && (
-                  <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
-                    <MapPin className="w-3 h-3" />{event.venue}
-                  </span>
-                )}
-              </div>
+    <div
+      className={`group rounded-2xl border ${cardBorder} overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 cursor-pointer flex flex-col ${
+        isDark ? "bg-[#1a2e1d]" : "bg-white"
+      }`}
+    >
+      {/* Cover image area — tall, image-forward */}
+      <div
+        className="relative h-52 overflow-hidden"
+        style={{
+          background: event.coverImageUrl
+            ? undefined
+            : `linear-gradient(145deg, ${event.clubAccent}dd 0%, ${event.clubAccent}44 60%, ${isDark ? '#0d1a0f' : '#1a2e1d'}ee 100%)`,
+        }}
+      >
+        {event.coverImageUrl ? (
+          <img
+            src={event.coverImageUrl}
+            alt=""
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 chess-board-bg opacity-10" />
+            {/* Decorative chess icon */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Trophy className="w-16 h-16 text-white/15" />
             </div>
-            <Link href={`/clubs/${event.clubId}/home`}>
-              <span
-                className={`flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
-                  event.isJoined
-                    ? isDark ? "bg-[#4CAF50]/12 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
-                    : isDark ? "bg-white/6 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
-                }`}
-              >
-                {event.isJoined ? <Users className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
-                {event.clubName}
-              </span>
-            </Link>
-          </div>
+          </>
+        )}
+        {/* Gradient scrim */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-          {/* RSVP row */}
-          <div className="flex items-center gap-2 mt-3">
-            {RSVP_OPTIONS.map((opt) => (
-              <button
-                key={opt.status}
-                onClick={() => handleRSVP(opt.status)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-95 ${
-                  rsvp?.status === opt.status
-                    ? `${opt.activeClass} border-transparent`
-                    : isDark
-                    ? "border-white/8 text-white/40 hover:text-white hover:border-white/20 bg-white/3"
-                    : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F] bg-white"
-                }`}
-              >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
-            <RsvpAvatarStack
-              rsvps={rsvps}
-              accentColor={event.clubAccent}
-              isDark={isDark}
-            />
-          </div>
+        {/* Date badge — top-left overlay */}
+        <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold text-white backdrop-blur-md"
+          style={{ background: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.55)' }}
+        >
+          {weekday} at {time}
+        </div>
+
+        {/* Three-dot menu placeholder — top-right */}
+        <div className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.4)' }}
+        >
+          <span className="text-white text-sm font-bold">⋯</span>
+        </div>
+      </div>
+
+      {/* Content area below image */}
+      <div className="flex flex-col flex-1 p-4">
+        {/* Title */}
+        <h3 className={`text-base font-bold leading-snug line-clamp-2 ${textMain}`}>
+          {event.title}
+        </h3>
+
+        {/* Meta row */}
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
+          {event.venue && (
+            <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
+              <MapPin className="w-3 h-3" />
+              <span className="truncate max-w-[140px]">{event.venue}</span>
+            </span>
+          )}
+          <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
+            <CalendarDays className="w-3 h-3" />{month} {day}
+          </span>
+        </div>
+
+        {/* Hosted by row */}
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(173,188,159,0.5)' }}>
+          <Link href={`/clubs/${event.clubId}/home`} className="flex items-center gap-2 min-w-0">
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+              style={{ background: event.clubAccent }}
+            >
+              {event.clubName.slice(0, 1).toUpperCase()}
+            </div>
+            <span className={`text-xs font-semibold truncate ${isDark ? 'text-white/70 hover:text-white' : 'text-[#436850] hover:text-[#12372A]'} transition-colors`}>
+              {event.clubName}
+            </span>
+          </Link>
+          <RsvpAvatarStack
+            rsvps={rsvps}
+            accentColor={event.clubAccent}
+            isDark={isDark}
+            max={4}
+          />
+        </div>
+
+        {/* RSVP buttons */}
+        <div className="flex items-center gap-1.5 mt-3">
+          {RSVP_OPTIONS.map((opt) => (
+            <button
+              key={opt.status}
+              onClick={() => handleRSVP(opt.status)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-95 ${
+                rsvp?.status === opt.status
+                  ? `${opt.activeClass} border-transparent`
+                  : isDark
+                  ? "border-white/8 text-white/40 hover:text-white hover:border-white/20 bg-white/3"
+                  : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F] bg-white"
+              }`}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -804,7 +833,7 @@ export default function MyClubs() {
     <div className={`min-h-screen ${bg}`}>
 
       {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-[#F5F5EE]/95"} backdrop-blur-md`}>
+      <header className={`sticky top-0 z-40 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-[#F5F5EE]/95"} backdrop-blur-md`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
@@ -820,31 +849,51 @@ export default function MyClubs() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
+      {/* ── Hero gradient section ─────────────────────────────────────────── */}
+      <div className="relative overflow-hidden">
+        {/* Gradient background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isDark
+              ? "linear-gradient(180deg, #0d2b12 0%, #0d1a0f 100%)"
+              : "linear-gradient(180deg, #1a4a22 0%, #F5F5EE 100%)",
+          }}
+        />
+        {/* Checkered pattern overlay */}
+        <div className="absolute inset-0 chess-board-bg" style={{ opacity: isDark ? 0.06 : 0.04 }} />
+        {/* Subtle radial glow */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isDark
+              ? "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(76,175,80,0.12) 0%, transparent 70%)"
+              : "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(67,104,80,0.08) 0%, transparent 70%)",
+          }}
+        />
 
-        {/* ── Page title + tab bar ─────────────────────────────────────── */}
-        <div>
+        <div className="relative max-w-5xl mx-auto px-4 pt-10 pb-8 sm:pt-14 sm:pb-10">
           <h1
-            className={`text-2xl sm:text-3xl font-bold ${textMain}`}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            {user ? "My Clubs" : "Discover Clubs"}
+            {user ? `Welcome back${user.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}!` : "Discover Clubs"}
           </h1>
-          <p className={`text-sm mt-1 ${textMuted}`}>
+          <p className="text-sm sm:text-base mt-2 text-white/60 max-w-lg">
             {user
-              ? "Your chess communities and clubs you follow"
+              ? "Your chess communities and upcoming events"
               : "Find and join chess clubs from around the world"}
           </p>
 
-          {/* Tab bar — only for signed-in users */}
+          {/* Tab bar — integrated into hero */}
           {user && (
-            <div className={`flex gap-1 mt-5 p-1 rounded-2xl w-fit ${isDark ? "bg-white/6" : "bg-black/5"}`}>
+            <div className="flex gap-1.5 mt-6 flex-wrap">
               <button
                 onClick={() => setActiveTab("clubs")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all border ${
                   activeTab === "clubs"
-                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-[#12372A] shadow-sm"
-                    : isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"
+                    ? "bg-white/15 text-white border-white/20 shadow-sm backdrop-blur-sm"
+                    : "bg-transparent text-white/50 border-white/8 hover:text-white hover:border-white/15"
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -852,17 +901,17 @@ export default function MyClubs() {
                 {myClubs.length > 0 && (
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                     activeTab === "clubs"
-                      ? "bg-[#436850]/20 text-[#4CAF50]"
-                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-[#436850]"
+                      ? "bg-white/20 text-white"
+                      : "bg-white/8 text-white/40"
                   }`}>{myClubs.length}</span>
                 )}
               </button>
               <button
                 onClick={() => setActiveTab("events")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all border ${
                   activeTab === "events"
-                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-[#12372A] shadow-sm"
-                    : isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"
+                    ? "bg-white/15 text-white border-white/20 shadow-sm backdrop-blur-sm"
+                    : "bg-transparent text-white/50 border-white/8 hover:text-white hover:border-white/15"
                 }`}
               >
                 <CalendarDays className="w-4 h-4" />
@@ -870,14 +919,17 @@ export default function MyClubs() {
                 {upcomingEvents.length > 0 && (
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                     activeTab === "events"
-                      ? "bg-[#436850]/20 text-[#4CAF50]"
-                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-[#436850]"
+                      ? "bg-white/20 text-white"
+                      : "bg-white/8 text-white/40"
                   }`}>{upcomingEvents.length}</span>
                 )}
               </button>
             </div>
           )}
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
 
         {/* ── Upcoming Events tab ──────────────────────────────────────────── */}
         {user && activeTab === "events" && (
