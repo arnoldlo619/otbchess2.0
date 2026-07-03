@@ -1426,10 +1426,19 @@ function FeedCard({
         <FeedIcon type={event.type} />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
+            {event.type === "tournament_completed" ? (
+              <span className="text-amber-300 text-sm font-bold">{event.tournamentName ?? event.description}</span>
+            ) : (
+              <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
+            )}
             <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
           </div>
-          <p className="text-white/50 text-xs mt-0.5">{event.description}</p>
+          {event.type !== "tournament_completed" && (
+            <p className="text-white/50 text-xs mt-0.5">{event.description}</p>
+          )}
+          {event.type === "tournament_completed" && event.tournamentFormat && (
+            <p className="text-white/35 text-xs mt-0.5">{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
+          )}
         </div>
         {/* Director action buttons — visible on hover */}
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1459,48 +1468,79 @@ function FeedCard({
       </div>
       {!isPoll && !isRsvp && event.type === "tournament_completed" && (
         <div className="px-4 pb-4">
-          {/* Rich tournament results card */}
-          <div className="rounded-xl overflow-hidden border border-amber-500/20" style={{ background: "oklch(0.18 0.07 80 / 0.35)" }}>
-            {/* Header row */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-amber-500/15">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-400" />
-                <span className="text-amber-300 text-xs font-bold uppercase tracking-wider">{event.tournamentName ?? event.description}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {event.tournamentFormat && (
-                  <span className="text-[10px] font-semibold text-white/40 bg-white/05 rounded-full px-2 py-0.5">{event.tournamentFormat}</span>
-                )}
-                {event.tournamentPlayerCount && (
-                  <span className="text-[10px] font-semibold text-white/40">{event.tournamentPlayerCount} players</span>
-                )}
-              </div>
-            </div>
-            {/* Podium */}
+          {/* Visual podium card — mirrors the Instagram carousel slide aesthetic */}
+          <div
+            className="rounded-2xl overflow-hidden relative"
+            style={{
+              background: "linear-gradient(160deg, oklch(0.20 0.08 145) 0%, oklch(0.14 0.06 145) 100%)",
+              border: "1px solid oklch(0.35 0.10 80 / 0.3)",
+            }}
+          >
+            {/* Checkerboard texture overlay */}
+            <div
+              className="absolute inset-0 opacity-[0.04] pointer-events-none"
+              style={{
+                backgroundImage: `repeating-conic-gradient(oklch(0.9 0 0) 0% 25%, transparent 0% 50%)`,
+                backgroundSize: "24px 24px",
+              }}
+            />
+            {/* Podium visual — 3-column layout */}
             {event.tournamentPodium && event.tournamentPodium.length > 0 ? (
-              <div className="px-4 py-3 space-y-2">
-                {event.tournamentPodium.map((entry) => {
-                  const medal = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉";
-                  const nameColor = entry.rank === 1 ? "text-amber-300" : entry.rank === 2 ? "text-slate-300" : "text-orange-300";
-                  const scoreStr = entry.score % 1 !== 0 ? `${Math.floor(entry.score)}½` : String(entry.score);
-                  return (
-                    <div key={entry.rank} className={`flex items-center gap-3 ${entry.rank === 1 ? "" : "opacity-75"}`}>
-                      <span className="text-base w-6 text-center">{medal}</span>
-                      <span className={`text-sm font-semibold flex-1 truncate ${nameColor}`}>{entry.playerName}</span>
-                      <span className="text-xs text-white/40 font-mono">{scoreStr}/{entry.totalRounds}</span>
-                    </div>
-                  );
-                })}
+              <div className="relative px-4 pt-5 pb-4">
+                {/* "Top Players" heading */}
+                <p className="text-white/90 text-[11px] font-black uppercase tracking-[0.18em] mb-4">Top Players</p>
+                {/* Podium columns: 2nd | 1st | 3rd */}
+                <div className="flex items-end justify-center gap-2">
+                  {[1, 0, 2].map((srcIdx) => {
+                    const entry = event.tournamentPodium![srcIdx];
+                    if (!entry) return <div key={srcIdx} className="flex-1" />;
+                    const isFirst = entry.rank === 1;
+                    const isSecond = entry.rank === 2;
+                    const blockColors = isFirst
+                      ? { bg: "oklch(0.38 0.14 80 / 0.55)", border: "oklch(0.65 0.18 80 / 0.6)", text: "text-amber-300", num: "text-amber-400/40" }
+                      : isSecond
+                      ? { bg: "oklch(0.30 0.04 220 / 0.45)", border: "oklch(0.55 0.06 220 / 0.5)", text: "text-slate-200", num: "text-slate-400/40" }
+                      : { bg: "oklch(0.28 0.08 50 / 0.45)", border: "oklch(0.52 0.10 50 / 0.5)", text: "text-orange-300", num: "text-orange-400/40" };
+                    const medal = isFirst ? "🥇" : isSecond ? "🥈" : "🥉";
+                    const blockH = isFirst ? "h-20" : isSecond ? "h-14" : "h-10";
+                    const scoreStr = entry.score % 1 !== 0 ? `${Math.floor(entry.score)}½` : String(entry.score);
+                    return (
+                      <div key={entry.rank} className="flex-1 flex flex-col items-center gap-1.5">
+                        {/* Player info above block */}
+                        <span className="text-base leading-none">{medal}</span>
+                        <span className={`text-xs font-bold truncate max-w-full text-center ${blockColors.text}`}>{entry.playerName}</span>
+                        <span className="text-[10px] text-white/40 font-mono">{scoreStr}/{entry.totalRounds} pts</span>
+                        {/* Podium block */}
+                        <div
+                          className={`w-full ${blockH} rounded-t-xl flex items-center justify-center relative overflow-hidden`}
+                          style={{ background: blockColors.bg, border: `1px solid ${blockColors.border}`, borderBottom: "none" }}
+                        >
+                          <span className={`text-3xl font-black ${blockColors.num}`}>#{entry.rank}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            ) : event.detail ? (
-              <div className="px-4 py-3">
-                <p className="text-sm font-bold text-amber-300">{event.detail}</p>
+            ) : (
+              /* Fallback: just show winner name if no podium data */
+              <div className="px-4 py-4 flex items-center gap-3">
+                <Trophy className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                <span className="text-amber-300 text-sm font-bold">{event.detail ?? event.actorName}</span>
               </div>
-            ) : null}
-            {/* View results link */}
+            )}
+            {/* Footer: view results link */}
             {event.linkHref && (
-              <div className="px-4 py-2.5 border-t border-amber-500/15">
-                <a href={event.linkHref} className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80" style={{ color: accent }}>
+              <div
+                className="px-4 py-2.5 flex items-center justify-between"
+                style={{ borderTop: "1px solid oklch(0.35 0.10 80 / 0.2)" }}
+              >
+                <span className="text-[10px] text-white/25 font-semibold uppercase tracking-widest">Final Results</span>
+                <a
+                  href={event.linkHref}
+                  className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80"
+                  style={{ color: accent }}
+                >
                   {event.linkLabel ?? "View results"} <ArrowRight className="w-3 h-3" />
                 </a>
               </div>
