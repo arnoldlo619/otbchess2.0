@@ -1187,21 +1187,6 @@ export default function ClubProfile() {
             borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
           }}
         >
-          {/* Collapse/Expand toggle button — floats on the right edge */}
-          <button
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            className="absolute -right-3 top-6 z-20 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-150 hover:scale-110"
-            style={{
-              background: isDark ? "#1e2530" : "#1e2530",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.60)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-            }}
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {sidebarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
-          </button>
-
           {/* Top: club logo + name */}
           <div className="px-3 pt-5 pb-4 overflow-hidden">
             <button
@@ -1342,6 +1327,19 @@ export default function ClubProfile() {
                 {!sidebarCollapsed && <span className="text-sm font-medium">Settings</span>}
               </button>
             )}
+
+            {/* Collapse/Expand toggle — clean bottom row */}
+            <button
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              className="flex items-center w-full rounded-xl transition-all duration-150"
+              style={{ color: "rgba(255,255,255,0.35)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.70)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? <ChevronRight size={18} className="flex-shrink-0" /> : <ChevronLeft size={18} className="flex-shrink-0" />}
+              {!sidebarCollapsed && <span className="text-sm font-medium">Collapse</span>}
+            </button>
 
             {/* Profile row */}
             {user && (
