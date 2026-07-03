@@ -429,6 +429,7 @@ function ExportableCard({
   chesscomWins,
   chesscomDraws,
   chesscomLosses,
+  clubName,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
@@ -443,6 +444,7 @@ function ExportableCard({
   chesscomWins?: number;
   chesscomDraws?: number;
   chesscomLosses?: number;
+  clubName?: string;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -569,6 +571,7 @@ function ExportableCard({
         chesscomWins={chesscomWins}
         chesscomDraws={chesscomDraws}
         chesscomLosses={chesscomLosses}
+        clubName={clubName}
       />
 
       {showExpanded && (
@@ -1220,6 +1223,7 @@ export default function ReportPage() {
                         chesscomWins={form?.wins}
                         chesscomDraws={form?.draws}
                         chesscomLosses={form?.losses}
+                        clubName={config?.clubName ?? undefined}
                       />
                     </div>
                     {/* Visible responsive card */}
@@ -1237,6 +1241,7 @@ export default function ReportPage() {
                       chesscomWins={form?.wins}
                       chesscomDraws={form?.draws}
                       chesscomLosses={form?.losses}
+                      clubName={config?.clubName ?? undefined}
                     />
                   </div>
                 );

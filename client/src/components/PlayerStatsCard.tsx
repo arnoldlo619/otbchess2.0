@@ -191,6 +191,8 @@ export interface PlayerStatsCardProps {
   chesscomWins?: number;
   chesscomDraws?: number;
   chesscomLosses?: number;
+  /** Optional club name shown as subtitle below tournament name in header */
+  clubName?: string;
 }
 
 const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
@@ -206,6 +208,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       chesscomWins,
       chesscomDraws,
       chesscomLosses,
+      clubName,
     },
     ref
   ) => {
@@ -306,78 +309,57 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             />
           )}
 
-          {/* Top bar: brand + tournament */}
+          {/* Header title: tournament name + optional club subtitle */}
           <div
             style={{
               position: "relative",
               zIndex: 2,
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
               padding: forExport ? "44px 60px 0" : "18px 22px 0",
             }}
           >
-            {/* Brand */}
-            <div style={{ display: "flex", alignItems: "center", gap: forExport ? 12 : 6 }}>
-              {/* OTB!! logo image */}
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png"
-                alt="OTB!!"
-                crossOrigin="anonymous"
-                style={{
-                  width: forExport ? 52 : 26,
-                  height: forExport ? 52 : 26,
-                  objectFit: "contain",
-                  flexShrink: 0,
-                  filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))",
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "'Clash Display', sans-serif",
-                  fontSize: forExport ? 20 : 9,
-                  fontWeight: 800,
-                  color: "rgba(255,255,255,0.50)",
-                  letterSpacing: "0.10em",
-                  textTransform: "uppercase",
-                }}
-              >
-                OTBchess.club
-              </span>
-            </div>
-
-            {/* Tournament */}
-            <div style={{ textAlign: "right", maxWidth: forExport ? 440 : 160 }}>
+            <h1
+              style={{
+                fontFamily: "'Clash Display', sans-serif",
+                fontSize: forExport ? 42 : 18,
+                fontWeight: 900,
+                color: "rgba(255,255,255,0.92)",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.1,
+                margin: 0,
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+              }}
+            >
+              {tournamentName}
+            </h1>
+            {clubName && (
               <p
                 style={{
-                  fontSize: forExport ? 14 : 7,
-                  fontWeight: 700,
-                  color: "rgba(255,255,255,0.25)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  marginBottom: 2,
-                }}
-              >
-                Final Report
-              </p>
-              <p
-                style={{
+                  marginTop: forExport ? 10 : 4,
                   fontSize: forExport ? 20 : 9,
                   fontWeight: 600,
-                  color: "rgba(255,255,255,0.55)",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  color: accentColor,
+                  letterSpacing: "0.02em",
+                  opacity: 0.85,
                 }}
               >
-                {tournamentName}
+                {clubName}
               </p>
-              {tournamentDate && (
-                <p style={{ fontSize: forExport ? 14 : 7, color: "rgba(255,255,255,0.25)", marginTop: 2 }}>
-                  {tournamentDate}
-                </p>
-              )}
-            </div>
+            )}
+            {!clubName && tournamentDate && (
+              <p
+                style={{
+                  marginTop: forExport ? 10 : 4,
+                  fontSize: forExport ? 18 : 8,
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.35)",
+                }}
+              >
+                {tournamentDate}
+              </p>
+            )}
           </div>
 
           {/* Badge pill — bottom-left of header */}
@@ -698,11 +680,11 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             </div>
           </div>
 
-          {/* ── Brand footer: tournament name + website URL ── */}
+          {/* ── Brand footer: logo + ChessOTB.club + Final Report + tournament name ── */}
           <div
             style={{
               marginTop: forExport ? 48 : 16,
-              paddingTop: forExport ? 24 : 8,
+              paddingTop: forExport ? 20 : 7,
               borderTop: "1px solid rgba(255,255,255,0.06)",
               display: "flex",
               alignItems: "center",
@@ -710,45 +692,61 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               gap: forExport ? 20 : 8,
             }}
           >
-            {/* Tournament name */}
-            <p
-              style={{
-                fontSize: forExport ? 17 : 8,
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.30)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {tournamentName}
-            </p>
+            {/* Left: OTB!! logo + ChessOTB.club wordmark */}
+            <div style={{ display: "flex", alignItems: "center", gap: forExport ? 10 : 5, flexShrink: 0 }}>
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png"
+                alt="OTB!!"
+                crossOrigin="anonymous"
+                style={{
+                  width: forExport ? 36 : 16,
+                  height: forExport ? 36 : 16,
+                  objectFit: "contain",
+                  flexShrink: 0,
+                  filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: forExport ? 18 : 8,
+                  fontWeight: 800,
+                  color: accentColor,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                ChessOTB.club
+              </span>
+            </div>
 
-            {/* Divider dot */}
-            <span
-              style={{
-                flexShrink: 0,
-                width: forExport ? 4 : 2,
-                height: forExport ? 4 : 2,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.18)",
-              }}
-            />
-
-            {/* Website URL */}
-            <p
-              style={{
-                fontSize: forExport ? 17 : 8,
-                fontWeight: 700,
-                color: accentColor,
-                flexShrink: 0,
-                letterSpacing: forExport ? "0.03em" : "0.01em",
-              }}
-            >
-              ChessOTB.club
-            </p>
+            {/* Right: Final Report label + tournament name */}
+            <div style={{ textAlign: "right", minWidth: 0, flex: 1 }}>
+              <p
+                style={{
+                  fontSize: forExport ? 11 : 6,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.25)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: 1,
+                }}
+              >
+                Final Report
+              </p>
+              <p
+                style={{
+                  fontSize: forExport ? 16 : 7,
+                  fontWeight: 600,
+                  color: "rgba(255,255,255,0.45)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {tournamentName}
+              </p>
+            </div>
           </div>
         </div>
       </div>
