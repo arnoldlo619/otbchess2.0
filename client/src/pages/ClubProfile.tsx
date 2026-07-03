@@ -1176,45 +1176,54 @@ export default function ClubProfile() {
   return (
     <div className={`min-h-screen ${bg}`}>
       <div className="flex h-screen overflow-hidden">
-        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
+
+        {/* ── LEFT SIDEBAR (Partiful-style: wide with icon+label rows) ─── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
+          className="hidden lg:flex flex-col w-[200px] flex-shrink-0 h-full relative"
           style={{
-            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+            background: isDark ? "#0f1117" : "#111827",
+            borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
           }}
         >
-          {/* Dark overlay so icons stay crisp over the chess pattern */}
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
-          />
-          {/* Sidebar content — sits above the chess-pattern overlay */}
-          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
-          {/* Club avatar / back button */}
-          <button
-            onClick={() => navigate("/clubs")}
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
-            style={{ background: accent }}
-            title="Back to My Clubs"
-          >
-            {club.avatarUrl && !avatarBroken ? (
-              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
-            ) : (
-              <span className="text-lg">{flag}</span>
-            )}
-          </button>
-          {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-          {/* Nav icons */}
-          <nav className="flex flex-col items-center gap-1 flex-1">
+          {/* Top: club logo + name */}
+          <div className="px-4 pt-5 pb-4">
+            <button
+              onClick={() => navigate("/clubs")}
+              className="flex items-center gap-2.5 w-full group"
+              title="Back to My Clubs"
+            >
+              <div
+                className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md"
+                style={{ background: accent }}
+              >
+                {club.avatarUrl && !avatarBroken ? (
+                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
+                ) : (
+                  <span>{flag}</span>
+                )}
+              </div>
+              <span className="text-white font-semibold text-sm truncate group-hover:opacity-80 transition-opacity">
+                {club.name}
+              </span>
+            </button>
+          </div>
+
+          {/* Nav items */}
+          <nav className="flex flex-col gap-0.5 px-2 flex-1">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={17} />,
-                events: <Calendar size={17} />,
-                members: <Users size={17} />,
-                tournaments: <Trophy size={17} />,
-                about: <Globe size={17} />,
-                leagues: <Award size={17} />,
+                feed: <Megaphone size={18} />,
+                events: <Calendar size={18} />,
+                members: <Users size={18} />,
+                tournaments: <Trophy size={18} />,
+                leagues: <Award size={18} />,
+              };
+              const labelMap: Record<string, string> = {
+                feed: "Feed",
+                events: "Events",
+                members: "Members",
+                tournaments: "Tournaments",
+                leagues: "Leagues",
               };
               const badgeMap: Record<string, number> = {
                 events: clubEvents.length,
@@ -1228,72 +1237,92 @@ export default function ClubProfile() {
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
-                  className="relative flex flex-col items-center justify-center gap-0.5 w-11 rounded-xl transition-all group"
+                  className="relative flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
                   style={{
-                    background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
-                    minHeight: "44px",
-                    paddingTop: "5px",
-                    paddingBottom: "5px",
+                    background: isActive ? "rgba(255,255,255,0.10)" : "transparent",
+                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.50)",
                   }}
-                  title={t.charAt(0).toUpperCase() + t.slice(1)}
-                  aria-label={t.charAt(0).toUpperCase() + t.slice(1)}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  aria-label={labelMap[t]}
                 >
-                  {iconMap[t]}
+                  <span className="flex-shrink-0">{iconMap[t]}</span>
+                  <span className="text-sm font-medium">{labelMap[t]}</span>
                   {badge > 0 && (
                     <span
-                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                      className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
                       style={{ background: "#ef4444", color: "#fff" }}
                     >
                       {badge}
                     </span>
                   )}
-                  {/* Tooltip on hover */}
-                  <span
-                    className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
-                  >
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </span>
                 </button>
               );
             })}
           </nav>
-          {/* Divider */}
-          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-          {/* Bottom actions */}
-          <div className="flex flex-col items-center gap-1">
+
+          {/* Bottom: share / settings / profile */}
+          <div className="px-2 pb-4 flex flex-col gap-0.5">
+            {/* Divider */}
+            <div className="mx-3 my-2 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+
             <button
               onClick={handleShare}
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: "oklch(0.55 0.08 145)" }}
-              title="Share Club"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
+              style={{ color: "rgba(255,255,255,0.50)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
             >
-              <Share2 size={16} />
+              <Share2 size={18} className="flex-shrink-0" />
+              <span className="text-sm font-medium">Share Club</span>
             </button>
-            {/* Contact Owner — shown to non-owners who are signed in */}
+
             {user && !isOwner && !isDirector && (
               <button
                 onClick={() => setShowContactOwner(true)}
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ color: "oklch(0.55 0.08 145)" }}
-                title="Contact Club Owner"
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
+                style={{ color: "rgba(255,255,255,0.50)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
               >
-                <MessageSquare size={16} />
+                <MessageSquare size={18} className="flex-shrink-0" />
+                <span className="text-sm font-medium">Contact Owner</span>
               </button>
             )}
+
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ color: "oklch(0.55 0.08 145)" }}
-                title="Club Settings"
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
+                style={{ color: "rgba(255,255,255,0.50)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
               >
-                <MoreHorizontal size={16} />
+                <MoreHorizontal size={18} className="flex-shrink-0" />
+                <span className="text-sm font-medium">Settings</span>
+              </button>
+            )}
+
+            {/* Profile row */}
+            {user && (
+              <button
+                onClick={() => navigate(`/profile/${user.id}`)}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left mt-1"
+                style={{ color: "rgba(255,255,255,0.50)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+              >
+                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-white/20 flex items-center justify-center text-xs font-bold text-white">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    user.displayName?.charAt(0).toUpperCase() ?? "?"
+                  )}
+                </div>
+                <span className="text-sm font-medium truncate">{user.displayName ?? "Profile"}</span>
               </button>
             )}
           </div>
-          </div>{/* end z-10 sidebar content wrapper */}
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
