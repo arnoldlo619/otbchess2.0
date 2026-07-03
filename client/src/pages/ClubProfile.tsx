@@ -1383,13 +1383,6 @@ export default function ClubProfile() {
             >
               <ChevronLeft size={15} />
             </button>
-            {/* Club name (desktop) — avatar shown in sidebar */}
-            <div className="hidden lg:flex items-center gap-2">
-              <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
-                {club.name}
-              </span>
-              <span className="text-xs font-medium px-1.5 py-0.5 rounded-md" style={{ color: "oklch(0.65 0.12 145)", background: "oklch(0.20 0.06 145)" }}>Club</span>
-            </div>
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
               <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
