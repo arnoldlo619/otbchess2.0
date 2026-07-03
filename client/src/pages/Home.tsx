@@ -730,20 +730,14 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
   // Height maintains the 320:650 (≈1:2.03) aspect ratio
   return (
     <>
-    {lightboxOpen && <PhoneLightbox src={src} alt={alt} onClose={handleClose} />}
     <div
-      className="relative mx-auto select-none cursor-pointer"
+      className="relative mx-auto select-none"
       style={{
         width: "clamp(200px, min(80vw, 320px), 320px)",
         height: "clamp(406px, min(162.5vw, 650px), 650px)",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => setLightboxOpen(true)}
-      role="button"
-      aria-label={`View ${alt} full screen`}
-      tabIndex={0}
-      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setLightboxOpen(true); }}
     >
       {/* Gradient glow ring — soft green halo on hover */}
       <div
