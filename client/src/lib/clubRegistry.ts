@@ -510,19 +510,21 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     website: "https://berlinschachclub.de",
   },
   {
-    name: "Tokyo Chess Society",
-    tagline: "Where East meets West over 64 squares.",
+    name: "Koenji Chess Club",
+    tagline: "Every 1st & 3rd Wednesday at The Den in Koenji.",
     description:
-      "An international chess community in Tokyo welcoming players from Japan and around the world. Monthly tournaments, English and Japanese spoken, all levels welcome.",
-    location: "Tokyo, Japan",
+      "Koenji Chess Club meets every 1st and 3rd Wednesday at The Den in Koenji, Suginami-ku, Tokyo — 6 to 10pm. A welcoming community of players from all backgrounds, all skill levels, all ages. Come for the chess, stay for the vibe. Follow @koenjichessclub on Instagram.",
+    location: "Koenji, Tokyo, Japan",
     country: "JP",
-    category: "club",
+    category: "community",
     avatarUrl: null,
-    bannerUrl: null,
-    accentColor: "#8B2252",
+    bannerUrl: "/manus-storage/732620725_18086479040637666_7406604460605570594_n_e42c49af.jpg",
+    accentColor: "#CC2222",
     ownerId: "seed",
-    ownerName: "Yuki Tanaka",
+    ownerName: "Koenji Chess Club",
     isPublic: true,
+    website: "https://www.instagram.com/p/DaG5lKBAf5t/",
+    announcement: "\u265f\ufe0f Next event: July 1 — The Den, 4-25-8 Koenjiminami, Suginami-ku. 6\u201310pm. All levels welcome.",
   },
   // ── Trending US Showcase Clubs ────────────────────────────────────────────
   {
@@ -638,10 +640,11 @@ const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
     { userId: "seed-m12", displayName: "Ingrid Bauer", chesscomUsername: null, lichessUsername: "ibauer", avatarUrl: null, role: "director", joinedAt: "2023-12-01T10:00:00Z", tournamentsPlayed: 14, bestFinish: 2 },
     { userId: "seed-m13", displayName: "Hans Richter", chesscomUsername: "hansrichter", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2024-01-10T10:00:00Z", tournamentsPlayed: 8, bestFinish: 3 },
   ],
-  // Tokyo Chess Society
+  // Koenji Chess Club
   [
-    { userId: "seed-m14", displayName: "Yuki Tanaka", chesscomUsername: "yukitanaka", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2024-02-01T10:00:00Z", tournamentsPlayed: 11, bestFinish: 1 },
-    { userId: "seed-m15", displayName: "Kenji Yamamoto", chesscomUsername: null, lichessUsername: "kenjiy", avatarUrl: null, role: "member", joinedAt: "2024-03-01T10:00:00Z", tournamentsPlayed: 6, bestFinish: 2 },
+    { userId: "seed-m14", displayName: "Koenji Chess Club", chesscomUsername: null, lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2023-04-01T10:00:00Z", tournamentsPlayed: 18, bestFinish: 1 },
+    { userId: "seed-m15", displayName: "Kenji Y.", chesscomUsername: null, lichessUsername: "kenjiy", avatarUrl: null, role: "member", joinedAt: "2023-05-01T10:00:00Z", tournamentsPlayed: 10, bestFinish: 2 },
+    { userId: "seed-m15b", displayName: "Hana M.", chesscomUsername: "hanam", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2023-06-15T10:00:00Z", tournamentsPlayed: 7, bestFinish: 3 },
   ],
   // Pawn Chess Club
   [
@@ -719,10 +722,11 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
     { tournamentId: "berlin-rapid-2026", name: "Rapid Championship 2026", date: "2026-02-15", format: "Swiss", playerCount: 64, rounds: 7, status: "completed", winnerName: "Klaus Müller" },
     { tournamentId: "berlin-blitz-2025", name: "Blitz Night December", date: "2025-12-20", format: "Swiss", playerCount: 40, rounds: 5, status: "completed", winnerName: "Ingrid Bauer" },
   ],
-  // Tokyo Chess Society
+  // Koenji Chess Club
   [
-    { tournamentId: "tokyo-spring-2026", name: "Spring Rapid 2026", date: "2026-04-18", format: "Swiss", playerCount: 0, rounds: 5, status: "upcoming" },
-    { tournamentId: "tokyo-winter-2025", name: "Winter Open 2025", date: "2025-12-07", format: "Swiss", playerCount: 22, rounds: 5, status: "completed", winnerName: "Yuki Tanaka" },
+    { tournamentId: "koenji-jul-2026", name: "July Chess Night at The Den", date: "2026-07-01", format: "Swiss", playerCount: 0, rounds: 5, status: "upcoming" },
+    { tournamentId: "koenji-jun-2026", name: "June Chess Night at The Den", date: "2026-06-18", format: "Swiss", playerCount: 28, rounds: 5, status: "completed", winnerName: "Kenji Y." },
+    { tournamentId: "koenji-may-2026", name: "May Chess Night at The Den", date: "2026-05-07", format: "Swiss", playerCount: 24, rounds: 5, status: "completed", winnerName: "Hana M." },
   ],
   // Pawn Chess Club
   [
@@ -759,7 +763,7 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
 ];
 
-const SEED_KEY = "otb-clubs-seeded-v5";
+const SEED_KEY = "otb-clubs-seeded-v6";
 
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {
