@@ -549,7 +549,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     country: "US",
     category: "community",
     avatarUrl: null,
-    bannerUrl: null,
+    bannerUrl: "/manus-storage/PawnChessClub_4938828b.jpeg",
     accentColor: "#E8C547",
     ownerId: "seed",
     ownerName: "Ismu Isamu",
@@ -566,7 +566,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     country: "US",
     category: "club",
     avatarUrl: null,
-    bannerUrl: null,
+    bannerUrl: "/manus-storage/clubchessnyc_94c89398.jpg",
     accentColor: "#9B59B6",
     ownerId: "seed",
     ownerName: "Luke Quietman",
@@ -583,7 +583,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     country: "US",
     category: "club",
     avatarUrl: null,
-    bannerUrl: null,
+    bannerUrl: "/manus-storage/marshallchessclub_e498ca97.jpg",
     accentColor: "#1A3A5C",
     ownerId: "seed",
     ownerName: "Marshall Chess Club",
@@ -600,7 +600,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     country: "US",
     category: "professional",
     avatarUrl: null,
-    bannerUrl: null,
+    bannerUrl: "/manus-storage/stlouischessclub_06d2a166.webp",
     accentColor: "#C41E3A",
     ownerId: "seed",
     ownerName:"Saint Louis Chess Club",
@@ -617,7 +617,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     country: "US",
     category: "professional",
     avatarUrl: null,
-    bannerUrl: null,
+    bannerUrl: "/manus-storage/charlottechesscenter_3f304989.png",
     accentColor: "#0066CC",
     ownerId: "seed",
     ownerName: "Charlotte Chess Center",
@@ -787,7 +787,7 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
 ];
 
-const SEED_KEY = "otb-clubs-seeded-v2";
+const SEED_KEY = "otb-clubs-seeded-v3";
 
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {
