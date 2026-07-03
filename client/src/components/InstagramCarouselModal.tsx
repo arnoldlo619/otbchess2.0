@@ -237,6 +237,106 @@ const ALL_THEMES = [...SLIDE_THEMES, ...EXTRA_THEMES];
 
 const DEFAULT_THEME = SLIDE_THEMES[0];
 
+/** Curated premium default templates for quick use */
+const PREMIUM_DEFAULTS: Omit<CarouselTemplate, "id" | "createdAt">[] = [
+  {
+    name: "OTB Classic",
+    themeId: "classic-green",
+    headingFontId: "anton",
+    headingSize: 144,
+    headingColor: "#FFFFFF",
+    bodyColor: "rgba(255,255,255,0.75)",
+    bgType: "gradient",
+    bgValue: null,
+    selectedGradientId: "default",
+    solidBgColor: "#1a3a1e",
+  },
+  {
+    name: "Neon Blitz",
+    themeId: "neon-night",
+    headingFontId: "anton",
+    headingSize: 160,
+    headingColor: "#39FF14",
+    bodyColor: "rgba(255,255,255,0.65)",
+    bgType: "gradient",
+    bgValue: "linear-gradient(160deg, #000000 0%, #0a0a0a 100%)",
+    selectedGradientId: "pitch-black",
+    solidBgColor: "#000000",
+  },
+  {
+    name: "Royal Gold",
+    themeId: "gold-rush",
+    headingFontId: "bebas",
+    headingSize: 152,
+    headingColor: "#F5C842",
+    bodyColor: "rgba(255,255,255,0.70)",
+    bgType: "gradient",
+    bgValue: null,
+    selectedGradientId: "default",
+    solidBgColor: "#1a1205",
+  },
+  {
+    name: "Midnight Chess",
+    themeId: "midnight-blue",
+    headingFontId: "oswald",
+    headingSize: 140,
+    headingColor: "#FFFFFF",
+    bodyColor: "rgba(180,210,255,0.70)",
+    bgType: "gradient",
+    bgValue: "linear-gradient(160deg, #050a1a 0%, #0a1535 100%)",
+    selectedGradientId: "night-sky",
+    solidBgColor: "#050a1a",
+  },
+  {
+    name: "Crimson King",
+    themeId: "crimson",
+    headingFontId: "barlow",
+    headingSize: 148,
+    headingColor: "#FF4444",
+    bodyColor: "rgba(255,200,200,0.70)",
+    bgType: "gradient",
+    bgValue: "linear-gradient(160deg, #1a0505 0%, #3a0a0a 100%)",
+    selectedGradientId: "ember",
+    solidBgColor: "#1a0505",
+  },
+  {
+    name: "Stealth Mono",
+    themeId: "monochrome",
+    headingFontId: "inter",
+    headingSize: 130,
+    headingColor: "#E0E0E0",
+    bodyColor: "rgba(255,255,255,0.55)",
+    bgType: "solid",
+    bgValue: "#0a0a0a",
+    selectedGradientId: "default",
+    solidBgColor: "#0a0a0a",
+  },
+  {
+    name: "Forest Deep",
+    themeId: "chalk-board",
+    headingFontId: "anton",
+    headingSize: 144,
+    headingColor: "#FFFFFF",
+    bodyColor: "rgba(255,255,255,0.70)",
+    bgType: "gradient",
+    bgValue: "linear-gradient(160deg, #0d2b0f 0%, #1a4a1e 100%)",
+    selectedGradientId: "forest",
+    solidBgColor: "#0d2b0f",
+  },
+  {
+    name: "Purple Reign",
+    themeId: "purple-reign",
+    headingFontId: "bebas",
+    headingSize: 156,
+    headingColor: "#C77DFF",
+    bodyColor: "rgba(220,200,255,0.70)",
+    bgType: "gradient",
+    bgValue: "linear-gradient(160deg, #0d0520 0%, #1a0a3a 100%)",
+    selectedGradientId: "royal",
+    solidBgColor: "#0d0520",
+  },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr?: string): string {
@@ -2951,6 +3051,84 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+
+            {/* ── Premium Defaults ── */}
+            <div className={`w-full rounded-2xl border p-4 space-y-3 ${isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F] bg-[#FBFADA]/70"}`}>
+              <div className="flex items-center gap-2">
+                <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>Premium Defaults</p>
+                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-amber-400 border border-amber-500/20">PRO</span>
+              </div>
+              <p className={`text-[10px] leading-relaxed ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>
+                Curated high-quality templates — one click to apply.
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {PREMIUM_DEFAULTS.map((prem, idx) => {
+                  const premTheme = ALL_THEMES.find((t) => t.id === prem.themeId) ?? DEFAULT_THEME;
+                  const premFont = SLIDE_FONTS.find((f) => f.id === prem.headingFontId) ?? DEFAULT_FONT;
+                  const THUMB_SIZE = 64;
+                  const thumbScale = THUMB_SIZE / SLIDE_W;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleLoadTemplate({ ...prem, id: `premium-${idx}`, createdAt: "" } as CarouselTemplate)}
+                      className={`group relative flex flex-col items-center gap-1.5 rounded-xl p-1.5 border transition-all hover:scale-[1.03] ${
+                        isDark
+                          ? "border-white/06 bg-white/02 hover:border-white/15 hover:bg-white/05"
+                          : "border-[#ADBC9F]/40 bg-white/20 hover:border-[#436850]/40 hover:bg-white/40"
+                      }`}
+                      title={prem.name}
+                    >
+                      {/* Thumbnail */}
+                      <div
+                        className="rounded-lg overflow-hidden"
+                        style={{
+                          width: THUMB_SIZE,
+                          height: THUMB_SIZE,
+                          position: "relative",
+                          border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.06)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            transformOrigin: "top left",
+                            transform: `scale(${thumbScale})`,
+                            pointerEvents: "none",
+                            userSelect: "none",
+                          }}
+                        >
+                          <Slide1Cover
+                            rows={rows}
+                            config={config}
+                            tournamentName={tournamentName}
+                            totalRounds={totalRounds}
+                            scale={1}
+                            hostLogoUrl={null}
+                            theme={premTheme}
+                            format="square"
+                            championAvatarUrl={null}
+                            logoScale={1}
+                            logoPosition="center"
+                            headingFont={premFont}
+                            headingSize={prem.headingSize}
+                            headingColor={prem.headingColor}
+                            bodyColor={prem.bodyColor}
+                            bgType={prem.bgType}
+                            bgValue={prem.bgValue}
+                          />
+                        </div>
+                      </div>
+                      {/* Label */}
+                      <span className={`text-[9px] font-bold text-center leading-tight truncate w-full ${
+                        isDark ? "text-white/50 group-hover:text-white/80" : "text-[#436850]/70 group-hover:text-[#12372A]"
+                      }`}>{prem.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
