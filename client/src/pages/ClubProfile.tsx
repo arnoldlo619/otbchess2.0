@@ -1179,25 +1179,25 @@ export default function ClubProfile() {
     <div className={`min-h-screen ${bg}`}>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── LEFT SIDEBAR — Partiful-style icon-only rail with hover expand ─── */}
+        {/* ── LEFT SIDEBAR — Partiful-style: icon rail expands to icon+label rows on hover ─── */}
         <aside
-          className="hidden lg:flex flex-col items-center flex-shrink-0 h-full relative group/sidebar"
+          className="hidden lg:flex flex-col flex-shrink-0 h-full relative group/sidebar"
           style={{
-            width: "70px",
-            transition: "width 0.28s cubic-bezier(0.4,0,0.2,1)",
-            background: isDark ? "#0f1117" : "#111827",
-            borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
-            overflow: "visible",
+            width: "64px",
+            transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
+            background: isDark ? "#0d1117" : "#111827",
+            borderRight: `1px solid rgba(255,255,255,0.07)`,
+            overflow: "hidden",
             zIndex: 40,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.width = "160px"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.width = "70px"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.width = "64px"; }}
         >
-          {/* Top: club logo */}
-          <div className="pt-5 pb-4 flex flex-col items-center">
+          {/* Top: club avatar — fixed, not part of expand */}
+          <div className="pt-5 pb-3 px-3 flex-shrink-0">
             <button
               onClick={() => navigate("/clubs")}
-              className="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md transition-opacity hover:opacity-80"
+              className="w-9 h-9 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md transition-opacity hover:opacity-80"
               style={{ background: accent }}
               title={club.name + " — Back to Clubs"}
             >
@@ -1209,18 +1209,15 @@ export default function ClubProfile() {
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "rgba(255,255,255,0.10)" }} />
-
-          {/* Nav items — centered vertically, expand with label on sidebar hover */}
-          <nav className="flex flex-col items-center gap-1 flex-1 justify-center">
+          {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
+          <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={18} />,
-                events: <Calendar size={18} />,
-                members: <Users size={18} />,
-                tournaments: <Trophy size={18} />,
-                leagues: <Award size={18} />,
+                feed: <Megaphone size={20} />,
+                events: <Calendar size={20} />,
+                members: <Users size={20} />,
+                tournaments: <Trophy size={20} />,
+                leagues: <Award size={20} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
@@ -1241,33 +1238,34 @@ export default function ClubProfile() {
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
-                  className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] group/navbtn"
+                  className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
                   style={{
-                    width: "44px",
-                    minHeight: "44px",
-                    paddingTop: "8px",
-                    paddingBottom: "8px",
-                    background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "rgba(255,255,255,0.45)",
+                    height: "44px",
+                    minWidth: "40px",
+                    paddingLeft: "10px",
+                    paddingRight: "10px",
+                    background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.15)") : "transparent",
+                    color: isActive ? "#fff" : "rgba(255,255,255,0.5)",
                   }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; } }}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; } }}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; } }}
                   aria-label={labelMap[t]}
                 >
-                  <span className="relative flex-shrink-0">
+                  {/* Icon — fixed width so it doesn't shift on expand */}
+                  <span className="relative flex-shrink-0 w-5 flex items-center justify-center">
                     {iconMap[t]}
                     {badge > 0 && (
                       <span
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
                         style={{ background: "#ef4444", color: "#fff" }}
                       >
                         {badge > 9 ? "9+" : badge}
                       </span>
                     )}
                   </span>
-                  {/* Label — hidden by default, fades in when sidebar is expanded */}
+                  {/* Label — slides in to the right, stays on same row as icon */}
                   <span
-                    className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100"
+                    className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
                     style={{ color: "inherit" }}
                   >
                     {labelMap[t]}
@@ -1278,47 +1276,48 @@ export default function ClubProfile() {
           </nav>
 
           {/* Bottom: utility icons */}
-          <div className="pb-4 flex flex-col items-center gap-1">
+          <div className="pb-5 flex flex-col gap-0.5 px-2">
             {/* Divider */}
-            <div className="w-8 h-px mb-2" style={{ background: "rgba(255,255,255,0.08)" }} />
+            <div className="h-px mb-2 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
 
+            {/* Share */}
             <button
               onClick={handleShare}
-              className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+              className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
               aria-label="Share Club"
             >
-              <Share2 size={18} className="flex-shrink-0" />
-              <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Share</span>
+              <span className="flex-shrink-0 w-5 flex items-center justify-center"><Share2 size={20} /></span>
+              <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Share Club</span>
             </button>
 
             {user && !isOwner && !isDirector && (
               <button
                 onClick={() => setShowContactOwner(true)}
-                className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
                 aria-label="Contact Owner"
               >
-                <MessageSquare size={18} className="flex-shrink-0" />
-                <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Contact</span>
+                <span className="flex-shrink-0 w-5 flex items-center justify-center"><MessageSquare size={20} /></span>
+                <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Contact</span>
               </button>
             )}
 
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
                 aria-label="Settings"
               >
-                <MoreHorizontal size={18} className="flex-shrink-0" />
-                <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Settings</span>
+                <span className="flex-shrink-0 w-5 flex items-center justify-center"><MoreHorizontal size={20} /></span>
+                <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Settings</span>
               </button>
             )}
 
@@ -1326,20 +1325,20 @@ export default function ClubProfile() {
             {user && (
               <button
                 onClick={() => navigate(`/profile/${user.id}`)}
-                className="relative rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] mt-1"
-                style={{ width: "44px", minHeight: "44px", paddingTop: "8px", paddingBottom: "8px", color: "rgba(255,255,255,0.45)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] mt-1"
+                style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 aria-label={user.displayName ?? "Profile"}
               >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
                     user.displayName?.charAt(0).toUpperCase() ?? "?"
                   )}
                 </div>
-                <span className="text-[10px] font-medium leading-none whitespace-nowrap overflow-hidden transition-all duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100" style={{ color: "rgba(255,255,255,0.6)" }}>{user.displayName?.split(" ")[0] ?? "Profile"}</span>
+                <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "rgba(255,255,255,0.7)" }}>{user.displayName?.split(" ")[0] ?? "Profile"}</span>
               </button>
             )}
           </div>
