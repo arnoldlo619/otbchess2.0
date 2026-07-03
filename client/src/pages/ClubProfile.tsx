@@ -705,6 +705,7 @@ export default function ClubProfile() {
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
   const [activeTab, setActiveTab] = useState<"events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
@@ -1179,18 +1180,34 @@ export default function ClubProfile() {
 
         {/* ── LEFT SIDEBAR (Partiful-style: wide with icon+label rows) ─── */}
         <aside
-          className="hidden lg:flex flex-col w-[200px] flex-shrink-0 h-full relative"
+          className="hidden lg:flex flex-col flex-shrink-0 h-full relative transition-all duration-300 ease-in-out"
           style={{
+            width: sidebarCollapsed ? "60px" : "200px",
             background: isDark ? "#0f1117" : "#111827",
             borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
           }}
         >
+          {/* Collapse/Expand toggle button — floats on the right edge */}
+          <button
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            className="absolute -right-3 top-6 z-20 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-150 hover:scale-110"
+            style={{
+              background: isDark ? "#1e2530" : "#1e2530",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.60)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            }}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          </button>
+
           {/* Top: club logo + name */}
-          <div className="px-4 pt-5 pb-4">
+          <div className="px-3 pt-5 pb-4 overflow-hidden">
             <button
               onClick={() => navigate("/clubs")}
               className="flex items-center gap-2.5 w-full group"
-              title="Back to My Clubs"
+              title={sidebarCollapsed ? club.name + " — Back to My Clubs" : "Back to My Clubs"}
             >
               <div
                 className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center text-sm font-bold text-white shadow-md"
@@ -1202,9 +1219,11 @@ export default function ClubProfile() {
                   <span>{flag}</span>
                 )}
               </div>
-              <span className="text-white font-semibold text-sm truncate group-hover:opacity-80 transition-opacity">
-                {club.name}
-              </span>
+              {!sidebarCollapsed && (
+                <span className="text-white font-semibold text-sm truncate group-hover:opacity-80 transition-opacity">
+                  {club.name}
+                </span>
+              )}
             </button>
           </div>
 
@@ -1237,24 +1256,42 @@ export default function ClubProfile() {
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
-                  className="relative flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
+                  className="relative flex items-center w-full rounded-xl transition-all duration-150"
                   style={{
                     background: isActive ? "rgba(255,255,255,0.10)" : "transparent",
                     color: isActive ? "#ffffff" : "rgba(255,255,255,0.50)",
+                    justifyContent: sidebarCollapsed ? "center" : "flex-start",
+                    gap: sidebarCollapsed ? 0 : "12px",
+                    padding: sidebarCollapsed ? "10px 0" : "10px 12px",
                   }}
                   onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
                   onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  title={sidebarCollapsed ? labelMap[t] : undefined}
                   aria-label={labelMap[t]}
                 >
-                  <span className="flex-shrink-0">{iconMap[t]}</span>
-                  <span className="text-sm font-medium">{labelMap[t]}</span>
-                  {badge > 0 && (
-                    <span
-                      className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-                      style={{ background: "#ef4444", color: "#fff" }}
-                    >
-                      {badge}
-                    </span>
+                  <span className="flex-shrink-0 relative">
+                    {iconMap[t]}
+                    {badge > 0 && sidebarCollapsed && (
+                      <span
+                        className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
+                        style={{ background: "#ef4444", color: "#fff" }}
+                      >
+                        {badge > 9 ? "9+" : badge}
+                      </span>
+                    )}
+                  </span>
+                  {!sidebarCollapsed && (
+                    <>
+                      <span className="text-sm font-medium">{labelMap[t]}</span>
+                      {badge > 0 && (
+                        <span
+                          className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                          style={{ background: "#ef4444", color: "#fff" }}
+                        >
+                          {badge}
+                        </span>
+                      )}
+                    </>
                   )}
                 </button>
               );
@@ -1268,38 +1305,41 @@ export default function ClubProfile() {
 
             <button
               onClick={handleShare}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
-              style={{ color: "rgba(255,255,255,0.50)" }}
+              className="flex items-center w-full rounded-xl transition-all duration-150"
+              style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+              title={sidebarCollapsed ? "Share Club" : undefined}
             >
               <Share2 size={18} className="flex-shrink-0" />
-              <span className="text-sm font-medium">Share Club</span>
+              {!sidebarCollapsed && <span className="text-sm font-medium">Share Club</span>}
             </button>
 
             {user && !isOwner && !isDirector && (
               <button
                 onClick={() => setShowContactOwner(true)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
-                style={{ color: "rgba(255,255,255,0.50)" }}
+                className="flex items-center w-full rounded-xl transition-all duration-150"
+                style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+                title={sidebarCollapsed ? "Contact Owner" : undefined}
               >
                 <MessageSquare size={18} className="flex-shrink-0" />
-                <span className="text-sm font-medium">Contact Owner</span>
+                {!sidebarCollapsed && <span className="text-sm font-medium">Contact Owner</span>}
               </button>
             )}
 
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left"
-                style={{ color: "rgba(255,255,255,0.50)" }}
+                className="flex items-center w-full rounded-xl transition-all duration-150"
+                style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+                title={sidebarCollapsed ? "Settings" : undefined}
               >
                 <MoreHorizontal size={18} className="flex-shrink-0" />
-                <span className="text-sm font-medium">Settings</span>
+                {!sidebarCollapsed && <span className="text-sm font-medium">Settings</span>}
               </button>
             )}
 
@@ -1307,10 +1347,11 @@ export default function ClubProfile() {
             {user && (
               <button
                 onClick={() => navigate(`/profile/${user.id}`)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-150 text-left mt-1"
-                style={{ color: "rgba(255,255,255,0.50)" }}
+                className="flex items-center w-full rounded-xl transition-all duration-150 mt-1"
+                style={{ color: "rgba(255,255,255,0.50)", justifyContent: sidebarCollapsed ? "center" : "flex-start", gap: sidebarCollapsed ? 0 : "12px", padding: sidebarCollapsed ? "10px 0" : "10px 12px" }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+                title={sidebarCollapsed ? (user.displayName ?? "Profile") : undefined}
               >
                 <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-white/20 flex items-center justify-center text-xs font-bold text-white">
                   {user.avatarUrl ? (
@@ -1319,7 +1360,7 @@ export default function ClubProfile() {
                     user.displayName?.charAt(0).toUpperCase() ?? "?"
                   )}
                 </div>
-                <span className="text-sm font-medium truncate">{user.displayName ?? "Profile"}</span>
+                {!sidebarCollapsed && <span className="text-sm font-medium truncate">{user.displayName ?? "Profile"}</span>}
               </button>
             )}
           </div>
