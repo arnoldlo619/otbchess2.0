@@ -792,7 +792,7 @@ export default function MyClubs() {
   const _myClubIds = new Set(myClubs.map((c) => c.id));
 
   // ── Colour palette ──────────────────────────────────────────────────────────
-  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#FBFADA]";
+  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F5F5EE]";  // off-white for light mode
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
   const cardBorder = isDark ? "border-white/8" : "border-[#ADBC9F]/70";
   const textMain = isDark ? "text-white" : "text-[#12372A]";
@@ -804,7 +804,7 @@ export default function MyClubs() {
     <div className={`min-h-screen ${bg}`}>
 
       {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
+      <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-[#F5F5EE]/95"} backdrop-blur-md`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
