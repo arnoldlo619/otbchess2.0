@@ -1356,8 +1356,7 @@ export default function ClubProfile() {
                 {club.name}
               </span>
             </div>
-            {/* Desktop: club name */}
-            <span className="hidden lg:block text-sm font-semibold text-white/80 truncate max-w-[220px]">{club.name}</span>
+            {/* Desktop: club name removed — already displayed in the hero banner below */}
             {/* Right side: stats + avatar */}
             <div className="flex items-center gap-3 ml-auto">
               <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
@@ -1738,7 +1737,7 @@ export default function ClubProfile() {
             {/* Combined About & Details — consolidated into a single card */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+                <h2 className={`text-base font-bold uppercase tracking-wider ${isDark ? "text-white" : "text-[#436850]"}`}>
                   About
                 </h2>
                 {(isOwner || isDirector) && (
