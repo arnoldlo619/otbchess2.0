@@ -524,21 +524,6 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     ownerName: "Yuki Tanaka",
     isPublic: true,
   },
-  {
-    name: "Mumbai Chess Academy",
-    tagline: "Training India's next generation of grandmasters.",
-    description:
-      "A professional chess academy offering structured training programs for all ages. Our students have won multiple national youth championships. We host FIDE-rated tournaments monthly.",
-    location: "Mumbai, India",
-    country: "IN",
-    category: "professional",
-    avatarUrl: null,
-    bannerUrl: null,
-    accentColor: "#5C3317",
-    ownerId: "seed",
-    ownerName: "Priya Sharma",
-    isPublic: true,
-  },
   // ── Trending US Showcase Clubs ────────────────────────────────────────────
   {
     name: "Pawn Chess Club",
@@ -658,12 +643,6 @@ const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
     { userId: "seed-m14", displayName: "Yuki Tanaka", chesscomUsername: "yukitanaka", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2024-02-01T10:00:00Z", tournamentsPlayed: 11, bestFinish: 1 },
     { userId: "seed-m15", displayName: "Kenji Yamamoto", chesscomUsername: null, lichessUsername: "kenjiy", avatarUrl: null, role: "member", joinedAt: "2024-03-01T10:00:00Z", tournamentsPlayed: 6, bestFinish: 2 },
   ],
-  // Mumbai Chess Academy
-  [
-    { userId: "seed-m16", displayName: "Priya Sharma", chesscomUsername: "priyasharma", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2023-08-01T10:00:00Z", tournamentsPlayed: 18, bestFinish: 1 },
-    { userId: "seed-m17", displayName: "Arjun Mehta", chesscomUsername: "arjunm", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2023-09-01T10:00:00Z", tournamentsPlayed: 12, bestFinish: 2 },
-    { userId: "seed-m18", displayName: "Riya Gupta", chesscomUsername: null, lichessUsername: "riyag", avatarUrl: null, role: "member", joinedAt: "2023-10-15T10:00:00Z", tournamentsPlayed: 7, bestFinish: 3 },
-  ],
   // Pawn Chess Club
   [
     { userId: "seed-m19", displayName: "Ismu Isamu", chesscomUsername: "ismuisamu", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2022-09-01T10:00:00Z", tournamentsPlayed: 38, bestFinish: 1 },
@@ -700,15 +679,14 @@ const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
   ],
 ];
 
-const SEED_MEMBER_COUNTS = [142, 89, 34, 218, 67, 156, 312, 274, 520, 890, 640];
-const SEED_TOURNAMENT_COUNTS = [24, 18, 9, 31, 12, 22, 38, 29, 110, 47, 52];
+const SEED_MEMBER_COUNTS = [142, 89, 34, 218, 67, 312, 274, 520, 890, 640];
+const SEED_TOURNAMENT_COUNTS = [24, 18, 9, 31, 12, 38, 29, 110, 47, 52];
 const SEED_FOUNDED_DATES = [
   "2024-01-15T10:00:00Z",
   "2024-06-01T10:00:00Z",
   "2024-09-01T10:00:00Z",
   "2023-11-01T10:00:00Z",
   "2024-02-01T10:00:00Z",
-  "2023-08-01T10:00:00Z",
   // Trending US clubs
   "2022-09-01T10:00:00Z", // Pawn Chess Club
   "2023-03-01T10:00:00Z", // Club Chess NYC
@@ -746,12 +724,6 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
     { tournamentId: "tokyo-spring-2026", name: "Spring Rapid 2026", date: "2026-04-18", format: "Swiss", playerCount: 0, rounds: 5, status: "upcoming" },
     { tournamentId: "tokyo-winter-2025", name: "Winter Open 2025", date: "2025-12-07", format: "Swiss", playerCount: 22, rounds: 5, status: "completed", winnerName: "Yuki Tanaka" },
   ],
-  // Mumbai Chess Academy
-  [
-    { tournamentId: "mumbai-open-2026", name: "Mumbai FIDE Open 2026", date: "2026-03-22", format: "Swiss", playerCount: 80, rounds: 9, status: "active" },
-    { tournamentId: "mumbai-youth-2025", name: "Youth Championship 2025", date: "2025-11-30", format: "Swiss", playerCount: 48, rounds: 7, status: "completed", winnerName: "Arjun Mehta" },
-    { tournamentId: "mumbai-rapid-2025", name: "Academy Rapid Cup", date: "2025-09-14", format: "Swiss", playerCount: 36, rounds: 6, status: "completed", winnerName: "Priya Sharma" },
-  ],
   // Pawn Chess Club
   [
     { tournamentId: "pawn-speed-dating-apr-2026", name: "Speed Dating Chess Night April", date: "2026-04-04", format: "Swiss", playerCount: 0, rounds: 8, status: "upcoming" },
@@ -787,7 +759,7 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
 ];
 
-const SEED_KEY = "otb-clubs-seeded-v3";
+const SEED_KEY = "otb-clubs-seeded-v4";
 
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {
