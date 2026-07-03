@@ -1193,22 +1193,28 @@ export default function ClubProfile() {
           onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
           onMouseLeave={(e) => { e.currentTarget.style.width = "64px"; }}
         >
-          {/* Top: OTB!! logo + ChessOTB.Club title on hover */}
-          <div className="pt-5 pb-3 px-3 flex-shrink-0 flex flex-row items-center gap-3">
+          {/* Top: !! thumbnail icon + OTB!! logo on hover */}
+          <div className="pt-5 pb-3 px-3 flex-shrink-0 flex flex-row items-center gap-2">
             <button
               onClick={() => navigate("/clubs")}
-              className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-base shadow-md transition-opacity hover:opacity-80"
-              style={{ background: "#1a2e1a", color: "#4ade80", border: "1.5px solid rgba(74,222,128,0.25)", letterSpacing: "-0.02em" }}
+              className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-opacity hover:opacity-80 overflow-hidden bg-transparent"
               title="ChessOTB.Club — Back to Clubs"
             >
-              !!
+              <img
+                src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
+                alt="!!"
+                className="w-full h-full object-contain"
+              />
             </button>
-            {/* ChessOTB.Club title — slides in on sidebar hover */}
+            {/* OTB!! logo image — slides in on sidebar hover */}
             <span
-              className="text-base font-bold whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[160px] group-hover/sidebar:opacity-100"
-              style={{ color: "#4ade80", letterSpacing: "-0.02em" }}
+              className="flex items-center overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[120px] group-hover/sidebar:opacity-100"
             >
-              ChessOTB.Club
+              <img
+                src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
+                alt="OTB!!"
+                className="h-7 w-auto object-contain"
+              />
             </span>
           </div>
 
