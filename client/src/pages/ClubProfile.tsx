@@ -721,8 +721,9 @@ export default function ClubProfile() {
   // Members tab state
   const [memberSearch, setMemberSearch] = useState("");
   const [memberSort, setMemberSort] = useState<"name" | "joined" | "role">("role");
+  const [memberRoleFilter, setMemberRoleFilter] = useState<"all" | "owner" | "director" | "member">("all");
   const [memberPage, setMemberPage] = useState(1);
-  const MEMBERS_PER_PAGE = 12;
+  const MEMBERS_PER_PAGE = 20;
   // Events tab filter
   const [eventsFilter, setEventsFilter] = useState<"all" | "events" | "tournaments">("all");
   // Tournaments tab filter
@@ -1670,88 +1671,202 @@ export default function ClubProfile() {
         {activeTab === "members" && (() => {
           // Filter and sort members
           const filteredMembers = members.filter((m) => {
-            if (!memberSearch.trim()) return true;
-            const q = memberSearch.toLowerCase();
-            return (m.displayName ?? "").toLowerCase().includes(q) ||
-              (m.chesscomUsername ?? "").toLowerCase().includes(q);
+            const matchesSearch = (() => {
+              if (!memberSearch.trim()) return true;
+              const q = memberSearch.toLowerCase();
+              return (m.displayName ?? "").toLowerCase().includes(q) ||
+                (m.chesscomUsername ?? "").toLowerCase().includes(q) ||
+                (m.lichessUsername ?? "").toLowerCase().includes(q);
+            })();
+            const matchesRole = memberRoleFilter === "all" || m.role === memberRoleFilter;
+            return matchesSearch && matchesRole;
           });
           const sortedMembers = [...filteredMembers].sort((a, b) => {
             if (memberSort === "name") return (a.displayName ?? "").localeCompare(b.displayName ?? "");
             if (memberSort === "joined") return new Date(b.joinedAt ?? 0).getTime() - new Date(a.joinedAt ?? 0).getTime();
-            // role: owner > director > member
             const roleOrder = { owner: 0, director: 1, member: 2 };
             return (roleOrder[a.role as keyof typeof roleOrder] ?? 2) - (roleOrder[b.role as keyof typeof roleOrder] ?? 2);
           });
           const totalPages = Math.ceil(sortedMembers.length / MEMBERS_PER_PAGE);
           const paginated = sortedMembers.slice((memberPage - 1) * MEMBERS_PER_PAGE, memberPage * MEMBERS_PER_PAGE);
+          // Counts for role chips
+          const ownerCount = members.filter(m => m.role === "owner").length;
+          const directorCount = members.filter(m => m.role === "director").length;
+          const memberCount = members.filter(m => m.role === "member").length;
+          // Top going-members for avatar stack hero (show up to 8 members sorted by role)
+          const heroMembers = [...members]
+            .sort((a, b) => { const ro = { owner: 0, director: 1, member: 2 }; return (ro[a.role as keyof typeof ro] ?? 2) - (ro[b.role as keyof typeof ro] ?? 2); })
+            .slice(0, 8);
           return (
-            <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden animate-in fade-in duration-200`}>
-              {/* Header */}
-              <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between gap-3`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                  Members
-                </h2>
-                <span className={`text-xs font-medium ${textMuted}`}>{club.memberCount} total</span>
-              </div>
-              {/* Search + Sort bar */}
-              <div className={`px-5 py-3 border-b ${divider} flex gap-2`}>
-                <div className="relative flex-1">
-                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
-                  <input
-                    type="text"
-                    value={memberSearch}
-                    onChange={(e) => { setMemberSearch(e.target.value); setMemberPage(1); }}
-                    placeholder="Search members…"
-                    className={`w-full pl-8 pr-3 py-1.5 rounded-xl border text-xs outline-none transition-colors focus:border-[${accent}] ${
-                      isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]"
-                    }`}
-                  />
+            <div className="space-y-4 animate-in fade-in duration-200">
+              {/* ── Hero avatar stack ──────────────────────────────────────────── */}
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-[#12372A]"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      {club.memberCount} Members
+                    </h2>
+                    <p className={`text-xs mt-0.5 ${textMuted}`}>
+                      {ownerCount > 0 && `${ownerCount} owner`}
+                      {directorCount > 0 && ` · ${directorCount} director${directorCount > 1 ? "s" : ""}`}
+                      {memberCount > 0 && ` · ${memberCount} member${memberCount > 1 ? "s" : ""}`}
+                    </p>
+                  </div>
+                  {/* Avatar stack */}
+                  <div className="flex -space-x-3">
+                    {heroMembers.map((m) => {
+                      const uname = m.chesscomUsername ?? m.lichessUsername ?? undefined;
+                      const plat: "chesscom" | "lichess" | undefined = m.chesscomUsername ? "chesscom" : m.lichessUsername ? "lichess" : undefined;
+                      return (
+                        <div key={m.userId} className={`w-9 h-9 rounded-full overflow-hidden ring-2 flex-shrink-0 ${
+                          isDark ? "ring-[#0d1a0f]" : "ring-white"
+                        }`} title={m.displayName}>
+                          <PlayerAvatar username={uname ?? ""} platform={plat} name={m.displayName} size={36} showBadge={false} className="w-full h-full object-cover" />
+                        </div>
+                      );
+                    })}
+                    {members.length > 8 && (
+                      <div className={`w-9 h-9 rounded-full ring-2 flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                        isDark ? "ring-[#0d1a0f] bg-white/10 text-white/70" : "ring-white bg-[#ADBC9F]/60 text-[#436850]"
+                      }`}>+{members.length - 8}</div>
+                    )}
+                  </div>
                 </div>
-                <select
-                  value={memberSort}
-                  onChange={(e) => { setMemberSort(e.target.value as typeof memberSort); setMemberPage(1); }}
-                  className={`text-xs px-2 py-1.5 rounded-xl border outline-none cursor-pointer ${
-                    isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850]"
-                  }`}
-                >
-                  <option value="role">By Role</option>
-                  <option value="name">A → Z</option>
-                  <option value="joined">Newest</option>
-                </select>
+                {/* Role breakdown pills */}
+                <div className="flex gap-2 flex-wrap">
+                  {ownerCount > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                      <Crown className="w-3 h-3" /> {ownerCount} Owner{ownerCount > 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {directorCount > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/20">
+                      <Shield className="w-3 h-3" /> {directorCount} Director{directorCount > 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {memberCount > 0 && (
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                      isDark ? "bg-white/8 text-white/60 border border-white/10" : "bg-[#ADBC9F]/40 text-[#436850] border border-[#ADBC9F]"
+                    }`}>
+                      <Users className="w-3 h-3" /> {memberCount} Member{memberCount > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
               </div>
-              {/* Member list */}
-              <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                {paginated.map((member) => (
-                  <MemberRow key={member.userId} member={member} clubId={club.id} isDark={isDark} textMuted={textMuted} />
-                ))}
-                {paginated.length === 0 && (
-                  <div className={`py-12 text-center text-sm ${textMuted}`}>
-                    {memberSearch ? `No members match "${memberSearch}"` : "No members yet"}
+
+              {/* ── Search + filter bar ────────────────────────────────────────── */}
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-4 py-3 border-b ${divider} flex gap-2 items-center`}>
+                  {/* Search input */}
+                  <div className="relative flex-1">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
+                    <input
+                      type="text"
+                      value={memberSearch}
+                      onChange={(e) => { setMemberSearch(e.target.value); setMemberPage(1); }}
+                      placeholder="Search by name or username…"
+                      className={`w-full pl-8 pr-3 py-2 rounded-xl border text-xs outline-none transition-colors ${
+                        isDark
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25"
+                          : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/70 focus:border-[#436850]"
+                      }`}
+                    />
+                  </div>
+                  {/* Sort dropdown */}
+                  <select
+                    value={memberSort}
+                    onChange={(e) => { setMemberSort(e.target.value as typeof memberSort); setMemberPage(1); }}
+                    className={`text-xs px-2.5 py-2 rounded-xl border outline-none cursor-pointer flex-shrink-0 ${
+                      isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850]"
+                    }`}
+                  >
+                    <option value="role">By Role</option>
+                    <option value="name">A → Z</option>
+                    <option value="joined">Newest</option>
+                  </select>
+                </div>
+                {/* Role filter chips */}
+                <div className={`px-4 py-2.5 border-b ${divider} flex gap-2 overflow-x-auto scrollbar-none`}>
+                  {(["all", "owner", "director", "member"] as const).map((r) => {
+                    const count = r === "all" ? members.length : r === "owner" ? ownerCount : r === "director" ? directorCount : memberCount;
+                    const isActive = memberRoleFilter === r;
+                    const chipStyle: React.CSSProperties = isActive
+                      ? r === "owner"
+                        ? { background: "oklch(0.65 0.15 80 / 0.2)", color: "oklch(0.75 0.15 80)", borderColor: "oklch(0.65 0.15 80 / 0.4)" }
+                        : r === "director"
+                        ? { background: "oklch(0.55 0.13 145 / 0.2)", color: "oklch(0.65 0.13 145)", borderColor: "oklch(0.55 0.13 145 / 0.4)" }
+                        : isDark
+                        ? { background: "oklch(0.22 0.04 145)", color: "oklch(0.75 0.06 145)", borderColor: "oklch(0.35 0.06 145)" }
+                        : { background: "oklch(0.85 0.05 145)", color: "oklch(0.35 0.1 145)", borderColor: "oklch(0.65 0.1 145)" }
+                      : {};
+                    const label = r === "all" ? "All" : r === "owner" ? "Owners" : r === "director" ? "Directors" : "Members";
+                    return (
+                      <button
+                        key={r}
+                        onClick={() => { setMemberRoleFilter(r); setMemberPage(1); }}
+                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                          isActive
+                            ? ""
+                            : isDark
+                            ? "bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/70"
+                            : "bg-[#FBFADA]/70 border-[#ADBC9F]/60 text-[#436850]/70 hover:bg-[#ADBC9F]/40 hover:text-[#436850]"
+                        }`}
+                        style={isActive ? chipStyle : {}}
+                      >
+                        {r === "owner" && <Crown className="w-3 h-3" />}
+                        {r === "director" && <Shield className="w-3 h-3" />}
+                        {r === "member" && <Users className="w-3 h-3" />}
+                        {label}
+                        <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                          isActive
+                            ? "bg-white/20"
+                            : isDark ? "bg-white/8 text-white/40" : "bg-[#ADBC9F]/50 text-[#436850]/60"
+                        }`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* ── Member card grid ──────────────────────────────────────────── */}
+                {paginated.length === 0 ? (
+                  <div className={`py-16 text-center text-sm ${textMuted}`}>
+                    {memberSearch || memberRoleFilter !== "all"
+                      ? "No members match your filters"
+                      : "No members yet"}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(173,188,159,0.3)" }}>
+                    {paginated.map((member) => (
+                      <MemberCard key={member.userId} member={member} clubId={club.id} isDark={isDark} textMuted={textMuted} accent={accent} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className={`px-5 py-3 border-t ${divider} flex items-center justify-between`}>
+                    <span className={`text-xs ${textMuted}`}>
+                      {sortedMembers.length} result{sortedMembers.length !== 1 ? "s" : ""} · Page {memberPage} of {totalPages}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={memberPage === 1}
+                        onClick={() => setMemberPage((p) => p - 1)}
+                        className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+                          isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#12372A]/85 hover:bg-[#ADBC9F]"
+                        }`}
+                      >Prev</button>
+                      <button
+                        disabled={memberPage === totalPages}
+                        onClick={() => setMemberPage((p) => p + 1)}
+                        className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+                          isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#12372A]/85 hover:bg-[#ADBC9F]"
+                        }`}
+                      >Next</button>
+                    </div>
                   </div>
                 )}
               </div>
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className={`px-5 py-3 border-t ${divider} flex items-center justify-between`}>
-                  <span className={`text-xs ${textMuted}`}>Page {memberPage} of {totalPages}</span>
-                  <div className="flex gap-2">
-                    <button
-                      disabled={memberPage === 1}
-                      onClick={() => setMemberPage((p) => p - 1)}
-                      className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
-                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#12372A]/85 hover:bg-[#ADBC9F]"
-                      }`}
-                    >Prev</button>
-                    <button
-                      disabled={memberPage === totalPages}
-                      onClick={() => setMemberPage((p) => p + 1)}
-                      className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
-                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#12372A]/85 hover:bg-[#ADBC9F]"
-                      }`}
-                    >Next</button>
-                  </div>
-                </div>
-              )}
             </div>
           );
         })()}
@@ -4228,6 +4343,111 @@ function MemberRow({
             </p>
             <p className={`text-[10px] ${textMuted}`}>played</p>
           </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MemberCard({
+  member,
+  clubId,
+  isDark,
+  textMuted,
+  accent,
+}: {
+  member: ClubMember;
+  clubId: string;
+  isDark: boolean;
+  textMuted: string;
+  accent: string;
+}) {
+  const platform: "chesscom" | "lichess" | undefined = member.chesscomUsername ? "chesscom" : member.lichessUsername ? "lichess" : undefined;
+  const username = member.chesscomUsername ?? member.lichessUsername ?? undefined;
+  const [battleSummary, setBattleSummary] = useState<PlayerBattleSummary>(
+    () => getPlayerBattleSummary(clubId, member.userId)
+  );
+  useEffect(() => {
+    apiBattlePlayerStats(clubId, member.userId)
+      .then((stats) => setBattleSummary({ wins: stats.wins, draws: stats.draws, losses: stats.losses, total: stats.total, winRate: stats.winRate }))
+      .catch(() => { /* keep localStorage fallback */ });
+  }, [clubId, member.userId]);
+
+  // Role-specific accent
+  const roleAccent = member.role === "owner"
+    ? "oklch(0.75 0.15 80)"
+    : member.role === "director"
+    ? "oklch(0.65 0.13 145)"
+    : accent;
+
+  return (
+    <div className={`flex items-start gap-3 p-4 transition-colors ${
+      isDark ? "bg-[#0d1a0f] hover:bg-white/3" : "bg-white hover:bg-[#FBFADA]/70"
+    }`}>
+      {/* Avatar with role ring */}
+      <div className="relative flex-shrink-0">
+        <div
+          className="rounded-full p-0.5"
+          style={member.role !== "member" ? { background: `${roleAccent}40`, boxShadow: `0 0 0 1px ${roleAccent}60` } : {}}
+        >
+          <PlayerAvatar
+            username={username ?? ""}
+            platform={platform}
+            name={member.displayName}
+            size={44}
+            showBadge={false}
+            className="rounded-full"
+          />
+        </div>
+        {/* Role icon badge */}
+        {member.role === "owner" && (
+          <span className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-amber-500 flex items-center justify-center" style={{ width: 18, height: 18 }}>
+            <Crown className="w-2.5 h-2.5 text-white" />
+          </span>
+        )}
+        {member.role === "director" && (
+          <span className="absolute -bottom-0.5 -right-0.5 rounded-full bg-[#4CAF50] flex items-center justify-center" style={{ width: 18, height: 18 }}>
+            <Shield className="w-2.5 h-2.5 text-white" />
+          </span>
+        )}
+      </div>
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className={`text-sm font-semibold truncate ${
+            isDark ? "text-white" : "text-[#12372A]"
+          }`}>{member.displayName}</span>
+          <RoleBadge role={member.role} />
+          {(member.leagueChampionships ?? 0) > 0 && (
+            <span
+              title={`${member.leagueChampionships}× League Champion`}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 flex-shrink-0"
+            >
+              <Trophy className="w-2.5 h-2.5" />
+              {(member.leagueChampionships ?? 0) > 1 ? `×${member.leagueChampionships}` : "Champ"}
+            </span>
+          )}
+        </div>
+        {username && (
+          <p className={`text-[11px] mt-0.5 ${textMuted}`}>
+            {member.chesscomUsername ? "chess.com" : "lichess"} · {username}
+          </p>
+        )}
+        {/* Battle stats */}
+        {battleSummary.total > 0 ? (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <Swords className={`w-3 h-3 ${textMuted}`} />
+            <span className="text-[11px] text-emerald-400 font-bold">{battleSummary.wins}W</span>
+            <span className={`text-[11px] ${textMuted}`}>{battleSummary.draws}D</span>
+            <span className="text-[11px] text-red-400">{battleSummary.losses}L</span>
+            <span className={`text-[10px] ${textMuted}`}>· {battleSummary.winRate}%</span>
+          </div>
+        ) : member.tournamentsPlayed > 0 ? (
+          <p className={`text-[11px] mt-1 ${textMuted}`}>
+            <Trophy className="w-2.5 h-2.5 inline mr-1" />{member.tournamentsPlayed} tournament{member.tournamentsPlayed !== 1 ? "s" : ""}
+          </p>
+        ) : (
+          <p className={`text-[11px] mt-1 ${textMuted} opacity-40`}>No games yet</p>
         )}
       </div>
     </div>
