@@ -57,16 +57,17 @@ import {
 } from "@/lib/clubFeedRegistry";
 import {
   listClubEvents,
-  countRSVPs,
   getEventRSVPs,
   getUserRSVP,
   upsertRSVP,
+  syncRSVPsFromServer,
   createClubEvent,
   updateClubEvent,
   deleteClubEvent,
   createRecurringEvents,
   deleteRecurringSeries,
   type ClubEvent,
+  type ClubEventRSVP,
   type RSVPStatus as _RSVPStatus,
 } from "@/lib/clubEventRegistry";
 import {
@@ -779,6 +780,10 @@ export default function ClubProfile() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingEvent, setDeletingEvent] = useState(false);
+  // RSVP hub state
+  const [rsvpTick, setRsvpTick] = useState(0); // bumped after each RSVP toggle to force re-render
+  const [expandedRsvpEventId, setExpandedRsvpEventId] = useState<string | null>(null); // which event's attendee drawer is open
+  const [rsvpOverrideMap, setRsvpOverrideMap] = useState<Record<string, ClubEventRSVP[]>>({}); // eventId → latest RSVPs (merged from server)
 
   // Reset broken-image flags when the club's image URLs change (e.g., after owner uploads a new image)
   useEffect(() => { setAvatarBroken(false); }, [club?.avatarUrl]);
@@ -891,6 +896,26 @@ export default function ClubProfile() {
     }, 30_000);
     return () => clearInterval(timer);
   }, [clubId]);
+
+  // Sync RSVPs from server when the Events tab is opened
+  useEffect(() => {
+    if (activeTab !== "events" || !clubId) return;
+    // Sync all upcoming events' RSVPs from server in parallel
+    const upcomingEvents = listClubEvents(clubId).filter((e) => e.isPublished && new Date(e.startAt) >= new Date());
+    if (!upcomingEvents.length) return;
+    Promise.all(
+      upcomingEvents.map((ev) =>
+        syncRSVPsFromServer(clubId, ev.id).then((rsvps) => ({ eventId: ev.id, rsvps }))
+      )
+    ).then((results) => {
+      setRsvpOverrideMap((prev) => {
+        const next = { ...prev };
+        results.forEach(({ eventId, rsvps }) => { next[eventId] = rsvps; });
+        return next;
+      });
+      setRsvpTick((t) => t + 1);
+    }).catch(() => { /* server unavailable — local data still shown */ });
+  }, [activeTab, clubId]);
 
   // Fetch leagues when the leagues tab is opened
   useEffect(() => {
@@ -2195,9 +2220,15 @@ export default function ClubProfile() {
                       {(showAllUpcoming ? filteredUpcoming : filteredUpcoming.slice(0, 4)).map((item) => (
                         item.type === "event" ? (() => {
                           const ev = item.data as ClubEvent;
-                          const myRsvp = (joined && user) ? getUserRSVP(ev.id, user.id) : null;
-                          const _rsvpCount = countRSVPs(ev.id);
-                          const goingRsvps = getEventRSVPs(ev.id).filter(r => r.status === "going");
+                          // Use server-merged RSVPs if available, else fall back to local storage
+                          const allRsvps = rsvpOverrideMap[ev.id] ?? getEventRSVPs(ev.id);
+                          // rsvpTick is read here to force re-render after toggle
+                          void rsvpTick;
+                          const myRsvp = (joined && user) ? (allRsvps.find(r => r.userId === user.id) ?? getUserRSVP(ev.id, user.id)) : null;
+                          const goingRsvps = allRsvps.filter(r => r.status === "going");
+                          const maybeRsvps = allRsvps.filter(r => r.status === "maybe");
+                          const notGoingRsvps = allRsvps.filter(r => r.status === "not_going");
+                          const isDrawerOpen = expandedRsvpEventId === ev.id;
                           const dateObj = new Date(ev.startAt);
                           const endObj = ev.endAt ? new Date(ev.endAt) : null;
                           const evAccent = ev.accentColor ?? accent;
@@ -2281,53 +2312,134 @@ export default function ClubProfile() {
                               {ev.description && (
                                 <p className={`text-sm leading-relaxed ${textMuted}`}>{ev.description}</p>
                               )}
-                              {/* Footer: attendee avatars + RSVP button */}
-                              <div className="flex items-center justify-between pt-1">
-                                <div className="flex items-center gap-2">
-                                  {goingRsvps.length > 0 && (
-                                    <div className="flex items-center gap-1.5">
-                                      <div className="flex -space-x-2">
-                                        {goingRsvps.slice(0, 4).map((r) => (
-                                          <div key={r.userId} className={`w-7 h-7 rounded-full overflow-hidden ring-2 ${isDark ? "ring-[#0d1f12]" : "ring-white"}`}>
-                                            <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
-                                          </div>
-                                        ))}
-                                      </div>
-                                      <span className={`text-xs font-medium ${textMuted}`}>
-                                        {goingRsvps.length} going{goingRsvps.length > 4 ? ` (+${goingRsvps.length - 4})` : ""}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {goingRsvps.length === 0 && (
-                                    <span className={`text-xs ${textMuted} opacity-50`}>No RSVPs yet</span>
-                                  )}
-                                </div>
+                              {/* ── RSVP Hub ─────────────────────────────────────────── */}
+                              <div className="space-y-3 pt-1">
+                                {/* 3-state RSVP buttons */}
                                 {joined && user ? (
-                                  <button
-                                    onClick={() => {
-                                      const next = myRsvp?.status === "going" ? "not_going" : "going";
-                                      upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
-                                    }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all active:scale-95 ${
-                                      myRsvp?.status === "going"
-                                        ? isDark ? "text-black" : "text-white"
-                                        : isDark ? "bg-white/8 text-white/70 hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
-                                    }`}
-                                    style={myRsvp?.status === "going" ? { background: evAccent } : {}}
-                                  >
-                                    {myRsvp?.status === "going" ? <><CheckCircle2 className="w-4 h-4" /> Going</> : "RSVP"}
-                                    {myRsvp?.status === "going" && <ChevronRight className="w-3.5 h-3.5 opacity-60" />}
-                                  </button>
+                                  <div className="flex gap-2">
+                                    {(["going", "maybe", "not_going"] as const).map((s) => {
+                                      const isSelected = myRsvp?.status === s;
+                                      const label = s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go";
+                                      const selectedStyle: React.CSSProperties = s === "going"
+                                        ? { background: evAccent, color: "#fff" }
+                                        : s === "maybe"
+                                        ? { background: "oklch(0.65 0.15 60)", color: "#fff" }
+                                        : isDark
+                                        ? { background: "oklch(0.25 0.04 145)", color: "oklch(0.65 0.06 145)" }
+                                        : { background: "oklch(0.88 0.04 145)", color: "oklch(0.35 0.08 145)" };
+                                      return (
+                                        <button
+                                          key={s}
+                                          onClick={() => {
+                                            if (!user) return;
+                                            // Optimistic update: update rsvpOverrideMap immediately
+                                            const newStatus = isSelected ? "not_going" : s;
+                                            const now = new Date().toISOString();
+                                            setRsvpOverrideMap((prev) => {
+                                              const base = prev[ev.id] ?? getEventRSVPs(ev.id);
+                                              const existing = base.find(r => r.userId === user.id);
+                                              let updated: ClubEventRSVP[];
+                                              if (existing) {
+                                                updated = base.map(r => r.userId === user.id ? { ...r, status: newStatus, updatedAt: now } : r);
+                                              } else {
+                                                updated = [...base, { id: `opt-${user.id}`, eventId: ev.id, clubId: ev.clubId, userId: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl ?? null, status: newStatus, updatedAt: now }];
+                                              }
+                                              return { ...prev, [ev.id]: updated };
+                                            });
+                                            setRsvpTick(t => t + 1);
+                                            // Persist to localStorage + server
+                                            upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, newStatus, user.avatarUrl ?? null);
+                                          }}
+                                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-2xl text-xs font-bold transition-all active:scale-95"
+                                          style={isSelected ? selectedStyle : isDark
+                                            ? { background: "oklch(0.18 0.04 145)", color: "oklch(0.55 0.06 145)" }
+                                            : { background: "oklch(0.92 0.03 145)", color: "oklch(0.45 0.08 145)" }
+                                          }
+                                        >
+                                          {isSelected && s === "going" && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                          {label}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 ) : (
                                   <button
-                                    onClick={() => {}}
-                                    className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all ${
-                                      isDark ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-[#FBFADA]/70 text-[#436850]/70 cursor-not-allowed"
+                                    onClick={() => setAuthOpen(true)}
+                                    className={`w-full py-2 rounded-2xl text-xs font-bold transition-all ${
+                                      isDark ? "bg-white/5 text-white/30 hover:bg-white/8" : "bg-[#FBFADA]/70 text-[#436850]/50 hover:bg-[#ADBC9F]/40"
                                     }`}
-                                    disabled
                                   >
                                     Join club to RSVP
                                   </button>
+                                )}
+                                {/* Attendee summary row + expand toggle */}
+                                {(goingRsvps.length > 0 || maybeRsvps.length > 0) && (
+                                  <button
+                                    onClick={() => setExpandedRsvpEventId(isDrawerOpen ? null : ev.id)}
+                                    className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl transition-colors ${
+                                      isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]/70"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {/* Avatar stack — going only */}
+                                      <div className="flex -space-x-2">
+                                        {goingRsvps.slice(0, 5).map((r) => (
+                                          <div key={r.userId} className={`w-7 h-7 rounded-full overflow-hidden ring-2 ${
+                                            isDark ? "ring-[#0d1f12]" : "ring-white"
+                                          }`}>
+                                            <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
+                                          </div>
+                                        ))}
+                                        {goingRsvps.length > 5 && (
+                                          <div className={`w-7 h-7 rounded-full ring-2 flex items-center justify-center text-[9px] font-bold ${
+                                            isDark ? "ring-[#0d1f12] bg-white/10 text-white/60" : "ring-white bg-[#ADBC9F]/50 text-[#436850]"
+                                          }`}>+{goingRsvps.length - 5}</div>
+                                        )}
+                                      </div>
+                                      <span className={`text-xs font-semibold ${textMuted}`}>
+                                        {goingRsvps.length > 0 && <span style={{ color: evAccent }}>{goingRsvps.length} going</span>}
+                                        {goingRsvps.length > 0 && maybeRsvps.length > 0 && <span className={textMuted}> · </span>}
+                                        {maybeRsvps.length > 0 && <span className="text-amber-500">{maybeRsvps.length} maybe</span>}
+                                        {notGoingRsvps.length > 0 && <span className={`${textMuted} opacity-50`}> · {notGoingRsvps.length} can't go</span>}
+                                      </span>
+                                    </div>
+                                    <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${isDrawerOpen ? "rotate-90" : ""} ${textMuted}`} />
+                                  </button>
+                                )}
+                                {goingRsvps.length === 0 && maybeRsvps.length === 0 && (
+                                  <p className={`text-xs ${textMuted} opacity-40 text-center`}>Be the first to RSVP</p>
+                                )}
+                                {/* Expandable attendee drawer */}
+                                {isDrawerOpen && (
+                                  <div className={`rounded-2xl border overflow-hidden animate-in slide-in-from-top-1 duration-200 ${
+                                    isDark ? "border-white/8 bg-white/3" : "border-[#ADBC9F]/60 bg-[#FBFADA]/60"
+                                  }`}>
+                                    {(["going", "maybe", "not_going"] as const).map((s) => {
+                                      const group = s === "going" ? goingRsvps : s === "maybe" ? maybeRsvps : notGoingRsvps;
+                                      if (!group.length) return null;
+                                      const label = s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go";
+                                      const labelColor = s === "going" ? evAccent : s === "maybe" ? "oklch(0.65 0.15 60)" : "oklch(0.45 0.06 145)";
+                                      return (
+                                        <div key={s} className={`px-4 py-3 border-b last:border-b-0 ${
+                                          isDark ? "border-white/5" : "border-[#ADBC9F]/30"
+                                        }`}>
+                                          <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: labelColor }}>
+                                            {label} · {group.length}
+                                          </p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {group.map((r) => (
+                                              <div key={r.userId} className="flex items-center gap-1.5">
+                                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                                  <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={24} className="w-full h-full object-cover" />
+                                                </div>
+                                                <span className={`text-xs font-medium ${textMain}`}>{r.displayName}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 )}
                               </div>
                             </div>
