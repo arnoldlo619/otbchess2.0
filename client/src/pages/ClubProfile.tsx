@@ -1201,7 +1201,7 @@ export default function ClubProfile() {
               className="relative flex items-center justify-start bg-transparent border-none p-0 cursor-pointer"
               style={{ width: "36px", height: "36px", transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)" }}
               title="ChessOTB.Club — Back to Clubs"
-              onMouseEnter={(e) => { e.currentTarget.style.width = "90px"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.width = "130px"; }}
               onMouseLeave={(e) => { e.currentTarget.style.width = "36px"; }}
             >
               {/* !! thumbnail — fades out on sidebar hover */}
@@ -1214,7 +1214,7 @@ export default function ClubProfile() {
               <img
                 src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-9 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
               />
             </button>
           </div>
