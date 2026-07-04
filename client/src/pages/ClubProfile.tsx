@@ -125,6 +125,9 @@ import {
   Phone,
   Video,
   Instagram,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -3536,25 +3539,47 @@ export default function ClubProfile() {
               };
               return (
                 <div className="space-y-4">
-                  {/* Active / Draft leagues */}
+                  {/* Active / Draft leagues — expandable LeagueCard */}
                   {activeLeagues.length > 0 && (
-                    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                      <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                        {activeLeagues.map((lg) => <LeagueRow key={lg.id} lg={lg} />)}
-                      </div>
+                    <div className="space-y-3">
+                      {activeLeagues.map((lg) => (
+                        <LeagueCard
+                          key={lg.id}
+                          lg={lg}
+                          isDark={isDark}
+                          textMain={textMain}
+                          textMuted={textMuted}
+                          divider={divider}
+                          card={card}
+                          cardBorder={cardBorder}
+                          accent={accent}
+                          onNavigate={navigate}
+                        />
+                      ))}
                     </div>
                   )}
-                  {/* Past Seasons */}
+                  {/* Past Seasons — expandable LeagueCard */}
                   {completedLeagues.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 px-1 mb-2">
                         <span className={`text-xs font-semibold uppercase tracking-wide ${textMuted}`}>Past Seasons</span>
                         <span className={`text-xs ${textMuted} opacity-50`}>· {completedLeagues.length}</span>
                       </div>
-                      <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                        <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                          {completedLeagues.map((lg) => <LeagueRow key={lg.id} lg={lg} />)}
-                        </div>
+                      <div className="space-y-3">
+                        {completedLeagues.map((lg) => (
+                          <LeagueCard
+                            key={lg.id}
+                            lg={lg}
+                            isDark={isDark}
+                            textMain={textMain}
+                            textMuted={textMuted}
+                            divider={divider}
+                            card={card}
+                            cardBorder={cardBorder}
+                            accent={accent}
+                            onNavigate={navigate}
+                          />
+                        ))}
                       </div>
                     </div>
                   )}
@@ -5043,6 +5068,363 @@ function RoundRobinMatrix({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ─── LeagueCard ──────────────────────────────────────────────────────────────
+// Expandable card for the Leagues tab — shows standings + match schedule on demand.
+
+type LeagueStandingEntry = {
+  playerId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  wins: number;
+  losses: number;
+  draws: number;
+  points: number;
+  rank: number;
+  streak: string;
+  movement: string;
+  lastResults: string;
+  chesscomRating?: number | null;
+  chesscomUsername?: string | null;
+};
+
+type LeagueMatchEntry = {
+  id: number;
+  weekNumber: number;
+  playerWhiteId: string;
+  playerWhiteName: string;
+  playerBlackId: string;
+  playerBlackName: string;
+  resultStatus: string;
+  result?: string | null;
+};
+
+type LeagueWeekEntry = {
+  id: number;
+  weekNumber: number;
+  isComplete: number;
+  deadline?: string | null;
+  matches: LeagueMatchEntry[];
+};
+
+function LeagueCard({
+  lg,
+  isDark,
+  textMain,
+  textMuted,
+  divider,
+  card,
+  cardBorder,
+  accent,
+  onNavigate,
+}: {
+  lg: { id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number };
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  divider: string;
+  card: string;
+  cardBorder: string;
+  accent: string;
+  onNavigate: (path: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [activeView, setActiveView] = useState<"standings" | "schedule">("standings");
+  const [standings, setStandings] = useState<LeagueStandingEntry[]>([]);
+  const [weeks, setWeeks] = useState<LeagueWeekEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const loaded = useRef(false);
+
+  const isDraft = lg.status === "draft";
+  const isActive = lg.status === "active";
+  const isCompleted = lg.status === "completed";
+
+  const statusColor = isActive
+    ? "text-green-500 bg-green-500/10 border-green-500/20"
+    : isCompleted
+    ? isDark ? "text-amber-400 bg-amber-400/10 border-amber-400/20" : "text-amber-600 bg-amber-500/10 border-amber-500/20"
+    : isDark ? "text-white/40 bg-white/5 border-white/10" : "text-[#436850]/60 bg-[#ADBC9F]/20 border-[#ADBC9F]/40";
+
+  const statusLabel = isActive ? "Active" : isCompleted ? "Complete" : "Draft";
+
+  // Fetch standings + weeks when opened
+  useEffect(() => {
+    if (!open || loaded.current || isDraft) return;
+    loaded.current = true;
+    setLoading(true);
+    Promise.all([
+      apiFetch<LeagueStandingEntry[]>(`/api/leagues/${lg.id}/standings`).catch(() => []),
+      apiFetch<LeagueWeekEntry[]>(`/api/leagues/${lg.id}/weeks`).catch(() => []),
+    ]).then(([s, w]) => {
+      setStandings(s);
+      setWeeks(w);
+      // Default to current week (last incomplete) or last week
+      const currentW = w.find((wk) => !wk.isComplete) ?? w[w.length - 1];
+      if (currentW) setSelectedWeek(currentW.weekNumber);
+    }).finally(() => setLoading(false));
+  }, [open, lg.id, isDraft]);
+
+  const currentWeekData = weeks.find((w) => w.weekNumber === selectedWeek);
+
+  const formDots = (lastResults: string) => {
+    if (!lastResults) return [];
+    return lastResults.split(",").slice(-5).map((r) => r.trim());
+  };
+
+  const movementIcon = (movement: string) => {
+    if (movement === "up") return <TrendingUp className="w-3 h-3 text-emerald-400" />;
+    if (movement === "down") return <TrendingDown className="w-3 h-3 text-red-400" />;
+    return <Minus className="w-3 h-3 text-gray-400" />;
+  };
+
+  return (
+    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+      {/* Card header */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FBFADA]/60"}`}
+      >
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          isActive ? "bg-green-500/15" : isCompleted ? isDark ? "bg-amber-500/10" : "bg-amber-50" : isDark ? "bg-white/6" : "bg-[#FBFADA]/70"
+        }`}>
+          {isActive
+            ? <Zap className="w-5 h-5 text-green-500" strokeWidth={1.8} />
+            : isCompleted
+            ? <Trophy className="w-5 h-5 text-amber-400" strokeWidth={1.8} />
+            : <Award className={`w-5 h-5 ${textMuted}`} strokeWidth={1.8} />
+          }
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold border ${statusColor}`}>{statusLabel}</span>
+          </div>
+          <div className={`flex items-center gap-2 mt-0.5 text-xs ${textMuted}`}>
+            <span>{lg.playerCount} players</span>
+            {!isDraft && <span>·</span>}
+            {isActive && <span>Week {lg.currentWeek}/{lg.totalWeeks}</span>}
+            {isCompleted && <span>{lg.totalWeeks} weeks · Season complete</span>}
+            {isDraft && <span>Forming up · {lg.playerCount}/{lg.maxPlayers ?? lg.playerCount}</span>}
+          </div>
+        </div>
+        <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-transform ${textMuted} ${open ? "rotate-90" : ""}`} />
+      </button>
+
+      {/* Expandable drawer */}
+      {open && (
+        <div className={`border-t ${divider}`}>
+          {/* Sub-nav + open link */}
+          <div className={`px-5 py-3 flex items-center justify-between border-b ${divider}`}>
+            {isDraft ? (
+              <span className={`text-xs ${textMuted}`}>Season hasn't started yet</span>
+            ) : (
+              <div className="flex gap-1">
+                {(["standings", "schedule"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setActiveView(v)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors capitalize ${
+                      activeView === v
+                        ? isDark ? "bg-white/10 text-white" : "bg-[#436850]/10 text-[#436850]"
+                        : textMuted
+                    }`}
+                  >{v}</button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => onNavigate(`/leagues/${lg.id}`)}
+              className="flex items-center gap-1 text-xs font-semibold transition-colors"
+              style={{ color: accent }}
+            >
+              Open <ExternalLink className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Loading */}
+          {loading && (
+            <div className="py-10 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+            </div>
+          )}
+
+          {/* Draft state */}
+          {!loading && isDraft && (
+            <div className="px-5 py-8 text-center">
+              <Award className={`w-8 h-8 mx-auto mb-2 ${textMuted} opacity-40`} />
+              <p className={`text-sm ${textMuted}`}>League is in draft — standings will appear once the season starts.</p>
+            </div>
+          )}
+
+          {/* Standings view */}
+          {!loading && !isDraft && activeView === "standings" && (
+            <div className="px-5 py-4">
+              {standings.length === 0 ? (
+                <p className={`text-sm text-center py-6 ${textMuted}`}>No standings yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className={textMuted}>
+                        <th className="text-left pb-2 pr-1 font-semibold w-5">#</th>
+                        <th className="text-left pb-2 pr-2 font-semibold">Player</th>
+                        <th className="text-center pb-2 px-1 font-semibold w-7">W</th>
+                        <th className="text-center pb-2 px-1 font-semibold w-7">D</th>
+                        <th className="text-center pb-2 px-1 font-semibold w-7">L</th>
+                        <th className="text-center pb-2 px-1 font-bold w-10" style={{ color: accent }}>Pts</th>
+                        <th className="text-center pb-2 pl-2 font-semibold">Form</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {standings.map((row, i) => {
+                        const dots = formDots(row.lastResults);
+                        return (
+                          <tr key={row.playerId} className={`border-t ${isDark ? "border-white/5" : "border-gray-100"} ${i === 0 ? isDark ? "bg-amber-500/5" : "bg-amber-50/50" : ""}`}>
+                            <td className="py-2 pr-1">
+                              <div className="flex items-center gap-0.5">
+                                <span className={`font-bold text-[11px] ${
+                                  i === 0 ? "text-amber-400" : i === 1 ? isDark ? "text-white/50" : "text-gray-400" : i === 2 ? "text-amber-600/70" : textMuted
+                                }`}>{row.rank}</span>
+                                <span className="ml-0.5">{movementIcon(row.movement)}</span>
+                              </div>
+                            </td>
+                            <td className="py-2 pr-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
+                                  {row.avatarUrl
+                                    ? <img src={row.avatarUrl} alt="" className="w-6 h-6 object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                                    : <span className={textMuted}>{(row.displayName?.[0] ?? "?").toUpperCase()}</span>
+                                  }
+                                </div>
+                                <div className="min-w-0">
+                                  <p className={`font-semibold truncate max-w-[90px] ${textMain}`}>
+                                    {i === 0 && <Star className="w-2.5 h-2.5 inline mr-0.5 text-amber-400" />}
+                                    {row.displayName}
+                                  </p>
+                                  {row.chesscomRating && (
+                                    <p className={`text-[10px] ${textMuted}`}>{row.chesscomRating}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-2 px-1 text-center text-emerald-400 font-semibold">{row.wins}</td>
+                            <td className={`py-2 px-1 text-center font-semibold ${textMuted}`}>{row.draws}</td>
+                            <td className="py-2 px-1 text-center text-red-400 font-semibold">{row.losses}</td>
+                            <td className="py-2 px-1 text-center font-bold" style={{ color: accent }}>{row.points}</td>
+                            <td className="py-2 pl-2">
+                              <div className="flex items-center gap-0.5 justify-center">
+                                {dots.length === 0
+                                  ? <span className={`text-[10px] ${textMuted}`}>—</span>
+                                  : dots.map((r, di) => (
+                                    <span key={di} className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                                      r === "W" ? "bg-emerald-500/20 text-emerald-400"
+                                      : r === "L" ? "bg-red-500/10 text-red-400"
+                                      : isDark ? "bg-white/10 text-white/40" : "bg-gray-100 text-gray-400"
+                                    }`}>{r}</span>
+                                  ))
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Schedule view */}
+          {!loading && !isDraft && activeView === "schedule" && (
+            <div className="px-5 py-4 space-y-4">
+              {weeks.length === 0 ? (
+                <p className={`text-sm text-center py-6 ${textMuted}`}>No schedule yet</p>
+              ) : (
+                <>
+                  {/* Week navigator */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    {weeks.map((w) => (
+                      <button
+                        key={w.weekNumber}
+                        onClick={() => setSelectedWeek(w.weekNumber)}
+                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                          selectedWeek === w.weekNumber
+                            ? isDark ? "bg-white/15 text-white" : "bg-[#436850]/10 text-[#436850]"
+                            : textMuted
+                        }`}
+                      >
+                        {w.isComplete ? (
+                          <span className="flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            Wk {w.weekNumber}
+                          </span>
+                        ) : (
+                          <span>Wk {w.weekNumber}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Matches for selected week */}
+                  {currentWeekData ? (
+                    <div className="space-y-2">
+                      {currentWeekData.matches.length === 0 ? (
+                        <p className={`text-xs text-center py-4 ${textMuted}`}>No matches this week</p>
+                      ) : (
+                        currentWeekData.matches.map((match) => {
+                          const isPending = match.resultStatus === "pending";
+                          const isWhiteWin = match.result === "white";
+                          const isBlackWin = match.result === "black";
+                          const isDraw = match.result === "draw";
+                          return (
+                            <div key={match.id} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl ${isDark ? "bg-white/4" : "bg-[#FBFADA]/60"}`}>
+                              {/* White player */}
+                              <span className={`flex-1 text-xs text-right truncate font-medium ${isWhiteWin ? textMain : isPending ? textMuted : "text-red-400/70"}`}>
+                                {match.playerWhiteName}
+                              </span>
+                              {/* Score chips */}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {isPending ? (
+                                  <>
+                                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${isDark ? "bg-white/8 text-white/30" : "bg-gray-100 text-gray-400"}`}>?</span>
+                                    <span className={`text-[10px] ${textMuted}`}>–</span>
+                                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${isDark ? "bg-white/8 text-white/30" : "bg-gray-100 text-gray-400"}`}>?</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                                      isWhiteWin ? "bg-emerald-500/20 text-emerald-400" : isDraw ? isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500" : "bg-red-500/10 text-red-400"
+                                    }`}>{isWhiteWin ? "1" : isDraw ? "½" : "0"}</span>
+                                    <span className={`text-[10px] ${textMuted}`}>–</span>
+                                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
+                                      isBlackWin ? "bg-emerald-500/20 text-emerald-400" : isDraw ? isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500" : "bg-red-500/10 text-red-400"
+                                    }`}>{isBlackWin ? "1" : isDraw ? "½" : "0"}</span>
+                                  </>
+                                )}
+                              </div>
+                              {/* Black player */}
+                              <span className={`flex-1 text-xs truncate font-medium ${isBlackWin ? textMain : isPending ? textMuted : "text-red-400/70"}`}>
+                                {match.playerBlackName}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  ) : (
+                    <p className={`text-xs text-center py-4 ${textMuted}`}>Select a week above</p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
