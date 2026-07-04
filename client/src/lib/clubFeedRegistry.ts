@@ -89,6 +89,17 @@ export interface FeedEvent {
   /** Collected RSVP responses */
   rsvpEntries?: FeedRSVPEntry[];
 
+  // ── Image attachment ────────────────────────────────────────────────────
+  /** Optional image URL attached to an announcement post */
+  imageUrl?: string | null;
+
+  // ── Reactions ────────────────────────────────────────────────────────────
+  /**
+   * Emoji reaction map: emoji → Record<userId, true>
+   * e.g. { "👍": { "user1": true, "user2": true }, "♟️": { "user3": true } }
+   */
+  reactions?: Record<string, Record<string, true>>;
+
   // ── Pin field ────────────────────────────────────────────────────────────
   /** True when a director/owner has pinned this post to the top of the feed */
   isPinned?: boolean;
@@ -308,7 +319,8 @@ export function postAnnouncement(
   clubId: string,
   actorName: string,
   body: string,
-  actorAvatarUrl?: string | null
+  actorAvatarUrl?: string | null,
+  imageUrl?: string | null
 ): FeedEvent {
   return addFeedEvent({
     clubId,
@@ -318,7 +330,44 @@ export function postAnnouncement(
     actorAvatarUrl,
     description: `${actorName} posted an announcement`,
     detail: body,
+    ...(imageUrl ? { imageUrl } : {}),
   });
+}
+
+/**
+ * Toggle an emoji reaction on a feed post.
+ * If the user has already reacted with this emoji, removes the reaction.
+ * Returns the updated FeedEvent.
+ */
+export function toggleReaction(
+  clubId: string,
+  eventId: string,
+  emoji: string,
+  userId: string
+): FeedEvent | null {
+  const events = loadFeed(clubId);
+  const idx = events.findIndex((e) => e.id === eventId);
+  if (idx === -1) return null;
+  const ev = events[idx];
+  const reactions: Record<string, Record<string, true>> = { ...(ev.reactions ?? {}) };
+  const emojiMap = { ...(reactions[emoji] ?? {}) };
+  if (emojiMap[userId]) {
+    delete emojiMap[userId];
+  } else {
+    emojiMap[userId] = true;
+  }
+  if (Object.keys(emojiMap).length === 0) {
+    delete reactions[emoji];
+  } else {
+    reactions[emoji] = emojiMap;
+  }
+  const updated: FeedEvent = { ...ev, reactions };
+  const newEvents = [...events];
+  newEvents[idx] = updated;
+  saveFeed(clubId, newEvents);
+  // Fire-and-forget persist (reactions are included in payload)
+  _persistFeedToServer(clubId, updated);
+  return updated;
 }
 
 /** Post a poll from an owner or director. */

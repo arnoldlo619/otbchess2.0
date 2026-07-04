@@ -7,7 +7,7 @@
  *   - Members roster with roles and stats
  *   - Tournament history with status badges
  */
-import {useState, useEffect} from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -52,6 +52,8 @@ import {
   upsertFeedRSVP,
   checkAndCloseExpiredPolls,
   publishScheduledPolls,
+  toggleReaction,
+  syncFeedFromServer,
   type FeedEvent,
   type FeedRSVPEntry,
 } from "@/lib/clubFeedRegistry";
@@ -407,6 +409,7 @@ function FeedEventCard({
   accentColor,
   onVoted,
   onRsvped,
+  onReaction,
 }: {
   event: FeedEvent;
   isDark: boolean;
@@ -422,6 +425,7 @@ function FeedEventCard({
   accentColor?: string;
   onVoted?: () => void;
   onRsvped?: () => void;
+  onReaction?: (eventId: string, emoji: string) => void;
 }) {
   const cfg = FEED_EVENT_CONFIG[event.type];
   const accentCls = isDark ? cfg.darkAccent : cfg.accent;
@@ -434,6 +438,9 @@ function FeedEventCard({
   const userRsvp = userId ? (event.rsvpEntries ?? []).find((r) => r.userId === userId) : undefined;
   // Use the club's accent color passed as a prop (keeps FeedEventCard stateless)
   const accent = accentColor ?? (isDark ? "#4CAF50" : "#436850");
+  // Reaction picker state
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const REACTION_EMOJIS = ["\u2665\ufe0f", "\u265f\ufe0f", "\ud83d\udc4d", "\ud83d\udd25", "\ud83c\udfc6", "\ud83e\udd21", "\ud83d\ude02", "\ud83d\ude2e"];
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId || !isMemberUser) return;
@@ -462,12 +469,77 @@ function FeedEventCard({
                 event.type === "announcement" ? (isDark ? "text-white/70" : "text-[#436850]") : textMuted
               }`}>{event.detail}</p>
             )}
-            <div className="flex items-center gap-3 mt-1.5">
+            {/* Image attachment */}
+            {event.imageUrl && (
+              <div className="mt-3 rounded-2xl overflow-hidden">
+                <img
+                  src={event.imageUrl}
+                  alt="Post attachment"
+                  className="w-full max-h-72 object-cover rounded-2xl"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              </div>
+            )}
+            {/* Reaction bar */}
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className={`text-xs ${textMuted}`}>{relativeTime(event.createdAt)}</span>
               {event.linkHref && (
                 <a href={event.linkHref} className={`text-xs font-semibold transition-colors ${
                   isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#436850] hover:text-[#3a5230]"
                 }`}>{event.linkLabel ?? "View"} &rarr;</a>
+              )}
+              {/* Existing reaction bubbles */}
+              {event.reactions && Object.entries(event.reactions).map(([emoji, voters]) => {
+                const count = Object.keys(voters).length;
+                if (count === 0) return null;
+                const userReacted = userId ? !!voters[userId] : false;
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => isMemberUser && userId && onReaction?.(event.id, emoji)}
+                    disabled={!isMemberUser || !userId}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border transition-all ${
+                      userReacted
+                        ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-[#4CAF50]" : "bg-[#436850]/15 border-[#436850]/30 text-[#436850]"
+                        : isDark ? "bg-white/5 border-white/10 text-white/60 hover:bg-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850]/70 hover:bg-[#ADBC9F]/40"
+                    } disabled:cursor-default`}
+                  >
+                    <span>{emoji}</span>
+                    <span>{count}</span>
+                  </button>
+                );
+              })}
+              {/* Add reaction button */}
+              {isMemberUser && userId && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowEmojiPicker((v) => !v)}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all ${
+                      isDark ? "bg-white/5 border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F]/60 text-[#436850]/50 hover:bg-[#ADBC9F]/40 hover:text-[#436850]"
+                    }`}
+                    title="Add reaction"
+                  >
+                    <span>+</span>
+                    <span>&#128512;</span>
+                  </button>
+                  {showEmojiPicker && (
+                    <>
+                      {/* Backdrop to close */}
+                      <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
+                      <div className={`absolute bottom-full mb-2 left-0 z-50 flex gap-1 p-2 rounded-2xl shadow-xl border ${
+                        isDark ? "bg-[#0d1a0f] border-white/15" : "bg-white border-[#ADBC9F]"
+                      }`}>
+                        {REACTION_EMOJIS.map((em) => (
+                          <button
+                            key={em}
+                            onClick={() => { onReaction?.(event.id, em); setShowEmojiPicker(false); }}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-lg hover:scale-125 transition-transform"
+                          >{em}</button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -764,6 +836,9 @@ export default function ClubProfile() {
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [announcementDraft, setAnnouncementDraft] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+  const [composerImageFile, setComposerImageFile] = useState<File | null>(null);
+  const [composerImagePreview, setComposerImagePreview] = useState<string | null>(null);
+  const composerImageInputRef = useRef<HTMLInputElement>(null);
   const [following, setFollowing] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
@@ -1068,12 +1143,29 @@ export default function ClubProfile() {
   const handlePostAnnouncement = async () => {
     if (!user || !announcementDraft.trim() || !club) return;
     setPostingAnnouncement(true);
-    await new Promise((r) => setTimeout(r, 300));
-    postAnnouncement(club.id, user.displayName, announcementDraft.trim(), user.avatarUrl ?? null);
+    // Convert image file to data URL if present
+    let imageUrl: string | null = null;
+    if (composerImageFile) {
+      imageUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.readAsDataURL(composerImageFile);
+      });
+    }
+    await new Promise((r) => setTimeout(r, 200));
+    postAnnouncement(club.id, user.displayName, announcementDraft.trim(), user.avatarUrl ?? null, imageUrl);
     setFeedEvents(listFeedEvents(club.id));
     setAnnouncementDraft("");
+    setComposerImageFile(null);
+    setComposerImagePreview(null);
     setPostingAnnouncement(false);
     toast.success("Announcement posted!");
+  };
+
+  const handleReaction = (eventId: string, emoji: string) => {
+    if (!user || !club) return;
+    toggleReaction(club.id, eventId, emoji, user.id);
+    setFeedEvents(listFeedEvents(club.id));
   };
 
   const handleDeleteFeedEvent = (eventId: string) => {
@@ -2093,42 +2185,113 @@ export default function ClubProfile() {
             )}
 
 
-            {/* ── Announcement composer (owner/director only) ────────────────── */}
+            {/* ── Post composer (owner/director only) ─────────────────────── */}
             {(isOwner || isDirector) && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
-                <div className="flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
-                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
-                  }`}>
-                    {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                {/* Composer header */}
+                <div className={`px-5 pt-4 pb-3 border-b ${divider} flex items-center gap-2`}>
+                  {/* Actor avatar */}
+                  <div className="relative flex-shrink-0">
+                    {user?.avatarUrl ? (
+                      <img src={user.avatarUrl} alt={user.displayName} className="w-9 h-9 rounded-full object-cover" />
+                    ) : (
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
+                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
+                      }`}>{user?.displayName?.charAt(0).toUpperCase() ?? "?"}</div>
+                    )}
+                    {(isOwner || isDirector) && (
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ${
+                        isOwner ? "bg-amber-500" : "bg-[#4CAF50]"
+                      }`} style={{ width: 16, height: 16 }}>
+                        {isOwner ? <Crown className="w-2.5 h-2.5 text-white" /> : <Shield className="w-2.5 h-2.5 text-white" />}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <textarea
-                      value={announcementDraft}
-                      onChange={(e) => setAnnouncementDraft(e.target.value)}
-                      placeholder="Post an announcement to the club…"
-                      rows={3}
-                      maxLength={500}
-                      className={`w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none border transition-colors ${
-                        isDark
-                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/40"
-                          : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850] focus:border-[#436850]/40"
-                      }`}
-                    />
-                    <div className="flex items-center justify-between mt-2">
-                      <span className={`text-xs ${textMuted}`}>{announcementDraft.length}/500</span>
+                  <span className={`text-sm font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>
+                    {user?.displayName}
+                  </span>
+                </div>
+                {/* Textarea */}
+                <div className="px-5 pt-4">
+                  <textarea
+                    value={announcementDraft}
+                    onChange={(e) => setAnnouncementDraft(e.target.value)}
+                    placeholder="Share an update, announcement, or highlight with the club…"
+                    rows={3}
+                    maxLength={600}
+                    className={`w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none border transition-colors ${
+                      isDark
+                        ? "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-[#4CAF50]/40"
+                        : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40"
+                    }`}
+                  />
+                </div>
+                {/* Image preview */}
+                {composerImagePreview && (
+                  <div className="px-5 pt-2 relative">
+                    <div className="relative rounded-2xl overflow-hidden">
+                      <img
+                        src={composerImagePreview}
+                        alt="Attachment preview"
+                        className="w-full max-h-64 object-cover rounded-2xl"
+                      />
                       <button
-                        onClick={handlePostAnnouncement}
-                        disabled={!announcementDraft.trim() || postingAnnouncement}
-                        className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 ${
-                          isDark
-                            ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A] disabled:hover:bg-[#4CAF50]"
-                            : "bg-[#436850] text-white hover:bg-[#3a5230] disabled:hover:bg-[#436850]"
-                        }`}
+                        onClick={() => { setComposerImageFile(null); setComposerImagePreview(null); }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                        title="Remove image"
                       >
-                        {postingAnnouncement ? "Posting…" : "Post"}
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                  </div>
+                )}
+                {/* Toolbar + Post button */}
+                <div className={`px-5 py-3 flex items-center justify-between gap-3`}>
+                  <div className="flex items-center gap-1">
+                    {/* Image upload button */}
+                    <button
+                      onClick={() => composerImageInputRef.current?.click()}
+                      title="Attach image"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                        composerImagePreview
+                          ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/15 text-[#436850]"
+                          : isDark ? "text-white/40 hover:text-white/70 hover:bg-white/8" : "text-[#436850]/60 hover:text-[#436850] hover:bg-[#ADBC9F]/30"
+                      }`}
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      <span>{composerImagePreview ? "Change" : "Photo"}</span>
+                    </button>
+                    <input
+                      ref={composerImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setComposerImageFile(file);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setComposerImagePreview(ev.target?.result as string);
+                        reader.readAsDataURL(file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs ${textMuted} ${announcementDraft.length > 550 ? "text-amber-400" : ""}`}>
+                      {announcementDraft.length}/600
+                    </span>
+                    <button
+                      onClick={handlePostAnnouncement}
+                      disabled={!announcementDraft.trim() || postingAnnouncement}
+                      className={`px-5 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 ${
+                        isDark
+                          ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A] disabled:hover:bg-[#4CAF50]"
+                          : "bg-[#436850] text-white hover:bg-[#3a5230] disabled:hover:bg-[#436850]"
+                      }`}
+                    >
+                      {postingAnnouncement ? "Posting…" : "Post"}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2241,6 +2404,7 @@ export default function ClubProfile() {
                       accentColor={accent}
                       onVoted={refreshFeed}
                       onRsvped={refreshFeed}
+                      onReaction={handleReaction}
                     />
                   ))}
                 </div>
