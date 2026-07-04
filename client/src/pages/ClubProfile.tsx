@@ -40,6 +40,8 @@ import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { listTournamentsByClub, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { loadTournamentState } from "@/lib/directorState";
+import { computeStandings, type StandingRow } from "@/lib/swiss";
 import {
   listFeedEvents,
   seedFeedIfEmpty,
@@ -3074,13 +3076,11 @@ export default function ClubProfile() {
               ))}
             </div>
 
-            {/* Upcoming & Active — seed data */}
+            {/* Upcoming & Active — seed data (no director state, use TournamentRow) */}
             {upcomingTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                    Upcoming & Active
-                  </h2>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Upcoming & Active</h2>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {upcomingTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
@@ -3090,52 +3090,34 @@ export default function ClubProfile() {
               </div>
             )}
 
-            {/* Live upcoming tournaments created via wizard */}
+            {/* Live upcoming tournaments created via wizard — TournamentCard with bracket/standings */}
             {liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                    Upcoming
-                  </h2>
-                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-500/15 text-green-600">
-                    Live
-                  </span>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Upcoming</h2>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-500/15 text-green-600">Live</span>
                 </div>
-                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
-                    <a
-                      key={t.id}
-                      href={`/tournament/${t.id}`}
-                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FBFADA]"}`}
-                    >
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-green-500/15" : "bg-green-50"}`}>
-                        <Zap className="w-4 h-4 text-green-500" strokeWidth={1.8} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold truncate ${textMain}`}>{t.name}</p>
-                        <p className={`text-xs truncate ${textMuted}`}>
-                          {t.venue || "Venue TBD"} &middot; {t.date ? new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date TBD"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
-                          {t.format === "swiss" ? "Swiss" : t.format === "roundrobin" ? "Round Robin" : "Elimination"}
-                        </span>
-                        <span className={`text-xs ${textMuted}`}>{t.rounds}R</span>
-                      </div>
-                    </a>
-                  ))}
-                </div>
+                {liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
+                  <TournamentCard
+                    key={t.id}
+                    tournament={t}
+                    isDark={isDark}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    divider={divider}
+                    card={card}
+                    cardBorder={cardBorder}
+                    accent={accent}
+                  />
+                ))}
               </div>
             )}
 
-            {/* Past tournaments — seed data */}
+            {/* Past tournaments — seed data (no director state, use TournamentRow) */}
             {completedTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                    Past Tournaments
-                  </h2>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Past Tournaments</h2>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {completedTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
@@ -3145,39 +3127,23 @@ export default function ClubProfile() {
               </div>
             )}
 
-            {/* Live past tournaments created via wizard */}
+            {/* Live past tournaments created via wizard — TournamentCard with bracket/standings */}
             {livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                <div className={`px-5 py-4 border-b ${divider}`}>
-                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                    Past Tournaments
-                  </h2>
-                </div>
-                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
-                    <a
-                      key={t.id}
-                      href={`/tournament/${t.id}`}
-                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FBFADA]"}`}
-                    >
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/5" : "bg-[#FBFADA]/70"}`}>
-                        <CheckCircle2 className={`w-4 h-4 ${textMuted}`} strokeWidth={1.8} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold truncate ${textMain}`}>{t.name}</p>
-                        <p className={`text-xs truncate ${textMuted}`}>
-                          {t.venue || "Venue TBD"} &middot; {t.date ? new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date TBD"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
-                          {t.format === "swiss" ? "Swiss" : t.format === "roundrobin" ? "Round Robin" : "Elimination"}
-                        </span>
-                        <span className={`text-xs ${textMuted}`}>{t.rounds}R</span>
-                      </div>
-                    </a>
-                  ))}
-                </div>
+              <div className="space-y-3">
+                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Past Tournaments</h2>
+                {livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
+                  <TournamentCard
+                    key={t.id}
+                    tournament={t}
+                    isDark={isDark}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    divider={divider}
+                    card={card}
+                    cardBorder={cardBorder}
+                    accent={accent}
+                  />
+                ))}
               </div>
             )}
 
@@ -4655,6 +4621,427 @@ function TournamentRow({
             <span className="font-medium">{tournament.winnerName}</span>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── TournamentCard ─────────────────────────────────────────────────────────
+// Expandable card for the Tournaments tab — shows bracket/standings on demand.
+
+function TournamentCard({
+  tournament,
+  isDark,
+  textMain,
+  textMuted,
+  divider,
+  card,
+  cardBorder,
+  accent,
+}: {
+  tournament: TournamentConfig;
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  divider: string;
+  card: string;
+  cardBorder: string;
+  accent: string;
+}) {
+  const [open, setOpen] = useState(false);
+  // Load director state eagerly (lightweight localStorage read) to get live status
+  const dirState = loadTournamentState(tournament.id);
+  const state = open ? dirState : null;
+  const standings: StandingRow[] = state ? computeStandings(state.players, state.rounds) : [];
+  const completedRounds = state ? state.rounds.filter((r) => r.status === "completed") : [];
+  const isElim = tournament.format === "elimination";
+  const isSwissElim = tournament.format === "swiss_elim";
+  const isRR = tournament.format === "roundrobin";
+
+  // Derive status from director state (TournamentConfig has no status field)
+  const tournStatus: "upcoming" | "active" | "completed" =
+    dirState?.status === "completed" ? "completed"
+    : dirState?.status === "in_progress" ? "active"
+    : "upcoming";
+
+  const formatLabel =
+    tournament.format === "swiss" ? "Swiss"
+    : tournament.format === "doubleswiss" ? "Double Swiss"
+    : tournament.format === "roundrobin" ? "Round Robin"
+    : tournament.format === "elimination" ? "Elimination"
+    : tournament.format === "swiss_elim" ? "Swiss + Elim"
+    : tournament.format;
+
+  const statusColor =
+    tournStatus === "active" ? "text-green-500 bg-green-500/10 border-green-500/20"
+    : tournStatus === "completed" ? isDark ? "text-white/40 bg-white/5 border-white/10" : "text-[#436850]/60 bg-[#ADBC9F]/20 border-[#ADBC9F]/40"
+    : isDark ? "text-amber-400 bg-amber-400/10 border-amber-400/20" : "text-amber-600 bg-amber-500/10 border-amber-500/20";
+
+  return (
+    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+      {/* Card header — always visible */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FBFADA]/60"}`}
+      >
+        {/* Format icon */}
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          tournStatus === "active"
+            ? "bg-green-500/15"
+            : isDark ? "bg-white/6" : "bg-[#FBFADA]/70"
+        }`}>
+          {tournStatus === "active"
+            ? <Zap className="w-5 h-5 text-green-500" strokeWidth={1.8} />
+            : tournStatus === "completed"
+            ? <CheckCircle2 className={`w-5 h-5 ${textMuted}`} strokeWidth={1.8} />
+            : <Trophy className={`w-5 h-5`} style={{ color: accent }} strokeWidth={1.8} />
+          }
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-sm font-semibold truncate ${textMain}`}>{tournament.name}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold border ${statusColor}`}>
+              {tournStatus === "active" ? "Live" : tournStatus === "completed" ? "Finished" : "Upcoming"}
+            </span>
+          </div>
+          <div className={`flex items-center gap-2 mt-0.5 text-xs ${textMuted} flex-wrap`}>
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {tournament.date ? new Date(tournament.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBD"}
+            </span>
+            <span className={`px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/8 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
+              {formatLabel}
+            </span>
+            <span>{tournament.rounds}R</span>
+            {tournament.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{tournament.venue}</span>}
+          </div>
+        </div>
+        <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-transform ${textMuted} ${open ? "rotate-90" : ""}`} />
+      </button>
+
+      {/* Expandable drawer */}
+      {open && (
+        <div className={`border-t ${divider}`}>
+          {/* Link to full tournament page */}
+          <div className={`px-5 py-3 flex items-center justify-between border-b ${divider}`}>
+            <span className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
+              {state ? `${state.players.length} players · Round ${state.currentRound}/${state.totalRounds}` : "No data yet"}
+            </span>
+            <a
+              href={`/tournament/${tournament.id}`}
+              className={`flex items-center gap-1 text-xs font-semibold transition-colors`}
+              style={{ color: accent }}
+            >
+              Open <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
+          {!state || state.players.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <Trophy className={`w-8 h-8 mx-auto mb-2 ${textMuted} opacity-40`} />
+              <p className={`text-sm ${textMuted}`}>No tournament data yet</p>
+            </div>
+          ) : (
+            <div className="px-5 py-4 space-y-5">
+
+              {/* ── Standings table ──────────────────────────────────────── */}
+              {standings.length > 0 && !isElim && (
+                <div>
+                  <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${textMuted}`}>
+                    {isSwissElim && state.elimPhase === "elimination" ? "Swiss Phase Standings" : "Standings"}
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className={`${textMuted}`}>
+                          <th className="text-left pb-2 pr-2 font-semibold w-6">#</th>
+                          <th className="text-left pb-2 pr-2 font-semibold">Player</th>
+                          <th className="text-center pb-2 px-2 font-semibold">Pts</th>
+                          <th className="text-center pb-2 px-2 font-semibold">W</th>
+                          <th className="text-center pb-2 px-2 font-semibold">D</th>
+                          <th className="text-center pb-2 px-2 font-semibold">L</th>
+                          <th className="text-center pb-2 pl-2 font-semibold">Buch</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {standings.slice(0, 10).map((row, i) => (
+                          <tr
+                            key={row.player.id}
+                            className={`border-t ${isDark ? "border-white/5" : "border-gray-100"} ${
+                              i === 0 ? isDark ? "bg-amber-500/5" : "bg-amber-50/60" : ""
+                            }`}
+                          >
+                            <td className={`py-2 pr-2 font-bold ${
+                              i === 0 ? "text-amber-400" : i === 1 ? isDark ? "text-white/60" : "text-gray-500" : i === 2 ? "text-amber-600" : textMuted
+                            }`}>{row.rank}</td>
+                            <td className={`py-2 pr-2 font-medium ${textMain} max-w-[120px] truncate`}>
+                              {i === 0 && <Star className="w-3 h-3 inline mr-1 text-amber-400" />}
+                              {row.player.name}
+                            </td>
+                            <td className={`py-2 px-2 text-center font-bold`} style={{ color: accent }}>{row.points}</td>
+                            <td className={`py-2 px-2 text-center text-emerald-400`}>{row.wins}</td>
+                            <td className={`py-2 px-2 text-center ${textMuted}`}>{row.draws}</td>
+                            <td className={`py-2 px-2 text-center text-red-400`}>{row.losses}</td>
+                            <td className={`py-2 pl-2 text-center ${textMuted}`}>{row.buchholz.toFixed(1)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {standings.length > 10 && (
+                      <p className={`text-xs ${textMuted} mt-2 text-center`}>+{standings.length - 10} more players</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Elimination bracket ──────────────────────────────────── */}
+              {(isElim || (isSwissElim && state.elimPhase === "elimination")) && state.rounds.length > 0 && (
+                <TournamentBracket
+                  rounds={state.rounds}
+                  players={state.players}
+                  isDark={isDark}
+                  textMain={textMain}
+                  textMuted={textMuted}
+                  accent={accent}
+                />
+              )}
+
+              {/* ── Round Robin matrix ───────────────────────────────────── */}
+              {isRR && completedRounds.length > 0 && (
+                <RoundRobinMatrix
+                  rounds={completedRounds}
+                  players={state.players}
+                  isDark={isDark}
+                  textMain={textMain}
+                  textMuted={textMuted}
+                  accent={accent}
+                />
+              )}
+
+              {/* ── Swiss round results ──────────────────────────────────── */}
+              {!isElim && !isRR && completedRounds.length > 0 && (
+                <div>
+                  <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${textMuted}`}>Round Results</h4>
+                  <div className="space-y-3">
+                    {completedRounds.slice(-3).reverse().map((round) => (
+                      <div key={round.number}>
+                        <p className={`text-[11px] font-semibold ${textMuted} mb-1.5`}>Round {round.number}</p>
+                        <div className="space-y-1">
+                          {round.games.map((game) => {
+                            const white = state.players.find((p) => p.id === game.whiteId);
+                            const black = state.players.find((p) => p.id === game.blackId);
+                            if (!white || !black) return null;
+                            const wWon = game.result === "1-0";
+                            const bWon = game.result === "0-1";
+                            const draw = game.result === "½-½";
+                            return (
+                              <div key={game.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${isDark ? "bg-white/4" : "bg-[#FBFADA]/60"}`}>
+                                <span className={`flex-1 text-xs text-right truncate font-medium ${wWon ? textMain : textMuted}`}>
+                                  {white.name}
+                                </span>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold ${
+                                    wWon ? "bg-emerald-500/20 text-emerald-400" : draw ? isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500" : "bg-red-500/10 text-red-400"
+                                  }`}>{wWon ? "1" : draw ? "½" : "0"}</span>
+                                  <span className={`text-[10px] ${textMuted}`}>–</span>
+                                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold ${
+                                    bWon ? "bg-emerald-500/20 text-emerald-400" : draw ? isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500" : "bg-red-500/10 text-red-400"
+                                  }`}>{bWon ? "1" : draw ? "½" : "0"}</span>
+                                </div>
+                                <span className={`flex-1 text-xs truncate font-medium ${bWon ? textMain : textMuted}`}>
+                                  {black.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    {completedRounds.length > 3 && (
+                      <p className={`text-xs ${textMuted} text-center`}>Showing last 3 of {completedRounds.length} rounds</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TournamentBracket ───────────────────────────────────────────────────────
+// Single-elimination bracket visualizer.
+
+function TournamentBracket({
+  rounds,
+  players,
+  isDark,
+  textMain,
+  textMuted,
+  accent,
+}: {
+  rounds: { number: number; status: string; games: { id: string; round: number; board: number; whiteId: string; blackId: string; result: string; isThirdPlace?: boolean }[] }[];
+  players: { id: string; name: string }[];
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  accent: string;
+}) {
+  const playerName = (id: string) => players.find((p) => p.id === id)?.name ?? "BYE";
+  const elimRounds = rounds.filter((r) => !r.games.every((g) => g.isThirdPlace));
+
+  const roundLabel = (roundNum: number, totalRounds: number) => {
+    const remaining = totalRounds - roundNum + 1;
+    if (remaining === 1) return "Final";
+    if (remaining === 2) return "Semifinals";
+    if (remaining === 3) return "Quarterfinals";
+    return `Round ${roundNum}`;
+  };
+
+  return (
+    <div>
+      <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${textMuted}`}>Bracket</h4>
+      <div className="overflow-x-auto">
+        <div className="flex gap-4 min-w-max pb-2">
+          {elimRounds.map((round) => (
+            <div key={round.number} className="flex flex-col gap-2" style={{ minWidth: 160 }}>
+              <p className={`text-[11px] font-semibold ${textMuted} mb-1`}>
+                {roundLabel(round.number, elimRounds.length)}
+              </p>
+              {round.games.filter((g) => !g.isThirdPlace).map((game) => {
+                const white = playerName(game.whiteId);
+                const black = playerName(game.blackId);
+                const wWon = game.result === "1-0";
+                const bWon = game.result === "0-1";
+                const pending = game.result === "*";
+                return (
+                  <div key={game.id} className={`rounded-xl overflow-hidden border ${isDark ? "border-white/10" : "border-[#ADBC9F]/50"}`}>
+                    {/* White player */}
+                    <div className={`flex items-center gap-2 px-3 py-2 ${
+                      wWon ? isDark ? "bg-emerald-500/10" : "bg-emerald-50/80" : isDark ? "bg-white/3" : "bg-white"
+                    }`}>
+                      <span className={`w-4 h-4 rounded-full flex-shrink-0 ${isDark ? "bg-white/80" : "bg-gray-100"}`} style={{ border: "1px solid #ccc" }} />
+                      <span className={`text-xs flex-1 truncate font-medium ${wWon ? textMain : textMuted}`}>{white}</span>
+                      {!pending && (
+                        <span className={`text-[11px] font-bold ${wWon ? "text-emerald-400" : "text-red-400"}`}>
+                          {wWon ? "1" : "0"}
+                        </span>
+                      )}
+                    </div>
+                    {/* Divider */}
+                    <div className={`h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    {/* Black player */}
+                    <div className={`flex items-center gap-2 px-3 py-2 ${
+                      bWon ? isDark ? "bg-emerald-500/10" : "bg-emerald-50/80" : isDark ? "bg-white/3" : "bg-white"
+                    }`}>
+                      <span className={`w-4 h-4 rounded-full flex-shrink-0 bg-gray-800`} style={{ border: "1px solid #555" }} />
+                      <span className={`text-xs flex-1 truncate font-medium ${bWon ? textMain : textMuted}`}>{black}</span>
+                      {!pending && (
+                        <span className={`text-[11px] font-bold ${bWon ? "text-emerald-400" : "text-red-400"}`}>
+                          {bWon ? "1" : "0"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── RoundRobinMatrix ────────────────────────────────────────────────────────
+// Cross-table matrix for round robin tournaments.
+
+function RoundRobinMatrix({
+  rounds,
+  players,
+  isDark,
+  textMain,
+  textMuted,
+  accent,
+}: {
+  rounds: { number: number; status: string; games: { id: string; whiteId: string; blackId: string; result: string }[] }[];
+  players: { id: string; name: string; points: number }[];
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  accent: string;
+}) {
+  // Build result map: resultMap[whiteId][blackId] = result
+  const resultMap: Record<string, Record<string, string>> = {};
+  for (const round of rounds) {
+    for (const game of round.games) {
+      if (!resultMap[game.whiteId]) resultMap[game.whiteId] = {};
+      resultMap[game.whiteId][game.blackId] = game.result;
+    }
+  }
+
+  const getScore = (aId: string, bId: string): string => {
+    if (aId === bId) return "—";
+    const asWhite = resultMap[aId]?.[bId];
+    if (asWhite) {
+      if (asWhite === "1-0") return "1";
+      if (asWhite === "0-1") return "0";
+      if (asWhite === "½-½") return "½";
+    }
+    const asBlack = resultMap[bId]?.[aId];
+    if (asBlack) {
+      if (asBlack === "0-1") return "1";
+      if (asBlack === "1-0") return "0";
+      if (asBlack === "½-½") return "½";
+    }
+    return "";
+  };
+
+  const sorted = [...players].sort((a, b) => b.points - a.points);
+
+  return (
+    <div>
+      <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${textMuted}`}>Cross Table</h4>
+      <div className="overflow-x-auto">
+        <table className="text-xs w-full">
+          <thead>
+            <tr>
+              <th className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>#</th>
+              <th className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>Player</th>
+              {sorted.map((_, i) => (
+                <th key={i} className={`text-center pb-2 px-1 font-semibold ${textMuted} w-7`}>{i + 1}</th>
+              ))}
+              <th className={`text-center pb-2 pl-2 font-bold`} style={{ color: accent }}>Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((player, i) => (
+              <tr key={player.id} className={`border-t ${isDark ? "border-white/5" : "border-gray-100"}`}>
+                <td className={`py-1.5 pr-3 font-bold ${textMuted}`}>{i + 1}</td>
+                <td className={`py-1.5 pr-3 font-medium ${textMain} max-w-[90px] truncate`}>{player.name}</td>
+                {sorted.map((opponent) => {
+                  const score = getScore(player.id, opponent.id);
+                  const isSelf = player.id === opponent.id;
+                  return (
+                    <td key={opponent.id} className={`py-1.5 px-1 text-center w-7 ${
+                      isSelf ? isDark ? "bg-white/5" : "bg-gray-100" : ""
+                    }`}>
+                      <span className={`font-semibold ${
+                        score === "1" ? "text-emerald-400"
+                        : score === "0" ? "text-red-400"
+                        : score === "½" ? isDark ? "text-white/50" : "text-gray-500"
+                        : textMuted
+                      }`}>{score}</span>
+                    </td>
+                  );
+                })}
+                <td className={`py-1.5 pl-2 text-center font-bold`} style={{ color: accent }}>{player.points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
