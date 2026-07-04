@@ -1401,7 +1401,7 @@ export default function ClubProfile() {
           </div>
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+          <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
             <div className="px-4 lg:px-10 xl:px-14 py-5">
               <div className="max-w-6xl">
                 {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
@@ -3964,32 +3964,54 @@ export default function ClubProfile() {
       )}
 
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-1"
         style={{
-          background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(15,31,20,0.97)",
-          backdropFilter: "blur(12px)",
-          borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+          background: isDark ? "oklch(0.13 0.04 145 / 0.97)" : "oklch(0.12 0.04 145 / 0.97)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145 / 0.6)" : "oklch(0.25 0.08 145 / 0.6)"}`,
+          paddingTop: "8px",
+          paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
           const iconMap: Record<string, React.ReactNode> = {
-            feed: <Megaphone size={18} />,
-            events: <Calendar size={18} />,
-            members: <Users size={18} />,
-            tournaments: <Trophy size={18} />,
-            about: <Globe size={18} />,
-            leagues: <Award size={18} />,
+            feed: <Megaphone size={22} />,
+            events: <Calendar size={22} />,
+            members: <Users size={22} />,
+            tournaments: <Trophy size={22} />,
+            leagues: <Award size={22} />,
           };
           const isActive = activeTab === t;
           return (
             <button
               key={t}
               onClick={() => setActiveTab(t)}
-              className="flex flex-col items-center gap-0.5 px-3 rounded-xl relative"
-              style={{ color: isActive ? accent : "oklch(0.55 0.08 145)", minHeight: "44px", paddingTop: "6px", paddingBottom: "6px" }}
+              className="flex flex-col items-center gap-1 flex-1 relative transition-all duration-200 active:scale-95"
+              style={{ minHeight: "48px", paddingTop: "4px", paddingBottom: "4px" }}
             >
-              {iconMap[t]}
-              <span className="text-[11px] font-medium">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+              {/* Active indicator pill */}
+              {isActive && (
+                <span
+                  className="absolute inset-x-1 inset-y-0 rounded-xl"
+                  style={{ background: `${accent}22` }}
+                />
+              )}
+              <span
+                className="relative z-10 transition-all duration-200"
+                style={{
+                  color: isActive ? accent : "oklch(0.45 0.06 145)",
+                  filter: isActive ? `drop-shadow(0 0 6px ${accent}88)` : "none",
+                }}
+              >
+                {iconMap[t]}
+              </span>
+              <span
+                className="relative z-10 text-[10px] font-semibold tracking-wide transition-all duration-200"
+                style={{ color: isActive ? accent : "oklch(0.40 0.05 145)" }}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </span>
             </button>
           );
         })}
