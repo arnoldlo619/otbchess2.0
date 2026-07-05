@@ -1459,32 +1459,13 @@ export default function ClubProfile() {
               </button>
             )}
 
-            {/* Profile avatar */}
-            {user && (
-              <button
-                onClick={() => navigate(`/profile/${user.id}`)}
-                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] mt-1"
-                style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                aria-label={user.displayName ?? "Profile"}
-              >
-                <div className="w-6 h-6 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    user.displayName?.charAt(0).toUpperCase() ?? "?"
-                  )}
-                </div>
-                <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "rgba(255,255,255,0.7)" }}>{user.displayName?.split(" ")[0] ?? "Profile"}</span>
-              </button>
-            )}
+
           </div>
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         {/* Sidebar is absolutely positioned so it overlays without shifting content */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ marginLeft: "64px" }}>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ marginLeft: "210px" }}>
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
             className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-10 xl:px-14 py-2 otb-header-safe"
