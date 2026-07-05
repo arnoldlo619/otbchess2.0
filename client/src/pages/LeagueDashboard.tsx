@@ -11,7 +11,8 @@ import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
-  Share2, Copy, Check, QrCode, X, History, Settings, Pencil
+  Share2, Copy, Check, QrCode, X, History, Settings, Pencil,
+  ExternalLink, TrendingUp, Star
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
@@ -296,6 +297,240 @@ function ShareModal({
   );
 }
 
+// ── Player Profile Modal ────────────────────────────────────────────────────
+interface ChessComStats {
+  chess_rapid?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
+  chess_blitz?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
+  chess_bullet?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
+  chess_daily?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
+  fide?: number;
+}
+interface ChessComProfile {
+  username?: string;
+  name?: string;
+  country?: string;
+  location?: string;
+  joined?: number;
+  last_online?: number;
+  followers?: number;
+  is_streamer?: boolean;
+  verified?: boolean;
+  title?: string;
+  url?: string;
+}
+
+function PlayerProfileModal({
+  player, allMatches, isDark, onClose, chesscomAvatarUrl,
+}: {
+  player: LeaguePlayer;
+  allMatches: LeagueMatch[];
+  isDark: boolean;
+  onClose: () => void;
+  chesscomAvatarUrl?: string | null;
+}) {
+  const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
+  const cardBg = isDark ? "oklch(0.24 0.07 145)" : "oklch(0.96 0.02 145)";
+  const border = isDark ? "oklch(0.28 0.07 145)" : "oklch(0.88 0.03 145)";
+  const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
+  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)";
+  const accent = "oklch(0.55 0.13 145)";
+
+  const [profile, setProfile] = useState<ChessComProfile | null>(null);
+  const [stats, setStats] = useState<ChessComStats | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch chess.com profile + stats on mount
+  useEffect(() => {
+    if (!player.chesscomUsername) return;
+    setLoadingData(true);
+    fetch(`/api/chess/player/${encodeURIComponent(player.chesscomUsername)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { setError(data.error); return; }
+        setProfile(data.profile as ChessComProfile);
+        setStats(data.stats as ChessComStats);
+      })
+      .catch(() => setError("Could not load chess.com data"))
+      .finally(() => setLoadingData(false));
+  }, [player.chesscomUsername]);
+
+  // Derive recent league matches for this player
+  const playerMatches = allMatches
+    .filter(m => m.playerWhiteId === player.playerId || m.playerBlackId === player.playerId)
+    .filter(m => m.resultStatus === "completed" && m.result)
+    .sort((a, b) => (b.weekNumber - a.weekNumber) || (b.id - a.id))
+    .slice(0, 5);
+
+  function matchOutcome(m: LeagueMatch): "win" | "loss" | "draw" {
+    const isWhite = m.playerWhiteId === player.playerId;
+    if (m.result === "draw") return "draw";
+    if ((m.result === "white_win" && isWhite) || (m.result === "black_win" && !isWhite)) return "win";
+    return "loss";
+  }
+
+  function matchOpponent(m: LeagueMatch): string {
+    return m.playerWhiteId === player.playerId ? m.playerBlackName : m.playerWhiteName;
+  }
+
+  const ratingTypes = [
+    { key: "chess_rapid" as const, label: "Rapid" },
+    { key: "chess_blitz" as const, label: "Blitz" },
+    { key: "chess_bullet" as const, label: "Bullet" },
+    { key: "chess_daily" as const, label: "Daily" },
+  ];
+
+  const outcomeColor = { win: accent, loss: "oklch(0.55 0.18 25)", draw: "oklch(0.65 0.15 60)" };
+  const outcomeLabel = { win: "W", loss: "L", draw: "D" };
+
+  return (
+    <div
+      className="modal-overlay z-50"
+      style={{ background: "rgba(0,0,0,0.65)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: bg, border: `1px solid ${border}` }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header strip */}
+        <div
+          className="relative h-20 flex-shrink-0"
+          style={{ background: `linear-gradient(135deg, oklch(0.22 0.08 145), oklch(0.30 0.10 145))` }}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 p-1.5 rounded-xl"
+            style={{ background: "oklch(0.18 0.06 145 / 0.7)" }}
+          >
+            <X size={14} style={{ color: textMuted }} />
+          </button>
+        </div>
+
+        {/* Avatar — overlaps the header */}
+        <div className="px-5 pb-1" style={{ marginTop: "-2.5rem" }}>
+          <div className="flex items-end justify-between">
+            <div
+              className="rounded-2xl overflow-hidden flex-shrink-0"
+              style={{ width: 72, height: 72, border: `3px solid ${bg}`, boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}
+            >
+              {chesscomAvatarUrl ? (
+                <img src={chesscomAvatarUrl} alt={player.displayName} className="w-full h-full object-cover" />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center text-2xl font-black"
+                  style={{ background: "linear-gradient(135deg, oklch(0.32 0.10 145), oklch(0.22 0.07 145))", color: "oklch(0.75 0.12 145)" }}
+                >
+                  {player.displayName.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
+                </div>
+              )}
+            </div>
+            {player.chesscomUsername && (
+              <a
+                href={`https://www.chess.com/member/${player.chesscomUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-opacity hover:opacity-80"
+                style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}33` }}
+              >
+                <ExternalLink size={11} />
+                chess.com
+              </a>
+            )}
+          </div>
+
+          {/* Name + username */}
+          <div className="mt-2.5 mb-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-black" style={{ color: textMain }}>{player.displayName}</h3>
+              {profile?.title && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${accent}22`, color: accent }}>{profile.title}</span>
+              )}
+            </div>
+            {player.chesscomUsername && (
+              <p className="text-xs mt-0.5" style={{ color: textMuted }}>@{player.chesscomUsername}</p>
+            )}
+          </div>
+
+          {/* Chess.com ratings */}
+          {loadingData ? (
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {[0,1,2,3].map(i => (
+                <div key={i} className="rounded-xl h-16 overflow-hidden" style={{ background: cardBg }}>
+                  <div className="w-full h-full" style={{ background: "linear-gradient(90deg, transparent, oklch(0.32 0.08 145 / 0.5), transparent)", backgroundSize: "200% 100%", animation: "avatar-shimmer 1.4s ease-in-out infinite" }} />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="mb-4 text-xs text-center py-3 rounded-xl" style={{ background: cardBg, color: textMuted }}>
+              {!player.chesscomUsername ? "No chess.com username linked" : error}
+            </div>
+          ) : stats ? (
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {ratingTypes.map(({ key, label }) => {
+                const r = stats[key];
+                const rating = r?.last?.rating;
+                const best = r?.best?.rating;
+                return (
+                  <div key={key} className="rounded-xl p-2.5 text-center" style={{ background: cardBg }}>
+                    <div className="text-[10px] font-semibold mb-1" style={{ color: textMuted }}>{label}</div>
+                    <div className="text-base font-black" style={{ color: rating ? textMain : textMuted }}>
+                      {rating ?? "—"}
+                    </div>
+                    {best && best !== rating && (
+                      <div className="text-[9px] mt-0.5" style={{ color: textMuted }}>↑{best}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {/* League match history */}
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-2.5">
+              <History size={13} style={{ color: accent }} />
+              <span className="text-xs font-semibold" style={{ color: textMain }}>Recent League Matches</span>
+            </div>
+            {playerMatches.length === 0 ? (
+              <div className="text-xs text-center py-3 rounded-xl" style={{ background: cardBg, color: textMuted }}>No completed matches yet</div>
+            ) : (
+              <div className="space-y-1.5">
+                {playerMatches.map(m => {
+                  const outcome = matchOutcome(m);
+                  const opp = matchOpponent(m);
+                  const isWhite = m.playerWhiteId === player.playerId;
+                  const score = m.result === "draw" ? "½–½" : m.result === "white_win" ? (isWhite ? "1–0" : "0–1") : (isWhite ? "0–1" : "1–0");
+                  return (
+                    <div
+                      key={m.id}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
+                      style={{ background: cardBg }}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0"
+                        style={{ background: `${outcomeColor[outcome]}22`, color: outcomeColor[outcome] }}
+                      >
+                        {outcomeLabel[outcome]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold truncate" style={{ color: textMain }}>vs {opp}</div>
+                        <div className="text-[10px]" style={{ color: textMuted }}>Week {m.weekNumber} · {isWhite ? "White" : "Black"}</div>
+                      </div>
+                      <span className="text-xs font-black flex-shrink-0" style={{ color: outcomeColor[outcome] }}>{score}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Result Report Modal ───────────────────────────────────────────────────────
 function resultLabel(r: string, wName: string, bName: string) {
   if (r === "white_win") return `${wName} wins`;
@@ -479,6 +714,7 @@ export default function LeagueDashboard() {
   const [advancingWeek, setAdvancingWeek] = useState(false);
   const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<LeaguePlayer | null>(null);
   // Join requests (commissioner-only, for Draft leagues)
   const [joinRequests, setJoinRequests] = useState<Array<{ id: number; playerId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null; createdAt: string }>>([]);
   const [reviewingId, setReviewingId] = useState<number | null>(null);
@@ -979,6 +1215,17 @@ export default function LeagueDashboard() {
   function isChesscomAvatarLoading(chesscomUsername?: string | null): boolean {
     if (!chesscomUsername) return false;
     return !allAvatarsLoaded && !allPlayerChesscomAvatars.has(chesscomUsername.toLowerCase());
+  }
+
+  // Helper: find a LeaguePlayer by their playerId
+  function getPlayer(playerId: string): LeaguePlayer | undefined {
+    return league?.players.find(p => p.playerId === playerId);
+  }
+
+  // Helper: open the player profile modal
+  function openPlayerProfile(playerId: string) {
+    const p = getPlayer(playerId);
+    if (p) setSelectedPlayer(p);
   }
 
   // Recent completed matches (last 5)
@@ -1534,8 +1781,14 @@ export default function LeagueDashboard() {
               }) => (
                 <div className="flex flex-col items-center gap-1.5">
                   <div className="relative">
-                                        <Avatar
-                      url={player.avatarUrl} chesscomUrl={getChesscomAvatar(player.chesscomUsername)} name={player.displayName} size={rank === 1 ? 16 : 12} ring glow loading={isChesscomAvatarLoading(player.chesscomUsername)} />
+                    <button
+                      onClick={() => openPlayerProfile(player.playerId)}
+                      className="block rounded-full transition-transform hover:scale-105 focus:outline-none"
+                      title={`View ${player.displayName}'s profile`}
+                    >
+                      <Avatar
+                        url={player.avatarUrl} chesscomUrl={getChesscomAvatar(player.chesscomUsername)} name={player.displayName} size={rank === 1 ? 16 : 12} ring glow loading={isChesscomAvatarLoading(player.chesscomUsername)} />
+                    </button>
                     <span
                       className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] shadow-lg font-bold"
                       style={{ background: medalColor, color: "#fff", fontSize: "9px" }}
@@ -1780,15 +2033,17 @@ export default function LeagueDashboard() {
                 <div className="px-4 py-4 flex items-center gap-3">
                   {/* White player */}
                   <div className={`flex-1 flex flex-col items-center gap-1.5 ${myMatchThisWeek.playerWhiteId === user?.id ? "opacity-100" : "opacity-70"}`}>
-                    <Avatar
-                      url={league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.avatarUrl}
-                      chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
-                      name={myMatchThisWeek.playerWhiteName}
-                      size={12}
-                      ring
-                      glow={myMatchThisWeek.playerWhiteId === user?.id}
-                      loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
-                    />
+                    <button onClick={() => openPlayerProfile(myMatchThisWeek.playerWhiteId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${myMatchThisWeek.playerWhiteName}'s profile`}>
+                      <Avatar
+                        url={league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.avatarUrl}
+                        chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
+                        name={myMatchThisWeek.playerWhiteName}
+                        size={12}
+                        ring
+                        glow={myMatchThisWeek.playerWhiteId === user?.id}
+                        loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
+                      />
+                    </button>
                     <span className="text-xs font-medium text-center truncate max-w-[80px]" style={{ color: textMain }}>
                       {myMatchThisWeek.playerWhiteName}
                     </span>
@@ -1847,15 +2102,17 @@ export default function LeagueDashboard() {
                   </div>
                   {/* Black player */}
                   <div className={`flex-1 flex flex-col items-center gap-1.5 ${myMatchThisWeek.playerBlackId === user?.id ? "opacity-100" : "opacity-70"}`}>
-                    <Avatar
-                      url={league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.avatarUrl}
-                      chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
-                      name={myMatchThisWeek.playerBlackName}
-                      size={12}
-                      ring
-                      glow={myMatchThisWeek.playerBlackId === user?.id}
-                      loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
-                    />
+                    <button onClick={() => openPlayerProfile(myMatchThisWeek.playerBlackId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${myMatchThisWeek.playerBlackName}'s profile`}>
+                      <Avatar
+                        url={league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.avatarUrl}
+                        chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
+                        name={myMatchThisWeek.playerBlackName}
+                        size={12}
+                        ring
+                        glow={myMatchThisWeek.playerBlackId === user?.id}
+                        loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
+                      />
+                    </button>
                     <span className="text-xs font-medium text-center truncate max-w-[80px]" style={{ color: textMain }}>
                       {myMatchThisWeek.playerBlackName}
                     </span>
@@ -2048,9 +2305,11 @@ export default function LeagueDashboard() {
                           {i + 1}
                         </div>
                         <div className="relative flex-shrink-0">
-                          <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                          <button onClick={() => openPlayerProfile(s.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${s.displayName}'s profile`}>
+                            <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                          </button>
                           {isMe && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full pointer-events-none" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -2105,9 +2364,11 @@ export default function LeagueDashboard() {
                       }}
                     >
                       <div className="relative flex-shrink-0">
-                        <Avatar url={p.avatarUrl} chesscomUrl={getChesscomAvatar(p.chesscomUsername)} name={p.displayName} size={10} ring={isMe} loading={isChesscomAvatarLoading(p.chesscomUsername)} />
+                        <button onClick={() => openPlayerProfile(p.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${p.displayName}'s profile`}>
+                          <Avatar url={p.avatarUrl} chesscomUrl={getChesscomAvatar(p.chesscomUsername)} name={p.displayName} size={10} ring={isMe} loading={isChesscomAvatarLoading(p.chesscomUsername)} />
+                        </button>
                         {isMe && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full pointer-events-none" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -2542,15 +2803,17 @@ export default function LeagueDashboard() {
                     >
                       <div className="flex items-center gap-3 px-4 py-4">
                         <div className="flex-1 flex flex-col items-center gap-1.5">
-                          <Avatar
-                            url={league.players.find(p => p.playerId === match.playerWhiteId)?.avatarUrl}
-                            chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}
-                            name={match.playerWhiteName}
-                            size={11}
-                            ring={mine && match.playerWhiteId === user?.id}
-                            glow={mine && match.playerWhiteId === user?.id}
-                            loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}
-                          />
+                          <button onClick={() => openPlayerProfile(match.playerWhiteId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${match.playerWhiteName}'s profile`}>
+                            <Avatar
+                              url={league.players.find(p => p.playerId === match.playerWhiteId)?.avatarUrl}
+                              chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}
+                              name={match.playerWhiteName}
+                              size={11}
+                              ring={mine && match.playerWhiteId === user?.id}
+                              glow={mine && match.playerWhiteId === user?.id}
+                              loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}
+                            />
+                          </button>
                           <span
                             className="text-xs font-medium text-center truncate max-w-[80px]"
                             style={{ color: textMain, fontWeight: match.result === "white_win" ? 700 : 400 }}
@@ -2620,15 +2883,17 @@ export default function LeagueDashboard() {
                           )}
                         </div>
                         <div className="flex-1 flex flex-col items-center gap-1.5">
-                          <Avatar
-                            url={league.players.find(p => p.playerId === match.playerBlackId)?.avatarUrl}
-                            chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}
-                            name={match.playerBlackName}
-                            size={11}
-                            ring={mine && match.playerBlackId === user?.id}
-                            glow={mine && match.playerBlackId === user?.id}
-                            loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}
-                          />
+                          <button onClick={() => openPlayerProfile(match.playerBlackId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${match.playerBlackName}'s profile`}>
+                            <Avatar
+                              url={league.players.find(p => p.playerId === match.playerBlackId)?.avatarUrl}
+                              chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}
+                              name={match.playerBlackName}
+                              size={11}
+                              ring={mine && match.playerBlackId === user?.id}
+                              glow={mine && match.playerBlackId === user?.id}
+                              loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}
+                            />
+                          </button>
                           <span
                             className="text-xs font-medium text-center truncate max-w-[80px]"
                             style={{ color: textMain, fontWeight: match.result === "black_win" ? 700 : 400 }}
@@ -2789,9 +3054,11 @@ export default function LeagueDashboard() {
                         {/* Player info */}
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="relative flex-shrink-0">
-                            <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                            <button onClick={() => openPlayerProfile(s.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${s.displayName}'s profile`}>
+                              <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                            </button>
                             {isMe && (
-                              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full pointer-events-none" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                             )}
                           </div>
                           <div className="min-w-0">
@@ -2903,9 +3170,11 @@ export default function LeagueDashboard() {
                           {/* Avatar + name */}
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative flex-shrink-0">
-                              <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                              <button onClick={() => openPlayerProfile(s.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${s.displayName}'s profile`}>
+                                <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                              </button>
                               {isMe && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full pointer-events-none" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -3186,7 +3455,9 @@ export default function LeagueDashboard() {
                     ) : (
                       <span className="w-7 text-center text-sm" style={{ color: textMuted }}>{i + 1}</span>
                     )}
-                    <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={9} glow={i < 3} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                    <button onClick={() => openPlayerProfile(s.playerId)} className="block rounded-full transition-transform hover:scale-105 focus:outline-none" title={`View ${s.displayName}'s profile`}>
+                      <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={9} glow={i < 3} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
+                    </button>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate" style={{ color: isMe ? accent : textMain }}>
                         {s.displayName}{isMe ? " (you)" : ""}
@@ -3893,6 +4164,17 @@ export default function LeagueDashboard() {
           league={league}
           isDark={isDark}
           onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {/* Player profile modal */}
+      {selectedPlayer && (
+        <PlayerProfileModal
+          player={selectedPlayer}
+          allMatches={allMatches}
+          isDark={isDark}
+          onClose={() => setSelectedPlayer(null)}
+          chesscomAvatarUrl={getChesscomAvatar(selectedPlayer.chesscomUsername)}
         />
       )}
 
