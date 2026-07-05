@@ -1307,8 +1307,12 @@ export default function ClubProfile() {
 
         {/* ── LEFT SIDEBAR — Partiful-style: icon rail expands to icon+label rows on hover ─── */}
         <aside
-          className="hidden lg:flex flex-col flex-shrink-0 h-full relative group/sidebar"
+          className="hidden lg:flex flex-col flex-shrink-0 h-full group/sidebar"
           style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            bottom: 0,
             width: "64px",
             transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
             background: isDark ? "#0d1117" : "#111827",
@@ -1324,23 +1328,21 @@ export default function ClubProfile() {
           <div className="pt-5 pb-3 px-3 flex-shrink-0">
             <button
               onClick={() => navigate("/clubs")}
-              className="relative flex items-center justify-start bg-transparent border-none p-0 cursor-pointer"
-              style={{ width: "44px", height: "44px", transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)" }}
+              className="relative flex items-center justify-center w-full bg-transparent border-none p-0 cursor-pointer"
+              style={{ height: "44px" }}
               title="ChessOTB.Club — Back to Clubs"
-              onMouseEnter={(e) => { e.currentTarget.style.width = "130px"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.width = "36px"; }}
             >
-              {/* !! thumbnail — fades out on sidebar hover */}
+              {/* !! thumbnail — always visible, fades out on sidebar hover */}
               <img
                 src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
                 alt="!!"
-                className="absolute left-0 top-0 w-11 h-11 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
+                className="absolute w-11 h-11 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
               />
-              {/* OTB!! logo — fades in on sidebar hover */}
+              {/* OTB!! logo — fades in on sidebar hover, centered */}
               <img
                 src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-11 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
+                className="absolute h-9 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
               />
             </button>
           </div>
@@ -1481,7 +1483,8 @@ export default function ClubProfile() {
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Sidebar is absolutely positioned so it overlays without shifting content */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ marginLeft: "64px" }}>
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
             className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-10 xl:px-14 py-2 otb-header-safe"
