@@ -6702,3 +6702,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Build player-facing quads pairings and standings UI (section-based)
 - [ ] Implement Bottom Swiss fallback for remainder players
 - [ ] Integration testing and regression verification
+
+## Mobile Responsiveness Fixes
+- [x] Replace h-screen with h-[100dvh] on ClubProfile, ClubDashboard, LeagueDashboard
+- [x] Add safe-area-inset-bottom to ClubDashboard and LeagueDashboard bottom navs
+- [x] Fix ClubProfile banner paddingLeft to be responsive (remove hardcoded 210px on mobile)
+- [ ] Increase content bottom padding on ClubDashboard and LeagueDashboard for safe area
+- [ ] Prevent horizontal overflow on mobile across all 3 pages

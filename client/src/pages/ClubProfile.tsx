@@ -1402,7 +1402,7 @@ export default function ClubProfile() {
 
   return (
     <div className={`min-h-screen ${bg}`}>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-[100dvh] overflow-hidden">
 
         {/* ── LEFT SIDEBAR — Partiful-style: icon rail expands to icon+label rows on hover ─── */}
         <aside
@@ -1598,7 +1598,7 @@ export default function ClubProfile() {
                     />
                   )}
                   {/* Content — bottom-anchored, sidebar-aware */}
-                  <div className="relative z-10 flex flex-col justify-end h-full" style={{ minHeight: "210px", padding: "0 1.25rem 1.25rem", paddingLeft: "calc(210px + 1.25rem)" }}>
+                  <div className="relative z-10 flex flex-col justify-end h-full px-4 pb-4 lg:pb-5 lg:pr-5 lg:pl-[calc(210px+1.25rem)]" style={{ minHeight: "210px" }}>
                     {/* CTA buttons — absolute top-right */}
                     <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
                       <AvatarNavDropdown currentPage="Clubs" />

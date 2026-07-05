@@ -3170,7 +3170,7 @@ export default function ClubDashboard() {
   return (
     <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-[100dvh] overflow-hidden">
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
           className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
@@ -3424,7 +3424,7 @@ export default function ClubDashboard() {
           })()}
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-28 lg:pb-6">
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
                 {/* ── CLUB BANNER ─────────────────────────────────────────── */}
@@ -7674,11 +7674,13 @@ export default function ClubDashboard() {
       })()}
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2"
         style={{
           background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(15,31,20,0.97)",
           backdropFilter: "blur(12px)",
           borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+          paddingTop: "8px",
+          paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {clubTabs.map((ct) => {

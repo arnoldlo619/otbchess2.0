@@ -1282,7 +1282,7 @@ export default function LeagueDashboard() {
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
 
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-[100dvh] overflow-hidden">
 
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
@@ -1590,7 +1590,7 @@ export default function LeagueDashboard() {
           )}
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+          <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
             <div className="px-4 lg:px-6 py-4">
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}
@@ -2157,7 +2157,7 @@ export default function LeagueDashboard() {
 
             {/* My standing + next opponent */}
             {(myStanding || nextWeekMatch) && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {myStanding && (
                   <div className="rounded-2xl p-4" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-2">
@@ -2351,7 +2351,7 @@ export default function LeagueDashboard() {
                   Players ({league.players.length})
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {league.players.map((p) => {
                   const isMe = p.playerId === user?.id;
                   return (
@@ -2408,12 +2408,12 @@ export default function LeagueDashboard() {
               >
                 {/* Hero header */}
                 <div
-                  className="px-6 py-3 flex items-center justify-between"
+                  className="px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
                   style={{ borderBottom: `1px solid ${accent}22` }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accent }}>Current Matchup</span>
-                    <span className="text-xs" style={{ color: textMuted }}>• Week {league.currentWeek} • {league.name}</span>
+                    <span className="text-xs hidden sm:inline" style={{ color: textMuted }}>• Week {league.currentWeek} • {league.name}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     {myMatchThisWeek.resultStatus === "completed" ? (
@@ -2436,7 +2436,7 @@ export default function LeagueDashboard() {
                 </div>
 
                 {/* Player avatars hero */}
-                <div className="px-6 py-8 flex items-center justify-center gap-4">
+                <div className="px-3 sm:px-6 py-5 sm:py-8 flex items-center justify-center gap-2 sm:gap-4">
                   {/* White player */}
                   {(() => {
                     const whitePlayer = league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId);
@@ -4069,11 +4069,13 @@ export default function LeagueDashboard() {
 
       {/* Mobile bottom nav bar */}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2"
         style={{
           background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(255,255,255,0.97)",
           backdropFilter: "blur(12px)",
           borderTop: `1px solid ${cardBorder}`,
+          paddingTop: "8px",
+          paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {tabs.map((tab) => {
