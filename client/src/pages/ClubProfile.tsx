@@ -1596,7 +1596,7 @@ export default function ClubProfile() {
                     />
                   )}
                   {/* Content — bottom-anchored, sidebar-aware */}
-                  <div className="relative z-10 flex flex-col justify-end h-full" style={{ minHeight: "260px", padding: "0 1.5rem 1.5rem", paddingLeft: "calc(68px + 1.5rem)" }}>
+                  <div className="relative z-10 flex flex-col justify-end h-full" style={{ minHeight: "260px", padding: "0 1.5rem 1.5rem", paddingLeft: "calc(210px + 1.5rem)" }}>
                     {/* CTA buttons — absolute top-right */}
                     <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
                       <AvatarNavDropdown currentPage="Clubs" />
