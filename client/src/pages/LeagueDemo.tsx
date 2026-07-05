@@ -222,13 +222,20 @@ export default function LeagueDemo() {
 
         {/* ── LEFT ICON RAIL (desktop) ──────────────────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1"
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
           style={{
-            background: isDark ? "oklch(0.15 0.04 145)" : "#0f1f14",
             borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
           }}
         >
-          {/* Club logo - this div button should navigate users back to the landing page when clicked */}
+          {/* Chess-pattern dark overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none z-0"
+            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
+          />
+          {/* Sidebar content — sits above the chess-pattern overlay */}
+          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
+
+          {/* Logo / back to home */}
           <button
             onClick={() => navigate("/")}
             className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity"
@@ -254,10 +261,10 @@ export default function LeagueDemo() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group hover:scale-110 active:scale-95"
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
                   style={{
                     background: isActive ? accent : "transparent",
-                    color: isActive ? "#fff" : "oklch(0.55 0.08 145)",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
                   }}
                   title={tab.label}
                 >
@@ -277,15 +284,19 @@ export default function LeagueDemo() {
           {/* Divider */}
           <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
 
-          {/* Back to home */}
-          <button
-            onClick={() => navigate("/")}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-            style={{ color: "oklch(0.55 0.08 145)" }}
-            title="Back to Home"
-          >
-            <ArrowLeft size={16} />
-          </button>
+          {/* Bottom actions */}
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={() => navigate("/")}
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+              style={{ color: "oklch(0.55 0.08 145)" }}
+              title="Back to Home"
+            >
+              <ArrowLeft size={16} />
+            </button>
+          </div>
+
+          </div>{/* end z-10 sidebar content wrapper */}
         </aside>
 
         {/* ── MAIN CONTENT AREA ─────────────────────────────────────────────── */}
