@@ -251,6 +251,7 @@ export default function AuthModal({
   const [guestError, setGuestError] = useState<string | undefined>();
 
   const firstInputRef = useRef<HTMLInputElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   const resetAll = useCallback(() => {
     // Restore saved email and Remember Me preference on reset so they persist across opens
@@ -294,6 +295,19 @@ export default function AuthModal({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
+
+  // Track mousedown target so we only close when the full click starts AND ends on the backdrop
+  const mousedownTargetRef = useRef<EventTarget | null>(null);
+  const handleOverlayMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    mousedownTargetRef.current = e.target;
+  };
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only close if both mousedown and mouseup landed on the overlay itself (not the card)
+    if (e.target === overlayRef.current && mousedownTargetRef.current === overlayRef.current) {
+      onClose();
+    }
+    mousedownTargetRef.current = null;
+  };
 
   if (!isOpen) return null;
 
@@ -390,17 +404,23 @@ export default function AuthModal({
 
   return (
     <div
+      ref={overlayRef}
       className="modal-overlay z-[200]"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Authentication"
+      onMouseDown={handleOverlayMouseDown}
+      onClick={handleOverlayClick}
     >
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      {/* Backdrop — purely visual, pointer-events-none so overlay handles all clicks */}
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-none" />
 
       {/* Modal card — bottom-sheet on xs (≤480px), centered dialog on sm+ */}
       <div
         className={`modal-card max-w-md rounded-3xl border shadow-2xl ${bg} ${border}`}
         style={{ marginTop: "max(1rem, 8vh)", marginBottom: "max(1rem, 8vh)" }}
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-7 pt-7 pb-5 border-b ${border}`}>
