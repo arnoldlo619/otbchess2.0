@@ -812,38 +812,41 @@ export default function MyClubs() {
     <div className={`min-h-screen ${bg}`}>
 
       {/* ── Unified hero + nav section ──────────────────────────────────── */}
-      <div className="relative overflow-hidden sticky top-0 z-40 backdrop-blur-md">
-        {/* Gradient background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: isDark
-              ? "linear-gradient(180deg, #0d2b12 0%, #0d1a0f 100%)"
-              : "linear-gradient(180deg, #1a4a22 0%, #F5F5EE 100%)",
-          }}
-        />
-        {/* Checkered pattern overlay */}
-        <div className="absolute inset-0 chess-board-bg" style={{ opacity: isDark ? 0.08 : 0.05 }} />
-        {/* Animated shimmer overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: isDark
-              ? "linear-gradient(120deg, transparent 30%, rgba(76,175,80,0.04) 50%, transparent 70%)"
-              : "linear-gradient(120deg, transparent 30%, rgba(67,104,80,0.03) 50%, transparent 70%)",
-            backgroundSize: "200% 100%",
-            animation: "shimmerBg 8s ease-in-out infinite",
-          }}
-        />
-        {/* Radial glow */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: isDark
-              ? "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(76,175,80,0.15) 0%, transparent 70%)"
-              : "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(67,104,80,0.10) 0%, transparent 70%)",
-          }}
-        />
+      <div className="relative sticky top-0 z-40 backdrop-blur-md">
+        {/* Decorative background layers — overflow-hidden scoped here so fixed children (modals) are not clipped */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Gradient background */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: isDark
+                ? "linear-gradient(180deg, #0d2b12 0%, #0d1a0f 100%)"
+                : "linear-gradient(180deg, #1a4a22 0%, #F5F5EE 100%)",
+            }}
+          />
+          {/* Checkered pattern overlay */}
+          <div className="absolute inset-0 chess-board-bg" style={{ opacity: isDark ? 0.08 : 0.05 }} />
+          {/* Animated shimmer overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: isDark
+                ? "linear-gradient(120deg, transparent 30%, rgba(76,175,80,0.04) 50%, transparent 70%)"
+                : "linear-gradient(120deg, transparent 30%, rgba(67,104,80,0.03) 50%, transparent 70%)",
+              backgroundSize: "200% 100%",
+              animation: "shimmerBg 8s ease-in-out infinite",
+            }}
+          />
+          {/* Radial glow */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: isDark
+                ? "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(76,175,80,0.15) 0%, transparent 70%)"
+                : "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(67,104,80,0.10) 0%, transparent 70%)",
+            }}
+          />
+        </div>
 
         <div className="relative max-w-5xl mx-auto px-4 pt-0 pb-10 sm:pb-12">
           {/* ── Nav row: logo + CTAs ── */}
