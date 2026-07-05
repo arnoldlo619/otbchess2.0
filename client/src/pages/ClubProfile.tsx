@@ -1724,7 +1724,7 @@ export default function ClubProfile() {
                       <div className="flex items-center gap-3 mt-2.5 flex-wrap">
                         {club.website && (
                           <a href={club.website.startsWith("http") ? club.website : `https://${club.website}`} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: accent }}>
+                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: '#82aad3' }}>
                             <Globe size={11} />
                             {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").slice(0, 28)}
                           </a>
