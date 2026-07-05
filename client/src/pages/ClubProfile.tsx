@@ -1285,12 +1285,15 @@ export default function ClubProfile() {
   })();
 
   // ── Colour palette ──────────────────────────────────────────────────────────
-  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#FBFADA]";
-  const card = isDark ? "bg-[#1a2e1d]" : "bg-[#F0F5E8]";
-  const cardBorder = isDark ? "border-white/8" : "border-[#ADBC9F]";
-  const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
-  const divider = isDark ? "border-white/8" : "border-[#ADBC9F]";
+  // ── Unified color system ─────────────────────────────────────────────────
+  // Dark:  deep forest-green base with subtle chroma steps for depth
+  // Light: clean warm-white base with soft sage tints — no yellow-cream
+  const bg         = isDark ? "bg-[oklch(0.14_0.04_145)]"  : "bg-[oklch(0.97_0.01_145)]";
+  const card       = isDark ? "bg-[oklch(0.19_0.05_145)]"  : "bg-[oklch(1.00_0.00_145)]";
+  const cardBorder = isDark ? "border-[oklch(0.27_0.06_145)]" : "border-[oklch(0.88_0.03_145)]";
+  const textMain   = isDark ? "text-[oklch(0.95_0.02_145)]" : "text-[oklch(0.18_0.06_145)]";
+  const textMuted  = isDark ? "text-[oklch(0.60_0.04_145)]" : "text-[oklch(0.45_0.05_145)]";
+  const divider    = isDark ? "border-[oklch(0.27_0.06_145)]" : "border-[oklch(0.88_0.03_145)]";
   const tabActive = isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]";
   const tabInactive = isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#12372A]";
   // Use the club's stored accent color — falls back to platform defaults if not set.
@@ -1504,7 +1507,7 @@ export default function ClubProfile() {
             {/* Desktop: club name removed — already displayed in the hero banner below */}
             {/* Right side: stats + avatar */}
             <div className="flex items-center gap-3 ml-auto">
-              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
                 <span className="flex items-center gap-1">
                   <Users size={12} style={{ color: accent }} />
                   <span className="font-semibold" style={{ color: "#fff" }}>{club.memberCount}</span> members
@@ -1591,7 +1594,7 @@ export default function ClubProfile() {
                           )}
                         </div>
                         {/* Location + visibility */}
-                        <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                        <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
                           {club.location && (
                             <span className="flex items-center gap-1">
                               <MapPin size={10} />
@@ -1616,7 +1619,7 @@ export default function ClubProfile() {
                             disabled={followingLoading}
                             className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50"
                             style={following
-                              ? { borderColor: "oklch(0.35 0.06 145)", color: "oklch(0.60 0.10 145)", background: "transparent" }
+                              ? { borderColor: "oklch(0.32 0.06 145)", color: "oklch(0.60 0.04 145)", background: "transparent" }
                               : { borderColor: `${accent}55`, color: accent, background: `${accent}18` }
                             }
                           >
@@ -1635,7 +1638,7 @@ export default function ClubProfile() {
                             <button
                               onClick={handleLeave}
                               className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
-                              style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.55 0.08 145)" }}
+                              style={{ borderColor: "oklch(0.30 0.05 145)", color: "oklch(0.60 0.04 145)" }}
                             >
                               Leave
                             </button>
@@ -1654,32 +1657,32 @@ export default function ClubProfile() {
 
                     {/* Description */}
                     {club.description && (
-                      <p className="text-sm leading-relaxed mt-3 line-clamp-2" style={{ color: "oklch(0.68 0.08 145)" }}>
+                      <p className="text-sm leading-relaxed mt-3 line-clamp-2" style={{ color: "oklch(0.65 0.04 145)" }}>
                         {club.description}
                       </p>
                     )}
 
                     {/* Stats row */}
                     <div className="flex items-center gap-4 mt-3 flex-wrap">
-                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
                         <Users size={11} style={{ color: accent }} />
                         <span className="font-bold text-white">{club.memberCount}</span>
                         <span>members</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
                         <Trophy size={11} style={{ color: accent }} />
                         <span className="font-bold text-white">{club.tournamentCount ?? 0}</span>
                         <span>tournaments</span>
                       </div>
                       {clubLeagues.length > 0 && (
-                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
                           <Award size={11} style={{ color: accent }} />
                           <span className="font-bold text-white">{clubLeagues.length}</span>
                           <span>league{clubLeagues.length !== 1 ? "s" : ""}</span>
                         </div>
                       )}
                       {followerCount > 0 && (
-                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
                           <Bell size={11} style={{ color: accent }} />
                           <span className="font-bold text-white">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
                           <span>follower{followerCount !== 1 ? "s" : ""}</span>
@@ -1942,7 +1945,7 @@ export default function ClubProfile() {
                         : r === "director"
                         ? { background: "oklch(0.55 0.13 145 / 0.2)", color: "oklch(0.65 0.13 145)", borderColor: "oklch(0.55 0.13 145 / 0.4)" }
                         : isDark
-                        ? { background: "oklch(0.22 0.04 145)", color: "oklch(0.75 0.06 145)", borderColor: "oklch(0.35 0.06 145)" }
+                        ? { background: "oklch(0.22 0.04 145)", color: "oklch(0.75 0.06 145)", borderColor: "oklch(0.32 0.06 145)" }
                         : { background: "oklch(0.85 0.05 145)", color: "oklch(0.35 0.1 145)", borderColor: "oklch(0.65 0.1 145)" }
                       : {};
                     const label = r === "all" ? "All" : r === "owner" ? "Owners" : r === "director" ? "Directors" : "Members";

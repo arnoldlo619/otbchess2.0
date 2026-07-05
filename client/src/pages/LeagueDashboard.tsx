@@ -150,10 +150,10 @@ function ShareModal({
   const [copied, setCopied] = useState(false);
   const [view, setView] = useState<"link" | "qr">("link");
 
-  const bg = isDark ? "oklch(0.18 0.05 145)" : "#ffffff";
-  const border = isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb";
-  const textMain = isDark ? "#f0f5ee" : "#111827";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
+  const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
+  const border = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
+  const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
+  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)";
   const accent = "oklch(0.55 0.13 145)";
 
   function handleCopy() {
@@ -194,7 +194,7 @@ function ShareModal({
                 onClick={() => setView(v)}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
-                  background: view === v ? (isDark ? "oklch(0.28 0.08 145)" : "#ffffff") : "transparent",
+                  background: view === v ? (isDark ? "oklch(0.28 0.08 145)" : "oklch(1.00 0.00 145)") : "transparent",
                   color: view === v ? textMain : textMuted,
                   boxShadow: view === v ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
                 }}
@@ -246,7 +246,7 @@ function ShareModal({
               className="rounded-2xl p-4"
               style={{ background: "#ffffff" }}
             >
-              <QRCodeSVG value={joinUrl} size={200} fgColor="#111827" bgColor="#ffffff" />
+              <QRCodeSVG value={joinUrl} size={200} fgColor="oklch(0.18 0.06 145)" bgColor="#ffffff" />
             </div>
             <p className="text-xs text-center" style={{ color: textMuted }}>
               Scan to view <strong style={{ color: textMain }}>{league.name}</strong>
@@ -282,10 +282,10 @@ function ReportResultModal({
 }) {
   const [selected, setSelected] = useState<"white_win" | "black_win" | "draw" | null>(null);
   const [loading, setLoading] = useState(false);
-  const bg = isDark ? "oklch(0.18 0.05 145)" : "#ffffff";
-  const border = isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb";
-  const textMain = isDark ? "#f0f5ee" : "#111827";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
+  const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
+  const border = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
+  const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
+  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)";
   const accent = "oklch(0.55 0.13 145)";
   const warn = "oklch(0.65 0.18 60)";
 
@@ -473,15 +473,18 @@ export default function LeagueDashboard() {
   const [joinRequestMsg, setJoinRequestMsg] = useState("");
   // Detect if the user arrived via an invite link (?join=1)
   const isInviteLink = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("join") === "1";
-  // Colour tokens
-  const pageBg = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
-  const cardBg = isDark ? "oklch(0.20 0.06 145)" : "#ffffff";
-  const cardBorder = isDark ? "oklch(0.28 0.07 145)" : "#e5e7eb";
-  const textMain = isDark ? "#f0f5ee" : "#111827";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
-  const accent = "oklch(0.55 0.13 145)";
-  const _tabBg = isDark ? "oklch(0.22 0.06 145)" : "#e8f0e8";
-  const _tabActive = isDark ? "oklch(0.28 0.08 145)" : "#ffffff";
+  // ── Unified color system (matches ClubProfile) ─────────────────────────────
+  // Dark:  deep forest-green base, low-chroma surface steps
+  // Light: near-white with subtle sage tint — no yellow-cream
+  const pageBg    = isDark ? "oklch(0.14 0.04 145)" : "oklch(0.97 0.01 145)";
+  const cardBg    = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
+  const cardBorder = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
+  const textMain  = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
+  const textMuted = isDark ? "oklch(0.60 0.04 145)" : "oklch(0.45 0.05 145)";
+  const accent    = isDark ? "oklch(0.62 0.16 145)" : "oklch(0.42 0.13 145)";
+  const surfaceHover = isDark ? "oklch(0.22 0.06 145)" : "oklch(0.94 0.02 145)";
+  const tabBg     = isDark ? "oklch(0.22 0.05 145)" : "oklch(0.93 0.02 145)";
+  const tabActive = isDark ? "oklch(0.28 0.08 145)" : "oklch(1.00 0.00 145)";
 
   function showToast(msg: string, type: "success" | "error" = "success") {
     setToast({ msg, type });
@@ -1017,7 +1020,7 @@ export default function LeagueDashboard() {
           </button>
 
           {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.05 145)" }} />
 
           {/* Nav icons */}
           <nav className="flex flex-col items-center gap-1 flex-1">
@@ -1031,7 +1034,7 @@ export default function LeagueDashboard() {
                   className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
                   style={{
                     background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.60 0.04 145)",
                   }}
                   title={tab.label}
                 >
@@ -1057,7 +1060,7 @@ export default function LeagueDashboard() {
           </nav>
 
           {/* Divider */}
-          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.05 145)" }} />
 
           {/* Bottom actions */}
           <div className="flex flex-col items-center gap-1">
@@ -1066,7 +1069,7 @@ export default function LeagueDashboard() {
                 onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
                 disabled={pushLoading || pushStatus === "denied"}
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.55 0.08 145)" }}
+                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.60 0.04 145)" }}
                 title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
               >
                 {pushLoading ? (
@@ -1082,7 +1085,7 @@ export default function LeagueDashboard() {
             <button
               onClick={() => setShowShare(true)}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: "oklch(0.55 0.08 145)" }}
+              style={{ color: "oklch(0.60 0.04 145)" }}
               title="Share League"
             >
               <Share2 size={16} />
@@ -1116,7 +1119,7 @@ export default function LeagueDashboard() {
 
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
+              <span className="text-sm font-bold truncate" style={{ color: "oklch(0.95 0.02 145)" }}>
                 {league.clubName ?? league.name}
               </span>
             </div>
@@ -1133,14 +1136,14 @@ export default function LeagueDashboard() {
                     : "oklch(0.20 0.04 145)",
                   color: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.60 0.08 145)",
                   border: `1px solid ${
-                    league.status === "active" ? `${accent}44` : league.status === "completed" ? "oklch(0.72 0.18 85 / 0.3)" : "oklch(0.30 0.06 145)"
+                    league.status === "active" ? `${accent}44` : league.status === "completed" ? "oklch(0.72 0.18 85 / 0.3)" : "oklch(0.30 0.05 145)"
                   }`,
                 }}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${league.status === "active" ? "animate-pulse" : ""}`}
                   style={{
-                    background: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.45 0.06 145)",
+                    background: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.45 0.05 145)",
                   }}
                 />
                 {league.status === "active"
@@ -1321,7 +1324,7 @@ export default function LeagueDashboard() {
                         <span className="text-sm font-semibold" style={{ color: textMain }}>Roster: {rosterCount} / {league.maxPlayers} players</span>
                         <span className="text-xs font-medium" style={{ color: rosterFull ? accent : textMuted }}>{rosterPct}%</span>
                       </div>
-                      <div className="h-2.5 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#e5e7eb" }}>
+                      <div className="h-2.5 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "oklch(0.88 0.03 145)" }}>
                         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${rosterPct}%`, background: rosterFull ? accent : "oklch(0.6 0.12 85)" }} />
                       </div>
                     </div>
@@ -1336,7 +1339,7 @@ export default function LeagueDashboard() {
                         ))}
                         {Array.from({ length: league.maxPlayers - rosterCount }).map((_, i) => (
                           <div key={`empty-${i}`} className="flex items-center gap-2 rounded-xl p-2 border-2 border-dashed" style={{ borderColor: isDark ? "oklch(0.3 0.04 145)" : "#d1d5db" }}>
-                            <div className="w-7 h-7 rounded-full" style={{ background: isDark ? "oklch(0.25 0.04 145)" : "#e5e7eb" }} />
+                            <div className="w-7 h-7 rounded-full" style={{ background: isDark ? "oklch(0.25 0.04 145)" : "oklch(0.88 0.03 145)" }} />
                             <span className="text-xs" style={{ color: textMuted }}>Open spot</span>
                           </div>
                         ))}
@@ -1388,7 +1391,7 @@ export default function LeagueDashboard() {
                 </div>
                 <p className="text-sm" style={{ color: textMuted }}>The commissioner is building the roster. The season will start once all {league.maxPlayers} spots are filled.</p>
                 <div className="mt-3">
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#e5e7eb" }}>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "oklch(0.88 0.03 145)" }}>
                     <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.round((league.players.length / league.maxPlayers) * 100)}%`, background: accent }} />
                   </div>
                   <span className="text-xs mt-1 block" style={{ color: textMuted }}>{league.players.length} / {league.maxPlayers} players</span>
@@ -2057,7 +2060,7 @@ export default function LeagueDashboard() {
                             <span className="text-[11px] truncate" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
                           )}
                           {p.rating && (
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.3 0.06 145)" : "#e5e7eb", color: textMuted }}>
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.3 0.06 145)" : "oklch(0.88 0.03 145)", color: textMuted }}>
                               {p.rating}
                             </span>
                           )}
@@ -3785,7 +3788,7 @@ export default function LeagueDashboard() {
         >
           <div
             className="w-full max-w-xs rounded-3xl overflow-hidden shadow-2xl"
-            style={{ background: isDark ? "oklch(0.18 0.05 145)" : "#ffffff", border: `1px solid ${isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb"}` }}
+            style={{ background: isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)", border: `1px solid ${isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)"}` }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-5 pt-5 pb-3 flex items-center justify-between">
@@ -3839,7 +3842,7 @@ export default function LeagueDashboard() {
         >
           <div
             className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-            style={{ background: isDark ? "oklch(0.18 0.05 145)" : "#ffffff", border: `1px solid ${isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb"}` }}
+            style={{ background: isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)", border: `1px solid ${isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)"}` }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -3854,8 +3857,8 @@ export default function LeagueDashboard() {
                   </svg>
                 </span>
                 <div>
-                  <p className="font-bold text-base" style={{ color: isDark ? "#f0f5ee" : "#111827" }}>Advance to Week {league.currentWeek + 1}?</p>
-                  <p className="text-xs mt-0.5" style={{ color: isDark ? "oklch(0.65 0.04 145)" : "#6b7280" }}>This action is irreversible.</p>
+                  <p className="font-bold text-base" style={{ color: isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)" }}>Advance to Week {league.currentWeek + 1}?</p>
+                  <p className="text-xs mt-0.5" style={{ color: isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)" }}>This action is irreversible.</p>
                 </div>
               </div>
               <button
@@ -3863,7 +3866,7 @@ export default function LeagueDashboard() {
                 className="p-1.5 rounded-xl flex-shrink-0"
                 style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}
               >
-                <X size={14} style={{ color: isDark ? "oklch(0.65 0.04 145)" : "#6b7280" }} />
+                <X size={14} style={{ color: isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)" }} />
               </button>
             </div>
 
