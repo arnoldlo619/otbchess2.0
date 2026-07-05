@@ -811,25 +811,8 @@ export default function MyClubs() {
   return (
     <div className={`min-h-screen ${bg}`}>
 
-      {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-40 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-[#F5F5EE]/95"} backdrop-blur-md`}>
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
-          <NavLogo className="h-7" />
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#436850] text-white hover:bg-[#3a5230] transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Create Club</span>
-            </button>
-            <AvatarNavDropdown currentPage="Clubs" />
-          </div>
-        </div>
-      </header>
-
-      {/* ── Hero gradient section ─────────────────────────────────────────── */}
-      <div className="relative overflow-hidden">
+      {/* ── Unified hero + nav section ──────────────────────────────────── */}
+      <div className="relative overflow-hidden sticky top-0 z-40 backdrop-blur-md">
         {/* Gradient background */}
         <div
           className="absolute inset-0"
@@ -862,7 +845,23 @@ export default function MyClubs() {
           }}
         />
 
-        <div className="relative max-w-5xl mx-auto px-4 pt-12 pb-10 sm:pt-16 sm:pb-12">
+        <div className="relative max-w-5xl mx-auto px-4 pt-0 pb-10 sm:pb-12">
+          {/* ── Nav row: logo + CTAs ── */}
+          <div className="flex items-center gap-3 h-14 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+            <NavLogo className="h-7" />
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/15 text-white hover:bg-white/25 transition-colors backdrop-blur-sm border border-white/15"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Create Club</span>
+              </button>
+              <AvatarNavDropdown currentPage="Clubs" />
+            </div>
+          </div>
+          {/* ── Hero headline ── */}
+          <div className="pt-8 sm:pt-10">
           {/* Headline */}
           <h1
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight"
@@ -960,6 +959,7 @@ export default function MyClubs() {
               </button>
             </div>
           )}
+          </div>{/* end headline wrapper */}
         </div>
       </div>
 
