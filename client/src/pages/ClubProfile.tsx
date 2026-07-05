@@ -1444,11 +1444,11 @@ export default function ClubProfile() {
           <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={24} />,
-                events: <Calendar size={24} />,
-                members: <Users size={24} />,
-                tournaments: <Trophy size={24} />,
-                leagues: <Award size={24} />,
+                feed: <Megaphone size={28} />,
+                events: <Calendar size={28} />,
+                members: <Users size={28} />,
+                tournaments: <Trophy size={28} />,
+                leagues: <Award size={28} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
@@ -1471,8 +1471,8 @@ export default function ClubProfile() {
                   onClick={() => handleTabChange(t)}
                   className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
                   style={{
-                    height: "52px",
-                    minWidth: "44px",
+                    height: "60px",
+                    minWidth: "48px",
                     paddingLeft: "10px",
                     paddingRight: "10px",
                     background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.15)") : "transparent",
@@ -1483,7 +1483,7 @@ export default function ClubProfile() {
                   aria-label={labelMap[t]}
                 >
                   {/* Icon — fixed width so it doesn't shift on expand */}
-                  <span className="relative flex-shrink-0 w-6 flex items-center justify-center">
+                  <span className="relative flex-shrink-0 w-7 flex items-center justify-center">
                     {iconMap[t]}
                     {badge > 0 && (
                       <span
@@ -1520,7 +1520,7 @@ export default function ClubProfile() {
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
               aria-label="Share Club"
             >
-              <span className="flex-shrink-0 w-6 flex items-center justify-center"><Share2 size={22} /></span>
+              <span className="flex-shrink-0 w-7 flex items-center justify-center"><Share2 size={26} /></span>
               <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Share</span>
             </button>
 
@@ -1533,7 +1533,7 @@ export default function ClubProfile() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
                 aria-label="Contact Owner"
               >
-                <span className="flex-shrink-0 w-6 flex items-center justify-center"><MessageSquare size={22} /></span>
+                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MessageSquare size={26} /></span>
                 <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Contact</span>
               </button>
             )}
@@ -1547,7 +1547,7 @@ export default function ClubProfile() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
                 aria-label="Settings"
               >
-                <span className="flex-shrink-0 w-6 flex items-center justify-center"><MoreHorizontal size={22} /></span>
+                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={26} /></span>
                 <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
               </button>
             )}
