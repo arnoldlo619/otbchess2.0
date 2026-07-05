@@ -1431,17 +1431,11 @@ export default function ClubProfile() {
               style={{ height: "60px" }}
               title="ChessOTB.Club — Back to Clubs"
             >
-              {/* !! thumbnail — always visible, fades out on sidebar hover */}
+              {/* Thumbnail logo — single logo for both collapsed and expanded sidebar */}
               <img
                 src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
-                alt="!!"
-                className="absolute left-1 w-14 h-14 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
-              />
-              {/* OTB!! full logo — fades in on sidebar hover, left-aligned with nav items */}
-              <img
-                src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="absolute left-1 h-13 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
+                className="w-14 h-14 object-contain flex-shrink-0"
               />
             </button>
           </div>
