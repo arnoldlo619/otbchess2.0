@@ -1560,90 +1560,173 @@ export default function ClubProfile() {
                     />
                   )}
                   {/* Content */}
-                  <div className="relative z-10 flex items-center gap-5 p-6 sm:p-8">
-                    {/* Club avatar */}
-                    <div
-                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
-                      style={{ background: accent, border: `2px solid ${accent}44` }}
-                    >
-                      {club.avatarUrl && !avatarBroken ? (
-                        <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
-                      ) : (
-                        <span className="text-3xl">{flag}</span>
-                      )}
-                    </div>
-                    {/* Club identity */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-white truncate">
-                          {club.name}
-                        </h1>
-                        {club.isPublic ? (
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: `${accent}33`, color: accent }}>Public</span>
+                  <div className="relative z-10 p-5 sm:p-7">
+                    {/* Top row: avatar + name + CTA */}
+                    <div className="flex items-start gap-4 sm:gap-5">
+                      {/* Club avatar */}
+                      <div
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
+                        style={{ background: accent, border: `2px solid ${accent}55` }}
+                      >
+                        {club.avatarUrl && !avatarBroken ? (
+                          <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
                         ) : (
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)" }}>Private</span>
-                        )}
-                        {club.isVerified && (
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: "oklch(0.25 0.10 220)", color: "oklch(0.75 0.14 220)" }}>
-                            <CheckCircle2 size={10} /> Verified
-                          </span>
-                        )}
-                        {club.beginnerFriendly && (
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.28 0.10 80)", color: "oklch(0.80 0.14 80)" }}>Beginner Friendly</span>
+                          <span className="text-3xl">{flag}</span>
                         )}
                       </div>
-                      {club.description && (
-                        <p className="text-sm leading-relaxed line-clamp-2" style={{ color: "oklch(0.70 0.08 145)" }}>
-                          {club.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
-                        <span className="flex items-center gap-1">
-                          <Users size={11} style={{ color: accent }} />
-                          <span className="font-semibold text-white">{club.memberCount}</span> members
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Trophy size={11} style={{ color: accent }} />
-                          <span className="font-semibold text-white">{club.tournamentCount}</span> tournaments
-                        </span>
+
+                      {/* Club name + badges */}
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight">
+                            {club.name}
+                          </h1>
+                          {club.isVerified && (
+                            <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.10 220)", color: "oklch(0.75 0.14 220)" }}>
+                              <CheckCircle2 size={9} /> Verified
+                            </span>
+                          )}
+                          {club.beginnerFriendly && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.28 0.10 80)", color: "oklch(0.80 0.14 80)" }}>Beginner Friendly</span>
+                          )}
+                        </div>
+                        {/* Location + visibility */}
+                        <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
                           {club.location && (
-                          <span className="hidden sm:flex items-center gap-1">
-                            <MapPin size={11} />
-                            {flag} {club.location}
+                            <span className="flex items-center gap-1">
+                              <MapPin size={10} />
+                              {flag} {club.location}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            {club.isPublic
+                              ? <><Globe size={10} /> Public</>  
+                              : <><Lock size={10} /> Private</>
+                            }
                           </span>
+                        </div>
+                      </div>
+
+                      {/* CTA buttons — top right */}
+                      <div className="flex-shrink-0 flex items-center gap-2">
+                        {/* Follow button — all users including members */}
+                        {!isOwner && (
+                          <button
+                            onClick={handleFollow}
+                            disabled={followingLoading}
+                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50"
+                            style={following
+                              ? { borderColor: "oklch(0.35 0.06 145)", color: "oklch(0.60 0.10 145)", background: "transparent" }
+                              : { borderColor: `${accent}55`, color: accent, background: `${accent}18` }
+                            }
+                          >
+                            {followingLoading
+                              ? <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                              : following ? <><Bell size={11} /> Following</> : <><Bell size={11} /> Follow</>
+                            }
+                            {followerCount > 0 && (
+                              <span className="ml-0.5 opacity-70">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
+                            )}
+                          </button>
+                        )}
+                        {/* Join / Leave — non-members only */}
+                        {!isOwner && !isDirector && (
+                          joined ? (
+                            <button
+                              onClick={handleLeave}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
+                              style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.55 0.08 145)" }}
+                            >
+                              Leave
+                            </button>
+                          ) : (
+                            <button
+                              onClick={handleJoin}
+                              className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
+                              style={{ background: accent, color: "#fff" }}
+                            >
+                              {club.isPublic ? "Join" : "Request"}
+                            </button>
+                          )
                         )}
                       </div>
-                      {/* Website + Instagram links */}
-                      {(club.website || club.instagram) && (
-                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                          {club.website && (
-                            <a
-                              href={club.website.startsWith("http") ? club.website : `https://${club.website}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
-                              style={{ color: accent }}
-                            >
-                              <Globe size={11} />
-                              {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-                            </a>
-                          )}
-                          {club.instagram && (
-                            <a
-                              href={`https://instagram.com/${club.instagram.replace(/^@/, "")}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
-                              style={{ color: "oklch(0.75 0.14 0)" }}
-                            >
-                              <Instagram size={11} />
-                              @{club.instagram.replace(/^@/, "")}
-                            </a>
-                          )}
+                    </div>{/* end top row */}
+
+                    {/* Description */}
+                    {club.description && (
+                      <p className="text-sm leading-relaxed mt-3 line-clamp-2" style={{ color: "oklch(0.68 0.08 145)" }}>
+                        {club.description}
+                      </p>
+                    )}
+
+                    {/* Stats row */}
+                    <div className="flex items-center gap-4 mt-3 flex-wrap">
+                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                        <Users size={11} style={{ color: accent }} />
+                        <span className="font-bold text-white">{club.memberCount}</span>
+                        <span>members</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                        <Trophy size={11} style={{ color: accent }} />
+                        <span className="font-bold text-white">{club.tournamentCount ?? 0}</span>
+                        <span>tournaments</span>
+                      </div>
+                      {clubLeagues.length > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                          <Award size={11} style={{ color: accent }} />
+                          <span className="font-bold text-white">{clubLeagues.length}</span>
+                          <span>league{clubLeagues.length !== 1 ? "s" : ""}</span>
+                        </div>
+                      )}
+                      {followerCount > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                          <Bell size={11} style={{ color: accent }} />
+                          <span className="font-bold text-white">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
+                          <span>follower{followerCount !== 1 ? "s" : ""}</span>
                         </div>
                       )}
                     </div>
-                    {/* Banner upload overlay (owners/directors only) */}
+
+                    {/* Social links row */}
+                    {(club.website || club.instagram || club.twitter || club.discord || club.youtube || club.tiktok || club.linktree) && (
+                      <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+                        {club.website && (
+                          <a href={club.website.startsWith("http") ? club.website : `https://${club.website}`} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: accent }}>
+                            <Globe size={11} />
+                            {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").slice(0, 28)}
+                          </a>
+                        )}
+                        {club.instagram && (
+                          <a href={`https://instagram.com/${club.instagram.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.75 0.14 0)" }}>
+                            <Instagram size={11} /> @{club.instagram.replace(/^@/, "")}
+                          </a>
+                        )}
+                        {club.twitter && (
+                          <a href={club.twitter.startsWith("http") ? club.twitter : `https://x.com/${club.twitter.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.80 0.05 220)" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            @{club.twitter.replace(/^@/, "")}
+                          </a>
+                        )}
+                        {club.discord && (
+                          <a href={club.discord} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.70 0.14 270)" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.055a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                            Discord
+                          </a>
+                        )}
+                        {club.youtube && (
+                          <a href={club.youtube} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.65 0.20 25)" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            YouTube
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  {/* Banner upload overlay (owners/directors only) */}
                     {(isOwner || isDirector) && (
                       <>
                         {/* Drag-and-drop highlight overlay */}
@@ -1724,40 +1807,6 @@ export default function ClubProfile() {
                           }}
                         />
                       </>
-                    )}
-                    {/* Join / Leave CTA */}
-                    {!isOwner && !isDirector && (
-                      <div className="flex-shrink-0 flex items-center gap-2">
-                        {/* Contact Owner button — for all non-owners; guests see auth prompt */}
-                        <button
-                          onClick={() => {
-                            if (!user) { setPendingAction(() => () => setShowContactOwner(true)); setAuthOpen(true); return; }
-                            setShowContactOwner(true);
-                          }}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80 flex items-center gap-1.5"
-                          style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.65 0.10 145)" }}
-                        >
-                          <MessageSquare size={12} />
-                          {user ? "Contact Owner" : "Sign in to Contact"}
-                        </button>
-                        {joined ? (
-                          <button
-                            onClick={handleLeave}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
-                            style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.55 0.08 145)" }}
-                          >
-                            Leave
-                          </button>
-                        ) : (
-                          <button
-                            onClick={handleJoin}
-                            className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-                            style={{ background: accent, color: "#fff" }}
-                          >
-                            {club.isPublic ? "Join Club" : "Request to Join"}
-                          </button>
-                        )}
-                      </div>
                     )}
                   </div>
                 </div>
