@@ -784,6 +784,12 @@ export default function ClubProfile() {
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
   const [activeTab, setActiveTab] = useState<"events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
+  // Tracks which tabs the user has visited — clears badge indicators on first visit
+  const [seenTabs, setSeenTabs] = useState<Set<string>>(new Set([initialTab]));
+  const handleTabChange = (tab: "events" | "members" | "tournaments" | "feed" | "leagues") => {
+    setActiveTab(tab);
+    setSeenTabs(prev => { const next = new Set(prev); next.add(tab); return next; });
+  };
   // Sidebar is now always icon-only (Partiful-style rail)
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -1374,11 +1380,11 @@ export default function ClubProfile() {
                 leagues: clubLeagues.length,
               };
               const isActive = activeTab === t;
-              const badge = badgeMap[t] ?? 0;
+              const badge = seenTabs.has(t) ? 0 : (badgeMap[t] ?? 0);
               return (
                 <button
                   key={t}
-                  onClick={() => setActiveTab(t)}
+                  onClick={() => handleTabChange(t)}
                   className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
                   style={{
                     height: "44px",
@@ -4407,7 +4413,7 @@ export default function ClubProfile() {
           return (
             <button
               key={t}
-              onClick={() => setActiveTab(t)}
+              onClick={() => handleTabChange(t)}
               className="flex flex-col items-center gap-1 flex-1 relative transition-all duration-200 active:scale-95"
               style={{ minHeight: "48px", paddingTop: "4px", paddingBottom: "4px" }}
             >
