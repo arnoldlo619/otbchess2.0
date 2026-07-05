@@ -14,7 +14,7 @@ export interface TournamentConfig {
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim" | "quads";
   rounds: number;
   /** For swiss_elim: number of Swiss rounds before elimination cutoff. */
   swissRounds?: number;
@@ -40,6 +40,16 @@ export interface TournamentConfig {
   customSlug?: string | null;
   /** Optional cover image (data URL or remote URL) shown in the tournament hero banner. */
   coverImageUrl?: string | null;
+
+  // ── Quads-specific fields ──
+  /** Rating source used to sort players into quads. Defaults to "best_available". */
+  quadRatingSource?: "otb" | "rapid" | "blitz" | "manual" | "best_available";
+  /** How to handle player counts not divisible by 4. Defaults to "bottom_swiss". */
+  quadRemainderHandling?: "bottom_swiss" | "expand_last_quad";
+  /** Color assignment mode for quad pairings. Defaults to "deterministic". */
+  quadColorAssignment?: "deterministic" | "random" | "balanced";
+  /** Tiebreak order for quad standings. */
+  quadTiebreakOrder?: string[];
 
   // ── Multi-Tournament Bracket fields ──
   /** If this is a child bracket-tournament, the parent bracket group ID */

@@ -13,6 +13,7 @@ import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from
 import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
+import { generateQuadTournament, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
 
 // ─── Schema Version ───────────────────────────────────────────────────────────
 // Bump this when the DirectorState shape changes to force a clean reset
@@ -28,7 +29,7 @@ export interface DirectorState {
   tournamentName: string;
   totalRounds: number;
   /** Tournament format — used to select the correct pairing engine. */
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim" | "quads";
   /** For swiss_elim: number of Swiss rounds before the elimination cutoff. */
   swissRounds?: number;
   /** For swiss_elim: current phase — starts in "swiss", transitions to "elimination" after cutoff. */
@@ -45,6 +46,10 @@ export interface DirectorState {
   status: "registration" | "in_progress" | "completed" | "paused";
   /** Minutes allocated per round (default 25). Used by the round timer. */
   roundMinutes: number;
+  /** For quads: the generated sections (quads + optional bottom swiss). */
+  quadSections?: QuadSection[];
+  /** For quads: settings used for generation. */
+  quadSettings?: QuadSettings;
 }
 
 interface PersistedState {
@@ -448,7 +453,26 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       if (prev.players.length < 2) return prev;
       let games: Game[];
       let nextState: DirectorState;
-      if (prev.format === "doubleswiss") {
+      if (prev.format === "quads") {
+        // Quads: generate all sections and all 3 rounds upfront
+        const settings = prev.quadSettings ?? DEFAULT_QUAD_SETTINGS;
+        const quadResult = generateQuadTournament(prev.players, settings);
+        const rounds: Round[] = [];
+        for (let r = 1; r <= quadResult.rounds; r++) {
+          const roundGames = quadResult.games.filter((g) => g.round === r);
+          rounds.push({ number: r, status: r === 1 ? "in_progress" : "pending" as any, games: roundGames });
+        }
+        games = rounds[0]?.games ?? [];
+        nextState = {
+          ...prev,
+          rounds,
+          currentRound: 1,
+          totalRounds: quadResult.rounds,
+          status: "in_progress",
+          quadSections: quadResult.sections,
+          quadSettings: settings,
+        };
+      } else if (prev.format === "doubleswiss") {
         games = generateDoubleSwissPairings(prev.players, [], 1);
         const round1: Round = { number: 1, status: "in_progress", games };
         nextState = { ...prev, rounds: [round1], currentRound: 1, status: "in_progress" };
@@ -526,6 +550,21 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       const currentRoundData = prev.rounds.find((r) => r.number === prev.currentRound);
       const allDone = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
       if (!allDone) return prev;
+
+      // ── Quads format — rounds are pre-generated, just advance ──────────
+      if (prev.format === "quads") {
+        if (nextRoundNum > prev.totalRounds) return prev;
+        const nextRound = prev.rounds.find((r) => r.number === nextRoundNum);
+        if (!nextRound) return prev;
+        result = { roundNum: nextRoundNum, games: nextRound.games, players: prev.players };
+        return {
+          ...prev,
+          currentRound: nextRoundNum,
+          rounds: prev.rounds.map((r) =>
+            r.number === nextRoundNum ? { ...r, status: "in_progress" } : r
+          ),
+        };
+      }
 
       // ── Swiss-Elim format ──────────────────────────────────────────────
       if (prev.format === "swiss_elim") {

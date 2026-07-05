@@ -49,6 +49,7 @@ import { EditPlayerModal } from "@/components/EditPlayerModal";
 import { PairingSwapModal } from "@/components/PairingSwapModal";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
+import QuadsDirectorPanel from "@/components/tournament/QuadsDirectorPanel";
 import {
   Crown,
   ChevronLeft,
@@ -3806,8 +3807,22 @@ export default function Director() {
               ══════════════════════════════════════════════════════════════════ */}
               {!isRegistration && (
                 <>
-                  {/* ── Round Pairings standalone header row ───────────────────────── */}
-                  <div>
+                  {/* ── Quads Section Panel ─────────────────────────────────────────────── */}
+                  {state.format === "quads" && state.quadSections && (
+                    <QuadsDirectorPanel
+                      sections={state.quadSections}
+                      players={state.players}
+                      games={state.rounds.flatMap((r) => r.games)}
+                      currentRound={state.currentRound}
+                      totalRounds={state.totalRounds}
+                      onEnterResult={enterResult}
+                      onAdvanceRound={() => generateNextRound()}
+                      onCompleteTournament={() => completeTournament()}
+                      isDark={isDark}
+                    />
+                  )}
+                  {/* ── Round Pairings standalone header row ─────────────────────────────────────── */}
+                  {state.format !== "quads" && (<div>
                     <div className="flex items-center justify-between py-1">
                       <h3
                         className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
@@ -3857,15 +3872,15 @@ export default function Director() {
                         }}
                       />
                     </div>
-                  </div>
+                  </div>)}
 
 
                   {/* ══════════════════════════════════════════════════════════════════
                       BOARD CARDS — Result entry (merged from Boards tab)
                   ══════════════════════════════════════════════════════════════════ */}
 
-                  {/* Generate Next Round CTA */}
-                  {allResultsIn && canGenerateNext && (
+                  {/* Generate Next Round CTA — hidden for quads (QuadsDirectorPanel handles advancement) */}
+                  {state.format !== "quads" && allResultsIn && canGenerateNext && (
                     <div
                       ref={generateCtaRef}
                       className={`rounded-xl border overflow-hidden ${
@@ -4219,7 +4234,7 @@ export default function Director() {
                       <p className="text-sm">Enter results for all boards to unlock next round pairing generation.</p>
                     </div>
                   )}                  {/* ── Board cards grid ────────────────────────────────────────────── */}
-                  <div>
+                  <div className={state.format === "quads" ? "hidden" : ""}>
                     <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                       <h2 className={`text-xs font-bold uppercase tracking-widest ${
                         isDark ? "text-white/30" : "text-[#436850]"

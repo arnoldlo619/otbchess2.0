@@ -69,6 +69,7 @@ import { PublicBracketView } from "@/components/PublicBracketView";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { LiveBoardsSection } from "@/components/LiveBoardsSection";
+import QuadsDirectorPanel from "@/components/tournament/QuadsDirectorPanel";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -2021,13 +2022,25 @@ export default function TournamentPage() {
                 </div>
               )}
               {mobileTab === "pairings" && (
-                <PairingsPanel
-                  players={displayState.players}
-                  rounds={displayState.rounds}
-                  totalRounds={displayState.totalRounds}
-                  currentRound={displayState.currentRound}
-                  myPlayerId={myPlayerId}
-                />
+                config?.format === "quads" && (displayState as any).quadSections ? (
+                  <QuadsDirectorPanel
+                    sections={(displayState as any).quadSections}
+                    players={displayState.players}
+                    games={displayState.rounds.flatMap((r) => r.games)}
+                    currentRound={displayState.currentRound}
+                    totalRounds={displayState.totalRounds}
+                    onEnterResult={() => {}}
+                    isDark={isDark}
+                  />
+                ) : (
+                  <PairingsPanel
+                    players={displayState.players}
+                    rounds={displayState.rounds}
+                    totalRounds={displayState.totalRounds}
+                    currentRound={displayState.currentRound}
+                    myPlayerId={myPlayerId}
+                  />
+                )
               )}
               {mobileTab === "standings" && (
                 <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} />

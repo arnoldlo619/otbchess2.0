@@ -6690,3 +6690,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove top bar redundancy — streamline header to minimal height
 - [x] Ensure hero/banner section spans full content width edge-to-edge
 - [x] Cards and sections use full available width with consistent internal padding
+
+## Quads Tournament Mode
+- [ ] Extend TournamentConfig.format union to include "quads"
+- [ ] Add quad-specific config fields (quadRatingSource, quadRemainderHandling, quadColorAssignment, quadTiebreakOrder)
+- [ ] Add sectionId field to Game interface
+- [ ] Build quads.ts engine module (generateQuadSections, sortPlayersForQuads, createFullQuads, createBottomSwissSection, generateQuadPairings, assignQuadColors, calculateQuadStandings, calculateSonnebornBerger, calculateDirectEncounter, validateQuadIntegrity)
+- [ ] Write comprehensive unit tests for quads engine (4-40 players)
+- [ ] Add "Quads" format option to TournamentWizard
+- [ ] Build host quad review/publish UI (section preview, manual drag-and-drop, publish pairings)
+- [ ] Build player-facing quads pairings and standings UI (section-based)
+- [ ] Implement Bottom Swiss fallback for remainder players
+- [ ] Integration testing and regression verification

@@ -75,7 +75,7 @@ interface WizardData {
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim" | "quads";
   rounds: number;
   /** For swiss_elim: number of Swiss rounds before elimination cutoff. */
   swissRounds?: number;
@@ -1009,7 +1009,7 @@ function QuickstartForm({
                 className="text-base font-semibold"
                 style={{ color: data.format !== "swiss" ? T.green : isDark ? T.dText : T.lText }}
               >
-                {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : "Elimination"}
+                {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : data.format === "quads" ? "Quads" : "Elimination"}
               </span>
               <ChevronDown
                 className="w-4 h-4 transition-transform duration-200"
@@ -1031,6 +1031,7 @@ function QuickstartForm({
                   { value: "doubleswiss",  label: "Double Swiss", sub: "Play both colors" },
                   { value: "roundrobin",   label: "Round Robin",  sub: "Everyone plays all" },
                   { value: "elimination",  label: "Elimination",  sub: "Single knockout" },
+                  { value: "quads",        label: "Quads",        sub: "4-player sections" },
                 ] as { value: WizardData["format"]; label: string; sub: string }[]).map((f) => {
                   const active = data.format === f.value;
                   return (
@@ -1046,6 +1047,9 @@ function QuickstartForm({
                         } else if (f.value === "swiss" || f.value === "doubleswiss") {
                           const suggested = recommendedRounds(data.maxPlayers);
                           if (suggested !== data.rounds) setRoundsSuggestion(suggested);
+                        } else if (f.value === "quads") {
+                          onChange({ rounds: 3 });
+                          setRoundsSuggestion(null);
                         } else {
                           setRoundsSuggestion(null);
                         }
@@ -1688,7 +1692,8 @@ function QuickstartForm({
           data.format === "swiss" ? "Swiss" :
           data.format === "doubleswiss" ? "Double Swiss" :
           data.format === "roundrobin" ? "Round Robin" :
-          data.format === "swiss_elim" ? "Swiss + Elim" : "Elimination";
+          data.format === "swiss_elim" ? "Swiss + Elim" :
+          data.format === "quads" ? "Quads" : "Elimination";
 
         const timeLabel = (() => {
           const base = data.timeBase;
@@ -2590,6 +2595,7 @@ function StepFormat({
     { value: "doubleswiss" as const, label: "Double Swiss", desc: "Each pairing plays both colors per round — maximum fairness.", icon: Shuffle },
     { value: "roundrobin" as const, label: "Round Robin", desc: "Everyone plays everyone — best for small groups.", icon: Users },
     { value: "elimination" as const, label: "Elimination", desc: "Single knockout bracket — fast and exciting.", icon: Trophy },
+    { value: "quads" as const, label: "Quads", desc: "4-player rating sections — each quad plays a 3-round round robin.", icon: Users2 },
   ];
 
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
@@ -3205,7 +3211,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     setTimeout(() => setSlugSaved(false), 2000);
   };
 
-  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : "Elimination";
+  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : data.format === "quads" ? "Quads" : "Elimination";
   const timeLabel = data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (
@@ -3513,6 +3519,7 @@ function BracketsStepEditor({
     { value: "doubleswiss", label: "Double Swiss" },
     { value: "roundrobin", label: "Round Robin" },
     { value: "elimination", label: "Elimination" },
+    { value: "quads", label: "Quads" },
   ];
 
   const timePresets = [

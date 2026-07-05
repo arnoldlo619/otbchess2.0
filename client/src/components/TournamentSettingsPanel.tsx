@@ -74,7 +74,7 @@ interface SettingsForm {
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim" | "quads";
   rounds: number;
   maxPlayers: number;
   timeBase: number;
@@ -415,6 +415,7 @@ export function TournamentSettingsPanel({
                 { value: "swiss" as const,       label: "Swiss System",  desc: "Paired by score — best for large groups.", icon: Shuffle },
                 { value: "roundrobin" as const,  label: "Round Robin",   desc: "Everyone plays everyone.", icon: Users },
                 { value: "elimination" as const, label: "Elimination",   desc: "Single knockout bracket.", icon: Trophy },
+                { value: "quads" as const,       label: "Quads",         desc: "4-player sections by rating.", icon: Users },
               ].map((f) => {
                 const Icon = f.icon;
                 const active = form.format === f.value;
