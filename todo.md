@@ -6711,6 +6711,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Prevent horizontal overflow on mobile across all 3 pages
 
 ## Quad Prize Templates / Winner Recognition / Social Recap Assets (Jul 5 2026)
+- [x] SocialAssetGenerator: 8 built-in themes (Dark Forest, Midnight Blue, Royal Purple, Crimson, Gold, Slate, Light Clean, Neon)
+- [x] SocialAssetGenerator: theme swatch picker with gradient preview and active indicator
+- [x] SocialAssetGenerator: custom color editor (3 background stops, accent start/end, brand color)
+- [x] SocialAssetGenerator: gradient direction selector (vertical, horizontal, diagonal, radial)
+- [x] SocialAssetGenerator: background pattern selector (chess, dots, lines, none)
+- [x] SocialAssetGenerator: live canvas preview — re-renders automatically on every theme/format change
+- [x] SocialAssetGenerator: Reset to built-in button when custom theme is active
+- [x] SocialAssetGenerator: theme name reflected in downloaded filename
+- [x] Tests: 21 unit tests for theme definitions, caption generation, custom color logic (all passing)
+- [x] TypeScript: 0 errors
 - [x] Server: quadsCompletion.ts — prize template generation (5 templates), winner auto-assignment, achievement detection (8 types), recap data generation, highlight detection, caption generation
 - [x] Server: /api/recap/:slug GET endpoint (fetch published recap by slug)
 - [x] Server: /api/recap/:slug POST endpoint (generate and publish recap for a tournament)
