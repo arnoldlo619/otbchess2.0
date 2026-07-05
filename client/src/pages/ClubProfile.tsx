@@ -473,34 +473,35 @@ function FeedEventCard({
     : false;
 
   return (
-    <div className={`group ${ (isPoll || isRsvp) ? "px-5 py-4" : "px-5 py-4" }`}>
+    <div className={`group ${ (isPoll || isRsvp) ? "px-5 py-5" : "px-5 py-5" }`}>
       {/* Standard activity row — Threads-style post card */}
       {!isPoll && !isRsvp && (
         <>
           {/* ── POST HEADER: avatar + name + timestamp + menu ── */}
           <div className="flex items-start gap-3 mb-3">
-            {/* Circular avatar */}
+            {/* Circular avatar — 44px matching Threads */}
             <div className="flex-shrink-0">
               {event.actorAvatarUrl ? (
                 <img
                   src={event.actorAvatarUrl}
                   alt={event.actorName}
-                  className={`w-10 h-10 rounded-full object-cover ring-2 ${isDark ? "ring-white/10" : "ring-black/6"}`}
+                  className={`w-11 h-11 rounded-full object-cover ring-2 ${isDark ? "ring-white/10" : "ring-black/6"}`}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               ) : (
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold flex-shrink-0"
                   style={{ background: accent + "33", color: accent }}
                 >
                   {event.actorName?.[0]?.toUpperCase() ?? "?"}
                 </div>
               )}
             </div>
-            {/* Name + type badge + timestamp */}
+            {/* Name + timestamp on same row, type badge below */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-sm font-bold ${textMain} leading-none`}>{event.actorName}</span>
+                <span className={`text-[15px] font-bold ${textMain} leading-tight`}>{event.actorName}</span>
+                <span className={`text-[13px] ${textMuted} leading-tight`}>{relativeTime(event.createdAt)}</span>
                 {event.type !== "announcement" && (
                   <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${accentCls}`}>
                     {cfg.icon}
@@ -508,7 +509,6 @@ function FeedEventCard({
                   </span>
                 )}
               </div>
-              <span className={`text-xs ${textMuted} mt-0.5 block`}>{relativeTime(event.createdAt)}</span>
             </div>
             {/* ··· menu */}
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -535,12 +535,12 @@ function FeedEventCard({
           </div>
 
           {/* ── POST BODY ── */}
-          <div className="ml-[52px]">
-            {/* Primary description */}
-            <p className={`text-sm font-medium ${textMain} leading-relaxed mb-1`}>{event.description}</p>
+          <div className="ml-[56px]">
+            {/* Primary description — Threads uses regular weight 15px */}
+            <p className={`text-[15px] font-normal ${textMain} leading-[1.55] mb-1`}>{event.description}</p>
             {/* Secondary detail */}
             {event.detail && (
-              <p className={`text-sm leading-relaxed mb-2 ${
+              <p className={`text-[14px] leading-[1.55] mb-2 ${
                 event.type === "announcement" ? (isDark ? "text-white/75" : "text-[#436850]") : textMuted
               }`}>{event.detail}</p>
             )}
@@ -557,46 +557,47 @@ function FeedEventCard({
             )}
 
             {/* ── THREADS-STYLE ACTION BAR ── */}
-            <div className="flex items-center gap-1 mt-2 -ml-1.5">
-              {/* Heart / Like */}
+            {/* Threads: bare icons, no background pill, generous gap, 20px icons */}
+            <div className="flex items-center gap-4 mt-3 -ml-0.5">
+              {/* Heart / Like — fills red when liked */}
               <button
                 onClick={() => isMemberUser && userId && onReaction?.(event.id, "❤️")}
                 disabled={!isMemberUser || !userId}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-1.5 transition-all ${
                   userHearted
                     ? isDark ? "text-red-400" : "text-red-500"
-                    : isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                    : isDark ? "text-white/35 hover:text-white/75" : "text-[#436850]/45 hover:text-[#436850]"
                 } disabled:cursor-default`}
               >
-                <Heart className={`w-[18px] h-[18px] transition-all ${ userHearted ? "fill-current" : "" }`} />
-                {totalHearts > 0 && <span className="text-xs">{totalHearts}</span>}
+                <Heart className={`w-5 h-5 transition-all ${ userHearted ? "fill-current" : "" }`} />
+                {totalHearts > 0 && <span className={`text-[13px] font-medium ${isDark ? "text-white/50" : "text-[#436850]/60"}`}>{totalHearts}</span>}
               </button>
 
               {/* Comment (visual only) */}
               <button
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                  isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                className={`flex items-center gap-1.5 transition-all ${
+                  isDark ? "text-white/35 hover:text-white/75" : "text-[#436850]/45 hover:text-[#436850]"
                 }`}
               >
-                <MessageCircle className="w-[18px] h-[18px]" />
+                <MessageCircle className="w-5 h-5" />
               </button>
 
               {/* Repost (visual only) */}
               <button
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                  isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                className={`flex items-center gap-1.5 transition-all ${
+                  isDark ? "text-white/35 hover:text-white/75" : "text-[#436850]/45 hover:text-[#436850]"
                 }`}
               >
-                <Repeat2 className="w-[18px] h-[18px]" />
+                <Repeat2 className="w-5 h-5" />
               </button>
 
               {/* Share */}
               <button
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                  isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                className={`flex items-center gap-1.5 transition-all ${
+                  isDark ? "text-white/35 hover:text-white/75" : "text-[#436850]/45 hover:text-[#436850]"
                 }`}
               >
-                <Send className="w-[18px] h-[18px]" />
+                <Send className="w-5 h-5" />
               </button>
 
               {/* Emoji reaction picker */}
