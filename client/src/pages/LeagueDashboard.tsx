@@ -118,11 +118,32 @@ function MovementIcon({ movement }: { movement?: string }) {
 }
 
 function Avatar({
-  url, chesscomUrl, name, size = 8, ring = false, glow = false,
-}: { url?: string | null; chesscomUrl?: string | null; name: string; size?: number; ring?: boolean; glow?: boolean }) {
+  url, chesscomUrl, name, size = 8, ring = false, glow = false, loading = false,
+}: { url?: string | null; chesscomUrl?: string | null; name: string; size?: number; ring?: boolean; glow?: boolean; loading?: boolean }) {
   const sizeClass = `w-${size} h-${size}`;
   const resolvedUrl = chesscomUrl ?? url ?? null;
   const glowStyle = glow ? { boxShadow: "0 0 14px oklch(0.55 0.13 145 / 0.55), 0 2px 8px rgba(0,0,0,0.45)" } : { boxShadow: "0 2px 6px rgba(0,0,0,0.35)" };
+
+  // Skeleton shimmer while chess.com photo is in-flight
+  if (loading) {
+    return (
+      <div
+        className={`${sizeClass} rounded-full flex-shrink-0 overflow-hidden${ring ? " ring-2 ring-white/20" : ""}`}
+        style={{ background: "oklch(0.22 0.06 145)", position: "relative" }}
+        aria-label="Loading avatar"
+      >
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "linear-gradient(90deg, transparent 0%, oklch(0.32 0.08 145 / 0.6) 50%, transparent 100%)",
+            backgroundSize: "200% 100%",
+            animation: "avatar-shimmer 1.4s ease-in-out infinite",
+          }}
+        />
+      </div>
+    );
+  }
+
   if (resolvedUrl) {
     return (
       <img
@@ -946,12 +967,18 @@ export default function LeagueDashboard() {
 
   // chess.com avatars for all players (standings, schedule, players grid, etc.)
   const allPlayerChesscomUsernames = (league?.players ?? []).map(p => p.chesscomUsername ?? "").filter(Boolean);
-  const { avatars: allPlayerChesscomAvatars } = useChessAvatars(allPlayerChesscomUsernames);
+  const { avatars: allPlayerChesscomAvatars, allLoaded: allAvatarsLoaded } = useChessAvatars(allPlayerChesscomUsernames);
 
   // Helper: resolve chess.com avatar for any player by their chesscomUsername
   function getChesscomAvatar(chesscomUsername?: string | null): string | null {
     if (!chesscomUsername) return null;
     return allPlayerChesscomAvatars.get(chesscomUsername.toLowerCase()) ?? null;
+  }
+
+  // Helper: true while chess.com avatar is still being fetched for this username
+  function isChesscomAvatarLoading(chesscomUsername?: string | null): boolean {
+    if (!chesscomUsername) return false;
+    return !allAvatarsLoaded && !allPlayerChesscomAvatars.has(chesscomUsername.toLowerCase());
   }
 
   // Recent completed matches (last 5)
@@ -1507,7 +1534,8 @@ export default function LeagueDashboard() {
               }) => (
                 <div className="flex flex-col items-center gap-1.5">
                   <div className="relative">
-                    <Avatar url={player.avatarUrl} chesscomUrl={getChesscomAvatar(player.chesscomUsername)} name={player.displayName} size={rank === 1 ? 16 : 12} ring glow />
+                                        <Avatar
+                      url={player.avatarUrl} chesscomUrl={getChesscomAvatar(player.chesscomUsername)} name={player.displayName} size={rank === 1 ? 16 : 12} ring glow loading={isChesscomAvatarLoading(player.chesscomUsername)} />
                     <span
                       className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] shadow-lg font-bold"
                       style={{ background: medalColor, color: "#fff", fontSize: "9px" }}
@@ -1647,6 +1675,7 @@ export default function LeagueDashboard() {
                               chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === m.playerWhiteId)?.chesscomUsername)}
                               name={m.playerWhiteName}
                               size={7}
+                              loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === m.playerWhiteId)?.chesscomUsername)}
                             />
                             <span
                               className="text-xs truncate"
@@ -1680,6 +1709,7 @@ export default function LeagueDashboard() {
                               chesscomUrl={getChesscomAvatar(league.players.find(p => p.playerId === m.playerBlackId)?.chesscomUsername)}
                               name={m.playerBlackName}
                               size={7}
+                              loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === m.playerBlackId)?.chesscomUsername)}
                             />
                           </div>
                           {/* My outcome pill */}
@@ -1757,6 +1787,7 @@ export default function LeagueDashboard() {
                       size={12}
                       ring
                       glow={myMatchThisWeek.playerWhiteId === user?.id}
+                      loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername)}
                     />
                     <span className="text-xs font-medium text-center truncate max-w-[80px]" style={{ color: textMain }}>
                       {myMatchThisWeek.playerWhiteName}
@@ -1823,6 +1854,7 @@ export default function LeagueDashboard() {
                       size={12}
                       ring
                       glow={myMatchThisWeek.playerBlackId === user?.id}
+                      loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername)}
                     />
                     <span className="text-xs font-medium text-center truncate max-w-[80px]" style={{ color: textMain }}>
                       {myMatchThisWeek.playerBlackName}
@@ -1907,7 +1939,7 @@ export default function LeagueDashboard() {
                       return (
                         <>
                           <div className="flex items-center gap-2">
-                            <Avatar url={oppPlayer?.avatarUrl} chesscomUrl={getChesscomAvatar(oppPlayer?.chesscomUsername)} name={oppName} size={10} />
+                            <Avatar url={oppPlayer?.avatarUrl} chesscomUrl={getChesscomAvatar(oppPlayer?.chesscomUsername)} name={oppName} size={10} loading={isChesscomAvatarLoading(oppPlayer?.chesscomUsername)} />
                             <div className="min-w-0">
                               <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{oppName}</div>
                               {oppStanding && (
@@ -2016,7 +2048,7 @@ export default function LeagueDashboard() {
                           {i + 1}
                         </div>
                         <div className="relative flex-shrink-0">
-                          <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} />
+                          <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
                           {isMe && (
                             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                           )}
@@ -2073,7 +2105,7 @@ export default function LeagueDashboard() {
                       }}
                     >
                       <div className="relative flex-shrink-0">
-                        <Avatar url={p.avatarUrl} chesscomUrl={getChesscomAvatar(p.chesscomUsername)} name={p.displayName} size={10} ring={isMe} />
+                        <Avatar url={p.avatarUrl} chesscomUrl={getChesscomAvatar(p.chesscomUsername)} name={p.displayName} size={10} ring={isMe} loading={isChesscomAvatarLoading(p.chesscomUsername)} />
                         {isMe && (
                           <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                         )}
@@ -2517,6 +2549,7 @@ export default function LeagueDashboard() {
                             size={11}
                             ring={mine && match.playerWhiteId === user?.id}
                             glow={mine && match.playerWhiteId === user?.id}
+                            loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerWhiteId)?.chesscomUsername)}
                           />
                           <span
                             className="text-xs font-medium text-center truncate max-w-[80px]"
@@ -2594,6 +2627,7 @@ export default function LeagueDashboard() {
                             size={11}
                             ring={mine && match.playerBlackId === user?.id}
                             glow={mine && match.playerBlackId === user?.id}
+                            loading={isChesscomAvatarLoading(league.players.find(p => p.playerId === match.playerBlackId)?.chesscomUsername)}
                           />
                           <span
                             className="text-xs font-medium text-center truncate max-w-[80px]"
@@ -2755,7 +2789,7 @@ export default function LeagueDashboard() {
                         {/* Player info */}
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="relative flex-shrink-0">
-                            <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} />
+                            <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
                             {isMe && (
                               <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                             )}
@@ -2869,7 +2903,7 @@ export default function LeagueDashboard() {
                           {/* Avatar + name */}
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative flex-shrink-0">
-                              <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} />
+                              <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={10} glow={i < 3} ring={isMe} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
                               {isMe && (
                                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
                               )}
@@ -3152,7 +3186,7 @@ export default function LeagueDashboard() {
                     ) : (
                       <span className="w-7 text-center text-sm" style={{ color: textMuted }}>{i + 1}</span>
                     )}
-                    <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={9} glow={i < 3} />
+                    <Avatar url={s.avatarUrl} chesscomUrl={getChesscomAvatar(s.chesscomUsername)} name={s.displayName} size={9} glow={i < 3} loading={isChesscomAvatarLoading(s.chesscomUsername)} />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate" style={{ color: isMe ? accent : textMain }}>
                         {s.displayName}{isMe ? " (you)" : ""}
