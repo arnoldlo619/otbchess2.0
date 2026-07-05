@@ -1008,7 +1008,7 @@ export default function LeagueDashboard() {
           {/* Club logo / back button */}
           <button
             onClick={() => navigate(`/clubs/${league.clubId}`)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0"
+            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
             style={{ background: accent }}
             title={league.clubName ?? "Back to Club"}
           >
@@ -1020,7 +1020,7 @@ export default function LeagueDashboard() {
           </button>
 
           {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.05 145)" }} />
+          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
 
           {/* Nav icons */}
           <nav className="flex flex-col items-center gap-1 flex-1">
@@ -1034,7 +1034,7 @@ export default function LeagueDashboard() {
                   className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
                   style={{
                     background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.60 0.04 145)",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
                   }}
                   title={tab.label}
                 >
@@ -1060,7 +1060,7 @@ export default function LeagueDashboard() {
           </nav>
 
           {/* Divider */}
-          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.05 145)" }} />
+          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
 
           {/* Bottom actions */}
           <div className="flex flex-col items-center gap-1">
@@ -1069,7 +1069,7 @@ export default function LeagueDashboard() {
                 onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
                 disabled={pushLoading || pushStatus === "denied"}
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.60 0.04 145)" }}
+                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.55 0.08 145)" }}
                 title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
               >
                 {pushLoading ? (
@@ -1085,7 +1085,7 @@ export default function LeagueDashboard() {
             <button
               onClick={() => setShowShare(true)}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: "oklch(0.60 0.04 145)" }}
+              style={{ color: "oklch(0.55 0.08 145)" }}
               title="Share League"
             >
               <Share2 size={16} />
