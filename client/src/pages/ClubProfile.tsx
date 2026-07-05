@@ -1410,7 +1410,7 @@ export default function ClubProfile() {
             top: 0,
             left: 0,
             bottom: 0,
-            width: "64px",
+            width: "56px",
             transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
             backgroundImage: isDark
               ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
@@ -1421,7 +1421,7 @@ export default function ClubProfile() {
             zIndex: 40,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.width = "64px"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.width = "56px"; }}
         >
           {/* Top: !! thumbnail icon + OTB!! logo on hover */}
           {/* Logo crossfade: !! thumbnail fades out, OTB!! logo fades in on hover */}
@@ -1442,14 +1442,14 @@ export default function ClubProfile() {
           </div>
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
-          <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
+          <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={28} />,
-                events: <Calendar size={28} />,
-                members: <Users size={28} />,
-                tournaments: <Trophy size={28} />,
-                leagues: <Award size={28} />,
+                feed: <Megaphone size={26} />,
+                events: <Calendar size={26} />,
+                members: <Users size={26} />,
+                tournaments: <Trophy size={26} />,
+                leagues: <Award size={26} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
@@ -1472,15 +1472,15 @@ export default function ClubProfile() {
                   onClick={() => handleTabChange(t)}
                   className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
                   style={{
-                    height: "60px",
-                    minWidth: "48px",
-                    paddingLeft: "10px",
+                    height: "64px",
+                    minWidth: "44px",
+                    paddingLeft: "14px",
                     paddingRight: "10px",
-                    background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.15)") : "transparent",
-                    color: isActive ? "#fff" : "rgba(255,255,255,0.5)",
+                    background: "transparent",
+                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.38)",
                   }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; } }}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; } }}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; } }}
                   aria-label={labelMap[t]}
                 >
                   {/* Icon — fixed width so it doesn't shift on expand */}
@@ -1516,12 +1516,12 @@ export default function ClubProfile() {
             <button
               onClick={handleShare}
               className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+              style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
               aria-label="Share Club"
             >
-              <span className="flex-shrink-0 w-7 flex items-center justify-center"><Share2 size={26} /></span>
+              <span className="flex-shrink-0 w-7 flex items-center justify-center"><Share2 size={24} /></span>
               <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Share</span>
             </button>
 
@@ -1529,12 +1529,12 @@ export default function ClubProfile() {
               <button
                 onClick={() => setShowContactOwner(true)}
                 className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+                style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
                 aria-label="Contact Owner"
               >
-                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MessageSquare size={26} /></span>
+                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MessageSquare size={24} /></span>
                 <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Contact</span>
               </button>
             )}
@@ -1543,12 +1543,12 @@ export default function ClubProfile() {
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
                 className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ height: "44px", paddingLeft: "10px", paddingRight: "10px", color: "rgba(255,255,255,0.5)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+                style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
                 aria-label="Settings"
               >
-                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={26} /></span>
+                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={24} /></span>
                 <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
               </button>
             )}
@@ -1606,7 +1606,7 @@ export default function ClubProfile() {
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
-            <div className="px-4 lg:pl-[226px] lg:pr-10 xl:pl-[238px] xl:pr-14 py-5">
+            <div className="px-4 lg:pl-[212px] lg:pr-10 xl:pl-[224px] xl:pr-14 py-5">
               <div className="max-w-6xl">
                 {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
                 <div
