@@ -128,6 +128,11 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Heart,
+  MessageCircle,
+  Repeat2,
+  Send,
+  MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -459,79 +464,175 @@ function FeedEventCard({
     onRsvped?.();
   }
 
+  // Compute total heart reactions for the Threads-style like count
+  const totalHearts = event.reactions
+    ? Object.values(event.reactions).reduce((sum, voters) => sum + Object.keys(voters).length, 0)
+    : 0;
+  const userHearted = userId && event.reactions
+    ? Object.values(event.reactions).some((voters) => voters[userId])
+    : false;
+
   return (
-    <div className={`group ${ (isPoll || isRsvp) ? "px-5 py-4" : "flex items-start gap-3 px-5 py-4" }`}>
-      {/* Standard activity row (non-poll, non-rsvp) */}
+    <div className={`group ${ (isPoll || isRsvp) ? "px-5 py-4" : "px-5 py-4" }`}>
+      {/* Standard activity row — Threads-style post card */}
       {!isPoll && !isRsvp && (
         <>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>
-            {cfg.icon}
+          {/* ── POST HEADER: avatar + name + timestamp + menu ── */}
+          <div className="flex items-start gap-3 mb-3">
+            {/* Circular avatar */}
+            <div className="flex-shrink-0">
+              {event.actorAvatarUrl ? (
+                <img
+                  src={event.actorAvatarUrl}
+                  alt={event.actorName}
+                  className={`w-10 h-10 rounded-full object-cover ring-2 ${isDark ? "ring-white/10" : "ring-black/6"}`}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background: accent + "33", color: accent }}
+                >
+                  {event.actorName?.[0]?.toUpperCase() ?? "?"}
+                </div>
+              )}
+            </div>
+            {/* Name + type badge + timestamp */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-sm font-bold ${textMain} leading-none`}>{event.actorName}</span>
+                {event.type !== "announcement" && (
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${accentCls}`}>
+                    {cfg.icon}
+                    <span className="capitalize">{event.type.replace(/_/g, " ")}</span>
+                  </span>
+                )}
+              </div>
+              <span className={`text-xs ${textMuted} mt-0.5 block`}>{relativeTime(event.createdAt)}</span>
+            </div>
+            {/* ··· menu */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {event.linkHref && (
+                <a
+                  href={event.linkHref}
+                  className={`text-xs font-semibold px-2 py-1 rounded-lg transition-colors ${
+                    isDark ? "text-[#4CAF50] hover:bg-white/8" : "text-[#436850] hover:bg-[#ADBC9F]/30"
+                  }`}
+                >{event.linkLabel ?? "View"} →</a>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => onDelete(event.id)}
+                  className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
+                    isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-[#ADBC9F]/50 text-[#436850]/70 hover:text-[#436850]"
+                  }`}
+                  title="Remove from feed"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium ${textMain} leading-snug`}>{event.description}</p>
+
+          {/* ── POST BODY ── */}
+          <div className="ml-[52px]">
+            {/* Primary description */}
+            <p className={`text-sm font-medium ${textMain} leading-relaxed mb-1`}>{event.description}</p>
+            {/* Secondary detail */}
             {event.detail && (
-              <p className={`text-sm mt-1 leading-relaxed ${
-                event.type === "announcement" ? (isDark ? "text-white/70" : "text-[#436850]") : textMuted
+              <p className={`text-sm leading-relaxed mb-2 ${
+                event.type === "announcement" ? (isDark ? "text-white/75" : "text-[#436850]") : textMuted
               }`}>{event.detail}</p>
             )}
             {/* Image attachment */}
             {event.imageUrl && (
-              <div className="mt-3 rounded-2xl overflow-hidden">
+              <div className="mt-2 mb-3 rounded-2xl overflow-hidden border" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
                 <img
                   src={event.imageUrl}
                   alt="Post attachment"
-                  className="w-full max-h-72 object-cover rounded-2xl"
+                  className="w-full max-h-80 object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               </div>
             )}
-            {/* Reaction bar */}
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className={`text-xs ${textMuted}`}>{relativeTime(event.createdAt)}</span>
-              {event.linkHref && (
-                <a href={event.linkHref} className={`text-xs font-semibold transition-colors ${
-                  isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#436850] hover:text-[#3a5230]"
-                }`}>{event.linkLabel ?? "View"} &rarr;</a>
-              )}
-              {/* Existing reaction bubbles */}
-              {event.reactions && Object.entries(event.reactions).map(([emoji, voters]) => {
-                const count = Object.keys(voters).length;
-                if (count === 0) return null;
-                const userReacted = userId ? !!voters[userId] : false;
-                return (
-                  <button
-                    key={emoji}
-                    onClick={() => isMemberUser && userId && onReaction?.(event.id, emoji)}
-                    disabled={!isMemberUser || !userId}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border transition-all ${
-                      userReacted
-                        ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-[#4CAF50]" : "bg-[#436850]/15 border-[#436850]/30 text-[#436850]"
-                        : isDark ? "bg-white/5 border-white/10 text-white/60 hover:bg-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850]/70 hover:bg-[#ADBC9F]/40"
-                    } disabled:cursor-default`}
-                  >
-                    <span>{emoji}</span>
-                    <span>{count}</span>
-                  </button>
-                );
-              })}
-              {/* Add reaction button */}
+
+            {/* ── THREADS-STYLE ACTION BAR ── */}
+            <div className="flex items-center gap-1 mt-2 -ml-1.5">
+              {/* Heart / Like */}
+              <button
+                onClick={() => isMemberUser && userId && onReaction?.(event.id, "❤️")}
+                disabled={!isMemberUser || !userId}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  userHearted
+                    ? isDark ? "text-red-400" : "text-red-500"
+                    : isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                } disabled:cursor-default`}
+              >
+                <Heart className={`w-[18px] h-[18px] transition-all ${ userHearted ? "fill-current" : "" }`} />
+                {totalHearts > 0 && <span className="text-xs">{totalHearts}</span>}
+              </button>
+
+              {/* Comment (visual only) */}
+              <button
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                }`}
+              >
+                <MessageCircle className="w-[18px] h-[18px]" />
+              </button>
+
+              {/* Repost (visual only) */}
+              <button
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                }`}
+              >
+                <Repeat2 className="w-[18px] h-[18px]" />
+              </button>
+
+              {/* Share */}
+              <button
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  isDark ? "text-white/40 hover:text-white/80 hover:bg-white/6" : "text-[#436850]/50 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
+                }`}
+              >
+                <Send className="w-[18px] h-[18px]" />
+              </button>
+
+              {/* Emoji reaction picker */}
               {isMemberUser && userId && (
-                <div className="relative">
+                <div className="relative ml-auto">
                   <button
                     onClick={() => setShowEmojiPicker((v) => !v)}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all ${
-                      isDark ? "bg-white/5 border-white/10 text-white/30 hover:text-white/60 hover:bg-white/10" : "bg-[#FBFADA]/70 border-[#ADBC9F]/60 text-[#436850]/50 hover:bg-[#ADBC9F]/40 hover:text-[#436850]"
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                      isDark ? "text-white/30 hover:text-white/70 hover:bg-white/6" : "text-[#436850]/40 hover:text-[#436850] hover:bg-[#ADBC9F]/25"
                     }`}
                     title="Add reaction"
                   >
-                    <span>+</span>
-                    <span>&#128512;</span>
+                    <span className="text-base">&#128512;</span>
+                    {/* Show existing non-heart reactions as small bubbles */}
+                    {event.reactions && Object.entries(event.reactions).filter(([em]) => em !== "❤️").map(([emoji, voters]) => {
+                      const count = Object.keys(voters).length;
+                      if (count === 0) return null;
+                      const userReacted = userId ? !!voters[userId] : false;
+                      return (
+                        <span
+                          key={emoji}
+                          className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] font-semibold border ml-1 ${
+                            userReacted
+                              ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-[#4CAF50]" : "bg-[#436850]/15 border-[#436850]/30 text-[#436850]"
+                              : isDark ? "bg-white/5 border-white/10 text-white/60" : "bg-[#f0f5e8] border-[#ADBC9F] text-[#436850]/70"
+                          }`}
+                        >
+                          {emoji} {count}
+                        </span>
+                      );
+                    })}
                   </button>
                   {showEmojiPicker && (
                     <>
-                      {/* Backdrop to close */}
                       <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
-                      <div className={`absolute bottom-full mb-2 left-0 z-50 flex gap-1 p-2 rounded-2xl shadow-xl border ${
+                      <div className={`absolute bottom-full mb-2 right-0 z-50 flex gap-1 p-2 rounded-2xl shadow-xl border ${
                         isDark ? "bg-[#0d1a0f] border-white/15" : "bg-white border-[#ADBC9F]"
                       }`}>
                         {REACTION_EMOJIS.map((em) => (
@@ -548,17 +649,6 @@ function FeedEventCard({
               )}
             </div>
           </div>
-          {canDelete && (
-            <button
-              onClick={() => onDelete(event.id)}
-              className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
-                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-[#ADBC9F]/50 text-[#436850]/70 hover:text-[#436850]"
-              }`}
-              title="Remove from feed"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
         </>
       )}
 
@@ -1360,11 +1450,11 @@ export default function ClubProfile() {
           <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={22} />,
-                events: <Calendar size={22} />,
-                members: <Users size={22} />,
-                tournaments: <Trophy size={22} />,
-                leagues: <Award size={22} />,
+                feed: <Megaphone size={24} />,
+                events: <Calendar size={24} />,
+                members: <Users size={24} />,
+                tournaments: <Trophy size={24} />,
+                leagues: <Award size={24} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
@@ -1387,8 +1477,8 @@ export default function ClubProfile() {
                   onClick={() => handleTabChange(t)}
                   className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
                   style={{
-                    height: "44px",
-                    minWidth: "40px",
+                    height: "52px",
+                    minWidth: "44px",
                     paddingLeft: "10px",
                     paddingRight: "10px",
                     background: isActive ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.15)") : "transparent",
@@ -1399,7 +1489,7 @@ export default function ClubProfile() {
                   aria-label={labelMap[t]}
                 >
                   {/* Icon — fixed width so it doesn't shift on expand */}
-                  <span className="relative flex-shrink-0 w-5 flex items-center justify-center">
+                  <span className="relative flex-shrink-0 w-6 flex items-center justify-center">
                     {iconMap[t]}
                     {badge > 0 && (
                       <span
@@ -1436,7 +1526,7 @@ export default function ClubProfile() {
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
               aria-label="Share Club"
             >
-              <span className="flex-shrink-0 w-5 flex items-center justify-center"><Share2 size={20} /></span>
+              <span className="flex-shrink-0 w-6 flex items-center justify-center"><Share2 size={22} /></span>
               <span className="text-[12px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Share</span>
             </button>
 
@@ -1449,7 +1539,7 @@ export default function ClubProfile() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
                 aria-label="Contact Owner"
               >
-                <span className="flex-shrink-0 w-5 flex items-center justify-center"><MessageSquare size={20} /></span>
+                <span className="flex-shrink-0 w-6 flex items-center justify-center"><MessageSquare size={22} /></span>
                 <span className="text-[12px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Contact</span>
               </button>
             )}
@@ -1463,7 +1553,7 @@ export default function ClubProfile() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
                 aria-label="Settings"
               >
-                <span className="flex-shrink-0 w-5 flex items-center justify-center"><MoreHorizontal size={20} /></span>
+                <span className="flex-shrink-0 w-6 flex items-center justify-center"><MoreHorizontal size={22} /></span>
                 <span className="text-[12px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
               </button>
             )}
