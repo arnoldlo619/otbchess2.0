@@ -1563,13 +1563,11 @@ export default function ClubProfile() {
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
-            <div className="px-4 lg:pl-[224px] lg:pr-10 xl:pl-[236px] xl:pr-14 py-5">
-              <div className="max-w-6xl">
-                {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
-                <div
-                  className={`relative rounded-2xl overflow-hidden mb-6${!club.bannerUrl ? " chess-board-bg" : ""}`}
-                  style={{
-                    minHeight: "180px",
+            {/* ── CLUB BANNER — full-bleed header ───────────────────────────── */}
+            <div
+              className={`relative overflow-hidden${!club.bannerUrl ? " chess-board-bg" : ""}`}
+              style={{
+                minHeight: "260px",
                     ...(club.bannerUrl ? {
                       backgroundImage: `url(${club.bannerUrl})`,
                       backgroundSize: "cover",
@@ -1597,10 +1595,52 @@ export default function ClubProfile() {
                       }}
                     />
                   )}
-                  {/* Content */}
-                  <div className="relative z-10 p-5 sm:p-7">
-                    {/* Top row: avatar + name + CTA */}
-                    <div className="flex items-start gap-4 sm:gap-5">
+                  {/* Content — bottom-anchored, sidebar-aware */}
+                  <div className="relative z-10 flex flex-col justify-end h-full" style={{ minHeight: "260px", padding: "0 1.5rem 1.5rem", paddingLeft: "calc(68px + 1.5rem)" }}>
+                    {/* CTA buttons — absolute top-right */}
+                    <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+                      <AvatarNavDropdown currentPage="Clubs" />
+                      {!isOwner && (
+                        <button
+                          onClick={handleFollow}
+                          disabled={followingLoading}
+                          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50"
+                          style={following
+                            ? { borderColor: "rgba(255,255,255,0.25)", color: "rgba(255,255,255,0.7)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)" }
+                            : { borderColor: `${accent}88`, color: accent, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)" }
+                          }
+                        >
+                          {followingLoading
+                            ? <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                            : following ? <><Bell size={11} /> Following</> : <><Bell size={11} /> Follow</>
+                          }
+                          {followerCount > 0 && (
+                            <span className="ml-0.5 opacity-70">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
+                          )}
+                        </button>
+                      )}
+                      {!isOwner && !isDirector && (
+                        joined ? (
+                          <button
+                            onClick={handleLeave}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
+                            style={{ borderColor: "rgba(255,255,255,0.25)", color: "rgba(255,255,255,0.7)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)" }}
+                          >
+                            Leave
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleJoin}
+                            className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
+                            style={{ background: accent, color: "#fff" }}
+                          >
+                            {club.isPublic ? "Join" : "Request"}
+                          </button>
+                        )
+                      )}
+                    </div>
+                    {/* Bottom row: avatar + name + CTA */}
+                    <div className="flex items-end gap-4 sm:gap-5">
                       {/* Club avatar */}
                       <div
                         className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
@@ -1645,52 +1685,7 @@ export default function ClubProfile() {
                         </div>
                       </div>
 
-                      {/* CTA buttons — top right */}
-                      <div className="flex-shrink-0 flex items-center gap-2">
-                        {/* Avatar dropdown — moved from removed top bar */}
-                        <AvatarNavDropdown currentPage="Clubs" />
-                        {/* Follow button — all users including members */}
-                        {!isOwner && (
-                          <button
-                            onClick={handleFollow}
-                            disabled={followingLoading}
-                            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50"
-                            style={following
-                              ? { borderColor: "oklch(0.32 0.06 145)", color: "oklch(0.60 0.04 145)", background: "transparent" }
-                              : { borderColor: `${accent}55`, color: accent, background: `${accent}18` }
-                            }
-                          >
-                            {followingLoading
-                              ? <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-                              : following ? <><Bell size={11} /> Following</> : <><Bell size={11} /> Follow</>
-                            }
-                            {followerCount > 0 && (
-                              <span className="ml-0.5 opacity-70">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
-                            )}
-                          </button>
-                        )}
-                        {/* Join / Leave — non-members only */}
-                        {!isOwner && !isDirector && (
-                          joined ? (
-                            <button
-                              onClick={handleLeave}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
-                              style={{ borderColor: "oklch(0.30 0.05 145)", color: "oklch(0.60 0.04 145)" }}
-                            >
-                              Leave
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleJoin}
-                              className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-                              style={{ background: accent, color: "#fff" }}
-                            >
-                              {club.isPublic ? "Join" : "Request"}
-                            </button>
-                          )
-                        )}
-                      </div>
-                    </div>{/* end top row */}
+                    </div>{/* end bottom row */}
 
                     {/* Description */}
                     {club.description && (
@@ -1849,9 +1844,11 @@ export default function ClubProfile() {
                       </>
                     )}
                   </div>
-                </div>
+            </div>{/* close full-bleed banner */}
 
-
+            {/* ── PADDED CONTENT BELOW BANNER ─────────────────────────── */}
+            <div className="px-4 lg:pl-[224px] lg:pr-10 xl:pl-[236px] xl:pr-14 py-5">
+              <div className="max-w-6xl">
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (() => {
@@ -3677,8 +3674,8 @@ export default function ClubProfile() {
             })()}
           </div>
         )}
-              </div>{/* close max-w-6xl */}
-            </div>{/* close px wrapper */}
+            </div>{/* close max-w-6xl */}
+          </div>{/* close padded content */}
           </div>{/* close scrollable */}
         </div>{/* close main content area */}
       </div>{/* close flex h-screen */}
