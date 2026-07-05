@@ -46,6 +46,8 @@ export interface FeedRSVPEntry {
   userId: string;
   displayName: string;
   avatarUrl?: string | null;
+  /** chess.com username — used to fetch their profile picture */
+  chesscomUsername?: string | null;
   status: "going" | "maybe" | "not_going";
 }
 
@@ -60,6 +62,8 @@ export interface FeedEvent {
   actorName: string;
   /** Optional actor avatar URL */
   actorAvatarUrl?: string | null;
+  /** chess.com username of the actor — used to fetch their profile picture */
+  actorChesscomUsername?: string | null;
   /** Human-readable description of the event */
   description: string;
   /** Optional secondary detail (e.g. tournament name, announcement body) */
@@ -259,7 +263,7 @@ function _persistFeedToServer(clubId: string, event: FeedEvent): void {
         linkHref: event.linkHref ?? null,
         linkLabel: event.linkLabel ?? null,
         isPinned: event.isPinned ?? false,
-        payload: (event.pollOptions || event.rsvpEntries) ? JSON.stringify(event) : null,
+        payload: (event.pollOptions || event.rsvpEntries || event.actorChesscomUsername) ? JSON.stringify(event) : null,
       }),
     }).then((res) => {
       if (!res.ok) {
@@ -299,6 +303,7 @@ export async function syncFeedFromServer(clubId: string): Promise<FeedEvent[]> {
         createdAt: row.createdAt,
         actorName: row.actorName,
         actorAvatarUrl: row.actorAvatarUrl ?? null,
+        actorChesscomUsername: (extra as Partial<FeedEvent>).actorChesscomUsername ?? null,
         description: extra.description ?? row.detail ?? "",
         detail: row.detail ?? undefined,
         linkHref: row.linkHref ?? undefined,
@@ -320,7 +325,8 @@ export function postAnnouncement(
   actorName: string,
   body: string,
   actorAvatarUrl?: string | null,
-  imageUrl?: string | null
+  imageUrl?: string | null,
+  actorChesscomUsername?: string | null
 ): FeedEvent {
   return addFeedEvent({
     clubId,
@@ -328,6 +334,7 @@ export function postAnnouncement(
     createdAt: new Date().toISOString(),
     actorName,
     actorAvatarUrl,
+    actorChesscomUsername,
     description: `${actorName} posted an announcement`,
     detail: body,
     ...(imageUrl ? { imageUrl } : {}),
@@ -378,7 +385,8 @@ export function postPoll(
   options: string[],
   expiresInHours: number,
   multiple: boolean,
-  actorAvatarUrl?: string | null
+  actorAvatarUrl?: string | null,
+  actorChesscomUsername?: string | null
 ): FeedEvent {
   const pollOptions: PollOption[] = options.map((text) => ({
     id: generateId(),
@@ -392,6 +400,7 @@ export function postPoll(
     createdAt: new Date().toISOString(),
     actorName,
     actorAvatarUrl,
+    actorChesscomUsername,
     description: `${actorName} posted a poll`,
     pollQuestion: question,
     pollOptions,
@@ -441,7 +450,8 @@ export function postRsvpForm(
   title: string,
   date: string,
   venue: string,
-  actorAvatarUrl?: string | null
+  actorAvatarUrl?: string | null,
+  actorChesscomUsername?: string | null
 ): FeedEvent {
   return addFeedEvent({
     clubId,
@@ -449,6 +459,7 @@ export function postRsvpForm(
     createdAt: new Date().toISOString(),
     actorName,
     actorAvatarUrl,
+    actorChesscomUsername,
     description: `${actorName} posted an RSVP form`,
     rsvpTitle: title,
     rsvpDate: date,
@@ -464,7 +475,8 @@ export function upsertFeedRSVP(
   userId: string,
   displayName: string,
   status: FeedRSVPEntry["status"],
-  avatarUrl?: string | null
+  avatarUrl?: string | null,
+  chesscomUsername?: string | null
 ): void {
   const events = loadFeed(clubId);
   const ev = events.find((e) => e.id === feedEventId);
@@ -473,9 +485,9 @@ export function upsertFeedRSVP(
   const entries = ev.rsvpEntries ?? [];
   const idx = entries.findIndex((r) => r.userId === userId);
   if (idx >= 0) {
-    entries[idx] = { userId, displayName, avatarUrl, status };
+    entries[idx] = { userId, displayName, avatarUrl, chesscomUsername, status };
   } else {
-    entries.push({ userId, displayName, avatarUrl, status });
+    entries.push({ userId, displayName, avatarUrl, chesscomUsername, status });
   }
   ev.rsvpEntries = entries;
   saveFeed(clubId, events);

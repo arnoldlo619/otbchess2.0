@@ -414,6 +414,7 @@ function FeedEventCard({
   userId,
   displayName,
   avatarUrl,
+  chesscomUsername,
   clubId,
   isMemberUser,
   accentColor,
@@ -430,6 +431,7 @@ function FeedEventCard({
   userId?: string;
   displayName?: string;
   avatarUrl?: string | null;
+  chesscomUsername?: string | null;
   clubId: string;
   isMemberUser: boolean;
   accentColor?: string;
@@ -460,7 +462,7 @@ function FeedEventCard({
 
   function handleRsvp(status: FeedRSVPEntry["status"]) {
     if (!userId || !isMemberUser) return;
-    upsertFeedRSVP(clubId, event.id, userId, displayName ?? "", status, avatarUrl ?? null);
+    upsertFeedRSVP(clubId, event.id, userId, displayName ?? "", status, avatarUrl ?? null, chesscomUsername ?? null);
     onRsvped?.();
   }
 
@@ -480,22 +482,15 @@ function FeedEventCard({
           {/* ── POST HEADER: avatar + name + timestamp + menu ── */}
           <div className="flex items-start gap-3 mb-3">
             {/* Circular avatar — 44px matching Threads */}
-            <div className="flex-shrink-0">
-              {event.actorAvatarUrl ? (
-                <img
-                  src={event.actorAvatarUrl}
-                  alt={event.actorName}
-                  className={`w-11 h-11 rounded-full object-cover ring-2 ${isDark ? "ring-white/10" : "ring-black/6"}`}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-              ) : (
-                <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold flex-shrink-0"
-                  style={{ background: accent + "33", color: accent }}
-                >
-                  {event.actorName?.[0]?.toUpperCase() ?? "?"}
-                </div>
-              )}
+            <div className={`flex-shrink-0 rounded-full ring-2 overflow-hidden ${isDark ? "ring-white/10" : "ring-black/6"}`}>
+              <PlayerAvatar
+                username={event.actorChesscomUsername ?? event.actorName}
+                platform={event.actorChesscomUsername ? "chesscom" : undefined}
+                name={event.actorName}
+                avatarUrl={event.actorAvatarUrl ?? undefined}
+                size={44}
+                showBadge={false}
+              />
             </div>
             {/* Name + timestamp on same row, type badge below */}
             <div className="flex-1 min-w-0">
@@ -832,7 +827,14 @@ function FeedEventCard({
                     <div className="flex -space-x-1.5">
                       {group.slice(0, 5).map((r) => (
                         <div key={r.userId} className="w-6 h-6 rounded-full border border-white/10 overflow-hidden" title={r.displayName}>
-                          <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={24} className="w-full h-full object-cover" />
+                          <PlayerAvatar
+                            username={r.chesscomUsername ?? r.displayName}
+                            platform={r.chesscomUsername ? "chesscom" : undefined}
+                            name={r.displayName}
+                            avatarUrl={r.avatarUrl ?? undefined}
+                            size={24}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       ))}
                       {group.length > 5 && (
@@ -1255,7 +1257,7 @@ export default function ClubProfile() {
       });
     }
     await new Promise((r) => setTimeout(r, 200));
-    postAnnouncement(club.id, user.displayName, announcementDraft.trim(), user.avatarUrl ?? null, imageUrl);
+    postAnnouncement(club.id, user.displayName, announcementDraft.trim(), user.avatarUrl ?? null, imageUrl, user.chesscomUsername ?? null);
     setFeedEvents(listFeedEvents(club.id));
     setAnnouncementDraft("");
     setComposerImageFile(null);
@@ -2414,14 +2416,14 @@ export default function ClubProfile() {
                     {top.map((m, idx) => (
                       <div key={m.userId} className={`flex items-center gap-3 px-5 py-3 transition-colors ${isDark ? "hover:bg-white/4" : "hover:bg-[#FBFADA]"}`}>
                         <span className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-[#436850]"}`}>{idx + 1}</span>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden ${
-                          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
-                        }`}>
-                          {m.avatarUrl ? (
-                            <img src={m.avatarUrl} alt={m.displayName} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                          ) : (
-                            (m.displayName?.charAt(0) ?? "?").toUpperCase()
-                          )}
+                        <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                          <PlayerAvatar
+                            username={m.chesscomUsername ?? m.lichessUsername ?? m.displayName}
+                            platform={m.chesscomUsername ? "chesscom" : m.lichessUsername ? "lichess" : undefined}
+                            name={m.displayName}
+                            size={32}
+                            showBadge={false}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-semibold truncate ${textMain}`}>{m.displayName}</p>
@@ -2491,6 +2493,7 @@ export default function ClubProfile() {
                       userId={user?.id}
                       displayName={user?.displayName}
                       avatarUrl={user?.avatarUrl}
+                      chesscomUsername={user?.chesscomUsername}
                       clubId={club.id}
                       isMemberUser={joined}
                       accentColor={accent}
@@ -2758,7 +2761,14 @@ export default function ClubProfile() {
                                           <div key={r.userId} className={`w-7 h-7 rounded-full overflow-hidden ring-2 ${
                                             isDark ? "ring-[#0d1f12]" : "ring-white"
                                           }`}>
-                                            <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
+                                            <PlayerAvatar
+                                              username={(r as any).chesscomUsername ?? r.displayName}
+                                              platform={(r as any).chesscomUsername ? "chesscom" : undefined}
+                                              name={r.displayName}
+                                              avatarUrl={r.avatarUrl ?? undefined}
+                                              size={28}
+                                              className="w-full h-full object-cover"
+                                            />
                                           </div>
                                         ))}
                                         {goingRsvps.length > 5 && (
@@ -2801,7 +2811,14 @@ export default function ClubProfile() {
                                             {group.map((r) => (
                                               <div key={r.userId} className="flex items-center gap-1.5">
                                                 <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                                                  <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={24} className="w-full h-full object-cover" />
+                                                  <PlayerAvatar
+                                                    username={(r as any).chesscomUsername ?? r.displayName}
+                                                    platform={(r as any).chesscomUsername ? "chesscom" : undefined}
+                                                    name={r.displayName}
+                                                    avatarUrl={r.avatarUrl ?? undefined}
+                                                    size={24}
+                                                    className="w-full h-full object-cover"
+                                                  />
                                                 </div>
                                                 <span className={`text-xs font-medium ${textMain}`}>{r.displayName}</span>
                                               </div>
@@ -3429,11 +3446,14 @@ export default function ClubProfile() {
                                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b last:border-b-0 ${isDark ? "border-white/5" : "border-[#ADBC9F]/70"} ${disabled ? "opacity-30" : ""}`}
                                 style={{ background: sel ? "oklch(0.55 0.13 145 / 0.12)" : "transparent" }}
                               >
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 overflow-hidden" style={{ background: sel ? "oklch(0.55 0.13 145)" : (isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb") }}>
-                                  {m.avatarUrl
-                                    ? <img src={m.avatarUrl} alt="" className="w-8 h-8 object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                                    : <span style={{ color: sel ? "#fff" : (isDark ? "rgba(255,255,255,0.5)" : "#9ca3af") }}>{(m.displayName?.[0] ?? "?").toUpperCase()}</span>
-                                  }
+                                <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+                                  <PlayerAvatar
+                                    username={m.chesscomUsername ?? m.lichessUsername ?? m.displayName}
+                                    platform={m.chesscomUsername ? "chesscom" : m.lichessUsername ? "lichess" : undefined}
+                                    name={m.displayName}
+                                    size={32}
+                                    showBadge={false}
+                                  />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className={`text-sm font-semibold truncate ${textMain}`}>{m.displayName ?? m.userId}</p>

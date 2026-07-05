@@ -1363,6 +1363,7 @@ function FeedCard({
   userId,
   displayName,
   avatarUrl,
+  chesscomUsername,
   clubId,
   canDelete,
   canPin,
@@ -1377,6 +1378,7 @@ function FeedCard({
   userId: string;
   displayName: string;
   avatarUrl?: string | null;
+  chesscomUsername?: string | null;
   clubId: string;
   canDelete: boolean;
   canPin: boolean;
@@ -1402,7 +1404,7 @@ function FeedCard({
 
   function handleRsvp(status: FeedRSVPEntry["status"]) {
     if (!userId) return;
-    upsertFeedRSVP(clubId, event.id, userId, displayName, status, avatarUrl ?? null);
+    upsertFeedRSVP(clubId, event.id, userId, displayName, status, avatarUrl ?? null, chesscomUsername ?? null);
     onRsvped();
   }
 
@@ -2765,7 +2767,7 @@ export default function ClubDashboard() {
       );
       toast.success("Poll scheduled!");
     } else {
-      postPoll(club.id, user.displayName, pollQuestion.trim(), opts, pollHours, pollMultiple, user.avatarUrl ?? null);
+      postPoll(club.id, user.displayName, pollQuestion.trim(), opts, pollHours, pollMultiple, user.avatarUrl ?? null, user.chesscomUsername ?? null);
       toast.success("Poll posted!");
     }
 
@@ -2827,7 +2829,7 @@ export default function ClubDashboard() {
       toast.success("Tournament created! Share the join code: " + inviteCode);
     } else {
       // Plain RSVP form (no tournament)
-      postRsvpForm(club.id, user.displayName, rsvpTitle.trim(), rsvpDate, rsvpVenue.trim(), user.avatarUrl ?? null);
+      postRsvpForm(club.id, user.displayName, rsvpTitle.trim(), rsvpDate, rsvpVenue.trim(), user.avatarUrl ?? null, user.chesscomUsername ?? null);
       toast.success("RSVP form posted!");
     }
 
@@ -5234,6 +5236,7 @@ export default function ClubDashboard() {
                       userId={user?.id ?? ""}
                       displayName={user?.displayName ?? ""}
                       avatarUrl={user?.avatarUrl}
+                      chesscomUsername={user?.chesscomUsername}
                       clubId={club.id}
                       canDelete={!!isOwnerOrDirector}
                       canPin={!!isOwnerOrDirector}
