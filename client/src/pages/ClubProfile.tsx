@@ -1569,7 +1569,7 @@ export default function ClubProfile() {
             <div
               className={`relative overflow-hidden${!club.bannerUrl ? " chess-board-bg" : ""}`}
               style={{
-                minHeight: "260px",
+                minHeight: "210px",
                     ...(club.bannerUrl ? {
                       backgroundImage: `url(${club.bannerUrl})`,
                       backgroundSize: "cover",
@@ -1598,7 +1598,7 @@ export default function ClubProfile() {
                     />
                   )}
                   {/* Content — bottom-anchored, sidebar-aware */}
-                  <div className="relative z-10 flex flex-col justify-end h-full" style={{ minHeight: "260px", padding: "0 1.5rem 1.5rem", paddingLeft: "calc(210px + 1.5rem)" }}>
+                  <div className="relative z-10 flex flex-col justify-end h-full" style={{ minHeight: "210px", padding: "0 1.25rem 1.25rem", paddingLeft: "calc(210px + 1.25rem)" }}>
                     {/* CTA buttons — absolute top-right */}
                     <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
                       <AvatarNavDropdown currentPage="Clubs" />
@@ -1642,10 +1642,10 @@ export default function ClubProfile() {
                       )}
                     </div>
                     {/* Bottom row: avatar + name + CTA */}
-                    <div className="flex items-end gap-4 sm:gap-5">
+                    <div className="flex items-end gap-3 sm:gap-4">
                       {/* Club avatar */}
                       <div
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
                         style={{ background: accent, border: `2px solid ${accent}55` }}
                       >
                         {club.avatarUrl && !avatarBroken ? (
@@ -1692,7 +1692,7 @@ export default function ClubProfile() {
 
 
                     {/* Stats row */}
-                    <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    <div className="flex items-center gap-4 mt-2 flex-wrap">
                       <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
                         <Users size={11} style={{ color: accent }} />
                         <span className="font-bold text-white">{club.memberCount}</span>
