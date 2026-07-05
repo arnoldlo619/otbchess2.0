@@ -1315,7 +1315,10 @@ export default function ClubProfile() {
             bottom: 0,
             width: "64px",
             transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
-            background: isDark ? "#0d1117" : "#111827",
+            backgroundImage: isDark
+              ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
+              : `repeating-conic-gradient(oklch(0.16 0.06 145) 0% 25%, oklch(0.12 0.04 145) 0% 50%)`,
+            backgroundSize: "12px 12px",
             borderRight: `1px solid rgba(255,255,255,0.07)`,
             overflow: "hidden",
             zIndex: 40,
@@ -1325,24 +1328,24 @@ export default function ClubProfile() {
         >
           {/* Top: !! thumbnail icon + OTB!! logo on hover */}
           {/* Logo crossfade: !! thumbnail fades out, OTB!! logo fades in on hover */}
-          <div className="pt-5 pb-3 px-3 flex-shrink-0">
+          <div className="pt-5 pb-3 px-2 flex-shrink-0">
             <button
               onClick={() => navigate("/clubs")}
-              className="relative flex items-center justify-center w-full bg-transparent border-none p-0 cursor-pointer"
-              style={{ height: "44px" }}
+              className="relative flex items-center justify-start w-full bg-transparent border-none p-0 cursor-pointer"
+              style={{ height: "52px" }}
               title="ChessOTB.Club — Back to Clubs"
             >
               {/* !! thumbnail — always visible, fades out on sidebar hover */}
               <img
                 src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
                 alt="!!"
-                className="absolute w-11 h-11 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
+                className="absolute left-1 w-12 h-12 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
               />
-              {/* OTB!! logo — fades in on sidebar hover, centered */}
+              {/* OTB!! full logo — fades in on sidebar hover, left-aligned with nav items */}
               <img
                 src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="absolute h-9 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
+                className="absolute left-1 h-11 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
               />
             </button>
           </div>
