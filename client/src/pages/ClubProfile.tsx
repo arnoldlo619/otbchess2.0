@@ -1406,8 +1406,8 @@ export default function ClubProfile() {
                   </span>
                   {/* Label — slides in to the right, stays on same row as icon */}
                   <span
-                    className="text-base font-semibold whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
-                    style={{ color: "inherit" }}
+                    className="text-[13px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
+                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em" }}
                   >
                     {labelMap[t]}
                   </span>
@@ -1431,7 +1431,7 @@ export default function ClubProfile() {
               aria-label="Share Club"
             >
               <span className="flex-shrink-0 w-5 flex items-center justify-center"><Share2 size={20} /></span>
-              <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Share Club</span>
+              <span className="text-[12px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Share</span>
             </button>
 
             {user && !isOwner && !isDirector && (
@@ -1444,7 +1444,7 @@ export default function ClubProfile() {
                 aria-label="Contact Owner"
               >
                 <span className="flex-shrink-0 w-5 flex items-center justify-center"><MessageSquare size={20} /></span>
-                <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Contact</span>
+                <span className="text-[12px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Contact</span>
               </button>
             )}
 
@@ -1458,7 +1458,7 @@ export default function ClubProfile() {
                 aria-label="Settings"
               >
                 <span className="flex-shrink-0 w-5 flex items-center justify-center"><MoreHorizontal size={20} /></span>
-                <span className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit" }}>Settings</span>
+                <span className="text-[12px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
               </button>
             )}
 
@@ -1468,7 +1468,7 @@ export default function ClubProfile() {
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         {/* Sidebar is absolutely positioned so it overlays without shifting content */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ marginLeft: "210px" }}>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
             className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-10 xl:px-14 py-2 otb-header-safe"
@@ -1515,7 +1515,7 @@ export default function ClubProfile() {
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
-            <div className="px-4 lg:px-10 xl:px-14 py-5">
+            <div className="px-4 lg:pl-[226px] lg:pr-10 xl:pl-[238px] xl:pr-14 py-5">
               <div className="max-w-6xl">
                 {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
                 <div
