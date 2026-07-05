@@ -3194,10 +3194,26 @@ async function startServer() {
       ? path.resolve(__dirname, "public")
       : path.resolve(__dirname, "..", "dist", "public");
 
-  app.use(express.static(staticPath));
+  // Hashed JS/CSS assets get long-lived immutable caching; HTML always revalidates.
+  app.use(express.static(staticPath, {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith(".html")) {
+        // Always revalidate HTML so browsers pick up new asset hashes after deploy
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+      } else if (/\.[0-9a-f]{8,}\.(js|css)$/.test(filePath)) {
+        // Content-hashed assets are immutable — safe to cache for 1 year
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  }));
 
   // Handle client-side routing - serve index.html for all routes
   app.get("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.sendFile(path.join(staticPath, "index.html"));
   });
 
