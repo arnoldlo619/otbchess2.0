@@ -1428,20 +1428,20 @@ export default function ClubProfile() {
             <button
               onClick={() => navigate("/clubs")}
               className="relative flex items-center justify-start w-full bg-transparent border-none p-0 cursor-pointer"
-              style={{ height: "52px" }}
+              style={{ height: "60px" }}
               title="ChessOTB.Club — Back to Clubs"
             >
               {/* !! thumbnail — always visible, fades out on sidebar hover */}
               <img
                 src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
                 alt="!!"
-                className="absolute left-1 w-12 h-12 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
+                className="absolute left-1 w-14 h-14 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
               />
               {/* OTB!! full logo — fades in on sidebar hover, left-aligned with nav items */}
               <img
                 src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="absolute left-1 h-11 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
+                className="absolute left-1 h-13 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
               />
             </button>
           </div>
