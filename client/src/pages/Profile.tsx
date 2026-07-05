@@ -42,6 +42,7 @@ import { Users, Settings as _Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
+import { AchievementBadgeGrid } from "@/components/tournament/AchievementBadge";
 interface EditState {
   displayName: string;
   chesscomUsername: string;
@@ -200,6 +201,28 @@ export default function ProfilePage() {
         avatarDataUrl: null,
       });
     }
+  }, [user]);
+
+  // ── Player Achievements ────────────────────────────────────────────────────
+  interface ProfileAchievement {
+    id: string;
+    achievementType: string;
+    title: string;
+    description: string | null;
+    tournamentName: string | null;
+    earnedAt: string;
+  }
+  const [achievements, setAchievements] = useState<ProfileAchievement[]>([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setAchievementsLoading(true);
+    fetch(`/api/player/${user.id}/achievements`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setAchievements(Array.isArray(data) ? data : []))
+      .catch(() => setAchievements([]))
+      .finally(() => setAchievementsLoading(false));
   }, [user]);
 
   // ── Battle history ──────────────────────────────────────────────────────────
@@ -598,6 +621,32 @@ export default function ProfilePage() {
               isDark={isDark}
             />
           </div>
+
+          {/* Achievement Badges */}
+          {achievements.length > 0 && (
+            <div className="mb-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-white/50" : "text-[#436850]/70"}`}>Achievements</span>
+              </div>
+              <AchievementBadgeGrid
+                achievements={achievements.map((a) => ({
+                  type: a.achievementType as any,
+                  tournamentName: a.tournamentName || "",
+                  earned: a.earnedAt ? new Date(a.earnedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "",
+                }))}
+                maxVisible={8}
+                badgeSize={32}
+              />
+            </div>
+          )}
+          {achievementsLoading && (
+            <div className="mb-5 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full animate-pulse" style={{ background: "oklch(0.22 0.04 145)" }} />
+              <div className="w-7 h-7 rounded-full animate-pulse" style={{ background: "oklch(0.22 0.04 145)" }} />
+              <div className="w-7 h-7 rounded-full animate-pulse" style={{ background: "oklch(0.22 0.04 145)" }} />
+            </div>
+          )}
 
           {/* Edit form */}
           {editing ? (

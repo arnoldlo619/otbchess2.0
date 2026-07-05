@@ -2366,3 +2366,123 @@ export const eventRecaps = mysqlTable(
 );
 export type EventRecapRow = typeof eventRecaps.$inferSelect;
 export type NewEventRecapRow = typeof eventRecaps.$inferInsert;
+
+// ─── quad_prizes ──────────────────────────────────────────────────────────────
+// Stores prize configuration and assignments for Quads tournaments.
+// Each row represents one prize slot (e.g., "Quad 1 Champion — $40").
+export const quadPrizes = mysqlTable(
+  "quad_prizes",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    sectionId: varchar("section_id", { length: 64 }),
+    placement: int("placement").notNull().default(1),
+    prizeTitle: varchar("prize_title", { length: 255 }).notNull(),
+    prizeType: varchar("prize_type", { length: 50 }).notNull().default("cash"),
+    prizeValue: varchar("prize_value", { length: 100 }),
+    sponsorName: varchar("sponsor_name", { length: 255 }),
+    sponsorLogoUrl: text("sponsor_logo_url"),
+    assignedPlayerId: varchar("assigned_player_id", { length: 36 }),
+    assignedPlayerName: varchar("assigned_player_name", { length: 255 }),
+    status: varchar("status", { length: 30 }).notNull().default("pending"),
+    templateType: varchar("template_type", { length: 50 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    qpTournamentIdx: index("qp_tournament_idx").on(table.tournamentId),
+    qpPlayerIdx: index("qp_player_idx").on(table.assignedPlayerId),
+  })
+);
+export type QuadPrize = typeof quadPrizes.$inferSelect;
+export type NewQuadPrize = typeof quadPrizes.$inferInsert;
+
+// ─── player_achievements ──────────────────────────────────────────────────────
+// Stores earned badges and achievements for players across tournaments.
+// Automatically assigned when a Quads tournament completes.
+export const playerAchievements = mysqlTable(
+  "player_achievements",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    playerId: varchar("player_id", { length: 36 }).notNull(),
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    sectionId: varchar("section_id", { length: 64 }),
+    achievementType: varchar("achievement_type", { length: 50 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    tournamentName: varchar("tournament_name", { length: 255 }),
+    earnedAt: timestamp("earned_at").defaultNow().notNull(),
+    visibility: varchar("visibility", { length: 20 }).notNull().default("public"),
+  },
+  (table) => ({
+    paPlayerIdx: index("pa_player_idx").on(table.playerId),
+    paTournamentIdx: index("pa_tournament_idx").on(table.tournamentId),
+    paTypeIdx: index("pa_type_idx").on(table.achievementType),
+  })
+);
+export type PlayerAchievement = typeof playerAchievements.$inferSelect;
+export type NewPlayerAchievement = typeof playerAchievements.$inferInsert;
+
+// ─── tournament_recaps ────────────────────────────────────────────────────────
+// Stores the generated recap page data for completed tournaments.
+// Hosts can review, edit, and publish the recap before it goes public.
+export const tournamentRecaps = mysqlTable(
+  "tournament_recaps",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 120 }).notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("draft"),
+    publishedAt: timestamp("published_at"),
+    heroImageUrl: text("hero_image_url"),
+    summaryText: text("summary_text"),
+    tournamentName: varchar("tournament_name", { length: 255 }),
+    venue: varchar("venue", { length: 255 }),
+    eventDate: varchar("event_date", { length: 50 }),
+    hostName: varchar("host_name", { length: 255 }),
+    clubId: varchar("club_id", { length: 64 }),
+    format: varchar("format", { length: 50 }),
+    playerCount: int("player_count"),
+    sectionCount: int("section_count"),
+    timeControl: varchar("time_control", { length: 100 }),
+    championsJson: json("champions_json"),
+    sectionsJson: json("sections_json"),
+    highlightsJson: json("highlights_json"),
+    sponsorNote: text("sponsor_note"),
+    venueNote: text("venue_note"),
+    customNote: text("custom_note"),
+    privacyMode: varchar("privacy_mode", { length: 30 }).notNull().default("standard"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    trTournamentIdx: uniqueIndex("tr_tournament_idx").on(table.tournamentId),
+    trSlugIdx: uniqueIndex("tr_slug_idx").on(table.slug),
+    trClubIdx: index("tr_club_idx").on(table.clubId),
+  })
+);
+export type TournamentRecap = typeof tournamentRecaps.$inferSelect;
+export type NewTournamentRecap = typeof tournamentRecaps.$inferInsert;
+
+// ─── social_assets ────────────────────────────────────────────────────────────
+// Stores generated social media asset metadata for tournaments.
+// The actual image is stored in S3; this table tracks what was generated.
+export const socialAssets = mysqlTable(
+  "social_assets",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    assetType: varchar("asset_type", { length: 50 }).notNull(),
+    format: varchar("format", { length: 30 }).notNull().default("square"),
+    generatedImageUrl: text("generated_image_url"),
+    dataJson: json("data_json"),
+    createdByHostId: varchar("created_by_host_id", { length: 36 }),
+    generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    saTournamentIdx: index("sa_tournament_idx").on(table.tournamentId),
+    saTypeIdx: index("sa_type_idx").on(table.assetType),
+  })
+);
+export type SocialAsset = typeof socialAssets.$inferSelect;
+export type NewSocialAsset = typeof socialAssets.$inferInsert;

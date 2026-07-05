@@ -6709,3 +6709,23 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix ClubProfile banner paddingLeft to be responsive (remove hardcoded 210px on mobile)
 - [ ] Increase content bottom padding on ClubDashboard and LeagueDashboard for safe area
 - [ ] Prevent horizontal overflow on mobile across all 3 pages
+
+## Quad Prize Templates / Winner Recognition / Social Recap Assets (Jul 5 2026)
+- [x] Server: quadsCompletion.ts — prize template generation (5 templates), winner auto-assignment, achievement detection (8 types), recap data generation, highlight detection, caption generation
+- [x] Server: /api/recap/:slug GET endpoint (fetch published recap by slug)
+- [x] Server: /api/recap/:slug POST endpoint (generate and publish recap for a tournament)
+- [x] Server: /api/club/:clubId/recaps GET endpoint (list published recaps for a club)
+- [x] Client: PrizeTemplatePanel component — template selector, prize editing, auto-assign, sponsor fields
+- [x] Client: AchievementBadge + AchievementBadgeGrid components — 8 badge types with icons/colors
+- [x] Client: TournamentRecap page (/recap/:slug) — hero, champions, sections, highlights, host notes, share
+- [x] Client: SocialAssetGenerator component — Canvas-based image export (Instagram 1:1, Twitter 1.91:1, Story 9:16)
+- [x] Client: Caption generator with copy-to-clipboard and Web Share API integration
+- [x] Client: Player Profile achievements section — fetch and display earned badges
+- [x] Client: Club Page tournament recaps section — fetch and display published recaps in tournaments tab
+- [x] Client: Privacy mode selector (standard / scholastic / anonymous) in PrizeTemplatePanel
+- [x] Client: Privacy-aware name masking in TournamentRecap page (scholastic = first + last initial, anonymous = "Player")
+- [x] DB: tournament_recaps table (slug, tournamentId, clubId, champions/sections/highlights JSON, privacyMode, publishedAt)
+- [x] DB: player_achievements table (playerId, achievementType, tournamentId, metadata JSON, earnedAt)
+- [x] Tests: 15 integration tests (prize generation, winner assignment, achievement detection, highlights, privacy masking, caption generation)
+- [x] Tests: 26 existing quadsCompletion unit tests still passing
+- [x] TypeScript: 0 errors across entire codebase

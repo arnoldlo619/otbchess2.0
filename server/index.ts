@@ -3136,6 +3136,173 @@ function getRaceRoom(code: string): RaceRoomState {
     }
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOURNAMENT RECAP ENDPOINTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // GET /api/recap/:slug — Public endpoint, returns recap data for a published recap
+  app.get("/api/recap/:slug", async (req, res) => {
+    try {
+      const db = await getDb();
+      const { tournamentRecaps } = await import("../shared/schema.js");
+      const rows = await db
+        .select()
+        .from(tournamentRecaps)
+        .where(eq(tournamentRecaps.slug, req.params.slug))
+        .limit(1);
+      if (rows.length === 0) {
+        return res.status(404).json({ error: "Recap not found" });
+      }
+      const recap = rows[0];
+      // Only return published recaps to public viewers (drafts require auth)
+      if (recap.status === "draft") {
+        // Check if requester is the host (authenticated)
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+          return res.status(404).json({ error: "Recap not found" });
+        }
+      }
+      res.json(recap);
+    } catch (err) {
+      logger.error("[recap] GET error:", err);
+      res.status(500).json({ error: "Failed to fetch recap" });
+    }
+  });
+
+  // POST /api/recap — Create or update a tournament recap (host only)
+  app.post("/api/recap", requireAuth, async (req: any, res) => {
+    try {
+      const db = await getDb();
+      const { tournamentRecaps } = await import("../shared/schema.js");
+      const { nanoid } = await import("nanoid");
+      const body = req.body;
+      if (!body.tournamentId) {
+        return res.status(400).json({ error: "tournamentId is required" });
+      }
+      // Check if recap already exists for this tournament
+      const existing = await db
+        .select()
+        .from(tournamentRecaps)
+        .where(eq(tournamentRecaps.tournamentId, body.tournamentId))
+        .limit(1);
+      if (existing.length > 0) {
+        // Update existing recap
+        await db.update(tournamentRecaps).set({
+          status: body.status || existing[0].status,
+          publishedAt: body.status === "published" ? new Date() : existing[0].publishedAt,
+          heroImageUrl: body.heroImageUrl ?? existing[0].heroImageUrl,
+          summaryText: body.summaryText ?? existing[0].summaryText,
+          championsJson: body.championsJson ?? existing[0].championsJson,
+          sectionsJson: body.sectionsJson ?? existing[0].sectionsJson,
+          highlightsJson: body.highlightsJson ?? existing[0].highlightsJson,
+          sponsorNote: body.sponsorNote ?? existing[0].sponsorNote,
+          venueNote: body.venueNote ?? existing[0].venueNote,
+          customNote: body.customNote ?? existing[0].customNote,
+          privacyMode: body.privacyMode ?? existing[0].privacyMode,
+        }).where(eq(tournamentRecaps.tournamentId, body.tournamentId));
+        const updated = await db.select().from(tournamentRecaps).where(eq(tournamentRecaps.tournamentId, body.tournamentId)).limit(1);
+        return res.json(updated[0]);
+      }
+      // Create new recap
+      const slug = body.slug || `${(body.tournamentName || "tournament").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}-${nanoid(6)}`;
+      const id = nanoid(12);
+      await db.insert(tournamentRecaps).values({
+        id,
+        tournamentId: body.tournamentId,
+        slug,
+        status: body.status || "draft",
+        publishedAt: body.status === "published" ? new Date() : null,
+        heroImageUrl: body.heroImageUrl || null,
+        summaryText: body.summaryText || null,
+        tournamentName: body.tournamentName || null,
+        venue: body.venue || null,
+        eventDate: body.eventDate || null,
+        hostName: body.hostName || null,
+        clubId: body.clubId || null,
+        format: body.format || "quads",
+        playerCount: body.playerCount || null,
+        sectionCount: body.sectionCount || null,
+        timeControl: body.timeControl || null,
+        championsJson: body.championsJson || null,
+        sectionsJson: body.sectionsJson || null,
+        highlightsJson: body.highlightsJson || null,
+        sponsorNote: body.sponsorNote || null,
+        venueNote: body.venueNote || null,
+        customNote: body.customNote || null,
+        privacyMode: body.privacyMode || "standard",
+      });
+      const created = await db.select().from(tournamentRecaps).where(eq(tournamentRecaps.id, id)).limit(1);
+      res.status(201).json(created[0]);
+    } catch (err) {
+      logger.error("[recap] POST error:", err);
+      res.status(500).json({ error: "Failed to save recap" });
+    }
+  });
+
+  // GET /api/player/:playerId/achievements — Public endpoint for player badges
+  app.get("/api/player/:playerId/achievements", async (req, res) => {
+    try {
+      const db = await getDb();
+      const { playerAchievements } = await import("../shared/schema.js");
+      const achievements = await db
+        .select()
+        .from(playerAchievements)
+        .where(eq(playerAchievements.playerId, req.params.playerId));
+      res.json(achievements);
+    } catch (err) {
+      logger.error("[achievements] GET error:", err);
+      res.status(500).json({ error: "Failed to fetch achievements" });
+    }
+  });
+
+  // POST /api/player/achievements — Batch create achievements (host only)
+  app.post("/api/player/achievements", requireAuth, async (req: any, res) => {
+    try {
+      const db = await getDb();
+      const { playerAchievements } = await import("../shared/schema.js");
+      const { nanoid } = await import("nanoid");
+      const { achievements } = req.body;
+      if (!Array.isArray(achievements) || achievements.length === 0) {
+        return res.status(400).json({ error: "achievements array is required" });
+      }
+      const values = achievements.map((a: any) => ({
+        id: nanoid(12),
+        playerId: a.playerId,
+        tournamentId: a.tournamentId,
+        sectionId: a.sectionId || null,
+        achievementType: a.achievementType,
+        title: a.title,
+        description: a.description || null,
+        tournamentName: a.tournamentName || null,
+        visibility: a.visibility || "public",
+      }));
+      await db.insert(playerAchievements).values(values);
+      res.status(201).json({ created: values.length });
+    } catch (err) {
+      logger.error("[achievements] POST error:", err);
+      res.status(500).json({ error: "Failed to create achievements" });
+    }
+  });
+
+  // GET /api/club/:clubId/recaps — Get all published recaps for a club
+  app.get("/api/club/:clubId/recaps", async (req, res) => {
+    try {
+      const db = await getDb();
+      const { tournamentRecaps } = await import("../shared/schema.js");
+      const recaps = await db
+        .select()
+        .from(tournamentRecaps)
+        .where(and(
+          eq(tournamentRecaps.clubId, req.params.clubId),
+          eq(tournamentRecaps.status, "published")
+        ));
+      res.json(recaps);
+    } catch (err) {
+      logger.error("[club-recaps] GET error:", err);
+      res.status(500).json({ error: "Failed to fetch club recaps" });
+    }
+  });
+
   return app;
 }
 

@@ -937,6 +937,7 @@ export default function ClubProfile() {
     return p.get("create") === "1";
   });
   const [liveTournaments, setLiveTournaments] = useState<TournamentConfig[]>([]);
+  const [clubRecaps, setClubRecaps] = useState<Array<{ id: string; slug: string; tournamentName: string | null; eventDate: string | null; playerCount: number | null; format: string | null; publishedAt: string | null }>>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [announcementDraft, setAnnouncementDraft] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
@@ -1003,6 +1004,11 @@ export default function ClubProfile() {
       setMembers(clubMembers);
       setTournaments(getClubTournaments(found.id));
       setLiveTournaments(listTournamentsByClub(found.id));
+      // Fetch published recaps for this club
+      fetch(`/api/club/${encodeURIComponent(found.id)}/recaps`)
+        .then((r) => r.ok ? r.json() : [])
+        .then((data) => setClubRecaps(Array.isArray(data) ? data : []))
+        .catch(() => {});
       if (user) {
         setJoined(isMember(found.id, user.id));
         setFollowing(isFollowing(found.id, user.id));
@@ -3217,6 +3223,39 @@ export default function ClubProfile() {
                     accent={accent}
                   />
                 ))}
+              </div>
+            )}
+
+            {/* Tournament Recaps — links to published recap pages */}
+            {clubRecaps.length > 0 && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-5 py-4 border-b ${divider}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Tournament Recaps</h2>
+                </div>
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                  {clubRecaps.map((recap) => (
+                    <a
+                      key={recap.id}
+                      href={`/recap/${recap.slug}`}
+                      className={`flex items-center justify-between px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-[#FBFADA]/50"}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-amber-500/10" : "bg-amber-50"}`}>
+                          <Trophy className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`text-sm font-medium truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
+                            {recap.tournamentName || "Tournament Recap"}
+                          </p>
+                          <p className={`text-xs ${textMuted}`}>
+                            {recap.eventDate || ""}{recap.playerCount ? ` • ${recap.playerCount} players` : ""}{recap.format ? ` • ${recap.format}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <ExternalLink className={`w-3.5 h-3.5 flex-shrink-0 ${textMuted}`} />
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
