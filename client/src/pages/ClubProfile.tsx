@@ -1325,7 +1325,7 @@ export default function ClubProfile() {
             <button
               onClick={() => navigate("/clubs")}
               className="relative flex items-center justify-start bg-transparent border-none p-0 cursor-pointer"
-              style={{ width: "36px", height: "36px", transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)" }}
+              style={{ width: "44px", height: "44px", transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)" }}
               title="ChessOTB.Club — Back to Clubs"
               onMouseEnter={(e) => { e.currentTarget.style.width = "130px"; }}
               onMouseLeave={(e) => { e.currentTarget.style.width = "36px"; }}
@@ -1334,13 +1334,13 @@ export default function ClubProfile() {
               <img
                 src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
                 alt="!!"
-                className="absolute left-0 top-0 w-9 h-9 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
+                className="absolute left-0 top-0 w-11 h-11 object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-100 group-hover/sidebar:opacity-0"
               />
               {/* OTB!! logo — fades in on sidebar hover */}
               <img
                 src="/manus-storage/otbchesslogo_brilliant_v2_8f748182.webp"
                 alt="OTB!!"
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-9 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-11 w-auto object-contain transition-opacity duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] opacity-0 group-hover/sidebar:opacity-100"
               />
             </button>
           </div>
@@ -1349,11 +1349,11 @@ export default function ClubProfile() {
           <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={20} />,
-                events: <Calendar size={20} />,
-                members: <Users size={20} />,
-                tournaments: <Trophy size={20} />,
-                leagues: <Award size={20} />,
+                feed: <Megaphone size={22} />,
+                events: <Calendar size={22} />,
+                members: <Users size={22} />,
+                tournaments: <Trophy size={22} />,
+                leagues: <Award size={22} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
@@ -1581,7 +1581,7 @@ export default function ClubProfile() {
                       {/* Club name + badges */}
                       <div className="flex-1 min-w-0 pt-0.5">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight">
+                          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
                             {club.name}
                           </h1>
                           {club.isVerified && (
@@ -1657,32 +1657,32 @@ export default function ClubProfile() {
 
                     {/* Description */}
                     {club.description && (
-                      <p className="text-sm leading-relaxed mt-3 line-clamp-2" style={{ color: "oklch(0.65 0.04 145)" }}>
+                      <p className="text-base leading-relaxed mt-3 line-clamp-2" style={{ color: "oklch(0.65 0.04 145)" }}>
                         {club.description}
                       </p>
                     )}
 
                     {/* Stats row */}
                     <div className="flex items-center gap-4 mt-3 flex-wrap">
-                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
+                      <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
                         <Users size={11} style={{ color: accent }} />
                         <span className="font-bold text-white">{club.memberCount}</span>
                         <span>members</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
+                      <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
                         <Trophy size={11} style={{ color: accent }} />
                         <span className="font-bold text-white">{club.tournamentCount ?? 0}</span>
                         <span>tournaments</span>
                       </div>
                       {clubLeagues.length > 0 && (
-                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
+                        <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
                           <Award size={11} style={{ color: accent }} />
                           <span className="font-bold text-white">{clubLeagues.length}</span>
                           <span>league{clubLeagues.length !== 1 ? "s" : ""}</span>
                         </div>
                       )}
                       {followerCount > 0 && (
-                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
+                        <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
                           <Bell size={11} style={{ color: accent }} />
                           <span className="font-bold text-white">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
                           <span>follower{followerCount !== 1 ? "s" : ""}</span>
