@@ -1410,7 +1410,7 @@ export default function ClubProfile() {
             top: 0,
             left: 0,
             bottom: 0,
-            width: "56px",
+            width: "68px",
             transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
             backgroundImage: isDark
               ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
@@ -1421,7 +1421,7 @@ export default function ClubProfile() {
             zIndex: 40,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.width = "56px"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
         >
           {/* Top: !! thumbnail icon + OTB!! logo on hover */}
           {/* Logo crossfade: !! thumbnail fades out, OTB!! logo fades in on hover */}
@@ -1560,53 +1560,10 @@ export default function ClubProfile() {
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         {/* Sidebar is absolutely positioned so it overlays without shifting content */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
-          <div
-            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-10 xl:px-14 py-2 otb-header-safe"
-            style={{
-              background: isDark ? "oklch(0.12 0.03 145 / 0.98)" : "#0f1f14",
-              borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"}`,
-            }}
-          >
-            {/* Mobile back button */}
-            <button
-              onClick={() => navigate("/clubs")}
-              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
-              style={{ color: "oklch(0.65 0.12 145)" }}
-            >
-              <ChevronLeft size={15} />
-            </button>
-            {/* Mobile title */}
-            <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
-                {club.name}
-              </span>
-            </div>
-            {/* Desktop: club name removed — already displayed in the hero banner below */}
-            {/* Right side: stats + avatar */}
-            <div className="flex items-center gap-3 ml-auto">
-              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
-                <span className="flex items-center gap-1">
-                  <Users size={12} style={{ color: accent }} />
-                  <span className="font-semibold" style={{ color: "#fff" }}>{club.memberCount}</span> members
-                </span>
-                <span className="flex items-center gap-1">
-                  <Trophy size={12} style={{ color: accent }} />
-                  <span className="font-semibold" style={{ color: "#fff" }}>{club.tournamentCount}</span> tournaments
-                </span>
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
-                <span className="font-semibold" style={{ color: "#fff" }}>{onlineCount}</span> online
-              </div>
-              <AvatarNavDropdown currentPage="Clubs" />
-            </div>
-          </div>
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
-            <div className="px-4 lg:pl-[212px] lg:pr-10 xl:pl-[224px] xl:pr-14 py-5">
+            <div className="px-4 lg:pl-[224px] lg:pr-10 xl:pl-[236px] xl:pr-14 py-5">
               <div className="max-w-6xl">
                 {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
                 <div
@@ -1690,6 +1647,8 @@ export default function ClubProfile() {
 
                       {/* CTA buttons — top right */}
                       <div className="flex-shrink-0 flex items-center gap-2">
+                        {/* Avatar dropdown — moved from removed top bar */}
+                        <AvatarNavDropdown currentPage="Clubs" />
                         {/* Follow button — all users including members */}
                         {!isOwner && (
                           <button
