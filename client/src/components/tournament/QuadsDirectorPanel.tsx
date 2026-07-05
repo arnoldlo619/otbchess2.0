@@ -79,6 +79,8 @@ export default function QuadsDirectorPanel({
     sections[0]?.id ?? null
   );
   const [activeTab, setActiveTab] = useState<"pairings" | "standings">("pairings");
+  const [swapMode, setSwapMode] = useState(false);
+  const [swapPlayerA, setSwapPlayerA] = useState<string | null>(null);
 
   // Group games by section
   const gamesBySection = useMemo(() => {
@@ -111,6 +113,28 @@ export default function QuadsDirectorPanel({
     return map;
   }, [sections, gamesBySection]);
 
+  // Determine if swaps are allowed (no results entered yet)
+  const hasAnyResults = games.some((g) => g.result !== "*" && g.blackId !== "BYE");
+  const canSwap = !!onSwapPlayers && !hasAnyResults;
+
+  const handlePlayerClick = (playerId: string) => {
+    if (!swapMode || !canSwap) return;
+    if (!swapPlayerA) {
+      setSwapPlayerA(playerId);
+    } else if (swapPlayerA === playerId) {
+      setSwapPlayerA(null); // deselect
+    } else {
+      // Find sections for both players
+      const sectionA = sections.find((s) => s.playerIds.includes(swapPlayerA));
+      const sectionB = sections.find((s) => s.playerIds.includes(playerId));
+      if (sectionA && sectionB && sectionA.id !== sectionB.id) {
+        onSwapPlayers(sectionA.id, swapPlayerA, playerId);
+      }
+      setSwapPlayerA(null);
+      setSwapMode(false);
+    }
+  };
+
   const T = {
     card: isDark ? "oklch(0.18 0.03 145)" : "#ffffff",
     cardBorder: isDark ? "oklch(0.28 0.04 145)" : "#e5e7eb",
@@ -122,6 +146,9 @@ export default function QuadsDirectorPanel({
     goldBg: isDark ? "oklch(0.25 0.06 85)" : "oklch(0.95 0.06 85)",
     goldBorder: isDark ? "oklch(0.40 0.10 85)" : "oklch(0.80 0.10 85)",
     gold: "oklch(0.75 0.15 85)",
+    swapHighlight: isDark ? "oklch(0.30 0.12 200)" : "oklch(0.90 0.08 200)",
+    swapBorder: isDark ? "oklch(0.50 0.15 200)" : "oklch(0.60 0.15 200)",
+    swap: "oklch(0.65 0.18 200)",
   };
 
   return (
@@ -132,6 +159,20 @@ export default function QuadsDirectorPanel({
           Sections ({sections.length})
         </h3>
         <div className="flex gap-1">
+          {canSwap && (
+            <button
+              onClick={() => { setSwapMode(!swapMode); setSwapPlayerA(null); }}
+              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
+              style={{
+                background: swapMode ? T.swapHighlight : "transparent",
+                color: swapMode ? T.swap : T.textMuted,
+                border: `1px solid ${swapMode ? T.swapBorder : "transparent"}`,
+              }}
+            >
+              <ArrowLeftRight size={12} />
+              {swapMode ? "Cancel" : "Swap"}
+            </button>
+          )}
           <button
             onClick={() => setActiveTab("pairings")}
             className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
@@ -231,8 +272,41 @@ export default function QuadsDirectorPanel({
               </div>
             </button>
 
+            {/* Swap Mode: Player List */}
+            {swapMode && (
+              <div className="px-4 py-2 border-t" style={{ borderColor: T.cardBorder }}>
+                <div className="flex flex-wrap gap-1.5">
+                  {section.playerIds.map((pid) => {
+                    const isSelected = swapPlayerA === pid;
+                    const isInDifferentSection = swapPlayerA ? !section.playerIds.includes(swapPlayerA) : false;
+                    return (
+                      <button
+                        key={pid}
+                        onClick={() => handlePlayerClick(pid)}
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all hover:scale-105"
+                        style={{
+                          background: isSelected ? T.swapHighlight : (isDark ? "oklch(0.15 0.02 145)" : "#f3f4f6"),
+                          border: `1.5px solid ${isSelected ? T.swapBorder : (isInDifferentSection ? T.greenBorder : T.cardBorder)}`,
+                          color: isSelected ? T.swap : T.text,
+                          boxShadow: isSelected ? `0 0 8px ${T.swapBorder}` : "none",
+                        }}
+                      >
+                        {getPlayerName(players, pid)}
+                        <span className="ml-1 opacity-60">{getPlayerRating(players, pid)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {swapPlayerA && !section.playerIds.includes(swapPlayerA) && (
+                  <p className="text-[10px] mt-1.5 font-medium" style={{ color: T.swap }}>
+                    Click a player above to swap with {getPlayerName(players, swapPlayerA)}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Expanded Content */}
-            {isExpanded && (
+            {isExpanded && !swapMode && (
               <div className="px-4 pb-4 border-t" style={{ borderColor: T.cardBorder }}>
                 {activeTab === "pairings" ? (
                   <PairingsView

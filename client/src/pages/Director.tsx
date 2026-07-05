@@ -2095,6 +2095,7 @@ export default function Director() {
     resetElimination,
     togglePause,
     resetTournament,
+    swapQuadPlayers,
     completeTournament,
     updateSettings,
     isSwissElimCutoff: _isSwissElimCutoff,
@@ -3816,6 +3817,7 @@ export default function Director() {
                       currentRound={state.currentRound}
                       totalRounds={state.totalRounds}
                       onEnterResult={enterResult}
+                      onSwapPlayers={(_sectionId, playerIdA, playerIdB) => swapQuadPlayers(playerIdA, playerIdB)}
                       onAdvanceRound={() => generateNextRound()}
                       onCompleteTournament={() => completeTournament()}
                       isDark={isDark}

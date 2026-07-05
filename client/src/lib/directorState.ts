@@ -13,7 +13,7 @@ import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from
 import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
-import { generateQuadTournament, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
+import { generateQuadTournament, swapPlayersBetweenSections, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
 
 // ─── Schema Version ───────────────────────────────────────────────────────────
 // Bump this when the DirectorState shape changes to force a clean reset
@@ -887,6 +887,25 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     []
   );
 
+  // Swap two players between quad sections (director manual adjustment)
+  const swapQuadPlayers = useCallback((playerIdA: string, playerIdB: string) => {
+    setState((prev) => {
+      if (!prev.quadSections || !prev.quadSettings) return prev;
+      // Only allow swaps before any results are entered
+      const allGames = prev.rounds.flatMap((r) => r.games);
+      const hasResults = allGames.some((g) => g.result !== "*" && g.blackId !== "BYE");
+      if (hasResults) return prev;
+      const updatedSections = swapPlayersBetweenSections(
+        prev.quadSections,
+        playerIdA,
+        playerIdB,
+        prev.players,
+        prev.quadSettings
+      );
+      return { ...prev, quadSections: updatedSections };
+    });
+  }, []);
+
   // Reset tournament — clears localStorage and restores initial state
   const resetTournament = useCallback(() => {
     localStorage.removeItem(storageKey(tournamentId));
@@ -943,6 +962,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     completeTournament,
     togglePause,
     resetTournament,
+    swapQuadPlayers,
     updateSettings,
   };
 }

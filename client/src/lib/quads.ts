@@ -906,3 +906,101 @@ export function formatRatingRange(section: QuadSection): string {
 export function getQuadPairingTable(): [number, number][][] {
   return QUAD_PAIRING_TABLE;
 }
+
+// ─── Manual Adjustments ──────────────────────────────────────────────────────
+
+/**
+ * Swap two players between sections (or within the same section).
+ * Returns updated sections array. Only allowed before any results are entered.
+ */
+export function swapPlayersBetweenSections(
+  sections: QuadSection[],
+  playerIdA: string,
+  playerIdB: string,
+  players: Player[],
+  settings: QuadSettings
+): QuadSection[] {
+  const sectionA = sections.find((s) => s.playerIds.includes(playerIdA));
+  const sectionB = sections.find((s) => s.playerIds.includes(playerIdB));
+
+  if (!sectionA || !sectionB) return sections;
+  if (sectionA.id === sectionB.id) return sections; // Same section, no-op
+
+  // Swap player IDs
+  const updatedSections = sections.map((s) => {
+    if (s.id === sectionA.id) {
+      const newPlayerIds = s.playerIds.map((id) => (id === playerIdA ? playerIdB : id));
+      return rebuildSection(s, newPlayerIds, players, settings);
+    }
+    if (s.id === sectionB.id) {
+      const newPlayerIds = s.playerIds.map((id) => (id === playerIdB ? playerIdA : id));
+      return rebuildSection(s, newPlayerIds, players, settings);
+    }
+    return s;
+  });
+
+  return updatedSections;
+}
+
+/**
+ * Move a player from one section to another (adds to target, removes from source).
+ * Returns updated sections array. Only allowed before any results are entered.
+ */
+export function movePlayerToSection(
+  sections: QuadSection[],
+  playerId: string,
+  targetSectionId: string,
+  players: Player[],
+  settings: QuadSettings
+): QuadSection[] {
+  const sourceSection = sections.find((s) => s.playerIds.includes(playerId));
+  const targetSection = sections.find((s) => s.id === targetSectionId);
+
+  if (!sourceSection || !targetSection) return sections;
+  if (sourceSection.id === targetSection.id) return sections;
+
+  return sections.map((s) => {
+    if (s.id === sourceSection.id) {
+      const newPlayerIds = s.playerIds.filter((id) => id !== playerId);
+      return rebuildSection(s, newPlayerIds, players, settings);
+    }
+    if (s.id === targetSection.id) {
+      const newPlayerIds = [...s.playerIds, playerId];
+      return rebuildSection(s, newPlayerIds, players, settings);
+    }
+    return s;
+  });
+}
+
+/** Rebuild a section's metadata after player list changes. */
+function rebuildSection(
+  section: QuadSection,
+  newPlayerIds: string[],
+  players: Player[],
+  settings: QuadSettings
+): QuadSection {
+  const sectionPlayers = players.filter((p) => newPlayerIds.includes(p.id));
+  const sorted = sectionPlayers.sort(
+    (a, b) =>
+      resolveQuadRating(b, settings.ratingSource, settings.ratingType) -
+      resolveQuadRating(a, settings.ratingSource, settings.ratingType)
+  );
+
+  const localSeeds: Record<string, number> = {};
+  sorted.forEach((p, i) => {
+    localSeeds[p.id] = i + 1;
+  });
+
+  const ratings = sorted.map((p) => resolveQuadRating(p, settings.ratingSource, settings.ratingType));
+  const ratingMin = ratings.length > 0 ? Math.min(...ratings) : 0;
+  const ratingMax = ratings.length > 0 ? Math.max(...ratings) : 0;
+
+  return {
+    ...section,
+    playerIds: sorted.map((p) => p.id),
+    localSeeds,
+    ratingMin,
+    ratingMax,
+    type: newPlayerIds.length <= 4 ? "quad" : "bottom_swiss",
+  };
+}

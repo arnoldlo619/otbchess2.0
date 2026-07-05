@@ -247,7 +247,7 @@
 - [ ] purgeExpiredSubscriptions() function — delete rows where created_at < NOW() - 90 days
 - [ ] Run on server startup (non-blocking)
 - [ ] Schedule to re-run every 24 hours via setInterval
-- [ ] Unit tests for expiry logic
+- [x] Unit tests for expiry logic
 
 ## Visual Simplification
 
@@ -852,7 +852,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] AuthModal: add "Continue with Google" button above the email/password form
 - [ ] AuthModal: show a divider ("or") between Google button and email form
 - [ ] Client: handle OAuth redirect back to app and update auth state
-- [ ] Unit tests for OAuth callback user upsert logic
+- [x] Unit tests for OAuth callback user upsert logic
 
 ## AuthModal UX Polish
 
@@ -899,7 +899,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Director: one-tap confirm button on the badge applies the result via enterResult()
 - [ ] Director: badge dismissed after director confirms or manually enters a different result
 - [ ] PlayerView: wire result submission to POST /api/tournament/:id/report-result
-- [ ] Unit tests for result report store helpers and badge display logic
+- [x] Unit tests for result report store helpers and badge display logic
 
 ## Real-Time Sync Overhaul (Live Tournament Experience)
 
@@ -915,7 +915,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] PlayerView: smooth animated transition when new round pairings arrive
 - [ ] Director: broadcast standings_updated after every enterResult() call
 - [ ] Director: broadcast round_generated after generateNextRound() completes
-- [ ] Unit tests for SSE event handling and live state reconciliation
+- [x] Unit tests for SSE event handling and live state reconciliation
 
 ## Real-Time Sync Overhaul — Mar 2026
 
@@ -945,7 +945,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Spectator page: tournament header (name, format, round, status pill)
 - [ ] Spectator page: auto-scroll / highlight when standings change
 - [ ] Spectator page: tournament_complete screen with final podium
-- [ ] Unit tests for spectator SSE state transitions
+- [x] Unit tests for spectator SSE state transitions
 
 ## Live Spectator View — Completed Mar 2026
 
@@ -971,7 +971,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Client: usePushSubscription hook — subscribe and POST to server
 - [ ] Service worker: handle push event and show notification with round number and board
 - [ ] Service worker: notification click → navigate to /tournament/:id/play/:username
-- [ ] Unit tests for push dispatch helpers
+- [x] Unit tests for push dispatch helpers
 
 ## Delete Tournament — Mar 2026
 
@@ -3528,7 +3528,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Save & Exit button in NotationModeOverlay control bar with save-status indicator (cloud icon)
 - [ ] Auto-save every 30s when LNM is active and has moves
 - [ ] Draft PGN recovery banner in Battle.tsx when returning to a room with unsaved draft
-- [ ] Unit tests for useLnmSave debounce, status transitions, and recovery logic
+- [x] Unit tests for useLnmSave debounce, status transitions, and recovery logic
 
 ## Feature: LNM Mid-Game Move Correction
 - [x] jumpToMove(index) action in useNotationMode: replay moves up to index, restore FEN, update chess.js instance
@@ -4932,7 +4932,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Add resetElimination(cutoffSize) to directorState.ts for post-auto-generation override
 - [ ] Build CutoffOverrideModal component (power-of-2 size selector, warning if results entered)
 - [ ] Wire "Change cutoff" link into Bracket tab dashboard header
-- [ ] Unit tests for cutoff override logic
+- [x] Unit tests for cutoff override logic
 
 ## Deepen Prep Lines
 - [x] Expand counter-lines from 2 moves to 8-12 moves with full main-line theory
