@@ -1559,7 +1559,7 @@ export default function ClubProfile() {
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         {/* Sidebar is absolutely positioned so it overlays without shifting content */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0">
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
