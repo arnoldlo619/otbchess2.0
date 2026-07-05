@@ -1687,12 +1687,7 @@ export default function ClubProfile() {
 
                     </div>{/* end bottom row */}
 
-                    {/* Description */}
-                    {club.description && (
-                      <p className="text-base leading-relaxed mt-3 line-clamp-2" style={{ color: "oklch(0.65 0.04 145)" }}>
-                        {club.description}
-                      </p>
-                    )}
+
 
                     {/* Stats row */}
                     <div className="flex items-center gap-4 mt-3 flex-wrap">
@@ -2150,24 +2145,30 @@ export default function ClubProfile() {
                   <Crown className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                   <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.ownerName}</span>
                 </div>
+                {club.website && (
+                  <div className="col-span-2 flex items-center gap-2">
+                    <Globe className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <a
+                      href={club.website.startsWith("http") ? club.website : `https://${club.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-xs font-medium truncate transition-opacity hover:opacity-70 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}
+                    >
+                      {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                    </a>
+                    <ExternalLink className={`w-3 h-3 flex-shrink-0 ${textMuted}`} />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Social links + meeting schedule + contact */}
-            {(club.website || club.discord || club.twitter || club.instagram || club.tiktok || club.youtube || club.linktree || club.meetingDay || club.contactEmail || club.contactPhone) && (
+            {(club.discord || club.twitter || club.instagram || club.tiktok || club.youtube || club.linktree || club.meetingDay || club.contactEmail || club.contactPhone || club.facebook || club.xUrl || club.meetupUrl) && (
               <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
                 <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                   Links & Info
                 </h2>
                 <div className="flex flex-col gap-1.5">
-                  {club.website && (
-                    <a href={club.website} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Website</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
                   {club.discord && (
                     <a href={club.discord} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
