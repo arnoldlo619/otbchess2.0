@@ -1,0 +1,112 @@
+/**
+ * ClubTabs — Premium horizontal tab bar for the club profile page.
+ * Replaces the sidebar-only navigation with a visible tab strip
+ * that works on both mobile and desktop, while the sidebar remains
+ * for desktop quick-access.
+ */
+import React from "react";
+import { Megaphone, Calendar, Users, Trophy, Award } from "lucide-react";
+
+export type ClubTab = "feed" | "events" | "members" | "tournaments" | "leagues";
+
+interface TabConfig {
+  id: ClubTab;
+  label: string;
+  icon: React.ReactNode;
+  badge?: number;
+}
+
+interface ClubTabsProps {
+  activeTab: ClubTab;
+  onChange: (tab: ClubTab) => void;
+  seenTabs: Set<ClubTab>;
+  badges: Partial<Record<ClubTab, number>>;
+  accent: string;
+  isDark: boolean;
+}
+
+export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark }: ClubTabsProps) {
+  const tabs: TabConfig[] = [
+    { id: "feed", label: "Feed", icon: <Megaphone size={15} /> },
+    { id: "events", label: "Events", icon: <Calendar size={15} /> },
+    { id: "members", label: "Members", icon: <Users size={15} /> },
+    { id: "tournaments", label: "Tournaments", icon: <Trophy size={15} /> },
+    { id: "leagues", label: "Leagues", icon: <Award size={15} /> },
+  ];
+
+  return (
+    <div
+      className="flex items-center gap-1 overflow-x-auto scrollbar-none"
+      style={{
+        padding: "4px",
+        borderRadius: "18px",
+        background: isDark
+          ? "rgba(255,255,255,0.04)"
+          : "rgba(67,104,80,0.08)",
+        border: isDark
+          ? "1px solid rgba(255,255,255,0.08)"
+          : "1px solid rgba(67,104,80,0.18)",
+        boxShadow: isDark
+          ? "none"
+          : "inset 0 1px 2px rgba(67,104,80,0.06)",
+      }}
+      role="tablist"
+      aria-label="Club sections"
+    >
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        const unseen = !seenTabs.has(tab.id);
+        const badgeCount = unseen ? (badges[tab.id] ?? 0) : 0;
+
+        return (
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={`tabpanel-${tab.id}`}
+            onClick={() => onChange(tab.id)}
+            className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-[14px] text-xs font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+            style={{
+              background: isActive
+                ? isDark
+                  ? `linear-gradient(135deg, ${accent}22, ${accent}12)`
+                  : `rgba(67,104,80,0.12)`
+                : "transparent",
+              color: isActive
+                ? isDark ? accent : "rgba(18,55,42,0.95)"
+                : isDark ? "rgba(255,255,255,0.42)" : "rgba(67,104,80,0.65)",
+              border: isActive
+                ? isDark
+                  ? `1px solid ${accent}33`
+                  : "1px solid rgba(67,104,80,0.22)"
+                : "1px solid transparent",
+              boxShadow: isActive && isDark
+                ? `0 2px 12px ${accent}18`
+                : "none",
+              outlineColor: accent,
+            }}
+          >
+            <span
+              style={{
+                color: isActive
+                  ? accent
+                  : isDark ? "rgba(255,255,255,0.35)" : "rgba(67,104,80,0.55)",
+              }}
+            >
+              {tab.icon}
+            </span>
+            <span>{tab.label}</span>
+            {badgeCount > 0 && (
+              <span
+                className="flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold"
+                style={{ background: "#ef4444", color: "#fff" }}
+              >
+                {badgeCount > 9 ? "9+" : badgeCount}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

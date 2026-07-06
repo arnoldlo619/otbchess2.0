@@ -6775,3 +6775,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Cursor changes to grab/grabbing/nwse-resize based on hover target
 - [x] Touch support (touchstart/touchmove/touchend) for mobile preview
 - [x] Tests: unit tests for coordinate normalization and snap-to-edge logic
+
+## Club Profile Page Redesign (Jul 6 2026)
+- [x] ClubHero component: contained rounded card with micro-grid chess pattern background
+- [x] ClubHero: integrated banner upload (drag-and-drop + click), Change/Remove buttons, uploading spinner
+- [x] ClubHero: stats row (members, tournaments, leagues, followers), social links, online count
+- [x] ClubHero: Follow/Join/Leave action buttons with loading states and accessibility labels
+- [x] ClubHero: Owner/Director badge, Verified badge, Beginner Friendly badge
+- [x] ClubHero: AvatarNavDropdown slot in top-left of hero
+- [x] ClubTabs: horizontal pill tab bar replacing sidebar-only navigation
+- [x] ClubTabs: unseen-count badges per tab, accessible role="tablist" markup
+- [x] ClubTabs: active state with accent glow (dark) / green tint (light), smooth transitions
+- [x] ClubProfile: replaced full-bleed banner block with ClubHero + ClubTabs layout
+- [x] ClubProfile: padded content area updated to sidebar-aware offsets matching collapsed sidebar
+- [x] ClubProfile: dead old banner JSX removed, hidden file input preserved for banner upload
+- [x] TypeScript: 0 errors | Tests: 71 passing

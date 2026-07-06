@@ -142,6 +142,8 @@ import { apiFetch } from "@/lib/apiFetch";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { EditClubDetailsModal } from "@/components/EditClubDetailsModal";
 import { ClubShareModal } from "@/components/ClubShareModal";
+import { ClubHero } from "@/components/club/ClubHero";
+import { ClubTabs } from "@/components/club/ClubTabs";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1571,287 +1573,87 @@ export default function ClubProfile() {
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
-            {/* ── CLUB BANNER — full-bleed header ───────────────────────────── */}
-            <div
-              className={`relative overflow-hidden${!club.bannerUrl ? " chess-board-bg" : ""}`}
-              style={{
-                minHeight: "210px",
-                    ...(club.bannerUrl ? {
-                      backgroundImage: `url(${club.bannerUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    } : {}),
-                  }}
-                >
-                  {/* Enhanced gradient overlay — deeper, more cinematic */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: club.bannerUrl
-                        ? `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.75) 100%)`
-                        : `linear-gradient(135deg, ${accent}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)`,
+            {/* ── PADDED HEADER AREA ─────────────────────────────────────── */}
+            <div className="px-4 lg:pl-[88px] lg:pr-8 xl:pl-[96px] xl:pr-12 pt-5 pb-0">
+              <div className="max-w-5xl mx-auto">
+                {/* ── Contained Club Hero ──────────────────────────────── */}
+                <ClubHero
+                  name={club.name}
+                  avatarUrl={club.avatarUrl}
+                  bannerUrl={club.bannerUrl}
+                  avatarBroken={avatarBroken}
+                  flag={flag}
+                  accent={accent}
+                  isVerified={club.isVerified}
+                  beginnerFriendly={club.beginnerFriendly}
+                  isPublic={club.isPublic}
+                  location={club.location}
+                  memberCount={club.memberCount}
+                  tournamentCount={club.tournamentCount}
+                  leagueCount={clubLeagues.length}
+                  followerCount={followerCount}
+                  onlineCount={onlineCount}
+                  website={club.website}
+                  instagram={club.instagram}
+                  twitter={club.twitter}
+                  discord={club.discord}
+                  youtube={club.youtube}
+                  isOwner={isOwner}
+                  isDirector={isDirector}
+                  joined={joined}
+                  joining={joining}
+                  following={following}
+                  followingLoading={followingLoading}
+                  onJoin={handleJoin}
+                  onLeave={handleLeave}
+                  onFollow={handleFollow}
+                  bannerUploading={bannerUploading}
+                  bannerDragOver={bannerDragOver}
+                  onBannerFile={handleBannerFile}
+                  onRemoveBanner={handleRemoveBannerHero}
+                  onBannerDragOver={setBannerDragOver}
+                  avatarDropdown={<AvatarNavDropdown currentPage="Clubs" />}
+                  isDark={isDark}
+                />
+
+                {/* ── Horizontal Tab Bar ───────────────────────────────── */}
+                <div className="mt-4 mb-0">
+                  <ClubTabs
+                    activeTab={activeTab}
+                    onChange={handleTabChange}
+                    seenTabs={seenTabs as Set<import("@/components/club/ClubTabs").ClubTab>}
+                    badges={{
+                      feed: feedEvents.length,
+                      events: clubEvents.length,
+                      tournaments: tournaments.length + liveTournaments.length,
+                      leagues: clubLeagues.length,
                     }}
+                    accent={accent}
+                    isDark={isDark}
                   />
-                  {/* Subtle animated shimmer */}
-                  {!club.bannerUrl && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: "linear-gradient(120deg, transparent 30%, rgba(76,175,80,0.04) 50%, transparent 70%)",
-                        backgroundSize: "200% 100%",
-                        animation: "shimmerBg 8s ease-in-out infinite",
-                      }}
-                    />
-                  )}
-                  {/* Content — bottom-anchored, sidebar-aware */}
-                  <div className="relative z-10 flex flex-col justify-end h-full px-4 pb-4 lg:pb-5 lg:pr-5 lg:pl-[calc(210px+1.25rem)]" style={{ minHeight: "210px" }}>
-                    {/* CTA buttons — absolute top-right */}
-                    <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
-                      <AvatarNavDropdown currentPage="Clubs" />
-                      {!isOwner && (
-                        <button
-                          onClick={handleFollow}
-                          disabled={followingLoading}
-                          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50"
-                          style={following
-                            ? { borderColor: "rgba(255,255,255,0.25)", color: "rgba(255,255,255,0.7)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)" }
-                            : { borderColor: `${accent}88`, color: accent, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)" }
-                          }
-                        >
-                          {followingLoading
-                            ? <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-                            : following ? <><Bell size={11} /> Following</> : <><Bell size={11} /> Follow</>
-                          }
-                          {followerCount > 0 && (
-                            <span className="ml-0.5 opacity-70">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
-                          )}
-                        </button>
-                      )}
-                      {!isOwner && !isDirector && (
-                        joined ? (
-                          <button
-                            onClick={handleLeave}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
-                            style={{ borderColor: "rgba(255,255,255,0.25)", color: "rgba(255,255,255,0.7)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)" }}
-                          >
-                            Leave
-                          </button>
-                        ) : (
-                          <button
-                            onClick={handleJoin}
-                            className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
-                            style={{ background: accent, color: "#fff" }}
-                          >
-                            {club.isPublic ? "Join" : "Request"}
-                          </button>
-                        )
-                      )}
-                    </div>
-                    {/* Bottom row: avatar + name + CTA */}
-                    <div className="flex items-end gap-3 sm:gap-4">
-                      {/* Club avatar */}
-                      <div
-                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl"
-                        style={{ background: accent, border: `2px solid ${accent}55` }}
-                      >
-                        {club.avatarUrl && !avatarBroken ? (
-                          <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
-                        ) : (
-                          <span className="text-3xl">{flag}</span>
-                        )}
-                      </div>
+                </div>
+              </div>
+            </div>
 
-                      {/* Club name + badges */}
-                      <div className="flex-1 min-w-0 pt-0.5">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
-                            {club.name}
-                          </h1>
-                          {club.isVerified && (
-                            <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.10 220)", color: "oklch(0.75 0.14 220)" }}>
-                              <CheckCircle2 size={9} /> Verified
-                            </span>
-                          )}
-                          {club.beginnerFriendly && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.28 0.10 80)", color: "oklch(0.80 0.14 80)" }}>Beginner Friendly</span>
-                          )}
-                        </div>
-                        {/* Location + visibility */}
-                        <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.60 0.04 145)" }}>
-                          {club.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin size={10} />
-                              {flag} {club.location}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            {club.isPublic
-                              ? <><Globe size={10} /> Public</>  
-                              : <><Lock size={10} /> Private</>
-                            }
-                          </span>
-                        </div>
-                      </div>
-
-                    </div>{/* end bottom row */}
+            {/* ── LEGACY BANNER BLOCK (removed — kept as empty placeholder for old upload input) ── */}
+            {(isOwner || isDirector) && (
+              <input
+                id="banner-upload-profile"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleBannerFile(file);
+                  e.target.value = "";
+                }}
+              />
+            )}
 
 
-
-                    {/* Stats row */}
-                    <div className="flex items-center gap-4 mt-2 flex-wrap">
-                      <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
-                        <Users size={11} style={{ color: accent }} />
-                        <span className="font-bold text-white">{club.memberCount}</span>
-                        <span>members</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
-                        <Trophy size={11} style={{ color: accent }} />
-                        <span className="font-bold text-white">{club.tournamentCount ?? 0}</span>
-                        <span>tournaments</span>
-                      </div>
-                      {clubLeagues.length > 0 && (
-                        <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
-                          <Award size={11} style={{ color: accent }} />
-                          <span className="font-bold text-white">{clubLeagues.length}</span>
-                          <span>league{clubLeagues.length !== 1 ? "s" : ""}</span>
-                        </div>
-                      )}
-                      {followerCount > 0 && (
-                        <div className="flex items-center gap-1.5 text-sm" style={{ color: "oklch(0.60 0.04 145)" }}>
-                          <Bell size={11} style={{ color: accent }} />
-                          <span className="font-bold text-white">{followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}</span>
-                          <span>follower{followerCount !== 1 ? "s" : ""}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Social links row */}
-                    {(club.website || club.instagram || club.twitter || club.discord || club.youtube || club.tiktok || club.linktree) && (
-                      <div className="flex items-center gap-3 mt-2.5 flex-wrap">
-                        {club.website && (
-                          <a href={club.website.startsWith("http") ? club.website : `https://${club.website}`} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: '#82aad3' }}>
-                            <Globe size={11} />
-                            {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").slice(0, 28)}
-                          </a>
-                        )}
-                        {club.instagram && (
-                          <a href={`https://instagram.com/${club.instagram.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.75 0.14 0)" }}>
-                            <Instagram size={11} /> @{club.instagram.replace(/^@/, "")}
-                          </a>
-                        )}
-                        {club.twitter && (
-                          <a href={club.twitter.startsWith("http") ? club.twitter : `https://x.com/${club.twitter.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.80 0.05 220)" }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            @{club.twitter.replace(/^@/, "")}
-                          </a>
-                        )}
-                        {club.discord && (
-                          <a href={club.discord} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.70 0.14 270)" }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.055a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-                            Discord
-                          </a>
-                        )}
-                        {club.youtube && (
-                          <a href={club.youtube} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80" style={{ color: "oklch(0.65 0.20 25)" }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                            YouTube
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  {/* Banner upload overlay (owners/directors only) */}
-                    {(isOwner || isDirector) && (
-                      <>
-                        {/* Drag-and-drop highlight overlay */}
-                        <div
-                          className="absolute inset-0 z-30 pointer-events-none transition-all duration-200"
-                          style={{
-                            background: bannerDragOver ? "rgba(0,0,0,0.55)" : "transparent",
-                            border: bannerDragOver ? `2px dashed ${club.accentColor ?? "#4CAF50"}` : "2px dashed transparent",
-                            borderRadius: "1.5rem",
-                          }}
-                        >
-                          {bannerDragOver && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                              <Camera size={28} style={{ color: club.accentColor ?? "#4CAF50" }} />
-                              <span className="text-sm font-bold text-white">Drop to upload banner</span>
-                            </div>
-                          )}
-                        </div>
-                        {/* Invisible drag target covering the whole banner */}
-                        <div
-                          className="absolute inset-0 z-20"
-                          onDragOver={(e) => { e.preventDefault(); setBannerDragOver(true); }}
-                          onDragLeave={() => setBannerDragOver(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setBannerDragOver(false);
-                            const file = e.dataTransfer.files?.[0];
-                            if (file) handleBannerFile(file);
-                          }}
-                        />
-                        {/* Action buttons top-right */}
-                        <div className="absolute top-3 right-3 z-40 flex items-center gap-2">
-                          {bannerUploading ? (
-                            <div
-                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
-                              style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                            >
-                              <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                              </svg>
-                              Uploading…
-                            </div>
-                          ) : (
-                            <>
-                              <label
-                                htmlFor="banner-upload-profile"
-                                className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
-                                style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                                title="Change banner image"
-                              >
-                                <Camera size={13} />
-                                {club.bannerUrl ? "Change Banner" : "Add Banner"}
-                              </label>
-                              {club.bannerUrl && (
-                                <button
-                                  onClick={handleRemoveBannerHero}
-                                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
-                                  style={{ background: "rgba(180,0,0,0.65)", color: "#fff", backdropFilter: "blur(4px)" }}
-                                  title="Remove banner image"
-                                >
-                                  <X size={13} />
-                                  Remove
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        <input
-                          id="banner-upload-profile"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleBannerFile(file);
-                            e.target.value = "";
-                          }}
-                        />
-                      </>
-                    )}
-                  </div>
-            </div>{/* close full-bleed banner */}
-
-            {/* ── PADDED CONTENT BELOW BANNER ─────────────────────────── */}
-            <div className="px-4 lg:pl-[224px] lg:pr-10 xl:pl-[236px] xl:pr-14 py-5">
-              <div className="max-w-6xl">
+            {/* ── PADDED CONTENT BELOW HERO ─────────────────────────── */}
+            <div className="px-4 lg:pl-[88px] lg:pr-8 xl:pl-[96px] xl:pr-12 py-5">
+              <div className="max-w-5xl mx-auto">
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (() => {
