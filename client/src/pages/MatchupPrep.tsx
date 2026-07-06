@@ -43,6 +43,8 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
+import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -268,6 +270,12 @@ export default function MatchupPrep() {
   // Repertoire state (persisted in localStorage)
   const [repertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
 
+  // V3 schema toggle + provider
+  type Provider = "chesscom" | "lichess";
+  const [useV3, setUseV3] = useState(true); // V3 on by default
+  const [provider, setProvider] = useState<Provider>("chesscom");
+  const [reportV3, setReportV3] = useState<ScoutReportV3 | null>(null);
+
   // Time-control filter for prep report
   type TcFilter = "all" | "rapid" | "blitz";
   const [tcFilter, setTcFilter] = useState<TcFilter>("all");
@@ -306,7 +314,7 @@ export default function MatchupPrep() {
 
   // Opponent profile (avatar, title, country)
   const { profile: opponentProfile } = useOpponentProfile(
-    report ? report.opponent.username : null
+    reportV3 ? reportV3.opponent.username : report ? report.opponent.username : null
   );
 
   // Recently scouted chips
@@ -361,6 +369,7 @@ export default function MatchupPrep() {
     } else {
       setLoading(true);
       setReport(null);
+      setReportV3(null);
       setActiveTab("scout");
     }
     setError(null);
@@ -370,25 +379,49 @@ export default function MatchupPrep() {
       const tcQuery = activeTc !== "all" ? `tc=${activeTc}` : "";
       const refreshQuery = refresh ? "refresh=true" : "";
       const gamesQuery = activeGames !== "50" ? `games=${activeGames}` : "";
-      const queryStr = [tcQuery, refreshQuery, gamesQuery].filter(Boolean).join("&");
-      const url = `/api/prep/${encodeURIComponent(username.trim())}${queryStr ? `?${queryStr}` : ""}`;
-      const res = await authFetch(url);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(data.error || `Error ${res.status}`);
-      }
-      const data: PrepReport = await res.json();
-      setReport(data);
-      // Auto-select TC filter based on opponent's dominant time control
-      if (!tc && !refresh && data.opponent.dominantTimeControl && data.opponent.dominantTimeControl !== "mixed") {
-        const dominant = data.opponent.dominantTimeControl;
-        if (dominant === "rapid" || dominant === "blitz") {
-          setTcFilter(dominant);
+
+      if (useV3) {
+        // ── V3 path ──
+        const providerQuery = `provider=${provider}`;
+        const queryStr = ["schema=3", providerQuery, tcQuery, refreshQuery, gamesQuery].filter(Boolean).join("&");
+        const url = `/api/prep/${encodeURIComponent(username.trim())}?${queryStr}`;
+        const res = await authFetch(url);
+        if (!res.ok) {
+          const data: PrepErrorPayload = await res.json().catch(() => ({ error: "all_filtered", message: "Unknown error" }));
+          const friendlyMsg: Record<string, string> = {
+            invalid_username: "Username must be 2–50 characters.",
+            not_found: `Player "${username}" was not found on ${provider === "lichess" ? "Lichess" : "chess.com"}.`,
+            no_recent_games: `No rated rapid/blitz games found for "${username}" in the last 6 months.`,
+            all_filtered: `All games for "${username}" were filtered out. Try switching to All formats or increasing game depth.`,
+            upstream_rate_limited: "The chess provider is rate-limiting requests. Please try again in a minute.",
+          };
+          throw new Error(friendlyMsg[data.error] ?? data.message ?? `Error ${res.status}`);
         }
+        const data: ScoutReportV3 = await res.json();
+        setReportV3(data);
+        const updated = addRecentlyScouted(username.trim());
+        setRecentlyScouted(updated);
+      } else {
+        // ── V2 legacy path ──
+        const queryStr = [tcQuery, refreshQuery, gamesQuery].filter(Boolean).join("&");
+        const url = `/api/prep/${encodeURIComponent(username.trim())}${queryStr ? `?${queryStr}` : ""}`;
+        const res = await authFetch(url);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({ error: "Unknown error" }));
+          throw new Error(data.error || `Error ${res.status}`);
+        }
+        const data: PrepReport = await res.json();
+        setReport(data);
+        // Auto-select TC filter based on opponent's dominant time control
+        if (!tc && !refresh && data.opponent.dominantTimeControl && data.opponent.dominantTimeControl !== "mixed") {
+          const dominant = data.opponent.dominantTimeControl;
+          if (dominant === "rapid" || dominant === "blitz") {
+            setTcFilter(dominant);
+          }
+        }
+        const updated = addRecentlyScouted(username.trim());
+        setRecentlyScouted(updated);
       }
-      // Persist to recently scouted list
-      const updated = addRecentlyScouted(username.trim());
-      setRecentlyScouted(updated);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to fetch prep report");
     } finally {
@@ -399,15 +432,16 @@ export default function MatchupPrep() {
 
   // When a new report loads, check if this opponent is already saved
   useEffect(() => {
-    if (report && user) {
+    const activeUsername = reportV3?.opponent.username ?? report?.opponent.username;
+    if (activeUsername && user) {
       const match = savedReports.find(
-        (r) => r.opponentUsername === report.opponent.username.toLowerCase()
+        (r) => r.opponentUsername === activeUsername.toLowerCase()
       );
       setSavedId(match?.id ?? null);
     } else {
       setSavedId(null);
     }
-  }, [report, savedReports, user]);
+  }, [report, reportV3, savedReports, user]);
 
   const fetchSavedReports = useCallback(async () => {
     if (!user) return;
@@ -425,7 +459,8 @@ export default function MatchupPrep() {
   useEffect(() => { fetchSavedReports(); }, [fetchSavedReports]);
 
   async function handleSaveReport() {
-    if (!report || !user) return;
+    if (!reportV3 && !report) return;
+    if (!user) return;
     setSaving(true);
     try {
       const res = await authFetch("/api/prep/saved", {
@@ -433,12 +468,12 @@ export default function MatchupPrep() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          opponentUsername: report.opponent.username,
-          opponentName: report.opponent.username,
-          winRate: report.opponent.overall.winRate,
-          gamesAnalyzed: report.opponent.gamesAnalyzed,
-          prepLinesCount: report.prepLines.length,
-          reportJson: report,
+          opponentUsername: reportV3 ? reportV3.opponent.username : report?.opponent.username,
+          opponentName: reportV3 ? reportV3.opponent.username : report?.opponent.username,
+          winRate: reportV3 ? null : report?.opponent.overall.winRate,
+          gamesAnalyzed: reportV3 ? reportV3.dataQuality.parsed : report?.opponent.gamesAnalyzed,
+          prepLinesCount: reportV3 ? reportV3.insights.length : report?.prepLines.length,
+          reportJson: reportV3 ?? report,
         }),
       });
       if (res.ok) {
@@ -566,10 +601,10 @@ export default function MatchupPrep() {
           </form>
 
           {/* Action buttons — only when report is loaded */}
-          {report && (
+          {(report || reportV3) && (
             <div className="flex items-center gap-1 shrink-0">
               <button
-                onClick={() => fetchReport(report.opponent.username, true)}
+                onClick={() => fetchReport((reportV3?.opponent.username ?? report?.opponent.username)!, true)}
                 disabled={refreshing}
                 className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
                   isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]"
@@ -596,21 +631,49 @@ export default function MatchupPrep() {
           )}
         </div>
 
-        {/* ── Smart Filters Row ── */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
-          {/* Time Control */}
-          <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-            {(["all", "rapid", "blitz"] as const).map((tc) => (
-              <button
-                key={tc}
-                data-testid={`tc-filter-${tc}`}
-                onClick={() => {
-                  if (tc === tcFilter) return;
-                  setTcFilter(tc);
-                  if (report) fetchReport(report.opponent.username, false, tc);
-                  else if (searchInput.trim()) fetchReport(searchInput.trim(), false, tc);
-                }}
+          {/* ── Smart Filters Row ── */}
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
+            {/* Provider selector (V3 only) */}
+            {useV3 && (
+              <>
+                <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Source</span>
+                <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
+                  {(["chesscom", "lichess"] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => {
+                        if (p === provider) return;
+                        setProvider(p);
+                        const activeUser = reportV3?.opponent.username ?? searchInput.trim();
+                        if (activeUser) fetchReport(activeUser, false);
+                      }}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                        provider === p
+                          ? "bg-[#436850] text-white shadow-sm"
+                          : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+                      }`}
+                    >
+                      {p === "chesscom" ? "chess.com" : "Lichess"}
+                    </button>
+                  ))}
+                </div>
+                <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
+              </>
+            )}
+
+            {/* Time Control */}
+            <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
+            <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
+              {(["all", "rapid", "blitz"] as const).map((tc) => (
+                <button
+                  key={tc}
+                  data-testid={`tc-filter-${tc}`}
+                  onClick={() => {
+                    if (tc === tcFilter) return;
+                    setTcFilter(tc);
+                    const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                    if (activeUser) fetchReport(activeUser, false, tc);
+                  }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
                   tcFilter === tc
                     ? "bg-[#436850] text-white shadow-sm"
@@ -634,8 +697,8 @@ export default function MatchupPrep() {
                 onClick={() => {
                   if (gc === gameCountFilter) return;
                   setGameCountFilter(gc);
-                  if (report) fetchReport(report.opponent.username, false, undefined, gc);
-                  else if (searchInput.trim()) fetchReport(searchInput.trim(), false, undefined, gc);
+                  const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                  if (activeUser) fetchReport(activeUser, false, undefined, gc);
                 }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   gameCountFilter === gc
@@ -704,7 +767,59 @@ export default function MatchupPrep() {
           />
         )}
 
-        {/* ── Report ── */}
+        {/* ── V3 Report ── */}
+        {reportV3 && !loading && (
+          <div className="space-y-4 sm:space-y-5">
+
+            {/* V3 Opponent Hero — minimal card */}
+            <div className={`${t.card} p-4 sm:p-5 flex items-center gap-4`}>
+              {opponentProfile?.avatar && (
+                <img src={opponentProfile.avatar} alt={reportV3.opponent.username} className="w-12 h-12 rounded-full object-cover shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {opponentProfile?.title && (
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"}`}>
+                      {opponentProfile.title}
+                    </span>
+                  )}
+                  <h2 className={`text-base font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {reportV3.opponent.username}
+                  </h2>
+                  {opponentProfile?.countryCode && (
+                    <span className="text-sm">{countryCodeToFlag(opponentProfile.countryCode)}</span>
+                  )}
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${isDark ? "bg-[#1e2e22] text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
+                    {provider === "lichess" ? "Lichess" : "chess.com"}
+                  </span>
+                </div>
+                <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
+                  {reportV3.dataQuality.parsed} games analyzed
+                  {reportV3.opponent.avgRating !== null && ` · ~${reportV3.opponent.avgRating} avg rating`}
+                  {reportV3.opponent.timeControlSplit.rapid && ` · ${reportV3.opponent.timeControlSplit.rapid.games} rapid`}
+                  {reportV3.opponent.timeControlSplit.blitz && ` · ${reportV3.opponent.timeControlSplit.blitz.games} blitz`}
+                </p>
+              </div>
+              {/* V3 badge */}
+              <span className={`shrink-0 text-[10px] font-black px-2 py-1 rounded-lg ${isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"}`}>
+                V3
+              </span>
+            </div>
+
+            {/* V3 Scout Report — no tab bar, single-page layout */}
+            <V3ScoutReportTab report={reportV3} isDark={isDark} t={t} />
+
+            {/* V2 fallback link */}
+            <button
+              onClick={() => { setUseV3(false); setReportV3(null); fetchReport(reportV3.opponent.username); }}
+              className={`w-full text-center text-xs py-2 ${t.textTertiary} hover:underline`}
+            >
+              Switch to V2 legacy report
+            </button>
+          </div>
+        )}
+
+        {/* ── V2 Report ── */}
         {report && !loading && (
           <div className="space-y-4 sm:space-y-5">
 

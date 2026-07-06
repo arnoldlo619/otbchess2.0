@@ -1,0 +1,1904 @@
+{
+ "games": [
+  {
+   "url": "https://www.chess.com/game/live/fixture401",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.11\"]\n[Round \"?\"]\n[White \"e0\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 { [%clk 0:09:58] } 1... d5 { [%clk 0:09:54] } 2. exd5 { [%clk 0:09:51] } 2... Qxd5 { [%clk 0:09:43] } 3. Nc3 { [%clk 0:09:41] } 3... Qa5 { [%clk 0:09:38] } 4. h3 { [%clk 0:09:35] } 4... Qb6 { [%clk 0:09:26] } 5. a4 { [%clk 0:09:18] } 5... Qb4 { [%clk 0:09:09] } 6. Qf3 { [%clk 0:09:02] } 6... Qxa4 { [%clk 0:08:59] } 7. Ba6 { [%clk 0:08:54] } 7... c5 { [%clk 0:08:50] } 8. Rh2 { [%clk 0:08:42] } 8... Nh6 { [%clk 0:08:34] } 9. Rh1 { [%clk 0:08:28] } 9... Rg8 { [%clk 0:08:23] } 10. Bc4 { [%clk 0:08:19] } 10... Qc6 { [%clk 0:08:15] } 11. Qxf7+ { [%clk 0:08:12] } 11... Kd8 { [%clk 0:08:04] } 12. b3 { [%clk 0:07:58] } 12... Qf3 { [%clk 0:07:50] } 13. gxf3 { [%clk 0:07:41] } 13... Nd7 { [%clk 0:07:39] } 14. Ne4 { [%clk 0:07:36] } 14... b5 { [%clk 0:07:27] } 15. Nf6 { [%clk 0:07:22] } 15... a5 { [%clk 0:07:18] } 16. b4 { [%clk 0:07:12] } 16... gxf6 { [%clk 0:07:03] } 17. Ba3 { [%clk 0:06:55] } 17... Rg4 { [%clk 0:06:48] } 18. hxg4 { [%clk 0:06:41] } 18... Ba6 { [%clk 0:06:39] } 19. Qe6 { [%clk 0:06:37] } 19... f5 { [%clk 0:06:28] } 20. Qxa6 { [%clk 0:06:23] } 20... cxb4 { [%clk 0:06:16] } 21. Rh4 { [%clk 0:06:14] } 21... e5 { [%clk 0:06:10] } 22. Kf1 { [%clk 0:06:01] } 22... Nb8 { [%clk 0:05:59] } 23. Rh1 { [%clk 0:05:52] } 23... b3 { [%clk 0:05:50] } 24. Rc1 { [%clk 0:05:46] } 24... Kd7 { [%clk 0:05:43] } 25. Qf6 { [%clk 0:05:37] } 25... Be7 { [%clk 0:05:34] } 26. g5 { [%clk 0:05:31] } 26... Bf8 { [%clk 0:05:26] } 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747443600,
+   "white": {
+    "username": "e0",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture402",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.12\"]\n[Round \"?\"]\n[White \"e1\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. Bd3 Qa3 5. Qe2 b5 6. bxa3 Bd7 7. Nf3 c6 8. Bf5 Bc8 9. Ng1 Nf6 10. Kd1 h6 11. Qd3 g6 12. Qe4 Nh5 13. Nxb5 e5 14. Nh3 Nf4 15. c3 Bxf5 16. d4 Bb4 17. g3 O-O 18. Rg1 Nxh3 19. Rb1 Ba5 20. Rh1 Bxe4 21. Nxa7 f5 22. dxe5 Bxb1 23. Nc8 Bd3 24. Rg1 f4 25. Ne7+ Kf7 26. Nf5 Bxc3 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747447200,
+   "white": {
+    "username": "e1",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture403",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.13\"]\n[Round \"?\"]\n[White \"e2\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. h4 Qb6 5. Nce2 Qe3 6. dxe3 Na6 7. Rh2 c5 8. Rh3 g6 9. Nc3 Be6 10. Nf3 f6 11. Qd4 Bd7 12. Ne5 Bf5 13. Rf3 h5 14. Ke2 Bd3+ 15. cxd3 cxd4 16. Bd2 Rh7 17. e4 e6 18. Bf4 Bg7 19. Kd2 Nb4 20. Ke1 Rh6 21. Nc4 Na6 22. g4 Nb8 23. Na4 g5 24. Ke2 hxg4 25. Rh3 a5 26. Ke1 Kd7 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747450800,
+   "white": {
+    "username": "e2",
+    "rating": 1600,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture404",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.14\"]\n[Round \"?\"]\n[White \"e3\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 { [%clk 0:09:52] } 1... d5 { [%clk 0:09:46] } 2. exd5 { [%clk 0:09:38] } 2... Qxd5 { [%clk 0:09:29] } 3. Nc3 { [%clk 0:09:27] } 3... Qa5 { [%clk 0:09:24] } 4. f3 { [%clk 0:09:15] } 4... Bg4 { [%clk 0:09:10] } 5. Ke2 { [%clk 0:09:06] } 5... f5 { [%clk 0:09:00] } 6. b4 { [%clk 0:08:51] } 6... Na6 { [%clk 0:08:43] } 7. d3 { [%clk 0:08:36] } 7... Qe5+ { [%clk 0:08:29] } 8. Ne4 { [%clk 0:08:27] } 8... Nxb4 { [%clk 0:08:25] } 9. d4 { [%clk 0:08:16] } 9... Rc8 { [%clk 0:08:11] } 10. Qe1 { [%clk 0:08:04] } 10... e6 { [%clk 0:08:02] } 11. Bg5 { [%clk 0:07:58] } 11... Qf6 { [%clk 0:07:49] } 12. Ng3 { [%clk 0:07:47] } 12... Nxa2 { [%clk 0:07:40] } 13. Be3 { [%clk 0:07:38] } 13... Qf7 { [%clk 0:07:34] } 14. Qd1 { [%clk 0:07:31] } 14... f4 { [%clk 0:07:25] } 15. Nf5 { [%clk 0:07:22] } 15... Nb4 { [%clk 0:07:19] } 16. Bd2 { [%clk 0:07:14] } 16... c6 { [%clk 0:07:05] } 17. Nh6 { [%clk 0:07:02] } 17... Na6 { [%clk 0:06:55] } 18. Kf2 { [%clk 0:06:50] } 18... Qh5 { [%clk 0:06:48] } 19. fxg4 { [%clk 0:06:42] } 19... Qxh6 { [%clk 0:06:38] } 20. Be1 { [%clk 0:06:29] } 20... g5 { [%clk 0:06:27] } 21. Qd2 { [%clk 0:06:18] } 21... Bb4 { [%clk 0:06:09] } 22. Kf3 { [%clk 0:06:01] } 22... Rd8 { [%clk 0:05:59] } 23. Ra5 { [%clk 0:05:57] } 23... Nc7 { [%clk 0:05:51] } 24. Nh3 { [%clk 0:05:47] } 24... Qg6 { [%clk 0:05:43] } 25. Nf2 { [%clk 0:05:35] } 25... Ra8 { [%clk 0:05:27] } 26. Rb5 { [%clk 0:05:23] } 26... Kf7 { [%clk 0:05:21] } 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747454400,
+   "white": {
+    "username": "e3",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture405",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.15\"]\n[Round \"?\"]\n[White \"e4\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. Bb5+ Kd8 5. Ba6 Nxa6 6. b4 f5 7. a3 c5 8. Rb1 Qxb4 9. g3 f4 10. d3 Qb6 11. Nce2 Kc7 12. Rb3 c4 13. Rb5 Qc6 14. d4 Qxb5 15. f3 Qb3 16. cxb3 cxb3 17. g4 b6 18. Nc3 Nb8 19. Qe2 Nf6 20. a4 Kb7 21. Qc2 Nfd7 22. Qa2 e5 23. Nd1 h6 24. Nh3 Kc7 25. Nc3 Be7 26. Nf2 Bb7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747458000,
+   "white": {
+    "username": "e4",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture406",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.16\"]\n[Round \"?\"]\n[White \"e5\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. Nh3 Qxa2 5. b3 Qa3 6. Ke2 h5 7. Ke1 Rh6 8. Ng5 a5 9. Nh7 Rxh7 10. d4 g6 11. Na2 b6 12. Kd2 Rg7 13. Kc3 Be6 14. Kd2 Na6 15. Rg1 Ra7 16. Qg4 c6 17. Ke2 Rb7 18. Bxa3 Nb8 19. Rb1 g5 20. g3 Rh7 21. d5 Bg7 22. Rb2 Rh8 23. Nc1 c5 24. Bxc5 Rd7 25. Qh4 Nh6 26. h3 Bf8 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747461600,
+   "white": {
+    "username": "e5",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture407",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.17\"]\n[Round \"?\"]\n[White \"e6\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 { [%clk 0:09:51] } 1... d5 { [%clk 0:09:49] } 2. exd5 { [%clk 0:09:42] } 2... Qxd5 { [%clk 0:09:40] } 3. Nc3 { [%clk 0:09:36] } 3... Qa5 { [%clk 0:09:33] } 4. d3 { [%clk 0:09:27] } 4... Qg5 { [%clk 0:09:24] } 5. g4 { [%clk 0:09:21] } 5... Nd7 { [%clk 0:09:16] } 6. Nb5 { [%clk 0:09:07] } 6... Qf6 { [%clk 0:09:04] } 7. a3 { [%clk 0:08:57] } 7... Qxb2 { [%clk 0:08:52] } 8. Bg2 { [%clk 0:08:50] } 8... e5 { [%clk 0:08:44] } 9. Nh3 { [%clk 0:08:40] } 9... e4 { [%clk 0:08:31] } 10. Rg1 { [%clk 0:08:29] } 10... c5 { [%clk 0:08:20] } 11. c4 { [%clk 0:08:11] } 11... Qf6 { [%clk 0:08:03] } 12. Nf4 { [%clk 0:08:01] } 12... Qe5 { [%clk 0:07:59] } 13. g5 { [%clk 0:07:53] } 13... g6 { [%clk 0:07:49] } 14. Qh5 { [%clk 0:07:45] } 14... Ne7 { [%clk 0:07:37] } 15. Rh1 { [%clk 0:07:29] } 15... e3 { [%clk 0:07:25] } 16. Rg1 { [%clk 0:07:23] } 16... Nc6 { [%clk 0:07:14] } 17. Bxc6 { [%clk 0:07:12] } 17... Bh6 { [%clk 0:07:08] } 18. Qh4 { [%clk 0:07:03] } 18... Kd8 { [%clk 0:06:59] } 19. h3 { [%clk 0:06:57] } 19... b6 { [%clk 0:06:51] } 20. Rg2 { [%clk 0:06:48] } 20... f5 { [%clk 0:06:42] } 21. Nh5 { [%clk 0:06:36] } 21... Qf6 { [%clk 0:06:30] } 22. Nc7 { [%clk 0:06:23] } 22... a6 { [%clk 0:06:15] } 23. Bxa8 { [%clk 0:06:10] } 23... Qe6 { [%clk 0:06:06] } 24. gxh6+ { [%clk 0:06:03] } 24... Qe7 { [%clk 0:05:55] } 25. Ne8 { [%clk 0:05:50] } 25... f4 { [%clk 0:05:46] } 26. Nd6 { [%clk 0:05:40] } 26... Qg5 { [%clk 0:05:34] } 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747465200,
+   "white": {
+    "username": "e6",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture408",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.18\"]\n[Round \"?\"]\n[White \"e7\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. Be2 Qb4 5. Bf3 e5 6. Nb1 Kd7 7. g3 Qe7 8. h3 Qa3 9. Ke2 e4 10. b3 Bd6 11. Bb2 f6 12. Bc3 Bb4 13. Bg4+ Ke8 14. Bf3 a5 15. Bh5+ Kd7 16. Be5 b5 17. Bf7 Ra6 18. Nf3 Rb6 19. Bd5 h6 20. Bxf6 h5 21. g4 Bb7 22. Be7 hxg4 23. Re1 Rxh3 24. Be6+ Kxe6 25. Ne5 Bd6 26. Nxa3 Kd5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747468800,
+   "white": {
+    "username": "e7",
+    "rating": 1600,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture409",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.19\"]\n[Round \"?\"]\n[White \"e8\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. f3 Qa4 5. Ke2 Bf5 6. d3 Qc4 7. Nh3 Qxc3 8. Bd2 e6 9. Qc1 a6 10. Kf2 Ra7 11. Qd1 Qa5 12. Qe1 Bc5+ 13. Kg3 Qxd2 14. c3 Nc6 15. Rc1 Bg1 16. Rd1 Kd7 17. Rc1 Nh6 18. Nf4 g5 19. Nh3 Bf2+ 20. Nxf2 f6 21. Nd1 Raa8 22. Rc2 g4 23. Qe5 Qe3 24. Nxe3 b5 25. Be2 Kc8 26. Nd5 Ng8 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747472400,
+   "white": {
+    "username": "e8",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture410",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.20\"]\n[Round \"?\"]\n[White \"e9\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 { [%clk 0:09:52] } 1... d5 { [%clk 0:09:50] } 2. exd5 { [%clk 0:09:48] } 2... Qxd5 { [%clk 0:09:42] } 3. Nc3 { [%clk 0:09:38] } 3... Qa5 { [%clk 0:09:34] } 4. a3 { [%clk 0:09:26] } 4... Bg4 { [%clk 0:09:18] } 5. Bd3 { [%clk 0:09:14] } 5... a6 { [%clk 0:09:12] } 6. Bxa6 { [%clk 0:09:03] } 6... h6 { [%clk 0:09:01] } 7. Be2 { [%clk 0:08:57] } 7... g6 { [%clk 0:08:52] } 8. Bf3 { [%clk 0:08:48] } 8... Nf6 { [%clk 0:08:46] } 9. Nce2 { [%clk 0:08:40] } 9... Qd5 { [%clk 0:08:37] } 10. c4 { [%clk 0:08:31] } 10... e5 { [%clk 0:08:25] } 11. h3 { [%clk 0:08:19] } 11... Ne4 { [%clk 0:08:12] } 12. Qa4+ { [%clk 0:08:04] } 12... Kd8 { [%clk 0:07:59] } 13. Nc3 { [%clk 0:07:55] } 13... Qxc4 { [%clk 0:07:52] } 14. Kd1 { [%clk 0:07:44] } 14... b5 { [%clk 0:07:39] } 15. Qb4 { [%clk 0:07:35] } 15... Qd5 { [%clk 0:07:29] } 16. Rb1 { [%clk 0:07:23] } 16... Ra7 { [%clk 0:07:20] } 17. Qb3 { [%clk 0:07:15] } 17... Qa8 { [%clk 0:07:12] } 18. a4 { [%clk 0:07:05] } 18... Rxa4 { [%clk 0:07:01] } 19. Kc2 { [%clk 0:06:58] } 19... c6 { [%clk 0:06:53] } 20. Na2 { [%clk 0:06:45] } 20... Bd6 { [%clk 0:06:40] } 21. Bxe4 { [%clk 0:06:38] } 21... Bc5 { [%clk 0:06:29] } 22. Qd3+ { [%clk 0:06:27] } 22... Ke7 { [%clk 0:06:21] } 23. Qe3 { [%clk 0:06:18] } 23... Ke8 { [%clk 0:06:10] } 24. Qb3 { [%clk 0:06:01] } 24... f5 { [%clk 0:05:58] } 25. d3 { [%clk 0:05:56] } 25... Be3 { [%clk 0:05:53] } 26. Bxc6+ { [%clk 0:05:44] } 26... Kd8 { [%clk 0:05:41] } 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747476000,
+   "white": {
+    "username": "e9",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture411",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.21\"]\n[Round \"?\"]\n[White \"e10\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. d3 e5 5. a4 Qb5 6. Bg5 Qc6 7. Bh6 g5 8. Kd2 Be7 9. Qc1 Bf8 10. Bg7 Bc5 11. Bxh8 Bd7 12. b3 Bg4 13. Qb2 Nf6 14. Be2 Bc8 15. Bxf6 Bb6 16. g3 a5 17. d4 Kd7 18. Bh5 Qb5 19. Nce2 Qxb3 20. Bg7 Qc4 21. Qb5+ Qc6 22. f4 e4 23. Bxf7 Ke7 24. d5 Qg6 25. Qb2 Ra6 26. c3 Qf6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747479600,
+   "white": {
+    "username": "e10",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture412",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.22\"]\n[Round \"?\"]\n[White \"e11\"]\n[Black \"cleanplayer\"]\n[Result \"1-0\"]\n[WhiteElo \"1600\"]\n[BlackElo \"1610\"]\n[TimeControl \"600\"]\n\n1. e4 d5 2. exd5 Qxd5 3. Nc3 Qa5 4. h3 Qxc3 5. Bc4 f6 6. Nf3 Qb3 7. Rh2 c5 8. Kf1 a5 9. Kg1 f5 10. Qf1 e6 11. h4 Ke7 12. Nd4 Nc6 13. a4 Nb8 14. Bxe6 Qb4 15. Rh1 Nh6 16. Ra2 Qb3 17. Qc4 Qh3 18. Qd3 Qg4 19. g3 Qe4 20. Bxf5 Qc6 21. f4 Ng8 22. Be4 Nf6 23. f5 Qd5 24. Qc3 Qc6 25. Kg2 Nfd7 26. Kh2 Qc7 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747483200,
+   "white": {
+    "username": "e11",
+    "rating": 1600,
+    "result": "win"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture413",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.23\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f0\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. a3 b6 4. Qe2 g5 5. a4 dxe4 6. b4 Bh3 7. Qg4 Nf6 8. Be3 Qd5 9. Ne2 Qd6 10. c3 Nbd7 11. Bd2 Bh6 12. gxh3 Qxb4 13. Qg3 Qxa4 14. Ng1 Rc8 15. Be2 a6 16. Bb5 Rg8 17. Qg2 e5 18. Ke2 Rf8 19. Bxa4 Nh5 20. Na3 b5 21. Qg3 Rg8 22. Rc1 f5 23. Bd1 Rb8 24. h4 a5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747486800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f0",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture414",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.24\"]\n[Round \"?\"]\n[White \"f1\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Nh3 Bd7 4. b3 f6 5. Nd2 e6 6. g3 Ke7 7. Nb1 b5 8. Qd2 f5 9. Kd1 h5 10. Ng1 Qc8 11. h3 Qc7 12. Qe3 Qd8 13. f3 Nh6 14. exf5 Qb6 15. a4 Nxf5 16. Qc3 a6 17. Nd2 Rg8 18. a5 Be8 19. Qd3 Qxa5 20. c3 Nxg3 21. Qb1 Kd8 22. Qh7 h4 23. Bc4 Ne4 24. Nf1 Be7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747490400,
+   "white": {
+    "username": "f1",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture415",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.25\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f2\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Nc3 Bd7 4. c5 Nc6 5. Ne4 f5 6. g4 Qf6 7. f4 Nd8 8. b4 fxg4 9. Kd2 Kf7 10. Kd3 Qg5 11. Qe1 b5 12. Kd2 Bxc5 13. Bb2 Kg6 14. Nxg5 a5 15. Bh3 Rb8 16. Bc1 Be8 17. Qf2 gxh3 18. Kd3 Bd7 19. e4 axb4 20. Qf3 Ra8 21. a3 Ra4 22. N5xh3 Bc8 23. Qh5+ Kxh5 24. Nf3 Rxa3+ 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747494000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f2",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture416",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.26\"]\n[Round \"?\"]\n[White \"f3\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. a4 Ng4 4. Bg5 Rg8 5. Qb3 Na6 6. Kd1 Bh6 7. Ke1 Kf8 8. h3 Qe8 9. Qa2 c6 10. f4 Nb4 11. g3 Nxa2 12. Nc3 f6 13. c5 Rg7 14. f5 b5 15. axb5 Rb8 16. Bxh6 gxf5 17. Nd1 Nh2 18. h4 Nb4 19. d5 cxd5 20. e4 Nc2+ 21. Kd2 Qg6 22. Kc1 Qxg3 23. Bd3 Qg2 24. Kb1 dxe4 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747497600,
+   "white": {
+    "username": "f3",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture417",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.27\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f4\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 f5 4. Ng1 Nf6 5. Nc3 b5 6. Qf3 a5 7. Be6 h6 8. Kf1 Ng4 9. Qf4 Nxh2+ 10. Rxh2 Rh7 11. Ke1 exf4 12. Rxh6 Bd6 13. Rh4 fxe4 14. Rh3 Na7 15. g4 Kf8 16. Re3 Rh3 17. f3 Qg5 18. Bg8 a4 19. b3 Qxg4 20. Ke2 Rh6 21. Nxe4 a3 22. d4 c6 23. Nf6 Qh3 24. d5 b4 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747501200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f4",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture418",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.28\"]\n[Round \"?\"]\n[White \"f5\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 g5 3. g4 Bb4 4. Nc3 Be7 5. d3 Ba3 6. e3 d6 7. e4 a6 8. Rb1 Bxb2 9. Nce2 Nh6 10. Qc2 Nf5 11. Kd2 Ba3 12. h3 Nc6 13. Ra1 Na7 14. Nd4 Bb2 15. Nde2 b5 16. f3 Be6 17. a4 Qb8 18. exf5 Nc6 19. Bg2 a5 20. Nf4 Bd7 21. axb5 Na7 22. Ne6 Qb7 23. Nxg5 d5 24. Ke3 Bc6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747504800,
+   "white": {
+    "username": "f5",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture419",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.29\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f6\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 b6 4. Bg3 Ng8 5. c3 h6 6. a3 Ba6 7. Nbd2 Bxe2 8. Nc4 c6 9. Bc7 f5 10. Ncd2 f4 11. Ne4 Bxf3 12. Be2 Kf7 13. Nd2 Na6 14. Rg1 Be4 15. Bxa6 Qd7 16. Bc4 a5 17. Bd3 f3 18. Bc4 Rd8 19. Ra2 dxc4 20. Qb1 Rb8 21. Bf4 Qe8 22. Qxe4 c5 23. Be5 b5 24. Kf1 Qd7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747508400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f6",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture420",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.01\"]\n[Round \"?\"]\n[White \"f7\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. g3 f6 4. Be2 e5 5. Kd2 c5 6. Bg4 exd4 7. Ke1 Qd7 8. Nf3 Nc6 9. Bf4 Ne5 10. a3 Qd8 11. Ng1 Rb8 12. Kf1 Qe7 13. Ra2 Nd3 14. Ne2 g6 15. Bxc8 Nh6 16. Bxb8 Qc7 17. Qxd3 dxe4 18. b3 Kd8 19. Bxb7 Ke7 20. Qc4 Qd7 21. h4 Qc6 22. Ke1 Qa6 23. Ba8 d3 24. Rh3 Rg8 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747512000,
+   "white": {
+    "username": "f7",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture421",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.02\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f8\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. c3 d5 4. d3 Be6 5. Qd2 Na6 6. Qe3 Nh6 7. Ng5 Bf5 8. Kd1 Qb6 9. b3 Qxb3+ 10. Kd2 Bg6 11. Rg1 Rc8 12. Ke2 Qd1+ 13. Kxd1 Ra8 14. Ke1 dxe4 15. h4 Nb4 16. Nxf7 Bh5 17. Be2 b5 18. Na3 Bf3 19. Nd8 Nc6 20. Nc2 Ng8 21. Qg5 Bxe2 22. Nb7 Bg4 23. Qh6 Be2 24. a3 Bxd3 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747515600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f8",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture422",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.03\"]\n[Round \"?\"]\n[White \"f9\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Kd2 Qd6 4. cxd5 Na6 5. Qc2 Ne7 6. Qa4+ Qc6 7. Kd1 Kd7 8. a3 g6 9. h3 Qb5 10. Nd2 Rb8 11. Nc4 h6 12. Nb6+ Kd8 13. Bf4 Ng8 14. Qa5 Bg7 15. Qd2 Qb3+ 16. Ke1 Qc3 17. Be3 Ke8 18. Na4 h5 19. dxe6 Bf6 20. Bf4 Nb4 21. f3 fxe6 22. e4 Kf7 23. Ba6 Bh4+ 24. g3 Nd3+ 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747519200,
+   "white": {
+    "username": "f9",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture423",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.04\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f10\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Bd2 e5 4. f4 c6 5. h4 d5 6. Bc1 a5 7. b4 g5 8. Bd2 Rg8 9. dxe5 Be7 10. e3 Rh8 11. Bc3 gxh4 12. Rh3 Bxh3 13. Na3 h6 14. Nxh3 Qd7 15. Qf3 Bd6 16. e4 Qe7 17. exd6 Ra7 18. c5 Qxd6 19. Bd2 Ng8 20. b5 Qe7 21. Bd3 Nf6 22. Bxa5 Nbd7 23. Ng5 Nh5 24. Bc4 h3 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747522800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f10",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture424",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.05\"]\n[Round \"?\"]\n[White \"f11\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. a3 Bd7 4. Bf4 g6 5. e5 Bg4 6. b3 a6 7. Bc1 g5 8. Qf3 b5 9. Ne2 Bh6 10. Nd2 Kf8 11. Qxf7+ Kxf7 12. Ra2 c5 13. Nf4 Qd7 14. Ng6 Qe6 15. c3 Qxg6 16. Nc4 Qd6 17. Be3 Bf5 18. Bd3 Bxd3 19. b4 Bf5 20. Rc2 a5 21. Bc1 g4 22. bxa5 Bxc2 23. Kf1 Qe6 24. h4 Qa6 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747526400,
+   "white": {
+    "username": "f11",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture425",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.06\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f12\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Na6 3. Bh3 b6 4. Nf3 Nb4 5. Bg4 Rb8 6. e4 d5 7. Bh3 Qd6 8. Nxe5 Ke7 9. Nd7 Qc6 10. d4 h6 11. a3 Rb7 12. c5 Bxd7 13. e5 Rh7 14. axb4 Qd6 15. Ra2 Bb5 16. Bf4 Kd8 17. Qd2 Be8 18. Qc1 Qxe5+ 19. Bxe5 Rh8 20. Be6 Bxc5 21. Kd2 g5 22. Bh3 f5 23. Bxc7+ Ke7 24. Bg4 Ba4 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747530000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f12",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture426",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.07\"]\n[Round \"?\"]\n[White \"f13\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Bh3 4. g3 Bxf1 5. e4 g5 6. b4 b6 7. Rg1 a6 8. Bd6 Bb5 9. Bxc7 Nc6 10. Bf4 Qb8 11. h3 e6 12. Rh1 Ke7 13. Qc1 Nxd4 14. Qb2 Nxf3+ 15. Kd1 dxe4 16. Bxb8 Bd7 17. Qc1 Be8 18. Be5 Rd8+ 19. Bd6+ Rxd6+ 20. Nd2 Nxd2 21. f3 Rd4 22. Re1 g4 23. Rxe4 Bd7 24. Qb1 Rxe4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747533600,
+   "white": {
+    "username": "f13",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture427",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.08\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f14\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bd3 dxe4 4. Nf3 Bf5 5. Rf1 Qd6 6. Bxe4 Qg3 7. a4 Nd7 8. c4 a6 9. h3 c5 10. b4 Ngf6 11. Qd2 Kd8 12. fxg3 b6 13. Ke2 Rg8 14. Na3 a5 15. g4 b5 16. Rg1 cxd4 17. c5 Be6 18. Bxa8 Bd5 19. g5 Nh5 20. Qa2 Nxc5 21. Nxb5 Bxa2 22. Ba3 f5 23. gxf6 Nxa4 24. Nd2 Ke8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747537200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f14",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture428",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.09\"]\n[Round \"?\"]\n[White \"f15\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bd3 Nf6 4. Ne2 Bg4 5. f4 Bd7 6. Be3 h6 7. Ng3 a6 8. Qc1 e6 9. O-O c5 10. Nc3 Nxe4 11. Nxd5 Bc6 12. Nf5 Nd2 13. c3 Bd7 14. c4 g5 15. Nd6+ Bxd6 16. Qxd2 b6 17. a3 h5 18. Rfc1 f6 19. Bb1 Kf8 20. Rd1 b5 21. Qe2 Kg7 22. f5 Qf8 23. Bd3 Qe7 24. Rac1 Kg8 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747540800,
+   "white": {
+    "username": "f15",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture429",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.10\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f16\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. a3 Qe7 4. Bg5 Qc5 5. Nf3 Qxc4 6. Ra2 Be7 7. Qc2 Qb3 8. Bf4 Qxf3 9. exf3 Nc6 10. a4 Bf6 11. Qc1 e5 12. Bg5 Bf5 13. f4 Nb8 14. b4 Ke7 15. dxe5 a5 16. exf6+ Kd7 17. Qc2 Kd8 18. Qd1 Kd7 19. g3 Ra7 20. Bc4 Bxb1 21. Bh4 Ra6 22. Qc1 gxf6 23. Rb2 c5 24. Qe3 Re6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747544400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f16",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture430",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.11\"]\n[Round \"?\"]\n[White \"f17\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Nh3 Bh6 4. e3 b5 5. Ng5 Nh5 6. Nh3 a5 7. Nf4 Bf8 8. Nxh5 Nc6 9. Ng3 Rb8 10. Rg1 f5 11. e4 Nxd4 12. Be2 Nb3 13. Nd2 f4 14. Kf1 d5 15. e5 Nc5 16. cxd5 h5 17. b3 f3 18. Bxb5+ Bd7 19. Rb1 Ne4 20. Nc4 Nd6 21. Qc2 e6 22. Rb2 g5 23. Bxd7+ Qxd7 24. Qd3 Qa4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747548000,
+   "white": {
+    "username": "f17",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture431",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.12\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f18\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Qf6 4. Na3 Qf4 5. Bf1 Nd4 6. Ng5 Ne6 7. Nh3 Nh6 8. Be2 Qxf2+ 9. Kxf2 g6 10. Bd3 Rg8 11. Kf1 Ng7 12. Ke1 a6 13. Kf2 c5 14. Ng1 g5 15. Ke2 Kd8 16. Ke1 Ne8 17. g4 Rg7 18. b3 d6 19. c3 Rb8 20. Nb1 Ra8 21. Ba3 Rg6 22. Ne2 Ra7 23. Kf1 d5 24. Kg2 Bxg4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747551600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f18",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture432",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.13\"]\n[Round \"?\"]\n[White \"f19\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Na6 3. d3 h6 4. Bg5 Ne7 5. c5 d6 6. c6 Nc5 7. Bg2 Be6 8. Bc1 Nxd3+ 9. Kd2 Bc4 10. Bh3 d5 11. Bg2 Nb4 12. cxb7 c5 13. e3 Bxa2 14. Kc3 Qd7 15. Bf1 Ng8 16. Qd4 Bxb1 17. Qh4 Qh3 18. bxa8=B d4+ 19. Kb3 Bh7 20. Bd3 dxe3 21. Bc2 Nxc2 22. Qd8+ Kxd8 23. Bb7 Be7 24. Rxa7 Kc7 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747555200,
+   "white": {
+    "username": "f19",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture433",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.14\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f20\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Ng8 4. Qd3 Nc6 5. h4 Nf6 6. Bc1 Ne4 7. g4 Nxf2 8. Nbd2 Rb8 9. Qg6 Bd7 10. b4 Be6 11. Qf6 Bd7 12. Qe5 Rc8 13. Nh2 e6 14. a3 Qe7 15. Rg1 f6 16. Ndf3 Qc5 17. Qg3 Qb6 18. Qxf2 Qxd4 19. Rb1 Qc3+ 20. Nd2 Na5 21. Bg2 d4 22. Rb2 Ke7 23. Bh1 Ba4 24. Bg2 Kf7 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747558800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f20",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture434",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.15\"]\n[Round \"?\"]\n[White \"f21\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Na3 Nf6 4. b4 Qd6 5. Qg4 Qxb4+ 6. c3 Kd8 7. Be3 Qb2 8. Qxc8+ Kxc8 9. exd5 Nfd7 10. g4 Qxa1+ 11. Kd2 f5 12. Kd3 c5 13. Bg5 b6 14. Bh3 Qc1 15. Nb5 f4 16. f3 Rg8 17. d6 Qc2+ 18. Kxc2 a5 19. Bxe7 h6 20. a3 Nc6 21. Bg5 Be7 22. Bg2 Nf6 23. Nc7 c4 24. Bxf6 a4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747562400,
+   "white": {
+    "username": "f21",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture435",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.16\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f22\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. Nh4 Nh6 4. Bb5+ Bd7 5. Bd3 Bb5 6. Qh5 e5 7. Qe2 Bc4 8. Rf1 Nf5 9. f4 exf4 10. Nf3 b6 11. a4 Qg5 12. c3 Ng3 13. Bxc4 Qe7 14. Ra2 b5 15. Rf2 Kd7 16. Qd3 Nc6 17. Re2 Nb8 18. Qd5 Ke8 19. e5 Qd7 20. Bb3 bxa4 21. h3 c4 22. Rf2 Qc6 23. Qa5 Qd7 24. Qa6 f6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747566000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f22",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture436",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.17\"]\n[Round \"?\"]\n[White \"f23\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. b4 Bc5 4. f4 a6 5. Bd2 Qg5 6. h4 Nc6 7. Kf2 Kd7 8. bxc5 Nce7 9. Nc3 Qg4 10. Nf3 Qh5 11. Nb5 Qg6 12. Qb3 Qh6 13. Nh2 g5 14. Qa4 Qf8 15. Qa5 f5 16. Kf3 Nf6 17. Nd6 Qe8 18. Nxf5 Ng6 19. Nh6 Kd8 20. Bc3 Ng8 21. Qb4 Ne5+ 22. Kg3 g4 23. Qa3 Rb8 24. Rb1 Kd7 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747569600,
+   "white": {
+    "username": "f23",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture437",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.18\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f24\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Bg5 Na6 4. b4 h6 5. d5 d6 6. e4 Nh5 7. f4 Bd7 8. Ke2 c5 9. a4 Bxa4 10. Qe1 Nxb4 11. Nd2 Bc2 12. Ra6 Nc6 13. g4 Qb6 14. Nb3 f5 15. Qb1 Kf7 16. gxf5 Nd4+ 17. Ke3 e6 18. Bf6 exf5 19. Bh3 g5 20. Bg4 Nc6 21. Kd2 Rg8 22. Ra5 Nb8 23. Bd4 Nd7 24. Bf3 Be7 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747573200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f24",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture438",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.19\"]\n[Round \"?\"]\n[White \"f25\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. c4 e6 4. b4 Bd7 5. f3 Bc5 6. Nd2 a6 7. Be2 Ke7 8. Kf2 Qc7 9. g4 Qxh2+ 10. Rxh2 f6 11. Qf1 Bc8 12. Kg3 Kf7 13. bxc5 Bd7 14. Qg2 dxc4 15. Qh1 h6 16. Bb2 Bc8 17. Kf2 Nd7 18. Kg2 g6 19. Bc1 Nf8 20. Kh3 Nd7 21. a3 c3 22. Bb2 Ne7 23. Kh4 Kg7 24. Rd1 Kf7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747576800,
+   "white": {
+    "username": "f25",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture439",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.20\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f26\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 a6 3. b3 Nh6 4. f3 e4 5. Kf2 Ke7 6. Bh3 Ng4+ 7. Kf1 Kf6 8. a3 Ra7 9. b4 Qe7 10. a4 Qc5 11. d3 Ne3+ 12. Ke1 Qg5 13. dxe4 d6 14. Bg4 d5 15. Qc2 d4 16. a5 Qd5 17. Kd2 Qc5 18. Qa2 Qb5 19. Ke1 Nf5 20. Bh5 Nc6 21. exf5 d3 22. Bg5+ Kxg5 23. Nd2 Kf6 24. Bg6 Qb6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747580400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f26",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture440",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.21\"]\n[Round \"?\"]\n[White \"f27\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Rg8 4. Ng1 g6 5. Qc1 e6 6. Na3 Bd7 7. Bxc7 Bc6 8. Nb5 Ng4 9. Nc3 h5 10. e3 Ba3 11. Nxd5 Rh8 12. c4 Bb4+ 13. Nc3 Bd6 14. Nd5 Nxh2 15. b3 Qd7 16. g4 Na6 17. gxh5 Nb8 18. Nf3 exd5 19. Bb6 Nxf3+ 20. Ke2 Na6 21. Qb1 Ng1+ 22. Kd3 Ne2 23. cxd5 Bh2 24. dxc6 Bf4 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747584000,
+   "white": {
+    "username": "f27",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture441",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.22\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f28\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. e5 Bd7 4. Nc3 c5 5. Nb1 Qa5+ 6. Bd2 cxd4 7. Nh3 Bf5 8. a3 Be6 9. Bb5+ Qxb5 10. b4 Kd7 11. Rg1 Bf5 12. e6+ fxe6 13. g4 h6 14. Nf4 Kd8 15. gxf5 a6 16. Qe2 Qa5 17. Qd3 Qxb4 18. Rg6 Qxb1+ 19. Bc1 Qxc1+ 20. Rxc1 Nd7 21. c4 Rc8 22. Ra1 Ndf6 23. Ra2 Rc5 24. Kd1 Nh5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747587600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f28",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture442",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.23\"]\n[Round \"?\"]\n[White \"f29\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. a4 Bh3 4. Bf4 Bd7 5. h3 Qb6 6. Qc1 f5 7. Ra3 Kd8 8. Bc7+ Kc8 9. Re3 a6 10. Nd2 Be8 11. Ne2 c5 12. Rd3 Nh6 13. Nb3 fxe4 14. Qg5 Nc6 15. f4 e6 16. Nc3 Ne7 17. Rd2 Nhf5 18. Bd6 Nh6 19. Bd3 Qxb3 20. Kf2 a5 21. cxb3 Bb5 22. Re2 Bxd3 23. Ke1 Nf7 24. Bxc5 Bb1 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747591200,
+   "white": {
+    "username": "f29",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture443",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.24\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f30\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. b3 g5 4. Nd2 Ne7 5. a3 c6 6. f4 c5 7. b4 Qd6 8. Ngf3 cxb4 9. e3 Nf5 10. fxg5 a5 11. h3 b5 12. c5 Ra7 13. Ke2 Kd8 14. g4 Be7 15. Bb2 Qf4 16. Kf2 Ra6 17. Qc2 Re8 18. Qb1 Nxe3 19. Bc3 Nxf1 20. Rxf1 Rh8 21. h4 Qxd4+ 22. Bxd4 Bd7 23. Be5 Bf6 24. Re1 Rg8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747594800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f30",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture444",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.25\"]\n[Round \"?\"]\n[White \"f31\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. a3 h6 4. Nf3 Ng4 5. h4 f5 6. b3 Ne5 7. Kd2 Rh7 8. h5 Rf7 9. Qc2 a6 10. Nh2 Nbc6 11. Qa2 d5 12. Nc3 Bg7 13. f4 Bf6 14. Ke1 Rh7 15. b4 Bh8 16. a4 Bd7 17. Qb1 Ng4 18. Qd3 Rb8 19. g3 Nxd4 20. e3 Nb5 21. Bg2 Bc6 22. Nxb5 d4 23. e4 Kf8 24. Qc3 Bxe4 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747598400,
+   "white": {
+    "username": "f31",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture445",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.26\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f32\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Be7 4. b4 d6 5. a4 Nh6 6. Be2 Nxb4 7. h4 c6 8. Bd3 Rg8 9. Rh3 g5 10. c4 f5 11. Rh2 Rh8 12. Rh3 c5 13. Ba3 a6 14. a5 Bf8 15. Kf1 Qf6 16. Bb2 Ng8 17. Bc3 Qg6 18. Bxb4 Bg7 19. g3 Rb8 20. Ke1 Qf6 21. Ra3 fxe4 22. Bxc5 Bd7 23. Bd4 Rc8 24. Bc2 Bf8 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747602000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f32",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture446",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.27\"]\n[Round \"?\"]\n[White \"f33\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Ne7 3. a3 d5 4. b3 c6 5. Nh3 Bd7 6. Ng5 h5 7. d4 Qc8 8. Nh3 Bg4 9. Bg5 Rh6 10. Nf4 Qe6 11. e3 b5 12. Bf6 Qd7 13. Bh3 exf4 14. Kd2 Kd8 15. cxb5 Na6 16. Bg5 Qe8 17. bxa6 Rg6 18. Qf1 Rc8 19. Kc3 Rxg5 20. Kc2 h4 21. gxf4 Bxh3 22. Qc1 Bd7 23. Qg1 Bh3 24. f5 Bg2 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747605600,
+   "white": {
+    "username": "f33",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture447",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.28\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f34\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Nfd7 4. Nfd2 f6 5. Bg3 c5 6. Ne4 Rg8 7. Ned2 h5 8. Bxb8 Kf7 9. Nb3 Qc7 10. a3 b5 11. f4 Ne5 12. h4 Bf5 13. Rg1 Qc8 14. N1d2 e6 15. g4 g6 16. Ne4 cxd4 17. a4 Bh6 18. Ned2 Bd3 19. Rh1 Bc4 20. f5 Kf8 21. a5 Qc6 22. Rc1 Nd3+ 23. cxd3 Bxb3 24. Nb1 Kg7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747609200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f34",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture448",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.29\"]\n[Round \"?\"]\n[White \"f35\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. g3 Nf6 4. a3 Qd6 5. a4 Qb4+ 6. Nc3 Qxb2 7. Kd2 Qxc1+ 8. Rxc1 Nxe4+ 9. Ke1 Kd8 10. Bg2 a5 11. h4 e6 12. Nge2 b6 13. Qd3 Ng5 14. Qe4 Be7 15. Rh2 h5 16. Qg6 b5 17. Nd1 Nf3+ 18. Bxf3 Nd7 19. Kf1 Nf6 20. Ke1 e5 21. Nec3 fxg6 22. Bxh5 Ng8 23. Rh1 bxa4 24. Kf1 Bd7 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747612800,
+   "white": {
+    "username": "f35",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture449",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.30\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f36\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. Na3 Bh3 4. d4 h5 5. Ne5 b5 6. f4 Qd7 7. f5 Nf6 8. Qg4 h4 9. Qh5 Ng4 10. Bf4 Rh6 11. Bxh6 Nxh6 12. Kf2 cxd4 13. Ke2 Bxg2 14. Ng4 h3 15. Qg5 a6 16. Rd1 a5 17. c3 Kd8 18. Nf2 Bxh1 19. Nd3 Ra7 20. Ne1 Ng8 21. Qh4 Qc8 22. Qh7 Qc5 23. Qh8 Na6 24. Rxd4 g5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747616400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f36",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture450",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.31\"]\n[Round \"?\"]\n[White \"f37\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Bg5 Ba3 4. Nc3 Qd6 5. Kd2 Qc6 6. Nb5 a5 7. f3 e5 8. f4 Qf6 9. h3 Kd8 10. h4 Be7 11. Qb1 Qc6 12. Qd1 Qe6 13. Rc1 Ke8 14. Qa4 Qh3 15. Bxe7 Qh2 16. b4 axb4 17. Nf3 e4 18. Qa6 Qxf4+ 19. e3 Bf5 20. Qb6 Nh6 21. Re1 Bg6 22. Rb1 Ra6 23. Qa5 Bh5 24. Ra1 dxc4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747620000,
+   "white": {
+    "username": "f37",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture451",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.01\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f38\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. h4 a6 4. Bf4 d5 5. Be5 Bd7 6. Bxf6 Bh6 7. a4 Nc6 8. Nc3 e5 9. Ne4 Bh3 10. Nd6+ Qxd6 11. dxe5 Be3 12. Qxd5 Qe7 13. Nxh3 Qd8 14. b4 Bb6 15. Qe4 Nxb4 16. Qc6+ Kf8 17. Bxd8 Rxd8 18. Qe8+ Rxe8 19. Rg1 Bd4 20. Kd1 Kg7 21. Rh1 Bxe5 22. Rh2 Rb8 23. g3 h5 24. Kc1 c5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747623600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f38",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture452",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.02\"]\n[Round \"?\"]\n[White \"f39\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Qd3 Na6 4. Kd2 Nc5 5. Qa3 Qc7 6. Qa6 Qg3 7. Qxc6+ bxc6 8. Bb5 Ne6 9. h3 Qxh3 10. Rxh3 Kd7 11. Kd1 Ke8 12. Bg5 Nh6 13. Bh4 g5 14. Kd2 Ng8 15. a3 g4 16. Nf3 Nf6 17. c3 Rg8 18. b3 gxh3 19. Nh2 Rg6 20. Kd3 Rxg2 21. Bg5 Ng4 22. a4 Rxh2 23. Bc1 Nd8 24. f4 e5 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747627200,
+   "white": {
+    "username": "f39",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture453",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.03\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f40\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Nc6 3. Qc2 Nf6 4. Na3 g6 5. c5 Ne4 6. d4 g5 7. e3 Na5 8. Bd3 Rg8 9. Qd2 c6 10. d5 Nxg3 11. d6 a6 12. Be4 h6 13. fxg3 Qf6 14. Qc2 b6 15. Ne2 b5 16. Bxc6 e4 17. Bd5 Qf1+ 18. Kxf1 Bxd6 19. Bd2 Bf4 20. Qc4 Kd8 21. c6 Rh8 22. Be1 Ra7 23. Kg1 h5 24. g4 f6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747630800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f40",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture454",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.04\"]\n[Round \"?\"]\n[White \"f41\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 a6 4. a4 h5 5. h3 Nh7 6. e4 Bf5 7. Qd3 Bd7 8. Nc3 Nf6 9. Qc4 c5 10. Kd2 Qc7 11. Qxa6 Bxh3 12. Bg5 e5 13. Qxf6 h4 14. Ke2 Be7 15. dxe5 Qc6 16. exd5 Be6 17. Qf4 Bd7 18. Kd2 Rf8 19. Re1 Bf6 20. Ba6 Bxg5 21. g4 Qe6 22. Rxh4 b6 23. b4 Qf5 24. Rb1 Qh7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747634400,
+   "white": {
+    "username": "f41",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture455",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.05\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f42\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Nh3 g6 4. c3 Bd7 5. Rg1 h6 6. b3 a5 7. Bxh6 e5 8. c4 Rh7 9. Qe2 Ba3 10. f4 a4 11. Qd3 Bb2 12. Bg5 Rh5 13. Qg3 Bxa1 14. Nf2 Ra5 15. Qh4 Bxd4 16. Qg4 dxe4 17. Bh6 Qh4 18. Qf5 axb3 19. Qh3 Nxh6 20. Qxd7+ Nxd7 21. c5 Nb8 22. g3 Qf6 23. Nh1 Rg5 24. Bc4 Ba1 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747638000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f42",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture456",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.06\"]\n[Round \"?\"]\n[White \"f43\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. a3 e3 5. Na4 b5 6. Bxb5 Qxd4 7. Nc5 Qd5 8. Kf1 e6 9. Be2 Be7 10. Nb7 Bb4 11. c3 Qc4 12. Qa4 Qd3 13. Bd2 a5 14. axb4 Qd7 15. Qb5 Qc7 16. Nh3 Nf6 17. Kg1 Na6 18. g4 e5 19. Bd3 h5 20. gxh5 Nxh5 21. Bc1 f5 22. Bc4 Be6 23. Bf1 Rb8 24. Nd6+ Ke7 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747641600,
+   "white": {
+    "username": "f43",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture457",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.07\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f44\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. c5 b6 4. Bd2 Be7 5. h4 g6 6. Na3 Kd7 7. e3 Nc6 8. Ba5 a6 9. Qb1 Na7 10. Qf5 Bxc5 11. Bb5+ Ke7 12. Bb4 c6 13. Bxc6 Bd7 14. Qf6+ Kf8 15. Nc2 Bd6 16. Qf4 Nxc6 17. Bxd6+ Nge7 18. b4 Nxb4 19. Nf3 Qc7 20. Be5 Nf5 21. Qh6+ Ke7 22. Na3 Qc2 23. Rc1 Ke8 24. Ng1 Qc5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747645200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f44",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture458",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.08\"]\n[Round \"?\"]\n[White \"f45\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Kd2 Bh6+ 4. Ke1 Nc6 5. b4 Rg8 6. e4 Bf8 7. Nd2 Nxd4 8. g4 Nf3+ 9. Ke2 d6 10. Nb3 Nd7 11. g5 Bh6 12. Qe1 Bg7 13. a3 Nd2 14. h4 h5 15. Nc5 Bc3 16. e5 Nxf1 17. e6 Bh8 18. Bd2 Ne3 19. Kf3 Nc2 20. Ke4 Bxa1 21. Kf4 Rf8 22. Bc3 b6 23. Rh2 Bb7 24. b5 Ba6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747648800,
+   "white": {
+    "username": "f45",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture459",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.09\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f46\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 h5 4. O-O Nce7 5. Bb3 g5 6. a3 g4 7. Nd4 a5 8. Nf5 Bh6 9. Bc4 f6 10. Nc3 c5 11. Ng3 Rh7 12. h3 Rh8 13. d4 Kf8 14. Bd3 Kg7 15. Nh1 a4 16. Re1 d5 17. Bb5 Rh7 18. Ne2 Ra7 19. Bc4 Kf8 20. dxc5 g3 21. fxg3 Bf4 22. Ba2 Kg7 23. h4 Bh6 24. g4 Qa5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747652400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f46",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture460",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.10\"]\n[Round \"?\"]\n[White \"f47\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Nf6 3. b3 g5 4. f4 b6 5. Bg2 Nc6 6. d3 Ng8 7. Qc2 h6 8. Ba3 Nce7 9. Bc1 Rb8 10. Bb2 exf4 11. Ba3 h5 12. Nf3 a5 13. O-O Ra8 14. h3 f5 15. Nxg5 d5 16. Bb2 Kd7 17. Be4 d4 18. Bc1 Qe8 19. Nf3 Ke6 20. Bd5+ Kd6 21. Qd2 Nc6 22. e4 Kc5 23. Kh1 b5 24. Qe2 Ra6 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747656000,
+   "white": {
+    "username": "f47",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture461",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.11\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f48\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 b6 4. h4 h5 5. Bh6 b5 6. Rg1 g6 7. Ng5 Be6 8. g3 Nh7 9. f4 f5 10. Rg2 Qd6 11. b4 Qxf4 12. Bxf8 Nc6 13. a3 Nf6 14. Ne4 Qg4 15. c3 Kd7 16. Qd2 Nxd4 17. Ng5 Bf7 18. c4 bxc4 19. Qe3 c6 20. b5 Nb3 21. Rh2 Rg8 22. Qb6 Qf4 23. Qb7+ Ke8 24. Bg2 Ng4 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747659600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f48",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture462",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.12\"]\n[Round \"?\"]\n[White \"f49\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bb5 Qd6 4. Qg4 Kd8 5. Qd7+ Qxd7 6. b4 e6 7. Bf1 f5 8. e5 Ke8 9. a4 h5 10. Bb2 Ke7 11. h4 a6 12. a5 Ke8 13. Be2 Bxb4+ 14. Nd2 Kf8 15. Bxh5 Bxa5 16. Bf7 Qd8 17. Ba3+ Qe7 18. Bc5 Ra7 19. Bb6 Qxf7 20. Bc7 Qe8 21. h5 Kf7 22. f3 Qd7 23. Bd6 Bxd2+ 24. Kf1 Ba5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747663200,
+   "white": {
+    "username": "f49",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture463",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.13\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f50\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. c3 g6 4. Be2 Qd7 5. h4 Nc6 6. a3 Nf6 7. O-O Nb4 8. e5 Qc7 9. exf6 Nc2 10. d4 cxd4 11. Bh6 a6 12. Ng5 Qxc3 13. Nh3 Qa5 14. Ng5 Nxa1 15. Qa4+ Qb5 16. Rd1 Bh3 17. Qxb5+ axb5 18. Kh2 Bc8 19. Bd3 Rb8 20. Ne4 Nb3 21. Rd2 Ra8 22. f3 b4 23. Kg3 Bg7 24. Rd1 Kf8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747666800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f50",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture464",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.14\"]\n[Round \"?\"]\n[White \"f51\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. b3 b5 4. e3 a5 5. f3 Be7 6. g3 Na6 7. Qe2 c5 8. Qf2 Bd7 9. b4 Bd6 10. Nh3 Bf8 11. Rg1 Ra7 12. a3 g5 13. g4 Ra8 14. Qa2 h6 15. bxa5 Ra7 16. Nd2 Nc7 17. Be2 bxc4 18. Nxc4 Bd6 19. Qd2 dxc4 20. Kd1 Bf4 21. Ra2 Ba4+ 22. Rc2 Bxh2 23. Qe1 Bg3 24. Qxg3 f5 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747670400,
+   "white": {
+    "username": "f51",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture465",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.15\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f52\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. a3 h5 5. e3 b5 6. g3 d6 7. Bd2 Rh6 8. Qxh5 Bd7 9. Nf3 a5 10. Ne5 Ng8 11. c5 Bf6 12. Ne4 e6 13. Qf5 Qe7 14. Bd3 Qf8 15. Nxg6 Bh4 16. Qf3 Rh8 17. Nxf8 f5 18. Bxa5 Rh6 19. Qxf5 Bd8 20. cxd6 Nc6 21. Nc5 Nf6 22. Bc2 Rh3 23. Ra2 e5 24. Nb3 Be6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747674000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f52",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture466",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.16\"]\n[Round \"?\"]\n[White \"f53\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. c4 c5 4. Qb3 Qc7 5. Qg3 Qa5+ 6. b4 dxe4 7. Nc3 Qxb4 8. d5 Bd7 9. h3 e3 10. Qg6 Qb6 11. Bd3 Bf5 12. Bd2 e6 13. Nd1 Bd6 14. Qg5 Bxh3 15. Qh5 Qc6 16. Kf1 Bg4 17. Bc1 Ne7 18. Rh3 Kf8 19. Bb1 g5 20. Rh4 Rg8 21. Ne2 Bg3 22. Ndc3 Qa6 23. Bd3 exd5 24. Rh3 Qd6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747677600,
+   "white": {
+    "username": "f53",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture467",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.17\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f54\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Be7 3. a3 Bd6 4. Nf3 Qg5 5. Qa4 Bc5 6. b3 Bb6 7. Qxd7+ Kf8 8. Qh3 Qh5 9. Ng1 g5 10. Kd1 c5 11. Qf5 Nh6 12. h3 Qg6 13. Qxg6 Bxh3 14. Qf6 Nc6 15. Rxh3 Bd8 16. Rh2 Rc8 17. Bh3 Rc7 18. Qe6 Nb8 19. Qf5 a6 20. Bb2 Ng4 21. d3 Ne3+ 22. Ke1 b5 23. Qf3 Be7 24. Bd4 Rg8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747681200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f54",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture468",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.18\"]\n[Round \"?\"]\n[White \"f55\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 a5 4. Qd2 h5 5. g3 Qd7 6. g4 Ra7 7. Nh4 Nh7 8. Bh6 Qxg4 9. Qd3 Qg6 10. Qd2 Qe6 11. Qf4 f6 12. Qxf6 Qe5 13. a3 Rg8 14. Nc3 Ra8 15. h3 Ra6 16. Qxa6 Qxe2+ 17. Bxe2 Nc6 18. Rg1 Bxh3 19. Qxb7 Nb4 20. Rh1 Rh8 21. Qa8+ Kd7 22. Bxg7 c5 23. Bxh5 Be6 24. Nf5 Nd3+ 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747684800,
+   "white": {
+    "username": "f55",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture469",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.19\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f56\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. f3 Kd7 4. Bd3 Qe8 5. Bf4 a5 6. Bd6 Nh6 7. c3 f6 8. Kf2 Ra6 9. Bf4 f5 10. Qa4 fxe4 11. Bxh6 Ra7 12. Bc2 gxh6 13. Ne2 Ke6 14. Ke1 Bd7 15. Nd2 e3 16. Bd3 Rg8 17. Qxa5 Rg7 18. b3 Na6 19. Qb6 Rg4 20. h3 Qb8 21. Bc4 Rxg2 22. Ne4 Qh2 23. a4 Nb8 24. Rd1 Ra8 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747688400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f56",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture470",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.20\"]\n[Round \"?\"]\n[White \"f57\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bf4 Qd6 4. Be3 Qf4 5. Nc3 Bf5 6. Bd2 Qc7 7. Bh6 f6 8. Qh5+ Bg6 9. b4 Qa5 10. Rd1 Kf7 11. Nb5 Ke8 12. Nd6+ exd6 13. h3 Qxb4+ 14. Bd2 Qc3 15. Qh6 Na6 16. e5 Qa1 17. Be2 Qxd1+ 18. Bxd1 fxe5 19. Qf4 h5 20. Qe3 Bd3 21. Qe2 Kd7 22. Bc3 g6 23. g3 Ke6 24. a3 Rh7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747692000,
+   "white": {
+    "username": "f57",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture471",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.21\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f58\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. b4 c6 4. Bd2 Bc5 5. Qc1 Na6 6. Na3 Qd7 7. Bf4 f6 8. g3 Qd6 9. Bh3 Bxd4 10. Nb5 Qf8 11. Qc3 Rb8 12. Qe3 dxc4 13. Qe4 g6 14. Bxb8 Bb6 15. Qxc6+ Kd8 16. Bd6 Qh6 17. Kd1 Nxb4 18. Be5 Qf8 19. Bb2 Qd6+ 20. Kc1 Nd3+ 21. Kb1 Bxf2 22. exd3 Qc7 23. Bf5 Qxg3 24. Qa6 Bxg1 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747695600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f58",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture472",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.22\"]\n[Round \"?\"]\n[White \"f59\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. a3 Rg8 4. Qd2 Nd5 5. Qh6 Nf4 6. Qh3 f6 7. f3 Nxh3 8. e3 c5 9. Ne2 d6 10. Ng3 Bh6 11. Ne4 Bf4 12. b4 Qb6 13. d5 Be6 14. Bd2 Qc6 15. Nec3 Bg4 16. e4 Ng5 17. Be3 Nxe4 18. Bg1 a6 19. h3 Nd7 20. Kd1 Bh6 21. Ke2 Bc1 22. Bxc5 a5 23. Be3 Qb5 24. Bxc1 Nf8 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747699200,
+   "white": {
+    "username": "f59",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture473",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.23\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f60\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. Bxf7+ Kxf7 5. a3 Qg5 6. g4 Kf6 7. Kf1 d6 8. Nd4 Qf5 9. b4 Nh6 10. f3 Qxf3+ 11. Ke1 Rb8 12. d3 Bxb4+ 13. Qd2 Bxa3 14. Qf2 g5 15. Be3 Kg6 16. Nxf3 Bd7 17. Kd2 Rbg8 18. Rxa3 Nd8 19. Bxg5 Rg7 20. Kc3 Ne6 21. Qh4 Rhg8 22. Qf2 Re7 23. Ra4 Reg7 24. Qe3 Rf7 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747702800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f60",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture474",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.24\"]\n[Round \"?\"]\n[White \"f61\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 h5 3. f4 b5 4. h3 g5 5. a3 d5 6. Qb3 Nf6 7. Ra2 a5 8. Qc3 Ra6 9. f5 Nbd7 10. g4 Bb7 11. a4 Bb4 12. Qxe5+ Kf8 13. h4 Nxg4 14. Qxh8+ Ke7 15. Rh2 Kd6 16. Qe8 Ra7 17. Qxd8 gxh4 18. Bh3 bxc4 19. Na3 f6 20. Kd1 Ra6 21. Qg8 c5 22. Qxg4 Bxa3 23. Qg2 Ba8 24. Kc2 Ne5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747706400,
+   "white": {
+    "username": "f61",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture475",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.25\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f62\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 b6 4. Qd2 Nbd7 5. b3 Nb8 6. c4 Nh5 7. Nc3 e6 8. e4 g6 9. a3 Bxa3 10. Ne2 Be7 11. Rg1 e5 12. Bxe5 Ng7 13. Bf4 Nh5 14. b4 Rf8 15. Nc3 f5 16. Bd3 Nd7 17. Ke2 Nb8 18. Ne1 Nd7 19. Kd1 dxc4 20. Ra3 Nhf6 21. Nb1 Ng4 22. f3 Nde5 23. Ke2 c6 24. Kd1 Bg5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747710000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f62",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture476",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.26\"]\n[Round \"?\"]\n[White \"f63\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bf4 Qa5+ 4. Nc3 Qxc3+ 5. bxc3 h5 6. exd5 Rh7 7. Be2 Nh6 8. Kd2 h4 9. Bh5 Kd8 10. a4 a6 11. Rc1 f5 12. g4 g6 13. Nh3 Nxg4 14. Ra1 e6 15. c4 g5 16. Qg1 Nf6 17. Be5 Rh8 18. Ke2 cxd5 19. Bc7+ Kxc7 20. Kd1 Ne8 21. Bxe8 Nd7 22. c5 Be7 23. c6 Rh5 24. Rb1 Rh6 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747713600,
+   "white": {
+    "username": "f63",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture477",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.27\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f64\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. d3 c4 4. Bd2 Qb6 5. g3 h6 6. Bg2 a5 7. Bxh6 Qd4 8. b3 b6 9. dxc4 Qe3+ 10. Kf1 Na6 11. h3 Bd7 12. Qd2 Nb8 13. Qd1 d5 14. fxe3 Bb5 15. e5 d4 16. Rg1 d3 17. Bh1 Ba6 18. Nd4 e6 19. Be4 f5 20. Qe1 Rxh6 21. Kg2 Rh7 22. Bxf5 Rxh3 23. Nb5 Kf7 24. cxd3 Rxg3+ 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747717200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f64",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture478",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.28\"]\n[Round \"?\"]\n[White \"f65\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. e4 Qg5 4. c5 Qxg2 5. Nd2 g6 6. Nb1 g5 7. f3 Kd8 8. Qe2 dxe4 9. Qxe4 a6 10. Qf5 Bxc5 11. Bxg2 c6 12. h3 f6 13. Qg4 Bf8 14. Qg3 h6 15. h4 Bb4+ 16. Kf2 Bd6 17. Ke1 gxh4 18. Qf4 Ra7 19. Kd2 e5 20. Kc3 a5 21. Rh3 Ke8 22. Na3 Ra8 23. Nb5 f5 24. Kd2 Ra7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747720800,
+   "white": {
+    "username": "f65",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture479",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.29\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f66\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Qa4 e6 4. g4 Nc6 5. Qd1 h5 6. Bg5 Be7 7. Bh6 a5 8. b3 Nd5 9. Qd2 Rg8 10. g5 Bf8 11. Qb2 Bg7 12. e4 Bf6 13. f4 e5 14. Kd2 h4 15. Kd3 Ke7 16. Ke2 h3 17. gxf6+ Ke8 18. a3 Rf8 19. f5 Na7 20. exd5 g5 21. Kd2 Qe7 22. Qc2 Nb5 23. dxe5 b6 24. Nc3 Qd8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747724400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f66",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture480",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.01\"]\n[Round \"?\"]\n[White \"f67\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Qh5 e6 4. Qd1 Qa5+ 5. b4 Kd7 6. Kd2 c5 7. h3 Kc6 8. a3 Qb5 9. Qg4 Qb6 10. Qg6 Na6 11. Qh5 Qxb4+ 12. Ke2 Qa5 13. exd5+ exd5 14. Bg5 Kb6 15. Ke3 Qa4 16. Bh4 Qe8+ 17. Be7 Bxe7 18. Qe5 Kc6 19. f4 h6 20. h4 Bd8 21. h5 Ne7 22. Qb8 Bg4 23. Bd3 Bd7 24. g4 f5 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747728000,
+   "white": {
+    "username": "f67",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture481",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.02\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f68\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 a6 3. h3 Nc6 4. Bg2 a5 5. Qb3 Ra7 6. a3 Nf6 7. Qf3 Bxa3 8. Qe4 Nb4 9. Nc3 Nxe4 10. Rb1 Nd3+ 11. exd3 Ra6 12. Kf1 Bc5 13. Ke1 Rd6 14. Bxe4 Re6 15. Nd1 Qh4 16. Nf3 Ke7 17. Rh2 Qh5 18. Rh1 f6 19. Bf5 b5 20. Rf1 b4 21. Nd4 Qf3 22. h4 Qf4 23. Bxh7 Qe4+ 24. Bxe4 Rh5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747731600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f68",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture482",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.03\"]\n[Round \"?\"]\n[White \"f69\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 h6 4. Bd2 Rh7 5. Be3 Nbd7 6. Ne5 g5 7. Qd3 e6 8. b4 Bg7 9. Qc3 g4 10. Bg5 Ne4 11. Nxd7 Bf8 12. f4 Nxc3 13. Kf2 Nb5 14. Ne5 Qd7 15. Nd3 Na3 16. Nd2 Qe7 17. Nb3 g3+ 18. Ke3 Nxc2+ 19. Kd2 Qd8 20. Be7 Kd7 21. Re1 Kc6 22. Kc3 Nxe1 23. Bg5 Rg7 24. Be7 Nc2 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747735200,
+   "white": {
+    "username": "f69",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture483",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.04\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f70\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. g3 c5 4. a3 Bh3 5. Bxh3 Qd7 6. Nf3 g5 7. exd5 Qe6+ 8. dxe6 Nf6 9. Bf5 Na6 10. Ke2 Nc7 11. Kf1 Rg8 12. Bf4 Ncd5 13. Nxg5 Rxg5 14. Be4 cxd4 15. h4 b6 16. h5 Ng8 17. Qxd4 Re5 18. b3 Rc8 19. Bd2 f6 20. Kg2 Bg7 21. Rh4 Nh6 22. Bc1 b5 23. Kf1 Rxh5 24. Qd1 Ng4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747738800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f70",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture484",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.05\"]\n[Round \"?\"]\n[White \"f71\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bd2 c5 4. Nh3 Bxh3 5. g3 Bc8 6. c3 Bg4 7. dxc5 Bc8 8. c4 h5 9. Qg4 e5 10. b3 Ne7 11. f4 Rh6 12. Ba5 exf4 13. Qxc8 d4 14. Bc7 Rh8 15. e5 Rh7 16. g4 a5 17. Qxb8 Ra7 18. Bxd8 a4 19. Qc8 Ra5 20. e6 b5 21. Qa6 f6 22. a3 Nc6 23. Qc8 Ne5 24. Ra2 Rh8 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747742400,
+   "white": {
+    "username": "f71",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture485",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.06\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f72\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Qa4+ Ke7 4. Qxa7 f6 5. cxd5 e5 6. Qa4 Kf7 7. g3 Ra5 8. f4 Bb4+ 9. Bd2 b5 10. Qxb5 Nc6 11. d6 Na7 12. h4 g5 13. h5 cxd6 14. Qb8 Rc5 15. Rh4 Ke7 16. Bxb4 Kf8 17. a3 Nh6 18. g4 Qe7 19. Bh3 Rd5 20. Bc3 Nc6 21. Bf1 exf4 22. e3 Kf7 23. Qa7 Rb5 24. a4 Rb4 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747746000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f72",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture486",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.07\"]\n[Round \"?\"]\n[White \"f73\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. e4 Nd5 4. Nc3 c6 5. Qd2 Qa5 6. Kd1 h5 7. Be2 Qc5 8. g3 Nc7 9. Nd5 Qb5 10. Ne3 h4 11. Qc2 Qc5 12. d5 Rh7 13. Kd2 h3 14. b4 f5 15. Bf1 Qa5 16. a4 f4 17. Nf3 Qb6 18. gxf4 Rh6 19. d6 Rh5 20. Nh4 Nba6 21. Ra3 Rd5+ 22. Ke1 Qd4 23. e5 Ne6 24. Nxg6 Nxb4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747749600,
+   "white": {
+    "username": "f73",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture487",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.08\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f74\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Qg5 4. Be6 Nge7 5. Qe2 Nd5 6. Rg1 Qe7 7. Nc3 Nd8 8. Nh4 Rb8 9. Qf1 Nxe6 10. b4 b5 11. Kd1 h5 12. Ba3 g5 13. Na4 Ra8 14. Ke1 g4 15. d3 bxa4 16. Rh1 a5 17. Kd1 Rg8 18. Bc1 Nc3+ 19. Ke1 Nd8 20. Qe2 Bb7 21. bxa5 Nxa2 22. Qf3 Bxe4 23. Qf5 g3 24. fxg3 d5 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747753200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f74",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture488",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.09\"]\n[Round \"?\"]\n[White \"f75\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Qh4 3. d3 Ba3 4. g4 Na6 5. d4 Bb4+ 6. Nd2 Ba5 7. h3 Bb6 8. Rb1 c6 9. Rh2 Qxf2+ 10. Rxf2 Nh6 11. a3 Nc5 12. dxe5 Ke7 13. h4 d6 14. a4 Re8 15. Rxf7+ Ke6 16. Rd7 g6 17. e4 Bd8 18. exd6 Bxh4+ 19. Ke2 Re7 20. Qe1 Rb8 21. g5 Na6 22. Rd8 b6 23. Rf8 Reb7 24. Rh8 Ng8 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747756800,
+   "white": {
+    "username": "f75",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture489",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.10\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f76\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Na6 4. c3 Kd7 5. Bxc7 Kxc7 6. Qd3 Kc6 7. Qg6 Kd6 8. Ng5 Qe8 9. Qxg7 Qd7 10. Nf3 h5 11. Kd2 Qc7 12. h4 Qb6 13. Qxf7 Qc5 14. dxc5+ Kd7 15. c4 Nb4 16. Ke3 Ng8 17. Rh2 Nh6 18. c6+ Kd8 19. Rh3 Bxh3 20. Nfd2 Rc8 21. Qf3 Ng4+ 22. Kd4 Nxa2 23. Qd3 Rxc6 24. b3 Nf6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747760400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f76",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture490",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.11\"]\n[Round \"?\"]\n[White \"f77\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bd2 a5 4. Be2 Bd7 5. c3 g6 6. Bh5 e6 7. Ke2 Ne7 8. a4 Ng8 9. Bf3 f5 10. exf5 Qf6 11. Ke1 Bg7 12. Bh5 Qxf5 13. b3 Bxd4 14. Ne2 Be5 15. c4 Qxh5 16. g3 b6 17. h4 Bd4 18. Bf4 Qh6 19. Be3 Bc3+ 20. Nexc3 c5 21. Qd3 e5 22. Kd1 Qxh4 23. cxd5 Bh3 24. Na2 Qd8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747764000,
+   "white": {
+    "username": "f77",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture491",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.12\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f78\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. Be2 Nc6 4. Nc3 Ne5 5. Bb5+ Bd7 6. Ba4 Rb8 7. Nd5 e6 8. a3 Be7 9. d4 Ra8 10. Bc6 exd5 11. c3 cxd4 12. Qd2 a6 13. cxd4 Nxc6 14. O-O Na5 15. Ng5 f6 16. b3 Nh6 17. Nf7 Bc6 18. e5 fxe5 19. Nxd6+ Kf8 20. b4 Nf5 21. Ra2 Ba4 22. Nb5 Bc2 23. bxa5 g5 24. Qe1 Qd7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747767600,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f78",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture492",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.13\"]\n[Round \"?\"]\n[White \"f79\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Qa4+ Ke7 4. Bd2 Qe8 5. a3 c5 6. Nf3 Qd8 7. Nh4 Nd7 8. b4 g6 9. Ra2 Qa5 10. Nxg6+ Ke8 11. Rg1 Be7 12. f3 b6 13. Bf4 Bg5 14. Ne7 Bh4+ 15. Bg3 Qxb4+ 16. Nc3 a6 17. h3 a5 18. Rc2 Kxe7 19. Rb2 Qxc3+ 20. Kd1 cxd4 21. Qxd7+ Kxd7 22. cxd5 Ra7 23. Bb8 Qc6 24. Rh1 Qa8 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747771200,
+   "white": {
+    "username": "f79",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture493",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.14\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f80\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Qd3 c5 4. h3 Rg8 5. Qc3 h5 6. Qa3 Qb6 7. Rh2 Qb4+ 8. Kd1 Qb6 9. h4 d5 10. Qe3 Qa5 11. Nh3 Bg7 12. cxd5 Qc3 13. Qxc3 Rh8 14. Kd2 a6 15. Kc2 Ra7 16. a4 Bf8 17. f4 Bg4 18. a5 Bc8 19. Kd2 Bh6 20. g4 Bf8 21. Rf2 Ne4+ 22. Kd1 Nd2 23. g5 Nc6 24. Kxd2 b6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747774800,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f80",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture494",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.15\"]\n[Round \"?\"]\n[White \"f81\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. h4 f6 4. h5 h6 5. a4 Na6 6. f4 f5 7. a5 Nb4 8. a6 Nd3+ 9. Kd2 Kd7 10. Kxd3 c5 11. Kc3 dxe4 12. Be3 Kd6 13. Rh4 b6 14. Bc4 b5 15. Qf3 Qe8 16. dxc5+ Kc7 17. Qxe4 Bd7 18. Bc1 b4+ 19. Kd3 Qd8 20. Qd4 Rh7 21. Nh3 Qb8 22. Ra4 Qb6 23. Qf2 Qc6 24. Ra2 Qg6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747778400,
+   "white": {
+    "username": "f81",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture495",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.16\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f82\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Qh4 3. a3 d6 4. Nc3 Qd4 5. Ne4 Be6 6. Nxd6+ Kd8 7. d3 Bd7 8. Bh3 Qxb2 9. a4 a5 10. f3 g5 11. f4 Bb5 12. Ra3 Qb1 13. cxb5 Nc6 14. Be3 f6 15. Be6 Ra7 16. b6 Be7 17. Bb3 Qa2 18. Nc8 Bc5 19. f5 h5 20. Qc1 Qxa3 21. Qc2 Bd6 22. bxa7 Ke8 23. Bb6 Kd7 24. Qd2 Qxb3 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747782000,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f82",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture496",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.17\"]\n[Round \"?\"]\n[White \"f83\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Bd7 4. Kd2 Bf5 5. Bh6 gxh6 6. b3 a6 7. g3 Kd7 8. a4 Ne4+ 9. Kd3 Ke8 10. e3 b5 11. Ng5 c5 12. h3 b4 13. h4 Nxf2+ 14. Ke2 Qd6 15. Nf3 Ne4 16. Rh3 Nd7 17. Rh2 f6 18. dxc5 Ne5 19. Ng1 Qc6 20. Qd4 Bh3 21. Nc3 Qxc5 22. Rg2 h5 23. Nxe4 Rg8 24. Nc3 Nd3 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747785600,
+   "white": {
+    "username": "f83",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture497",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.18\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f84\"]\n[Result \"1-0\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Bg5 Qd7 4. Qc1 e6 5. Bh4 Ba3 6. Bf6 Nxf6 7. Qf4 Nh5 8. Ba6 Bf8 9. Qg3 Bd6 10. c3 Bf8 11. Qd3 f5 12. g3 g5 13. Qd1 b6 14. Be2 h6 15. Kf1 Qg7 16. a3 Bb7 17. f3 Ba6 18. Nd2 Bb7 19. Qa4 Qe7 20. Rb1 Qg7 21. Ba6 Qc7 22. f4 Ke7 23. Qa5 b5 24. Qxc7+ Kf6 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747789200,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "win"
+   },
+   "black": {
+    "username": "f84",
+    "rating": 1600,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture498",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.19\"]\n[Round \"?\"]\n[White \"f85\"]\n[Black \"cleanplayer\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. e5 Nf6 4. c4 Qd7 5. g3 Ne4 6. Na3 Qc7 7. c5 Qd6 8. Bf4 g5 9. Bxg5 Qc7 10. Qf3 f5 11. Nc4 h5 12. Bh4 b5 13. Rb1 Bh6 14. Ne3 f4 15. gxf4 Kd8 16. Ng4 Ba6 17. Bc4 Bc8 18. Qxe4 Qa5+ 19. Kf1 bxc4 20. e6 hxg4 21. Qe5 Rg8 22. a4 a6 23. Ne2 Bxe6 24. Qf6 Rf8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747792800,
+   "white": {
+    "username": "f85",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture499",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.20\"]\n[Round \"?\"]\n[White \"cleanplayer\"]\n[Black \"f86\"]\n[Result \"0-1\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Nc3 Na6 4. Nf3 Qf6 5. Ne5 Nh6 6. Nxd5 Be7 7. Nf4 Ng8 8. Ned3 Kd8 9. Nh3 Bc5 10. Bd2 h5 11. Nb4 Qe7 12. Qc1 Nf6 13. Nf4 Ng4 14. Nxa6 Kd7 15. e3 Nh6 16. Bb4 g6 17. f3 Bxd4 18. Rb1 Rb8 19. h4 Bc3+ 20. bxc3 Qd6 21. Be2 Qd4 22. g3 Qf6 23. Kd2 Rg8 24. Kd3 Rg7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747796400,
+   "white": {
+    "username": "cleanplayer",
+    "rating": 1610,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "f86",
+    "rating": 1600,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture500",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.21\"]\n[Round \"?\"]\n[White \"f87\"]\n[Black \"cleanplayer\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1610\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Nh3 Bg7 4. Qa4 g5 5. Qa5 d5 6. b3 Be6 7. Kd2 Bh6 8. e3 Nfd7 9. Qa6 b5 10. Bd3 Rf8 11. Kc2 Nf6 12. Rf1 Nh5 13. Qb6 Bxh3 14. Na3 f6 15. Rb1 Bg7 16. Rh1 axb6 17. Bd2 Nc6 18. Bg6+ hxg6 19. Kc3 Be6 20. Rbg1 Bh8 21. Rc1 Bc8 22. cxb5 Nxd4 23. f3 Qd7 24. Rcg1 Bg7 1/2-1/2",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1747800000,
+   "white": {
+    "username": "f87",
+    "rating": 1610,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "cleanplayer",
+    "rating": 1600,
+    "result": "agreed"
+   }
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+[Event "Test"]
+[White "edge"]
+[Black "case"]
+[Result "0-1"]
+
+1. e4 $1 c5 $2 2. Nf3 (2. c3 d5 3. exd5 Qxd5) 2... d6 $6 3. d4 cxd4 0-1

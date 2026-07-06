@@ -6800,3 +6800,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] showPromoModal state wired into ClubProfile.tsx
 - [x] ClubPromoModal receives club, recaps, liveTournaments props
 - [x] TypeScript: 0 errors | Tests: 71 passing
+## Matchup Prep V3 Scouting Pipeline (Jul 6 2026)
+- [x] Step 1: chess.js + zod verified; data/ecoByEpd.json (3,733 entries) copied; 5 fixtures + 6 PGN torture files staged; reference source preserved in reference/
+- [x] Step 2: shared/prepTypes.ts (single source of truth); server/services/chesscom.ts + lichess.ts; server/prep/openingBook.ts + parseGames.ts + facts.ts + insightEngine.ts + guards.ts + buildReport.ts
+- [x] Step 3: 38/38 fixture tests passing — cleanplayer (grade A), jobavabot (chess.com + lichess), mixedsalted (grade C/D), thinaccount (grade D thin-data), corrupt PGN quarantine
+- [x] Step 4: GET /api/prep/:username?schema=3&provider=chesscom|lichess; structured PrepErrorPayload (5 error codes); V2 legacy path unchanged; cache key namespaced to v3:
+- [x] Step 5: DataQualityBanner, InsightCard (6 fields), V3ScoutReportTab (forecast, checklist, filterable insights); provider selector; V3 render block in MatchupPrep.tsx; V2 legacy fallback link
+- [x] Step 6: coach-insight security fix — requireAuth, 8KB cap, system prompt prefix allowlist, user prompt length bounds
+- [x] Step 7: 38 fixture + 71 recap/theme tests pass; 0 TypeScript errors; banned phrase list + illegal line chess.js replay confirmed

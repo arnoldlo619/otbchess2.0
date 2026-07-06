@@ -1,0 +1,6 @@
+[Event "Test"]
+[White "edge"]
+[Black "case"]
+[Result "1/2-1/2"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 d6 6. Bg5 h6 7. Bh4 g5 8. Bg3 Bg4 9. Nbd2 Qd7 10. c3 O-O-O 11. b4 Bb6 12. a4 Qe6 13. Bxe6+ fxe6 1/2-1/2

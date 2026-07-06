@@ -114,3 +114,4 @@ uploads/
 # Large binary files — served via /manus-storage/ CDN proxy instead
 server/cv-models/
 client/public/stockfish/*.wasm
+dist-verify/

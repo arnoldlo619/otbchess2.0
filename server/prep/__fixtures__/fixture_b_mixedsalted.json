@@ -1,0 +1,574 @@
+{
+ "games": [
+  {
+   "url": "https://www.chess.com/game/live/fixture101",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.11\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c0\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"180\"]\n\n1. e4 { [%clk 0:09:58] } 1... c6 { [%clk 0:09:55] } 2. d4 { [%clk 0:09:49] } 2... d5 { [%clk 0:09:41] } 3. Bc4 { [%clk 0:09:32] } 3... Nd7 { [%clk 0:09:26] } 4. Bb5 { [%clk 0:09:18] } 4... h6 { [%clk 0:09:15] } 5. c4 { [%clk 0:09:12] } 5... Nb8 { [%clk 0:09:08] } 6. Bxc6+ { [%clk 0:09:03] } 6... Qd7 { [%clk 0:08:57] } 7. e5 { [%clk 0:08:51] } 7... f5 { [%clk 0:08:47] } 8. b3 { [%clk 0:08:43] } 8... bxc6 { [%clk 0:08:39] } 9. a4 { [%clk 0:08:35] } 9... Qd8 { [%clk 0:08:29] } 10. Bg5 { [%clk 0:08:26] } 10... a6 { [%clk 0:08:20] } 11. h4 { [%clk 0:08:16] } 11... Ra7 { [%clk 0:08:14] } 12. Bc1 { [%clk 0:08:07] } 12... Be6 { [%clk 0:08:01] } 13. g3 { [%clk 0:07:58] } 13... a5 { [%clk 0:07:55] } 14. f3 { [%clk 0:07:47] } 14... g6 { [%clk 0:07:40] } 15. Qe2 { [%clk 0:07:32] } 15... Qb6 { [%clk 0:07:26] } 16. Qf1 { [%clk 0:07:24] } 16... Ra8 { [%clk 0:07:20] } 17. Nh3 { [%clk 0:07:15] } 17... Kd8 { [%clk 0:07:13] } 18. c5 { [%clk 0:07:08] } 18... Qa7 { [%clk 0:07:00] } 19. Ra3 { [%clk 0:06:54] } 19... Kd7 { [%clk 0:06:48] } 20. Bxh6 { [%clk 0:06:43] } 20... Qc7 { [%clk 0:06:35] } 21. Rg1 { [%clk 0:06:29] } 21... Qb7 { [%clk 0:06:26] } 22. Qa6 { [%clk 0:06:17] } 22... Qb5 { [%clk 0:06:10] } 23. Ra1 { [%clk 0:06:07] } 23... Rxh6 { [%clk 0:06:05] } 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746363600,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c0",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture102",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.12\"]\n[Round \"?\"]\n[White \"c1\"]\n[Black \"mixedsalted\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. e4 c5 2. Nf3 d6 3. b3 Bh3 4. Ba6 f5 5. Be2 h6 6. b4 h5 7. Bb5+ Kf7 8. Bd3 cxb4 9. Nd4 Qa5 10. e5 dxe5 11. Na3 b5 12. Nf3 Qb6 13. Bxf5 Qc6 14. Be6+ Kg6 15. Nd4 Rh7 16. Nxc6 Nh6 17. g4 Nxc6 18. Ke2 a5 19. Bf7+ Nxf7 20. g5 Bg2 21. Nc4 b3 22. Na3 Nb4 23. h3 Ra7 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746367200,
+   "white": {
+    "username": "c1",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture103",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.13\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c2\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. c4 e6 3. Kd2 Na6 4. Nc3 Qd6 5. Nf3 Be7 6. Ng1 Qc5 7. e4 Nb4 8. a3 Bg5+ 9. Ke1 Qa5 10. Qh5 Qb6 11. Be2 Qa5 12. g4 dxc4 13. Qh3 Bf4 14. Qh4 Nd3+ 15. Kd1 Qf5 16. Nh3 Qxg4 17. Rg1 Bxh2 18. Bg5 Rb8 19. Qh6 Bd7 20. Bf6 Nxf6 21. Qg5 Qxg5 22. Nb5 Qg6 23. Nxa7 Nc1 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746370800,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c2",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture104",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.14\"]\n[Round \"?\"]\n[White \"c3\"]\n[Black \"mixedsalted\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"180\"]\n\n1. d4 Nf6 2. c4 g6 3. h4 e6 4. Rh2 d5 5. Qc2 Kd7 6. Bd2 Kc6 7. Qc1 Ng8 8. Nh3 Qg5 9. hxg5 Kd7 10. a4 Bh6 11. g3 b5 12. b4 c5 13. Rh1 Bxg5 14. Qa3 a6 15. Bc3 Kc7 16. bxc5 Bf6 17. Qb3 h6 18. Ng5 Kb7 19. a5 Rh7 20. Rh5 Ra7 21. cxb5 Bd7 22. Ne4 dxe4 23. b6 e5 1/2-1/2",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746374400,
+   "white": {
+    "username": "c3",
+    "rating": 1750,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture105",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.15\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c4\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. e4 { [%clk 0:09:52] } 1... e5 { [%clk 0:09:46] } 2. Nf3 { [%clk 0:09:44] } 2... Nc6 { [%clk 0:09:40] } 3. Bc4 { [%clk 0:09:35] } 3... d6 { [%clk 0:09:33] } 4. Rg1 { [%clk 0:09:28] } 4... Bh3 { [%clk 0:09:20] } 5. d3 { [%clk 0:09:14] } 5... Bf5 { [%clk 0:09:08] } 6. Nfd2 { [%clk 0:09:03] } 6... b6 { [%clk 0:08:55] } 7. Rh1 { [%clk 0:08:49] } 7... g6 { [%clk 0:08:46] } 8. Ke2 { [%clk 0:08:37] } 8... Rc8 { [%clk 0:08:30] } 9. Bxf7+ { [%clk 0:08:27] } 9... Kd7 { [%clk 0:08:25] } 10. Bc4 { [%clk 0:08:18] } 10... d5 { [%clk 0:08:14] } 11. exf5 { [%clk 0:08:06] } 11... Qe8 { [%clk 0:07:57] } 12. Nc3 { [%clk 0:07:49] } 12... Qe6 { [%clk 0:07:42] } 13. Bb5 { [%clk 0:07:40] } 13... e4 { [%clk 0:07:36] } 14. fxe6+ { [%clk 0:07:31] } 14... Kxe6 { [%clk 0:07:24] } 15. Nxd5 { [%clk 0:07:22] } 15... Nge7 { [%clk 0:07:18] } 16. Nxe4 { [%clk 0:07:16] } 16... Ke5 { [%clk 0:07:10] } 17. Kd2 { [%clk 0:07:07] } 17... Rg8 { [%clk 0:07:04] } 18. b3 { [%clk 0:07:02] } 18... Nd4 { [%clk 0:06:54] } 19. c3 { [%clk 0:06:46] } 19... Nxd5 { [%clk 0:06:43] } 20. Qg1 { [%clk 0:06:39] } 20... Bc5 { [%clk 0:06:33] } 21. Ng5 { [%clk 0:06:24] } 21... Bb4 { [%clk 0:06:15] } 22. Ne4 { [%clk 0:06:10] } 22... Ke6 { [%clk 0:06:08] } 23. Kd1 { [%clk 0:06:04] } 23... c6 { [%clk 0:05:59] } 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746378000,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c4",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture106",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.16\"]\n[Round \"?\"]\n[White \"c5\"]\n[Black \"mixedsalted\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. c4 e5 2. g3 Qh4 3. b4 Na6 4. Qc2 Kd8 5. Qe4 b6 6. Qc6 dxc6 7. Nh3 Bc5 8. Bg2 Nb8 9. e3 Bb7 10. b5 f5 11. Bf3 Qh5 12. Bxh5 Bb4 13. Kf1 Kc8 14. Be2 Be7 15. bxc6 Na6 16. Bb2 Nc5 17. Bxe5 Kb8 18. Kg2 Bg5 19. Nf4 Ne4 20. Kf1 h5 21. cxb7 Bxf4 22. Kg1 Nxd2 23. h4 Nxc4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746381600,
+   "white": {
+    "username": "c5",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture107",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.17\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c6\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"180\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 Bf5 4. Bc1 Bg6 5. Ng1 b5 6. a3 c6 7. a4 Qb6 8. c3 a5 9. h3 b4 10. g3 b3 11. Kd2 Qb5 12. Qxb3 Ra7 13. Qd1 Qxa4 14. Qb3 Ra6 15. Qb6 Ng4 16. Rxa4 Rxb6 17. Ra1 Ra6 18. Ra3 Rb6 19. h4 Kd7 20. e4 Bf5 21. Rh2 Kc7 22. f4 Kc8 23. Bc4 g6 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746385200,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c6",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture108",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.18\"]\n[Round \"?\"]\n[White \"c7\"]\n[Black \"mixedsalted\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. Be3 h6 4. Nh3 c5 5. g3 f6 6. Bd2 Bxh3 7. Na3 c4 8. b3 a6 9. Bxh6 Ra7 10. Nb5 cxb3 11. Kd2 g6 12. Qb1 Bxf1 13. Qd1 b6 14. Nc7+ Kf7 15. Bxf8 Rh4 16. Qe2 Rh8 17. a4 g5 18. Rc1 Qxf8 19. Qxf1 b2 20. h4 Rh7 21. Rh3 Rg7 22. g4 bxc1=N 23. Qe2 gxh4 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746388800,
+   "white": {
+    "username": "c7",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture109",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.19\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c8\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. e4 { [%clk 0:09:58] } 1... c5 { [%clk 0:09:54] } 2. Nf3 { [%clk 0:09:52] } 2... d6 { [%clk 0:09:46] } 3. Ba6 { [%clk 0:09:43] } 3... f6 { [%clk 0:09:40] } 4. Rg1 { [%clk 0:09:38] } 4... e5 { [%clk 0:09:30] } 5. Rh1 { [%clk 0:09:22] } 5... g6 { [%clk 0:09:19] } 6. d3 { [%clk 0:09:15] } 6... Qe7 { [%clk 0:09:09] } 7. a3 { [%clk 0:09:00] } 7... Nd7 { [%clk 0:08:51] } 8. Kd2 { [%clk 0:08:46] } 8... Qd8 { [%clk 0:08:44] } 9. h3 { [%clk 0:08:40] } 9... Rb8 { [%clk 0:08:35] } 10. Ke3 { [%clk 0:08:30] } 10... Qe7 { [%clk 0:08:27] } 11. Ke2 { [%clk 0:08:22] } 11... g5 { [%clk 0:08:14] } 12. h4 { [%clk 0:08:11] } 12... Kd8 { [%clk 0:08:04] } 13. Rh2 { [%clk 0:07:58] } 13... g4 { [%clk 0:07:49] } 14. b4 { [%clk 0:07:40] } 14... h5 { [%clk 0:07:34] } 15. Ne1 { [%clk 0:07:29] } 15... Bg7 { [%clk 0:07:21] } 16. Be3 { [%clk 0:07:15] } 16... Rh7 { [%clk 0:07:09] } 17. c3 { [%clk 0:07:01] } 17... Qe8 { [%clk 0:06:52] } 18. f3 { [%clk 0:06:44] } 18... Nf8 { [%clk 0:06:36] } 19. Ra2 { [%clk 0:06:31] } 19... Qe7 { [%clk 0:06:22] } 20. Bf4 { [%clk 0:06:19] } 20... gxf3+ { [%clk 0:06:15] } 21. Ke3 { [%clk 0:06:12] } 21... Bf5 { [%clk 0:06:03] } 22. Bxb7 { [%clk 0:05:54] } 22... cxb4 { [%clk 0:05:45] } 23. Qe2 { [%clk 0:05:38] } 23... Bxe4 { [%clk 0:05:31] } 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746392400,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c8",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture110",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.20\"]\n[Round \"?\"]\n[White \"c9\"]\n[Black \"mixedsalted\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"180\"]\n\n1. d4 d5 2. c4 e6 3. b3 Nd7 4. Bg5 b6 5. h3 Ne7 6. c5 f5 7. Bxe7 Rb8 8. a4 Nxc5 9. a5 e5 10. b4 Be6 11. Qc1 g6 12. Bxc5 b5 13. Ra3 Qd6 14. Bxd6 f4 15. Rh2 Rg8 16. Bxf8 exd4 17. Qxf4 Rb7 18. Qg4 g5 19. Nf3 d3 20. Ra1 d4 21. Ra2 Bc8 22. Qg3 Kd8 23. Ng1 c5 1/2-1/2",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746396000,
+   "white": {
+    "username": "c9",
+    "rating": 1750,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture111",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.21\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c10\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Qd2 c5 4. f4 g5 5. Qd1 Qa5+ 6. Kf2 Qb6 7. Nc3 Nc6 8. Na4 Qa5 9. Be3 Nb4 10. Bd2 cxd4 11. Qb3 h6 12. Nb6 Nfd5 13. Ke1 Rg8 14. e3 f6 15. Qc3 Qxb6 16. h3 Rh8 17. Qxd4 a6 18. f5 d6 19. Rb1 Qa7 20. Qe4 e5 21. g3 Qc5 22. g4 Nc6 23. Qc2 Nf4 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746399600,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c10",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture112",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.22\"]\n[Round \"?\"]\n[White \"c11\"]\n[Black \"mixedsalted\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Bb4 4. Be2 Bf8 5. Ng1 d5 6. g4 Qe7 7. g5 Be6 8. exd5 b5 9. f4 Qc5 10. d4 a6 11. Nh3 Bxh3 12. Bg4 a5 13. Bd2 Nb8 14. Bxa5 Qb4+ 15. Kf2 Qxb2 16. Be6 Qa3 17. Qe2 fxe6 18. Qg4 Bg2 19. Bxc7 Qc1 20. Nd2 e4 21. Bd8 h6 22. c4 Bxh1 23. Nf3 Bg2 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746403200,
+   "white": {
+    "username": "c11",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture113",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.23\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c12\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"180\"]\n\n1. c4 { [%clk 0:09:55] } 1... e5 { [%clk 0:09:47] } 2. g3 { [%clk 0:09:41] } 2... f5 { [%clk 0:09:35] } 3. e4 { [%clk 0:09:27] } 3... Na6 { [%clk 0:09:18] } 4. Be2 { [%clk 0:09:10] } 4... Qh4 { [%clk 0:09:02] } 5. Nc3 { [%clk 0:08:57] } 5... Qf6 { [%clk 0:08:48] } 6. Nb1 { [%clk 0:08:45] } 6... h5 { [%clk 0:08:41] } 7. Kf1 { [%clk 0:08:38] } 7... fxe4 { [%clk 0:08:29] } 8. d3 { [%clk 0:08:20] } 8... Rb8 { [%clk 0:08:11] } 9. Nc3 { [%clk 0:08:04] } 9... Ke7 { [%clk 0:07:57] } 10. dxe4 { [%clk 0:07:55] } 10... c6 { [%clk 0:07:46] } 11. Bf3 { [%clk 0:07:43] } 11... Qf4 { [%clk 0:07:41] } 12. b3 { [%clk 0:07:37] } 12... d5 { [%clk 0:07:33] } 13. cxd5 { [%clk 0:07:31] } 13... Kd8 { [%clk 0:07:27] } 14. Nb1 { [%clk 0:07:23] } 14... Nh6 { [%clk 0:07:14] } 15. Qe1 { [%clk 0:07:07] } 15... g6 { [%clk 0:07:02] } 16. gxf4 { [%clk 0:06:53] } 16... Be6 { [%clk 0:06:50] } 17. Kg2 { [%clk 0:06:43] } 17... Be7 { [%clk 0:06:39] } 18. d6 { [%clk 0:06:33] } 18... Re8 { [%clk 0:06:27] } 19. d7 { [%clk 0:06:20] } 19... Bh3+ { [%clk 0:06:15] } 20. Kg3 { [%clk 0:06:10] } 20... Nc5 { [%clk 0:06:07] } 21. Nxh3 { [%clk 0:06:03] } 21... Kc7 { [%clk 0:05:56] } 22. Qa5+ { [%clk 0:05:50] } 22... Kxd7 { [%clk 0:05:44] } 23. Qb4 { [%clk 0:05:39] } 23... Ng8 { [%clk 0:05:31] } 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746406800,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c12",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture114",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.24\"]\n[Round \"?\"]\n[White \"c13\"]\n[Black \"mixedsalted\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. d4 d5 2. Nf3 Nf6 3. Bf4 g5 4. Qd2 Bd7 5. a4 c5 6. Bc7 Bc6 7. Qb4 g4 8. Ng5 Bh6 9. b3 Qxc7 10. Kd1 Kd8 11. e3 Qe5 12. Nc3 Bb5 13. h3 Nbd7 14. g3 Re8 15. Bxb5 Qd6 16. Bc4 Nb6 17. Qxc5 Rf8 18. h4 Ne4 19. Qc8+ Nxc8 20. h5 Qf6 21. Nxd5 Qxd4+ 22. exd4 e6 23. Rf1 a6 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746410400,
+   "white": {
+    "username": "c13",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture115",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.25\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c14\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. e4 c6 2. d4 d5 3. g3 Nh6 4. e5 Na6 5. a4 Bh3 6. Qg4 f5 7. Bd3 Nb4 8. Kd2 g6 9. Qxg6+ hxg6 10. Kd1 Qa5 11. Ra3 Bg7 12. Bd2 Kd8 13. f3 b6 14. Bg5 Rc8 15. Rc3 Rg8 16. Ba6 Rf8 17. Ne2 Rg8 18. f4 Bf6 19. Re3 Qb5 20. Na3 Qc4 21. e6 b5 22. Kc1 Qb3 23. Rf3 Nf7 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746414000,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c14",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture116",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.26\"]\n[Round \"?\"]\n[White \"c15\"]\n[Black \"mixedsalted\"]\n[Result \"1/2-1/2\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"180\"]\n\n1. e4 c5 2. Nf3 d6 3. c4 g6 4. Na3 Qc7 5. g3 Bg4 6. Bg2 Qc6 7. b4 b6 8. Rg1 Kd7 9. Ne5+ Kd8 10. Bh1 Bg7 11. Nb5 Bh3 12. Qe2 cxb4 13. Nc3 Bf6 14. a3 Bh4 15. Bf3 Bd7 16. Bg2 Qxc4 17. Rh1 Be8 18. Rg1 Qc5 19. Qg4 Nc6 20. gxh4 e6 21. Rb1 f5 22. Ke2 Qa5 23. Qxf5 Nxe5 1/2-1/2",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746417600,
+   "white": {
+    "username": "c15",
+    "rating": 1750,
+    "result": "agreed"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "agreed"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture117",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.27\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"c16\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. d4 { [%clk 0:09:53] } 1... d5 { [%clk 0:09:48] } 2. c4 { [%clk 0:09:39] } 2... e6 { [%clk 0:09:36] } 3. Nc3 { [%clk 0:09:29] } 3... a5 { [%clk 0:09:25] } 4. a3 { [%clk 0:09:19] } 4... h5 { [%clk 0:09:13] } 5. a4 { [%clk 0:09:06] } 5... Qg5 { [%clk 0:09:01] } 6. cxd5 { [%clk 0:08:56] } 6... Qh4 { [%clk 0:08:53] } 7. dxe6 { [%clk 0:08:49] } 7... Rh7 { [%clk 0:08:42] } 8. Nh3 { [%clk 0:08:36] } 8... Nh6 { [%clk 0:08:30] } 9. Bf4 { [%clk 0:08:25] } 9... Ng4 { [%clk 0:08:17] } 10. Ng1 { [%clk 0:08:11] } 10... Ne3 { [%clk 0:08:04] } 11. Qc2 { [%clk 0:08:01] } 11... f5 { [%clk 0:07:56] } 12. Qc1 { [%clk 0:07:48] } 12... c6 { [%clk 0:07:45] } 13. Bxe3 { [%clk 0:07:43] } 13... Qxf2+ { [%clk 0:07:38] } 14. Bxf2 { [%clk 0:07:36] } 14... c5 { [%clk 0:07:33] } 15. Nf3 { [%clk 0:07:25] } 15... g6 { [%clk 0:07:16] } 16. Kd2 { [%clk 0:07:14] } 16... f4 { [%clk 0:07:05] } 17. Bg1 { [%clk 0:06:57] } 17... Bd6 { [%clk 0:06:55] } 18. g4 { [%clk 0:06:47] } 18... fxg3 { [%clk 0:06:40] } 19. h4 { [%clk 0:06:35] } 19... Ra6 { [%clk 0:06:30] } 20. Bh3 { [%clk 0:06:21] } 20... g5 { [%clk 0:06:18] } 21. Nh2 { [%clk 0:06:13] } 21... Kf8 { [%clk 0:06:09] } 22. Bg2 { [%clk 0:06:00] } 22... cxd4 { [%clk 0:05:55] } 23. Bc6 { [%clk 0:05:49] } 23... Kg8 { [%clk 0:05:43] } 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746421200,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "c16",
+    "rating": 1740,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture118",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.28\"]\n[Round \"?\"]\n[White \"c17\"]\n[Black \"mixedsalted\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"600\"]\n\n1. d4 Nf6 2. c4 g6 3. Bh6 e6 4. Bxf8 a5 5. Na3 h6 6. g3 a4 7. Bc5 Ra6 8. Kd2 c6 9. e3 Rh7 10. h3 Ng8 11. e4 Ra8 12. Bd3 Qb6 13. e5 f6 14. Bf5 Qa5+ 15. b4 b5 16. Bxe6 Ra6 17. Rh2 Ra8 18. Qc2 bxc4 19. Kd1 Na6 20. Nf3 Qxc5 21. dxc5 f5 22. Nh4 Nc7 23. Bf7+ Kd8 0-1",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746424800,
+   "white": {
+    "username": "c17",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "mixedsalted",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture119",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.29\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"joke0\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"900\"]\n[TimeControl \"180\"]\n\n1. Nh3 a5 2. Ng5 c6 3. h4 h5 4. e4 b5 5. Bc4 Na6 6. Qxh5 Qb6 7. Qh7 a4 8. Qxh8 f6 9. Qh7 Nb4 10. Kd1 Na6 11. Qf5 Nc7 12. d4 Nd5 13. h5 Ra5 14. Bf1 Nh6 15. Rh4 Qb7 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": false,
+   "rules": "chess",
+   "end_time": 1746428400,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "joke0",
+    "rating": 900,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture120",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.01\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"joke1\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"900\"]\n[TimeControl \"180\"]\n\n1. Nh3 Nc6 2. b3 Nh6 3. g3 g6 4. Nc3 a6 5. a3 f6 6. Nd5 f5 7. Ng5 f4 8. e4 Nb4 9. Bc4 e5 10. c3 Nf5 11. exf5 Ra7 12. Qg4 c5 13. Nxf4 Bd6 14. Nge6 Qh4 15. Bb5 c4 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": false,
+   "rules": "chess",
+   "end_time": 1746432000,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "joke1",
+    "rating": 900,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture121",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.02\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"joke2\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"900\"]\n[TimeControl \"180\"]\n\n1. Nh3 e6 2. Rg1 Ba3 3. g4 d5 4. c3 Nc6 5. Ng5 Bxb2 6. h3 a6 7. a3 a5 8. Nxf7 Nb4 9. cxb4 h5 10. Nxd8 Ke7 11. e3 Kf6 12. Bd3 Rh7 13. Qc2 c6 14. Qc4 Bc3 15. bxa5 b5 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": false,
+   "rules": "chess",
+   "end_time": 1746435600,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "joke2",
+    "rating": 900,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture122",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.03\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"joke3\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"900\"]\n[TimeControl \"180\"]\n\n1. Na3 c6 2. b4 Qb6 3. d3 c5 4. Be3 Qg6 5. f3 Qe6 6. Bc1 b5 7. Be3 Qb6 8. h3 Ba6 9. g3 Qe6 10. c4 Nf6 11. Bf4 Qxh3 12. Rb1 Rg8 13. Qa4 Ne4 14. Bd6 Rh8 15. fxe4 Nc6 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": false,
+   "rules": "chess",
+   "end_time": 1746439200,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "joke3",
+    "rating": 900,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture123",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.04\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"joke4\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"900\"]\n[TimeControl \"180\"]\n\n1. Na3 f5 2. Nh3 c6 3. Nb1 Na6 4. d4 b5 5. e3 b4 6. c3 h6 7. b3 h5 8. Qd3 Bb7 9. Qe4 Nc7 10. Qc2 Ba6 11. Rg1 Kf7 12. Qe4 Bc8 13. Qe5 a6 14. Ba3 g5 15. e4 Bg7 1-0",
+   "time_control": "180",
+   "time_class": "blitz",
+   "rated": false,
+   "rules": "chess",
+   "end_time": 1746442800,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "joke4",
+    "rating": 900,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture124",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.05\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"v0\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1700\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. c4 a5 3. Nc3 Bc5 4. a4 b5 5. Nge2 Ra7 6. g3 h5 7. b4 Rh6 8. d4 f6 9. Nf4 Bf8 10. Qe2 Ra6 11. axb5 Rc6 12. Ng2 Re6 13. f3 Qe7 14. g4 Rh7 15. Na2 d6 16. Nh4 Na6 17. bxa5 Nh6 18. bxa6 Qd8 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess960",
+   "end_time": 1746446400,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "v0",
+    "rating": 1700,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture125",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.06\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"v1\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1700\"]\n[TimeControl \"600\"]\n\n1. e4 e5 2. b4 Qh4 3. h3 d6 4. Qe2 a5 5. Qf3 a4 6. Qf6 Nc6 7. Qg6 Qxf2+ 8. Kxf2 hxg6 9. Nc3 Kd7 10. Nge2 g5 11. Ke3 Be7 12. Ng3 Nf6 13. Nge2 Bd8 14. Nxa4 g6 15. Ba3 Rh6 16. Rh2 Ng4+ 17. Kf3 Ke6 18. Rc1 Kd7 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess960",
+   "end_time": 1746450000,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "v1",
+    "rating": 1700,
+    "result": "resigned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture175",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.25\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"ab0\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746630000,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "ab0",
+    "rating": 1600,
+    "result": "abandoned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture176",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.06.26\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"ab1\"]\n[Result \"1-0\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1600\"]\n[TimeControl \"600\"]\n\n1. e4 e5 1-0",
+   "time_control": "600",
+   "time_class": "rapid",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746633600,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "win"
+   },
+   "black": {
+    "username": "ab1",
+    "rating": 1600,
+    "result": "abandoned"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture126",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.07\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"bu0\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"60\"]\n\n1. e4 c5 2. Nf3 d6 3. a3 g6 4. d3 e5 5. g3 Qa5+ 6. Nc3 Bh3 7. g4 Qa6 8. Nb5 Kd7 9. Nfd4 Kc8 10. Qd2 h5 11. Bg2 Qxb5 12. Ne2 Qe8 13. Nc3 Qd7 14. Rf1 b5 15. Ne2 Qe6 16. Ra2 Ne7 17. Nc3 Nd5 18. gxh5 Be7 19. Ra1 Nf6 20. Kd1 Ng4 0-1",
+   "time_control": "60",
+   "time_class": "bullet",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746453600,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "bu0",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture127",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.08\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"bu1\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"60\"]\n\n1. e4 c5 2. Nf3 d6 3. Ke2 Bd7 4. h3 Nc6 5. Ne1 Bg4+ 6. hxg4 Qc8 7. Na3 g5 8. c4 Rb8 9. b3 h5 10. Bb2 d5 11. exd5 b6 12. Bd4 hxg4 13. b4 Nf6 14. Kd3 a5 15. Rh7 Kd8 16. Rh4 Qb7 17. bxc5 Qd7 18. f3 Kc7 19. Qc2 Rc8 20. Qc1 Qe8 0-1",
+   "time_control": "60",
+   "time_class": "bullet",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746457200,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "bu1",
+    "rating": 1740,
+    "result": "win"
+   }
+  },
+  {
+   "url": "https://www.chess.com/game/live/fixture128",
+   "pgn": "[Event \"Live Chess\"]\n[Site \"Chess.com\"]\n[Date \"2026.05.09\"]\n[Round \"?\"]\n[White \"mixedsalted\"]\n[Black \"bu2\"]\n[Result \"0-1\"]\n[WhiteElo \"1750\"]\n[BlackElo \"1740\"]\n[TimeControl \"60\"]\n\n1. e4 c5 2. Nf3 d6 3. c3 a6 4. Nd4 Be6 5. Nb5 g5 6. d3 d5 7. Nc7+ Qxc7 8. Qc2 Bg7 9. Bf4 Bh3 10. a4 Bf8 11. Bg3 e5 12. b4 Nd7 13. Qc1 dxe4 14. Nd2 Bg4 15. f4 exf3 16. d4 Qc6 17. Nxf3 cxd4 18. Bxa6 Ngf6 19. h4 Qd5 20. Rh2 Qe6 0-1",
+   "time_control": "60",
+   "time_class": "bullet",
+   "rated": true,
+   "rules": "chess",
+   "end_time": 1746460800,
+   "white": {
+    "username": "mixedsalted",
+    "rating": 1750,
+    "result": "resigned"
+   },
+   "black": {
+    "username": "bu2",
+    "rating": 1740,
+    "result": "win"
+   }
+  }
+ ]
+}

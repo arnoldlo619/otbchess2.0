@@ -19,6 +19,10 @@ import { clubsRouter } from "./clubs.js";
 import { leaguesRouter } from "./leagues.js";
 import { emailRouter } from "./email.js";
 import { buildPrepReport, ENGINE_VERSION } from "./prepEngine.js";
+import { buildReport as buildReportV3, ENGINE_VERSION as ENGINE_VERSION_V3 } from "./prep/buildReport.js";
+import { fetchChesscom } from "./services/chesscom.js";
+import { fetchLichess } from "./services/lichess.js";
+import type { PrepErrorPayload, FetchOpts } from "../shared/prepTypes.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
 import { createOpeningsAdminRouter } from "./openingsAdmin.js";
@@ -499,13 +503,97 @@ export function createApp() {
 
   // ── Matchup Prep Engine: GET /api/prep/:username ──────────────────────────
   // Full matchup preparation report with 24h server-side caching.
+  // ?schema=3 → V3 pipeline (ScoutReportV3 + structured PrepErrorPayload)
+  // default (no ?schema) → V2 legacy pipeline (backwards-compatible)
   app.get("/api/prep/:username", prepLimiter, async (req, res) => {
-    try {
-      const username = req.params.username;
-      if (!username || username.length < 2 || username.length > 50) {
-        res.status(400).json({ error: "Invalid username" });
-        return;
+    const username = req.params.username;
+    if (!username || username.length < 2 || username.length > 50) {
+      const errPayload: PrepErrorPayload = { error: "invalid_username", message: "Username must be 2–50 characters." };
+      res.status(400).json(errPayload);
+      return;
+    }
+
+    // ── V3 path (?schema=3) ────────────────────────────────────────────────
+    if (req.query.schema === "3") {
+      try {
+        const normalised = username.toLowerCase().trim();
+        const maxGames = Math.min(parseInt(req.query.games as string) || 100, 100);
+        const tcParam = (req.query.tc as string) || "all";
+        const timeClasses: string[] =
+          tcParam === "rapid" ? ["rapid"] :
+          tcParam === "blitz" ? ["blitz"] :
+          ["rapid", "blitz"];
+        const provider = (req.query.provider as string) === "lichess" ? "lichess" : "chesscom";
+        const forceRefresh = req.query.refresh === "true";
+
+        // Cache key includes schema version so V3 never collides with V2
+        const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
+        const cacheKey = `v3:${provider}:${normalised}:${tcKey}`;
+
+        if (!forceRefresh) {
+          try {
+            const db = await getDb();
+            const [cached] = await db.select().from(prepCache)
+              .where(eq(prepCache.username, cacheKey))
+              .limit(1);
+            if (cached) {
+              const age = Date.now() - new Date(cached.cachedAt).getTime();
+              const versionMatch = cached.engineVersion === ENGINE_VERSION_V3;
+              if (age < PREP_CACHE_TTL_MS && versionMatch) {
+                res.json({ ...JSON.parse(cached.reportJson), _cached: true });
+                return;
+              }
+            }
+          } catch { /* non-fatal — fall through to live fetch */ }
+        }
+
+        const fetchOpts: FetchOpts = { maxGames, months: 6, timeClasses, ratedOnly: true };
+        const raw = provider === "lichess"
+          ? await fetchLichess(normalised, fetchOpts)
+          : await fetchChesscom(normalised, fetchOpts);
+
+        const report = buildReportV3(provider, normalised, raw, fetchOpts);
+
+        // Cache fire-and-forget
+        try {
+          const db = await getDb();
+          const reportStr = JSON.stringify(report);
+          await db.insert(prepCache).values({
+            username: cacheKey,
+            reportJson: reportStr,
+            gamesAnalyzed: report.dataQuality.parsed,
+            cachedAt: new Date(),
+            engineVersion: ENGINE_VERSION_V3,
+          }).onDuplicateKeyUpdate({
+            set: { reportJson: reportStr, gamesAnalyzed: report.dataQuality.parsed, cachedAt: new Date(), engineVersion: ENGINE_VERSION_V3 },
+          });
+        } catch { /* non-fatal */ }
+
+        res.json({ ...report, _cached: false });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        logger.error("[prep v3]", msg);
+        if (msg.startsWith("PlayerNotFound:")) {
+          const payload: PrepErrorPayload = { error: "not_found", message: `Player "${username}" was not found on the selected provider.` };
+          res.status(404).json(payload);
+        } else if (msg.startsWith("NoRecentGames:")) {
+          const payload: PrepErrorPayload = { error: "no_recent_games", message: `No rated rapid/blitz games found for "${username}" in the last 6 months.` };
+          res.status(404).json(payload);
+        } else if (msg.startsWith("NoUsableGames:")) {
+          const payload: PrepErrorPayload = { error: "all_filtered", message: `All games for "${username}" were filtered out (unrated, wrong time control, or corrupt).` };
+          res.status(422).json(payload);
+        } else if (msg.startsWith("UpstreamRateLimited:")) {
+          const payload: PrepErrorPayload = { error: "upstream_rate_limited", message: "The chess provider is rate-limiting requests. Please try again in a few minutes." };
+          res.status(429).json(payload);
+        } else {
+          res.status(502).json({ error: "all_filtered", message: "Could not generate prep report. Please try again." } as PrepErrorPayload);
+        }
       }
+      return;
+    }
+
+    // ── V2 legacy path (default) ───────────────────────────────────────────
+    try {
       const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
       const forceRefresh = req.query.refresh === "true";
 
@@ -712,12 +800,16 @@ export function createApp() {
 
   // ── Coach Insight: POST /api/prep/coach-insight ─────────────────────────────
   // Generates a coach-like insight from prep data using the built-in LLM.
-  // Rate-limited to prevent abuse. No auth required (quota tracked client-side).
-  app.post("/api/prep/coach-insight", rateLimit({ windowMs: 60_000, max: 10 }), async (req: any, res) => {
+  // Rate-limited to prevent abuse. Requires auth to prevent anonymous LLM abuse.
+  app.post("/api/prep/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), async (req: any, res) => {
     try {
       const { promptJson } = req.body;
       if (!promptJson || typeof promptJson !== "string") {
         res.status(400).json({ error: "promptJson is required" }); return;
+      }
+      // Enforce max payload size to prevent prompt injection via oversized inputs
+      if (promptJson.length > 8_000) {
+        res.status(413).json({ error: "promptJson too large" }); return;
       }
 
       let parsed: { system: string; user: string };
@@ -725,6 +817,16 @@ export function createApp() {
         parsed = JSON.parse(promptJson);
       } catch {
         res.status(400).json({ error: "Invalid promptJson format" }); return;
+      }
+
+      // Validate that system prompt is the expected chess-prep system prompt
+      // (prevents callers from using this endpoint as a general-purpose LLM proxy)
+      const ALLOWED_SYSTEM_PREFIX = "You are a chess coach";
+      if (typeof parsed.system !== "string" || !parsed.system.trimStart().startsWith(ALLOWED_SYSTEM_PREFIX)) {
+        res.status(400).json({ error: "Invalid system prompt" }); return;
+      }
+      if (typeof parsed.user !== "string" || parsed.user.length < 10 || parsed.user.length > 4_000) {
+        res.status(400).json({ error: "Invalid user prompt" }); return;
       }
 
       const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY;

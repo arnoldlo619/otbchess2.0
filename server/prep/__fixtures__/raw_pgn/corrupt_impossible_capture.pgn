@@ -1,0 +1,6 @@
+[Event "Corrupt"]
+[White "bad"]
+[Black "data"]
+[Result "*"]
+
+1. d4 d5 2. Nf3 Nf6 3. hxg6 *

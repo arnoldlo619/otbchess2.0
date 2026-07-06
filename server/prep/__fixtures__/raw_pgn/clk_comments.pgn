@@ -1,0 +1,7 @@
+[Event "Live Chess"]
+[Site "Chess.com"]
+[White "edge"]
+[Black "case"]
+[Result "1-0"]
+
+1. e4 {[%clk 0:09:58]} e5 {[%clk 0:09:57]} 2. Nf3 {[%clk 0:09:55]} Nc6 {[%clk 0:09:50]} 3. Bb5 {[%clk 0:09:48]} a6 1-0

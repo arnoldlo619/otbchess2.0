@@ -105,6 +105,10 @@ export default tseslint.config(
       "*.config.ts",
       "drizzle/**",
       "public/**",
+      "reference/**",       // read-only reference implementation, not production code
+      "references/**",      // markdown reference docs
+      "server/prep/__fixtures__/**", // test fixture data and debug scripts
+      "data/**",            // static data files (ECO opening book etc.)
     ],
   }
 );
