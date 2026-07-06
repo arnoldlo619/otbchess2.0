@@ -72,7 +72,23 @@ export function buildFilterString(f: BgImageFilters): string {
   if (f.contrast !== 100)   parts.push(`contrast(${f.contrast}%)`);
   return parts.length > 0 ? parts.join(" ") : "none";
 }
-type LogoPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
+export interface LogoPlacement {
+  x: number; // normalized left position within preview/canvas (0–1)
+  y: number; // normalized top position within preview/canvas (0–1)
+}
+
+export interface LogoBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const DEFAULT_LOGO_PLACEMENT: LogoPlacement = { x: 0.75, y: 0.82 };
+const LOGO_MARGIN_RATIO = 0.05;
+const LOGO_RESIZE_HANDLE = 16;
+const LOGO_MIN_SIZE = 0.5;
+const LOGO_MAX_SIZE = 2.0;
 
 export interface CanvasTheme {
   id: string;
@@ -268,33 +284,57 @@ function drawBgImage(
   ctx.restore();
 }
 
-function drawLogo(
-  ctx: CanvasRenderingContext2D,
+export function clampLogoPlacement(placement: LogoPlacement, bounds: { width: number; height: number }): LogoPlacement {
+  return {
+    x: Math.min(Math.max(placement.x, LOGO_MARGIN_RATIO), 1 - bounds.width - LOGO_MARGIN_RATIO),
+    y: Math.min(Math.max(placement.y, LOGO_MARGIN_RATIO), 1 - bounds.height - LOGO_MARGIN_RATIO),
+  };
+}
+
+export function snapLogoPlacement(placement: LogoPlacement, bounds: { width: number; height: number }): LogoPlacement {
+  const next = { ...placement };
+  if (Math.abs(next.x - LOGO_MARGIN_RATIO) <= 0.03) next.x = LOGO_MARGIN_RATIO;
+  if (Math.abs(next.y - LOGO_MARGIN_RATIO) <= 0.03) next.y = LOGO_MARGIN_RATIO;
+  const rightTarget = 1 - bounds.width - LOGO_MARGIN_RATIO;
+  const bottomTarget = 1 - bounds.height - LOGO_MARGIN_RATIO;
+  if (Math.abs(next.x - rightTarget) <= 0.03) next.x = rightTarget;
+  if (Math.abs(next.y - bottomTarget) <= 0.03) next.y = bottomTarget;
+  return clampLogoPlacement(next, bounds);
+}
+
+export function getLogoBounds(
   img: HTMLImageElement,
-  position: LogoPosition,
-  sizePct: number,   // 0.5 – 2.0
+  placement: LogoPlacement,
+  sizePct: number,
   W: number,
-  H: number,
-  scale: number
-) {
+  H: number
+): LogoBounds {
   const maxW = W * 0.25 * sizePct;
   const maxH = H * 0.12 * sizePct;
   const ratio = Math.min(maxW / img.width, maxH / img.height);
-  const lw = img.width * ratio, lh = img.height * ratio;
-  const pad = 32 * scale;
+  const width = img.width * ratio;
+  const height = img.height * ratio;
+  const normalized = clampLogoPlacement(placement, { width: width / W, height: height / H });
+  return {
+    x: normalized.x * W,
+    y: normalized.y * H,
+    width,
+    height,
+  };
+}
 
-  let lx: number, ly: number;
-  switch (position) {
-    case "top-left":     lx = pad;          ly = pad + 6 * scale; break;
-    case "top-right":    lx = W - lw - pad; ly = pad + 6 * scale; break;
-    case "bottom-left":  lx = pad;          ly = H - lh - pad; break;
-    case "center":       lx = (W - lw) / 2; ly = (H - lh) / 2; break;
-    default:             lx = W - lw - pad; ly = H - lh - pad; break; // bottom-right
-  }
-
+function drawLogo(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  placement: LogoPlacement,
+  sizePct: number,
+  W: number,
+  H: number
+) {
+  const bounds = getLogoBounds(img, placement, sizePct, W, H);
   ctx.save();
   ctx.globalAlpha = 0.92;
-  ctx.drawImage(img, lx, ly, lw, lh);
+  ctx.drawImage(img, bounds.x, bounds.y, bounds.width, bounds.height);
   ctx.restore();
 }
 
@@ -306,7 +346,7 @@ interface DrawExtras {
   bgImageOpacity: number;  // 0–1
   bgFilters: BgImageFilters;
   logoImage?: HTMLImageElement | null;
-  logoPosition: LogoPosition;
+  logoPlacement: LogoPlacement;
   logoSize: number;        // 0.5–2.0
 }
 
@@ -446,7 +486,7 @@ function drawChampionCard(
 
   // ── Logo (drawn last, on top) ──
   if (extras.logoImage) {
-    drawLogo(ctx, extras.logoImage, extras.logoPosition, extras.logoSize, W, H, scale);
+    drawLogo(ctx, extras.logoImage, extras.logoPlacement, extras.logoSize, W, H);
   }
 }
 
@@ -563,44 +603,6 @@ function UploadZone({
   );
 }
 
-// ─── Logo Position Grid ───────────────────────────────────────────────────────
-
-const LOGO_POSITIONS: { id: LogoPosition; label: string; gridArea: string }[] = [
-  { id: "top-left",     label: "TL", gridArea: "1 / 1" },
-  { id: "top-right",    label: "TR", gridArea: "1 / 3" },
-  { id: "center",       label: "C",  gridArea: "2 / 2" },
-  { id: "bottom-left",  label: "BL", gridArea: "3 / 1" },
-  { id: "bottom-right", label: "BR", gridArea: "3 / 3" },
-];
-
-function LogoPositionPicker({ value, onChange }: { value: LogoPosition; onChange: (v: LogoPosition) => void }) {
-  return (
-    <div className="grid grid-cols-3 grid-rows-3 gap-1 w-24 h-24">
-      {LOGO_POSITIONS.map(({ id, label, gridArea }) => (
-        <button
-          key={id}
-          onClick={() => onChange(id)}
-          title={id}
-          className={`rounded-lg text-[10px] font-bold transition-colors flex items-center justify-center ${
-            value === id
-              ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/40"
-              : "bg-white/5 text-white/30 hover:bg-white/10 hover:text-white/60 border border-transparent"
-          }`}
-          style={{ gridArea }}
-        >
-          {label}
-        </button>
-      ))}
-      {/* Center dot for visual reference */}
-      <div className="flex items-center justify-center" style={{ gridArea: "2 / 1" }}>
-        <div className="w-1 h-1 rounded-full bg-white/10" />
-      </div>
-      <div className="flex items-center justify-center" style={{ gridArea: "2 / 3" }}>
-        <div className="w-1 h-1 rounded-full bg-white/10" />
-      </div>
-    </div>
-  );
-}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -639,9 +641,208 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
   // ── Logo state ──
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const [logoImageEl, setLogoImageEl] = useState<HTMLImageElement | null>(null);
-  const [logoPosition, setLogoPosition] = useState<LogoPosition>("bottom-right");
+  const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>(DEFAULT_LOGO_PLACEMENT);
   const [logoSize, setLogoSize] = useState(1.0);
   const [logoDragging, setLogoDragging] = useState(false);
+
+  // ── Interactive overlay drag/resize state ──
+  const previewRef = useRef<HTMLDivElement>(null);
+  const dragStateRef = useRef<{
+    mode: "drag" | "resize" | null;
+    startX: number; startY: number;
+    startPlacement: LogoPlacement;
+    startSize: number;
+  }>({ mode: null, startX: 0, startY: 0, startPlacement: DEFAULT_LOGO_PLACEMENT, startSize: 1.0 });
+  const [overlayHover, setOverlayHover] = useState<"logo" | "resize" | null>(null);
+  const [isDraggingLogo, setIsDraggingLogo] = useState(false);
+
+  // Compute logo overlay rect in preview-div coordinates (px)
+  const getLogoOverlayRect = useCallback((): { x: number; y: number; w: number; h: number } | null => {
+    const preview = previewRef.current;
+    const canvas = canvasRef.current;
+    if (!preview || !canvas || !logoImageEl) return null;
+    const { width: canvasW, height: canvasH } = FORMAT_SIZES[format];
+    const previewW = preview.clientWidth;
+    const previewH = previewW * (canvasH / canvasW);
+    const maxW = canvasW * 0.25 * logoSize;
+    const maxH = canvasH * 0.12 * logoSize;
+    const ratio = Math.min(maxW / logoImageEl.width, maxH / logoImageEl.height);
+    const lw = logoImageEl.width * ratio;
+    const lh = logoImageEl.height * ratio;
+    const clamped = clampLogoPlacement(logoPlacement, { width: lw / canvasW, height: lh / canvasH });
+    return {
+      x: clamped.x * previewW,
+      y: clamped.y * previewH,
+      w: (lw / canvasW) * previewW,
+      h: (lh / canvasH) * previewH,
+    };
+  }, [logoImageEl, logoPlacement, logoSize, format]);
+
+  const getPointerInPreview = useCallback((clientX: number, clientY: number): { nx: number; ny: number } => {
+    const preview = previewRef.current;
+    if (!preview) return { nx: 0, ny: 0 };
+    const rect = preview.getBoundingClientRect();
+    const { width: canvasW, height: canvasH } = FORMAT_SIZES[format];
+    const previewH = rect.width * (canvasH / canvasW);
+    return {
+      nx: (clientX - rect.left) / rect.width,
+      ny: (clientY - rect.top) / previewH,
+    };
+  }, [format]);
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!logoImageEl) return;
+    const rect = getLogoOverlayRect();
+    if (!rect) return;
+    const preview = previewRef.current;
+    if (!preview) return;
+    const previewRect = preview.getBoundingClientRect();
+    const { width: canvasW, height: canvasH } = FORMAT_SIZES[format];
+    const previewH = previewRect.width * (canvasH / canvasW);
+    const px = e.clientX - previewRect.left;
+    const py = e.clientY - previewRect.top;
+    const handleSize = LOGO_RESIZE_HANDLE;
+    const inResize = (
+      px >= rect.x + rect.w - handleSize && px <= rect.x + rect.w + handleSize &&
+      py >= rect.y + rect.h - handleSize && py <= rect.y + rect.h + handleSize
+    );
+    const inLogo = px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
+    if (!inResize && !inLogo) return;
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    dragStateRef.current = {
+      mode: inResize ? "resize" : "drag",
+      startX: e.clientX, startY: e.clientY,
+      startPlacement: { ...logoPlacement },
+      startSize: logoSize,
+    };
+    setIsDraggingLogo(true);
+    void previewH;
+    void previewRect;
+  }, [logoImageEl, getLogoOverlayRect, logoPlacement, logoSize, format]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const ds = dragStateRef.current;
+    if (!ds.mode || !logoImageEl) {
+      // Hover detection
+      const rect = getLogoOverlayRect();
+      if (!rect) { setOverlayHover(null); return; }
+      const preview = previewRef.current;
+      if (!preview) return;
+      const previewRect = preview.getBoundingClientRect();
+      const px = e.clientX - previewRect.left;
+      const py = e.clientY - previewRect.top;
+      const handleSize = LOGO_RESIZE_HANDLE;
+      const inResize = (
+        px >= rect.x + rect.w - handleSize && px <= rect.x + rect.w + handleSize &&
+        py >= rect.y + rect.h - handleSize && py <= rect.y + rect.h + handleSize
+      );
+      const inLogo = px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
+      setOverlayHover(inResize ? "resize" : inLogo ? "logo" : null);
+      return;
+    }
+    e.preventDefault();
+    const { width: canvasW, height: canvasH } = FORMAT_SIZES[format];
+    const preview = previewRef.current;
+    if (!preview) return;
+    const previewRect = preview.getBoundingClientRect();
+    const previewH = previewRect.width * (canvasH / canvasW);
+    const dx = (e.clientX - ds.startX) / previewRect.width;
+    const dy = (e.clientY - ds.startY) / previewH;
+    if (ds.mode === "drag") {
+      const maxW = canvasW * 0.25 * ds.startSize;
+      const maxH = canvasH * 0.12 * ds.startSize;
+      const ratio = Math.min(maxW / logoImageEl.width, maxH / logoImageEl.height);
+      const lw = logoImageEl.width * ratio;
+      const lh = logoImageEl.height * ratio;
+      const newPlacement = snapLogoPlacement(
+        { x: ds.startPlacement.x + dx, y: ds.startPlacement.y + dy },
+        { width: lw / canvasW, height: lh / canvasH }
+      );
+      setLogoPlacement(newPlacement);
+    } else {
+      // resize: drag distance maps to size change
+      const distPx = Math.sqrt(
+        Math.pow(e.clientX - ds.startX, 2) + Math.pow(e.clientY - ds.startY, 2)
+      ) * (dx + dy > 0 ? 1 : -1);
+      const newSize = Math.min(LOGO_MAX_SIZE, Math.max(LOGO_MIN_SIZE, ds.startSize + distPx * 0.02));
+      setLogoSize(newSize);
+    }
+  }, [logoImageEl, getLogoOverlayRect, format]);
+
+  const onPointerUp = useCallback(() => {
+    dragStateRef.current.mode = null;
+    setIsDraggingLogo(false);
+  }, []);
+
+  const onPointerLeave = useCallback(() => {
+    if (!dragStateRef.current.mode) setOverlayHover(null);
+  }, []);
+
+  // Touch support
+  const onTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!logoImageEl || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const rect = getLogoOverlayRect();
+    if (!rect) return;
+    const preview = previewRef.current;
+    if (!preview) return;
+    const previewRect = preview.getBoundingClientRect();
+    const px = touch.clientX - previewRect.left;
+    const py = touch.clientY - previewRect.top;
+    const handleSize = LOGO_RESIZE_HANDLE;
+    const inResize = (
+      px >= rect.x + rect.w - handleSize && px <= rect.x + rect.w + handleSize &&
+      py >= rect.y + rect.h - handleSize && py <= rect.y + rect.h + handleSize
+    );
+    const inLogo = px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
+    if (!inResize && !inLogo) return;
+    e.preventDefault();
+    dragStateRef.current = {
+      mode: inResize ? "resize" : "drag",
+      startX: touch.clientX, startY: touch.clientY,
+      startPlacement: { ...logoPlacement },
+      startSize: logoSize,
+    };
+    setIsDraggingLogo(true);
+  }, [logoImageEl, getLogoOverlayRect, logoPlacement, logoSize]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const ds = dragStateRef.current;
+    if (!ds.mode || !logoImageEl || e.touches.length !== 1) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const { width: canvasW, height: canvasH } = FORMAT_SIZES[format];
+    const preview = previewRef.current;
+    if (!preview) return;
+    const previewRect = preview.getBoundingClientRect();
+    const previewH = previewRect.width * (canvasH / canvasW);
+    const dx = (touch.clientX - ds.startX) / previewRect.width;
+    const dy = (touch.clientY - ds.startY) / previewH;
+    if (ds.mode === "drag") {
+      const maxW = canvasW * 0.25 * ds.startSize;
+      const maxH = canvasH * 0.12 * ds.startSize;
+      const ratio = Math.min(maxW / logoImageEl.width, maxH / logoImageEl.height);
+      const lw = logoImageEl.width * ratio;
+      const lh = logoImageEl.height * ratio;
+      const newPlacement = snapLogoPlacement(
+        { x: ds.startPlacement.x + dx, y: ds.startPlacement.y + dy },
+        { width: lw / canvasW, height: lh / canvasH }
+      );
+      setLogoPlacement(newPlacement);
+    } else {
+      const distPx = Math.sqrt(
+        Math.pow(touch.clientX - ds.startX, 2) + Math.pow(touch.clientY - ds.startY, 2)
+      ) * (dx + dy > 0 ? 1 : -1);
+      const newSize = Math.min(LOGO_MAX_SIZE, Math.max(LOGO_MIN_SIZE, ds.startSize + distPx * 0.02));
+      setLogoSize(newSize);
+    }
+  }, [logoImageEl, format]);
+
+  const onTouchEnd = useCallback(() => {
+    dragStateRef.current.mode = null;
+    setIsDraggingLogo(false);
+  }, []);
 
   // ── Derived active theme ──
   const activeTheme: CanvasTheme = customTheme ?? (BUILT_IN_THEMES.find(t => t.id === selectedThemeId) ?? BUILT_IN_THEMES[0]);
@@ -698,9 +899,9 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
     if (!ctx) return;
     drawChampionCard(ctx, config, format, activeTheme, {
       bgImage: bgImageEl, bgImageFit, bgImageOpacity, bgFilters,
-      logoImage: logoImageEl, logoPosition, logoSize,
+      logoImage: logoImageEl, logoPlacement, logoSize,
     });
-  }, [config, format, activeTheme, bgImageEl, bgImageFit, bgImageOpacity, bgFilters, logoImageEl, logoPosition, logoSize]);
+  }, [config, format, activeTheme, bgImageEl, bgImageFit, bgImageOpacity, bgFilters, logoImageEl, logoPlacement, logoSize]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 
@@ -1033,10 +1234,19 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                 <span>Small</span><span>Default</span><span>Large</span>
               </div>
             </div>
-            {/* Position grid */}
             <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">Logo Position</p>
-              <LogoPositionPicker value={logoPosition} onChange={setLogoPosition} />
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">Logo Placement</p>
+                <button
+                  onClick={() => { setLogoPlacement(DEFAULT_LOGO_PLACEMENT); setLogoSize(1.0); }}
+                  className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors">
+                  <RotateCcw className="w-2.5 h-2.5" /> Reset
+                </button>
+              </div>
+              <p className="text-[10px] text-white/30 leading-relaxed">
+                Drag the logo on the preview below to reposition it.
+                Drag the <span className="text-white/50 font-medium">corner handle</span> to resize.
+              </p>
             </div>
           </div>
         ) : (
@@ -1050,10 +1260,68 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
         )}
       </div>
 
-      {/* ── Live Canvas Preview ── */}
-      <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/20">
+      {/* ── Live Canvas Preview (with interactive logo overlay) ── */}
+      <div
+        ref={previewRef}
+        className="rounded-2xl overflow-hidden border border-white/10 bg-black/20 relative select-none"
+        style={{
+          cursor: isDraggingLogo
+            ? dragStateRef.current.mode === "resize" ? "nwse-resize" : "grabbing"
+            : overlayHover === "resize" ? "nwse-resize"
+            : overlayHover === "logo" ? "grab"
+            : "default",
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerLeave}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <canvas ref={canvasRef} className="w-full h-auto block"
           style={{ maxWidth: FORMAT_SIZES[format].width }} />
+        {/* Logo bounding box overlay */}
+        {logoImageEl && (() => {
+          const rect = getLogoOverlayRect();
+          if (!rect) return null;
+          return (
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: rect.x,
+                top: rect.y,
+                width: rect.w,
+                height: rect.h,
+              }}
+            >
+              {/* Dashed border */}
+              <div className={`absolute inset-0 rounded border-2 transition-opacity ${
+                isDraggingLogo || overlayHover ? "border-[#4CAF50] opacity-100" : "border-white/30 opacity-60"
+              }`} />
+              {/* Corner resize handle */}
+              <div
+                className={`absolute bottom-0 right-0 w-4 h-4 rounded-sm translate-x-1/2 translate-y-1/2 transition-colors ${
+                  overlayHover === "resize" || (isDraggingLogo && dragStateRef.current.mode === "resize")
+                    ? "bg-[#4CAF50]"
+                    : "bg-white/60"
+                }`}
+                style={{ cursor: "nwse-resize" }}
+              />
+              {/* Drag hint label */}
+              {!isDraggingLogo && overlayHover === "logo" && (
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[9px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
+                  Drag to move
+                </div>
+              )}
+              {!isDraggingLogo && overlayHover === "resize" && (
+                <div className="absolute -bottom-6 right-0 bg-black/70 text-white text-[9px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
+                  Drag to resize
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Action Buttons ── */}

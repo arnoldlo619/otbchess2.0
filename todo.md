@@ -6763,3 +6763,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Filter controls only visible when a background image is uploaded
 - [x] Live canvas preview re-renders on every filter slider change
 - [x] Tests: unit tests for filter string composition logic
+
+## SocialAssetGenerator — Interactive Logo Drag & Resize (Jul 6 2026)
+- [x] Replace position grid picker with free-form x/y coordinates (0–1 normalized)
+- [x] Overlay div on canvas preview shows logo bounding box with drag handle
+- [x] Mouse/touch drag on logo overlay updates logo x/y in real time
+- [x] Corner resize handle (bottom-right) updates logoSize on drag
+- [x] Canvas re-renders on every pointer move during drag (React state-driven re-render)
+- [x] Logo bounding box and handles hidden in final downloaded PNG (overlay only)
+- [x] Snap-to-edge guides: logo snaps to 5% margin from any edge when dragged close
+- [x] Cursor changes to grab/grabbing/nwse-resize based on hover target
+- [x] Touch support (touchstart/touchmove/touchend) for mobile preview
+- [x] Tests: unit tests for coordinate normalization and snap-to-edge logic

@@ -5,7 +5,8 @@
 import { describe, it, expect } from "vitest";
 import {
   BUILT_IN_THEMES, generateCaption, buildFilterString, DEFAULT_FILTERS,
-  type AssetConfig, type BgImageFilters,
+  clampLogoPlacement, snapLogoPlacement, getLogoBounds,
+  type AssetConfig, type BgImageFilters, type LogoPlacement,
 } from "../components/tournament/SocialAssetGenerator";
 
 // ─── Theme Definitions ────────────────────────────────────────────────────────
@@ -290,5 +291,109 @@ describe("Canvas draw order contract", () => {
     // 6. logo (last = on top)
     const drawOrder = ["background", "bgImage", "pattern", "accentBar", "content", "logo"];
     expect(drawOrder.indexOf("logo")).toBe(drawOrder.length - 1);
+  });
+});
+
+// ─── Logo Placement Utilities ─────────────────────────────────────────────────
+
+describe("clampLogoPlacement", () => {
+  const bounds = { width: 0.2, height: 0.1 };
+
+  it("returns placement unchanged when within safe zone", () => {
+    const p: LogoPlacement = { x: 0.3, y: 0.4 };
+    const result = clampLogoPlacement(p, bounds);
+    expect(result.x).toBe(0.3);
+    expect(result.y).toBe(0.4);
+  });
+
+  it("clamps x to left margin when too far left", () => {
+    const p: LogoPlacement = { x: 0.0, y: 0.4 };
+    const result = clampLogoPlacement(p, bounds);
+    expect(result.x).toBeGreaterThanOrEqual(0.05);
+  });
+
+  it("clamps x to right margin when too far right", () => {
+    const p: LogoPlacement = { x: 0.99, y: 0.4 };
+    const result = clampLogoPlacement(p, bounds);
+    expect(result.x).toBeLessThanOrEqual(1 - bounds.width - 0.05);
+  });
+
+  it("clamps y to top margin when too far up", () => {
+    const p: LogoPlacement = { x: 0.3, y: -0.1 };
+    const result = clampLogoPlacement(p, bounds);
+    expect(result.y).toBeGreaterThanOrEqual(0.05);
+  });
+
+  it("clamps y to bottom margin when too far down", () => {
+    const p: LogoPlacement = { x: 0.3, y: 0.99 };
+    const result = clampLogoPlacement(p, bounds);
+    expect(result.y).toBeLessThanOrEqual(1 - bounds.height - 0.05);
+  });
+});
+
+describe("snapLogoPlacement", () => {
+  const bounds = { width: 0.2, height: 0.1 };
+
+  it("snaps x to left edge when within 3% of left margin", () => {
+    const p: LogoPlacement = { x: 0.06, y: 0.4 };
+    const result = snapLogoPlacement(p, bounds);
+    expect(result.x).toBe(0.05);
+  });
+
+  it("snaps x to right edge when within 3% of right margin", () => {
+    const rightTarget = 1 - bounds.width - 0.05;
+    const p: LogoPlacement = { x: rightTarget + 0.02, y: 0.4 };
+    const result = snapLogoPlacement(p, bounds);
+    expect(result.x).toBe(rightTarget);
+  });
+
+  it("snaps y to top edge when within 3% of top margin", () => {
+    const p: LogoPlacement = { x: 0.3, y: 0.06 };
+    const result = snapLogoPlacement(p, bounds);
+    expect(result.y).toBe(0.05);
+  });
+
+  it("snaps y to bottom edge when within 3% of bottom margin", () => {
+    const bottomTarget = 1 - bounds.height - 0.05;
+    const p: LogoPlacement = { x: 0.3, y: bottomTarget + 0.02 };
+    const result = snapLogoPlacement(p, bounds);
+    expect(result.y).toBe(bottomTarget);
+  });
+
+  it("does not snap when far from edges", () => {
+    const p: LogoPlacement = { x: 0.4, y: 0.4 };
+    const result = snapLogoPlacement(p, bounds);
+    expect(result.x).toBe(0.4);
+    expect(result.y).toBe(0.4);
+  });
+});
+
+describe("getLogoBounds", () => {
+  const makeImg = (w: number, h: number) => ({ width: w, height: h } as HTMLImageElement);
+
+  it("returns pixel bounds with correct position", () => {
+    const img = makeImg(200, 100);
+    const placement: LogoPlacement = { x: 0.1, y: 0.1 };
+    const bounds = getLogoBounds(img, placement, 1.0, 1080, 1080);
+    expect(bounds.x).toBeGreaterThan(0);
+    expect(bounds.y).toBeGreaterThan(0);
+    expect(bounds.width).toBeGreaterThan(0);
+    expect(bounds.height).toBeGreaterThan(0);
+  });
+
+  it("logo width scales with sizePct", () => {
+    const img = makeImg(200, 100);
+    const placement: LogoPlacement = { x: 0.1, y: 0.1 };
+    const small = getLogoBounds(img, placement, 0.5, 1080, 1080);
+    const large = getLogoBounds(img, placement, 2.0, 1080, 1080);
+    expect(large.width).toBeGreaterThan(small.width);
+  });
+
+  it("logo stays within canvas bounds after clamping", () => {
+    const img = makeImg(200, 100);
+    const placement: LogoPlacement = { x: 0.99, y: 0.99 };
+    const bounds = getLogoBounds(img, placement, 1.0, 1080, 1080);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(1080);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(1080);
   });
 });
