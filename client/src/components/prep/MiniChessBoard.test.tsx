@@ -2,8 +2,8 @@
 /**
  * MiniChessBoard + InsightCard board integration tests
  */
-import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { MiniChessBoard } from "./MiniChessBoard";
 import { InsightCard } from "./InsightCard";
 import type { Insight } from "../../../../shared/prepTypes";
@@ -33,9 +33,9 @@ function makeInsight(overrides: Partial<Insight> = {}): Insight {
   };
 }
 
-// ── MiniChessBoard tests ───────────────────────────────────────────────────────
+// ── MiniChessBoard — rendering tests ──────────────────────────────────────────
 
-describe("MiniChessBoard", () => {
+describe("MiniChessBoard — rendering", () => {
   it("renders without crashing for a valid SAN line", () => {
     expect(() =>
       render(<MiniChessBoard sanLine="e4 e5 Nf3 Nc6 Bb5" isDark={true} />)
@@ -62,59 +62,24 @@ describe("MiniChessBoard", () => {
     expect(rects.length).toBe(64);
   });
 
-  it("renders piece glyphs as text elements", () => {
+  it("renders piece glyphs as text elements (≥32 for starting position)", () => {
     const { container } = render(
       <MiniChessBoard sanLine="" isDark={true} />
     );
-    // Starting position has 32 pieces
     const texts = container.querySelectorAll("svg text");
-    // 32 pieces + 8 rank labels + 8 file labels = 48
     expect(texts.length).toBeGreaterThanOrEqual(32);
   });
 
-  it("shows Previous and Next buttons", () => {
-    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
-    expect(screen.getByLabelText("Previous move")).toBeTruthy();
-    expect(screen.getByLabelText("Next move")).toBeTruthy();
+  it("renders in light mode without crashing", () => {
+    expect(() =>
+      render(<MiniChessBoard sanLine="d4 d5 c4" isDark={false} />)
+    ).not.toThrow();
   });
 
-  it("shows Flip board button", () => {
-    render(<MiniChessBoard sanLine="e4 e5" isDark={true} />);
-    expect(screen.getByLabelText("Flip board")).toBeTruthy();
-  });
-
-  it("shows Go to start button", () => {
-    render(<MiniChessBoard sanLine="e4 e5" isDark={true} />);
-    expect(screen.getByLabelText("Go to start")).toBeTruthy();
-  });
-
-  it("Previous button is disabled at start position", () => {
-    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
-    const prevBtn = screen.getByLabelText("Previous move") as HTMLButtonElement;
-    // Click back to start
-    fireEvent.click(screen.getByLabelText("Go to start"));
-    expect(prevBtn.disabled).toBe(true);
-  });
-
-  it("Next button is disabled at end of line", () => {
-    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
-    const nextBtn = screen.getByLabelText("Next move") as HTMLButtonElement;
-    expect(nextBtn.disabled).toBe(true); // starts at end
-  });
-
-  it("clicking Previous enables Next button", () => {
-    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
-    const prevBtn = screen.getByLabelText("Previous move");
-    const nextBtn = screen.getByLabelText("Next move") as HTMLButtonElement;
-    fireEvent.click(prevBtn);
-    expect(nextBtn.disabled).toBe(false);
-  });
-
-  it("clicking Flip board toggles orientation", () => {
-    render(<MiniChessBoard sanLine="e4" isDark={true} playerColor="white" />);
-    const flipBtn = screen.getByLabelText("Flip board");
-    // Just confirm it doesn't throw
-    expect(() => fireEvent.click(flipBtn)).not.toThrow();
+  it("renders with playerColor=black (flipped by default)", () => {
+    expect(() =>
+      render(<MiniChessBoard sanLine="e4 c5" isDark={true} playerColor="black" />)
+    ).not.toThrow();
   });
 
   it("handles empty SAN line gracefully", () => {
@@ -129,20 +94,181 @@ describe("MiniChessBoard", () => {
     ).not.toThrow();
   });
 
-  it("renders in light mode without crashing", () => {
-    expect(() =>
-      render(<MiniChessBoard sanLine="d4 d5 c4" isDark={false} />)
-    ).not.toThrow();
-  });
-
-  it("renders with playerColor=black (flipped by default)", () => {
-    expect(() =>
-      render(<MiniChessBoard sanLine="e4 c5" isDark={true} playerColor="black" />)
-    ).not.toThrow();
+  it("shows a progress bar element", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    expect(screen.getByRole("progressbar")).toBeTruthy();
   });
 });
 
-// ── InsightCard board integration tests ───────────────────────────────────────
+// ── MiniChessBoard — navigation buttons ───────────────────────────────────────
+
+describe("MiniChessBoard — navigation", () => {
+  it("shows Previous, Next, Reset, Flip, Play, Speed, Loop buttons", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    expect(screen.getByLabelText("Previous move")).toBeTruthy();
+    expect(screen.getByLabelText("Next move")).toBeTruthy();
+    expect(screen.getByLabelText("Go to start")).toBeTruthy();
+    expect(screen.getByLabelText("Flip board")).toBeTruthy();
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
+    expect(screen.getByLabelText(/Playback speed/)).toBeTruthy();
+    expect(screen.getByLabelText(/Loop/)).toBeTruthy();
+  });
+
+  it("Previous button is disabled at start position", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    const prevBtn = screen.getByLabelText("Previous move") as HTMLButtonElement;
+    expect(prevBtn.disabled).toBe(true);
+  });
+
+  it("Next button is disabled at end of line (default state)", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    const nextBtn = screen.getByLabelText("Next move") as HTMLButtonElement;
+    expect(nextBtn.disabled).toBe(true);
+  });
+
+  it("clicking Previous enables Next button", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Previous move"));
+    const nextBtn = screen.getByLabelText("Next move") as HTMLButtonElement;
+    expect(nextBtn.disabled).toBe(false);
+  });
+
+  it("clicking Flip board does not throw", () => {
+    render(<MiniChessBoard sanLine="e4" isDark={true} playerColor="white" />);
+    expect(() => fireEvent.click(screen.getByLabelText("Flip board"))).not.toThrow();
+  });
+
+  it("keyboard ArrowLeft steps back", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    const board = screen.getByRole("application");
+    fireEvent.keyDown(board, { key: "ArrowLeft" });
+    // Next button should now be enabled
+    const nextBtn = screen.getByLabelText("Next move") as HTMLButtonElement;
+    expect(nextBtn.disabled).toBe(false);
+  });
+
+  it("keyboard ArrowRight steps forward from start", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    const board = screen.getByRole("application");
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.keyDown(board, { key: "ArrowRight" });
+    // Previous button should now be enabled
+    const prevBtn = screen.getByLabelText("Previous move") as HTMLButtonElement;
+    expect(prevBtn.disabled).toBe(false);
+  });
+});
+
+// ── MiniChessBoard — auto-play ─────────────────────────────────────────────────
+
+describe("MiniChessBoard — auto-play", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("clicking Play shows Pause button", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3 Nc6" isDark={true} />);
+    // Reset to start first so there are moves to play
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+    expect(screen.getByLabelText("Pause auto-play")).toBeTruthy();
+  });
+
+  it("clicking Pause stops playback and shows Play button", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3 Nc6" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+    fireEvent.click(screen.getByLabelText("Pause auto-play"));
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
+  });
+
+  it("Space key toggles play/pause", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3 Nc6" isDark={true} />);
+    const board = screen.getByRole("application");
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.keyDown(board, { key: " " });
+    expect(screen.getByLabelText("Pause auto-play")).toBeTruthy();
+    fireEvent.keyDown(board, { key: " " });
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
+  });
+
+  it("auto-play advances move index over time (normal speed = 900ms)", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3 Nc6" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+
+    // After 900ms the first move should have played
+    act(() => { vi.advanceTimersByTime(900); });
+    // Previous button should be enabled (we're no longer at start)
+    const prevBtn = screen.getByLabelText("Previous move") as HTMLButtonElement;
+    expect(prevBtn.disabled).toBe(false);
+  });
+
+  it("auto-play stops at end of line (no loop)", () => {
+    render(<MiniChessBoard sanLine="e4 e5" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+
+    // Advance past both moves (2 × 900ms + buffer)
+    act(() => { vi.advanceTimersByTime(900 * 3); });
+    // Should have reverted to Play button
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
+  });
+
+  it("speed button cycles through labels (0.7×, 1×, 2×)", () => {
+    render(<MiniChessBoard sanLine="e4 e5" isDark={true} />);
+    const speedBtn = screen.getByLabelText(/Playback speed/);
+    expect(speedBtn.textContent).toBe("1×");
+    fireEvent.click(speedBtn);
+    expect(speedBtn.textContent).toBe("2×");
+    fireEvent.click(speedBtn);
+    expect(speedBtn.textContent).toBe("0.7×");
+    fireEvent.click(speedBtn);
+    expect(speedBtn.textContent).toBe("1×");
+  });
+
+  it("loop button toggles aria-pressed", () => {
+    render(<MiniChessBoard sanLine="e4 e5" isDark={true} />);
+    const loopBtn = screen.getByLabelText(/Loop/);
+    expect(loopBtn.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(loopBtn);
+    expect(loopBtn.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(loopBtn);
+    expect(loopBtn.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("playing indicator pulse appears during playback", () => {
+    const { container } = render(
+      <MiniChessBoard sanLine="e4 e5 Nf3 Nc6" isDark={true} />
+    );
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+    // The pulse dot has animate-pulse class
+    expect(container.querySelector(".animate-pulse")).toBeTruthy();
+  });
+
+  it("clicking Reset while playing stops playback", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
+  });
+
+  it("clicking Previous while playing stops playback", () => {
+    render(<MiniChessBoard sanLine="e4 e5 Nf3" isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Go to start"));
+    fireEvent.click(screen.getByLabelText("Start auto-play"));
+    act(() => { vi.advanceTimersByTime(900); }); // advance one move
+    fireEvent.click(screen.getByLabelText("Previous move"));
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
+  });
+});
+
+// ── InsightCard board integration ─────────────────────────────────────────────
 
 describe("InsightCard — board integration", () => {
   it("shows ♟ Board badge when insight has a recommendation line", () => {
@@ -160,23 +286,19 @@ describe("InsightCard — board integration", () => {
 
   it("shows Board toggle button in expanded state", () => {
     render(<InsightCard insight={makeInsight()} index={0} isDark={true} />);
-    // index=0 starts expanded
     expect(screen.getByLabelText("Show chessboard")).toBeTruthy();
   });
 
   it("clicking Board toggle reveals the MiniChessBoard", () => {
     render(<InsightCard insight={makeInsight()} index={0} isDark={true} />);
-    const toggleBtn = screen.getByLabelText("Show chessboard");
-    fireEvent.click(toggleBtn);
-    // MiniChessBoard has role=application
+    fireEvent.click(screen.getByLabelText("Show chessboard"));
     expect(screen.getByRole("application")).toBeTruthy();
   });
 
   it("clicking Board toggle again hides the MiniChessBoard", () => {
     render(<InsightCard insight={makeInsight()} index={0} isDark={true} />);
-    const toggleBtn = screen.getByLabelText("Show chessboard");
-    fireEvent.click(toggleBtn); // show
-    fireEvent.click(screen.getByLabelText("Hide chessboard")); // hide
+    fireEvent.click(screen.getByLabelText("Show chessboard"));
+    fireEvent.click(screen.getByLabelText("Hide chessboard"));
     expect(screen.queryByRole("application")).toBeNull();
   });
 
@@ -192,10 +314,7 @@ describe("InsightCard — board integration", () => {
   });
 
   it("deviation_point insight shows ply info in move count hint", () => {
-    const insight = makeInsight({
-      kind: "deviation_point",
-      ply: 4,
-    });
+    const insight = makeInsight({ kind: "deviation_point", ply: 4 });
     render(<InsightCard insight={insight} index={0} isDark={true} />);
     fireEvent.click(screen.getByLabelText("Show chessboard"));
     expect(screen.getByText(/deviation at ply 5/)).toBeTruthy();
@@ -203,15 +322,19 @@ describe("InsightCard — board integration", () => {
 
   it("collapsed InsightCard (index >= 3) does not show board", () => {
     render(<InsightCard insight={makeInsight()} index={5} isDark={true} />);
-    // Board toggle is inside the expanded body — not visible when collapsed
     expect(screen.queryByLabelText("Show chessboard")).toBeNull();
   });
 
   it("expanding a collapsed card reveals the Board toggle", () => {
     render(<InsightCard insight={makeInsight()} index={5} isDark={true} />);
-    // Click the header to expand
     const header = screen.getByRole("button", { name: /Ruy Lopez/i });
     fireEvent.click(header);
     expect(screen.getByLabelText("Show chessboard")).toBeTruthy();
+  });
+
+  it("board inside InsightCard has Play button", () => {
+    render(<InsightCard insight={makeInsight()} index={0} isDark={true} />);
+    fireEvent.click(screen.getByLabelText("Show chessboard"));
+    expect(screen.getByLabelText("Start auto-play")).toBeTruthy();
   });
 });
