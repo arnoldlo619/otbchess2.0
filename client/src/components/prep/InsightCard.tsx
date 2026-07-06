@@ -1,10 +1,18 @@
 /**
  * InsightCard — renders one V3 Insight with all six fields:
- * claim, evidence, interpretation, recommendation, confidence, sampleSize
+ * claim, evidence, interpretation, recommendation, confidence, sampleSize.
+ *
+ * When the insight's recommendation includes a `line.san`, a "Board" toggle
+ * appears that reveals an interactive MiniChessBoard pre-loaded with that
+ * opening line. Deviation-point insights also show the deviation ply highlight.
  */
 import { useState } from "react";
-import { ChevronDown, ChevronRight, GitBranch, TrendingDown, TrendingUp, Zap, AlertTriangle, Target } from "lucide-react";
+import {
+  ChevronDown, ChevronRight, GitBranch, TrendingDown, TrendingUp,
+  Zap, AlertTriangle, Target, LayoutGrid,
+} from "lucide-react";
 import type { Insight } from "../../../../shared/prepTypes";
+import { MiniChessBoard } from "./MiniChessBoard";
 
 interface Props {
   insight: Insight;
@@ -13,18 +21,18 @@ interface Props {
 }
 
 const KIND_CONFIG: Record<string, { icon: React.ReactNode; label: string; accent: string; accentLight: string }> = {
-  opening_tendency: { icon: <GitBranch   className="w-3.5 h-3.5" />, label: "Opening Tendency", accent: "text-blue-400",    accentLight: "text-blue-700" },
-  response_pattern: { icon: <Zap         className="w-3.5 h-3.5" />, label: "Response Pattern", accent: "text-amber-400",   accentLight: "text-amber-700" },
+  opening_tendency: { icon: <GitBranch    className="w-3.5 h-3.5" />, label: "Opening Tendency", accent: "text-blue-400",    accentLight: "text-blue-700" },
+  response_pattern: { icon: <Zap          className="w-3.5 h-3.5" />, label: "Response Pattern", accent: "text-amber-400",   accentLight: "text-amber-700" },
   weakness:         { icon: <TrendingDown className="w-3.5 h-3.5" />, label: "Weakness",         accent: "text-red-400",     accentLight: "text-red-700" },
   strength:         { icon: <TrendingUp   className="w-3.5 h-3.5" />, label: "Strength",         accent: "text-emerald-400", accentLight: "text-emerald-700" },
-  deviation_point:  { icon: <GitBranch   className="w-3.5 h-3.5" />, label: "Deviation Point",  accent: "text-purple-400",  accentLight: "text-purple-700" },
+  deviation_point:  { icon: <GitBranch    className="w-3.5 h-3.5" />, label: "Deviation Point",  accent: "text-purple-400",  accentLight: "text-purple-700" },
   behavior:         { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Behavior",        accent: "text-orange-400",  accentLight: "text-orange-700" },
-  game_plan:        { icon: <Target      className="w-3.5 h-3.5" />, label: "Game Plan",         accent: "text-purple-400",  accentLight: "text-purple-700" },
+  game_plan:        { icon: <Target       className="w-3.5 h-3.5" />, label: "Game Plan",        accent: "text-purple-400",  accentLight: "text-purple-700" },
   weak_signal:      { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Weak Signal",     accent: "text-white/40",    accentLight: "text-gray-500" },
 };
 
 const CONFIDENCE_BAR: Record<string, number> = {
-  high: 3, medium: 2, low: 1,
+  high: 3, medium_high: 2.5, medium: 2, low: 1,
 };
 
 function ConfidenceIndicator({ level, isDark }: { level: string; isDark: boolean }) {
@@ -46,9 +54,14 @@ function ConfidenceIndicator({ level, isDark }: { level: string; isDark: boolean
 }
 
 export function InsightCard({ insight, index, isDark }: Props) {
-  const [expanded, setExpanded] = useState(index < 3); // first 3 open by default
-  const cfg = KIND_CONFIG[insight.kind] ?? KIND_CONFIG.pattern;
+  const [expanded, setExpanded] = useState(index < 3);
+  const [showBoard, setShowBoard] = useState(false);
 
+  const cfg = KIND_CONFIG[insight.kind] ?? KIND_CONFIG.weak_signal;
+  const line = insight.recommendation.line;
+  const hasBoard = Boolean(line?.san && line.san.trim().length > 0);
+
+  // ── Styles ────────────────────────────────────────────────────────────────
   const cardBase = isDark
     ? "bg-[#0f1c11] border border-[#243028]/70 rounded-2xl"
     : "bg-white border border-[#ADBC9F]/80 rounded-2xl shadow-sm";
@@ -57,14 +70,22 @@ export function InsightCard({ insight, index, isDark }: Props) {
     ? "bg-[#060e07] text-[#5B9A6A] border border-[#1e2e22]/60 font-mono text-[11px] rounded-lg px-2.5 py-1.5"
     : "bg-[#436850]/04 text-[#436850] border border-[#436850]/10 font-mono text-[11px] rounded-lg px-2.5 py-1.5";
 
-  const textPrimary = isDark ? "text-white" : "text-[#12372A]";
-  const textSecondary = isDark ? "text-white/55" : "text-[#436850]";
-  const textTertiary = isDark ? "text-white/30" : "text-[#436850]/60";
-  const divider = isDark ? "border-[#1e2e22]/70" : "border-[#ADBC9F]/70";
+  const textPrimary   = isDark ? "text-white"        : "text-[#12372A]";
+  const textSecondary = isDark ? "text-white/55"     : "text-[#436850]";
+  const textTertiary  = isDark ? "text-white/30"     : "text-[#436850]/60";
+  const divider       = isDark ? "border-[#1e2e22]/70" : "border-[#ADBC9F]/70";
+
+  const boardToggleCls = showBoard
+    ? isDark
+      ? "bg-[#436850]/25 text-[#5B9A6A] border border-[#436850]/40"
+      : "bg-[#436850]/12 text-[#436850] border border-[#436850]/30"
+    : isDark
+      ? "bg-white/05 text-white/40 border border-white/10 hover:bg-white/08 hover:text-white/60"
+      : "bg-[#ADBC9F]/20 text-[#436850]/60 border border-[#ADBC9F]/40 hover:bg-[#ADBC9F]/30 hover:text-[#436850]";
 
   return (
     <div className={cardBase}>
-      {/* Header row — always visible */}
+      {/* ── Header row — always visible ─────────────────────────────────── */}
       <button
         onClick={() => setExpanded(e => !e)}
         className={`w-full flex items-start gap-3 p-4 sm:p-5 text-left transition-colors rounded-2xl ${
@@ -83,12 +104,11 @@ export function InsightCard({ insight, index, isDark }: Props) {
             </span>
             <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
               insight.color === "white"
-                ? isDark ? "bg-white/10 text-white/70" : "bg-[#12372A]/08 text-[#12372A]"
-                : isDark ? "bg-[#1e2e22]/80 text-white/50" : "bg-[#436850]/08 text-[#436850]"
+                ? isDark ? "bg-white/10 text-white/70"        : "bg-[#12372A]/08 text-[#12372A]"
+                : isDark ? "bg-[#1e2e22]/80 text-white/50"    : "bg-[#436850]/08 text-[#436850]"
             }`}>
               {insight.color === "white" ? "♔ White" : "♚ Black"}
             </span>
-
           </div>
 
           {/* Claim */}
@@ -98,22 +118,35 @@ export function InsightCard({ insight, index, isDark }: Props) {
           <p className={`text-xs ${textSecondary}`}>{insight.evidence.stat}</p>
         </div>
 
-        {/* Right: confidence + expand chevron */}
+        {/* Right: confidence + board badge + expand chevron */}
         <div className="flex items-center gap-2 shrink-0">
           <ConfidenceIndicator level={insight.confidence} isDark={isDark} />
           <span className={`text-[10px] font-medium ${textTertiary}`}>
             n={insight.sampleSize}
           </span>
+          {hasBoard && (
+            <span
+              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${
+                isDark
+                  ? "bg-[#436850]/15 text-[#5B9A6A] border-[#436850]/30"
+                  : "bg-[#436850]/08 text-[#436850] border-[#436850]/20"
+              }`}
+              title="Has board visualization"
+            >
+              ♟ Board
+            </span>
+          )}
           {expanded
-            ? <ChevronDown className={`w-3.5 h-3.5 ${textTertiary}`} />
+            ? <ChevronDown  className={`w-3.5 h-3.5 ${textTertiary}`} />
             : <ChevronRight className={`w-3.5 h-3.5 ${textTertiary}`} />
           }
         </div>
       </button>
 
-      {/* Expanded body */}
+      {/* ── Expanded body ────────────────────────────────────────────────── */}
       {expanded && (
         <div className={`px-4 sm:px-5 pb-4 sm:pb-5 space-y-3 border-t ${divider}`}>
+
           {/* Interpretation */}
           <div className="pt-3">
             <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${textTertiary}`}>Interpretation</p>
@@ -141,9 +174,47 @@ export function InsightCard({ insight, index, isDark }: Props) {
             <p className={`text-xs leading-relaxed font-medium ${textPrimary}`}>
               {insight.recommendation.action}
             </p>
-            {insight.recommendation.line && (
-              <div className={monoBlock}>
-                {insight.recommendation.line.san}
+
+            {/* SAN line + board toggle */}
+            {line?.san && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className={`${monoBlock} flex-1 truncate`}>{line.san}</div>
+                  {hasBoard && (
+                    <button
+                      onClick={() => setShowBoard(s => !s)}
+                      className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold border transition-all ${boardToggleCls}`}
+                      aria-expanded={showBoard}
+                      aria-label={showBoard ? "Hide chessboard" : "Show chessboard"}
+                    >
+                      <LayoutGrid className="w-3 h-3" />
+                      {showBoard ? "Hide" : "Board"}
+                    </button>
+                  )}
+                </div>
+
+                {/* ECO label */}
+                {line.eco && (
+                  <span className={`text-[10px] font-mono ${textTertiary}`}>{line.eco}</span>
+                )}
+
+                {/* ── Mini chessboard ─────────────────────────────────── */}
+                {showBoard && hasBoard && (
+                  <div className="pt-1">
+                    <MiniChessBoard
+                      sanLine={line.san}
+                      deviationPly={insight.kind === "deviation_point" ? insight.ply : undefined}
+                      playerColor={insight.color}
+                      isDark={isDark}
+                    />
+                    <p className={`text-[9px] mt-1.5 text-center ${textTertiary}`}>
+                      Showing {line.san.trim().split(/\s+/).filter(t => !/^\d+\./.test(t)).length} moves
+                      {insight.kind === "deviation_point" && insight.ply !== undefined
+                        ? ` · deviation at ply ${insight.ply + 1}`
+                        : ""}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -162,7 +233,9 @@ export function InsightCard({ insight, index, isDark }: Props) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`flex items-center justify-between text-[11px] px-2.5 py-1.5 rounded-lg transition-opacity hover:opacity-80 ${
-                      isDark ? "bg-[#0a1409] border border-[#1e2e22]/40" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/40"
+                      isDark
+                        ? "bg-[#0a1409] border border-[#1e2e22]/40"
+                        : "bg-[#FBFADA]/70 border border-[#ADBC9F]/40"
                     }`}
                   >
                     <span className={`font-mono truncate max-w-[180px] ${textSecondary}`}>
