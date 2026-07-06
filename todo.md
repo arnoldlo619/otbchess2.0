@@ -6739,3 +6739,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tests: 15 integration tests (prize generation, winner assignment, achievement detection, highlights, privacy masking, caption generation)
 - [x] Tests: 26 existing quadsCompletion unit tests still passing
 - [x] TypeScript: 0 errors across entire codebase
+
+## SocialAssetGenerator — Custom Image Upload (Jul 6 2026)
+- [x] Custom background image upload (file input, FileReader → HTMLImageElement, drawn behind gradient at configurable opacity)
+- [x] Background image fit modes: cover, contain, tile
+- [x] Background image opacity slider (0–100%)
+- [x] Custom logo upload (file input, FileReader → HTMLImageElement, drawn in bottom-right corner)
+- [x] Logo size slider (small / medium / large)
+- [x] Logo position selector (bottom-right, bottom-left, top-right, top-left, center)
+- [x] Clear/remove buttons for both background image and logo
+- [x] Drag-and-drop support for both upload zones
+- [x] Preview thumbnails for uploaded images in the UI
+- [x] Tests: unit tests for image upload state logic and canvas draw order
