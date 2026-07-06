@@ -8,7 +8,7 @@
 import React from "react";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
-  CheckCircle2, Camera, X, Instagram,
+  CheckCircle2, Camera, X, Instagram, Sparkles,
 } from "lucide-react";
 
 export interface ClubHeroProps {
@@ -55,6 +55,8 @@ export interface ClubHeroProps {
   avatarDropdown?: React.ReactNode;
   // Dark mode
   isDark: boolean;
+  // Owner-only: open the promo graphic creator
+  onCreatePromo?: () => void;
 }
 
 export function ClubHero({
@@ -65,7 +67,7 @@ export function ClubHero({
   isOwner, isDirector, joined, joining, following, followingLoading,
   onJoin, onLeave, onFollow,
   bannerUploading, bannerDragOver, onBannerFile, onRemoveBanner, onBannerDragOver,
-  avatarDropdown, isDark,
+  avatarDropdown, isDark, onCreatePromo,
 }: ClubHeroProps) {
 
   return (
@@ -188,16 +190,35 @@ export function ClubHero({
               )
             )}
             {(isOwner || isDirector) && (
-              <span
-                className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                style={{
-                  background: "rgba(245,197,66,0.12)",
-                  borderColor: "rgba(245,197,66,0.30)",
-                  color: "#f5c542",
-                }}
-              >
-                {isOwner ? "Owner" : "Director"}
-              </span>
+              <>
+                {onCreatePromo && (
+                  <button
+                    onClick={onCreatePromo}
+                    className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    style={{
+                      borderColor: "rgba(76,175,80,0.40)",
+                      color: "#4CAF50",
+                      background: "rgba(76,175,80,0.12)",
+                      backdropFilter: "blur(8px)",
+                      outlineColor: "#4CAF50",
+                    }}
+                    aria-label="Create promotional graphic"
+                  >
+                    <Sparkles size={11} />
+                    Promo
+                  </button>
+                )}
+                <span
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                  style={{
+                    background: "rgba(245,197,66,0.12)",
+                    borderColor: "rgba(245,197,66,0.30)",
+                    color: "#f5c542",
+                  }}
+                >
+                  {isOwner ? "Owner" : "Director"}
+                </span>
+              </>
             )}
           </div>
         </div>

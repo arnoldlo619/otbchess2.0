@@ -144,6 +144,7 @@ import { EditClubDetailsModal } from "@/components/EditClubDetailsModal";
 import { ClubShareModal } from "@/components/ClubShareModal";
 import { ClubHero } from "@/components/club/ClubHero";
 import { ClubTabs } from "@/components/club/ClubTabs";
+import { ClubPromoModal } from "@/components/club/ClubPromoModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -933,6 +934,7 @@ export default function ClubProfile() {
   const [selectedTransferMemberId, setSelectedTransferMemberId] = useState("");
   const [isTransferring, setIsTransferring] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showPromoModal, setShowPromoModal] = useState(false);
   const [isLeavingClub, setIsLeavingClub] = useState(false);
   const [showWizard, setShowWizard] = useState(() => {
     const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
@@ -1614,6 +1616,7 @@ export default function ClubProfile() {
                   onBannerDragOver={setBannerDragOver}
                   avatarDropdown={<AvatarNavDropdown currentPage="Clubs" />}
                   isDark={isDark}
+                  onCreatePromo={(isOwner || isDirector) ? () => setShowPromoModal(true) : undefined}
                 />
 
                 {/* ── Horizontal Tab Bar ───────────────────────────────── */}
@@ -3968,6 +3971,18 @@ export default function ClubProfile() {
           />
         );
       })()}
+
+      {/* Promo Graphic Modal — owner/director only */}
+      {club && showPromoModal && (
+        <ClubPromoModal
+          isOpen={showPromoModal}
+          onClose={() => setShowPromoModal(false)}
+          club={club}
+          recaps={clubRecaps}
+          tournaments={liveTournaments}
+          isDark={isDark}
+        />
+      )}
 
       {/* Edit Club Details Modal */}
       {club && (

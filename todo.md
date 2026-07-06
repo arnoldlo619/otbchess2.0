@@ -6790,3 +6790,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] ClubProfile: padded content area updated to sidebar-aware offsets matching collapsed sidebar
 - [x] ClubProfile: dead old banner JSX removed, hidden file input preserved for banner upload
 - [x] TypeScript: 0 errors | Tests: 71 passing
+
+## Club Profile — Promo Graphic Integration (Jul 6 2026)
+
+- [x] ClubPromoModal component: full-screen modal wrapping SocialAssetGenerator
+- [x] Source picker dropdown: Club Profile / Tournaments / Published Recaps
+- [x] Config builder: buildClubConfig, buildTournamentConfig, buildRecapConfig
+- [x] "Promo" button in ClubHero (owners and directors only, hidden for members)
+- [x] showPromoModal state wired into ClubProfile.tsx
+- [x] ClubPromoModal receives club, recaps, liveTournaments props
+- [x] TypeScript: 0 errors | Tests: 71 passing
