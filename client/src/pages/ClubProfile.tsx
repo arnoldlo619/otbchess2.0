@@ -145,6 +145,7 @@ import { ClubShareModal } from "@/components/ClubShareModal";
 import { ClubHero } from "@/components/club/ClubHero";
 import { ClubTabs } from "@/components/club/ClubTabs";
 import { ClubPromoModal } from "@/components/club/ClubPromoModal";
+import { ClubQRProjectionModal } from "@/components/club/ClubQRProjectionModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -935,6 +936,7 @@ export default function ClubProfile() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
+  const [showClubQR, setShowClubQR] = useState(false);
   const [isLeavingClub, setIsLeavingClub] = useState(false);
   const [showWizard, setShowWizard] = useState(() => {
     const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
@@ -1524,18 +1526,13 @@ export default function ClubProfile() {
             {/* Divider */}
             <div className="h-px mb-2 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
 
-            {/* Share */}
-            <button
-              onClick={handleShare}
-              className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
-              aria-label="Share Club"
+            {/* Avatar / Profile dropdown — replaces the old Share button */}
+            <div
+              className="relative flex flex-row items-center gap-3 rounded-xl"
+              style={{ height: "52px", paddingLeft: "10px", paddingRight: "10px" }}
             >
-              <span className="flex-shrink-0 w-7 flex items-center justify-center"><Share2 size={24} /></span>
-              <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Share</span>
-            </button>
+              <AvatarNavDropdown currentPage="Clubs" />
+            </div>
 
             {user && !isOwner && !isDirector && (
               <button
@@ -1614,9 +1611,9 @@ export default function ClubProfile() {
                   onBannerFile={handleBannerFile}
                   onRemoveBanner={handleRemoveBannerHero}
                   onBannerDragOver={setBannerDragOver}
-                  avatarDropdown={<AvatarNavDropdown currentPage="Clubs" />}
                   isDark={isDark}
                   onCreatePromo={(isOwner || isDirector) ? () => setShowPromoModal(true) : undefined}
+                  onShareQR={(isOwner || isDirector) ? () => setShowClubQR(true) : undefined}
                 />
 
                 {/* ── Horizontal Tab Bar ───────────────────────────────── */}
@@ -3981,6 +3978,19 @@ export default function ClubProfile() {
           recaps={clubRecaps}
           tournaments={liveTournaments}
           isDark={isDark}
+        />
+      )}
+
+      {/* Club QR Projection Modal — owner/director only */}
+      {club && (
+        <ClubQRProjectionModal
+          open={showClubQR}
+          onClose={() => setShowClubQR(false)}
+          clubName={club.name}
+          clubSlug={club.slug ?? club.id}
+          accent={accent}
+          flag={flag}
+          memberCount={club.memberCount}
         />
       )}
 

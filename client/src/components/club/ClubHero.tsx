@@ -8,7 +8,7 @@
 import React from "react";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
-  CheckCircle2, Camera, X, Instagram, Sparkles,
+  CheckCircle2, Camera, X, Instagram, Sparkles, QrCode,
 } from "lucide-react";
 
 export interface ClubHeroProps {
@@ -57,6 +57,8 @@ export interface ClubHeroProps {
   isDark: boolean;
   // Owner-only: open the promo graphic creator
   onCreatePromo?: () => void;
+  // Share Club QR projection
+  onShareQR?: () => void;
 }
 
 export function ClubHero({
@@ -67,7 +69,7 @@ export function ClubHero({
   isOwner, isDirector, joined, joining, following, followingLoading,
   onJoin, onLeave, onFollow,
   bannerUploading, bannerDragOver, onBannerFile, onRemoveBanner, onBannerDragOver,
-  avatarDropdown, isDark, onCreatePromo,
+  avatarDropdown, isDark, onCreatePromo, onShareQR,
 }: ClubHeroProps) {
 
   return (
@@ -133,9 +135,9 @@ export function ClubHero({
       {/* ── Content ── */}
       <div className="relative z-10 p-6 sm:p-8 flex flex-col gap-5">
 
-        {/* Top row: avatar dropdown + action buttons */}
+        {/* Top row: action buttons (avatar dropdown moved to sidebar) */}
         <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="flex-shrink-0">{avatarDropdown}</div>
+          <div className="flex-shrink-0" />
           {/* Action buttons — right-aligned in hero */}
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {!isOwner && (
@@ -206,6 +208,23 @@ export function ClubHero({
                   >
                     <Sparkles size={11} />
                     Promo
+                  </button>
+                )}
+                {onShareQR && (
+                  <button
+                    onClick={onShareQR}
+                    className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    style={{
+                      borderColor: "rgba(59,130,246,0.40)",
+                      color: "#93C5FD",
+                      background: "rgba(59,130,246,0.12)",
+                      backdropFilter: "blur(8px)",
+                      outlineColor: "#3B82F6",
+                    }}
+                    aria-label="Share Club QR code projection"
+                  >
+                    <QrCode size={11} />
+                    Share QR
                   </button>
                 )}
                 <span
