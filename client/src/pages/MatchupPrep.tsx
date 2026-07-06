@@ -44,6 +44,7 @@ import { authFetch } from "@/lib/apiFetch";
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
+import { V3ScoutReportSkeleton } from "@/components/prep/V3ScoutReportSkeleton";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -751,8 +752,9 @@ export default function MatchupPrep() {
           />
         )}
 
-        {/* ── Loading State (premium animated, requirement 11) ── */}
-        {loading && <PrepLoadingState username={searchInput} isDark={isDark} t={t} />}
+        {/* ── Loading State ── */}
+        {loading && useV3 && <V3ScoutReportSkeleton isDark={isDark} />}
+        {loading && !useV3 && <PrepLoadingState username={searchInput} isDark={isDark} t={t} />}
 
         {/* ── Error State (detailed, requirement 11) ── */}
         {error && !loading && (
