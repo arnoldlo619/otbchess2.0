@@ -19,7 +19,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Download, Share2, Instagram, Twitter, Copy, Check,
-  ChevronDown, ChevronUp, Palette, Sliders, ImageIcon, X,
+  ChevronDown, ChevronUp, Palette, Sliders, ImageIcon, X, RotateCcw,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -49,6 +49,29 @@ type AssetFormat = "instagram" | "twitter" | "story";
 type PatternType = "chess" | "dots" | "lines" | "none";
 type GradientDirection = "vertical" | "diagonal" | "radial" | "horizontal";
 type BgImageFit = "cover" | "contain" | "tile";
+
+export interface BgImageFilters {
+  blur: number;        // 0–20 px
+  grayscale: number;  // 0–100 %
+  sepia: number;      // 0–100 %
+  brightness: number; // 50–150 %
+  contrast: number;   // 50–150 %
+}
+
+export const DEFAULT_FILTERS: BgImageFilters = {
+  blur: 0, grayscale: 0, sepia: 0, brightness: 100, contrast: 100,
+};
+
+/** Compose a CSS/canvas filter string from a BgImageFilters object. */
+export function buildFilterString(f: BgImageFilters): string {
+  const parts: string[] = [];
+  if (f.blur > 0)           parts.push(`blur(${f.blur}px)`);
+  if (f.grayscale > 0)      parts.push(`grayscale(${f.grayscale}%)`);
+  if (f.sepia > 0)          parts.push(`sepia(${f.sepia}%)`);
+  if (f.brightness !== 100) parts.push(`brightness(${f.brightness}%)`);
+  if (f.contrast !== 100)   parts.push(`contrast(${f.contrast}%)`);
+  return parts.length > 0 ? parts.join(" ") : "none";
+}
 type LogoPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center";
 
 export interface CanvasTheme {
@@ -219,11 +242,14 @@ function drawBgImage(
   img: HTMLImageElement,
   fit: BgImageFit,
   opacity: number,
+  filters: BgImageFilters,
   W: number,
   H: number
 ) {
   ctx.save();
   ctx.globalAlpha = opacity;
+  const filterStr = buildFilterString(filters);
+  if (filterStr !== "none") ctx.filter = filterStr;
   if (fit === "cover") {
     const scale = Math.max(W / img.width, H / img.height);
     const sw = img.width * scale, sh = img.height * scale;
@@ -278,6 +304,7 @@ interface DrawExtras {
   bgImage?: HTMLImageElement | null;
   bgImageFit: BgImageFit;
   bgImageOpacity: number;  // 0–1
+  bgFilters: BgImageFilters;
   logoImage?: HTMLImageElement | null;
   logoPosition: LogoPosition;
   logoSize: number;        // 0.5–2.0
@@ -299,7 +326,7 @@ function drawChampionCard(
 
   // ── Custom background image ──
   if (extras.bgImage) {
-    drawBgImage(ctx, extras.bgImage, extras.bgImageFit, extras.bgImageOpacity, W, H);
+    drawBgImage(ctx, extras.bgImage, extras.bgImageFit, extras.bgImageOpacity, extras.bgFilters, W, H);
     // Dark scrim so text stays readable
     const scrim = ctx.createLinearGradient(0, 0, 0, H);
     scrim.addColorStop(0, "rgba(0,0,0,0.55)");
@@ -600,7 +627,14 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
   const [bgImageEl, setBgImageEl] = useState<HTMLImageElement | null>(null);
   const [bgImageFit, setBgImageFit] = useState<BgImageFit>("cover");
   const [bgImageOpacity, setBgImageOpacity] = useState(0.55);
+  const [bgFilters, setBgFilters] = useState<BgImageFilters>({ ...DEFAULT_FILTERS });
   const [bgDragging, setBgDragging] = useState(false);
+
+  const isFiltersDefault = (
+    bgFilters.blur === 0 && bgFilters.grayscale === 0 && bgFilters.sepia === 0 &&
+    bgFilters.brightness === 100 && bgFilters.contrast === 100
+  );
+  const resetFilters = useCallback(() => setBgFilters({ ...DEFAULT_FILTERS }), []);
 
   // ── Logo state ──
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
@@ -663,10 +697,10 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     drawChampionCard(ctx, config, format, activeTheme, {
-      bgImage: bgImageEl, bgImageFit, bgImageOpacity,
+      bgImage: bgImageEl, bgImageFit, bgImageOpacity, bgFilters,
       logoImage: logoImageEl, logoPosition, logoSize,
     });
-  }, [config, format, activeTheme, bgImageEl, bgImageFit, bgImageOpacity, logoImageEl, logoPosition, logoSize]);
+  }, [config, format, activeTheme, bgImageEl, bgImageFit, bgImageOpacity, bgFilters, logoImageEl, logoPosition, logoSize]);
 
   useEffect(() => { renderCanvas(); }, [renderCanvas]);
 
@@ -858,6 +892,90 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                 className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                 style={{ background: `linear-gradient(to right, #4CAF50 ${Math.round(bgImageOpacity * 100)}%, rgba(255,255,255,0.12) ${Math.round(bgImageOpacity * 100)}%)` }}
               />
+            </div>
+
+            {/* ── Image Filters ── */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">Image Filters</p>
+                {!isFiltersDefault && (
+                  <button onClick={resetFilters}
+                    className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors">
+                    <RotateCcw className="w-2.5 h-2.5" /> Reset
+                  </button>
+                )}
+              </div>
+
+              {/* Blur */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/40">Blur</span>
+                  <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.blur}px</span>
+                </div>
+                <input type="range" min={0} max={20} step={1} value={bgFilters.blur}
+                  onChange={(e) => setBgFilters(f => ({ ...f, blur: Number(e.target.value) }))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
+                  style={{ background: `linear-gradient(to right, #4CAF50 ${bgFilters.blur / 20 * 100}%, rgba(255,255,255,0.12) ${bgFilters.blur / 20 * 100}%)` }}
+                />
+              </div>
+
+              {/* Grayscale */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/40">Grayscale</span>
+                  <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.grayscale}%</span>
+                </div>
+                <input type="range" min={0} max={100} step={5} value={bgFilters.grayscale}
+                  onChange={(e) => setBgFilters(f => ({ ...f, grayscale: Number(e.target.value) }))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
+                  style={{ background: `linear-gradient(to right, #4CAF50 ${bgFilters.grayscale}%, rgba(255,255,255,0.12) ${bgFilters.grayscale}%)` }}
+                />
+              </div>
+
+              {/* Sepia */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/40">Sepia</span>
+                  <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.sepia}%</span>
+                </div>
+                <input type="range" min={0} max={100} step={5} value={bgFilters.sepia}
+                  onChange={(e) => setBgFilters(f => ({ ...f, sepia: Number(e.target.value) }))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
+                  style={{ background: `linear-gradient(to right, #4CAF50 ${bgFilters.sepia}%, rgba(255,255,255,0.12) ${bgFilters.sepia}%)` }}
+                />
+              </div>
+
+              {/* Brightness */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/40">Brightness</span>
+                  <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.brightness}%</span>
+                </div>
+                <input type="range" min={50} max={150} step={5} value={bgFilters.brightness}
+                  onChange={(e) => setBgFilters(f => ({ ...f, brightness: Number(e.target.value) }))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
+                  style={{ background: `linear-gradient(to right, #4CAF50 ${(bgFilters.brightness - 50) / 100 * 100}%, rgba(255,255,255,0.12) ${(bgFilters.brightness - 50) / 100 * 100}%)` }}
+                />
+                <div className="flex justify-between text-[9px] text-white/20">
+                  <span>Dark</span><span>Normal</span><span>Bright</span>
+                </div>
+              </div>
+
+              {/* Contrast */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/40">Contrast</span>
+                  <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.contrast}%</span>
+                </div>
+                <input type="range" min={50} max={150} step={5} value={bgFilters.contrast}
+                  onChange={(e) => setBgFilters(f => ({ ...f, contrast: Number(e.target.value) }))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
+                  style={{ background: `linear-gradient(to right, #4CAF50 ${(bgFilters.contrast - 50) / 100 * 100}%, rgba(255,255,255,0.12) ${(bgFilters.contrast - 50) / 100 * 100}%)` }}
+                />
+                <div className="flex justify-between text-[9px] text-white/20">
+                  <span>Flat</span><span>Normal</span><span>Vivid</span>
+                </div>
+              </div>
             </div>
           </div>
         ) : (

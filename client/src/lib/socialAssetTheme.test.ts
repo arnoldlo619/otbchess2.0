@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { BUILT_IN_THEMES, generateCaption, type AssetConfig } from "../components/tournament/SocialAssetGenerator";
+import {
+  BUILT_IN_THEMES, generateCaption, buildFilterString, DEFAULT_FILTERS,
+  type AssetConfig, type BgImageFilters,
+} from "../components/tournament/SocialAssetGenerator";
 
 // ─── Theme Definitions ────────────────────────────────────────────────────────
 
@@ -193,6 +196,78 @@ describe("Image upload state logic", () => {
   it("non-image MIME types are rejected", () => {
     const invalidTypes = ["application/pdf", "text/plain", "video/mp4"];
     for (const t of invalidTypes) expect(t.startsWith("image/")).toBe(false);
+  });
+});
+
+// ─── buildFilterString ──────────────────────────────────────────────────────────
+
+describe("buildFilterString", () => {
+  it("returns 'none' for default filters", () => {
+    expect(buildFilterString(DEFAULT_FILTERS)).toBe("none");
+  });
+
+  it("returns blur filter string", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, blur: 8 };
+    expect(buildFilterString(f)).toBe("blur(8px)");
+  });
+
+  it("returns grayscale filter string", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, grayscale: 100 };
+    expect(buildFilterString(f)).toBe("grayscale(100%)");
+  });
+
+  it("returns sepia filter string", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, sepia: 75 };
+    expect(buildFilterString(f)).toBe("sepia(75%)");
+  });
+
+  it("returns brightness filter string when not 100", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, brightness: 70 };
+    expect(buildFilterString(f)).toBe("brightness(70%)");
+  });
+
+  it("returns contrast filter string when not 100", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, contrast: 130 };
+    expect(buildFilterString(f)).toBe("contrast(130%)");
+  });
+
+  it("composes multiple filters in correct order", () => {
+    const f: BgImageFilters = { blur: 4, grayscale: 50, sepia: 30, brightness: 90, contrast: 110 };
+    const result = buildFilterString(f);
+    expect(result).toBe("blur(4px) grayscale(50%) sepia(30%) brightness(90%) contrast(110%)");
+  });
+
+  it("omits blur when 0", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, grayscale: 100 };
+    expect(buildFilterString(f)).not.toContain("blur");
+  });
+
+  it("omits grayscale when 0", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, blur: 5 };
+    expect(buildFilterString(f)).not.toContain("grayscale");
+  });
+
+  it("omits sepia when 0", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, blur: 5 };
+    expect(buildFilterString(f)).not.toContain("sepia");
+  });
+
+  it("omits brightness when exactly 100", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, blur: 5 };
+    expect(buildFilterString(f)).not.toContain("brightness");
+  });
+
+  it("omits contrast when exactly 100", () => {
+    const f: BgImageFilters = { ...DEFAULT_FILTERS, blur: 5 };
+    expect(buildFilterString(f)).not.toContain("contrast");
+  });
+
+  it("DEFAULT_FILTERS has correct zero/100 defaults", () => {
+    expect(DEFAULT_FILTERS.blur).toBe(0);
+    expect(DEFAULT_FILTERS.grayscale).toBe(0);
+    expect(DEFAULT_FILTERS.sepia).toBe(0);
+    expect(DEFAULT_FILTERS.brightness).toBe(100);
+    expect(DEFAULT_FILTERS.contrast).toBe(100);
   });
 });
 

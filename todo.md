@@ -6751,3 +6751,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Drag-and-drop support for both upload zones
 - [x] Preview thumbnails for uploaded images in the UI
 - [x] Tests: unit tests for image upload state logic and canvas draw order
+
+## SocialAssetGenerator — Background Image Filters (Jul 6 2026)
+- [x] Blur filter slider (0–20px) applied via ctx.filter before drawing bg image
+- [x] Grayscale filter slider (0–100%) applied via ctx.filter
+- [x] Sepia filter slider (0–100%) applied via ctx.filter
+- [x] Brightness filter slider (50–150%) applied via ctx.filter
+- [x] Contrast filter slider (50–150%) applied via ctx.filter
+- [x] Filters compose correctly (all active filters combined into single ctx.filter string)
+- [x] Reset Filters button to zero all sliders at once
+- [x] Filter controls only visible when a background image is uploaded
+- [x] Live canvas preview re-renders on every filter slider change
+- [x] Tests: unit tests for filter string composition logic
