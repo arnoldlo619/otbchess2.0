@@ -1531,7 +1531,7 @@ export default function ClubProfile() {
               className="relative flex flex-row items-center gap-3 rounded-xl"
               style={{ height: "52px", paddingLeft: "10px", paddingRight: "10px" }}
             >
-              <AvatarNavDropdown currentPage="Clubs" />
+              <AvatarNavDropdown currentPage="Clubs" variant="sidebar" />
             </div>
 
             {user && !isOwner && !isDirector && (

@@ -73,6 +73,12 @@ interface AvatarNavDropdownProps {
   dashboardUrl?: string;
   /** Smart league URL (resolves to user's active league or /league-demo). Passed from AppNavBar. */
   leagueUrl?: string;
+  /**
+   * "default" (pill with avatar + chevron) — used in the global AppNavBar header.
+   * "sidebar" (compact square avatar-only button) — used in the Club sidebar slot.
+   *   The dropdown still opens normally; only the trigger shape changes.
+   */
+  variant?: "default" | "sidebar";
 }
 
 // ─── Sparkline SVG (interactive with hover tooltip) ──────────────────────────
@@ -300,6 +306,7 @@ export function AvatarNavDropdown({
   className = "",
   dashboardUrl,
   leagueUrl,
+  variant = "default",
 }: AvatarNavDropdownProps) {
   const { user, loading: authLoading, logout, updateProfile } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
@@ -578,35 +585,89 @@ export function AvatarNavDropdown({
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
       {/* ── Avatar button ── */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close menu" : "Open menu"}
-        aria-expanded={open}
-        className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30 hover:bg-white/10 active:bg-white/15" : "bg-white/80 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F] shadow-sm"} backdrop-blur-md`}
-        style={{ padding: "3px 8px 3px 3px" }}
-      >
-        {/* Avatar circle */}
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+      {variant === "sidebar" ? (
+        /* ── Sidebar compact trigger: 44×44 square avatar button, no chevron ── */
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Close account menu" : "Open account menu"}
+          aria-expanded={open}
+          className="relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 group"
           style={{
-            background:
-              user && !user.isGuest
-                ? "#436850"
-                : user?.isGuest
-                ? "rgba(245,158,11,0.15)"
-                : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+            background: open
+              ? "rgba(76,175,80,0.18)"
+              : "rgba(255,255,255,0.06)",
+            border: open
+              ? "1px solid rgba(76,175,80,0.40)"
+              : "1px solid rgba(255,255,255,0.10)",
+            boxShadow: open ? "0 0 12px rgba(76,175,80,0.20)" : "none",
+          }}
+          onMouseEnter={e => {
+            if (!open) {
+              e.currentTarget.style.background = "rgba(255,255,255,0.10)";
+              e.currentTarget.style.border = "1px solid rgba(255,255,255,0.18)";
+            }
+          }}
+          onMouseLeave={e => {
+            if (!open) {
+              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+              e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
+            }
           }}
         >
-          <AvatarCircle user={user} />
-        </div>
-        {/* Chevron */}
-        <motion.div
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          {/* Avatar — slightly larger than default pill (32px) */}
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+            style={{
+              background:
+                user && !user.isGuest
+                  ? "#436850"
+                  : user?.isGuest
+                  ? "rgba(245,158,11,0.15)"
+                  : "rgba(255,255,255,0.08)",
+            }}
+          >
+            <AvatarCircle user={user} />
+          </div>
+          {/* Online dot */}
+          {user && !user.isGuest && (
+            <span
+              className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full"
+              style={{ background: "#4CAF50", border: "1.5px solid rgba(0,0,0,0.5)" }}
+            />
+          )}
+        </button>
+      ) : (
+        /* ── Default pill trigger: avatar + chevron ── */
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30 hover:bg-white/10 active:bg-white/15" : "bg-white/80 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F] shadow-sm"} backdrop-blur-md`}
+          style={{ padding: "3px 8px 3px 3px" }}
         >
-          <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
-        </motion.div>
-      </button>
+          {/* Avatar circle */}
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+            style={{
+              background:
+                user && !user.isGuest
+                  ? "#436850"
+                  : user?.isGuest
+                  ? "rgba(245,158,11,0.15)"
+                  : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+            }}
+          >
+            <AvatarCircle user={user} />
+          </div>
+          {/* Chevron */}
+          <motion.div
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
+          </motion.div>
+        </button>
+      )}
 
       {/* ── Backdrop ── */}
       <AnimatePresence>
@@ -629,11 +690,15 @@ export function AvatarNavDropdown({
         {open && (
           <motion.div
             key="dropdown"
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            initial={variant === "sidebar" ? { opacity: 0, x: 8, scale: 0.97 } : { opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            exit={variant === "sidebar" ? { opacity: 0, x: 8, scale: 0.97 } : { opacity: 0, y: -6, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="hidden md:block absolute right-0 top-full mt-2 z-[9999] w-64 rounded-2xl shadow-2xl"
+            className={`hidden md:block absolute z-[9999] w-64 rounded-2xl shadow-2xl ${
+              variant === "sidebar"
+                ? "left-full bottom-0 ml-3"   // opens to the right, aligned to bottom of trigger
+                : "right-0 top-full mt-2"     // default: drops below the button
+            }`}
             style={{
               background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
               border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
