@@ -204,6 +204,7 @@ import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
 import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
+import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon } from "@/components/OtbIcons";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -3156,15 +3157,15 @@ export default function ClubDashboard() {
   }
 
   const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
-    { id: "overview", label: "Overview", icon: BarChart2, ownerOnly: true },
-    { id: "feed", label: "Feed", icon: Megaphone },
-    { id: "events", label: "Events", icon: Calendar, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
-    { id: "members", label: "Members", icon: Users },
+    { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true },
+    { id: "feed", label: "Feed", icon: OtbFeedIcon },
+    { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
+    { id: "members", label: "Members", icon: MembersIcon },
     // battles tab removed - now a sub-tab of Feed
-    { id: "leagues", label: "Leagues", icon: Trophy },
-    { id: "qr", label: "QR Tools", icon: QrCode, ownerOnly: true },
-    { id: "growth", label: "Growth", icon: Sprout, ownerOnly: true },
-    { id: "settings", label: "Settings", icon: Settings2 },
+    { id: "leagues", label: "Leagues", icon: LeaguesIcon },
+    { id: "qr", label: "QR Tools", icon: QrShareIcon, ownerOnly: true },
+    { id: "growth", label: "Growth", icon: RatingIcon, ownerOnly: true },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
   ];
 
   return (
@@ -3220,7 +3221,9 @@ export default function ClubDashboard() {
                   }}
                   title={ct.label}
                 >
-                  <Icon size={17} />
+                  <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                    <Icon size={17} />
+                  </span>
                   {(ct.badge ?? 0) > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
@@ -7693,7 +7696,9 @@ export default function ClubDashboard() {
               className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
               style={{ color: isActive ? accent : "oklch(0.55 0.08 145)" }}
             >
-              <Icon size={18} />
+              <span className={`otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                <Icon size={18} />
+              </span>
               <span className="text-[9px] font-medium">{ct.label}</span>
               {(ct.badge ?? 0) > 0 && (
                 <span

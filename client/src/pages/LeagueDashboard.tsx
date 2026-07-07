@@ -15,6 +15,7 @@ import {
   ExternalLink, TrendingUp, Star
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon, MembersIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import AuthModal from "@/components/AuthModal";
 import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
@@ -1255,13 +1256,13 @@ export default function LeagueDashboard() {
   }
 
   const tabs = [
-    { id: "overview" as const, label: "Overview", icon: BarChart3 },
-    { id: "matchups" as const, label: "Matchups", icon: Swords },
-    { id: "standings" as const, label: "Standings", icon: ListOrdered },
-    { id: "schedule" as const, label: "Schedule", icon: Calendar },
-    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: History }] : []),
-    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: Users, badge: joinRequests.length }] : []),
-    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: Settings }] : []),
+    { id: "overview" as const, label: "Overview", icon: DashboardIcon },
+    { id: "matchups" as const, label: "Matchups", icon: BattleIcon },
+    { id: "standings" as const, label: "Standings", icon: RatingIcon },
+    { id: "schedule" as const, label: "Schedule", icon: EventsIcon },
+    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: TournamentsIcon }] : []),
+    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: MembersIcon, badge: joinRequests.length }] : []),
+    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon }] : []),
   ];
 
   const progressPct = totalMatches > 0 ? Math.round((completedMatchCount / totalMatches) * 100) : 0;
@@ -1331,7 +1332,9 @@ export default function LeagueDashboard() {
                   }}
                   title={tab.label}
                 >
-                  <Icon size={17} />
+                  <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                    <Icon size={17} />
+                  </span>
                   {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
@@ -4088,7 +4091,9 @@ export default function LeagueDashboard() {
               className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
               style={{ color: isActive ? accent : textMuted }}
             >
-              <Icon size={18} />
+              <span className={`otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                <Icon size={18} />
+              </span>
               <span className="text-[9px] font-medium">{tab.label}</span>
               {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
                 <span
