@@ -1529,7 +1529,7 @@ export default function ClubProfile() {
             {/* Avatar / Profile dropdown — replaces the old Share button */}
             <div
               className="relative flex flex-row items-center gap-3 rounded-xl"
-              style={{ height: "52px", paddingLeft: "10px", paddingRight: "10px" }}
+              style={{ height: "44px", paddingLeft: "8px", paddingRight: "16px" }}
             >
               <AvatarNavDropdown currentPage="Clubs" variant="sidebar" />
             </div>
