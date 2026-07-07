@@ -6,6 +6,7 @@
  * Includes: Status Bar, Setup Checklist, Board Control (with Live Operator Mode),
  * Venue Display Monitor, Bridge/Manual Status, Broadcast Logs, Post-Game Export.
  */
+import BarLoader from "@/components/ui/bar-loader";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import { Chess } from "chess.js";
@@ -824,9 +825,9 @@ export default function BroadcastConsole() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0d1a0f]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-[#436850] border-t-transparent animate-spin" />
-          <span className="text-sm text-white/50">Loading broadcast console…</span>
+        <div className="flex flex-col items-center gap-5">
+          <BarLoader bars={8} barWidth={8} barHeight={52} color="bg-[#7CF562]" speed={1.2} />
+          <span className="text-xs text-white/50 tracking-widest uppercase">Loading broadcast console…</span>
         </div>
       </div>
     );

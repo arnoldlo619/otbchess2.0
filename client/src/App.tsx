@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
+import BarLoader from "@/components/ui/bar-loader";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
 // Each page is split into its own JS chunk, dramatically reducing initial bundle
@@ -69,13 +70,13 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const JoinClub = lazy(() => import("./pages/JoinClub"));
 const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
 
-// ── Minimal full-screen loading fallback ─────────────────────────────────────
+// ── Official platform loading fallback (green bar loader) ────────────────────
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0d1a0f]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-[#4D6940] border-t-transparent animate-spin" />
-        <span className="text-sm text-[#6B6B50] font-medium">Loading…</span>
+      <div className="flex flex-col items-center gap-5">
+        <BarLoader bars={8} barWidth={8} barHeight={52} color="bg-[#7CF562]" speed={1.2} />
+        <span className="text-xs text-[#6B6B50] dark:text-[#7CF562]/60 font-medium tracking-widest uppercase">Loading…</span>
       </div>
     </div>
   );

@@ -1926,3 +1926,18 @@ select {
 .otb-sidebar-item:active {
   transform: scale(0.95);
 }
+
+/* ── Bar Loader — platform official loading animation ─────────────────────── */
+@keyframes barLoader {
+  0%, 100% {
+    transform: scaleY(0.1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.animate-barLoader {
+  animation: barLoader var(--bar-speed, 1.2s) ease-in-out infinite;
+}
