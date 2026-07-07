@@ -134,6 +134,13 @@ import {
   Send,
   MoreVertical,
 } from "lucide-react";
+import {
+  FeedIcon as OtbFeed,
+  EventsIcon as OtbEvents,
+  MembersIcon as OtbMembers,
+  TournamentsIcon as OtbTournaments,
+  LeaguesIcon as OtbLeagues,
+} from "@/components/OtbIcons";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
@@ -1458,12 +1465,13 @@ export default function ClubProfile() {
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
           <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
             {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
+              const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {
-                feed: <Megaphone size={26} />,
-                events: <Calendar size={26} />,
-                members: <Users size={26} />,
-                tournaments: <Trophy size={26} />,
-                leagues: <Award size={26} />,
+                feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
+                events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
+                members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
+                tournaments: <OtbTournaments size={22} accentColor={isActive ? accent : undefined} />,
+                leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
@@ -1478,7 +1486,6 @@ export default function ClubProfile() {
                 tournaments: tournaments.length + liveTournaments.length,
                 leagues: clubLeagues.length,
               };
-              const isActive = activeTab === t;
               const badge = seenTabs.has(t) ? 0 : (badgeMap[t] ?? 0);
               return (
                 <button
@@ -4330,14 +4337,14 @@ export default function ClubProfile() {
         }}
       >
         {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
-          const iconMap: Record<string, React.ReactNode> = {
-            feed: <Megaphone size={22} />,
-            events: <Calendar size={22} />,
-            members: <Users size={22} />,
-            tournaments: <Trophy size={22} />,
-            leagues: <Award size={22} />,
-          };
           const isActive = activeTab === t;
+          const iconMap: Record<string, React.ReactNode> = {
+            feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
+            events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
+            members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
+            tournaments: <OtbTournaments size={22} accentColor={isActive ? accent : undefined} />,
+            leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
+          };
           return (
             <button
               key={t}

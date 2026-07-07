@@ -1856,3 +1856,73 @@ select {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
+
+/* ── OTB Icon System — Premium Animations ────────────────────────────────── */
+
+/**
+ * Base hover animation for all OTB custom icons.
+ * Apply `.otb-icon` to any wrapper that contains an OtbIcon component.
+ */
+.otb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.18s ease,
+    color 0.15s ease;
+}
+.otb-icon:hover,
+.otb-icon:focus-visible {
+  transform: scale(1.18) translateY(-1px);
+  filter: drop-shadow(0 0 6px oklch(0.55 0.18 145 / 0.65));
+}
+.otb-icon:active {
+  transform: scale(0.92);
+  transition-duration: 0.08s;
+}
+
+/* Active state glow — pulsing when nav item is selected */
+.otb-icon--active {
+  filter: drop-shadow(0 0 8px oklch(0.55 0.18 145 / 0.75));
+  animation: otb-icon-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes otb-icon-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px oklch(0.55 0.18 145 / 0.55)); }
+  50%       { filter: drop-shadow(0 0 12px oklch(0.55 0.18 145 / 0.85)); }
+}
+
+/* Entrance animation — one-shot pop-in on mount */
+.otb-icon--enter {
+  animation: otb-icon-enter 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes otb-icon-enter {
+  from { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* Stagger helper — apply to nav list container */
+.otb-icon-list > *:nth-child(1) .otb-icon--enter { animation-delay: 0.04s; }
+.otb-icon-list > *:nth-child(2) .otb-icon--enter { animation-delay: 0.08s; }
+.otb-icon-list > *:nth-child(3) .otb-icon--enter { animation-delay: 0.12s; }
+.otb-icon-list > *:nth-child(4) .otb-icon--enter { animation-delay: 0.16s; }
+.otb-icon-list > *:nth-child(5) .otb-icon--enter { animation-delay: 0.20s; }
+
+/* Mobile bottom nav tap feedback */
+.otb-nav-tap {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.otb-nav-tap:active {
+  transform: scale(0.82) translateY(2px);
+}
+
+/* Sidebar icon row — hover lift */
+.otb-sidebar-item:hover .otb-icon {
+  transform: scale(1.22) translateY(-1px);
+  filter: drop-shadow(0 0 8px oklch(0.55 0.18 145 / 0.7));
+}
+.otb-sidebar-item:active {
+  transform: scale(0.95);
+}

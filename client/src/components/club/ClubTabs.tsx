@@ -3,16 +3,24 @@
  * Replaces the sidebar-only navigation with a visible tab strip
  * that works on both mobile and desktop, while the sidebar remains
  * for desktop quick-access.
+ *
+ * Uses custom OTB chess-native icons instead of generic Lucide icons.
  */
 import React from "react";
-import { Megaphone, Calendar, Users, Trophy, Award } from "lucide-react";
+import {
+  FeedIcon,
+  EventsIcon,
+  MembersIcon,
+  TournamentsIcon,
+  LeaguesIcon,
+} from "@/components/OtbIcons";
 
 export type ClubTab = "feed" | "events" | "members" | "tournaments" | "leagues";
 
 interface TabConfig {
   id: ClubTab;
   label: string;
-  icon: React.ReactNode;
+  icon: (props: { size?: number; accentColor?: string }) => React.ReactElement;
   badge?: number;
 }
 
@@ -27,11 +35,11 @@ interface ClubTabsProps {
 
 export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark }: ClubTabsProps) {
   const tabs: TabConfig[] = [
-    { id: "feed", label: "Feed", icon: <Megaphone size={15} /> },
-    { id: "events", label: "Events", icon: <Calendar size={15} /> },
-    { id: "members", label: "Members", icon: <Users size={15} /> },
-    { id: "tournaments", label: "Tournaments", icon: <Trophy size={15} /> },
-    { id: "leagues", label: "Leagues", icon: <Award size={15} /> },
+    { id: "feed",        label: "Feed",        icon: FeedIcon },
+    { id: "events",      label: "Events",      icon: EventsIcon },
+    { id: "members",     label: "Members",     icon: MembersIcon },
+    { id: "tournaments", label: "Tournaments", icon: TournamentsIcon },
+    { id: "leagues",     label: "Leagues",     icon: LeaguesIcon },
   ];
 
   return (
@@ -57,6 +65,9 @@ export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark
         const isActive = activeTab === tab.id;
         const unseen = !seenTabs.has(tab.id);
         const badgeCount = unseen ? (badges[tab.id] ?? 0) : 0;
+        const iconColor = isActive
+          ? accent
+          : isDark ? "rgba(255,255,255,0.35)" : "rgba(67,104,80,0.55)";
 
         return (
           <button
@@ -65,7 +76,7 @@ export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark
             aria-selected={isActive}
             aria-controls={`tabpanel-${tab.id}`}
             onClick={() => onChange(tab.id)}
-            className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-[14px] text-xs font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1"
+            className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-[14px] text-xs font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 group"
             style={{
               background: isActive
                 ? isDark
@@ -87,13 +98,18 @@ export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark
             }}
           >
             <span
+              className="transition-all duration-200 group-hover:scale-110 group-active:scale-95"
               style={{
-                color: isActive
-                  ? accent
-                  : isDark ? "rgba(255,255,255,0.35)" : "rgba(67,104,80,0.55)",
+                color: iconColor,
+                filter: isActive ? `drop-shadow(0 0 5px ${accent}88)` : "none",
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              {tab.icon}
+              <tab.icon
+                size={15}
+                accentColor={isActive ? accent : undefined}
+              />
             </span>
             <span>{tab.label}</span>
             {badgeCount > 0 && (

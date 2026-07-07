@@ -20,7 +20,8 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { LucideIcon } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import type { OtbIconProps } from "@/components/OtbIcons"
 import { cn } from "@/lib/utils"
 
 // ─── OTB design tokens ────────────────────────────────────────────────────────
@@ -33,7 +34,7 @@ const OTB_GREEN_GLOW  = "rgba(61,107,71,"
 interface NavItem {
   name: string
   url: string
-  icon: LucideIcon
+  icon: LucideIcon | React.FC<OtbIconProps>
   onClick?: (e: React.MouseEvent) => void
   /** Optional section ID to watch with IntersectionObserver for scroll-aware active state */
   sectionId?: string
@@ -392,13 +393,28 @@ export function AnimeNavBar({
                         )}
                       </AnimatePresence>
 
-                      {/* ── Label ── */}
+                      {/* ── Icon + Label ── */}
                       <motion.span
-                        className="relative z-10"
+                        className="relative z-10 flex items-center gap-1.5"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.2 }}
                       >
+                        <span
+                          className="transition-all duration-200 group-hover:scale-110"
+                          style={{
+                            filter: isActive ? `drop-shadow(0 0 5px ${OTB_GREEN_GLOW}0.7))` : "none",
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <item.icon
+                            size={15}
+                            {...("accentColor" in (item.icon as React.FC<OtbIconProps>)
+                              ? {}
+                              : {})}
+                          />
+                        </span>
                         {item.name}
                       </motion.span>
 

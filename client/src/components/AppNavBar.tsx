@@ -15,7 +15,7 @@
 
 
 import { Link } from "wouter";
-import { Building2, GraduationCap, LayoutDashboard, Trophy } from "lucide-react";
+import { ClubsIcon, TournamentsIcon, AcademyIcon, LeaguesIcon } from "@/components/OtbIcons";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -119,7 +119,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   const navItems = [
     { name: "League",
       url: leagueNavUrl,
-      icon: Trophy,
+      icon: LeaguesIcon,
       tooltip: myLeagues.length
         ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name)
         : "View League Demo",
@@ -131,7 +131,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     },
     { name: "Tournaments",
       url: dashboardUrl,
-      icon: LayoutDashboard,
+      icon: TournamentsIcon,
       tooltip: dashboardTooltip,
       badge: showActiveDot ? (
         <span
@@ -145,8 +145,8 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
         window.location.href = getDashboardUrl();
       },
     },
-    { name: "Clubs",    url: "/clubs",    icon: Building2 },
-    { name: "Tools", url: "/training", icon: GraduationCap, dropdown: <TrainingDropdown /> },
+    { name: "Clubs",    url: "/clubs",    icon: ClubsIcon },
+    { name: "Tools", url: "/training", icon: AcademyIcon, dropdown: <TrainingDropdown /> },
   ];
 
   const logoEl = (
