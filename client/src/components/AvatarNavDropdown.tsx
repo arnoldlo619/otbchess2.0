@@ -314,8 +314,22 @@ export function AvatarNavDropdown({
   const [open, setOpen]   = useState(false);
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
+  const triggerRef        = useRef<HTMLButtonElement>(null);
   const avatarInputRef    = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  // Portal position for sidebar variant — computed from trigger's bounding rect
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Recompute panel position whenever the sidebar dropdown opens
+  useEffect(() => {
+    if (variant === "sidebar" && open && triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect();
+      setPanelPos({
+        top: Math.max(8, r.bottom - 256), // align bottom of panel to bottom of trigger, clamp to viewport
+        left: r.right + 12,
+      });
+    }
+  }, [variant, open]);
 
   const handleAvatarUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -588,6 +602,7 @@ export function AvatarNavDropdown({
       {variant === "sidebar" ? (
         /* ── Sidebar compact trigger: 44×44 square avatar button, no chevron ── */
         <button
+          ref={triggerRef}
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close account menu" : "Open account menu"}
           aria-expanded={open}
@@ -686,30 +701,36 @@ export function AvatarNavDropdown({
 
       {/* ── Dropdown panel ── */}
       {/* On mobile: full-screen slide-up sheet. On desktop: anchored dropdown. */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="dropdown"
-            initial={variant === "sidebar" ? { opacity: 0, x: 8, scale: 0.97 } : { opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-            exit={variant === "sidebar" ? { opacity: 0, x: 8, scale: 0.97 } : { opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className={`hidden md:block absolute z-[9999] w-64 rounded-2xl shadow-2xl ${
-              variant === "sidebar"
-                ? "left-full bottom-0 ml-3"   // opens to the right, aligned to bottom of trigger
-                : "right-0 top-full mt-2"     // default: drops below the button
-            }`}
-            style={{
-              background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
-              border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)` : "0 8px 32px rgba(0,0,0,0.12)",
-              maxHeight: "calc(100dvh - 5rem)",
-              overflowY: "auto",
-              overflowX: "hidden",
-            }}
-          >
+      {/* For sidebar variant the panel is portaled to document.body to escape the clipped <aside> */}
+      {variant === "sidebar" && typeof document !== "undefined" ? createPortal(
+        <AnimatePresence>
+          {open && panelPos && (
+            <>
+              {/* Invisible backdrop to close on outside click */}
+              <div
+                className="fixed inset-0 z-[9998] hidden md:block"
+                onClick={() => setOpen(false)}
+              />
+              <motion.div
+                key="dropdown-sidebar-portal"
+                initial={{ opacity: 0, x: -8, scale: 0.97 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -8, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                className="fixed z-[9999] w-64 rounded-2xl shadow-2xl hidden md:block"
+                style={{
+                  top: panelPos.top,
+                  left: panelPos.left,
+                  background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
+                  border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)` : "0 8px 32px rgba(0,0,0,0.12)",
+                  maxHeight: "calc(100dvh - 5rem)",
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                }}
+              >
             {/* ── User identity header (when logged in) ── */}
             {user && !user.isGuest && (
               <div className="flex items-center gap-3 px-4 pt-3 pb-2">
@@ -1052,8 +1073,122 @@ export function AvatarNavDropdown({
               )}
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      ) : (
+        /* Default (non-sidebar) desktop dropdown panel — rendered in-tree */
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              key="dropdown-default"
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 380, damping: 32 }}
+              className="hidden md:block absolute right-0 top-full mt-2 z-[9999] w-64 rounded-2xl shadow-2xl"
+              style={{
+                background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
+                border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)` : "0 8px 32px rgba(0,0,0,0.12)",
+                maxHeight: "calc(100dvh - 5rem)",
+                overflowY: "auto",
+                overflowX: "hidden",
+              }}
+            >
+              {/* ── User identity header ── */}
+              {user && !user.isGuest && (
+                <div className="flex items-center gap-3 px-4 pt-3 pb-2">
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="relative w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 group"
+                    style={{ background: "#436850" }}
+                    title="Change profile photo"
+                    disabled={avatarUploading}
+                  >
+                    <AvatarCircle user={user} />
+                    <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {avatarUploading
+                        ? <div className="w-3 h-3 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                        : <Camera className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                  </button>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-semibold truncate leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}>
+                      {user.displayName || user.email}
+                    </p>
+                    {user.chesscomUsername && (
+                      <p className={`text-[11px] truncate leading-tight ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+                        chess.com/{user.chesscomUsername}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* ── Nav links ── */}
+              <div className="px-2 pt-1.5 pb-1">
+                {resolvedNavItems.map((item) => {
+                  const active = isActive(item);
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                      style={active ? { background: `${OTB_GREEN_GLOW}0.22)`, border: `1px solid ${OTB_GREEN_GLOW}0.28)`, color: "#fff" } : { color: isDark ? "rgba(255,255,255,0.65)" : "var(--dropdown-text-secondary)", border: "1px solid transparent" }}
+                      onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)"; }}
+                      onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    >
+                      <item.icon className="w-4 h-4 flex-shrink-0" style={{ color: active ? OTB_GREEN : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }} />
+                      <span>{item.name}</span>
+                      {active && <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: OTB_GREEN }} />}
+                    </Link>
+                  );
+                })}
+              </div>
+              {/* ── Appearance ── */}
+              <div className="mx-3 my-1 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
+              <div className="px-2 pb-1">
+                <button
+                  onClick={() => toggleTheme?.()}
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-[#436850] hover:text-[#12372A]"}`}
+                  style={{ border: "1px solid transparent" }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                >
+                  {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+                  <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                </button>
+              </div>
+              {/* ── Sign out / Sign in ── */}
+              <div className="mx-3 my-1 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
+              <div className="px-2 pb-2">
+                {user ? (
+                  <button
+                    onClick={() => { logout(); setOpen(false); }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4 flex-shrink-0" />
+                    <span>Sign Out</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSignIn}
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
+                  >
+                    <LogIn className="w-4 h-4 flex-shrink-0" />
+                    <span>Sign In</span>
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* ── Mobile slide-up sheet (signed-in users only, hidden on md+) ── */}
       {/* Rendered via portal at document.body to escape backdrop-filter stacking context */}
