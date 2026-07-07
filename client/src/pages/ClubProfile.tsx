@@ -1505,7 +1505,7 @@ export default function ClubProfile() {
                   aria-label={labelMap[t]}
                 >
                   {/* Icon — fixed width so it doesn't shift on expand */}
-                  <span className="relative flex-shrink-0 w-7 flex items-center justify-center">
+                  <span className={`relative flex-shrink-0 w-7 flex items-center justify-center otb-icon${isActive ? " otb-icon--active" : ""}`}>
                     {iconMap[t]}
                     {badge > 0 && (
                       <span
@@ -4360,10 +4360,9 @@ export default function ClubProfile() {
                 />
               )}
               <span
-                className="relative z-10 transition-all duration-200"
+                className={`relative z-10 otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""}`}
                 style={{
                   color: isActive ? accent : "oklch(0.45 0.06 145)",
-                  filter: isActive ? `drop-shadow(0 0 6px ${accent}88)` : "none",
                 }}
               >
                 {iconMap[t]}
