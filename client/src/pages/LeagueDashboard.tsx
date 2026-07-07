@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon, MembersIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
+import { TabTransition } from "@/components/TabTransition";
 import AuthModal from "@/components/AuthModal";
 import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
@@ -1597,8 +1598,8 @@ export default function LeagueDashboard() {
             <div className="px-4 lg:px-6 py-4">
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}
-                <div className="flex-1 min-w-0 space-y-4">
-
+                                <div className="flex-1 min-w-0 space-y-4">
+        <TabTransition tabKey={activeTab}>
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
@@ -3771,6 +3772,7 @@ export default function LeagueDashboard() {
             </div>
           </div>
         )}
+        </TabTransition>
           {/* ── SETTINGS TAB (commissioner-only) ─────────────────────── */}
           {activeTab === "settings" && (
             <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-6 space-y-6">

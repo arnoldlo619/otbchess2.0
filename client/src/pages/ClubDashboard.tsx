@@ -204,7 +204,8 @@ import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
 import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
-import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon } from "@/components/OtbIcons";
+import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
+import { TabTransition } from "@/components/TabTransition";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -3165,7 +3166,7 @@ export default function ClubDashboard() {
     { id: "leagues", label: "Leagues", icon: LeaguesIcon },
     { id: "qr", label: "QR Tools", icon: QrShareIcon, ownerOnly: true },
     { id: "growth", label: "Growth", icon: RatingIcon, ownerOnly: true },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
+    { id: "settings", label: "Settings", icon: OtbSettingsIcon },
   ];
 
   return (
@@ -3586,6 +3587,7 @@ export default function ClubDashboard() {
                     </div>
                   );
                 })()}
+        <TabTransition tabKey={tab}>
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (
           <div className="space-y-6">
@@ -7293,10 +7295,9 @@ export default function ClubDashboard() {
                 ))}
               </div>
             )}
-          </div>
+                    </div>
         )}
-
-
+        </TabTransition>
               </div>{/* end max-w-4xl */}
             </div>{/* end px wrapper */}
           </div>{/* end scrollable content */}
