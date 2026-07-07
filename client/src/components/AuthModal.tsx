@@ -19,7 +19,7 @@
  *  - Escape key closes modal
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Eye, EyeOff, Crown, Loader2, ChevronRight, CheckCircle2, Ghost } from "lucide-react";
+import { X, Eye, EyeOff, Loader2, ChevronRight, CheckCircle2, Ghost } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 
 type Tab = "signin" | "signup" | "guest";
@@ -425,8 +425,12 @@ export default function AuthModal({
         {/* Header */}
         <div className={`flex items-center justify-between px-7 pt-7 pb-5 border-b ${border}`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#436850] flex items-center justify-center">
-              <Crown className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0">
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                alt="OTB Chess"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h2 className={`text-lg font-bold leading-tight ${text}`}>OTB Chess</h2>
