@@ -488,25 +488,48 @@ export function AvatarNavDropdown({
             onSignInClick={handleSignIn}
           />
         </div>
-        {/* Desktop: avatar dropdown (same JSX as the main return below, scoped to desktop) */}
+        {/* Desktop: avatar dropdown — respects variant prop */}
         <div ref={wrapperRef} className={`relative hidden md:block ${className}`}>
-          <button
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            className={`flex items-center gap-1.5 rounded-full border transition-all ${isDark ? "border-white/20 bg-black/30 hover:bg-white/10 active:bg-white/15" : "border-[#ADBC9F] bg-white/80 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F] shadow-sm"} backdrop-blur-md`}
-            style={{ padding: "3px 8px 3px 3px" }}
-          >
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-              style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }}
+          {variant === "sidebar" ? (
+            /* Sidebar compact square trigger for guest */
+            <button
+              ref={triggerRef}
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? "Close account menu" : "Sign in"}
+              aria-expanded={open}
+              className="relative w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200"
+              style={{
+                background: open ? "rgba(76,175,80,0.18)" : "rgba(255,255,255,0.06)",
+                border: open ? "1px solid rgba(76,175,80,0.40)" : "1px solid rgba(255,255,255,0.10)",
+                boxShadow: open ? "0 0 12px rgba(76,175,80,0.20)" : "none",
+              }}
+              onMouseEnter={e => { if (!open) { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.18)"; } }}
+              onMouseLeave={e => { if (!open) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)"; } }}
             >
-              <LogIn className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
-            </div>
-            <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
-            </motion.div>
-          </button>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
+                <LogIn className="w-4 h-4 text-white/60" />
+              </div>
+            </button>
+          ) : (
+            /* Default pill trigger for guest */
+            <button
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              className={`flex items-center gap-1.5 rounded-full border transition-all ${isDark ? "border-white/20 bg-black/30 hover:bg-white/10 active:bg-white/15" : "border-[#ADBC9F] bg-white/80 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F] shadow-sm"} backdrop-blur-md`}
+              style={{ padding: "3px 8px 3px 3px" }}
+            >
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }}
+              >
+                <LogIn className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
+              </div>
+              <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
+              </motion.div>
+            </button>
+          )}
           <AnimatePresence>
             {open && (
               <motion.div
@@ -518,79 +541,95 @@ export function AvatarNavDropdown({
               />
             )}
           </AnimatePresence>
-          <AnimatePresence>
-            {open && (
-              <motion.div
-                key="dropdown-guest"
-                initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                className="absolute right-0 top-full mt-2 z-[9999] w-56 rounded-2xl shadow-2xl"
-                style={{
-                  background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
-                  border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55)` : "0 8px 32px rgba(0,0,0,0.12)",
-                }}
-              >
-                {/* Header row: Sign In label + theme toggle */}
-                <div className="flex items-center justify-between px-3 pt-2 pb-1">
-                  <span className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/25" : "text-[#436850]"}`}>Account</span>
-                  <button
-                    onClick={() => toggleTheme?.()}
-                    title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/08" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
+          {/* Guest dropdown panel — portaled for sidebar (escapes overflow:hidden), in-tree for default */}
+          {variant === "sidebar"
+            ? (typeof document !== "undefined" && createPortal(
+                <AnimatePresence>
+                  {open && panelPos && (
+                    <>
+                      <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+                      <motion.div
+                        key="dropdown-guest-portal"
+                        initial={{ opacity: 0, x: -8, scale: 0.97 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -8, scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        className="fixed z-[9999] w-56 rounded-2xl shadow-2xl"
+                        style={{
+                          top: panelPos.top,
+                          left: panelPos.left,
+                          background: "oklch(0.17 0.06 145 / 0.97)",
+                          border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+                          backdropFilter: "blur(20px)",
+                          WebkitBackdropFilter: "blur(20px)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
+                        }}
+                      >
+                        <div className="px-2 py-2">
+                          <button onClick={handleSignIn} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/80 hover:text-white hover:bg-white/08 transition-colors">
+                            <LogIn className="w-4 h-4 flex-shrink-0" />
+                            <span>Sign In</span>
+                          </button>
+                          <button onClick={() => toggleTheme?.()} className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/50 hover:text-white hover:bg-white/08 transition-colors">
+                            {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+                            <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>,
+                document.body
+              ))
+            : (
+              <AnimatePresence>
+                {open && (
+                  <motion.div
+                    key="dropdown-guest"
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    className="absolute right-0 top-full mt-2 z-[9999] w-56 rounded-2xl shadow-2xl"
+                    style={{
+                      background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
+                      border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
+                      backdropFilter: "blur(20px)",
+                      WebkitBackdropFilter: "blur(20px)",
+                      boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.55)" : "0 8px 32px rgba(0,0,0,0.12)",
+                    }}
                   >
-                    {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                    <div
-                      className="w-7 h-3.5 rounded-full flex items-center transition-colors flex-shrink-0"
-                      style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}
-                    >
-                      <div
-                        className="w-2.5 h-2.5 rounded-full bg-white shadow transition-transform mx-0.5"
-                        style={{ transform: isDark ? "translateX(0)" : "translateX(14px)" }}
-                      />
+                    <div className="flex items-center justify-between px-3 pt-2 pb-1">
+                      <span className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/25" : "text-[#436850]"}`}>Account</span>
+                      <button onClick={() => toggleTheme?.()} title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/08" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
+                        {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                        <div className="w-7 h-3.5 rounded-full flex items-center transition-colors flex-shrink-0" style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}>
+                          <div className="w-2.5 h-2.5 rounded-full bg-white shadow transition-transform mx-0.5" style={{ transform: isDark ? "translateX(0)" : "translateX(14px)" }} />
+                        </div>
+                      </button>
                     </div>
-                  </button>
-                </div>
-                <div className="px-2 pb-1">
-                  <button
-                    onClick={handleSignIn}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
-                  >
-                    <LogIn className="w-4 h-4 flex-shrink-0" />
-                    <span>Sign In</span>
-                  </button>
-                </div>
-                {/* Divider */}
-                <div
-                  className="mx-3 my-1 h-px"
-                  style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
-                />
-                {/* Blog + Chess Clock shortcuts */}
-                <div className="px-2 pb-2 flex flex-col gap-0.5">
-                  <Link
-                    href="/blog"
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
-                  >
-                    <BookOpen className="w-4 h-4 flex-shrink-0" />
-                    <span>Blog</span>
-                  </Link>
-                  <Link
-                    href="/clock"
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
-                  >
-                    <Timer className="w-4 h-4 flex-shrink-0" />
-                    <span>Chess Clock</span>
-                  </Link>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    <div className="px-2 pb-1">
+                      <button onClick={handleSignIn} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
+                        <LogIn className="w-4 h-4 flex-shrink-0" />
+                        <span>Sign In</span>
+                      </button>
+                    </div>
+                    <div className="mx-3 my-1 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
+                    <div className="px-2 pb-2 flex flex-col gap-0.5">
+                      <Link href="/blog" onClick={() => setOpen(false)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
+                        <BookOpen className="w-4 h-4 flex-shrink-0" />
+                        <span>Blog</span>
+                      </Link>
+                      <Link href="/clock" onClick={() => setOpen(false)} className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
+                        <Timer className="w-4 h-4 flex-shrink-0" />
+                        <span>Chess Clock</span>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )
+          }
         </div>
       </>
     );
