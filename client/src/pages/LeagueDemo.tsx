@@ -11,10 +11,13 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import {
-  Trophy, Users as _Users, Calendar, BarChart3, ListOrdered,
-  Clock, Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
-  History, Shield as _Shield, Zap, CheckCircle2, Plus, Users2,
+  Trophy, Users as _Users, Calendar, BarChart3 as _BarChart3, ListOrdered as _ListOrdered,
+  Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
+  History as _History, Shield as _Shield, Zap, CheckCircle2, Plus, Users2,
 } from "lucide-react";
+import {
+  DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon,
+} from "@/components/OtbIcons";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -144,11 +147,11 @@ function FormBadge({ result }: { result: string }) {
 type TabId = "overview" | "matchup" | "standings" | "schedule" | "history";
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-  { id: "overview",  label: "Dashboard",  icon: BarChart3 },
-  { id: "matchup",   label: "Matchup",    icon: Swords },
-  { id: "standings", label: "Standings",  icon: ListOrdered },
-  { id: "schedule",  label: "Schedule",   icon: Calendar },
-  { id: "history",   label: "History",    icon: History },
+  { id: "overview",  label: "Dashboard",  icon: DashboardIcon },
+  { id: "matchup",   label: "Matchup",    icon: BattleIcon },
+  { id: "standings", label: "Standings",  icon: RatingIcon },
+  { id: "schedule",  label: "Schedule",   icon: EventsIcon },
+  { id: "history",   label: "History",    icon: TournamentsIcon },
 ];
 
 export default function LeagueDemo() {
@@ -268,7 +271,9 @@ export default function LeagueDemo() {
                   }}
                   title={tab.label}
                 >
-                  <Icon size={17} />
+                  <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                    <Icon size={17} />
+                  </span>
                   {/* Tooltip */}
                   <span
                     className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
@@ -366,7 +371,7 @@ export default function LeagueDemo() {
                   >
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
-                        <Swords size={14} style={{ color: accent }} />
+                        <BattleIcon size={14} style={{ color: accent }} />
                         <span className="text-sm font-bold" style={{ color: textMain }}>Featured Matchup — Week 14</span>
                       </div>
                       <span
@@ -450,7 +455,7 @@ export default function LeagueDemo() {
                   >
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
-                        <ListOrdered size={14} style={{ color: accent }} />
+                        <RatingIcon size={14} style={{ color: accent }} />
                         <span className="text-sm font-bold" style={{ color: textMain }}>Premier Chess League Standings</span>
                       </div>
                       <button
@@ -679,7 +684,7 @@ export default function LeagueDemo() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <Swords size={15} style={{ color: accent }} />
+                        <BattleIcon size={15} style={{ color: accent }} />
                         <span className="font-bold text-sm" style={{ color: textMain }}>Current Matchup</span>
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full animate-pulse" style={{ background: `${accent}22`, color: accent }}>Live</span>
                       </div>
@@ -1014,7 +1019,7 @@ export default function LeagueDemo() {
             {activeTab === "history" && (
               <div className="p-4 lg:p-6 space-y-4">
                 <div className="rounded-2xl p-6 text-center" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                  <History size={36} className="mx-auto mb-3 opacity-40" style={{ color: accent }} />
+                  <TournamentsIcon size={36} className="mx-auto mb-3 opacity-40" style={{ color: accent }} />
                   <div className="text-base font-bold mb-1" style={{ color: textMain }}>Season in Progress</div>
                   <div className="text-sm" style={{ color: textMuted }}>Season history will appear here once the current season completes (Week 16/16).</div>
                   <div className="mt-4 text-xs font-semibold" style={{ color: textMuted }}>2 weeks remaining</div>
@@ -1076,7 +1081,9 @@ export default function LeagueDemo() {
                       color: isActive ? accent : "oklch(0.55 0.08 145)",
                     }}
                   >
-                    <Icon size={18} />
+                    <span className={`otb-icon otb-nav-tap${isActive ? " otb-icon--active" : ""}`}>
+                      <Icon size={18} />
+                    </span>
                     <span className="text-[9px] font-semibold">{tab.label}</span>
                   </button>
                 );
