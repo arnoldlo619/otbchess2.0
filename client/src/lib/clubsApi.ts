@@ -17,6 +17,8 @@ export async function apiListPublicClubs(opts?: {
   category?: string;
   limit?: number;
   sort?: "members" | "newest" | "tournaments" | "az";
+  country?: string;
+  city?: string;
 }): Promise<{ clubs: Club[]; total: number }> {
   try {
     const params = new URLSearchParams();
@@ -25,6 +27,8 @@ export async function apiListPublicClubs(opts?: {
       params.set("category", opts.category);
     if (opts?.limit) params.set("limit", String(opts.limit));
     if (opts?.sort && opts.sort !== "members") params.set("sort", opts.sort);
+    if (opts?.country && opts.country !== "all") params.set("country", opts.country);
+    if (opts?.city && opts.city !== "all") params.set("city", opts.city);
     const qs = params.toString();
     const res = await authFetch(`${BASE}${qs ? `?${qs}` : ""}`);
     if (!res.ok) return { clubs: [], total: 0 };
@@ -34,6 +38,17 @@ export async function apiListPublicClubs(opts?: {
     return { clubs: data.clubs ?? [], total: data.total ?? 0 };
   } catch {
     return { clubs: [], total: 0 };
+  }
+}
+
+// ── Fetch distinct location tree for filter dropdown ────────────────────────────
+export async function apiListClubLocations(): Promise<{ locations: Array<{ code: string; name: string; cities: string[] }> }> {
+  try {
+    const res = await fetch(`${BASE}/locations`);
+    if (!res.ok) return { locations: [] };
+    return (await res.json()) as { locations: Array<{ code: string; name: string; cities: string[] }> };
+  } catch {
+    return { locations: [] };
   }
 }
 

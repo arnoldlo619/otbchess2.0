@@ -28,6 +28,7 @@ import {
   apiListPublicClubs,
   apiListMyClubs,
   migrateLocalClubsToServer,
+  apiListClubLocations,
 } from "@/lib/clubsApi";
 import { FeaturedClubsCarousel } from "@/components/FeaturedClubsCarousel";
 import {
@@ -671,6 +672,14 @@ export default function MyClubs() {
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverTotal, setDiscoverTotal] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [locationFilter, setLocationFilter] = useState<string>("all"); // country code or "all"
+  const [cityFilter, setCityFilter] = useState<string>("all"); // city name or "all"
+  const [locationTree, setLocationTree] = useState<Array<{ code: string; name: string; cities: string[] }>>([]);
+
+  // Fetch location tree for filter dropdowns
+  useEffect(() => {
+    apiListClubLocations().then(({ locations }) => setLocationTree(locations));
+  }, []);
 
   // SEO: set page title and meta description
   useEffect(() => {
@@ -683,7 +692,14 @@ export default function MyClubs() {
   }, []);
 
   // ── Server-side Discover search (debounced) ──────────────────────────────
-  const fetchDiscover = useCallback(async (q: string, cat: ClubCategory | "all", joinedIds: Set<string>, sort: "members" | "newest" | "tournaments" | "az" = "members") => {
+  const fetchDiscover = useCallback(async (
+    q: string,
+    cat: ClubCategory | "all",
+    joinedIds: Set<string>,
+    sort: "members" | "newest" | "tournaments" | "az" = "members",
+    countryCode: string = "all",
+    cityName: string = "all",
+  ) => {
     setDiscoverLoading(true);
     setDiscoverError(false);
     try {
@@ -691,6 +707,8 @@ export default function MyClubs() {
         search: q.trim() || undefined,
         category: cat !== "all" ? cat : undefined,
         sort,
+        country: countryCode !== "all" ? countryCode : undefined,
+        city: cityName !== "all" ? cityName : undefined,
       });
       // Exclude clubs the user has already joined
       const filtered = results.filter((c: Club) => !joinedIds.has(c.id));
@@ -703,6 +721,7 @@ export default function MyClubs() {
         allClubs.filter((c) => {
           if (joinedIds.has(c.id)) return false;
           if (cat !== "all" && c.category !== cat) return false;
+          if (countryCode !== "all" && c.country !== countryCode) return false;
           if (q.trim()) {
             const lq = q.toLowerCase();
             return c.name.toLowerCase().includes(lq) || c.location.toLowerCase().includes(lq) || c.tagline.toLowerCase().includes(lq);
@@ -715,26 +734,28 @@ export default function MyClubs() {
     }
   }, [allClubs]);
 
-  // Debounce search + category changes → server fetch
+  // Debounce search + category + location changes → server fetch
   useEffect(() => {
     const joinedIds = new Set(myClubs.map((c) => c.id));
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    // Immediate fetch for category changes, debounced for text search
+    // Immediate fetch for filter changes, debounced for text search
     const delay = search !== "" ? 350 : 0;
     // Sync URL params
     const params = new URLSearchParams();
     if (search) params.set("q", search);
     if (categoryFilter !== "all") params.set("cat", categoryFilter);
     if (sortBy !== "members") params.set("sort", sortBy);
+    if (locationFilter !== "all") params.set("country", locationFilter);
+    if (cityFilter !== "all") params.set("city", cityFilter);
     const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
     debounceRef.current = setTimeout(() => {
-      fetchDiscover(search, categoryFilter, joinedIds, sortBy);
+      fetchDiscover(search, categoryFilter, joinedIds, sortBy, locationFilter, cityFilter);
     }, delay);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, categoryFilter, sortBy, myClubs, fetchDiscover]);
+  }, [search, categoryFilter, sortBy, locationFilter, cityFilter, myClubs, fetchDiscover]);
 
   const refreshClubs = useCallback(async () => {
     seedClubsIfEmpty();
@@ -1105,6 +1126,81 @@ export default function MyClubs() {
               </button>
             )}
           </div>
+
+          {/* Location filter row — Country + City cascading dropdowns */}
+          {locationTree.length > 0 && (
+            <div className="flex gap-2 mb-3 flex-wrap">
+              {/* Country dropdown */}
+              <div className="relative">
+                <MapPin className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
+                <select
+                  value={locationFilter}
+                  onChange={(e) => {
+                    setLocationFilter(e.target.value);
+                    setCityFilter("all"); // reset city when country changes
+                  }}
+                  className={`pl-8 pr-7 py-2 rounded-xl border text-xs font-medium outline-none transition-colors cursor-pointer appearance-none ${
+                    locationFilter !== "all"
+                      ? isDark
+                        ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                        : "bg-[#436850]/10 border-[#436850]/30 text-[#436850]"
+                      : isDark
+                        ? "bg-white/5 border-white/10 text-white/70"
+                        : "bg-white border-[#ADBC9F] text-[#436850]"
+                  }`}
+                >
+                  <option value="all">All Countries</option>
+                  {locationTree.map((loc) => (
+                    <option key={loc.code} value={loc.code}>
+                      {COUNTRY_FLAGS[loc.code] ?? ""} {loc.name}
+                    </option>
+                  ))}
+                </select>
+                <span className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] ${textMuted}`}>▾</span>
+              </div>
+
+              {/* City dropdown — only shown when a country is selected and has cities */}
+              {locationFilter !== "all" && (() => {
+                const loc = locationTree.find((l) => l.code === locationFilter);
+                return loc && loc.cities.length > 0 ? (
+                  <div className="relative">
+                    <select
+                      value={cityFilter}
+                      onChange={(e) => setCityFilter(e.target.value)}
+                      className={`pl-3 pr-7 py-2 rounded-xl border text-xs font-medium outline-none transition-colors cursor-pointer appearance-none ${
+                        cityFilter !== "all"
+                          ? isDark
+                            ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                            : "bg-[#436850]/10 border-[#436850]/30 text-[#436850]"
+                          : isDark
+                            ? "bg-white/5 border-white/10 text-white/70"
+                            : "bg-white border-[#ADBC9F] text-[#436850]"
+                      }`}
+                    >
+                      <option value="all">All Cities</option>
+                      {loc.cities.map((city) => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                    <span className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] ${textMuted}`}>▾</span>
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Clear location filter */}
+              {locationFilter !== "all" && (
+                <button
+                  onClick={() => { setLocationFilter("all"); setCityFilter("all"); }}
+                  className={`flex items-center gap-1 px-2.5 py-2 rounded-xl border text-xs font-medium transition-colors ${
+                    isDark ? "border-white/10 text-white/40 hover:text-white/70 bg-white/4" : "border-[#ADBC9F] text-[#436850]/60 hover:text-[#436850] bg-white"
+                  }`}
+                  aria-label="Clear location filter"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Category filter chips — always visible */}
           <div className="flex gap-2 flex-wrap mb-4">

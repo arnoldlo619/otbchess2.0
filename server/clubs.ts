@@ -177,7 +177,7 @@ function dbMemberToMember(row: typeof dbClubMembers.$inferSelect) {
 clubsRouter.get("/", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const { search, category, limit, sort } = req.query as Record<string, string>;
+    const { search, category, limit, sort, country, city } = req.query as Record<string, string>;
     let rows = await db
       .select()
       .from(dbClubs)
@@ -198,6 +198,17 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
       rows = rows.filter(
         (r: typeof dbClubs.$inferSelect) => r.category === category
       );
+    }
+    if (country && country !== "all") {
+      rows = rows.filter(
+        (r: typeof dbClubs.$inferSelect) => r.country === country
+      );
+    }
+    if (city && city !== "all") {
+      rows = rows.filter((r: typeof dbClubs.$inferSelect) => {
+        const rowCity = (r.city ?? "").trim() || (r.location ?? "").split(",")[0].trim();
+        return rowCity.toLowerCase() === city.toLowerCase();
+      });
     }
     // Apply sort
     if (sort === "newest") {
@@ -248,6 +259,54 @@ clubsRouter.get("/mine", authMiddleware, async (req: Request, res: Response) => 
   } catch (err) {
     logger.error("[clubs] GET /mine error:", err);
     res.status(500).json({ error: "Failed to list your clubs" });
+  }
+});
+
+// ── GET /api/clubs/locations — distinct countries + cities for filter dropdown ──
+// MUST be declared before /:id to avoid the wildcard swallowing "locations".
+clubsRouter.get("/locations", async (_req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const rows = await db
+      .select({
+        country: dbClubs.country,
+        city: dbClubs.city,
+        location: dbClubs.location,
+      })
+      .from(dbClubs)
+      .where(eq(dbClubs.isPublic, 1));
+
+    // Build structured location tree: { country: string, cities: string[] }[]
+    const countryMap = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const country = (r.country ?? "").trim();
+      if (!country) continue;
+      if (!countryMap.has(country)) countryMap.set(country, new Set());
+      // Prefer city column, fall back to parsing location string
+      const city =
+        (r.city ?? "").trim() ||
+        (r.location ?? "").split(",")[0].trim();
+      if (city) countryMap.get(country)!.add(city);
+    }
+
+    const COUNTRY_NAMES: Record<string, string> = {
+      US: "United States", DE: "Germany", JP: "Japan",
+      GB: "United Kingdom", BR: "Brazil", FR: "France",
+      CA: "Canada", AU: "Australia",
+    };
+
+    const locations = Array.from(countryMap.entries())
+      .map(([code, cities]) => ({
+        code,
+        name: COUNTRY_NAMES[code] ?? code,
+        cities: Array.from(cities).sort(),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    res.json({ locations });
+  } catch (err) {
+    logger.error("[clubs] GET /locations error:", err);
+    res.status(500).json({ error: "Failed to fetch locations" });
   }
 });
 
