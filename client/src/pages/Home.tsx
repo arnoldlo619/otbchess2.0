@@ -71,6 +71,7 @@ import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { GlassButton } from "@/components/ui/apple-tahoe-liquid-glass-button";
+import { DynamicSquare } from "@/components/ui/dynamic-square";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -1124,56 +1125,25 @@ function Features() {
           </h2>
         </div>
 
-        {/* Feature cards — full width 3-column grid */}
+        {/* Feature cards — animated DynamicSquare grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((feature, i) => {
-            const cardContent = (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/08 text-[#436850]"}`}>
-                    {feature.icon}
-                  </div>
-                  <span className="tag-elo">{feature.tag}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-base text-muted-foreground leading-relaxed">{feature.description}</p>
-                {(feature as { href?: string }).href && (
-                  <p className={`text-xs font-semibold mt-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>View feature →</p>
-                )}
-              </>
-            );
             const f = feature as { href?: string; tooltip?: string };
-            const cls = `card-chess p-6 transition-all duration-500 relative group ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${
-              f.href ? "cursor-pointer hover:scale-[1.02] hover:shadow-lg" : ""
-            }`;
-            const style = { transitionDelay: `${(i + 1) * 80}ms` };
-            const tooltipEl = f.tooltip ? (
-              <span
-                className={`pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium shadow-lg
-                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20
-                  ${isDark ? "bg-[oklch(0.18_0.06_145)] text-[oklch(0.85_0.10_145)] border border-white/10" : "bg-[#1a2e1a] text-white"}`}
-              >
-                {f.tooltip}
-              </span>
-            ) : null;
-            return f.href ? (
-              <a
-                key={feature.title}
-                href={f.href}
-                className={cls}
-                style={style}
-              >
-                {tooltipEl}
-                {cardContent}
-              </a>
-            ) : (
+            return (
               <div
                 key={feature.title}
-                className={cls}
-                style={style}
+                className={`transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{ transitionDelay: `${(i + 1) * 80}ms` }}
               >
-                {tooltipEl}
-                {cardContent}
+                <DynamicSquare
+                  title={feature.title}
+                  description={feature.description}
+                  tag={feature.tag}
+                  icon={feature.icon}
+                  buttonText={f.href ? "View feature" : undefined}
+                  buttonHref={f.href}
+                  isDark={isDark}
+                />
               </div>
             );
           })}
