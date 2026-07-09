@@ -1156,6 +1156,7 @@ const SHOWCASE_FEATURES = [
     id: "tournaments",
     tag: "Swiss + Elim Format",
     title: "Run a\nTournament",
+    description: "Swiss pairings, live standings, and elimination brackets — all from one director dashboard.",
     href: "/?action=create",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
     screenshotAlt: "Swiss Tournament Director Dashboard",
@@ -1164,6 +1165,7 @@ const SHOWCASE_FEATURES = [
     id: "league",
     tag: "Chess Club League",
     title: "Host a\nLeague",
+    description: "Weekly matchups and a season champion — incentivize your members to show up every week.",
     href: "/league-demo",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
@@ -1172,6 +1174,7 @@ const SHOWCASE_FEATURES = [
     id: "rated-game",
     tag: "OTB Rated Games",
     title: "Club OTB\nRating",
+    description: "Earn a real over-the-board ELO that updates automatically after every rated club game.",
     href: "/clock?register=true",
     screenshot: "/manus-storage/otb-rated-game-carousel_ed800e01.webp",
     screenshotAlt: "OTB Rated Game with QR code on chess clock",
@@ -1180,6 +1183,7 @@ const SHOWCASE_FEATURES = [
     id: "prep",
     tag: "Matchup Prep",
     title: "Build OTB\nRepertoire",
+    description: "Scout any chess.com player's openings, problem lines, and blunder patterns before you sit down.",
     href: "/prep",
     screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ldjNZgAdszCUXLEl.webp",
     screenshotAlt: "Scout Report showing opponent weaknesses",
@@ -1280,14 +1284,19 @@ function Showcase() {
                 </span>
               </div>
 
-              {/* Title — bottom-left, large serif overlay */}
-              <div className="absolute bottom-5 left-5 right-5 z-10">
+              {/* Title + description — bottom-left overlay */}
+              <div className="absolute bottom-5 left-5 right-14 z-10">
                 <h3
-                  className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white leading-tight"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white leading-tight mb-2"
                   style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
                 >
                   {feature.title}
                 </h3>
+                {feature.description && (
+                  <p className="text-[13px] text-white/70 leading-snug">
+                    {feature.description}
+                  </p>
+                )}
               </div>
 
               {/* Arrow hint — bottom-right, appears on hover */}
