@@ -1104,7 +1104,7 @@ function Features() {
     { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered", href: "/prep", tooltip: "Enter a username to generate a full scout report" },
     { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature", href: "/league-demo", tooltip: "See a live demo of weekly club league matchups" },
     { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time", href: "/tournaments", tooltip: "Browse live and past tournament standings" },
-    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready", tooltip: "Coming soon — auto-generated recap graphics" },
+    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready", href: "/clubs", tooltip: "Explore clubs using automated shareable content" },
   ];
 
   return (
