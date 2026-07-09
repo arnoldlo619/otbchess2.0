@@ -15,6 +15,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -246,9 +247,15 @@ export function DynamicSquare({
   isDark = false,
 }: DynamicSquareProps) {
 
+  const [, navigate] = useLocation();
+
   const handleClick = () => {
-    if (onClick) onClick();
-    else if (buttonHref) window.location.href = buttonHref;
+    if (onClick) { onClick(); return; }
+    if (buttonHref) {
+      // Use client-side routing for internal paths, hard nav for external URLs
+      if (buttonHref.startsWith("/")) navigate(buttonHref);
+      else window.open(buttonHref, "_blank", "noopener");
+    }
   };
 
   // Lower opacity so the chess grid bleeds through clearly
@@ -375,9 +382,9 @@ export function DynamicSquare({
             whileTap={prefersReducedMotion ? {} : { scale: 0.97 }}
             transition={{ duration: 0.14 }}
             onClick={(e) => {
+              // Button tap navigates same as card — stopPropagation prevents double-fire
               e.stopPropagation();
-              if (buttonHref) window.location.href = buttonHref;
-              else if (onClick) onClick();
+              handleClick();
             }}
           >
             {buttonText}
