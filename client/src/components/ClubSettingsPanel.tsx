@@ -6,6 +6,7 @@ import React, { useState, useRef } from "react";
 import { Settings2, Save, Globe, Lock, MapPin, FileText, Type, Palette, Check, Link2, Instagram, MessageCircle, Phone, Mail, Calendar, Megaphone, Tag, Flag } from "lucide-react";
 import { ClubAvatarUpload } from "./ClubAvatarUpload";
 import { ClubBannerUpload } from "./ClubBannerUpload";
+import { ClubBackgroundPicker } from "./ClubBackgroundPicker";
 import { toast } from "sonner";
 import type { Club } from "@/lib/clubRegistry";
 import { authFetch } from "@/lib/apiFetch";
@@ -300,6 +301,30 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               Landscape 16:4 recommended · max 1 MB
             </p>
           </div>
+        </div>
+
+        {/* Background Image Templates */}
+        <div className="mt-6 pt-5 border-t border-white/[0.06]">
+          <ClubBackgroundPicker
+            value={(club as { backgroundImage?: string | null }).backgroundImage ?? null}
+            onChange={(path) => {
+              (onClubChange as (p: Record<string, unknown>) => void)({ backgroundImage: path });
+              authFetch(`/api/clubs/${club.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ backgroundImage: path }),
+              }).then((r) => {
+                if (r.ok) {
+                  if (path) toast.success("Background updated!");
+                  else toast.success("Background removed.");
+                } else {
+                  toast.error("Background update failed.");
+                }
+              }).catch(() => toast.error("Background update failed."));
+            }}
+            accent={accentColor}
+          />
         </div>
       </div>
 

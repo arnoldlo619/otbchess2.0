@@ -1587,6 +1587,7 @@ export default function ClubProfile() {
                   name={club.name}
                   avatarUrl={club.avatarUrl}
                   bannerUrl={club.bannerUrl}
+                  backgroundImage={(club as { backgroundImage?: string | null }).backgroundImage ?? null}
                   avatarBroken={avatarBroken}
                   flag={flag}
                   accent={accent}

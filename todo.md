@@ -6822,3 +6822,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove old carousel progress bar, tabs, lightbox, auto-advance logic
 - [x] Clean up unused imports (GlassButton, Maximize2, Target, Timer, StarIcon)
 - [x] Replace carousel tests with new showcaseGrid.test.ts
+
+## Club Background Image Templates
+
+- [x] Upload 5 background images to CDN via manus-upload-file --webdev
+- [x] Add background_image column to clubs DB schema
+- [x] Run db:push migration (applied via direct SQL ALTER TABLE)
+- [x] Build BackgroundPicker component (5-image grid with selection state)
+- [x] Add background picker step to club creation wizard
+- [x] Add background picker to club dashboard settings page
+- [x] Apply selected background_image on the club dashboard hero/header
+- [x] Fallback to default micro-grid pattern when no background selected

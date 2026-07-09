@@ -706,6 +706,7 @@ export const dbClubs = mysqlTable(
     category: varchar("category", { length: 30 }).notNull().default("club"),
     avatarUrl: text("avatar_url"),
     bannerUrl: text("banner_url"),
+    backgroundImage: text("background_image"),
     accentColor: varchar("accent_color", { length: 20 }).notNull().default("#4CAF50"),
     ownerId: varchar("owner_id", { length: 64 }).notNull(),
     ownerName: varchar("owner_name", { length: 100 }).notNull().default(""),

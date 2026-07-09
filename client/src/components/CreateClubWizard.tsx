@@ -24,6 +24,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { createClub, type ClubCategory } from "@/lib/clubRegistry";
 import { apiCreateClub } from "@/lib/clubsApi";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
+import { ClubBackgroundPicker } from "@/components/ClubBackgroundPicker";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import {
@@ -81,6 +82,8 @@ interface WizardData {
   isPublic: boolean;
   /** Base64 data URL for the club avatar (null = use initials) */
   avatarUrl: string | null;
+  /** /manus-storage path for the selected background template (null = default) */
+  backgroundImage: string | null;
 }
 
 const DEFAULT_DATA: WizardData = {
@@ -108,6 +111,7 @@ const DEFAULT_DATA: WizardData = {
   status: "published",
   isPublic: true,
   avatarUrl: null,
+  backgroundImage: null,
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -388,6 +392,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
           accentColor: data.accentColor,
           avatarUrl: resolvedAvatarUrl,
           bannerUrl: null as null,
+          backgroundImage: data.backgroundImage || undefined,
           ownerId: user.id,
           ownerName: user.displayName,
           isPublic: data.isPublic,
@@ -999,6 +1004,15 @@ function Step4About({
           maxLength={500}
           rows={5}
           className={`w-full px-4 py-3.5 rounded-2xl border text-sm outline-none transition-colors resize-none leading-relaxed ${inputBg}`}
+        />
+      </div>
+
+      {/* Background Image */}
+      <div className={`pt-4 border-t ${divider}`}>
+        <ClubBackgroundPicker
+          value={data.backgroundImage}
+          onChange={(path) => patch({ backgroundImage: path })}
+          accent={data.accentColor}
         />
       </div>
 

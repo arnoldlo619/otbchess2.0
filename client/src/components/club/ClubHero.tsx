@@ -16,6 +16,7 @@ export interface ClubHeroProps {
   name: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
+  backgroundImage?: string | null;
   avatarBroken: boolean;
   flag: string;
   accent: string;
@@ -62,7 +63,7 @@ export interface ClubHeroProps {
 }
 
 export function ClubHero({
-  name, avatarUrl, bannerUrl, avatarBroken, flag, accent,
+  name, avatarUrl, bannerUrl, backgroundImage, avatarBroken, flag, accent,
   isVerified, beginnerFriendly, isPublic, location,
   memberCount, tournamentCount, leagueCount = 0, followerCount, onlineCount,
   website, instagram, twitter, discord, youtube,
@@ -71,6 +72,8 @@ export function ClubHero({
   bannerUploading, bannerDragOver, onBannerFile, onRemoveBanner, onBannerDragOver,
   avatarDropdown, isDark, onCreatePromo, onShareQR,
 }: ClubHeroProps) {
+  // bannerUrl (custom upload) takes priority; backgroundImage (template) is fallback
+  const heroBg = bannerUrl || backgroundImage || null;
 
   return (
     <div
@@ -78,19 +81,19 @@ export function ClubHero({
       style={{
         minHeight: "220px",
         border: `1px solid rgba(118,255,136,0.10)`,
-        background: bannerUrl
+        background: heroBg
           ? undefined
           : `radial-gradient(circle at 18% 20%, rgba(84,190,100,0.18), transparent 360px),
              linear-gradient(135deg, rgba(10,45,20,0.96), rgba(2,12,6,0.98))`,
         boxShadow: `0 24px 80px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04)`,
       }}
     >
-      {/* Custom banner image */}
-      {bannerUrl && (
+      {/* Hero background: custom upload or template */}
+      {heroBg && (
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `url(${bannerUrl})`,
+            backgroundImage: `url(${heroBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -101,14 +104,14 @@ export function ClubHero({
       <div
         className="absolute inset-0"
         style={{
-          background: bannerUrl
+          background: heroBg
             ? `linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.42) 40%, rgba(0,0,0,0.78) 100%)`
             : undefined,
         }}
       />
 
-      {/* Micro-grid checkered pattern (no banner only) — matches landing page hero */}
-      {!bannerUrl && (
+      {/* Micro-grid checkered pattern (no background only) — matches landing page hero */}
+      {!heroBg && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -123,7 +126,7 @@ export function ClubHero({
       )}
 
       {/* Radial glow behind avatar area */}
-      {!bannerUrl && (
+      {!heroBg && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
