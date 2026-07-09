@@ -235,18 +235,26 @@ clubsRouter.get("/mine", authMiddleware, async (req: Request, res: Response) => 
   if (!userId) return;
   try {
     const db = await getDb();
+    // Collect club IDs from club_members rows
     const memberRows = await db
       .select()
       .from(dbClubMembers)
       .where(eq(dbClubMembers.userId, userId));
+    const clubIdSet = new Set(memberRows.map((m: typeof dbClubMembers.$inferSelect) => m.clubId));
 
-    if (memberRows.length === 0) {
+    // Also include clubs where the user is the owner (covers clubs inserted
+    // directly via SQL that may not have a corresponding club_members row)
+    const ownedRows = await db
+      .select({ id: dbClubs.id })
+      .from(dbClubs)
+      .where(eq(dbClubs.ownerId, userId));
+    ownedRows.forEach((r: { id: string }) => clubIdSet.add(r.id));
+
+    const clubIds = Array.from(clubIdSet);
+    if (clubIds.length === 0) {
       res.json([]);
       return;
     }
-    const clubIds = memberRows.map(
-      (m: typeof dbClubMembers.$inferSelect) => m.clubId
-    );
     const clubRows = await db
       .select()
       .from(dbClubs)

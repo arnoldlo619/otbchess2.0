@@ -196,7 +196,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { TournamentWizard } from "@/components/TournamentWizard";
-import { apiGetClub, apiListClubMembers, apiTransferOwnership } from "@/lib/clubsApi";
+import { apiGetClub, apiListClubMembers, apiListMyClubs, apiTransferOwnership } from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
@@ -2581,6 +2581,16 @@ export default function ClubDashboard() {
               if (!existingMembers.find((m) => m.clubId === found!.id && m.userId === user.id)) {
                 localStorage.setItem("otb-club-members-v1", JSON.stringify([...existingMembers, serverMember]));
               }
+              localMember = true;
+            }
+          } catch { /* network error — deny access */ }
+        }
+        // Final fallback: check /mine (covers clubs where ownerId in DB may not match user.id
+        // e.g. clubs inserted via SQL or migrated from seed data)
+        if (!localMember && !isOwner) {
+          try {
+            const myClubs = await apiListMyClubs();
+            if (myClubs.find((c) => c.id === found!.id)) {
               localMember = true;
             }
           } catch { /* network error — deny access */ }
