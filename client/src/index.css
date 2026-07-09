@@ -1941,3 +1941,23 @@ select {
 .animate-barLoader {
   animation: barLoader var(--bar-speed, 1.2s) ease-in-out infinite;
 }
+
+/* ── DynamicSquare: CSS-only rotating border (mobile / reduced-motion fallback) ── */
+@keyframes otb-card-border-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Wrapper spins the conic-gradient pseudo-element via a child div rotation trick.
+   Because conic-gradient itself can't be animated, we rotate the entire border div.
+   The mask-composite:exclude keeps only the 1px ring visible. */
+.otb-card-border-spin {
+  animation: otb-card-border-spin 4s linear infinite;
+  transform-origin: center center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otb-card-border-spin {
+    animation: none;
+  }
+}

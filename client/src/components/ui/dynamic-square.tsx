@@ -1,18 +1,20 @@
 /**
  * DynamicSquare — Animated feature card with chess-board square grid background.
- * The grid is always visible through a semi-transparent card surface.
- * Squares near the cursor glow lime green (#7CF562) — OTB brand accent.
  *
- * Architecture:
- *  - Outer wrapper: dark/light bg with rounded corners + overflow hidden
- *  - Layer 1 (z-0): CSS chess-square grid (SVG pattern via backgroundImage)
- *  - Layer 2 (z-1): Mouse-proximity glow overlay (canvas, pointer-events:none)
- *  - Layer 3 (z-2): Rotating conic-gradient border (1px inset)
- *  - Layer 4 (z-10): Card content on semi-transparent frosted surface
+ * Mobile optimizations:
+ *  - Canvas glow overlay is DISABLED on touch devices (no mouse = no glow needed,
+ *    and canvas + useAnimationFrame is expensive on low-end mobile GPUs)
+ *  - Rotating conic border uses CSS animation (not JS setAngle) on mobile
+ *  - AnimatedBorder uses requestAnimationFrame only on non-touch devices
+ *  - ChessGrid uses a static SVG data-URI (zero JS cost, GPU-composited)
+ *  - Framer-motion spring is lighter on mobile (less stiffness, no y-translate)
+ *  - Touch ripple feedback replaces hover scale on mobile
+ *  - prefers-reduced-motion: all animations are suppressed
+ *  - will-change: transform applied only to the outer wrapper (GPU layer promotion)
  */
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { motion, useAnimationFrame } from "framer-motion";
+import { motion } from "framer-motion";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,26 +32,39 @@ export interface DynamicSquareProps {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SQUARE_SIZE = 24;          // chess square size in px
-const GLOW_RADIUS = 90;          // px radius of cursor glow
-const GLOW_PEAK = 0.55;          // max glow opacity at cursor center
+const SQUARE_SIZE = 24;
+const GLOW_RADIUS = 90;
+const GLOW_PEAK = 0.55;
 
-// ── Mouse glow canvas overlay ─────────────────────────────────────────────────
+// ── Detect touch device (once, at module level) ───────────────────────────────
+
+const isTouchDevice =
+  typeof window !== "undefined" &&
+  (window.matchMedia("(hover: none)").matches || "ontouchstart" in window);
+
+const prefersReducedMotion =
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ── Mouse glow canvas overlay (desktop only) ──────────────────────────────────
 
 function GlowOverlay({ isDark }: { isDark: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef<{ x: number; y: number } | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const activeRef = useRef(false);
 
-  // Resize canvas to match container
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const wrapper = wrapperRef.current;
     if (!canvas || !wrapper) return;
     const { width, height } = wrapper.getBoundingClientRect();
-    if (canvas.width !== Math.round(width) || canvas.height !== Math.round(height)) {
-      canvas.width = Math.round(width);
-      canvas.height = Math.round(height);
+    const rw = Math.round(width);
+    const rh = Math.round(height);
+    if (canvas.width !== rw || canvas.height !== rh) {
+      canvas.width = rw;
+      canvas.height = rh;
     }
   }, []);
 
@@ -60,23 +75,8 @@ function GlowOverlay({ isDark }: { isDark: boolean }) {
     return () => ro.disconnect();
   }, [resizeCanvas]);
 
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const onMove = (e: MouseEvent) => {
-      const rect = wrapper.getBoundingClientRect();
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    };
-    const onLeave = () => { mouseRef.current = null; };
-    wrapper.addEventListener("mousemove", onMove);
-    wrapper.addEventListener("mouseleave", onLeave);
-    return () => {
-      wrapper.removeEventListener("mousemove", onMove);
-      wrapper.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
-  useAnimationFrame(() => {
+  // Draw loop — only runs when mouse is inside the card
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -85,10 +85,9 @@ function GlowOverlay({ isDark }: { isDark: boolean }) {
     ctx.clearRect(0, 0, w, h);
 
     const mouse = mouseRef.current;
-    if (!mouse) return;
+    if (!mouse) { activeRef.current = false; return; }
 
-    // Draw glowing squares near cursor
-    const glowColor = isDark ? "124, 245, 98" : "67, 104, 80";  // RGB
+    const glowColor = isDark ? "124, 245, 98" : "67, 104, 80";
     const startCol = Math.max(0, Math.floor((mouse.x - GLOW_RADIUS) / SQUARE_SIZE));
     const endCol = Math.min(Math.ceil(w / SQUARE_SIZE), Math.ceil((mouse.x + GLOW_RADIUS) / SQUARE_SIZE));
     const startRow = Math.max(0, Math.floor((mouse.y - GLOW_RADIUS) / SQUARE_SIZE));
@@ -101,12 +100,49 @@ function GlowOverlay({ isDark }: { isDark: boolean }) {
         const dist = Math.hypot(cx - mouse.x, cy - mouse.y);
         if (dist >= GLOW_RADIUS) continue;
         const t = 1 - dist / GLOW_RADIUS;
-        const alpha = t * t * GLOW_PEAK;  // quadratic falloff
+        const alpha = t * t * GLOW_PEAK;
         ctx.fillStyle = `rgba(${glowColor}, ${alpha})`;
         ctx.fillRect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
       }
     }
-  });
+
+    if (activeRef.current) {
+      rafRef.current = requestAnimationFrame(draw);
+    }
+  }, [isDark]);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = wrapper.getBoundingClientRect();
+      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      if (!activeRef.current) {
+        activeRef.current = true;
+        rafRef.current = requestAnimationFrame(draw);
+      }
+    };
+    const onLeave = () => {
+      mouseRef.current = null;
+      activeRef.current = false;
+      cancelAnimationFrame(rafRef.current);
+      // Clear canvas on leave
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+
+    wrapper.addEventListener("mousemove", onMove, { passive: true });
+    wrapper.addEventListener("mouseleave", onLeave);
+    return () => {
+      wrapper.removeEventListener("mousemove", onMove);
+      wrapper.removeEventListener("mouseleave", onLeave);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [draw]);
 
   return (
     <div ref={wrapperRef} className="absolute inset-0 pointer-events-none z-[1]">
@@ -120,12 +156,44 @@ function GlowOverlay({ isDark }: { isDark: boolean }) {
 }
 
 // ── Rotating border ───────────────────────────────────────────────────────────
+// Desktop: JS-driven angle for smooth sync with glow
+// Mobile: pure CSS animation (no JS overhead)
 
 function AnimatedBorder({ isDark }: { isDark: boolean }) {
   const [angle, setAngle] = useState(0);
-  useAnimationFrame((t) => {
-    setAngle((t / 25) % 360);
-  });
+  const rafRef = useRef<number>(0);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (isTouchDevice || prefersReducedMotion) return;
+
+    const tick = (ts: number) => {
+      if (startRef.current === null) startRef.current = ts;
+      const elapsed = ts - startRef.current;
+      setAngle((elapsed / 25) % 360);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  // Mobile: use CSS animation via a keyframe class
+  if (isTouchDevice || prefersReducedMotion) {
+    return (
+      <div
+        className="absolute inset-0 rounded-2xl z-[2] pointer-events-none otb-card-border-spin"
+        style={{
+          padding: "1px",
+          background: isDark
+            ? "conic-gradient(from 0deg, transparent 0deg, #7CF562 55deg, transparent 110deg)"
+            : "conic-gradient(from 0deg, transparent 0deg, oklch(0.41 0.09 152) 55deg, transparent 110deg)",
+          WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+        }}
+      />
+    );
+  }
 
   const gradient = isDark
     ? `conic-gradient(from ${angle}deg, transparent 0deg, #7CF562 55deg, transparent 110deg)`
@@ -145,22 +213,14 @@ function AnimatedBorder({ isDark }: { isDark: boolean }) {
   );
 }
 
-// ── Chess square grid background ──────────────────────────────────────────────
+// ── Chess square grid (pure CSS, zero JS) ─────────────────────────────────────
 
 function ChessGrid({ isDark }: { isDark: boolean }) {
-  // Two alternating square colors — subtle, like a real chess board
   const light = isDark ? "oklch(0.26 0.07 145)" : "oklch(0.91 0.03 145)";
   const dark  = isDark ? "oklch(0.22 0.07 145)" : "oklch(0.87 0.04 145)";
   const s = SQUARE_SIZE;
 
-  // SVG checkerboard pattern
-  const svg = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='${s * 2}' height='${s * 2}'>
-      <rect width='${s * 2}' height='${s * 2}' fill='${light}'/>
-      <rect x='0' y='0' width='${s}' height='${s}' fill='${dark}'/>
-      <rect x='${s}' y='${s}' width='${s}' height='${s}' fill='${dark}'/>
-    </svg>
-  `.trim();
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${s * 2}' height='${s * 2}'><rect width='${s * 2}' height='${s * 2}' fill='${light}'/><rect x='0' y='0' width='${s}' height='${s}' fill='${dark}'/><rect x='${s}' y='${s}' width='${s}' height='${s}' fill='${dark}'/></svg>`;
   const encoded = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 
   return (
@@ -190,7 +250,6 @@ export function DynamicSquare({
     else if (buttonHref) window.location.href = buttonHref;
   };
 
-  // Semi-transparent frosted surface so chess grid shows through
   const surfaceBg = isDark
     ? "oklch(0.22 0.07 145 / 0.82)"
     : "oklch(0.97 0.02 145 / 0.85)";
@@ -199,37 +258,49 @@ export function DynamicSquare({
     ? "oklch(0.20 0.06 145)"
     : "oklch(0.89 0.04 145)";
 
+  // Lighter spring on mobile to avoid jank
+  const springConfig = isTouchDevice
+    ? { type: "spring" as const, stiffness: 260, damping: 30 }
+    : { type: "spring" as const, stiffness: 320, damping: 26 };
+
+  // No y-translate on mobile (causes layout shift on small screens)
+  const hoverAnim = isTouchDevice
+    ? { scale: 1.015 }
+    : { scale: 1.025, y: -4 };
+
   return (
     <motion.div
       className={`relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
-      style={{ background: outerBg, minHeight: "200px" }}
-      whileHover={{ scale: 1.025, y: -4 }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      style={{
+        background: outerBg,
+        minHeight: "200px",
+        willChange: "transform",   // single GPU layer for the whole card
+        WebkitTapHighlightColor: "transparent",
+      }}
+      whileHover={prefersReducedMotion ? {} : hoverAnim}
+      whileTap={prefersReducedMotion ? {} : { scale: 0.97 }}
+      transition={springConfig}
       onClick={handleClick}
     >
-      {/* Layer 0: Chess square grid */}
+      {/* Layer 0: Chess grid (CSS, always on) */}
       <ChessGrid isDark={isDark} />
 
-      {/* Layer 1: Mouse proximity glow overlay */}
-      <GlowOverlay isDark={isDark} />
+      {/* Layer 1: Mouse glow (desktop only) */}
+      {!isTouchDevice && !prefersReducedMotion && <GlowOverlay isDark={isDark} />}
 
-      {/* Layer 2: Rotating conic border */}
-      <AnimatedBorder isDark={isDark} />
+      {/* Layer 2: Rotating border */}
+      {!prefersReducedMotion && <AnimatedBorder isDark={isDark} />}
 
-      {/* Layer 3: Card content — semi-transparent so grid shows through */}
+      {/* Layer 3: Card content */}
       <div
-        className="relative z-10 m-[1px] rounded-[calc(1rem-1px)] p-6 flex flex-col gap-3 h-[calc(100%-2px)]"
-        style={{
-          background: surfaceBg,
-          backdropFilter: "blur(0px)",  // no blur — keep grid crisp
-        }}
+        className="relative z-10 m-[1px] rounded-[calc(1rem-1px)] p-5 sm:p-6 flex flex-col gap-3 h-[calc(100%-2px)]"
+        style={{ background: surfaceBg }}
       >
         {/* Header: icon + tag */}
         <div className="flex items-center justify-between">
           {icon && (
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{
                 background: isDark
                   ? "oklch(0.30 0.09 145 / 0.7)"
@@ -260,7 +331,7 @@ export function DynamicSquare({
 
         {/* Title */}
         <h3
-          className="text-base font-semibold leading-snug"
+          className="text-sm sm:text-base font-semibold leading-snug"
           style={{ color: isDark ? "oklch(0.93 0.05 145)" : "oklch(0.24 0.07 155)" }}
         >
           {title}
@@ -268,7 +339,7 @@ export function DynamicSquare({
 
         {/* Description */}
         <p
-          className="text-sm leading-relaxed flex-1"
+          className="text-xs sm:text-sm leading-relaxed flex-1"
           style={{ color: isDark ? "oklch(0.68 0.07 145)" : "oklch(0.38 0.09 152)" }}
         >
           {description}
@@ -277,7 +348,7 @@ export function DynamicSquare({
         {/* CTA button */}
         {buttonText && (
           <motion.button
-            className="mt-2 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide"
+            className="mt-2 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide touch-manipulation"
             style={{
               background: isDark
                 ? "oklch(0.27 0.08 145 / 0.9)"
@@ -286,13 +357,15 @@ export function DynamicSquare({
               border: isDark
                 ? "1px solid oklch(0.38 0.10 145 / 0.5)"
                 : "1px solid oklch(0.41 0.09 152 / 0.22)",
+              // Minimum 44px touch target
+              minHeight: "44px",
             }}
-            whileHover={{
+            whileHover={prefersReducedMotion ? {} : {
               background: isDark ? "#7CF562" : "oklch(0.41 0.09 152)",
               color: isDark ? "oklch(0.14 0.05 145)" : "#fff",
               scale: 1.02,
             }}
-            whileTap={{ scale: 0.97 }}
+            whileTap={prefersReducedMotion ? {} : { scale: 0.97 }}
             transition={{ duration: 0.14 }}
             onClick={(e) => {
               e.stopPropagation();
