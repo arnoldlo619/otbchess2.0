@@ -2022,9 +2022,9 @@ export default function Home() {
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
       <HowItWorks />
+      <Showcase />
       <Features />
       <PlayerDemo />
-      <Showcase />
       <Testimonials />
       <CTASection onCreateTournament={() => setWizardOpen(true)} />
       <Footer />
