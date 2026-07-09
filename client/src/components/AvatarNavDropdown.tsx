@@ -37,6 +37,7 @@ import {
   FlaskConical,
   BookOpen,
 } from "lucide-react";
+import { FeedIcon, ChessClockIcon } from "@/components/OtbIcons";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
 import { useChessAvatar } from "@/hooks/useChessAvatar";
@@ -51,8 +52,8 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "Blog",        href: "/blog",        icon: BookOpen },
-  { name: "Chess Clock", href: "/clock",       icon: Timer },
+  { name: "Blog",        href: "/blog",        icon: FeedIcon },
+  { name: "Chess Clock", href: "/clock",       icon: ChessClockIcon },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -950,10 +951,12 @@ export function AvatarNavDropdown({
                         (e.currentTarget as HTMLElement).style.background = "transparent";
                     }}
                   >
-                    <item.icon
-                      className="w-4 h-4 flex-shrink-0"
-                      style={{ color: active ? OTB_GREEN : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }}
-                    />
+                    <span className={`otb-icon${active ? " otb-icon--active" : ""}`}>
+                      <item.icon
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: active ? OTB_GREEN : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }}
+                      />
+                    </span>
                     <span>{item.name}</span>
                     {active && (
                       <motion.div
@@ -1182,7 +1185,9 @@ export function AvatarNavDropdown({
                       onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)"; }}
                       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                     >
-                      <item.icon className="w-4 h-4 flex-shrink-0" style={{ color: active ? OTB_GREEN : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }} />
+                      <span className={`otb-icon${active ? " otb-icon--active" : ""}`}>
+                        <item.icon className="w-4 h-4 flex-shrink-0" style={{ color: active ? OTB_GREEN : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }} />
+                      </span>
                       <span>{item.name}</span>
                       {active && <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: OTB_GREEN }} />}
                     </Link>
@@ -1354,7 +1359,9 @@ export function AvatarNavDropdown({
                           className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ background: active ? `${OTB_GREEN_GLOW}0.25)` : isDark ? "rgba(255,255,255,0.06)" : "var(--dropdown-icon-bg)" }}
                         >
-                          <item.icon className="w-4 h-4" style={{ color: active ? "#4CAF50" : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }} />
+                          <span className={`otb-icon${active ? " otb-icon--active" : ""}`}>
+                            <item.icon className="w-4 h-4" style={{ color: active ? "#4CAF50" : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }} />
+                          </span>
                         </div>
                         <span>{item.name}</span>
                         {active && (

@@ -41,6 +41,7 @@ import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
 import { Users, Settings as _Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
+import { TournamentsIcon, BattleIcon, MembersIcon, RatingIcon, ProfileIcon } from "@/components/OtbIcons";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { AchievementBadgeGrid } from "@/components/tournament/AchievementBadge";
 interface EditState {
@@ -626,7 +627,7 @@ export default function ProfilePage() {
           {achievements.length > 0 && (
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-2">
-                <Trophy className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                <span className="otb-icon"><TournamentsIcon size={16} /></span>
                 <span className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-white/50" : "text-[#436850]/70"}`}>Achievements</span>
               </div>
               <AchievementBadgeGrid
@@ -855,7 +856,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Link2 className="w-5 h-5 text-[#436850]" />
+                    <span className="otb-icon"><ProfileIcon size={20} /></span>
                     <div>
                       <p className={`text-sm font-medium ${text}`}>FIDE Profile</p>
                       <p className={`text-xs ${muted}`}>ID: {user.fideId}</p>
@@ -890,7 +891,7 @@ export default function ProfilePage() {
         {/* Tournaments card */}
         <div className={`rounded-3xl border p-6 ${card}`}>
           <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-[#436850]" />
+            <span className="otb-icon"><TournamentsIcon size={20} /></span>
             <h2 className={`text-base font-bold ${text}`}>Your Tournaments</h2>
             {tournamentsLoading && (
               <Loader2 className="w-4 h-4 animate-spin text-[#436850] ml-auto" />
@@ -998,7 +999,7 @@ export default function ProfilePage() {
           {/* Header row */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+              <span className="otb-icon"><BattleIcon size={16} /></span>
               <h2 className={`text-base font-bold ${text}`}>Battle History</h2>
             </div>
             <a
@@ -1061,7 +1062,7 @@ export default function ProfilePage() {
             </div>
           ) : !battleHistory || battleHistory.length === 0 ? (
             <div className={`flex flex-col items-center gap-3 py-8 ${muted}`}>
-              <Swords className="w-8 h-8 opacity-30" />
+              <span className="otb-icon opacity-30"><BattleIcon size={32} /></span>
               <p className="text-sm text-center">No battles yet.<br />Challenge someone to a 1v1 battle!</p>
               <a
                 href="/battle"
@@ -1144,7 +1145,7 @@ export default function ProfilePage() {
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
                 isDark ? "bg-[#4ade80]/15" : "bg-emerald-50"
               }`}>
-                <TrendingUp className={`w-4 h-4 ${isDark ? "text-[#4ade80]" : "text-emerald-600"}`} />
+                <span className="otb-icon"><RatingIcon size={16} /></span>
               </div>
               <div>
                 <h2 className={`text-base font-bold ${text}`}>My Analysed Games</h2>
@@ -1186,7 +1187,7 @@ export default function ProfilePage() {
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                 isDark ? "bg-white/5" : "bg-[#ADBC9F]/40"
               }`}>
-                <TrendingUp className={`w-6 h-6 ${muted}`} />
+                <span className="otb-icon"><RatingIcon size={24} /></span>
               </div>
               <div>
                 <p className={`text-sm font-medium ${text}`}>No analysed games yet</p>
@@ -1218,7 +1219,7 @@ export default function ProfilePage() {
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
                 isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/10"
               }`}>
-                <Users className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                <span className="otb-icon"><MembersIcon size={20} /></span>
               </div>
               <div>
                 <p className={`text-sm font-semibold ${text}`}>My Clubs</p>
