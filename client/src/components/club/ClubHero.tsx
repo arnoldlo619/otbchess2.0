@@ -100,15 +100,38 @@ export function ClubHero({
         />
       )}
 
-      {/* Gradient overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: heroBg
-            ? `linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.42) 40%, rgba(0,0,0,0.78) 100%)`
-            : undefined,
-        }}
-      />
+      {/* Gradient overlay — multi-stop scrim ensures text readability at all positions */}
+      {heroBg && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(
+              180deg,
+              rgba(0,0,0,0.38) 0%,
+              rgba(0,0,0,0.28) 25%,
+              rgba(0,0,0,0.52) 55%,
+              rgba(0,0,0,0.82) 80%,
+              rgba(0,0,0,0.92) 100%
+            )`,
+          }}
+        />
+      )}
+
+      {/* Side vignette — softens busy edges on wide images */}
+      {heroBg && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(
+              90deg,
+              rgba(0,0,0,0.32) 0%,
+              transparent 30%,
+              transparent 70%,
+              rgba(0,0,0,0.32) 100%
+            )`,
+          }}
+        />
+      )}
 
       {/* Micro-grid checkered pattern (no background only) — matches landing page hero */}
       {!heroBg && (
