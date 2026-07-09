@@ -6808,3 +6808,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Step 5: DataQualityBanner, InsightCard (6 fields), V3ScoutReportTab (forecast, checklist, filterable insights); provider selector; V3 render block in MatchupPrep.tsx; V2 legacy fallback link
 - [x] Step 6: coach-insight security fix — requireAuth, 8KB cap, system prompt prefix allowlist, user prompt length bounds
 - [x] Step 7: 38 fixture + 71 recap/theme tests pass; 0 TypeScript errors; banned phrase list + illegal line chess.js replay confirmed
+
+## Showcase Section Redesign
+
+- [x] Transform carousel/slide section into Contra Labs-style 2×2 image-dominant card grid
+- [x] Full-card clickable with SPA navigation (Wouter useLocation)
+- [x] Keyboard accessible (Enter key, role=button, tabIndex, aria-label)
+- [x] Image-dominant cards with gradient scrim and overlay text
+- [x] Section header left-aligned editorial style
+- [x] Staggered entrance animation on scroll
+- [x] Hover effects: image scale, green tint overlay, arrow hint
+- [x] Works in both dark and light mode
+- [x] Remove old carousel progress bar, tabs, lightbox, auto-advance logic
+- [x] Clean up unused imports (GlassButton, Maximize2, Target, Timer, StarIcon)
+- [x] Replace carousel tests with new showcaseGrid.test.ts

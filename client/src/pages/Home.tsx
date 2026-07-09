@@ -18,7 +18,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -54,23 +54,18 @@ import {
   ChevronDown as _ChevronDown,
   Ghost,
   LayoutDashboard,
-  Target,
   BookOpen,
   Search,
   TrendingUp,
   Brain,
-  Maximize2,
   Link2,
   GraduationCap,
-  Timer,
-  Star as StarIcon,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
-import { GlassButton } from "@/components/ui/apple-tahoe-liquid-glass-button";
 import { DynamicSquare } from "@/components/ui/dynamic-square";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
@@ -1154,81 +1149,40 @@ function Features() {
 }
 // ─── Features CTA Banner ─────────────────────────────────────────────────────
 
-// ─── Features Carousel — Chess Club League + Matchup Prep ───────────────────
-// Per-slide accent colors: [light mode hex, dark mode oklch]
-const SLIDE_COLORS: Array<{ light: string; dark: string }> = [
-  { light: "rgba(61,107,71,0.18)",  dark: "rgba(34,197,94,0.18)"  }, // tournaments — forest green
-  { light: "rgba(37,99,235,0.16)",  dark: "rgba(96,165,250,0.18)" }, // league — blue
-  { light: "rgba(217,119,6,0.16)",  dark: "rgba(251,191,36,0.18)" }, // rated game — amber
-  { light: "rgba(124,58,237,0.16)", dark: "rgba(167,139,250,0.18)" }, // prep — violet
-];
+// ─── Showcase — Contra Labs-style 2×2 Image-Dominant Feature Grid ───────────
 
-const CAROUSEL_SLIDES = [
+const SHOWCASE_FEATURES = [
   {
     id: "tournaments",
-    badge: "Swiss + Elim Format",
-    badgeIcon: <Trophy className="w-3.5 h-3.5" />,
-    headline: "Run a tournament.\nNot a spreadsheet.",
-    sub: "Swiss pairings, live standings, and elimination brackets — all from one director dashboard. Players join with their chess.com username. No accounts, no friction.",
-    bullets: [
-      { icon: <Zap className="w-4 h-4" />, text: "Swiss rounds → elimination bracket in one seamless flow" },
-      { icon: <TrendingUp className="w-4 h-4" />, text: "Live standings with Buchholz tiebreaks, updated instantly" },
-      { icon: <Users className="w-4 h-4" />, text: "Players join via chess.com username — ratings auto-imported" },
-    ],
-    cta: { label: "Host a Tournament", href: "/?action=create" },
-    ctaSecondary: null,
+    tag: "Swiss + Elim Format",
+    title: "Run a\nTournament",
+    href: "/?action=create",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
-    screenshotAlt: "Swiss Tournament Director Dashboard — Round 5 Pairings",
+    screenshotAlt: "Swiss Tournament Director Dashboard",
   },
   {
     id: "league",
-    badge: "Chess Club League",
-    badgeIcon: <Swords className="w-3.5 h-3.5" />,
-    headline: "Your club.\nA real season.",
-    sub: "Weekly matchups, live standings, and a season champion. Powered by chess.com — members link their username once and their rating follows them all season.",
-    bullets: [
-      { icon: <Trophy className="w-4 h-4" />, text: "Fantasy-style weekly matchups between club members" },
-      { icon: <BarChart3 className="w-4 h-4" />, text: "Live standings, form guides, and head-to-head records" },
-      { icon: <Link2 className="w-4 h-4" />, text: "chess.com integration — ratings & avatars auto-synced" },
-    ],
-    cta: { label: "Explore Chess Leagues", href: "/league-demo" },
-    ctaSecondary: null,
+    tag: "Chess Club League",
+    title: "Your Club.\nA Real Season.",
+    href: "/league-demo",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
-    screenshotAspectRatio: "2318/1165",
-    screenshotObjectFit: "contain" as const,
   },
   {
     id: "rated-game",
-    badge: "OTB Rated Games",
-    badgeIcon: <Trophy className="w-3.5 h-3.5" />,
-    headline: "Play rated.\nEarn your OTB ELO.",
-    sub: "Register a rated game on the chess clock, share a QR code with your opponent, and your OTB Elo updates automatically when the game ends — no arbiter required.",
-    bullets: [
-      { icon: <Timer className="w-4 h-4" />, text: "Built into the clock — register a rated game in seconds" },
-      { icon: <StarIcon className="w-4 h-4" />, text: "Earn a real OTB Blitz and Rapid Elo, tracked over time" },
-      { icon: <TrendingUp className="w-4 h-4" />, text: "Leaderboard, W/L/D record, and rating history on your profile" },
-    ],
-    cta: { label: "Play a Rated Game", href: "/clock?register=true" },
-    ctaSecondary: null,
+    tag: "OTB Rated Games",
+    title: "Play Rated.\nEarn Your ELO.",
+    href: "/clock?register=true",
     screenshot: "/manus-storage/otb-rated-game-carousel_ed800e01.webp",
-    screenshotAlt: "OTB Rated Game — Register modal with QR code on chess clock",
+    screenshotAlt: "OTB Rated Game with QR code on chess clock",
   },
   {
     id: "prep",
-    badge: "Matchup Prep",
-    badgeIcon: <Search className="w-3.5 h-3.5" />,
-    headline: "Know your opponent\nbefore move one.",
-    sub: "Enter any chess.com username. Get opening tendencies, problem lines, exact blunder patterns, and AI-generated coaching insights — ready before you sit down at the board.",
-    bullets: [
-      { icon: <Search className="w-4 h-4" />, text: "Scout openings, tendencies, and weaknesses instantly" },
-      { icon: <Target className="w-4 h-4" />, text: "Problem Lines: exact moves where they usually go wrong" },
-      { icon: <Brain className="w-4 h-4" />, text: "Deep scout report: line depth, recurring mistakes, repertoire consistency" },
-    ],
-    cta: { label: "Try Matchup Prep", href: "/prep" },
-    ctaSecondary: null,
+    tag: "Matchup Prep",
+    title: "Know Your\nOpponent",
+    href: "/prep",
     screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ldjNZgAdszCUXLEl.webp",
-    screenshotAlt: "Matchup Prep — Scout Report showing hikaru's weaknesses and game plan",
+    screenshotAlt: "Scout Report showing opponent weaknesses",
   },
 ];
 
@@ -1236,231 +1190,116 @@ function Showcase() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [progressKey, setProgressKey] = useState(0); // bump to restart CSS animation
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
-  const [lightboxAlt, setLightboxAlt] = useState("");
-  const slide = CAROUSEL_SLIDES[activeSlide];
+  const [, navigate] = useLocation();
 
-  // Close lightbox on Escape key
-  useEffect(() => {
-    if (!lightboxSrc) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightboxSrc(null); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [lightboxSrc]);
+  // Section background: muted sage (light) / deep forest (dark) — Contra Labs style
+  const sectionBg = isDark
+    ? "bg-[oklch(0.16_0.05_145)]"
+    : "bg-[oklch(0.92_0.03_160)]";
 
-  // Auto-advance every 6 seconds; pause on hover
-  useEffect(() => {
-    if (isHovered) return;
-    const timer = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % CAROUSEL_SLIDES.length);
-      setProgressKey(k => k + 1);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [isHovered]);
-
-  // Reset progress bar when slide changes manually
-  const goToSlide = (i: number) => {
-    setActiveSlide(i);
-    setProgressKey(k => k + 1);
-  };
-
-  const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]";
-  const _accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/10 text-[#436850]";
-  const slideGlassColor = isDark
-    ? SLIDE_COLORS[activeSlide]?.dark
-    : SLIDE_COLORS[activeSlide]?.light;
+  // Card background: dark teal (both modes, image-dominant)
+  const cardBg = isDark
+    ? "bg-[oklch(0.22_0.06_170)]"
+    : "bg-[oklch(0.35_0.06_170)]";
 
   return (
-    <section id="for-clubs" className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
-      <div className="container">
+    <section
+      id="for-clubs"
+      className={`py-24 overflow-hidden transition-colors duration-500 ${sectionBg}`}
+      ref={ref}
+    >
+      <div className="container max-w-6xl">
 
-        {/* ── Slide selector tabs ── */}
-        <div className={`flex justify-center mb-14 ${inView ? "animate-fade-up-soft" : "opacity-0"}`} style={{ animationFillMode: "forwards" }}>
-          <div className={`inline-flex rounded-2xl p-1.5 gap-1 ${
-            isDark ? "bg-[oklch(0.18_0.06_145)] border border-white/08" : "bg-[#FBFADA] border border-[#436850]/10"
+        {/* ── Section header — left-aligned, editorial serif ── */}
+        <div className={`mb-12 max-w-lg transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <h2
+            className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-4 ${
+              isDark ? "text-white" : "text-[#12372A]"
+            }`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Explore the OTB
+            <br />
+            Chess ecosystem
+          </h2>
+          <p className={`text-base leading-relaxed ${
+            isDark ? "text-white/60" : "text-[#436850]"
           }`}>
-            {CAROUSEL_SLIDES.map((s, i) => (
-              <button
-                key={s.id}
-                onClick={() => goToSlide(i)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  activeSlide === i
-                    ? isDark
-                      ? "bg-[oklch(0.28_0.09_145)] text-white shadow-sm"
-                      : "bg-white text-[#12372A] shadow-sm"
-                    : isDark
-                      ? "text-white/40 hover:text-white/70"
-                      : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                <span className={activeSlide === i ? accentText : ""}>{s.badgeIcon}</span>
-                {s.badge}
-              </button>
-            ))}
-          </div>
+            Four tools that power your over-the-board chess experience — from hosting tournaments to scouting your next opponent.
+          </p>
         </div>
 
-        {/* ── Slide content ── */}
-        <div
-          key={slide.id}
-          className="grid lg:grid-cols-2 gap-16 items-center"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-
-          {/* Left — screenshot with chess-board backdrop */}
-          <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
+        {/* ── 2×2 Card Grid ── */}
+        <div className="grid sm:grid-cols-2 gap-3">
+          {SHOWCASE_FEATURES.map((feature, i) => (
             <div
-              className={`relative rounded-2xl p-4 shadow-2xl ${
-                isDark ? "bg-[oklch(0.18_0.06_145)]" : "bg-[#E8F0E9]"
-              }`}
+              key={feature.id}
+              className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ${
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              } ${cardBg}`}
+              style={{
+                transitionDelay: `${(i + 1) * 100}ms`,
+                aspectRatio: "4/3",
+              }}
+              onClick={() => {
+                if (feature.href.startsWith("/")) navigate(feature.href);
+                else window.open(feature.href, "_blank", "noopener");
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (feature.href.startsWith("/")) navigate(feature.href);
+                  else window.open(feature.href, "_blank", "noopener");
+                }
+              }}
+              aria-label={`${feature.tag}: ${feature.title.replace("\n", " ")}`}
             >
-              {/* Chess-board micro-grid backdrop */}
-              <div className="absolute inset-0 rounded-2xl chess-board-bg opacity-25 pointer-events-none" />
-              {/* Subtle inner glow border */}
-              <div className={`absolute inset-0 rounded-2xl pointer-events-none ${
-                isDark
-                  ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
-                  : "ring-1 ring-inset ring-[#436850]/15"
-              }`} />
-              {/* Screenshot — fills frame; per-slide objectFit override for wide images; click to expand */}
+              {/* Screenshot image — fills entire card */}
+              <img
+                src={feature.screenshot}
+                alt={feature.screenshotAlt}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+              />
+
+              {/* Gradient scrim — stronger at bottom for text readability */}
               <div
-                className="relative rounded-xl overflow-hidden shadow-xl cursor-zoom-in group/img"
-                style={{ aspectRatio: slide.screenshotAspectRatio ?? "16/10" }}
-                onClick={() => { setLightboxSrc(slide.screenshot!); setLightboxAlt(slide.screenshotAlt); }}
-              >
-                <img
-                  src={slide.screenshot!}
-                  alt={slide.screenshotAlt}
-                  className={`w-full h-full transition-transform duration-700 ease-out ${isHovered && !slide.screenshotObjectFit ? "scale-[1.06]" : "scale-100"}`}
-                  style={{ objectFit: slide.screenshotObjectFit ?? "cover", objectPosition: "top" }}
-                />
-                {/* Subtle bottom fade */}
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-                {/* Expand hint — appears on hover */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 pointer-events-none">
-                  <div className="bg-black/50 backdrop-blur-sm rounded-full p-3">
-                    <Maximize2 className="w-5 h-5 text-white" />
-                  </div>
+                className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)",
+                }}
+              />
+
+              {/* Hover overlay — subtle green tint */}
+              <div className="absolute inset-0 bg-[oklch(0.45_0.14_145)]/0 group-hover:bg-[oklch(0.45_0.14_145)]/10 transition-colors duration-300 pointer-events-none" />
+
+              {/* Tag — top-left, small uppercase */}
+              <div className="absolute top-4 left-4 z-10">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-white/90">
+                  {feature.tag}
+                </span>
+              </div>
+
+              {/* Title — bottom-left, large serif overlay */}
+              <div className="absolute bottom-5 left-5 right-5 z-10">
+                <h3
+                  className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white leading-tight"
+                  style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
+                >
+                  {feature.title}
+                </h3>
+              </div>
+
+              {/* Arrow hint — bottom-right, appears on hover */}
+              <div className="absolute bottom-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <ArrowRight className="w-5 h-5 text-white" />
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Right — text */}
-          <div className={`transition-all duration-700 delay-200 ${inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
-            <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${accentText}`}>
-              {slide.badge}
-            </p>
-            <h2
-              className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground"
-              style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
-            >
-              {slide.headline}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed mb-8 text-base">
-              {slide.sub}
-            </p>
-
-            <div className="space-y-4 mb-10">
-              {slide.bullets.map((b, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/08 text-[#436850]"
-                  }`}>{b.icon}</div>
-                  <p className="text-sm text-muted-foreground leading-relaxed pt-1.5">{b.text}</p>
-                </div>
-              ))}
-            </div>
-
-            <GlassButton
-              size="default"
-              onClick={() => window.location.href = slide.cta.href}
-              className="text-white"
-              glassColor={slideGlassColor}
-              style={{ transition: "all 0.4s ease" }}
-            >
-              {slide.cta.label}
-              <ChevronRight className="w-4 h-4" />
-            </GlassButton>
-          </div>
-        </div>
-
-        {/* ── Progress bar ── */}
-        <div className="flex justify-center mt-10 mb-2">
-          <div className={`relative w-48 h-0.5 rounded-full overflow-hidden ${
-            isDark ? "bg-white/10" : "bg-[#ADBC9F]"
-          }`}>
-            <div
-              key={progressKey}
-              className={`absolute inset-y-0 left-0 rounded-full ${
-                isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"
-              } ${isHovered ? "[animation-play-state:paused]" : "[animation-play-state:running]"}`}
-              style={{
-                animation: "carousel-progress 6s linear forwards",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ── Dot indicators ── */}
-        <div className="flex justify-center gap-2 mt-3">
-          {CAROUSEL_SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToSlide(i)}
-              className={`rounded-full transition-all duration-300 ${
-                activeSlide === i
-                  ? `w-6 h-2 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`
-                  : `w-2 h-2 ${isDark ? "bg-white/20 hover:bg-white/40" : "bg-[#ADBC9F] hover:bg-[#436850]/50"}`
-              }`}
-              aria-label={`Slide ${i + 1}`}
-            />
           ))}
         </div>
-
       </div>
-
-      {/* ── Lightbox modal ── */}
-      {lightboxSrc && (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 md:p-8"
-          onClick={() => setLightboxSrc(null)}
-          onKeyDown={(e) => e.key === "Escape" && setLightboxSrc(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={lightboxAlt}
-        >
-          {/* Close button */}
-          <button
-            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-2.5 transition-colors duration-150 z-10"
-            onClick={() => setLightboxSrc(null)}
-            aria-label="Close image"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-
-          {/* Image — stop propagation so clicking image itself doesn't close */}
-          <div
-            className="relative max-w-5xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <img
-              src={lightboxSrc}
-              alt={lightboxAlt}
-              className="w-full h-full object-contain"
-            />
-            {/* ESC hint */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-white/50 select-none">
-              Press Esc or click outside to close
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
