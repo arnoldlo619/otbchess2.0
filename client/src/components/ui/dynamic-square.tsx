@@ -1,74 +1,78 @@
 /**
- * DynamicSquare — Animated feature card with chess-board dot grid background
- * and OTB brand color scheme (forest green / lime green accent).
+ * DynamicSquare — Animated feature card with chess-board square grid background.
+ * The grid is always visible through a semi-transparent card surface.
+ * Squares near the cursor glow lime green (#7CF562) — OTB brand accent.
  *
- * Adapted from the Eldoraui "dynamic-square" pattern.
- * Purple replaced with OTB green palette:
- *   - Dark bg:   oklch(0.20 0.06 145) — deep forest green
- *   - Card bg:   oklch(0.25 0.07 145) — slightly lighter
- *   - Accent:    #7CF562 — OTB lime green (same as bar-loader / icon glow)
- *   - Border:    oklch(0.35 0.09 145 / 0.6)
- *   - Dot grid:  oklch(0.35 0.09 145 / 0.5) on dark, oklch(0.73 0.07 145 / 0.4) on light
+ * Architecture:
+ *  - Outer wrapper: dark/light bg with rounded corners + overflow hidden
+ *  - Layer 1 (z-0): CSS chess-square grid (SVG pattern via backgroundImage)
+ *  - Layer 2 (z-1): Mouse-proximity glow overlay (canvas, pointer-events:none)
+ *  - Layer 3 (z-2): Rotating conic-gradient border (1px inset)
+ *  - Layer 4 (z-10): Card content on semi-transparent frosted surface
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useAnimationFrame } from "framer-motion";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface DynamicSquareProps {
-  /** Card title */
   title: string;
-  /** Short description text */
   description: string;
-  /** Badge label (e.g. "For Clubs", "AI-Powered") */
   tag?: string;
-  /** Icon element rendered in the top-left */
   icon?: React.ReactNode;
-  /** CTA button text */
   buttonText?: string;
-  /** CTA button href — if omitted, button is not rendered */
   buttonHref?: string;
-  /** onClick handler (alternative to href) */
   onClick?: () => void;
-  /** Extra className on the outer wrapper */
   className?: string;
-  /** Force dark mode appearance regardless of theme */
-  forceDark?: boolean;
-  /** Whether the card is in dark mode (passed from parent) */
   isDark?: boolean;
 }
 
-// ── Animated dot grid ─────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-interface DotGridProps {
-  isDark: boolean;
-}
+const SQUARE_SIZE = 24;          // chess square size in px
+const GLOW_RADIUS = 90;          // px radius of cursor glow
+const GLOW_PEAK = 0.55;          // max glow opacity at cursor center
 
-const DOT_SIZE = 2;
-const DOT_GAP = 18;
-const GLOW_RADIUS = 80;
-const GLOW_COLOR_DARK = "rgba(124, 245, 98, 0.55)";   // #7CF562 at 55%
-const GLOW_COLOR_LIGHT = "rgba(67, 104, 80, 0.45)";    // #436850 at 45%
+// ── Mouse glow canvas overlay ─────────────────────────────────────────────────
 
-function DotGrid({ isDark }: DotGridProps) {
+function GlowOverlay({ isDark }: { isDark: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef<{ x: number; y: number } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Resize canvas to match container
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    const wrapper = wrapperRef.current;
+    if (!canvas || !wrapper) return;
+    const { width, height } = wrapper.getBoundingClientRect();
+    if (canvas.width !== Math.round(width) || canvas.height !== Math.round(height)) {
+      canvas.width = Math.round(width);
+      canvas.height = Math.round(height);
+    }
+  }, []);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    resizeCanvas();
+    const ro = new ResizeObserver(resizeCanvas);
+    if (wrapperRef.current) ro.observe(wrapperRef.current);
+    return () => ro.disconnect();
+  }, [resizeCanvas]);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
     const onMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
+      const rect = wrapper.getBoundingClientRect();
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
     const onLeave = () => { mouseRef.current = null; };
-    container.addEventListener("mousemove", onMove);
-    container.addEventListener("mouseleave", onLeave);
+    wrapper.addEventListener("mousemove", onMove);
+    wrapper.addEventListener("mouseleave", onLeave);
     return () => {
-      container.removeEventListener("mousemove", onMove);
-      container.removeEventListener("mouseleave", onLeave);
+      wrapper.removeEventListener("mousemove", onMove);
+      wrapper.removeEventListener("mouseleave", onLeave);
     };
   }, []);
 
@@ -77,80 +81,92 @@ function DotGrid({ isDark }: DotGridProps) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const w = canvas.width;
-    const h = canvas.height;
+    const { width: w, height: h } = canvas;
     ctx.clearRect(0, 0, w, h);
 
-    const baseDotColor = isDark
-      ? "rgba(124, 245, 98, 0.18)"
-      : "rgba(67, 104, 80, 0.22)";
-    const glowColor = isDark ? GLOW_COLOR_DARK : GLOW_COLOR_LIGHT;
     const mouse = mouseRef.current;
+    if (!mouse) return;
 
-    for (let x = DOT_GAP / 2; x < w; x += DOT_GAP) {
-      for (let y = DOT_GAP / 2; y < h; y += DOT_GAP) {
-        let alpha = 1;
-        if (mouse) {
-          const dist = Math.hypot(x - mouse.x, y - mouse.y);
-          if (dist < GLOW_RADIUS) {
-            alpha = 1 + (1 - dist / GLOW_RADIUS) * 3.5;
-          }
-        }
-        ctx.beginPath();
-        ctx.arc(x, y, DOT_SIZE / 2, 0, Math.PI * 2);
-        if (mouse && Math.hypot(x - mouse.x, y - mouse.y) < GLOW_RADIUS) {
-          const dist = Math.hypot(x - mouse.x, y - mouse.y);
-          const t = 1 - dist / GLOW_RADIUS;
-          // Interpolate between base and glow
-          ctx.fillStyle = t > 0.5 ? glowColor : baseDotColor;
-          ctx.globalAlpha = Math.min(1, alpha * 0.6);
-        } else {
-          ctx.fillStyle = baseDotColor;
-          ctx.globalAlpha = 1;
-        }
-        ctx.fill();
-        ctx.globalAlpha = 1;
+    // Draw glowing squares near cursor
+    const glowColor = isDark ? "124, 245, 98" : "67, 104, 80";  // RGB
+    const startCol = Math.max(0, Math.floor((mouse.x - GLOW_RADIUS) / SQUARE_SIZE));
+    const endCol = Math.min(Math.ceil(w / SQUARE_SIZE), Math.ceil((mouse.x + GLOW_RADIUS) / SQUARE_SIZE));
+    const startRow = Math.max(0, Math.floor((mouse.y - GLOW_RADIUS) / SQUARE_SIZE));
+    const endRow = Math.min(Math.ceil(h / SQUARE_SIZE), Math.ceil((mouse.y + GLOW_RADIUS) / SQUARE_SIZE));
+
+    for (let col = startCol; col <= endCol; col++) {
+      for (let row = startRow; row <= endRow; row++) {
+        const cx = col * SQUARE_SIZE + SQUARE_SIZE / 2;
+        const cy = row * SQUARE_SIZE + SQUARE_SIZE / 2;
+        const dist = Math.hypot(cx - mouse.x, cy - mouse.y);
+        if (dist >= GLOW_RADIUS) continue;
+        const t = 1 - dist / GLOW_RADIUS;
+        const alpha = t * t * GLOW_PEAK;  // quadratic falloff
+        ctx.fillStyle = `rgba(${glowColor}, ${alpha})`;
+        ctx.fillRect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
       }
     }
   });
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden rounded-2xl">
+    <div ref={wrapperRef} className="absolute inset-0 pointer-events-none z-[1]">
       <canvas
         ref={canvasRef}
-        width={320}
-        height={220}
-        className="w-full h-full"
+        className="absolute inset-0 w-full h-full"
         style={{ display: "block" }}
       />
     </div>
   );
 }
 
-// ── Animated border gradient ──────────────────────────────────────────────────
+// ── Rotating border ───────────────────────────────────────────────────────────
 
 function AnimatedBorder({ isDark }: { isDark: boolean }) {
   const [angle, setAngle] = useState(0);
   useAnimationFrame((t) => {
-    setAngle((t / 20) % 360);
+    setAngle((t / 25) % 360);
   });
 
-  const borderColor = isDark
-    ? `conic-gradient(from ${angle}deg, oklch(0.35 0.09 145 / 0.0) 0deg, #7CF562 60deg, oklch(0.35 0.09 145 / 0.0) 120deg)`
-    : `conic-gradient(from ${angle}deg, oklch(0.73 0.07 145 / 0.0) 0deg, oklch(0.41 0.09 152) 60deg, oklch(0.73 0.07 145 / 0.0) 120deg)`;
+  const gradient = isDark
+    ? `conic-gradient(from ${angle}deg, transparent 0deg, #7CF562 55deg, transparent 110deg)`
+    : `conic-gradient(from ${angle}deg, transparent 0deg, oklch(0.41 0.09 152) 55deg, transparent 110deg)`;
 
   return (
     <div
-      className="absolute inset-0 rounded-2xl"
+      className="absolute inset-0 rounded-2xl z-[2] pointer-events-none"
       style={{
         padding: "1px",
-        background: borderColor,
+        background: gradient,
         WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
         WebkitMaskComposite: "xor",
         maskComposite: "exclude",
-        pointerEvents: "none",
       }}
+    />
+  );
+}
+
+// ── Chess square grid background ──────────────────────────────────────────────
+
+function ChessGrid({ isDark }: { isDark: boolean }) {
+  // Two alternating square colors — subtle, like a real chess board
+  const light = isDark ? "oklch(0.26 0.07 145)" : "oklch(0.91 0.03 145)";
+  const dark  = isDark ? "oklch(0.22 0.07 145)" : "oklch(0.87 0.04 145)";
+  const s = SQUARE_SIZE;
+
+  // SVG checkerboard pattern
+  const svg = `
+    <svg xmlns='http://www.w3.org/2000/svg' width='${s * 2}' height='${s * 2}'>
+      <rect width='${s * 2}' height='${s * 2}' fill='${light}'/>
+      <rect x='0' y='0' width='${s}' height='${s}' fill='${dark}'/>
+      <rect x='${s}' y='${s}' width='${s}' height='${s}' fill='${dark}'/>
+    </svg>
+  `.trim();
+  const encoded = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+
+  return (
+    <div
+      className="absolute inset-0 z-0"
+      style={{ backgroundImage: encoded, backgroundSize: `${s * 2}px ${s * 2}px` }}
     />
   );
 }
@@ -168,47 +184,56 @@ export function DynamicSquare({
   className = "",
   isDark = false,
 }: DynamicSquareProps) {
-  const bgCard = isDark
-    ? "oklch(0.22 0.07 145)"
-    : "oklch(0.97 0.02 145)";
-  const bgOuter = isDark
-    ? "oklch(0.18 0.06 145 / 0.6)"
-    : "oklch(0.93 0.04 135 / 0.8)";
 
   const handleClick = () => {
     if (onClick) onClick();
     else if (buttonHref) window.location.href = buttonHref;
   };
 
+  // Semi-transparent frosted surface so chess grid shows through
+  const surfaceBg = isDark
+    ? "oklch(0.22 0.07 145 / 0.82)"
+    : "oklch(0.97 0.02 145 / 0.85)";
+
+  const outerBg = isDark
+    ? "oklch(0.20 0.06 145)"
+    : "oklch(0.89 0.04 145)";
+
   return (
     <motion.div
       className={`relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
-      style={{ background: bgOuter }}
-      whileHover={{ scale: 1.025, y: -3 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 340, damping: 28 }}
+      style={{ background: outerBg, minHeight: "200px" }}
+      whileHover={{ scale: 1.025, y: -4 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
       onClick={handleClick}
     >
-      {/* Animated dot grid background */}
-      <DotGrid isDark={isDark} />
+      {/* Layer 0: Chess square grid */}
+      <ChessGrid isDark={isDark} />
 
-      {/* Animated rotating border */}
+      {/* Layer 1: Mouse proximity glow overlay */}
+      <GlowOverlay isDark={isDark} />
+
+      {/* Layer 2: Rotating conic border */}
       <AnimatedBorder isDark={isDark} />
 
-      {/* Card content */}
+      {/* Layer 3: Card content — semi-transparent so grid shows through */}
       <div
-        className="relative z-10 p-6 flex flex-col gap-3"
-        style={{ background: bgCard, margin: "1px", borderRadius: "calc(1rem - 1px)" }}
+        className="relative z-10 m-[1px] rounded-[calc(1rem-1px)] p-6 flex flex-col gap-3 h-[calc(100%-2px)]"
+        style={{
+          background: surfaceBg,
+          backdropFilter: "blur(0px)",  // no blur — keep grid crisp
+        }}
       >
-        {/* Header row: icon + tag */}
+        {/* Header: icon + tag */}
         <div className="flex items-center justify-between">
           {icon && (
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200"
               style={{
                 background: isDark
-                  ? "oklch(0.30 0.09 145 / 0.6)"
-                  : "oklch(0.41 0.09 152 / 0.10)",
+                  ? "oklch(0.30 0.09 145 / 0.7)"
+                  : "oklch(0.41 0.09 152 / 0.12)",
                 color: isDark ? "#7CF562" : "oklch(0.41 0.09 152)",
               }}
             >
@@ -220,9 +245,9 @@ export function DynamicSquare({
               className="text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full"
               style={{
                 background: isDark
-                  ? "oklch(0.30 0.09 145 / 0.7)"
+                  ? "oklch(0.28 0.09 145 / 0.8)"
                   : "oklch(0.41 0.09 152 / 0.12)",
-                color: isDark ? "#7CF562" : "oklch(0.41 0.09 152)",
+                color: isDark ? "#7CF562" : "oklch(0.35 0.09 152)",
                 border: isDark
                   ? "1px solid oklch(0.40 0.10 145 / 0.5)"
                   : "1px solid oklch(0.41 0.09 152 / 0.25)",
@@ -236,15 +261,15 @@ export function DynamicSquare({
         {/* Title */}
         <h3
           className="text-base font-semibold leading-snug"
-          style={{ color: isDark ? "oklch(0.92 0.05 145)" : "oklch(0.24 0.07 155)" }}
+          style={{ color: isDark ? "oklch(0.93 0.05 145)" : "oklch(0.24 0.07 155)" }}
         >
           {title}
         </h3>
 
         {/* Description */}
         <p
-          className="text-sm leading-relaxed"
-          style={{ color: isDark ? "oklch(0.65 0.08 145)" : "oklch(0.41 0.09 152)" }}
+          className="text-sm leading-relaxed flex-1"
+          style={{ color: isDark ? "oklch(0.68 0.07 145)" : "oklch(0.38 0.09 152)" }}
         >
           {description}
         </p>
@@ -252,23 +277,23 @@ export function DynamicSquare({
         {/* CTA button */}
         {buttonText && (
           <motion.button
-            className="mt-2 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide transition-colors"
+            className="mt-2 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide"
             style={{
               background: isDark
-                ? "oklch(0.28 0.08 145)"
-                : "oklch(0.41 0.09 152 / 0.08)",
+                ? "oklch(0.27 0.08 145 / 0.9)"
+                : "oklch(0.41 0.09 152 / 0.09)",
               color: isDark ? "oklch(0.88 0.08 145)" : "oklch(0.24 0.07 155)",
               border: isDark
                 ? "1px solid oklch(0.38 0.10 145 / 0.5)"
-                : "1px solid oklch(0.41 0.09 152 / 0.20)",
+                : "1px solid oklch(0.41 0.09 152 / 0.22)",
             }}
             whileHover={{
               background: isDark ? "#7CF562" : "oklch(0.41 0.09 152)",
-              color: isDark ? "oklch(0.15 0.06 145)" : "#fff",
+              color: isDark ? "oklch(0.14 0.05 145)" : "#fff",
               scale: 1.02,
             }}
             whileTap={{ scale: 0.97 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.14 }}
             onClick={(e) => {
               e.stopPropagation();
               if (buttonHref) window.location.href = buttonHref;
@@ -283,6 +308,5 @@ export function DynamicSquare({
   );
 }
 
-// Named export for the import pattern used in the demo: import { Component }
 export { DynamicSquare as Component };
 export default DynamicSquare;
