@@ -345,7 +345,7 @@ export function DynamicSquare({
 
         {/* Title */}
         <h3
-          className="text-sm sm:text-base font-semibold leading-snug"
+          className="text-base sm:text-lg font-semibold leading-snug"
           style={{ color: isDark ? "oklch(0.93 0.05 145)" : "oklch(0.24 0.07 155)" }}
         >
           {title}
