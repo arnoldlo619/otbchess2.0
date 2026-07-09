@@ -297,7 +297,11 @@ export function DynamicSquare({
       {/* Layer 3: Card content */}
       <div
         className="relative z-10 m-[1px] rounded-[calc(1rem-1px)] p-5 sm:p-6 flex flex-col gap-3 h-[calc(100%-2px)]"
-        style={{ background: surfaceBg }}
+        style={{
+          background: surfaceBg,
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
       >
         {/* Header: icon + tag */}
         <div className="flex items-center justify-between">
