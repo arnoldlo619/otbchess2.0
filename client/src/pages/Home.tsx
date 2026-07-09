@@ -1163,7 +1163,7 @@ const SHOWCASE_FEATURES = [
   {
     id: "league",
     tag: "Chess Club League",
-    title: "Your Club.\nA Real Season.",
+    title: "Host a\nLeague",
     href: "/league-demo",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
@@ -1171,7 +1171,7 @@ const SHOWCASE_FEATURES = [
   {
     id: "rated-game",
     tag: "OTB Rated Games",
-    title: "Play Rated.\nEarn Your ELO.",
+    title: "Club OTB\nRating",
     href: "/clock?register=true",
     screenshot: "/manus-storage/otb-rated-game-carousel_ed800e01.webp",
     screenshotAlt: "OTB Rated Game with QR code on chess clock",
@@ -1179,7 +1179,7 @@ const SHOWCASE_FEATURES = [
   {
     id: "prep",
     tag: "Matchup Prep",
-    title: "Know Your\nOpponent",
+    title: "Build OTB\nRepertoire",
     href: "/prep",
     screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ldjNZgAdszCUXLEl.webp",
     screenshotAlt: "Scout Report showing opponent weaknesses",
