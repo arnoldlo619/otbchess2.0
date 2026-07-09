@@ -216,8 +216,9 @@ function AnimatedBorder({ isDark }: { isDark: boolean }) {
 // ── Chess square grid (pure CSS, zero JS) ─────────────────────────────────────
 
 function ChessGrid({ isDark }: { isDark: boolean }) {
-  const light = isDark ? "oklch(0.26 0.07 145)" : "oklch(0.91 0.03 145)";
-  const dark  = isDark ? "oklch(0.22 0.07 145)" : "oklch(0.87 0.04 145)";
+  // Wider luminance gap between the two square colors = clearly visible checkerboard
+  const light = isDark ? "oklch(0.32 0.09 145)" : "oklch(0.86 0.07 145)";
+  const dark  = isDark ? "oklch(0.16 0.06 145)" : "oklch(0.72 0.09 145)";
   const s = SQUARE_SIZE;
 
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${s * 2}' height='${s * 2}'><rect width='${s * 2}' height='${s * 2}' fill='${light}'/><rect x='0' y='0' width='${s}' height='${s}' fill='${dark}'/><rect x='${s}' y='${s}' width='${s}' height='${s}' fill='${dark}'/></svg>`;
@@ -250,13 +251,15 @@ export function DynamicSquare({
     else if (buttonHref) window.location.href = buttonHref;
   };
 
+  // Lower opacity so the chess grid bleeds through clearly
   const surfaceBg = isDark
-    ? "oklch(0.22 0.07 145 / 0.82)"
-    : "oklch(0.97 0.02 145 / 0.85)";
+    ? "oklch(0.22 0.07 145 / 0.55)"
+    : "oklch(0.97 0.02 145 / 0.58)";
 
+  // Outer bg matches the darker chess square so the grid fills edge-to-edge seamlessly
   const outerBg = isDark
-    ? "oklch(0.20 0.06 145)"
-    : "oklch(0.89 0.04 145)";
+    ? "oklch(0.16 0.06 145)"
+    : "oklch(0.72 0.09 145)";
 
   // Lighter spring on mobile to avoid jank
   const springConfig = isTouchDevice
