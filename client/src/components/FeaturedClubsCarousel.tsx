@@ -104,7 +104,8 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
                   linear-gradient(rgba(118,255,136,0.07) 1px, transparent 1px),
                   linear-gradient(90deg, rgba(118,255,136,0.07) 1px, transparent 1px)
                 `,
-                backgroundSize: "24px 24px",
+                /* 18px cells look crisp at 260–280px card width on mobile */
+                backgroundSize: "18px 18px",
               }}
             />
             {/* Subtle accent glow behind the initial */}
@@ -168,8 +169,11 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
           )}
         </div>
 
-        {/* "View Club" button — appears on hover, centered */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+        {/* "View Club" CTA — hidden on hover for pointer devices; always visible on touch */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none
+          opacity-0 group-hover:opacity-100
+          [@media(hover:none)]:opacity-100
+          transition-all duration-300">
           <span className="px-4 py-2 rounded-full text-xs font-bold bg-white/95 text-black shadow-xl backdrop-blur-sm">
             View Club
           </span>
