@@ -1000,6 +1000,30 @@ clubsRouter.delete(
 
 // ─── Club Events API ──────────────────────────────────────────────────────────
 
+/**
+ * GET /api/clubs/event/:eventId — fetch a single event by ID (no clubId required, used by QR check-in flow)
+ * IMPORTANT: This MUST be registered before GET /:id/events to prevent Express from matching
+ * "event" as the :id parameter and routing to the wrong handler.
+ */
+clubsRouter.get("/event/:eventId", async (req: Request, res: Response) => {
+  const { eventId } = req.params;
+  try {
+    const db = await getDb();
+    const [row] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
+    if (!row) { res.status(404).json({ error: "Event not found" }); return; }
+    res.json({
+      ...row,
+      startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
+      endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
+      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+    });
+  } catch (err) {
+    logger.error("[clubs] GET /event/:eventId error:", err);
+    res.status(500).json({ error: "Failed to fetch event" });
+  }
+});
+
 /** GET /api/clubs/:id/events — list all events for a club */
 clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -1020,26 +1044,6 @@ clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
   } catch (err) {
     logger.error("[clubs] GET /:id/events error:", err);
     res.status(500).json({ error: "Failed to fetch club events" });
-  }
-});
-
-/** GET /api/clubs/event/:eventId — fetch a single event by ID (no clubId required, used by QR check-in flow) */
-clubsRouter.get("/event/:eventId", async (req: Request, res: Response) => {
-  const { eventId } = req.params;
-  try {
-    const db = await getDb();
-    const [row] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
-    if (!row) { res.status(404).json({ error: "Event not found" }); return; }
-    res.json({
-      ...row,
-      startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
-      endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
-      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
-      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
-    });
-  } catch (err) {
-    logger.error("[clubs] GET /event/:eventId error:", err);
-    res.status(500).json({ error: "Failed to fetch event" });
   }
 });
 
@@ -1070,6 +1074,9 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       creatorId: userId, creatorName: body.creatorName ?? "",
       isPublished: 1, eventType: body.eventType ?? "standard",
       tournamentId: body.tournamentId ?? null,
+      recurrence: body.recurrence ?? "none",
+      recurrenceSeriesId: body.recurrenceSeriesId ?? null,
+      recurrenceEndDate: body.recurrenceEndDate ?? null,
     });
     const [created] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
     res.status(201).json({

@@ -1077,6 +1077,10 @@ export const clubEvents = mysqlTable(
     waitlistEnabled: tinyint("waitlist_enabled").notNull().default(0),
     entryFee: varchar("entry_fee", { length: 50 }),
     eventStatus: varchar("event_status", { length: 20 }).notNull().default("upcoming"),
+    // Recurrence fields — used for weekly/biweekly/monthly meetup series
+    recurrence: varchar("recurrence", { length: 20 }).default("none"),
+    recurrenceSeriesId: varchar("recurrence_series_id", { length: 64 }),
+    recurrenceEndDate: varchar("recurrence_end_date", { length: 30 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -1084,6 +1088,7 @@ export const clubEvents = mysqlTable(
     ceClubIdx: index("ce_club_idx").on(table.clubId),
     ceStartIdx: index("ce_start_idx").on(table.startAt),
     ceClubStartIdx: index("ce_club_start_idx").on(table.clubId, table.startAt),
+    ceSeriesIdx: index("ce_series_idx").on(table.recurrenceSeriesId),
   })
 );
 export type ClubEventRow = typeof clubEvents.$inferSelect;

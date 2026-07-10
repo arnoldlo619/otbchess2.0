@@ -180,6 +180,9 @@ function _persistEventToServer(event: ClubEvent): void {
         creatorName: event.creatorName,
         eventType: event.eventType ?? "standard",
         tournamentId: event.tournamentId ?? null,
+        recurrence: event.recurrence ?? "none",
+        recurrenceSeriesId: event.recurrenceSeriesId ?? null,
+        recurrenceEndDate: event.recurrenceEndDate ?? null,
       }),
     }).then((res) => {
       if (!res.ok) {
@@ -206,6 +209,8 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
       coverImageUrl?: string | null; accentColor: string;
       creatorId: string; creatorName: string; isPublished: number;
       eventType: string; tournamentId?: string | null;
+      recurrence?: string | null; recurrenceSeriesId?: string | null;
+      recurrenceEndDate?: string | null;
       createdAt: string; updatedAt: string;
     }>;
     const local = loadEvents();
@@ -225,6 +230,9 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
         isPublished: row.isPublished === 1,
         eventType: (row.eventType as ClubEvent["eventType"]) ?? "standard",
         tournamentId: row.tournamentId ?? undefined,
+        recurrence: (row.recurrence as ClubEvent["recurrence"]) ?? "none",
+        recurrenceSeriesId: row.recurrenceSeriesId ?? undefined,
+        recurrenceEndDate: row.recurrenceEndDate ?? undefined,
         createdAt: row.createdAt, updatedAt: row.updatedAt,
       });
     }

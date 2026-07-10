@@ -95,8 +95,17 @@ export default function MeetupEventPage() {
 
   const refresh = useCallback(async () => {
     if (!eventId) return;
-    const ev = getClubEvent(eventId);
-    setEvent(ev);
+    // Try localStorage first; fall back to server API (e.g. fresh device via QR scan)
+    let ev = getClubEvent(eventId);
+    if (!ev) {
+      try {
+        const evRes = await authFetch(`/api/clubs/event/${eventId}`);
+        if (evRes.ok) {
+          ev = await evRes.json() as ClubEvent;
+        }
+      } catch { /* ignore */ }
+    }
+    setEvent(ev ?? null);
     if (ev) {
       setRsvps(getEventRSVPs(ev.id));
       try {
