@@ -257,7 +257,7 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
           <h2 className={`${headingColor} font-bold text-base sm:text-lg`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Featured Clubs
           </h2>
-          <span className={`hidden sm:inline ${subColor} text-sm`}>— most popular</span>
+          <span className={`hidden sm:inline ${subColor} text-sm`}>— Example Popular Clubs</span>
         </div>
 
         <div className="flex items-center gap-2">
