@@ -28,7 +28,7 @@ import { DashboardDropdown } from "@/components/DashboardDropdown";
 import { TrainingDropdown } from "@/components/TrainingDropdown";
 import { LeagueDropdown } from "@/components/LeagueDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
-import { GuestMobileMenu } from "@/components/GuestMobileMenu";
+import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
@@ -162,25 +162,24 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   );
 
   // Right slot:
-  //   Desktop / signed-in: avatar dropdown (theme toggle is inside the dropdown)
-  //   Mobile + guest:      hamburger menu (GuestMobileMenu)
-  //                        (avatar dropdown hidden — no avatar to tap)
+  //   All users:        theme toggle (always visible)
+  //   Mobile (all):     MobileNavDrawer hamburger (md:hidden)
+  //   Desktop:          AvatarNavDropdown (hidden md:flex for guests, always flex for signed-in)
   const isGuest = !user || user.isGuest;
 
   const rightSlotEl = (
     <div className="flex items-center gap-2">
-      {/* Theme toggle — always visible in header */}
+      {/* Theme toggle — always visible */}
       <ThemeToggle />
-      {/* Hamburger — mobile only, unauthenticated only */}
-      {isGuest && (
-        <div className="flex md:hidden">
-          <GuestMobileMenu
-            currentPage={activeTab}
-            onSignInClick={onSignInClick}
-          />
-        </div>
-      )}
-      {/* Avatar dropdown — always on desktop; on mobile only when signed in */}
+      {/* Hamburger — mobile only, all users */}
+      <div className="flex md:hidden">
+        <MobileNavDrawer
+          currentPage={activeTab}
+          onSignInClick={onSignInClick}
+          isGuest={isGuest}
+        />
+      </div>
+      {/* Avatar dropdown — desktop only for guests; always shown for signed-in */}
       <div className={isGuest ? "hidden md:flex" : "flex"}>
         <AvatarNavDropdown
           currentPage={activeTab}
