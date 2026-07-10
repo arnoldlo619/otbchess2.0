@@ -67,6 +67,7 @@ import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { DynamicSquare } from "@/components/ui/dynamic-square";
+import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -397,9 +398,10 @@ function Nav({
 function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const TOURNAMENT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at5.47.32PM_037e969c.png";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 sm:pt-24 md:pt-16 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
+    <section className={`relative overflow-hidden pt-28 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
       {/* Chess board texture */}
       <div className={`absolute inset-0 chess-board-bg pointer-events-none ${isDark ? "opacity-40" : "opacity-60"}`} />
 
@@ -414,7 +416,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       />
 
       <div className="container relative z-10">
-        <div className="max-w-3xl mx-auto text-center py-24 lg:py-32">
+        <div className="max-w-3xl mx-auto text-center pt-16 sm:pt-20 lg:pt-24 pb-0">
           <div className="opacity-0-init animate-fade-in-up flex justify-center mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
             <AnnouncementBanner
               label="NEW"
@@ -485,31 +487,14 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
 
 
-          {/* Quick-stat chips */}
-          <div
-            className="opacity-0-init animate-fade-in-up mt-14 hidden sm:flex flex-wrap justify-center gap-3"
-            style={{ animationDelay: "0.65s", animationFillMode: "forwards" }}
-          >
-            {[
-              { icon: <Link2 className="w-3.5 h-3.5" />, label: "Chess.com" },
-              { icon: <Globe className="w-3.5 h-3.5" />, label: "Lichess" },
-              { icon: <Swords className="w-3.5 h-3.5" />, label: "TakeTakeTake" },
-            ].map(({ icon, label }) => (
-              <span
-                key={label}
-                className={`stat-pill inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-300 cursor-default select-none ${
-                  isDark
-                    ? "border-white/15 text-white/60 bg-white/04 hover:border-[oklch(0.65_0.14_145)]/50 hover:text-white/90 hover:bg-[oklch(0.65_0.14_145)]/10"
-                    : "border-[#436850]/20 text-[#436850]/80 bg-[#436850]/05 hover:border-[#436850]/50 hover:text-[#436850] hover:bg-[#436850]/10"
-                }`}
-                style={{ position: "relative" }}
-              >
-                {icon}
-                {label}
-              </span>
-            ))}
-          </div>
         </div>
+
+        {/* ── Hero Dashboard Mockup ── */}
+        <HeroDashboardMockup
+          screenshotUrl={TOURNAMENT_SCREENSHOT}
+          isDark={isDark}
+          alt="OTB!! Open 2026 — live tournament dashboard with Swiss pairings, round timer, and board results"
+        />
       </div>
     </section>
   );
