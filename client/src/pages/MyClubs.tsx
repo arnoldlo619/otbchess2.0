@@ -891,7 +891,14 @@ export default function MyClubs() {
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            {user ? `Welcome back${user.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}!` : "Discover Clubs"}
+            {user ? (
+              <>
+                <span className="block text-white/70 font-medium">Welcome back,</span>
+                <span className="block text-white">
+                  {user.displayName ? user.displayName.split(' ')[0] : 'Player'}!
+                </span>
+              </>
+            ) : "Discover Clubs"}
           </h1>
           <p className="text-sm sm:text-base mt-2 text-white/60 max-w-lg">
             {user
