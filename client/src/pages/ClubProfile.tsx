@@ -1042,24 +1042,25 @@ export default function ClubProfile() {
       setClubEvents(listClubEvents(found.id).filter((e) => e.isPublished));
     };
 
-    // Try localStorage first (fast, works offline)
-    const local = getClub(id) ?? getClubBySlug(id);
-    if (local) {
-      loadClubData(local);
-      return;
-    }
-
-    // Fall back to server API (handles share links from other devices/browsers)
+    // Always fetch from server first — localStorage seed data can be stale
+    // (IDs may not match the DB), so we only fall back to it when the server
+    // is unreachable (offline / network error) or returns a 404 (local-only club).
     fetch(`/api/clubs/${encodeURIComponent(id)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((serverClub: Club | null) => {
         if (serverClub) {
           loadClubData(serverClub);
+        } else {
+          // Server returned 404 — fall back to localStorage (local-only clubs)
+          const local = getClub(id) ?? getClubBySlug(id);
+          if (local) loadClubData(local);
+          // If still null, the "Club not found" UI will render
         }
-        // If null, the "Club not found" UI will render (club truly doesn't exist)
       })
       .catch(() => {
-        // Network error — "Club not found" UI will render
+        // Network error — fall back to localStorage (offline support)
+        const local = getClub(id) ?? getClubBySlug(id);
+        if (local) loadClubData(local);
       });
   }, [params.id, user]);
 

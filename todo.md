@@ -6871,3 +6871,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Hyperlink "Host a League" card in Explore section to /league
 - [ ] Align the ClubHero banner avatar and club title horizontally with the Follow/Join action buttons by moving the identity row higher in the header.
 
+
+## Bug Fix: Featured Clubs Navigation
+
+- [x] Fix Featured Clubs cards linking to wrong club pages — ClubProfile and ClubDashboard now always fetch from server first instead of trusting stale localStorage seed data (seed IDs in localStorage did not match DB IDs after re-seeding).
+

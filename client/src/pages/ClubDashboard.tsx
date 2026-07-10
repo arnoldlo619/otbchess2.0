@@ -2549,21 +2549,24 @@ export default function ClubDashboard() {
     seedClubEventsIfEmpty();
 
     async function loadClub() {
-      // ── Step 1: Resolve club (localStorage first, server fallback) ────────
-      let found: Club | null = getClub(id!) ?? getClubBySlug(id!);
-      if (!found) {
-        // Not in localStorage — fetch from server (cross-device / cache-cleared)
-        try {
-          const serverClub = await apiGetClub(id!);
-          if (serverClub) {
-            // Hydrate localStorage so subsequent loads are instant
-            const clubs = (JSON.parse(localStorage.getItem("otb-clubs-v1") || "[]") as Club[]);
-            if (!clubs.find((c) => c.id === serverClub.id)) {
-              localStorage.setItem("otb-clubs-v1", JSON.stringify([...clubs, serverClub]));
-            }
-            found = serverClub;
+      // ── Step 1: Resolve club (server-first, localStorage fallback) ────────
+      // Always fetch from server to avoid stale localStorage seed data returning
+      // the wrong club (seed IDs may not match the DB after re-seeding).
+      let found: Club | null = null;
+      try {
+        const serverClub = await apiGetClub(id!);
+        if (serverClub) {
+          // Hydrate localStorage so subsequent offline loads are instant
+          const clubs = (JSON.parse(localStorage.getItem("otb-clubs-v1") || "[]") as Club[]);
+          if (!clubs.find((c) => c.id === serverClub.id)) {
+            localStorage.setItem("otb-clubs-v1", JSON.stringify([...clubs, serverClub]));
           }
-        } catch { /* network error — fall through to not-found */ }
+          found = serverClub;
+        }
+      } catch { /* network error — fall back to localStorage */ }
+      // Offline / network error fallback
+      if (!found) {
+        found = getClub(id!) ?? getClubBySlug(id!);
       }
       if (!found) { navigate("/clubs"); return; }
 
