@@ -236,6 +236,16 @@ export function ClubHero({
             )}
             {(isOwner || isDirector) && (
               <>
+                <span
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                  style={{
+                    background: "rgba(245,197,66,0.12)",
+                    borderColor: "rgba(245,197,66,0.30)",
+                    color: "#f5c542",
+                  }}
+                >
+                  {isOwner ? "Owner" : "Director"}
+                </span>
                 {onCreatePromo && (
                   <button
                     onClick={onCreatePromo}
@@ -270,16 +280,6 @@ export function ClubHero({
                     Share QR
                   </button>
                 )}
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                  style={{
-                    background: "rgba(245,197,66,0.12)",
-                    borderColor: "rgba(245,197,66,0.30)",
-                    color: "#f5c542",
-                  }}
-                >
-                  {isOwner ? "Owner" : "Director"}
-                </span>
               </>
             )}
           </div>
