@@ -403,7 +403,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const LIGHT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at6.00.48PM_cf9817c3.png";
 
   return (
-    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
+    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 md:pb-10 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
       {/* Chess board texture */}
       <div className={`absolute inset-0 chess-board-bg pointer-events-none ${isDark ? "opacity-40" : "opacity-60"}`} />
 
@@ -542,23 +542,27 @@ function StatsBar() {
       ref={ref}
       className="relative overflow-hidden"
       style={{
-        /* On mobile: gradient bridge from hero bg into the green stats band */
+        /* Gradient bridge: fades in from hero bg, holds the green band, fades back out */
         background: isDark
-          ? "linear-gradient(to bottom, oklch(0.20 0.06 145) 0%, #436850 18%, #436850 82%, oklch(0.20 0.06 145) 100%)"
-          : "linear-gradient(to bottom, #F5F8F5 0%, #436850 18%, #436850 82%, #F5F8F5 100%)",
+          ? "linear-gradient(to bottom, oklch(0.20 0.06 145) 0%, oklch(0.20 0.06 145) 4%, #436850 22%, #436850 78%, oklch(0.20 0.06 145) 96%, oklch(0.20 0.06 145) 100%)"
+          : "linear-gradient(to bottom, #F5F8F5 0%, #F5F8F5 4%, #436850 22%, #436850 78%, #F5F8F5 96%, #F5F8F5 100%)",
       }}
     >
       {/* Subtle chess texture overlay */}
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
 
-      {/* Top label — mobile only, bridges from hero */}
-      <div className="sm:hidden text-center pt-8 pb-2 relative z-10">
+      {/* Top label — mobile: bridges from hero, desktop: section eyebrow */}
+      <div className="text-center pt-8 sm:pt-12 pb-2 relative z-10">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
           By the numbers
         </p>
+        {/* Decorative divider — desktop only */}
+        <div className="hidden sm:flex justify-center mt-3">
+          <div className="w-8 h-px bg-white/25" />
+        </div>
       </div>
 
-      <div className="container relative z-10 py-8 sm:py-10">
+      <div className="container relative z-10 py-6 sm:py-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 sm:gap-8">
           {stats.map((stat, i) => (
             <div
@@ -1113,7 +1117,7 @@ function HowItWorks() {
       isDark ? "bg-background" : "bg-background"
     }`}>
       {/* Section header */}
-      <div className="container pt-12 sm:pt-24 pb-4">
+      <div className="container pt-12 sm:pt-16 pb-4">
         <div className="text-center">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${
             isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
