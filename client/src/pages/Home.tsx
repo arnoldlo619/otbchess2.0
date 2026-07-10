@@ -419,7 +419,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
       <div className="container relative z-10 h-full">
         {/* On mobile: use flex column to distribute space so View Live Demo sits at bottom of viewport */}
-        <div className="hero-mobile-content max-w-3xl mx-auto text-center flex flex-col justify-between sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0">
+        <div className="hero-mobile-content max-w-3xl mx-auto text-center flex flex-col justify-center gap-8 sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0">
           {/* ── Top group: announcement + heading + subtitle ── */}
           <div className="flex flex-col items-center">
             <div className="opacity-0-init animate-fade-in-up flex justify-center mb-4 sm:mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
@@ -452,7 +452,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </h2>
           </div>
 
-          {/* ── Bottom group: CTAs + View live demo — pinned to bottom on mobile ── */}
+          {/* ── Bottom group: CTAs + View live demo ── */}
           <div className="flex flex-col items-center gap-0 sm:mt-0">
             <div
               className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center items-center w-full max-w-[320px] sm:max-w-none mx-auto px-0"
