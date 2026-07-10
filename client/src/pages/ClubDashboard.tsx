@@ -3168,7 +3168,7 @@ export default function ClubDashboard() {
     }
   }
 
-  const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
+    const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
     { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true },
     { id: "feed", label: "Feed", icon: OtbFeedIcon },
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
@@ -3180,8 +3180,29 @@ export default function ClubDashboard() {
     { id: "settings", label: "Settings", icon: OtbSettingsIcon },
   ];
 
+  // Club background image — set via ClubSettingsPanel > ClubBackgroundPicker
+  const clubBgImage = (club as { backgroundImage?: string | null }).backgroundImage ?? null;
+
   return (
-    <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
+    <div
+      className="min-h-screen"
+      style={{
+        background: "oklch(0.20 0.06 145)",
+        ...(clubBgImage ? {
+          backgroundImage: `url(${clubBgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          backgroundAttachment: "fixed",
+        } : {}),
+      }}
+    >
+      {/* Dark overlay when a background template is active — ensures readability */}
+      {clubBgImage && (
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{ background: "oklch(0.10 0.05 145 / 0.75)", zIndex: 0 }}
+        />
+      )}
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] overflow-hidden">
         {/* ── LEFT SIDEBAR (desktop) — matches ClubProfile expand-on-hover design ── */}
