@@ -148,11 +148,11 @@ export function LeagueDropdown() {
       {/* Footer */}
       <div className="border-t border-white/[0.08]">
         <a
-          href="/league-demo"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/league-demo"; }}
+          href="/league"
+          onClick={(e) => { e.preventDefault(); window.location.href = "/league"; }}
           className="flex items-center justify-between px-4 py-2.5 text-xs font-medium text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-colors"
         >
-          <span>Browse Leagues</span>
+          <span>Explore Leagues</span>
           <ChevronRight className="w-3 h-3" />
         </a>
       </div>

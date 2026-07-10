@@ -26,7 +26,7 @@ import type { AuthUser } from "@/hooks/useAuth";
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { name: "League",      href: "/league-demo", icon: Trophy },
+  { name: "League",      href: "/league", icon: Trophy },
   { name: "Tournaments", href: "/join",         icon: LayoutDashboard },
   { name: "Clubs",       href: "/clubs",        icon: Building2 },
   { name: "Tools",       href: "/training",     icon: GraduationCap },

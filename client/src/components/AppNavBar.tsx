@@ -100,9 +100,9 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   // Pick the best league to navigate to:
   // 1. Active league (status = "active") first
   // 2. Any league (draft, completed)
-  // 3. Fallback to demo page
+  // 3. Fallback to /league overview page
   const leagueNavUrl = (() => {
-    if (!myLeagues.length) return "/league-demo";
+    if (!myLeagues.length) return "/league";
     const active = myLeagues.find((l) => l.status === "active");
     const target = active ?? myLeagues[0];
     return `/league/${target.id}`;
@@ -122,7 +122,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       icon: LeaguesIcon,
       tooltip: myLeagues.length
         ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name)
-        : "View League Demo",
+        : "Explore OTB Leagues",
       dropdown: <LeagueDropdown />,
       onClick: (e: React.MouseEvent) => {
         e.preventDefault();
