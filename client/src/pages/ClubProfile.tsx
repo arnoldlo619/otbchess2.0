@@ -1625,7 +1625,7 @@ export default function ClubProfile() {
                 />
 
                 {/* ── Horizontal Tab Bar ───────────────────────────────── */}
-                <div className="mt-4 mb-0">
+                <div className="mt-4 mb-0 lg:hidden">
                   <ClubTabs
                     activeTab={activeTab}
                     onChange={handleTabChange}
