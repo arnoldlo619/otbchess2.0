@@ -1116,32 +1116,7 @@ function HowItWorks() {
     <section id="how-it-works" className={`transition-colors duration-500 ${
       isDark ? "bg-background" : "bg-background"
     }`}>
-      {/* Section header */}
-      <div className="container pt-12 sm:pt-16 pb-4">
-        <div className="text-center">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${
-            isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
-          }`}>
-            Simple Process
-          </p>
-          <h2
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            3 Simple Steps to Launch
-          </h2>
-          <p className="mt-3 text-muted-foreground text-sm sm:text-lg max-w-xl mx-auto px-4 sm:px-0">
-            Create Tournament, Share QR Code, Automate Pairings!
-          </p>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="container">
-        <div className={`h-px w-full mt-6 sm:mt-12 ${
-          isDark ? "bg-white/[0.06]" : "bg-[#ADBC9F]/40"
-        }`} />
-      </div>
+      
 
       {/* Parallax step blocks */}
       <div className="container">
