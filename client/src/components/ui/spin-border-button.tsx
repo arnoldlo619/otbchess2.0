@@ -133,7 +133,7 @@ export const SpinBorderButton = React.forwardRef<
       <span
         className={cn(
           "relative z-10 inline-flex w-full items-center justify-center gap-2 rounded-[9px]",
-          "px-6 py-3.5 text-sm font-semibold tracking-wide whitespace-nowrap",
+          "px-6 py-3.5 sm:py-3.5 min-h-[48px] sm:min-h-0 text-sm font-semibold tracking-wide whitespace-nowrap",
           "transition-all duration-200",
           // Arrow micro-interaction
           ARROW_SLIDE,

@@ -402,7 +402,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const LIGHT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at6.00.48PM_cf9817c3.png";
 
   return (
-    <section className={`relative overflow-hidden pt-28 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
+    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
       {/* Chess board texture */}
       <div className={`absolute inset-0 chess-board-bg pointer-events-none ${isDark ? "opacity-40" : "opacity-60"}`} />
 
@@ -417,8 +417,8 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       />
 
       <div className="container relative z-10">
-        <div className="max-w-3xl mx-auto text-center pt-16 sm:pt-20 lg:pt-24 pb-0">
-          <div className="opacity-0-init animate-fade-in-up flex justify-center mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
+        <div className="max-w-3xl mx-auto text-center pt-10 sm:pt-16 lg:pt-24 pb-0">
+          <div className="opacity-0-init animate-fade-in-up flex justify-center mb-5 sm:mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
             <AnnouncementBanner
               label="NEW"
               text="Chicago Chess Club Highlight!"
@@ -428,7 +428,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           </div>
 
           <h1
-            className="opacity-0-init animate-fade-in-up text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight mb-5 sm:mb-6 text-foreground"
+            className="opacity-0-init animate-fade-in-up text-[2.15rem] sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.08] tracking-tight mb-4 sm:mb-6 text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
           >
             Chess Tournaments,
@@ -440,19 +440,18 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
           {/* SEO H2 — visually styled as a subtitle, semantically an H2 for crawlers */}
           <h2
-            className="opacity-0-init animate-fade-in-up text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-2 sm:px-0"
+            className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-6 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
             style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
           >
-            <span className="sm:hidden">Players sign up with their chess.com username — we generate optimal pairings automatically.</span>
+            <span className="sm:hidden">Sign up with chess.com username — pairings generated automatically.</span>
             <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
           </h2>
 
           <div
-            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto"
+            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center items-center w-full max-w-[320px] sm:max-w-none mx-auto px-0"
             style={{
               animationDelay: "0.45s",
               animationFillMode: "forwards",
-              paddingBottom: "max(0px, env(safe-area-inset-bottom, 0px))",
             }}
           >
             <SpinBorderButton
@@ -522,6 +521,8 @@ function StatItem({
 
 function StatsBar() {
   const { ref, inView } = useInView();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const stats: { target: number; suffix: string; decimals: number; label: string }[] = [
     { target: 300, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
     { target: 550, suffix: "+", decimals: 0, label: "Players Registered" },
@@ -529,13 +530,34 @@ function StatsBar() {
     { target: 4.9, suffix: "★", decimals: 1, label: "Average Rating" },
   ];
   return (
-    <section ref={ref} className="bg-[#436850] py-10">
-      <div className="container">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+    <section
+      ref={ref}
+      className="relative overflow-hidden"
+      style={{
+        /* On mobile: gradient bridge from hero bg into the green stats band */
+        background: isDark
+          ? "linear-gradient(to bottom, oklch(0.20 0.06 145) 0%, #436850 18%, #436850 82%, oklch(0.20 0.06 145) 100%)"
+          : "linear-gradient(to bottom, #F5F8F5 0%, #436850 18%, #436850 82%, #F5F8F5 100%)",
+      }}
+    >
+      {/* Subtle chess texture overlay */}
+      <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
+
+      {/* Top label — mobile only, bridges from hero */}
+      <div className="sm:hidden text-center pt-8 pb-2 relative z-10">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
+          By the numbers
+        </p>
+      </div>
+
+      <div className="container relative z-10 py-8 sm:py-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 sm:gap-8">
           {stats.map((stat, i) => (
             <div
               key={stat.label}
-              className={`stat-item text-center ${inView ? "animate-stat-pop" : "opacity-0"}`}
+              className={`stat-item text-center ${
+                inView ? "animate-stat-pop" : "opacity-0"
+              }`}
               style={{ animationDelay: `${i * 90}ms`, animationFillMode: "forwards" }}
             >
               <StatItem
@@ -548,6 +570,18 @@ function StatsBar() {
               />
             </div>
           ))}
+        </div>
+
+        {/* Bridge label into next section — mobile only */}
+        <div className="sm:hidden text-center mt-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">
+            How it works
+          </p>
+          <div className="flex justify-center mt-2">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="opacity-40">
+              <path d="M1 1L8 9L15 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
         </div>
       </div>
     </section>
@@ -1023,7 +1057,7 @@ function HowItWorks() {
       isDark ? "bg-background" : "bg-background"
     }`}>
       {/* Section header */}
-      <div className="container pt-24 pb-4">
+      <div className="container pt-12 sm:pt-24 pb-4">
         <div className="text-center">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${
             isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
@@ -1031,12 +1065,12 @@ function HowItWorks() {
             Simple Process
           </p>
           <h2
-            className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             3 Simple Steps to Launch
           </h2>
-          <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="mt-3 text-muted-foreground text-sm sm:text-lg max-w-xl mx-auto px-4 sm:px-0">
             Create Tournament, Share QR Code, Automate Pairings!
           </p>
         </div>
@@ -1044,7 +1078,7 @@ function HowItWorks() {
 
       {/* Divider */}
       <div className="container">
-        <div className={`h-px w-full mt-12 ${
+        <div className={`h-px w-full mt-6 sm:mt-12 ${
           isDark ? "bg-white/[0.06]" : "bg-[#ADBC9F]/40"
         }`} />
       </div>
