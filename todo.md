@@ -6864,3 +6864,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix Training page top/bottom padding for mobile
 - [x] Add focus-visible styles to MobileBottomNav buttons
 - [x] Verify TypeScript: 0 errors
+
+## League Overview Page
+- [x] Create /league overview marketing page with hero, stats, features, league table preview, match center, CTA
+- [x] Wire up /league route in App.tsx
+- [x] Hyperlink "Host a League" card in Explore section to /league

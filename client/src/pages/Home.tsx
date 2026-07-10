@@ -1247,7 +1247,7 @@ const SHOWCASE_FEATURES = [
     tag: "Chess Club League",
     title: "Host a\nLeague",
     description: "Weekly matchups and a season champion — incentivize your members to show up every week.",
-    href: "/league-demo",
+    href: "/league",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
   },
