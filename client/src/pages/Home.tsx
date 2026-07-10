@@ -405,8 +405,8 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   return (
     <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}
       style={{
-        /* Mobile: fill exactly the visible viewport between top nav and bottom nav */
-        minHeight: "calc(100dvh - 80px - 64px)",
+        /* Mobile: fill exactly the visible viewport below the top nav */
+        minHeight: "calc(100dvh - 80px)",
       }}
     >
       {/* Chess board texture */}
@@ -425,7 +425,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       <div className="container relative z-10 h-full">
         {/* On mobile: use flex column to distribute space so View Live Demo sits at bottom of viewport */}
         <div className="max-w-3xl mx-auto text-center flex flex-col justify-between sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0"
-          style={{ minHeight: "calc(100dvh - 80px - 64px - 2rem)" }}
+          style={{ minHeight: "calc(100dvh - 80px - 2rem)" }}
         >
           {/* ── Top group: announcement + heading + subtitle ── */}
           <div className="flex flex-col items-center">

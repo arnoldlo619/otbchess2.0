@@ -1633,7 +1633,7 @@ select {
 
   /* ── Layout ── */
   --header-h: 56px;               /* mobile header height */
-  --bottom-nav-h: 64px;           /* bottom tab bar height */
+  --bottom-nav-h: 0px;             /* bottom nav removed */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
   --content-max-w: 1400px;        /* max content width */
@@ -1645,7 +1645,6 @@ select {
   --radius-input: 0.625rem;       /* 10px */
   --shadow-card: 0 2px 8px oklch(0 0 0 / 0.06);
   --shadow-card-hover: 0 8px 24px oklch(0 0 0 / 0.10);
-  --shadow-bottom-nav: 0 -1px 12px oklch(0 0 0 / 0.08);
 
   /* ── Motion ── */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -1690,7 +1689,6 @@ select {
     --text-display: 2.75rem;
     --text-heading: 1.875rem;
     --modal-max-w: 32rem;
-    --bottom-nav-h: 0px; /* no bottom nav on tablet+ */
   }
 }
 
@@ -1793,13 +1791,6 @@ select {
 /* Bottom nav safe area spacer */
 .mobile-bottom-spacer {
   height: calc(var(--bottom-nav-h) + var(--safe-bottom));
-}
-
-/* Global bottom nav clearance — ensures page content never hides behind bottom tab bar */
-@media (max-width: 767px) {
-  #main-content {
-    padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 1rem);
-  }
 }
 
 /* Mobile action bar (sticky bottom) */

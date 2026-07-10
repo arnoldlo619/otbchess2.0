@@ -5,7 +5,6 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
-import { MobileBottomNav } from "./components/MobileBottomNav";
 import { AuthProvider } from "./context/AuthContext";
 import BarLoader from "@/components/ui/bar-loader";
 
@@ -175,7 +174,6 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <MobileBottomNav />
             <InstallBanner />
           </TooltipProvider>
         </ThemeProvider>
