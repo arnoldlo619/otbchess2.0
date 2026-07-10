@@ -6869,3 +6869,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Create /league overview marketing page with hero, stats, features, league table preview, match center, CTA
 - [x] Wire up /league route in App.tsx
 - [x] Hyperlink "Host a League" card in Explore section to /league
+- [ ] Align the ClubHero banner avatar and club title horizontally with the Follow/Join action buttons by moving the identity row higher in the header.
+

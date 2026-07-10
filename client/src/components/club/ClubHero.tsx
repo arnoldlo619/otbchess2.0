@@ -287,7 +287,7 @@ export function ClubHero({
 
         {/* Main identity row: avatar + name + meta */}
         <motion.div
-          className="flex items-end gap-4 sm:gap-5"
+          className="flex items-end gap-4 sm:gap-5 sm:-mt-14 lg:-mt-16 sm:pr-36 lg:pr-44"
           variants={heroFadeUp}
           initial="hidden"
           animate="visible"
