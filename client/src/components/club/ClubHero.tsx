@@ -6,10 +6,21 @@
  * action handlers are threaded through unchanged.
  */
 import React from "react";
+import { motion } from "framer-motion";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
   CheckCircle2, Camera, X, Instagram, Sparkles, QrCode,
 } from "lucide-react";
+
+// Shared fade-up variants for staggered hero entrance
+const heroFadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: (delay: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: "easeOut" as const, delay },
+  }),
+};
 
 export interface ClubHeroProps {
   // Club data
@@ -162,7 +173,13 @@ export function ClubHero({
       <div className="relative z-10 p-6 sm:p-8 flex flex-col gap-5">
 
         {/* Top row: action buttons (avatar dropdown moved to sidebar) */}
-        <div className="flex items-start justify-between gap-3 flex-wrap">
+        <motion.div
+          className="flex items-start justify-between gap-3 flex-wrap"
+          variants={heroFadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0.05}
+        >
           <div className="flex-shrink-0" />
           {/* Action buttons — right-aligned in hero */}
           <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -266,10 +283,16 @@ export function ClubHero({
               </>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Main identity row: avatar + name + meta */}
-        <div className="flex items-end gap-4 sm:gap-5">
+        <motion.div
+          className="flex items-end gap-4 sm:gap-5"
+          variants={heroFadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0.15}
+        >
           {/* Club avatar */}
           <div
             className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-2xl"
@@ -328,10 +351,16 @@ export function ClubHero({
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-5 flex-wrap">
+        <motion.div
+          className="flex items-center gap-5 flex-wrap"
+          variants={heroFadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0.28}
+        >
           <div className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
             <Users size={12} style={{ color: accent }} />
             <span className="font-bold text-white tabular-nums">{memberCount}</span>
@@ -349,11 +378,17 @@ export function ClubHero({
               <span>league{leagueCount !== 1 ? "s" : ""}</span>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Social links */}
         {(website || instagram || twitter || discord || youtube) && (
-          <div className="flex items-center gap-4 flex-wrap">
+          <motion.div
+            className="flex items-center gap-4 flex-wrap"
+            variants={heroFadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={0.38}
+          >
             {website && (
               <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80"
@@ -385,7 +420,7 @@ export function ClubHero({
                 Discord
               </a>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
 
