@@ -787,7 +787,7 @@ export default function Archive() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1
-                className={`text-4xl sm:text-5xl font-black leading-none mb-2 ${isDark ? "text-white" : "text-[#12372A]"}`}
+                className={`text-3xl sm:text-4xl lg:text-5xl font-black leading-none mb-2 ${isDark ? "text-white" : "text-[#12372A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Archive
@@ -895,7 +895,7 @@ export default function Archive() {
                           <button
                             key={f}
                             onClick={() => setFormatFilter(f)}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                            className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-medium border transition-colors ${
                               formatFilter === f
                                 ? "bg-[#436850] border-[#436850] text-white"
                                 : isDark
@@ -923,7 +923,7 @@ export default function Archive() {
                           <button
                             key={key}
                             onClick={() => setSortKey(key as typeof sortKey)}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                            className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-medium border transition-colors ${
                               sortKey === key
                                 ? "bg-[#436850] border-[#436850] text-white"
                                 : isDark

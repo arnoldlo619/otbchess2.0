@@ -62,7 +62,7 @@ export default function NotFound() {
           </div>
 
           <h1
-            className={`text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-[#12372A]"}`}
+            className={`text-3xl sm:text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-[#12372A]"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             This board is empty.

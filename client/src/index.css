@@ -1795,6 +1795,13 @@ select {
   height: calc(var(--bottom-nav-h) + var(--safe-bottom));
 }
 
+/* Global bottom nav clearance — ensures page content never hides behind bottom tab bar */
+@media (max-width: 767px) {
+  #main-content {
+    padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 1rem);
+  }
+}
+
 /* Mobile action bar (sticky bottom) */
 .mobile-action-bar {
   position: fixed;

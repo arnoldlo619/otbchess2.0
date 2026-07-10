@@ -1175,16 +1175,16 @@ function Features() {
   return (
     <section
       id="features"
-      className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#EEF5EE]"}`}
+      className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#EEF5EE]"}`}
       ref={ref}
     >
       <div className="container">
-        <div className="text-center mb-16">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
             style={{ animationFillMode: "forwards" }}>
             Platform Features
           </p>
-          <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+          <h2 className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
             style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
             Take your club to the next level
           </h2>
@@ -1279,15 +1279,15 @@ function Showcase() {
   return (
     <section
       id="for-clubs"
-      className={`py-24 overflow-hidden transition-colors duration-500 ${sectionBg}`}
+      className={`py-12 sm:py-16 lg:py-24 overflow-hidden transition-colors duration-500 ${sectionBg}`}
       ref={ref}
     >
       <div className="container max-w-6xl">
 
         {/* ── Section header — left-aligned, editorial serif ── */}
-        <div className={`mb-12 max-w-lg transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <div className={`mb-8 sm:mb-12 max-w-lg transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <h2
-            className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-4 ${
+            className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight mb-3 sm:mb-4 ${
               isDark ? "text-white" : "text-[#12372A]"
             }`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -1400,7 +1400,7 @@ function PlayerDemo() {
   return (
     <section
       id="player-demo"
-      className={`py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
+      className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
       ref={ref}
     >
       {/* YouTube video background */}
@@ -1441,9 +1441,10 @@ function PlayerDemo() {
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>
             chess.com Integration
           </p>
-          <h2 className="text-4xl font-semibold tracking-tight mb-4 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Play Online,
-            <br />
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
             Improve OTB.
           </h2>
           <p className="text-muted-foreground">
@@ -1789,14 +1790,14 @@ function Testimonials() {
   ];
 
   return (
-    <section id="testimonials" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
+    <section id="testimonials" className="py-12 sm:py-16 lg:py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
-        <div className="text-center mb-16">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
             style={{ animationFillMode: "forwards" }}>
             From the Community
           </p>
-          <h2 className={`text-4xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
             style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
             Clubs that made the move.
           </h2>
@@ -1835,7 +1836,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-28 bg-[#436850] relative overflow-hidden" ref={ref}>
+    <section className="py-16 sm:py-20 lg:py-28 bg-[#436850] relative overflow-hidden" ref={ref}>
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
       <div
         className="absolute inset-0 pointer-events-none"
@@ -1850,14 +1851,15 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
           style={{ animationFillMode: "forwards" }}
         >
           <h2
-            className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-5"
+            className="text-2xl sm:text-3xl lg:text-5xl font-semibold text-white tracking-tight mb-4 sm:mb-5"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             Growing your chess club
-            <br />
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
             starts here.
           </h2>
-          <p className="text-white/90 text-xl mb-10">
+          <p className="text-white/90 text-base sm:text-lg lg:text-xl mb-8 sm:mb-10">
             Free for chess club owners who sign up. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -1905,7 +1907,7 @@ function Footer() {
   };
 
   return (
-    <footer className="bg-[#12372A] text-white py-16" style={{ paddingBottom: "max(4rem, calc(4rem + env(safe-area-inset-bottom, 0px)))" }}>
+    <footer className="bg-[#12372A] text-white py-10 sm:py-12 lg:py-16" style={{ paddingBottom: "max(5rem, calc(5rem + env(safe-area-inset-bottom, 0px)))" }}>
       <div className="container">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>

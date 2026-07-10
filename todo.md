@@ -6844,3 +6844,23 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit tournament pages mobile responsiveness
 - [x] Ensure touch targets are 44px+ on all interactive elements
 - [x] Verify no horizontal overflow on mobile viewports
+
+## Mobile UI Design System Overhaul (Jul 10 2026)
+- [x] Build unified mobile design tokens: spacing, typography, touch targets, safe areas in index.css
+- [x] Add MobileBottomNav component (global bottom tab bar for mobile)
+- [x] Wire MobileBottomNav into App.tsx for all pages
+- [x] Add global bottom nav clearance padding via CSS (#main-content)
+- [x] Scale all landing page section headings for mobile (text-2xl sm:text-3xl lg:text-5xl)
+- [x] Reduce section vertical padding on mobile (py-12 sm:py-16 lg:py-24)
+- [x] Fix Features section heading + margin for mobile
+- [x] Fix Showcase section heading + margin for mobile
+- [x] Fix PlayerDemo heading for mobile
+- [x] Fix Testimonials heading + padding for mobile
+- [x] Fix CTA section heading + padding for mobile
+- [x] Fix Footer padding for mobile + bottom nav clearance
+- [x] Fix Archive page heading scale (text-3xl sm:text-4xl lg:text-5xl)
+- [x] Fix Archive filter pills touch target (min-h-[36px])
+- [x] Fix NotFound page heading scale
+- [x] Fix Training page top/bottom padding for mobile
+- [x] Add focus-visible styles to MobileBottomNav buttons
+- [x] Verify TypeScript: 0 errors

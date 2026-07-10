@@ -76,7 +76,7 @@ export default function Training() {
       <BGPattern variant="checkerboard" mask="fade-top" fill={isDark ? "#5B9A6A" : "#436850"} size={32} />
       <AppNavBar defaultActive="Tools" />
 
-      <div className="max-w-5xl mx-auto px-4 pt-32 pb-24">
+      <div className="max-w-5xl mx-auto px-4 pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-20 lg:pb-24">
 
         {/* ── Page Header ── */}
         <div className="text-center mb-12">
