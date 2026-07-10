@@ -1288,37 +1288,33 @@ export default function LeagueDashboard() {
 
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
+          className="hidden lg:flex flex-col items-center w-[72px] flex-shrink-0 h-full py-5 gap-1.5 relative"
           style={{
-            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+            background: isDark
+              ? "linear-gradient(180deg, oklch(0.16 0.05 145), oklch(0.13 0.04 145))"
+              : "linear-gradient(180deg, oklch(0.14 0.06 145), oklch(0.11 0.05 145))",
+            borderRight: `1px solid ${isDark ? "oklch(0.24 0.06 145)" : "oklch(0.22 0.06 145)"}`,
           }}
         >
-          {/* Chess-pattern dark overlay */}
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
-          />
-          {/* Sidebar content — sits above the chess-pattern overlay */}
-          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
           {/* Club logo / back button */}
           <button
             onClick={() => navigate(`/clubs/${league.clubId}`)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
-            style={{ background: accent }}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 transition-all hover:scale-105 active:scale-95 flex-shrink-0 overflow-hidden shadow-lg"
+            style={{ background: accent, boxShadow: `0 4px 12px ${accent}44` }}
             title={league.clubName ?? "Back to Club"}
           >
             <img
               src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
               alt="OTB!!"
-              className="w-8 h-8 object-contain"
+              className="w-7 h-7 object-contain"
             />
           </button>
 
           {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          <div className="w-9 h-px mb-1" style={{ background: isDark ? "oklch(0.28 0.05 145)" : "oklch(0.25 0.06 145)" }} />
 
           {/* Nav icons */}
-          <nav className="flex flex-col items-center gap-1 flex-1">
+          <nav className="flex flex-col items-center gap-0.5 flex-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -1326,15 +1322,22 @@ export default function LeagueDashboard() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                  className="relative w-12 h-11 rounded-xl flex items-center justify-center transition-all group"
                   style={{
-                    background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                    background: isActive ? `${accent}22` : "transparent",
+                    color: isActive ? accent : "oklch(0.50 0.06 145)",
                   }}
                   title={tab.label}
                 >
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <span
+                      className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
+                      style={{ background: accent }}
+                    />
+                  )}
                   <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                    <Icon size={17} />
+                    <Icon size={18} />
                   </span>
                   {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
                     <span
@@ -1346,8 +1349,8 @@ export default function LeagueDashboard() {
                   )}
                   {/* Tooltip */}
                   <span
-                    className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
+                    className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg"
+                    style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#1a2e1f", color: "#fff", border: `1px solid ${isDark ? "oklch(0.30 0.06 145)" : "oklch(0.25 0.06 145)"}` }}
                   >
                     {tab.label}
                   </span>
@@ -1357,16 +1360,16 @@ export default function LeagueDashboard() {
           </nav>
 
           {/* Divider */}
-          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          <div className="w-9 h-px mt-1 mb-1" style={{ background: isDark ? "oklch(0.28 0.05 145)" : "oklch(0.25 0.06 145)" }} />
 
           {/* Bottom actions */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="flex flex-col items-center gap-0.5">
             {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
               <button
                 onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
                 disabled={pushLoading || pushStatus === "denied"}
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.55 0.08 145)" }}
+                className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.50 0.06 145)" }}
                 title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
               >
                 {pushLoading ? (
@@ -1381,14 +1384,13 @@ export default function LeagueDashboard() {
             )}
             <button
               onClick={() => setShowShare(true)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: "oklch(0.55 0.08 145)" }}
+              className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+              style={{ color: "oklch(0.50 0.06 145)" }}
               title="Share League"
             >
               <Share2 size={16} />
             </button>
           </div>
-          </div>{/* end z-10 sidebar content wrapper */}
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
@@ -1416,13 +1418,29 @@ export default function LeagueDashboard() {
 
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate" style={{ color: "oklch(0.95 0.02 145)" }}>
-                {league.clubName ?? league.name}
+              <span className="text-sm font-bold truncate block" style={{ color: "oklch(0.95 0.02 145)" }}>
+                {league.name}
+              </span>
+              <span className="text-[10px] font-medium truncate block" style={{ color: "oklch(0.55 0.06 145)" }}>
+                {league.clubName}
               </span>
             </div>
 
+            {/* Desktop league name + format */}
+            <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0">
+              <div className="min-w-0">
+                <h1 className="text-sm font-bold truncate" style={{ color: textMain }}>{league.name}</h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] font-medium" style={{ color: textMuted }}>{league.clubName}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide" style={{ background: `${accent}18`, color: accent }}>
+                    {league.formatType.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Centered Live / status pill */}
-            <div className="flex-1 flex justify-center">
+            <div className="flex items-center justify-center">
               <div
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                 style={{
@@ -1519,6 +1537,54 @@ export default function LeagueDashboard() {
                 </button>
               )}
             </div>
+          </div>
+
+          {/* ── LEAGUE HERO CONTEXT BAR (desktop) ────────────────────────────── */}
+          <div
+            className="hidden lg:flex flex-shrink-0 items-center gap-4 px-6 py-3"
+            style={{
+              background: isDark ? "oklch(0.16 0.05 145)" : "oklch(0.95 0.02 145)",
+              borderBottom: `1px solid ${cardBorder}`,
+            }}
+          >
+            {/* Season progress ring */}
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15" fill="none" stroke={isDark ? "oklch(0.25 0.05 145)" : "oklch(0.88 0.03 145)"} strokeWidth="3" />
+                <circle
+                  cx="18" cy="18" r="15" fill="none"
+                  stroke={accent}
+                  strokeWidth="3"
+                  strokeDasharray={`${progressPct * 0.942} 100`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold" style={{ color: accent }}>
+                {progressPct}%
+              </span>
+            </div>
+            {/* Stats row */}
+            <div className="flex items-center gap-5 flex-1">
+              <div>
+                <span className="text-[10px] uppercase tracking-wide font-medium block" style={{ color: textMuted }}>Players</span>
+                <span className="text-sm font-bold" style={{ color: textMain }}>{league.players.length}/{league.maxPlayers}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-wide font-medium block" style={{ color: textMuted }}>Matches</span>
+                <span className="text-sm font-bold" style={{ color: textMain }}>{completedMatchCount}/{totalMatches}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-wide font-medium block" style={{ color: textMuted }}>Week</span>
+                <span className="text-sm font-bold" style={{ color: textMain }}>{league.currentWeek}/{league.totalWeeks}</span>
+              </div>
+            </div>
+            {/* Format badge */}
+            <span
+              className="text-[10px] px-2.5 py-1 rounded-lg font-semibold uppercase tracking-wide"
+              style={{ background: `${accent}15`, color: accent, border: `1px solid ${accent}33` }}
+            >
+              {league.formatType.replace(/_/g, " ")}
+            </span>
           </div>
 
           {/* Guest CTA banner */}
@@ -4074,13 +4140,13 @@ export default function LeagueDashboard() {
 
       {/* Mobile bottom nav bar */}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-1"
         style={{
-          background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(255,255,255,0.97)",
-          backdropFilter: "blur(12px)",
-          borderTop: `1px solid ${cardBorder}`,
-          paddingTop: "8px",
-          paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
+          background: isDark ? "oklch(0.14 0.04 145 / 0.98)" : "rgba(255,255,255,0.98)",
+          backdropFilter: "blur(16px) saturate(1.4)",
+          borderTop: `1px solid ${isDark ? "oklch(0.24 0.06 145)" : "oklch(0.90 0.02 145)"}`,
+          paddingTop: "6px",
+          paddingBottom: "calc(6px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {tabs.map((tab) => {
@@ -4090,17 +4156,24 @@ export default function LeagueDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
+              className="flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] justify-center rounded-xl relative transition-all"
               style={{ color: isActive ? accent : textMuted }}
             >
-              <span className={`otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                <Icon size={18} />
+              {/* Active indicator bar */}
+              {isActive && (
+                <span
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[3px] rounded-full"
+                  style={{ background: accent }}
+                />
+              )}
+              <span className={`otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""} mt-0.5`}>
+                <Icon size={20} />
               </span>
-              <span className="text-[9px] font-medium">{tab.label}</span>
+              <span className={`text-[9px] font-medium ${isActive ? "font-semibold" : ""}`}>{tab.label}</span>
               {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
                 <span
-                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
-                  style={{ background: accent, color: "#fff" }}
+                  className="absolute top-1 right-0 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold shadow-sm"
+                  style={{ background: "#ef4444", color: "#fff" }}
                 >
                   {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
                 </span>
