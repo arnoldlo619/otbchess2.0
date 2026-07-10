@@ -1793,6 +1793,13 @@ select {
   height: calc(var(--bottom-nav-h) + var(--safe-bottom));
 }
 
+/* Hero section mobile viewport fill — mobile only, no effect on sm+ */
+@media (max-width: 639px) {
+  .hero-mobile-content {
+    min-height: calc(100dvh - 80px - 2rem);
+  }
+}
+
 /* Mobile action bar (sticky bottom) */
 .mobile-action-bar {
   position: fixed;
