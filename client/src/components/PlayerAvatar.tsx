@@ -4,7 +4,7 @@
  * A compact, reusable avatar component that:
  *  - Fetches a chess.com profile photo (with sessionStorage caching)
  *  - Renders a Lichess flair emoji when platform is "lichess"
- *  - Falls back to styled initials when no photo is available
+ *  - Falls back to premium OTB-green initials when no photo is available
  *
  * Props:
  *   username    — chess.com or Lichess username (used for API fetch)
@@ -20,23 +20,41 @@
 import { useState } from "react";
 import { useChessAvatar, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
-// Deterministic colour from username for the initials background
-function usernameToColor(username: string): string {
-  const colors = [
-    "bg-emerald-600",
-    "bg-teal-600",
-    "bg-blue-600",
-    "bg-violet-600",
-    "bg-amber-600",
-    "bg-rose-600",
-    "bg-cyan-600",
-    "bg-indigo-600",
+/**
+ * Deterministic OTB-green gradient from username hash.
+ *
+ * Instead of random off-brand colors, all default avatars stay within the
+ * OTB dark-green design system. The hash selects one of 8 carefully tuned
+ * dark-green gradient pairs — each unique but harmonious with the UI.
+ *
+ * Inspired by CRED's premium dark monochromatic avatar treatment.
+ */
+function usernameToGradient(username: string): { from: string; to: string; ring: string } {
+  // 8 OTB-green family gradient stops (dark forest → teal-green range)
+  const gradients = [
+    // Deep forest green
+    { from: "#0d2b14", to: "#1a4a25", ring: "rgba(74,222,128,0.18)" },
+    // Rich emerald
+    { from: "#0a2e1a", to: "#15532e", ring: "rgba(52,211,153,0.18)" },
+    // Dark teal-green
+    { from: "#0c2d24", to: "#134e3e", ring: "rgba(45,212,191,0.15)" },
+    // Midnight green
+    { from: "#0b2416", to: "#173d26", ring: "rgba(74,222,128,0.14)" },
+    // Olive-green dark
+    { from: "#1a2d0e", to: "#2d4a18", ring: "rgba(163,230,53,0.14)" },
+    // Deep pine
+    { from: "#0d2b1e", to: "#1a4a33", ring: "rgba(52,211,153,0.16)" },
+    // Forest shadow
+    { from: "#0f2a12", to: "#1e4a22", ring: "rgba(74,222,128,0.20)" },
+    // Dark sage
+    { from: "#1a2e1a", to: "#2e4e2e", ring: "rgba(134,239,172,0.14)" },
   ];
+
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
     hash = (hash * 31 + username.charCodeAt(i)) & 0xffffffff;
   }
-  return colors[Math.abs(hash) % colors.length];
+  return gradients[Math.abs(hash) % gradients.length];
 }
 
 interface PlayerAvatarProps {
@@ -76,10 +94,10 @@ export function PlayerAvatar({
     .slice(0, 2)
     .toUpperCase();
 
-  const colorClass = usernameToColor(username);
-  // Route all avatar URLs (chess.com and any future lichess.org image URLs) through
-  // the server-side /api/avatar-proxy to prevent mixed-content warnings on HTTPS
-  // and to allow html2canvas to draw them without "tainted canvas" errors.
+  const gradient = usernameToGradient(username || name);
+
+  // Route all avatar URLs through the server-side /api/avatar-proxy to prevent
+  // mixed-content warnings on HTTPS and allow html2canvas without tainted canvas errors.
   const resolvedUrl = toProxiedAvatarUrl(propAvatarUrl || fetchedUrl);
   // Show a photo for chess.com players and for Lichess players who have an avatarUrl
   const showPhoto = resolvedUrl && !imgError && (platform === "chesscom" || (platform === "lichess" && !!propAvatarUrl));
@@ -88,6 +106,10 @@ export function PlayerAvatar({
   const fontSize = Math.round(size * 0.38);
   const emojiFontSize = Math.round(size * 0.52);
   const badgeSize = Math.round(size * 0.38);
+  // Grid cell size scales with avatar: fine grid for small avatars, standard for larger
+  const gridSize = size <= 24 ? 6 : size <= 40 ? 8 : size <= 64 ? 10 : 14;
+  // Ring width scales with avatar size
+  const ringWidth = size <= 24 ? 1 : size <= 48 ? 1.5 : 2;
 
   return (
     <div
@@ -108,8 +130,13 @@ export function PlayerAvatar({
           onError={() => setImgError(true)}
         />
       ) : showFlair ? (
-        /* Lichess flair emoji on a dark gradient background */
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-500 to-orange-700">
+        /* Lichess flair emoji — OTB green base instead of orange */
+        <div
+          className="w-full h-full flex items-center justify-center"
+          style={{
+            background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
+          }}
+        >
           <span
             className="leading-none select-none"
             style={{ fontSize: emojiFontSize }}
@@ -120,12 +147,34 @@ export function PlayerAvatar({
           </span>
         </div>
       ) : (
-        /* Initials fallback */
+        /* Premium OTB-green initials fallback */
         <div
-          className={`w-full h-full flex items-center justify-center ${colorClass}`}
+          className="w-full h-full flex items-center justify-center relative"
+          style={{
+            background: `linear-gradient(145deg, ${gradient.from}, ${gradient.to})`,
+          }}
         >
+          {/* Micro-grid watermark — matches OTB design system */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(118,255,136,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(118,255,136,0.06) 1px, transparent 1px)
+              `,
+              backgroundSize: `${gridSize}px ${gridSize}px`,
+            }}
+          />
+          {/* Subtle inner ring */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              boxShadow: `inset 0 0 0 ${ringWidth}px ${gradient.ring}`,
+            }}
+          />
+          {/* Initials */}
           <span
-            className="font-bold text-white leading-none"
+            className="relative font-bold text-white leading-none tracking-wide z-10"
             style={{ fontSize }}
           >
             {initials}
@@ -137,7 +186,7 @@ export function PlayerAvatar({
       {showBadge && (showPhoto || showFlair) && (
         <div
           className={`absolute -bottom-0.5 -right-0.5 rounded-full border border-white/30 flex items-center justify-center ${
-            platform === "lichess" ? "bg-orange-500" : "bg-[#81b64c]"
+            platform === "lichess" ? "bg-[#4CAF50]" : "bg-[#81b64c]"
           }`}
           style={{ width: badgeSize, height: badgeSize }}
           title={platform === "lichess" ? "Lichess verified" : "chess.com verified"}
