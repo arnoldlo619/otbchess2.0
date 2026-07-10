@@ -6833,3 +6833,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add background picker to club dashboard settings page
 - [x] Apply selected background_image on the club dashboard hero/header
 - [x] Fallback to default micro-grid pattern when no background selected
+
+## Mobile Design Audit & Optimization
+
+- [x] Hide HeroDashboardMockup on mobile (show only on md+ / tablets and desktop)
+- [x] Audit landing page hero section mobile spacing and typography
+- [x] Audit landing page feature cards (DynamicSquare) mobile layout
+- [x] Audit landing page Showcase section mobile layout
+- [x] Audit ClubDashboard mobile layout and sidebar behavior
+- [x] Audit tournament pages mobile responsiveness
+- [x] Ensure touch targets are 44px+ on all interactive elements
+- [x] Verify no horizontal overflow on mobile viewports

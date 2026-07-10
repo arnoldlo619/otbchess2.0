@@ -53,7 +53,7 @@ export function HeroDashboardMockup({
   return (
     <div
       ref={ref}
-      className="relative mt-[5rem] w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0 group"
+      className="relative mt-[5rem] w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0 group hidden md:block"
       style={{ perspective: "2000px" }}
     >
       {/* Fade-out overlay at the bottom */}
