@@ -17,6 +17,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, useInView as useMotionInView } from "framer-motion";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -821,6 +822,56 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
 }
 
 // ─── Parallax Step Block ─────────────────────────────────────────────────────
+
+// Framer Motion variants for staggered step card reveals
+const stepContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.11,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const stepItemVariants = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
+};
+
+const stepMockupVariants = {
+  hidden: { opacity: 0, y: 52, scale: 0.93 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.85, ease: "easeOut" as const },
+  },
+};
+
+const stepMockup2Variants = {
+  hidden: { opacity: 0, y: 68, scale: 0.91 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.85, ease: "easeOut" as const, delay: 0.14 },
+  },
+};
+
+const stepAccentVariants = {
+  hidden: { opacity: 0, scaleX: 0, originX: 0 },
+  visible: {
+    opacity: 1,
+    scaleX: 1,
+    transition: { duration: 0.5, ease: "easeOut" as const, delay: 0.05 },
+  },
+};
+
 function ParallaxStep({
   number,
   icon,
@@ -852,75 +903,78 @@ function ParallaxStep({
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
 }) {
-  const { ref, inView } = useInView(0.08);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const isInView = useMotionInView(sectionRef, { once: true, amount: 0.10 });
   const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#436850]/10";
 
-  // MacBook step: side-by-side layout, mockup capped at 480px
+  // MacBook step: side-by-side layout
   if (mockupType === 'macbook') {
     return (
       <div
-        ref={ref}
+        ref={sectionRef}
         className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 py-20 lg:py-28"
       >
-        {/* MacBook mockup — left, bigger and wider */}
-        <div
-          className={`flex-[1.6] flex justify-center lg:justify-end transition-all duration-700 ease-out ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-          }`}
-          style={{ transitionDelay: "0ms" }}
+        {/* MacBook mockup — left */}
+        <motion.div
+          className="flex-[1.6] flex justify-center lg:justify-end"
+          variants={stepMockupVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
         >
-          <div
-            className="w-full transition-all duration-700 ease-out"
-            style={{
-              maxWidth: 640,
-              transform: inView ? "none" : "translateX(-40px)",
-              transitionDelay: "60ms",
-            }}
-          >
+          <div className="w-full" style={{ maxWidth: 640 }}>
             <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
           </div>
-        </div>
+        </motion.div>
 
-        {/* Text content — right */}
-        <div
-          className={`flex-1 max-w-md transition-all duration-700 ease-out ${
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-          style={{ transitionDelay: "150ms" }}
+        {/* Text content — right, staggered children */}
+        <motion.div
+          className="flex-1 max-w-md"
+          variants={stepContainerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
         >
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}>
+          <motion.div
+            variants={stepItemVariants}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}
+          >
             <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
               {icon}
             </span>
             Step {number}
-          </div>
+          </motion.div>
           <div className="relative">
             <span
-              className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none ${
+              className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none step-number ${
                 isDark ? "text-white/[0.09]" : "text-black/[0.07]"
               }`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {number}
             </span>
-            <h3
+            <motion.h3
+              variants={stepItemVariants}
               className="relative text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight"
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {title}
-            </h3>
+            </motion.h3>
           </div>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-8">{description}</p>
-          <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`} />
-        </div>
+          <motion.p variants={stepItemVariants} className="text-muted-foreground text-lg leading-relaxed mb-8">
+            {description}
+          </motion.p>
+          <motion.div
+            variants={stepAccentVariants}
+            className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
+          />
+        </motion.div>
       </div>
     );
   }
 
   return (
     <div
-      ref={ref}
+      ref={sectionRef}
       className={`flex flex-col ${
         phoneLeft ? "lg:flex-row" : "lg:flex-row-reverse"
       } items-center gap-8 sm:gap-12 lg:gap-20 py-12 sm:py-16 lg:py-28 px-4 sm:px-0`}
@@ -930,83 +984,78 @@ function ParallaxStep({
         className={`flex-1 flex w-full justify-center ${phoneLeft ? "lg:justify-start" : "lg:justify-end"}`}
       >
         <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-8">
-          <div
+          <motion.div
             className="group cursor-pointer"
-            style={{
-              transform: inView ? "translateY(0) scale(1)" : "translateY(60px) scale(0.92)",
-              opacity: inView ? 1 : 0,
-              transition: "transform 900ms cubic-bezier(0.16,1,0.3,1), opacity 700ms ease-out",
-              transitionDelay: "80ms",
-              willChange: "transform, opacity",
-            }}
+            variants={stepMockupVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
           >
             <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
               <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} objectFit={(objectFit as string | undefined)} />
             </div>
-          </div>
+          </motion.div>
           {imageSrc2 && (
-            <div
-            className="group cursor-pointer"
-            style={{
-              transform: inView ? "translateY(0) scale(1)" : "translateY(80px) scale(0.90)",
-              opacity: inView ? 1 : 0,
-              transition: "transform 900ms cubic-bezier(0.16,1,0.3,1), opacity 700ms ease-out",
-              transitionDelay: "220ms",
-              willChange: "transform, opacity",
-            }}
+            <motion.div
+              className="group cursor-pointer"
+              variants={stepMockup2Variants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
             >
               <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
                 <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit as string | undefined)} />
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
 
-      {/* Text content */}
-      <div
+      {/* Text content — staggered children */}
+      <motion.div
         className="flex-1 w-full max-w-md px-2 sm:px-0"
-        style={{
-          opacity: inView ? 1 : 0,
-          transform: inView ? "translateY(0)" : "translateY(32px)",
-          transition: "opacity 700ms ease-out, transform 700ms cubic-bezier(0.16,1,0.3,1)",
-          transitionDelay: "160ms",
-          willChange: "transform, opacity",
-        }}
+        variants={stepContainerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
       >
         {/* Step badge */}
-        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}>
+        <motion.div
+          variants={stepItemVariants}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}
+        >
           <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
             {icon}
           </span>
           Step {number}
-        </div>
+        </motion.div>
 
-        {/* Step number watermark */}
+        {/* Step number watermark + heading */}
         <div className="relative">
           <span
-            className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none ${
+            className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none step-number ${
               isDark ? "text-white/[0.09]" : "text-black/[0.07]"
             }`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             {number}
           </span>
-          <h3
+          <motion.h3
+            variants={stepItemVariants}
             className="relative text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             {title}
-          </h3>
+          </motion.h3>
         </div>
 
-        <p className="text-muted-foreground text-lg leading-relaxed mb-8">
+        <motion.p variants={stepItemVariants} className="text-muted-foreground text-lg leading-relaxed mb-8">
           {description}
-        </p>
+        </motion.p>
 
-        {/* Divider accent */}
-        <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`} />
-      </div>
+        {/* Divider accent — grows from left */}
+        <motion.div
+          variants={stepAccentVariants}
+          className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
+        />
+      </motion.div>
     </div>
   );
 }
