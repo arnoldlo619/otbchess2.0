@@ -81,9 +81,10 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
       <div
         className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(76,175,80,0.08)]"
         style={{
+          // Default: dark base for the micro-grid pattern
           background: club.bannerUrl
             ? undefined
-            : `linear-gradient(145deg, ${club.accentColor}dd 0%, ${club.accentColor}55 60%, ${isDark ? '#0d1a0f' : '#1a2e1d'}ee 100%)`,
+            : `linear-gradient(135deg, rgba(10,45,20,0.96), rgba(2,12,6,0.98))`,
         }}
       >
         {club.bannerUrl ? (
@@ -95,10 +96,27 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
           />
         ) : (
           <>
-            <div className="absolute inset-0 chess-board-bg opacity-12" />
+            {/* Micro-grid pattern — matches landing page hero and ClubHero default */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(118,255,136,0.07) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(118,255,136,0.07) 1px, transparent 1px)
+                `,
+                backgroundSize: "24px 24px",
+              }}
+            />
+            {/* Subtle accent glow behind the initial */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle at 50% 60%, ${club.accentColor}22 0%, transparent 70%)`,
+              }}
+            />
             {/* Club initial as fallback visual */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-white/15 text-8xl font-black transition-transform duration-300 group-hover:scale-110">{initial}</span>
+              <span className="text-white/20 text-8xl font-black transition-transform duration-300 group-hover:scale-110">{initial}</span>
             </div>
           </>
         )}
