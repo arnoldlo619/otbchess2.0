@@ -190,9 +190,9 @@ export function AnimeNavBar({
 
   useEffect(() => {
     setMounted(true)
-    setIsDesktop(window.innerWidth < 768)
+    setIsDesktop(window.innerWidth >= 768)
 
-    const handleResize = () => setIsDesktop(window.innerWidth < 768)
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768)
     const handleScroll = () => setScrollProgress(Math.min(1, window.scrollY / 100))
 
     window.addEventListener("resize", handleResize, { passive: true })
