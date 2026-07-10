@@ -189,6 +189,7 @@ import {
   BarChart,
   UserX,
   Lightbulb,
+  MoreHorizontal,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -3183,70 +3184,79 @@ export default function ClubDashboard() {
     <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] overflow-hidden">
-        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
+        {/* ── LEFT SIDEBAR (desktop) — matches ClubProfile expand-on-hover design ── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
+          className="hidden lg:flex flex-col flex-shrink-0 h-full group/sidebar"
           style={{
-            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+            position: "relative",
+            width: "68px",
+            transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
+            backgroundImage: isDark
+              ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
+              : `repeating-conic-gradient(oklch(0.16 0.06 145) 0% 25%, oklch(0.12 0.04 145) 0% 50%)`,
+            backgroundSize: "12px 12px",
+            borderRight: `1px solid rgba(255,255,255,0.07)`,
+            overflow: "hidden",
+            zIndex: 40,
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
         >
-          {/* Dark overlay so icons stay crisp over the chess pattern */}
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
-          />
-          {/* Sidebar content — sits above the chess-pattern overlay */}
-          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
-          {/* Club avatar / back button */}
-          <button
-            onClick={() => navigate("/clubs")}
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
-            style={{ background: accent }}
-            title="Back to My Clubs"
-          >
-            {club.avatarUrl ? (
-              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
-            ) : (
+          {/* Top: OTB!! logo */}
+          <div className="pt-5 pb-3 px-2 flex-shrink-0">
+            <button
+              onClick={() => navigate("/clubs")}
+              className="relative flex items-center justify-start w-full bg-transparent border-none p-0 cursor-pointer"
+              style={{ height: "60px" }}
+              title="ChessOTB.Club — Back to Clubs"
+            >
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
                 alt="OTB!!"
-                className="w-8 h-8 object-contain"
+                className="w-14 h-14 object-contain flex-shrink-0"
               />
-            )}
-          </button>
-          {/* Divider */}
-          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-          {/* Nav icons */}
-          <nav className="flex flex-col items-center gap-1 flex-1">
-            {clubTabs.filter((ct) => !ct.ownerOnly).map((ct) => {
+            </button>
+          </div>
+
+          {/* Nav items — vertically centered */}
+          <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
+            {clubTabs.map((ct) => {
               const Icon = ct.icon;
               const isActive = tab === ct.id;
               return (
                 <button
                   key={ct.id}
                   onClick={() => setTab(ct.id)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                  className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
                   style={{
-                    background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                    height: "56px",
+                    minWidth: "44px",
+                    paddingLeft: "14px",
+                    paddingRight: "10px",
+                    background: "transparent",
+                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.38)",
                   }}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; } }}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; } }}
+                  aria-label={ct.label}
                   title={ct.label}
                 >
-                  <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                    <Icon size={17} />
+                  {/* Icon */}
+                  <span className={`relative flex-shrink-0 w-7 flex items-center justify-center otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                    <Icon size={20} />
+                    {(ct.badge ?? 0) > 0 && (
+                      <span
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                        style={{ background: "#ef4444", color: "#fff" }}
+                      >
+                        {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
+                      </span>
+                    )}
                   </span>
-                  {(ct.badge ?? 0) > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
-                      style={{ background: "#ef4444", color: "#fff" }}
-                    >
-                      {ct.badge}
-                    </span>
-                  )}
-                  {/* Tooltip */}
+                  {/* Label — slides in on hover */}
                   <span
-                    className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
+                    className="text-[15px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
+                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em" }}
                   >
                     {ct.label}
                   </span>
@@ -3254,24 +3264,30 @@ export default function ClubDashboard() {
               );
             })}
           </nav>
-          {/* Divider */}
-          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-          {/* Bottom actions */}
-          <div className="flex flex-col items-center gap-1">
-            {user && (
-              <Link href={`/clubs/${id}/messages`}>
-                <button
-                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                  style={{ color: "oklch(0.55 0.08 145)" }}
-                  title="Messages"
-                >
-                  <MessageSquare size={16} />
-                </button>
-              </Link>
-            )}
 
+          {/* Bottom: avatar + settings */}
+          <div className="pb-5 flex flex-col gap-0.5 px-2">
+            <div className="h-px mb-2 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
+            <div
+              className="relative flex flex-row items-center gap-3 rounded-xl"
+              style={{ height: "44px", paddingLeft: "8px", paddingRight: "16px" }}
+            >
+              <AvatarNavDropdown currentPage="Clubs" variant="sidebar" />
+            </div>
+            {isOwnerOrDirector && (
+              <button
+                onClick={() => setTab("settings")}
+                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
+                aria-label="Settings"
+              >
+                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={24} /></span>
+                <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
+              </button>
+            )}
           </div>
-          </div>{/* end z-10 sidebar content wrapper */}
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
