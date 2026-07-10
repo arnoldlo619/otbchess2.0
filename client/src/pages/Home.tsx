@@ -403,7 +403,12 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const LIGHT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at6.00.48PM_cf9817c3.png";
 
   return (
-    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
+    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}
+      style={{
+        /* Mobile: fill exactly the visible viewport between top nav and bottom nav */
+        minHeight: "calc(100dvh - 80px - 64px)",
+      }}
+    >
       {/* Chess board texture */}
       <div className={`absolute inset-0 chess-board-bg pointer-events-none ${isDark ? "opacity-40" : "opacity-60"}`} />
 
@@ -417,73 +422,82 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
         }}
       />
 
-      <div className="container relative z-10">
-        <div className="max-w-3xl mx-auto text-center pt-10 sm:pt-16 lg:pt-24 pb-0">
-          <div className="opacity-0-init animate-fade-in-up flex justify-center mb-5 sm:mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
-            <AnnouncementBanner
-              label="NEW"
-              text="Chicago Chess Club Highlight!"
-              href="/blog/chicago-chess-club-highlight"
-              isDark={isDark}
-            />
+      <div className="container relative z-10 h-full">
+        {/* On mobile: use flex column to distribute space so View Live Demo sits at bottom of viewport */}
+        <div className="max-w-3xl mx-auto text-center flex flex-col justify-between sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0"
+          style={{ minHeight: "calc(100dvh - 80px - 64px - 2rem)" }}
+        >
+          {/* ── Top group: announcement + heading + subtitle ── */}
+          <div className="flex flex-col items-center">
+            <div className="opacity-0-init animate-fade-in-up flex justify-center mb-4 sm:mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
+              <AnnouncementBanner
+                label="NEW"
+                text="Chicago Chess Club Highlight!"
+                href="/blog/chicago-chess-club-highlight"
+                isDark={isDark}
+              />
+            </div>
+
+            <h1
+              className="opacity-0-init animate-fade-in-up text-[2.15rem] sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.08] tracking-tight mb-3 sm:mb-6 text-foreground"
+              style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
+            >
+              Chess Tournaments,
+              <br />
+              <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}>
+                Over The Board.
+              </span>
+            </h1>
+
+            {/* SEO H2 — visually styled as a subtitle, semantically an H2 for crawlers */}
+            <h2
+              className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
+              style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
+            >
+              <span className="sm:hidden">Sign up with chess.com username — pairings generated automatically.</span>
+              <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
+            </h2>
           </div>
 
-          <h1
-            className="opacity-0-init animate-fade-in-up text-[2.15rem] sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.08] tracking-tight mb-4 sm:mb-6 text-foreground"
-            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
-          >
-            Chess Tournaments,
-            <br />
-            <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}>
-              Over The Board.
-            </span>
-          </h1>
-
-          {/* SEO H2 — visually styled as a subtitle, semantically an H2 for crawlers */}
-          <h2
-            className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-6 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
-            style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
-          >
-            <span className="sm:hidden">Sign up with chess.com username — pairings generated automatically.</span>
-            <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
-          </h2>
-
-          <div
-            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center items-center w-full max-w-[320px] sm:max-w-none mx-auto px-0"
-            style={{
-              animationDelay: "0.45s",
-              animationFillMode: "forwards",
-            }}
-          >
-            <SpinBorderButton
-              variant="solid"
-              onClick={onCreateTournament}
-              className="w-full sm:w-auto"
+          {/* ── Bottom group: CTAs + View live demo — pinned to bottom on mobile ── */}
+          <div className="flex flex-col items-center gap-0 sm:mt-0">
+            <div
+              className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center items-center w-full max-w-[320px] sm:max-w-none mx-auto px-0"
+              style={{
+                animationDelay: "0.45s",
+                animationFillMode: "forwards",
+              }}
             >
-              Host Tournament
-              <ArrowRight className="w-4 h-4" />
-            </SpinBorderButton>
-            <SpinBorderButton
-              variant="outline"
-              onClick={() => window.location.href = "/join"}
-              className="w-full sm:w-auto"
+              <SpinBorderButton
+                variant="solid"
+                onClick={onCreateTournament}
+                className="w-full sm:w-auto"
+              >
+                Host Tournament
+                <ArrowRight className="w-4 h-4" />
+              </SpinBorderButton>
+              <SpinBorderButton
+                variant="outline"
+                onClick={() => window.location.href = "/join"}
+                className="w-full sm:w-auto"
+              >
+                Join a Tournament
+                <ArrowRight className="w-4 h-4" />
+              </SpinBorderButton>
+            </div>
+            <div
+              className="opacity-0-init animate-fade-in-up mt-4 sm:mt-3 pb-2 sm:pb-0"
+              style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
             >
-              Join a Tournament
-              <ArrowRight className="w-4 h-4" />
-            </SpinBorderButton>
-          </div>
-          <div
-            className="opacity-0-init animate-fade-in-up mt-3"
-            style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
-          >
-            <Link
-              href="/tournament/otb-demo-2026/manage"
-              className={`text-sm font-medium underline underline-offset-4 ${
-                isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#436850]"
-              }`}
-            >
-              View live demo →
-            </Link>
+              <Link
+                href="/tournament/otb-demo-2026/manage"
+                className={`text-sm font-medium underline underline-offset-4 ${
+                  isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#436850]"
+                }`}
+              >
+                View live demo →
+              </Link>
+            </div>
           </div>
 
 
