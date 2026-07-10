@@ -14,8 +14,9 @@ import {
   TournamentsIcon,
   ClubsIcon,
   AcademyIcon,
+  HomeIcon,
+  ProfileIcon,
 } from "@/components/OtbIcons";
-import { User, Home } from "lucide-react";
 
 // Routes where bottom nav should be hidden (full-screen experiences)
 const HIDDEN_ROUTES = [
@@ -48,7 +49,7 @@ const TABS: TabItem[] = [
   {
     name: "Home",
     href: "/",
-    icon: Home as unknown as TabItem["icon"],
+    icon: HomeIcon,
     matchPaths: ["/"],
   },
   {
@@ -72,7 +73,7 @@ const TABS: TabItem[] = [
   {
     name: "Profile",
     href: "/profile",
-    icon: User as unknown as TabItem["icon"],
+    icon: ProfileIcon,
     matchPaths: ["/profile"],
   },
 ];
