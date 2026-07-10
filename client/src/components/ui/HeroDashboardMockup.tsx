@@ -7,14 +7,12 @@
  * - Outer wrapper: perspective:2000px + fade-up entrance animation
  * - Inner frame: rounded-xl border + before: blur glow (image-glow animation)
  * - BorderBeam: animated conic-gradient beam travelling around the border
- * - Images: full-width, object-contain, dark/light mode swap
- * - After pseudo-element: gradient fade from bottom into hero background
- *
- * Dark mode: dark tournament screenshot (green-themed)
- * Light mode: light tournament screenshot (white/sage-themed)
+ * - Images: full-width, object-cover, dark/light mode swap
+ * - Bottom fade-out gradient into hero background
+ * - Hover: subtle scale-up + intensified glow via CSS group hover
  */
 import React, { useRef } from "react";
-import { useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { BorderBeam } from "./border-beam";
 
 interface HeroDashboardMockupProps {
@@ -44,16 +42,21 @@ export function HeroDashboardMockup({
   // Background color for the fade-out gradient (must match hero section bg)
   const heroBg = isDark ? "oklch(0.20 0.06 145)" : "#F5F8F5";
 
+  // Glow color for hover intensification
+  const glowColor = isDark
+    ? "oklch(0.55 0.14 145 / 0.55)"
+    : "oklch(0.45 0.12 145 / 0.35)";
+  const glowColorBase = isDark
+    ? "oklch(0.44 0.12 145 / 0.20)"
+    : "oklch(0.41 0.09 152 / 0.12)";
+
   return (
     <div
       ref={ref}
-      className="relative mt-[5rem] w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0"
-      style={{
-        perspective: "2000px",
-        // After pseudo-element: fade bottom of mockup into hero background
-      }}
+      className="relative mt-[5rem] w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0 group"
+      style={{ perspective: "2000px" }}
     >
-      {/* Fade-out overlay at the bottom — matches Magic UI's after:absolute pattern */}
+      {/* Fade-out overlay at the bottom */}
       <div
         className="absolute inset-x-0 bottom-0 z-10 pointer-events-none"
         style={{
@@ -62,8 +65,22 @@ export function HeroDashboardMockup({
         }}
       />
 
-      {/* Inner frame: border + glow pseudo-element */}
+      {/* Ambient glow behind the frame — intensifies on hover */}
       <div
+        className="absolute inset-x-4 -inset-y-4 rounded-2xl pointer-events-none transition-all duration-500 ease-out blur-2xl"
+        style={{
+          background: `radial-gradient(ellipse 70% 40% at 50% 100%, ${glowColorBase}, transparent)`,
+        }}
+      />
+      <div
+        className="absolute inset-x-4 -inset-y-4 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out blur-2xl"
+        style={{
+          background: `radial-gradient(ellipse 80% 50% at 50% 100%, ${glowColor}, transparent)`,
+        }}
+      />
+
+      {/* Inner frame — scales up on hover */}
+      <motion.div
         className={`relative rounded-xl border border-border bg-white/[0.01] overflow-hidden
           before:absolute before:bottom-1/2 before:left-0 before:top-0
           before:h-full before:w-full before:opacity-0
@@ -71,10 +88,15 @@ export function HeroDashboardMockup({
           before:[background-image:linear-gradient(to_bottom,${isDark ? "oklch(0.44_0.12_145)" : "oklch(0.55_0.13_145)"},${isDark ? "oklch(0.44_0.12_145)" : "oklch(0.55_0.13_145)"},transparent_40%)]
           ${inView ? "before:animate-image-glow" : ""}
         `}
+        initial={{ opacity: 0, y: 48 }}
+        animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 48 }}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+        whileHover={{
+          scale: 1.018,
+          transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+        }}
         style={{
-          opacity: inView ? 1 : 0,
-          transform: inView ? "translateY(0)" : "translateY(3rem)",
-          transition: "opacity 0.65s cubic-bezier(0.22,1,0.36,1) 0.4s, transform 0.65s cubic-bezier(0.22,1,0.36,1) 0.4s",
+          willChange: "transform",
         }}
       >
         {/* Animated border beam */}
@@ -99,7 +121,7 @@ export function HeroDashboardMockup({
           alt={alt}
           className={`relative w-full h-full rounded-[inherit] object-cover object-top block ${isDark ? "hidden" : ""}`}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }
