@@ -398,7 +398,8 @@ function Nav({
 function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const TOURNAMENT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at5.47.32PM_037e969c.png";
+  const DARK_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at5.47.32PM_dcaca0c6.png";
+  const LIGHT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at6.00.48PM_cf9817c3.png";
 
   return (
     <section className={`relative overflow-hidden pt-28 sm:pt-24 md:pt-16 pb-0 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
@@ -491,7 +492,8 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
         {/* ── Hero Dashboard Mockup ── */}
         <HeroDashboardMockup
-          screenshotUrl={TOURNAMENT_SCREENSHOT}
+          darkScreenshotUrl={DARK_SCREENSHOT}
+          lightScreenshotUrl={LIGHT_SCREENSHOT}
           isDark={isDark}
           alt="OTB!! Open 2026 — live tournament dashboard with Swiss pairings, round timer, and board results"
         />
