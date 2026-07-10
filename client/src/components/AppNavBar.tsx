@@ -177,6 +177,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
           currentPage={activeTab}
           onSignInClick={onSignInClick}
           isGuest={isGuest}
+          user={user}
         />
       </div>
       {/* Avatar dropdown — desktop only for guests; always shown for signed-in */}
