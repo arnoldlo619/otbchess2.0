@@ -661,18 +661,57 @@ function GameRow({
 
   // Pending selection state — tracks which result the director has tapped but not yet confirmed
   const [pendingResult, setPendingResult] = useState<"1-0" | "½-½" | "0-1" | null>(null);
+  // Collapsed state — auto-collapses after result is confirmed; director can tap to expand
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleResultClick = (result: "1-0" | "½-½" | "0-1") => {
     if (pendingResult === result) {
-      // Second tap on same button = confirm
+      // Second tap on same button = confirm + collapse
       onEnterResult(game.id, result);
       setPendingResult(null);
+      setTimeout(() => setCollapsed(true), 300); // brief delay so the result registers visually
     } else {
       // First tap = select (highlight)
       setPendingResult(result);
     }
   };
   const isDraw = game.result === "½-½";
+
+  // Collapsed summary row
+  if (collapsed && !isPending) {
+    return (
+      <div
+        className="rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all hover:opacity-80"
+        style={{
+          background: T.rowBg,
+          border: `1px solid ${T.rowBorder}`,
+        }}
+        onClick={() => setCollapsed(false)}
+        title="Tap to expand"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[9px] font-bold uppercase tracking-widest flex-shrink-0" style={{ color: T.textDim }}>
+            B{boardIndex}
+          </span>
+          <span className="text-xs font-semibold truncate" style={{ color: whiteWon ? T.green : T.textMuted }}>
+            {getPlayerName(players, game.whiteId).split(" ")[0]}
+          </span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+            style={{
+              background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg,
+              color: isDraw ? T.textMuted : T.green,
+            }}
+          >
+            {resultLabel(game.result)}
+          </span>
+          <span className="text-xs font-semibold truncate" style={{ color: blackWon ? T.green : T.textMuted }}>
+            {getPlayerName(players, game.blackId).split(" ")[0]}
+          </span>
+        </div>
+        <span className="text-[9px] flex-shrink-0" style={{ color: T.textDim }}>▼</span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -692,15 +731,25 @@ function GameRow({
           Board {boardIndex}
         </span>
         {!isPending && !isBye && (
-          <span
-            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-            style={{
-              background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg,
-              color: isDraw ? T.textMuted : T.green,
-            }}
-          >
-            {resultLabel(game.result)}
-          </span>
+          <>
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+              style={{
+                background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg,
+                color: isDraw ? T.textMuted : T.green,
+              }}
+            >
+              {resultLabel(game.result)}
+            </span>
+            <button
+              onClick={() => setCollapsed(true)}
+              className="ml-auto text-[9px] px-1.5 py-0.5 rounded transition-colors"
+              style={{ color: T.textDim, background: "transparent" }}
+              title="Collapse"
+            >
+              ▲ collapse
+            </button>
+          </>
         )}
       </div>
 
