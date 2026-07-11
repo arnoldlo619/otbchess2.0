@@ -159,6 +159,15 @@ export default function QuadsDirectorPanel({
   const [editingName, setEditingName] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-switch all section round tabs when a new round is generated
+  useEffect(() => {
+    setSectionRoundTab((prev) => {
+      const updated: Record<string, number> = { ...prev };
+      sections.forEach((s) => { updated[s.id] = currentRound; });
+      return updated;
+    });
+  }, [currentRound, sections]);
+
   useEffect(() => {
     if (editingSectionId && renameInputRef.current) {
       renameInputRef.current.focus();
