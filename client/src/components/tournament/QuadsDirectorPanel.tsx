@@ -262,17 +262,35 @@ export default function QuadsDirectorPanel({
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-4">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                   style={{
-                    background: section.type === "quad" ? T.greenBg : T.goldBg,
+                    background: section.type === "quad"
+                      ? `linear-gradient(135deg, oklch(0.22 0.08 145), oklch(0.18 0.05 145))`
+                      : `linear-gradient(135deg, oklch(0.24 0.08 85), oklch(0.20 0.05 85))`,
                     border: `1.5px solid ${section.type === "quad" ? T.greenBorder : T.goldBorder}`,
-                    boxShadow: `0 2px 8px ${section.type === "quad" ? "oklch(0.72 0.19 145 / 0.15)" : "oklch(0.75 0.15 85 / 0.15)"}`,
+                    boxShadow: section.type === "quad"
+                      ? `0 4px 14px oklch(0.72 0.19 145 / 0.25), inset 0 1px 0 oklch(0.72 0.19 145 / 0.15)`
+                      : `0 4px 14px oklch(0.75 0.15 85 / 0.25), inset 0 1px 0 oklch(0.75 0.15 85 / 0.15)`,
                   }}
                 >
+                  {/* Subtle radial shine */}
+                  <div className="absolute inset-0 rounded-2xl" style={{ background: "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12) 0%, transparent 65%)" }} />
                   {section.type === "quad" ? (
-                    <Users size={20} style={{ color: T.green }} />
+                    /* Chess grid / quad icon */
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="1" y="1" width="9" height="9" rx="2" fill={T.green} opacity="0.9" />
+                      <rect x="12" y="1" width="9" height="9" rx="2" fill={T.green} opacity="0.5" />
+                      <rect x="1" y="12" width="9" height="9" rx="2" fill={T.green} opacity="0.5" />
+                      <rect x="12" y="12" width="9" height="9" rx="2" fill={T.green} opacity="0.9" />
+                    </svg>
                   ) : (
-                    <ArrowLeftRight size={20} style={{ color: T.gold }} />
+                    /* Crown / trophy icon for non-quad sections */
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 16h16v2H3zM3 14l3-7 5 4 5-4 3 7H3z" fill={T.gold} opacity="0.9" />
+                      <circle cx="3" cy="7" r="2" fill={T.gold} />
+                      <circle cx="11" cy="5" r="2" fill={T.gold} />
+                      <circle cx="19" cy="7" r="2" fill={T.gold} />
+                    </svg>
                   )}
                 </div>
                 <div>
