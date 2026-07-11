@@ -886,6 +886,7 @@ function ParallaxStep({
   objectPosition,
   objectPosition2,
   objectFit,
+  objectFit2,
   phoneLeft,
   isDark,
   mockupType,
@@ -903,6 +904,7 @@ function ParallaxStep({
   objectPosition?: string;
   objectPosition2?: string;
   objectFit?: string;
+  objectFit2?: string;
   phoneLeft: boolean;
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
@@ -1019,7 +1021,7 @@ function ParallaxStep({
               animate={isInView ? "visible" : "hidden"}
             >
               <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
-                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit as string | undefined)} />
+                <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit2 ?? objectFit) as string | undefined} />
               </div>
               {caption2 && (
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold tracking-widest uppercase select-none border ${
@@ -1124,6 +1126,8 @@ function HowItWorks() {
       phoneLeft: true,
       objectFit: "contain",
       objectPosition: "center",
+      objectFit2: "cover",
+      objectPosition2: "top",
       caption1: "Player View",
       caption2: "Host View",
     },
@@ -1151,6 +1155,7 @@ function HowItWorks() {
             objectPosition={(step as any).objectPosition}
             objectPosition2={(step as any).objectPosition2}
             objectFit={(step as any).objectFit}
+            objectFit2={(step as any).objectFit2}
             phoneLeft={step.phoneLeft}
             isDark={isDark}
             mockupType={step.mockupType}
