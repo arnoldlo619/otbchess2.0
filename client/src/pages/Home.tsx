@@ -1002,10 +1002,10 @@ function ParallaxStep({
               <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} objectFit={(objectFit as string | undefined)} />
             </div>
             {caption1 && (
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase select-none border ${
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold tracking-widest uppercase select-none border ${
                 isDark
-                  ? 'bg-[oklch(0.65_0.14_145)]/20 text-[oklch(0.80_0.16_145)] border-[oklch(0.65_0.14_145)]/40'
-                  : 'bg-[#436850]/15 text-[#2d4a35] border-[#436850]/50'
+                  ? 'text-xs text-white bg-white/10 border-white/25'
+                  : 'text-[10px] bg-[#436850]/15 text-[#2d4a35] border-[#436850]/50'
               }`}>
                 {caption1}
               </span>
@@ -1022,10 +1022,10 @@ function ParallaxStep({
                 <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit as string | undefined)} />
               </div>
               {caption2 && (
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase select-none border ${
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold tracking-widest uppercase select-none border ${
                   isDark
-                    ? 'bg-[oklch(0.65_0.14_145)]/20 text-[oklch(0.80_0.16_145)] border-[oklch(0.65_0.14_145)]/40'
-                    : 'bg-[#436850]/15 text-[#2d4a35] border-[#436850]/50'
+                    ? 'text-xs text-white bg-white/10 border-white/25'
+                    : 'text-[10px] bg-[#436850]/15 text-[#2d4a35] border-[#436850]/50'
                 }`}>
                   {caption2}
                 </span>
