@@ -21,13 +21,17 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-import type { Player, Game, Result } from "../../lib/tournamentData";
+import type { Player, Game, Result, Round } from "../../lib/tournamentData";
 import type { QuadSection } from "../../lib/quads";
+import type { TournamentConfig } from "../../lib/tournamentRegistry";
+import type { StandingRow } from "../../lib/swiss";
 import {
   calculateQuadStandings,
   formatRatingRange,
   getSectionWinners,
 } from "../../lib/quads";
+import { computeStandings } from "../../lib/swiss";
+import { InstagramCarouselModal } from "../InstagramCarouselModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,6 +47,10 @@ interface QuadsDirectorPanelProps {
   onAdvanceRound?: () => void;
   onCompleteTournament?: () => void;
   isDark: boolean;
+  /** Tournament ID — used for action button links */
+  tournamentId?: string;
+  /** Tournament config — passed to InstagramCarouselModal */
+  tournamentConfig?: TournamentConfig | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -125,6 +133,8 @@ export default function QuadsDirectorPanel({
   onAdvanceRound,
   onCompleteTournament,
   isDark,
+  tournamentId,
+  tournamentConfig,
 }: QuadsDirectorPanelProps) {
   // Per-section state: which round tab is active, and pairings vs standings view
   const [sectionRoundTab, setSectionRoundTab] = useState<Record<string, number>>(() => {
@@ -140,6 +150,9 @@ export default function QuadsDirectorPanel({
 
   const [swapMode, setSwapMode] = useState(false);
   const [swapPlayerA, setSwapPlayerA] = useState<string | null>(null);
+
+  // Per-quad Instagram carousel modal state
+  const [carouselSection, setCarouselSection] = useState<string | null>(null);
 
   // Inline rename state
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -281,8 +294,8 @@ export default function QuadsDirectorPanel({
         const view = sectionView[section.id] ?? "pairings";
 
         return (
+          <div key={section.id} className="space-y-3">
           <div
-            key={section.id}
             className="group rounded-2xl border overflow-hidden transition-all"
             style={{
               background: T.card,
@@ -525,8 +538,207 @@ export default function QuadsDirectorPanel({
               </div>
             )}
           </div>
+
+          {/* ── Per-Quad Section Complete Card ─────────────────────────────── */}
+          {status.pct === 100 && (() => {
+            const sectionPlayers = players.filter((p) => section.playerIds.includes(p.id));
+            // Build Round objects for this section so computeStandings can rank them
+            const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
+            const sectionRounds: Round[] = roundNums.map((rn) => ({
+              number: rn,
+              status: "completed" as const,
+              games: sectionGames.filter((g) => g.round === rn),
+            }));
+            const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
+            const top3 = rows.slice(0, 3);
+            const sectionWinner = top3[0];
+
+            const medalConfig = [
+              { medalDark: "bg-amber-400/15 text-amber-300",   medalLight: "bg-amber-50 text-amber-500 border border-amber-200",   scoreColor: T.gold },
+              { medalDark: "bg-slate-400/15 text-slate-300",   medalLight: "bg-slate-50 text-slate-500 border border-slate-200",   scoreColor: isDark ? "oklch(0.65 0.01 145)" : "#6b7280" },
+              { medalDark: "bg-orange-400/15 text-orange-300", medalLight: "bg-orange-50 text-orange-500 border border-orange-200", scoreColor: isDark ? "oklch(0.62 0.08 55)" : "#b45309" },
+            ];
+
+            return (
+              <div
+                className="rounded-2xl border overflow-hidden animate-in fade-in slide-in-from-bottom-2"
+                style={{
+                  animationDuration: "400ms",
+                  animationFillMode: "both",
+                  background: isDark ? "oklch(0.14 0.04 85 / 0.6)" : "oklch(0.97 0.04 85 / 0.8)",
+                  borderColor: T.goldBorder,
+                  boxShadow: `0 0 0 1px ${T.goldBorder}, 0 4px 20px ${isDark ? "oklch(0.75 0.15 85 / 0.10)" : "oklch(0.75 0.15 85 / 0.15)"}`,
+                }}
+              >
+                {/* Header */}
+                <div
+                  className="flex items-center justify-between px-5 py-3 border-b"
+                  style={{ borderColor: T.goldBorder }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Trophy size={14} style={{ color: T.gold }} />
+                    <span
+                      className="text-sm font-black tracking-tight"
+                      style={{ color: T.gold, fontFamily: "'Clash Display', sans-serif" }}
+                    >
+                      {section.name} — Complete
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold" style={{ color: T.textDim }}>
+                    {totalRounds} round{totalRounds !== 1 ? "s" : ""} · {sectionPlayers.length} players
+                  </span>
+                </div>
+
+                {/* Podium — top 3 */}
+                <div className={`divide-y`} style={{ borderColor: isDark ? "oklch(0.22 0.04 85 / 0.3)" : "oklch(0.85 0.06 85 / 0.4)" }}>
+                  {top3.map((row, idx) => {
+                    const medal = medalConfig[idx];
+                    const pts = row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : String(row.points);
+                    const isFirst = idx === 0;
+                    return (
+                      <div
+                        key={row.player.id}
+                        className={`flex items-center gap-3 px-5 ${isFirst ? "py-4" : "py-3"}`}
+                      >
+                        {/* Medal */}
+                        <div
+                          className={`${ isFirst ? "w-10 h-10 text-lg" : "w-8 h-8 text-sm"} rounded-xl flex items-center justify-center flex-shrink-0 font-black ${
+                            isDark ? medal.medalDark : medal.medalLight
+                          }`}
+                          style={{ fontFamily: "'Clash Display', sans-serif" }}
+                        >
+                          {idx + 1}
+                        </div>
+                        {/* Name + meta */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`${isFirst ? "text-sm" : "text-xs"} font-black truncate`}
+                              style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}
+                            >
+                              {row.player.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] font-semibold" style={{ color: T.textDim }}>
+                              {row.wins}W {row.draws}D {row.losses}L
+                            </span>
+                            {row.buchholz > 0 && (
+                              <span className="text-[10px]" style={{ color: T.textDim }}>· Buch. {row.buchholz.toFixed(1)}</span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Score */}
+                        <div className="flex-shrink-0 text-right">
+                          <span
+                            className={`${isFirst ? "text-2xl" : "text-lg"} font-black tabular-nums`}
+                            style={{ color: medal.scoreColor, fontFamily: "'Clash Display', sans-serif" }}
+                          >
+                            {pts}
+                          </span>
+                          <p className="text-[10px] font-semibold" style={{ color: T.textDim }}>pts</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Action buttons */}
+                <div
+                  className="flex flex-wrap gap-2 px-5 pb-4 pt-3 border-t"
+                  style={{ borderColor: isDark ? "oklch(0.22 0.04 85 / 0.3)" : "oklch(0.85 0.06 85 / 0.4)" }}
+                >
+                  {/* View Results */}
+                  {tournamentId && (
+                    <a
+                      href={`/tournament/${tournamentId}?section=${section.id}`}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
+                      style={{
+                        background: isDark ? T.greenBg : "oklch(0.20 0.08 145)",
+                        color: T.green,
+                        border: `1px solid ${T.greenBorder}`,
+                      }}
+                    >
+                      <BarChart3 size={13} /> View Results
+                    </a>
+                  )}
+                  {/* Player Reports */}
+                  {tournamentId && (
+                    <a
+                      href={`/tournament/${tournamentId}/report?section=${section.id}`}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
+                      style={{
+                        background: isDark ? "oklch(0.22 0.06 85 / 0.4)" : "oklch(0.95 0.06 85)",
+                        color: T.gold,
+                        border: `1px solid ${T.goldBorder}`,
+                      }}
+                    >
+                      <Trophy size={13} /> Player Reports
+                    </a>
+                  )}
+                  {/* Create Recap */}
+                  <button
+                    onClick={() => setCarouselSection(section.id)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
+                    style={{
+                      background: isDark ? "oklch(0.16 0.02 145)" : "#fff",
+                      color: isDark ? "oklch(0.75 0.01 145)" : "#374151",
+                      border: `1px solid ${T.cardBorder}`,
+                    }}
+                  >
+                    <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
+                      <svg viewBox="0 0 24 24" fill="white" className="w-2 h-2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
+                    </div>
+                    Create Recap
+                  </button>
+                  {/* Print / Export */}
+                  {tournamentId && (
+                    <a
+                      href={`/tournament/${tournamentId}/print?section=${section.id}`}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
+                      style={{
+                        background: isDark ? "oklch(0.16 0.02 145)" : "#fff",
+                        color: isDark ? "oklch(0.75 0.01 145)" : "#374151",
+                        border: `1px solid ${T.cardBorder}`,
+                      }}
+                    >
+                      <Swords size={13} /> Print / Export
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+          </div>
         );
       })}
+
+
+      {/* Per-quad Instagram Carousel Modal */}
+      {carouselSection && (() => {
+        const sec = sections.find((s) => s.id === carouselSection);
+        if (!sec) return null;
+        const secPlayers = players.filter((p) => sec.playerIds.includes(p.id));
+        const secGames = gamesBySection.get(sec.id) ?? [];
+        const roundNums = Array.from(new Set(secGames.map((g) => g.round))).sort((a, b) => a - b);
+        const secRounds: Round[] = roundNums.map((rn) => ({
+          number: rn,
+          status: "completed" as const,
+          games: secGames.filter((g) => g.round === rn),
+        }));
+        const secRows: StandingRow[] = computeStandings(secPlayers, secRounds);
+        return (
+          <InstagramCarouselModal
+            open={true}
+            onClose={() => setCarouselSection(null)}
+            rows={secRows}
+            config={tournamentConfig ?? null}
+            tournamentName={`${sec.name} — ${tournamentConfig?.name ?? "Tournament"}`}
+            totalRounds={totalRounds}
+            rounds={secRounds}
+          />
+        );
+      })()}
 
       {/* Round Advancement CTA */}
       {onAdvanceRound && (() => {

@@ -3823,6 +3823,8 @@ export default function Director() {
                       onAdvanceRound={() => generateNextRound()}
                       onCompleteTournament={() => completeTournament()}
                       isDark={isDark}
+                      tournamentId={tournamentId}
+                      tournamentConfig={tournamentConfig}
                     />
                   )}
                   {/* ── Round Pairings standalone header row ─────────────────────────────────────── */}

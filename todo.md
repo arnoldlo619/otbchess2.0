@@ -6877,3 +6877,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix Featured Clubs cards linking to wrong club pages — ClubProfile and ClubDashboard now always fetch from server first instead of trusting stale localStorage seed data (seed IDs in localStorage did not match DB IDs after re-seeding).
 
 - [x] Redesign QuadsDirectorPanel for better visual clarity and intuitive UX (card-based sections, visual round tabs, clearer game rows)
+- [x] Per-quad SectionCompleteCard in QuadsDirectorPanel (winner podium, Player Reports, Create Recap, Print/Export per section)
