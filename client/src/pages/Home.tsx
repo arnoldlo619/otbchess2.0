@@ -520,12 +520,12 @@ function StatItem({
   return (
     <div>
       <p
-        className={`font-bold text-white mb-2 tabular-nums ${large ? "text-5xl sm:text-6xl lg:text-7xl" : "text-3xl"}`}
+        className={`font-bold text-white mb-1 tabular-nums ${large ? "text-3xl sm:text-4xl lg:text-5xl" : "text-3xl"}`}
         style={{ fontFamily: "'Clash Display', sans-serif" }}
       >
         {display}
       </p>
-      <p className={`font-medium text-white/70 ${large ? "text-base sm:text-lg" : "text-sm"}`}>{label}</p>
+      <p className={`font-medium text-white/70 ${large ? "text-xs sm:text-sm" : "text-sm"}`}>{label}</p>
     </div>
   );
 }
@@ -552,8 +552,8 @@ function StatsBar() {
       {/* Subtle chess texture overlay */}
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
 
-      <div className="container relative z-10 py-10 sm:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 sm:gap-12">
+      <div className="container relative z-10 py-6 sm:py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 sm:gap-8">
           {stats.map((stat, i) => (
             <div
               key={stat.label}
