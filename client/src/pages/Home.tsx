@@ -1296,7 +1296,7 @@ function Showcase() {
       <div className="container max-w-6xl">
 
         {/* ── Section header — left-aligned, editorial serif ── */}
-        <div className={`mb-8 sm:mb-12 max-w-lg transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+        <div className={`mb-8 sm:mb-12 mx-auto max-w-lg text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <h2
             className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight mb-3 sm:mb-4 ${
               isDark ? "text-white" : "text-[#12372A]"
