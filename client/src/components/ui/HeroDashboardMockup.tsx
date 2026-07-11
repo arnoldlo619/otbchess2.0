@@ -53,15 +53,15 @@ export function HeroDashboardMockup({
   return (
     <div
       ref={ref}
-      className="relative mt-[5rem] mb-[-10rem] w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0 group hidden md:block"
+      className="relative mt-[5rem] mb-[-4rem] w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0 group hidden md:block"
       style={{ perspective: "2000px" }}
     >
       {/* Fade-out overlay at the bottom — blends into the green stats bar */}
       <div
         className="absolute inset-x-0 bottom-0 z-10 pointer-events-none"
         style={{
-          height: "35%",
-          background: `linear-gradient(to top, #436850 0%, ${heroBg} 60%, transparent 100%)`,
+          height: "18%",
+          background: `linear-gradient(to top, #436850 0%, transparent 100%)`,
         }}
       />
 
