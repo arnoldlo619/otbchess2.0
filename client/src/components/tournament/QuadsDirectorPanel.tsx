@@ -259,42 +259,43 @@ export default function QuadsDirectorPanel({
             }}
           >
             {/* Section Header */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center gap-4">
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
                   style={{
                     background: section.type === "quad" ? T.greenBg : T.goldBg,
-                    border: `1px solid ${section.type === "quad" ? T.greenBorder : T.goldBorder}`,
+                    border: `1.5px solid ${section.type === "quad" ? T.greenBorder : T.goldBorder}`,
+                    boxShadow: `0 2px 8px ${section.type === "quad" ? "oklch(0.72 0.19 145 / 0.15)" : "oklch(0.75 0.15 85 / 0.15)"}`,
                   }}
                 >
                   {section.type === "quad" ? (
-                    <Users size={15} style={{ color: T.green }} />
+                    <Users size={20} style={{ color: T.green }} />
                   ) : (
-                    <ArrowLeftRight size={15} style={{ color: T.gold }} />
+                    <ArrowLeftRight size={20} style={{ color: T.gold }} />
                   )}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold" style={{ color: T.text }}>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>
                       {section.name}
                     </span>
                     {winner && (
                       <span
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
                         style={{ background: T.goldBg, border: `1px solid ${T.goldBorder}`, color: T.gold }}
                       >
-                        <Trophy size={9} />
+                        <Trophy size={10} />
                         {getPlayerName(players, winner.playerId).split(" ")[0]}
                       </span>
                     )}
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: T.textMuted }}>
+                  <div className="text-xs mt-1 font-medium" style={{ color: T.textMuted }}>
                     {formatRatingRange(section)} · {section.playerIds.length} players
                   </div>
                 </div>
               </div>
-              <ProgressRing completed={status.completed} total={status.total} isDark={isDark} />
+              <ProgressRing completed={status.completed} total={status.total} size={44} isDark={isDark} />
             </div>
 
             {/* Swap Mode: Player chips */}
