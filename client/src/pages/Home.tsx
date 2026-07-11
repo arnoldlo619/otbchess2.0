@@ -511,18 +511,21 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
 /// ─── Stats Bar ───────────────────────────────────────────────────────────────
 function StatItem({
-  target, suffix, decimals, label, delay, active,
+  target, suffix, decimals, label, delay, active, large = false,
 }: {
   target: number; suffix: string; decimals: number;
-  label: string; delay: number; active: boolean;
+  label: string; delay: number; active: boolean; large?: boolean;
 }) {
   const display = useCountUp(target, active, { duration: 1600, suffix, decimals, delay });
   return (
     <div>
-      <p className="text-3xl font-bold text-white mb-1 tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+      <p
+        className={`font-bold text-white mb-2 tabular-nums ${large ? "text-5xl sm:text-6xl lg:text-7xl" : "text-3xl"}`}
+        style={{ fontFamily: "'Clash Display', sans-serif" }}
+      >
         {display}
       </p>
-      <p className="text-sm text-white/70 font-medium">{label}</p>
+      <p className={`font-medium text-white/70 ${large ? "text-base sm:text-lg" : "text-sm"}`}>{label}</p>
     </div>
   );
 }
@@ -549,19 +552,8 @@ function StatsBar() {
       {/* Subtle chess texture overlay */}
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
 
-      {/* Top label — mobile: bridges from hero, desktop: section eyebrow */}
-      <div className="text-center pt-8 sm:pt-12 pb-2 relative z-10">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">
-          By the numbers
-        </p>
-        {/* Decorative divider — desktop only */}
-        <div className="hidden sm:flex justify-center mt-3">
-          <div className="w-8 h-px bg-white/25" />
-        </div>
-      </div>
-
-      <div className="container relative z-10 py-6 sm:py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 sm:gap-8">
+      <div className="container relative z-10 py-10 sm:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 sm:gap-12">
           {stats.map((stat, i) => (
             <div
               key={stat.label}
@@ -577,6 +569,7 @@ function StatsBar() {
                 label={stat.label}
                 delay={i * 90}
                 active={inView}
+                large
               />
             </div>
           ))}
@@ -945,7 +938,9 @@ function ParallaxStep({
         >
           <motion.div
             variants={stepItemVariants}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}
+            whileHover={{ scale: 1.06, y: -2 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 cursor-default select-none ${accentBg} ${accentColor}`}
           >
             <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
               {icon}
