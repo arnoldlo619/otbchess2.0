@@ -256,7 +256,7 @@ export default function LeagueDemo() {
           <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
 
           {/* Nav icons */}
-          <nav className="flex flex-col items-center gap-1 flex-1">
+          <nav className="flex flex-col items-center justify-center gap-1 flex-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
