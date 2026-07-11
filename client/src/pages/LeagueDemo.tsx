@@ -369,10 +369,10 @@ export default function LeagueDemo() {
                     className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                     style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
                   >
-                    <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                    <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
-                        <BattleIcon size={14} style={{ color: accent }} />
-                        <span className="text-sm font-bold" style={{ color: textMain }}>Featured Matchup — Week 14</span>
+                        <BattleIcon size={16} style={{ color: accent }} />
+                        <h3 className="text-base font-bold tracking-tight" style={{ color: textMain }}>Featured Matchup — Week 14</h3>
                       </div>
                       <span
                         className="text-xs font-semibold px-2 py-0.5 rounded-full animate-pulse"
