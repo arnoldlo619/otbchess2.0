@@ -1002,7 +1002,11 @@ function ParallaxStep({
               <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} objectFit={(objectFit as string | undefined)} />
             </div>
             {caption1 && (
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase ${accentBg} ${accentColor} select-none`}>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase select-none border ${
+                isDark
+                  ? 'bg-[oklch(0.65_0.14_145)]/20 text-[oklch(0.80_0.16_145)] border-[oklch(0.65_0.14_145)]/40'
+                  : 'bg-[#436850]/15 text-[#2d4a35] border-[#436850]/50'
+              }`}>
                 {caption1}
               </span>
             )}
@@ -1018,7 +1022,11 @@ function ParallaxStep({
                 <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit as string | undefined)} />
               </div>
               {caption2 && (
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase ${accentBg} ${accentColor} select-none`}>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase select-none border ${
+                  isDark
+                    ? 'bg-[oklch(0.65_0.14_145)]/20 text-[oklch(0.80_0.16_145)] border-[oklch(0.65_0.14_145)]/40'
+                    : 'bg-[#436850]/15 text-[#2d4a35] border-[#436850]/50'
+                }`}>
                   {caption2}
                 </span>
               )}
@@ -1114,8 +1122,8 @@ function HowItWorks() {
       imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
       imageAlt2: "Live board pairings screen with player matchups and result entry",
       phoneLeft: true,
-      objectFit: "cover",
-      objectPosition: "top",
+      objectFit: "contain",
+      objectPosition: "center",
       caption1: "Player View",
       caption2: "Host View",
     },
