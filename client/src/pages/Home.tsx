@@ -919,12 +919,12 @@ function ParallaxStep({
       >
         {/* MacBook mockup — left */}
         <motion.div
-          className="flex-[1.6] flex justify-center lg:justify-end"
+          className="flex-[1.6] flex justify-center lg:justify-end group cursor-pointer"
           variants={stepMockupVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <div className="w-full" style={{ maxWidth: 640 }}>
+          <div className="w-full transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5" style={{ maxWidth: 640 }}>
             <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
           </div>
         </motion.div>
