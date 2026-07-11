@@ -872,19 +872,18 @@ function GameRow({
   const blackWon = game.result === "0-1";
 
   // Pending selection state — tracks which result the director has tapped but not yet confirmed
-  const [pendingResult, setPendingResult] = useState<"1-0" | "½-½" | "0-1" | null>(null);
   // Collapsed state — auto-collapses after result is confirmed; director can tap to expand
   const [collapsed, setCollapsed] = useState(false);
 
   const handleResultClick = (result: "1-0" | "½-½" | "0-1") => {
-    if (pendingResult === result) {
-      // Second tap on same button = confirm + collapse
-      onEnterResult(game.id, result);
-      setPendingResult(null);
-      setTimeout(() => setCollapsed(true), 300); // brief delay so the result registers visually
+    if (game.result === result) {
+      // Already set — clicking same button again clears (undo)
+      onEnterResult(game.id, "*" as Result);
+      setCollapsed(false);
     } else {
-      // First tap = select (highlight)
-      setPendingResult(result);
+      // Single tap = immediately confirm + collapse
+      onEnterResult(game.id, result);
+      setTimeout(() => setCollapsed(true), 200);
     }
   };
   const isDraw = game.result === "½-½";
@@ -1026,10 +1025,10 @@ function GameRow({
         const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
         const blackName = getPlayerName(players, game.blackId).split(" ")[0];
         // When a selection is pending, non-selected buttons are dimmed; selected button is fully highlighted
-        const hasPending = pendingResult !== null;
-        const whiteSelected = pendingResult === "1-0";
-        const drawSelected = pendingResult === "½-½";
-        const blackSelected = pendingResult === "0-1";
+        const hasPending = false;
+        const whiteSelected = game.result === "1-0";
+        const drawSelected = game.result === "½-½";
+        const blackSelected = game.result === "0-1";
         return (
           <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
             {/* White wins */}
@@ -1054,7 +1053,7 @@ function GameRow({
               }}
             >
               <span className="text-[11px] font-extrabold truncate max-w-full px-1">{whiteName}</span>
-              <span className="text-[9px] opacity-70 font-semibold">{whiteSelected ? "tap to confirm" : "wins"}</span>
+              <span className="text-[9px] opacity-70 font-semibold">{whiteSelected ? "click to undo" : "wins"}</span>
             </button>
             {/* Draw */}
             <button
@@ -1074,7 +1073,7 @@ function GameRow({
               }}
             >
               <span className="text-[11px] font-extrabold">Draw</span>
-              <span className="text-[9px] opacity-70 font-semibold">{drawSelected ? "tap to confirm" : "½–½"}</span>
+              <span className="text-[9px] opacity-70 font-semibold">{drawSelected ? "click to undo" : "½–½"}</span>
             </button>
             {/* Black wins */}
             <button
@@ -1098,7 +1097,7 @@ function GameRow({
               }}
             >
               <span className="text-[11px] font-extrabold truncate max-w-full px-1">{blackName}</span>
-              <span className="text-[9px] opacity-70 font-semibold">{blackSelected ? "tap to confirm" : "wins"}</span>
+              <span className="text-[9px] opacity-70 font-semibold">{blackSelected ? "click to undo" : "wins"}</span>
             </button>
           </div>
         );
