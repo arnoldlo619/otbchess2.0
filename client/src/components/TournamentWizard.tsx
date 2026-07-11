@@ -1002,7 +1002,7 @@ function QuickstartForm({
           >
             <div className="flex items-center gap-3">
               <Trophy className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
-              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
+              <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>Format</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
@@ -1135,7 +1135,7 @@ function QuickstartForm({
           >
             <div className="flex items-center gap-3">
               <Hash className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
-              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Rounds</span>
+              <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>Rounds</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
@@ -1224,7 +1224,7 @@ function QuickstartForm({
           >
             <div className="flex items-center gap-3">
               <Users2 className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
-              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Max Players</span>
+              <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>Max Players</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
@@ -1315,7 +1315,7 @@ function QuickstartForm({
           >
             <div className="flex items-center gap-3">
               <Timer className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
-              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Time Control</span>
+              <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>Time Control</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
@@ -1507,7 +1507,7 @@ function QuickstartForm({
           <div className="flex items-center justify-between" style={{ padding: "16px 18px" }}>
             <div className="flex items-center gap-3">
               <BarChart3 className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
-              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>ELO Rating</span>
+              <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>ELO Rating</span>
             </div>
             <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}` }}>
               {(["rapid", "blitz"] as const).map((rt) => {
@@ -1551,7 +1551,7 @@ function QuickstartForm({
           >
             <div className="flex items-center gap-3">
               <Globe className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
-              <span className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
+              <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>Platform</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span
