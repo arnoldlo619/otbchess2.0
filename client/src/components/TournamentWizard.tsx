@@ -1395,7 +1395,12 @@ function QuickstartForm({
                   applyPreset(b, i);
                 };
                 return (
-                  <div className="pt-3 space-y-3">
+                  <div
+                    className="pt-3 space-y-3"
+                    style={{
+                      animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both",
+                    }}
+                  >
                     {/* Back button */}
                     <button
                       type="button"
