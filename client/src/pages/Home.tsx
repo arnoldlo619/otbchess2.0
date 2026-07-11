@@ -542,10 +542,8 @@ function StatsBar() {
       ref={ref}
       className="relative overflow-hidden"
       style={{
-        /* Gradient bridge: fades in from hero bg, holds the green band, fades back out */
-        background: isDark
-          ? "linear-gradient(to bottom, oklch(0.20 0.06 145) 0%, oklch(0.20 0.06 145) 4%, #436850 22%, #436850 78%, oklch(0.20 0.06 145) 96%, oklch(0.20 0.06 145) 100%)"
-          : "linear-gradient(to bottom, #F5F8F5 0%, #F5F8F5 4%, #436850 22%, #436850 78%, #F5F8F5 96%, #F5F8F5 100%)",
+/* Solid green band — hard contrast edges, no top/bottom faders */
+        background: "#436850",
       }}
     >
       {/* Subtle chess texture overlay */}
