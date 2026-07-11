@@ -658,6 +658,20 @@ function GameRow({
   const isPending = game.result === "*";
   const whiteWon = game.result === "1-0";
   const blackWon = game.result === "0-1";
+
+  // Pending selection state — tracks which result the director has tapped but not yet confirmed
+  const [pendingResult, setPendingResult] = useState<"1-0" | "½-½" | "0-1" | null>(null);
+
+  const handleResultClick = (result: "1-0" | "½-½" | "0-1") => {
+    if (pendingResult === result) {
+      // Second tap on same button = confirm
+      onEnterResult(game.id, result);
+      setPendingResult(null);
+    } else {
+      // First tap = select (highlight)
+      setPendingResult(result);
+    }
+  };
   const isDraw = game.result === "½-½";
 
   return (
@@ -750,43 +764,80 @@ function GameRow({
       {isPending && isActive && !isBye && (() => {
         const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
         const blackName = getPlayerName(players, game.blackId).split(" ")[0];
+        // When a selection is pending, non-selected buttons are dimmed; selected button is fully highlighted
+        const hasPending = pendingResult !== null;
+        const whiteSelected = pendingResult === "1-0";
+        const drawSelected = pendingResult === "½-½";
+        const blackSelected = pendingResult === "0-1";
         return (
           <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
+            {/* White wins */}
             <button
-              onClick={() => onEnterResult(game.id, "1-0")}
+              onClick={() => handleResultClick("1-0")}
               className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
               style={{
-                background: T.greenBg,
-                color: T.green,
-                border: `1.5px solid ${T.greenBorder}`,
+                background: whiteSelected
+                  ? T.green
+                  : hasPending
+                  ? (isDark ? "oklch(0.14 0.01 145)" : "#f1f5f9")
+                  : T.greenBg,
+                color: whiteSelected
+                  ? (isDark ? "#0a1a0f" : "#fff")
+                  : hasPending
+                  ? T.textDim
+                  : T.green,
+                border: `1.5px solid ${whiteSelected ? T.green : hasPending ? T.rowBorder : T.greenBorder}`,
+                opacity: hasPending && !whiteSelected ? 0.45 : 1,
+                transform: whiteSelected ? "scale(1.03)" : undefined,
+                boxShadow: whiteSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none",
               }}
             >
               <span className="text-[11px] font-extrabold truncate max-w-full px-1">{whiteName}</span>
-              <span className="text-[9px] opacity-60 font-semibold">wins</span>
+              <span className="text-[9px] opacity-70 font-semibold">{whiteSelected ? "tap to confirm" : "wins"}</span>
             </button>
+            {/* Draw */}
             <button
-              onClick={() => onEnterResult(game.id, "½-½")}
+              onClick={() => handleResultClick("½-½")}
               className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
               style={{
-                background: isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6",
-                color: T.textMuted,
-                border: `1.5px solid ${T.cardBorder}`,
+                background: drawSelected
+                  ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb")
+                  : hasPending
+                  ? (isDark ? "oklch(0.14 0.01 145)" : "#f1f5f9")
+                  : (isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6"),
+                color: drawSelected ? T.text : hasPending ? T.textDim : T.textMuted,
+                border: `1.5px solid ${drawSelected ? T.cardBorder : hasPending ? T.rowBorder : T.cardBorder}`,
+                opacity: hasPending && !drawSelected ? 0.45 : 1,
+                transform: drawSelected ? "scale(1.03)" : undefined,
+                boxShadow: drawSelected ? `0 4px 10px rgba(0,0,0,0.15)` : "none",
               }}
             >
               <span className="text-[11px] font-extrabold">Draw</span>
-              <span className="text-[9px] opacity-60 font-semibold">½–½</span>
+              <span className="text-[9px] opacity-70 font-semibold">{drawSelected ? "tap to confirm" : "½–½"}</span>
             </button>
+            {/* Black wins */}
             <button
-              onClick={() => onEnterResult(game.id, "0-1")}
+              onClick={() => handleResultClick("0-1")}
               className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
               style={{
-                background: T.greenBg,
-                color: T.green,
-                border: `1.5px solid ${T.greenBorder}`,
+                background: blackSelected
+                  ? T.green
+                  : hasPending
+                  ? (isDark ? "oklch(0.14 0.01 145)" : "#f1f5f9")
+                  : T.greenBg,
+                color: blackSelected
+                  ? (isDark ? "#0a1a0f" : "#fff")
+                  : hasPending
+                  ? T.textDim
+                  : T.green,
+                border: `1.5px solid ${blackSelected ? T.green : hasPending ? T.rowBorder : T.greenBorder}`,
+                opacity: hasPending && !blackSelected ? 0.45 : 1,
+                transform: blackSelected ? "scale(1.03)" : undefined,
+                boxShadow: blackSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none",
               }}
             >
               <span className="text-[11px] font-extrabold truncate max-w-full px-1">{blackName}</span>
-              <span className="text-[9px] opacity-60 font-semibold">wins</span>
+              <span className="text-[9px] opacity-70 font-semibold">{blackSelected ? "tap to confirm" : "wins"}</span>
             </button>
           </div>
         );
