@@ -889,6 +889,8 @@ function ParallaxStep({
   phoneLeft,
   isDark,
   mockupType,
+  caption1,
+  caption2,
 }: {
   number: string;
   icon: React.ReactNode;
@@ -904,6 +906,8 @@ function ParallaxStep({
   phoneLeft: boolean;
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
+  caption1?: string;
+  caption2?: string;
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useMotionInView(sectionRef, { once: true, amount: 0.10 });
@@ -989,7 +993,7 @@ function ParallaxStep({
       >
         <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-8">
           <motion.div
-            className="group cursor-pointer"
+            className="group cursor-pointer flex flex-col items-center gap-3"
             variants={stepMockupVariants}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
@@ -997,10 +1001,15 @@ function ParallaxStep({
             <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
               <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectPosition={objectPosition} objectFit={(objectFit as string | undefined)} />
             </div>
+            {caption1 && (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase ${accentBg} ${accentColor} select-none`}>
+                {caption1}
+              </span>
+            )}
           </motion.div>
           {imageSrc2 && (
             <motion.div
-              className="group cursor-pointer"
+              className="group cursor-pointer flex flex-col items-center gap-3"
               variants={stepMockup2Variants}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
@@ -1008,6 +1017,11 @@ function ParallaxStep({
               <div className="transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1">
                 <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} objectPosition={objectPosition2} objectFit={(objectFit as string | undefined)} />
               </div>
+              {caption2 && (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase ${accentBg} ${accentColor} select-none`}>
+                  {caption2}
+                </span>
+              )}
             </motion.div>
           )}
         </div>
@@ -1102,6 +1116,8 @@ function HowItWorks() {
       phoneLeft: true,
       objectFit: "cover",
       objectPosition: "top",
+      caption1: "Player View",
+      caption2: "Host View",
     },
   ];
 
@@ -1126,9 +1142,12 @@ function HowItWorks() {
             imageAlt2={(step as any).imageAlt2}
             objectPosition={(step as any).objectPosition}
             objectPosition2={(step as any).objectPosition2}
+            objectFit={(step as any).objectFit}
             phoneLeft={step.phoneLeft}
             isDark={isDark}
             mockupType={step.mockupType}
+            caption1={(step as any).caption1}
+            caption2={(step as any).caption2}
           />
         ))}
       </div>
