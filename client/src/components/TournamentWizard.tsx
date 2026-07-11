@@ -121,7 +121,7 @@ const DEFAULT_DATA: WizardData = {
   maxPlayers: 16,
   timeBase: 10,
   timeIncrement: 5,
-  timePreset: "10+5",
+  timePreset: "",
   ratingSystem: "chess.com",
   ratingType: "rapid",
   inviteCode: "",
@@ -857,7 +857,7 @@ function QuickstartForm({
         maxPlayers: 16,
         timeBase: 10,
         timeIncrement: 5,
-        timePreset: "10+5",
+        timePreset: "",
         ratingSystem: "chess.com",
         ratingType: "rapid",
       });
@@ -893,7 +893,7 @@ function QuickstartForm({
     { preset: "90+30",label: "Classical", sub: "90 min + 30 sec",        base: 90, inc: 30 },
   ];
 
-  const DEFAULT_TIME_PRESET = "10+5";
+  const DEFAULT_TIME_PRESET = "";
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
   const DEFAULT_ROUNDS = 5;
   const capOptions = [8, 12, 16, 24, 32, 48, 64, 100];
@@ -1320,14 +1320,16 @@ function QuickstartForm({
             <div className="flex items-center gap-1.5">
               <span
                 className="text-base font-semibold"
-                style={{ color: isNonDefaultTime ? T.green : isDark ? T.dText : T.lText }}
+                style={{ color: data.timePreset ? T.green : isDark ? "rgba(255,255,255,0.35)" : "#9CA3AF" }}
               >
-                {activeTime
+                {!data.timePreset
+                  ? "Select time control"
+                  : activeTime
                     ? `${activeTime.preset} · ${activeTime.label}`
                     : data.timePreset === "custom"
                       ? `${data.timeBase}+${data.timeIncrement} · ${data.ratingType === "blitz" ? "Blitz" : "Rapid"}`
                       : `${data.timePreset} · ${data.ratingType === "blitz" ? "Blitz" : data.ratingType === "rapid" ? "Rapid" : "Classical"}`
-                  }
+                }
               </span>
               <ChevronDown
                 className="w-4 h-4 transition-transform duration-200"
@@ -1345,9 +1347,9 @@ function QuickstartForm({
             >
               {/* Level 1 — Category buttons (no caption text) */}
               {!tcCategory && (
-                <div className="grid grid-cols-2 gap-2 pt-3">
-                  {(["Bullet", "Blitz", "Rapid", "Classical"] as const).map((cat) => {
-                    const catActive = ["Bullet", "Blitz"].includes(cat)
+                <div className="grid grid-cols-3 gap-2 pt-3">
+                  {(["Rapid", "Blitz", "Classical"] as const).map((cat) => {
+                    const catActive = cat === "Blitz"
                       ? data.ratingType === "blitz" && timeControlOptions.find(o => o.preset === data.timePreset)?.label === cat
                       : timeControlOptions.find(o => o.preset === data.timePreset)?.label === cat;
                     return (
@@ -1374,15 +1376,14 @@ function QuickstartForm({
               {/* Level 2 — Preset sub-prompt for selected category */}
               {tcCategory && (() => {
                 const presetMap: Record<string, { label: string; base: number; inc: number }[]> = {
-                  Bullet:    [{ label: "1 min", base: 1, inc: 0 }, { label: "1 + 1 min", base: 1, inc: 1 }, { label: "2 + 1 min", base: 2, inc: 1 }],
-                  Blitz:     [{ label: "3 min", base: 3, inc: 0 }, { label: "3 + 2 min", base: 3, inc: 2 }, { label: "5 min", base: 5, inc: 0 }],
                   Rapid:     [{ label: "10 min", base: 10, inc: 0 }, { label: "15 + 10 min", base: 15, inc: 10 }, { label: "30 min", base: 30, inc: 0 }],
+                  Blitz:     [{ label: "3 min", base: 3, inc: 0 }, { label: "3 + 2 min", base: 3, inc: 2 }, { label: "5 min", base: 5, inc: 0 }],
                   Classical: [{ label: "45 min", base: 45, inc: 0 }, { label: "60 + 30 min", base: 60, inc: 30 }, { label: "90 + 30 min", base: 90, inc: 30 }],
                 };
                 const presets = presetMap[tcCategory] ?? [];
                 const applyPreset = (base: number, inc: number) => {
                   const preset = inc > 0 ? `${base}+${inc}` : `${base}+0`;
-                  const isBlitzCat = tcCategory === "Bullet" || tcCategory === "Blitz";
+                  const isBlitzCat = tcCategory === "Blitz";
                   onChange({ timePreset: preset, timeBase: base, timeIncrement: inc, ratingType: isBlitzCat ? "blitz" : "rapid" });
                   setTcCategory(null);
                   setInlinePicker(null);
