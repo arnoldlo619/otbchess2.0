@@ -906,6 +906,17 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
+  // Rename a quad section title
+  const renameQuadSection = useCallback((sectionId: string, newName: string) => {
+    setState((prev) => {
+      if (!prev.quadSections) return prev;
+      const updatedSections = prev.quadSections.map((s) =>
+        s.id === sectionId ? { ...s, name: newName.trim() || s.name } : s
+      );
+      return { ...prev, quadSections: updatedSections };
+    });
+  }, []);
+
   // Reset tournament — clears localStorage and restores initial state
   const resetTournament = useCallback(() => {
     localStorage.removeItem(storageKey(tournamentId));
@@ -963,6 +974,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     togglePause,
     resetTournament,
     swapQuadPlayers,
+    renameQuadSection,
     updateSettings,
   };
 }

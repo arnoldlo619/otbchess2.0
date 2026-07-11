@@ -10,7 +10,7 @@
  *  - Inline standings toggle per section
  *  - Board-centric game rows with clear White/Black distinction
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Users,
   Trophy,
@@ -18,6 +18,8 @@ import {
   Check,
   BarChart3,
   Swords,
+  Pencil,
+  X,
 } from "lucide-react";
 import type { Player, Game, Result } from "../../lib/tournamentData";
 import type { QuadSection } from "../../lib/quads";
@@ -37,6 +39,7 @@ interface QuadsDirectorPanelProps {
   totalRounds: number;
   onEnterResult: (gameId: string, result: Result) => void;
   onSwapPlayers?: (sectionId: string, playerIdA: string, playerIdB: string) => void;
+  onRenameSection?: (sectionId: string, newName: string) => void;
   onAdvanceRound?: () => void;
   onCompleteTournament?: () => void;
   isDark: boolean;
@@ -118,6 +121,7 @@ export default function QuadsDirectorPanel({
   totalRounds,
   onEnterResult,
   onSwapPlayers,
+  onRenameSection,
   onAdvanceRound,
   onCompleteTournament,
   isDark,
@@ -136,6 +140,36 @@ export default function QuadsDirectorPanel({
 
   const [swapMode, setSwapMode] = useState(false);
   const [swapPlayerA, setSwapPlayerA] = useState<string | null>(null);
+
+  // Inline rename state
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingSectionId && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [editingSectionId]);
+
+  const startRename = (section: { id: string; name: string }) => {
+    setEditingSectionId(section.id);
+    setEditingName(section.name);
+  };
+
+  const commitRename = (sectionId: string) => {
+    if (onRenameSection && editingName.trim()) {
+      onRenameSection(sectionId, editingName.trim());
+    }
+    setEditingSectionId(null);
+    setEditingName("");
+  };
+
+  const cancelRename = () => {
+    setEditingSectionId(null);
+    setEditingName("");
+  };
 
   // Group games by section
   const gamesBySection = useMemo(() => {
@@ -249,7 +283,7 @@ export default function QuadsDirectorPanel({
         return (
           <div
             key={section.id}
-            className="rounded-2xl border overflow-hidden transition-all"
+            className="group rounded-2xl border overflow-hidden transition-all"
             style={{
               background: T.card,
               borderColor: winner ? T.goldBorder : T.cardBorder,
@@ -294,10 +328,51 @@ export default function QuadsDirectorPanel({
                   )}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-base font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>
-                      {section.name}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    {editingSectionId === section.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          ref={renameInputRef}
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") commitRename(section.id);
+                            if (e.key === "Escape") cancelRename();
+                          }}
+                          onBlur={() => commitRename(section.id)}
+                          className="text-base font-extrabold tracking-tight rounded-lg px-2 py-0.5 outline-none w-40"
+                          style={{
+                            color: T.text,
+                            fontFamily: "'Clash Display', sans-serif",
+                            background: T.greenBg,
+                            border: `1.5px solid ${T.greenBorder}`,
+                          }}
+                        />
+                        <button
+                          onClick={cancelRename}
+                          className="w-5 h-5 flex items-center justify-center rounded-full transition-colors"
+                          style={{ color: T.textMuted }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-base font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>
+                          {section.name}
+                        </span>
+                        {onRenameSection && (
+                          <button
+                            onClick={() => startRename(section)}
+                            className="w-6 h-6 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ color: T.textMuted }}
+                            title="Rename section"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                        )}
+                      </>
+                    )}
                     {winner && (
                       <span
                         className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
@@ -672,43 +747,50 @@ function GameRow({
       </div>
 
       {/* Result entry buttons — only for active round pending games */}
-      {isPending && isActive && !isBye && (
-        <div className="flex items-center justify-center gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
-          <button
-            onClick={() => onEnterResult(game.id, "1-0")}
-            className="flex-1 py-2 rounded-lg text-xs font-bold transition-all hover:scale-[1.02] active:scale-95"
-            style={{
-              background: T.greenBg,
-              color: T.green,
-              border: `1.5px solid ${T.greenBorder}`,
-            }}
-          >
-            1–0
-          </button>
-          <button
-            onClick={() => onEnterResult(game.id, "½-½")}
-            className="flex-1 py-2 rounded-lg text-xs font-bold transition-all hover:scale-[1.02] active:scale-95"
-            style={{
-              background: isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6",
-              color: T.textMuted,
-              border: `1.5px solid ${T.cardBorder}`,
-            }}
-          >
-            ½–½
-          </button>
-          <button
-            onClick={() => onEnterResult(game.id, "0-1")}
-            className="flex-1 py-2 rounded-lg text-xs font-bold transition-all hover:scale-[1.02] active:scale-95"
-            style={{
-              background: T.greenBg,
-              color: T.green,
-              border: `1.5px solid ${T.greenBorder}`,
-            }}
-          >
-            0–1
-          </button>
-        </div>
-      )}
+      {isPending && isActive && !isBye && (() => {
+        const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
+        const blackName = getPlayerName(players, game.blackId).split(" ")[0];
+        return (
+          <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
+            <button
+              onClick={() => onEnterResult(game.id, "1-0")}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              style={{
+                background: T.greenBg,
+                color: T.green,
+                border: `1.5px solid ${T.greenBorder}`,
+              }}
+            >
+              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{whiteName}</span>
+              <span className="text-[9px] opacity-60 font-semibold">wins</span>
+            </button>
+            <button
+              onClick={() => onEnterResult(game.id, "½-½")}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              style={{
+                background: isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6",
+                color: T.textMuted,
+                border: `1.5px solid ${T.cardBorder}`,
+              }}
+            >
+              <span className="text-[11px] font-extrabold">Draw</span>
+              <span className="text-[9px] opacity-60 font-semibold">½–½</span>
+            </button>
+            <button
+              onClick={() => onEnterResult(game.id, "0-1")}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              style={{
+                background: T.greenBg,
+                color: T.green,
+                border: `1.5px solid ${T.greenBorder}`,
+              }}
+            >
+              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{blackName}</span>
+              <span className="text-[9px] opacity-60 font-semibold">wins</span>
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }
