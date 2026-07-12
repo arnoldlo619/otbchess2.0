@@ -2103,6 +2103,7 @@ export default function Director() {
     isSwissElimCutoff: _isSwissElimCutoff,
     isSwissElimSwissPhaseComplete,
     isElimBracketComplete,
+    loadMockQuadsState,
   } = useDirectorState(tournamentId);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
@@ -3810,6 +3811,15 @@ export default function Director() {
               ══════════════════════════════════════════════════════════════════ */}
               {!isRegistration && (
                 <>
+                  {/* ── Dev-only: Mock Quads toolbar ─────────────────────────────────── */}
+                  {import.meta.env.DEV && state.format === "quads" && (
+                    <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <span className="text-xs font-bold text-amber-400 uppercase tracking-widest mr-1">Dev</span>
+                      <button type="button" onClick={() => loadMockQuadsState("mid")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">Mid-tournament</button>
+                      <button type="button" onClick={() => loadMockQuadsState("complete")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">All complete</button>
+                      <button type="button" onClick={() => loadMockQuadsState("cochampion")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">Co-champions</button>
+                    </div>
+                  )}
                   {/* ── Quads Section Panel ─────────────────────────────────────────────── */}
                   {state.format === "quads" && state.quadSections && (
                     <QuadsDirectorPanel

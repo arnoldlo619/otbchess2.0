@@ -14,6 +14,7 @@ import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayer
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
 import { generateQuadTournament, swapPlayersBetweenSections, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
+import { generateMockQuadsTournament, generateCompletedMockQuadsTournament, generateCoChampionMockQuadsTournament } from "./mockQuadsData";
 
 // ─── Schema Version ───────────────────────────────────────────────────────────
 // Bump this when the DirectorState shape changes to force a clean reset
@@ -977,6 +978,44 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   // Live standings with Buchholz tiebreaks from the Swiss engine
   const liveStandings = computeStandings(state.players, state.rounds);
 
+  // ── Dev-only mock loader ──────────────────────────────────────────────────────
+  const loadMockQuadsState = useCallback((scenario: "mid" | "complete" | "cochampion" = "mid") => {
+    const mock =
+      scenario === "complete" ? generateCompletedMockQuadsTournament() :
+      scenario === "cochampion" ? generateCoChampionMockQuadsTournament() :
+      generateMockQuadsTournament();
+
+    const roundsMap = new Map<number, Round>();
+    for (let r = 1; r <= mock.totalRounds; r++) {
+      const rGames = mock.games.filter((g) => g.round === r);
+      const allDone = rGames.length > 0 && rGames.every((g) => g.result !== "*");
+      const anyDone = rGames.some((g) => g.result !== "*");
+      roundsMap.set(r, {
+        number: r,
+        status: allDone ? "completed" : anyDone ? "in_progress" : r < mock.currentRound ? "completed" : r === mock.currentRound ? "in_progress" : "upcoming",
+        games: rGames,
+      });
+    }
+
+    const mockState: DirectorState = {
+      tournamentId,
+      tournamentName: "Mock Quads — Sat Night",
+      totalRounds: mock.totalRounds,
+      format: "quads",
+      players: mock.players,
+      rounds: Array.from(roundsMap.values()),
+      currentRound: mock.currentRound,
+      status: scenario === "complete" ? "completed" : "in_progress",
+      roundMinutes: 25,
+      quadSections: mock.sections,
+      quadSettings: { ...DEFAULT_QUAD_SETTINGS, ratingType: "rapid" },
+      resultHistory: [],
+    };
+
+    setState(mockState);
+    saveToStorage(tournamentId, mockState);
+  }, [tournamentId]);
+
   return {
     state,
     currentRoundData,
@@ -1010,5 +1049,6 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     swapQuadPlayers,
     renameQuadSection,
     updateSettings,
+    loadMockQuadsState,
   };
 }
