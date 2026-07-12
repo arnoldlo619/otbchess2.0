@@ -32,6 +32,7 @@ import {
 } from "../../lib/quads";
 import { computeStandings } from "../../lib/swiss";
 import { InstagramCarouselModal } from "../InstagramCarouselModal";
+import { PlayerAvatar } from "../PlayerAvatar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -911,23 +912,65 @@ function GameRow({
         title="Tap to expand"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[9px] font-bold uppercase tracking-widest flex-shrink-0" style={{ color: T.textDim }}>
+          {/* Board label */}
+          <span className="text-[9px] font-bold uppercase tracking-widest flex-shrink-0 w-5" style={{ color: T.textDim }}>
             B{boardIndex}
           </span>
-          <span className="text-xs font-semibold truncate" style={{ color: whiteWon ? T.green : T.textMuted }}>
-            {getPlayerName(players, game.whiteId).split(" ")[0]}
-          </span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-            style={{
-              background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg,
-              color: isDraw ? T.textMuted : T.green,
-            }}
-          >
-            {resultLabel(game.result)}
-          </span>
-          <span className="text-xs font-semibold truncate" style={{ color: blackWon ? T.green : T.textMuted }}>
-            {getPlayerName(players, game.blackId).split(" ")[0]}
-          </span>
+          {/* Winner avatar + name */}
+          {(() => {
+            const winnerId = whiteWon ? game.whiteId : blackWon ? game.blackId : null;
+            const loserId  = whiteWon ? game.blackId : blackWon ? game.whiteId : null;
+            const winnerPlayer = players.find(p => p.id === winnerId);
+            const loserPlayer  = players.find(p => p.id === loserId);
+            const winnerName = winnerPlayer?.name ?? winnerId ?? "";
+            const loserName  = loserPlayer?.name  ?? loserId  ?? "";
+            if (isDraw) {
+              // Draw: show both names equally
+              return (
+                <>
+                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>
+                    {getPlayerName(players, game.whiteId).split(" ")[0]}
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                    style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textMuted }}
+                  >
+                    Draw
+                  </span>
+                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>
+                    {getPlayerName(players, game.blackId).split(" ")[0]}
+                  </span>
+                </>
+              );
+            }
+            return (
+              <>
+                {/* Winner avatar */}
+                <div className="flex-shrink-0">
+                  <PlayerAvatar
+                    username={winnerPlayer?.username ?? ""}
+                    name={winnerName}
+                    platform={(winnerPlayer?.platform as "chesscom" | "lichess") ?? "chesscom"}
+                    avatarUrl={winnerPlayer?.avatarUrl}
+                    size={22}
+                  />
+                </div>
+                {/* Winner name */}
+                <span className="text-xs font-semibold truncate max-w-[80px]" style={{ color: T.green }}>
+                  {winnerName.split(" ")[0]}
+                </span>
+                {/* Score badge */}
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                  style={{ background: T.greenBg, color: T.green }}
+                >
+                  {resultLabel(game.result)}
+                </span>
+                {/* Loser name */}
+                <span className="text-xs truncate max-w-[72px]" style={{ color: T.textDim }}>
+                  {loserName.split(" ")[0]}
+                </span>
+              </>
+            );
+          })()}
         </div>
         <span className="text-[9px] flex-shrink-0" style={{ color: T.textDim }}>▼</span>
       </div>
