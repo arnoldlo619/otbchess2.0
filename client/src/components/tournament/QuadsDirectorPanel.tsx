@@ -110,13 +110,156 @@ function ProgressRing({ completed, total, size = 36, isDark }: { completed: numb
   );
 }
 
-// ─── GameRow ──────────────────────────────────────────────────────────────────
+// ─── ResultEntryPanel ────────────────────────────────────────────────────────
 
-function GameRow({
-  game, players, boardIndex, onEnterResult, isActive, isDark, T,
+function ResultEntryPanel({
+  game, players, boardIndex, onEnterResult, onClose, isDark, T,
 }: {
   game: Game; players: Player[]; boardIndex: number;
   onEnterResult: (gameId: string, result: Result) => void;
+  onClose: () => void; isDark: boolean; T: Record<string, string>;
+}) {
+  const white = players.find((p) => p.id === game.whiteId);
+  const black = players.find((p) => p.id === game.blackId);
+  const whiteName = white?.name ?? game.whiteId;
+  const blackName = black?.name ?? game.blackId;
+  const whiteRating = white?.elo ?? 0;
+  const blackRating = black?.elo ?? 0;
+  const current = game.result;
+
+  // Keyboard shortcuts: W = white wins, D = draw, B = black wins, Esc = close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "w" || e.key === "W") { onEnterResult(game.id, "1-0"); onClose(); }
+      if (e.key === "d" || e.key === "D") { onEnterResult(game.id, "½-½"); onClose(); }
+      if (e.key === "b" || e.key === "B") { onEnterResult(game.id, "0-1"); onClose(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [game.id, onEnterResult, onClose]);
+
+  const handleResult = (result: "1-0" | "½-½" | "0-1") => {
+    if (current === result) {
+      onEnterResult(game.id, "*" as Result);
+    } else {
+      onEnterResult(game.id, result);
+    }
+    onClose();
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40" style={{ background: "oklch(0 0 0 / 0.5)" }} onClick={onClose} aria-hidden="true" />
+      {/* Slide-out panel */}
+      <div
+        role="dialog" aria-modal="true" aria-label={`Enter result for Board ${boardIndex}`}
+        className="fixed right-0 top-0 h-full z-50 flex flex-col overflow-y-auto"
+        style={{ width: "min(380px, 92vw)", background: isDark ? "oklch(0.10 0.025 145)" : "#ffffff", borderLeft: `1px solid ${T.border ?? T.cardBorder}`, boxShadow: "-8px 0 32px oklch(0 0 0 / 0.35)", animation: "slideInPanel 0.28s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: T.greenBg, color: T.green }}>Board {boardIndex}</span>
+            <span className="text-xs font-semibold" style={{ color: T.textMuted }}>Enter Result</span>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close result panel" className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:opacity-80" style={{ background: T.rowBg, color: T.textMuted }}>
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Players */}
+        <div className="px-5 py-5 flex flex-col gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 p-3 rounded-xl transition-all" style={{ background: current === "1-0" ? T.greenSoft : T.rowBg, border: `1px solid ${current === "1-0" ? T.greenBorder : T.rowBorder}` }}>
+            <div className="w-8 h-8 rounded-lg flex-shrink-0 border-2" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
+            <PlayerAvatar username={white?.username ?? ""} name={whiteName} platform={(white?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={white?.avatarUrl} size={36} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate" style={{ color: T.text }}>{whiteName}</p>
+              <p className="text-[11px]" style={{ color: T.textDim }}>{whiteRating} · White</p>
+            </div>
+            {current === "1-0" && <Check size={16} style={{ color: T.green, flexShrink: 0 }} />}
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl transition-all" style={{ background: current === "0-1" ? T.greenSoft : T.rowBg, border: `1px solid ${current === "0-1" ? T.greenBorder : T.rowBorder}` }}>
+            <div className="w-8 h-8 rounded-lg flex-shrink-0 border-2" style={{ background: "#1a1a1a", borderColor: isDark ? "oklch(0.30 0.02 145)" : "#374151" }} />
+            <PlayerAvatar username={black?.username ?? ""} name={blackName} platform={(black?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={black?.avatarUrl} size={36} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate" style={{ color: T.text }}>{blackName}</p>
+              <p className="text-[11px]" style={{ color: T.textDim }}>{blackRating} · Black</p>
+            </div>
+            {current === "0-1" && <Check size={16} style={{ color: T.green, flexShrink: 0 }} />}
+          </div>
+        </div>
+
+        {/* Result buttons */}
+        <div className="px-5 flex flex-col gap-2 flex-shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: T.textDim }}>Select Result</p>
+          {([
+            { result: "1-0" as const, label: `${whiteName.split(" ")[0]} wins`, key: "W" },
+            { result: "½-½" as const, label: "Draw ½–½", key: "D" },
+            { result: "0-1" as const, label: `${blackName.split(" ")[0]} wins`, key: "B" },
+          ]).map(({ result, label, key }) => {
+            const isSelected = current === result;
+            const isDrawBtn = result === "½-½";
+            return (
+              <button
+                key={result}
+                type="button"
+                onClick={() => handleResult(result)}
+                aria-pressed={isSelected}
+                aria-label={label}
+                className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-semibold transition-all hover:scale-[1.01] active:scale-95"
+                style={{
+                  minHeight: "52px",
+                  background: isSelected ? (isDrawBtn ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb") : T.greenSoft) : T.rowBg,
+                  border: `2px solid ${isSelected ? (isDrawBtn ? T.textMuted : T.green) : T.rowBorder}`,
+                  color: isSelected ? (isDrawBtn ? T.text : T.green) : T.text,
+                  boxShadow: isSelected ? (isDrawBtn ? "none" : `0 4px 14px oklch(0.72 0.19 145 / 0.25)`) : "none",
+                }}
+              >
+                <span className="text-sm">{label}</span>
+                <div className="flex items-center gap-2">
+                  {isSelected && <Check size={14} style={{ color: isDrawBtn ? T.textMuted : T.green }} />}
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: T.rowBorder, color: T.textDim }}>{key}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Keyboard hint */}
+        <div className="px-5 mt-4 flex-shrink-0">
+          <p className="text-[10px] text-center" style={{ color: T.textDim }}>
+            Press <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>W</kbd> / <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>D</kbd> / <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>B</kbd> · <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>Esc</kbd> to close
+          </p>
+        </div>
+
+        {/* Clear result */}
+        {current !== "*" && (
+          <div className="px-5 mt-3 mb-6 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => { onEnterResult(game.id, "*" as Result); onClose(); }}
+              className="w-full text-xs py-2 rounded-lg transition-colors"
+              style={{ background: T.amberBg, color: T.amber, border: `1px solid ${T.amberBorder}` }}
+            >
+              Clear result (undo)
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── GameRow ──────────────────────────────────────────────────────────────────
+
+function GameRow({
+  game, players, boardIndex, onEnterResult, onGameClick, isActive, isDark, T,
+}: {
+  game: Game; players: Player[]; boardIndex: number;
+  onEnterResult: (gameId: string, result: Result) => void;
+  onGameClick?: (gameId: string) => void;
   isActive: boolean; isDark: boolean; T: Record<string, string>;
 }) {
   const isBye = game.blackId === "BYE";
@@ -179,13 +322,24 @@ function GameRow({
     );
   }
 
+  // When onGameClick is provided and game is pending and active, clicking the row header opens the slide-out panel
+  const canOpenPanel = !!onGameClick && isPending && isActive && !isBye;
+
   return (
     <div
       className="rounded-xl px-3 py-2.5 transition-all"
       style={{ background: T.rowBg, border: `1px solid ${isActive && isPending ? T.greenBorder : T.rowBorder}`, opacity: !isActive && isPending ? 0.55 : 1, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both" }}
     >
-      <div className="flex items-center gap-1.5 mb-2">
+      <div
+        className={`flex items-center gap-1.5 mb-2${canOpenPanel ? " cursor-pointer hover:opacity-80" : ""}`}
+        onClick={canOpenPanel ? () => onGameClick!(game.id) : undefined}
+        role={canOpenPanel ? "button" : undefined}
+        tabIndex={canOpenPanel ? 0 : undefined}
+        aria-label={canOpenPanel ? `Open result entry for Board ${boardIndex}` : undefined}
+        onKeyDown={canOpenPanel ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onGameClick!(game.id); } } : undefined}
+      >
         <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: T.textDim }}>Board {boardIndex}</span>
+        {canOpenPanel && <span className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: T.greenBg, color: T.green }}>Enter result →</span>}
         {!isPending && !isBye && (
           <>
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg, color: isDraw ? T.textMuted : T.green }}>{resultLabel(game.result)}</span>
@@ -212,7 +366,7 @@ function GameRow({
           <span className="w-4 h-4 rounded-[4px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
         </div>
       </div>
-      {isPending && isActive && !isBye && (() => {
+      {isPending && isActive && !isBye && !canOpenPanel && (() => {
         const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
         const blackName = getPlayerName(players, game.blackId).split(" ")[0];
         const whiteSelected = game.result === "1-0";
@@ -280,9 +434,11 @@ function StandingsView({ section, standings, players, isDark, T }: {
 
 // ─── RoundPairings ────────────────────────────────────────────────────────────
 
-function RoundPairings({ section, games, players, roundNum, currentRound, onEnterResult, isDark, T }: {
+function RoundPairings({ section, games, players, roundNum, currentRound, onEnterResult, onGameClick, isDark, T }: {
   section: QuadSection; games: Game[]; players: Player[]; roundNum: number; currentRound: number;
-  onEnterResult: (gameId: string, result: Result) => void; isDark: boolean; T: Record<string, string>;
+  onEnterResult: (gameId: string, result: Result) => void;
+  onGameClick?: (gameId: string) => void;
+  isDark: boolean; T: Record<string, string>;
 }) {
   const roundGames = games.filter((g) => g.round === roundNum);
   const isActive = roundNum === currentRound;
@@ -299,7 +455,7 @@ function RoundPairings({ section, games, players, roundNum, currentRound, onEnte
         </div>
       )}
       {roundGames.map((game, idx) => (
-        <GameRow key={game.id} game={game} players={players} boardIndex={idx + 1} onEnterResult={onEnterResult} isActive={isActive} isDark={isDark} T={T} />
+        <GameRow key={game.id} game={game} players={players} boardIndex={idx + 1} onEnterResult={onEnterResult} onGameClick={onGameClick} isActive={isActive} isDark={isDark} T={T} />
       ))}
     </div>
   );
@@ -329,6 +485,7 @@ export default function QuadsDirectorPanel({
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(() => sections[0]?.id ?? null);
   const [exceptionTrayOpen, setExceptionTrayOpen] = useState(false);
   const [carouselSection, setCarouselSection] = useState<string | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
 
   // Swap mode
   const [swapMode, setSwapMode] = useState(false);
@@ -906,6 +1063,7 @@ export default function QuadsDirectorPanel({
                 roundNum={sectionRoundTab[selectedSection.id] ?? currentRound}
                 currentRound={currentRound}
                 onEnterResult={onEnterResult}
+                onGameClick={(gameId) => setSelectedGameId(gameId)}
                 isDark={isDark}
                 T={T}
               />
@@ -959,7 +1117,7 @@ export default function QuadsDirectorPanel({
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); }}
+                    onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); setSelectedGameId(game.id); }}
                     className="text-[10px] font-semibold px-2 py-1 rounded-lg flex-shrink-0 transition-colors"
                     style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}
                   >
@@ -971,6 +1129,25 @@ export default function QuadsDirectorPanel({
           </div>
         )}
       </div>
+
+      {/* Result Entry Panel */}
+      {selectedGameId && (() => {
+        const game = games.find((g) => g.id === selectedGameId);
+        if (!game) return null;
+        const sectionGames = games.filter((g) => g.sectionId === game.sectionId);
+        const boardIndex = sectionGames.filter((g) => g.round === game.round).findIndex((g) => g.id === game.id) + 1;
+        return (
+          <ResultEntryPanel
+            game={game}
+            players={players}
+            boardIndex={boardIndex}
+            onEnterResult={onEnterResult}
+            onClose={() => setSelectedGameId(null)}
+            isDark={isDark}
+            T={T}
+          />
+        );
+      })()}
 
       {/* Instagram Carousel Modal */}
       {carouselSection && (() => {

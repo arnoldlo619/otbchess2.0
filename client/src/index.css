@@ -1003,6 +1003,12 @@
   animation: slideInFromLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Slide in panel from right edge (for result entry drawer) */
+@keyframes slideInPanel {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* Slide in from right (for text columns) */
 @keyframes slideInFromRight {
   from { opacity: 0; transform: translateX(32px); }
