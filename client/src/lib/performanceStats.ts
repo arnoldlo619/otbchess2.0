@@ -377,12 +377,23 @@ export function computeQuadSectionPerformances(
     // Compute performances within section scope
     const perfs = computeAllPerformances(sectionPlayers, sectionRounds);
 
+    // Detect co-champions: multiple players sharing rank 1
+    const champCount = perfs.filter((p) => p.rank === 1).length;
+    const isCo = champCount > 1;
     // Override badges with section-specific labels
     const updatedPerfs = perfs.map((perf) => {
       let badgeLabel = perf.badgeLabel;
-      if (perf.rank === 1) badgeLabel = `🏆 ${section.name} Champion`;
-      else if (perf.rank === 2) badgeLabel = `🥈 2nd in ${section.name}`;
-      else if (perf.rank === 3) badgeLabel = `🥉 3rd in ${section.name}`;
+      if (perf.rank === 1) {
+        badgeLabel = isCo
+          ? `🏆 ${section.name} Co-Champion`
+          : `🏆 ${section.name} Champion`;
+      } else if (perf.rank === 2) {
+        badgeLabel = `🥈 2nd in ${section.name}`;
+      } else if (perf.rank === 3) {
+        badgeLabel = `🥉 3rd in ${section.name}`;
+      } else {
+        badgeLabel = `4th in ${section.name}`;
+      }
       return {
         ...perf,
         badgeLabel,

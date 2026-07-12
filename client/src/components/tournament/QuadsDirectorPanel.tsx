@@ -455,8 +455,8 @@ export default function QuadsDirectorPanel({
                 className="flex items-center justify-between px-4 py-2 border-t"
                 style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.02 145)" : "#fafbfc" }}
               >
-                {/* Round tabs */}
-                <div className="flex items-center gap-1">
+                {/* Round tabs — horizontal scroll on mobile */}
+                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" role="tablist" aria-label="Round tabs">
                   {Array.from({ length: totalRounds }, (_, i) => i + 1).map((roundNum) => {
                     const isActive = activeRound === roundNum;
                     const roundGames = sectionGames.filter((g) => g.round === roundNum);
@@ -466,8 +466,12 @@ export default function QuadsDirectorPanel({
                     return (
                       <button
                         key={roundNum}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        aria-label={`Round ${roundNum}${roundComplete ? " — complete" : isCurrent ? " — in progress" : ""}`}
                         onClick={() => setSectionRoundTab((prev) => ({ ...prev, [section.id]: roundNum }))}
-                        className="relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                        className="relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
                         style={{
                           background: isActive ? T.greenBg : "transparent",
                           color: isActive ? T.green : T.textMuted,
@@ -497,6 +501,9 @@ export default function QuadsDirectorPanel({
                 {/* Pairings / Standings toggle */}
                 <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? "oklch(0.12 0.02 145)" : "#f1f5f9" }}>
                   <button
+                    type="button"
+                    aria-pressed={view === "pairings"}
+                    aria-label="Show boards view"
                     onClick={() => setSectionView((prev) => ({ ...prev, [section.id]: "pairings" }))}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
                     style={{
@@ -509,6 +516,9 @@ export default function QuadsDirectorPanel({
                     Boards
                   </button>
                   <button
+                    type="button"
+                    aria-pressed={view === "standings"}
+                    aria-label="Show standings table"
                     onClick={() => setSectionView((prev) => ({ ...prev, [section.id]: "standings" }))}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
                     style={{
@@ -903,15 +913,18 @@ function GameRow({
   // Collapsed summary row
   if (collapsed && !isPending) {
     return (
-      <div
-        className="rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all hover:opacity-80"
+      <button
+        type="button"
+        aria-expanded={false}
+        aria-label="Expand game details"
+        className="w-full rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all hover:opacity-80 text-left"
         style={{
           background: T.rowBg,
           border: `1px solid ${T.rowBorder}`,
           animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both",
+          minHeight: "44px",
         }}
         onClick={() => setCollapsed(false)}
-        title="Tap to expand"
       >
         <div className="flex items-center gap-2 min-w-0">
           {/* Board label */}
@@ -974,8 +987,8 @@ function GameRow({
             );
           })()}
         </div>
-        <span className="text-[9px] flex-shrink-0" style={{ color: T.textDim }}>▼</span>
-      </div>
+        <span className="text-[9px] flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
+      </button>
     );
   }
 
@@ -1009,10 +1022,12 @@ function GameRow({
               {resultLabel(game.result)}
             </span>
             <button
+              type="button"
+              aria-expanded={true}
+              aria-label="Collapse game row"
               onClick={() => setCollapsed(true)}
               className="ml-auto text-[9px] px-1.5 py-0.5 rounded transition-colors"
               style={{ color: T.textDim, background: "transparent" }}
-              title="Collapse"
             >
               ▲ collapse
             </button>
@@ -1089,9 +1104,15 @@ function GameRow({
           <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
             {/* White wins */}
             <button
+              type="button"
+              aria-pressed={whiteSelected}
+              aria-label={`${whiteName} wins${whiteSelected ? " — selected, click to undo" : ""}`}
               onClick={() => handleResultClick("1-0")}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
               style={{
+                minHeight: "44px",
+                paddingTop: "10px",
+                paddingBottom: "10px",
                 background: whiteSelected
                   ? T.green
                   : hasPending
@@ -1113,9 +1134,15 @@ function GameRow({
             </button>
             {/* Draw */}
             <button
+              type="button"
+              aria-pressed={drawSelected}
+              aria-label={`Draw${drawSelected ? " — selected, click to undo" : ""}`}
               onClick={() => handleResultClick("½-½")}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
               style={{
+                minHeight: "44px",
+                paddingTop: "10px",
+                paddingBottom: "10px",
                 background: drawSelected
                   ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb")
                   : hasPending
@@ -1133,9 +1160,15 @@ function GameRow({
             </button>
             {/* Black wins */}
             <button
+              type="button"
+              aria-pressed={blackSelected}
+              aria-label={`${blackName} wins${blackSelected ? " — selected, click to undo" : ""}`}
               onClick={() => handleResultClick("0-1")}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
               style={{
+                minHeight: "44px",
+                paddingTop: "10px",
+                paddingBottom: "10px",
                 background: blackSelected
                   ? T.green
                   : hasPending
