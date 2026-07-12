@@ -24,6 +24,7 @@ import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDirectorState } from "@/lib/directorState";
+import type { QuadSection } from "@/lib/quads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
@@ -4008,13 +4009,16 @@ export default function Director() {
                   {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (() => {
                     const finalStandings = getStandings(state.players);
                     const isQuadsFormat = state.format === "quads" && state.quadSections && state.quadSections.length > 0;
-                    // For Quads: compute per-section champions
+                    // For Quads: compute per-section champions (supports co-champions when tied on points)
                     const sectionChampions = isQuadsFormat
                       ? state.quadSections!.map(section => {
                           const sectionPlayerIds = new Set(section.playerIds);
                           const sectionStandings = finalStandings.filter(s => sectionPlayerIds.has(s.id));
-                          return { section, champion: sectionStandings[0] ?? null };
-                        }).filter(x => x.champion !== null)
+                          if (sectionStandings.length === 0) return null;
+                          const topPoints = sectionStandings[0].points;
+                          const champions = sectionStandings.filter(s => s.points === topPoints);
+                          return { section, champions };
+                        }).filter((x): x is { section: QuadSection; champions: typeof finalStandings } => x !== null && x.champions.length > 0)
                       : [];
                     // Podium config: rank index, medal colours, score size
                     const podiumConfig = [
@@ -4048,41 +4052,46 @@ export default function Director() {
                         {isQuadsFormat && sectionChampions.length > 0 ? (
                           <div className={`divide-y ${ isDark ? "divide-white/06" : "divide-[#436850]/08"}`}>
                             <p className={`text-[10px] font-bold uppercase tracking-widest px-5 pt-3 pb-1 ${ isDark ? "text-white/35" : "text-[#436850]/70"}`}>Section Champions</p>
-                            {sectionChampions.map(({ section, champion }) => {
-                              const player = state.players.find(p => p.id === champion!.id);
-                              if (!player) return null;
-                              const pts = champion!.points % 1 !== 0
-                                ? `${Math.floor(champion!.points)}\u00BD`
-                                : String(champion!.points);
+                            {sectionChampions.map(({ section, champions }) => {
+                              const isCo = champions.length > 1;
                               return (
-                                <div key={section.id} className="flex items-center gap-4 px-5 py-3">
-                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base ${
-                                    isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-500 border border-amber-200"
-                                  }`}>\uD83C\uDFC6</div>
-                                  <PlayerAvatar
-                                    name={player.name}
-                                    username={player.username}
-                                    size={36}
-                                    platform={player.platform === "lichess" ? "lichess" : "chesscom"}
-                                    avatarUrl={player.avatarUrl}
-                                  />
-                                  <div className="flex-1 min-w-0">
+                                <div key={section.id} className="px-5 py-3 space-y-2">
+                                  <div className="flex items-center gap-2">
                                     <p className={`text-[10px] font-bold uppercase tracking-widest ${ isDark ? "text-white/30" : "text-[#436850]/60"}`}>{section.name}</p>
-                                    <span className={`text-sm font-black truncate ${ isDark ? "text-white" : "text-[#12372A]"}`}
-                                      style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                                      {player.name}
-                                    </span>
-                                    <span className={`text-xs font-semibold ml-2 ${ isDark ? "text-white/45" : "text-[#436850]"}`}>
-                                      {champion!.wins}W {champion!.draws}D {champion!.losses}L
-                                    </span>
+                                    {isCo && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${ isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-600"}`}>Co-Champions</span>}
                                   </div>
-                                  <div className="flex-shrink-0 text-right">
-                                    <span className={`text-2xl font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}
-                                      style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                                      {pts}
-                                    </span>
-                                    <p className={`text-[11px] font-semibold ${ isDark ? "text-white/35" : "text-[#436850]"}`}>pts</p>
-                                  </div>
+                                  {champions.map(champ => {
+                                    const player = state.players.find(p => p.id === champ.id);
+                                    if (!player) return null;
+                                    const pts = champ.points % 1 !== 0
+                                      ? `${Math.floor(champ.points)}\u00BD`
+                                      : String(champ.points);
+                                    return (
+                                      <div key={champ.id} className="flex items-center gap-3">
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm ${
+                                          isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-500 border border-amber-200"
+                                        }`}>\uD83C\uDFC6</div>
+                                        <PlayerAvatar
+                                          name={player.name}
+                                          username={player.username}
+                                          size={32}
+                                          platform={player.platform === "lichess" ? "lichess" : "chesscom"}
+                                          avatarUrl={player.avatarUrl}
+                                        />
+                                        <span className={`text-sm font-black truncate ${ isDark ? "text-white" : "text-[#12372A]"}`}
+                                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                          {player.name}
+                                        </span>
+                                        <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-[#436850]"}`}>
+                                          {champ.wins}W {champ.draws}D {champ.losses}L
+                                        </span>
+                                        <span className={`ml-auto text-xl font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}
+                                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                          {pts}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               );
                             })}

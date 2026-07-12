@@ -1118,7 +1118,27 @@ function QuickstartForm({
           </div>
         )}
 
-        {/* Rounds row — TextInput-style field */}
+        {/* Rounds row — TextInput-style field (hidden for Quads — always 3 rounds) */}
+        {data.format === "quads" ? (
+          <div
+            className="rounded-2xl border transition-all duration-200 overflow-hidden opacity-60 cursor-not-allowed"
+            style={{
+              background: isDark ? T.dInput : T.lInput,
+              border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+            }}
+          >
+            <div className="w-full flex items-center justify-between" style={{ padding: "16px 18px" }}>
+              <div className="flex items-center gap-3">
+                <Hash className="w-5 h-5 flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+                <span className="text-base font-medium" style={{ color: isDark ? T.dSub : T.lMuted }}>Rounds</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-semibold" style={{ color: T.green }}>3</span>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: isDark ? "rgba(77,105,64,0.25)" : "#D1FAE5", color: T.green }}>Fixed</span>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div
           className="rounded-2xl border transition-all duration-200 overflow-hidden"
           style={{
@@ -1206,6 +1226,7 @@ function QuickstartForm({
             </div>
           )}
         </div>
+        )}
 
         {/* Max Players row — TextInput-style field */}
         <div

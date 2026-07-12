@@ -299,7 +299,9 @@ export default function QuadsDirectorPanel({
         const status = sectionStatus.get(section.id)!;
         const standings = standingsBySection.get(section.id) ?? [];
         const sectionGames = gamesBySection.get(section.id) ?? [];
-        const winner = status.pct === 100 ? getSectionWinners(standings)[0] : null;
+        const winners = status.pct === 100 ? getSectionWinners(standings) : [];
+        const winner = winners[0] ?? null;
+        const isCo = winners.length > 1;
         const activeRound = sectionRoundTab[section.id] ?? currentRound;
         const view = sectionView[section.id] ?? "pairings";
 
@@ -396,13 +398,13 @@ export default function QuadsDirectorPanel({
                         )}
                       </>
                     )}
-                    {winner && (
+                    {winners.length > 0 && (
                       <span
                         className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
                         style={{ background: T.goldBg, border: `1px solid ${T.goldBorder}`, color: T.gold }}
                       >
                         <Trophy size={10} />
-                        {getPlayerName(players, winner.playerId).split(" ")[0]}
+                        {isCo ? `Co-Champs: ${winners.map(w => getPlayerName(players, w.playerId).split(" ")[0]).join(" & ")}` : getPlayerName(players, winner.playerId).split(" ")[0]}
                       </span>
                     )}
                   </div>

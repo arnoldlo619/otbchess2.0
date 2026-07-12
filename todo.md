@@ -6886,3 +6886,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] P0: PublicTournament.tsx section tabs and per-Quad podium (Section Champions)
 - [x] P0: Server-side quadSections in public API (publicSnapshot.ts + index.ts)
 - [x] P0: Director.tsx Tournament Complete card shows per-section champions for Quads
+- [ ] P1: Lock rounds to 3 for Quads in TournamentWizard (hide rounds selector)
+- [ ] P1: Enforce rating source (rapid/blitz) end-to-end in Quads seeding
+- [ ] P1: Co-champion display in Director Tournament Complete and SectionCompleteCard
+- [ ] P1: Result history/audit trail in directorState (who entered, when, undo log)
+- [x] P1: Lock rounds to 3 for Quads in wizard (hide rounds picker)
+- [x] P1: Enforce rating source end-to-end (wire config.ratingType into quadSettings)
+- [x] P1: Co-champion display in Director Tournament Complete card
+- [x] P1: Co-champion display in QuadsDirectorPanel section header badge
+- [x] P1: Result audit trail (ResultHistoryEntry[] in DirectorState)

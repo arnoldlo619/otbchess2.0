@@ -50,6 +50,25 @@ export interface DirectorState {
   quadSections?: QuadSection[];
   /** For quads: settings used for generation. */
   quadSettings?: QuadSettings;
+  /** Audit trail: history of result entries/corrections. */
+  resultHistory?: ResultHistoryEntry[];
+}
+
+export interface ResultHistoryEntry {
+  /** ISO timestamp */
+  timestamp: string;
+  /** Round number */
+  round: number;
+  /** Board number */
+  board: number;
+  /** White player ID */
+  whiteId: string;
+  /** Black player ID */
+  blackId: string;
+  /** Previous result (null if first entry) */
+  previousResult: Result | null;
+  /** New result */
+  newResult: Result;
 }
 
 interface PersistedState {
@@ -98,6 +117,9 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
     ...(config.format === "swiss_elim" ? {
       swissRounds: config.swissRounds ?? config.rounds,
       elimPhase: "swiss" as const,
+    } : {}),
+    ...(config.format === "quads" ? {
+      quadSettings: { ...DEFAULT_QUAD_SETTINGS, ratingType: config.ratingType ?? "rapid" },
     } : {}),
   };
 }
@@ -536,7 +558,19 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
           : r
       );
 
-      return { ...prev, rounds: updatedRounds, players: playersWithBuchholz };
+      // Audit trail: record the result change
+      const historyEntry: ResultHistoryEntry = {
+        timestamp: new Date().toISOString(),
+        round: targetGame?.round ?? prev.currentRound,
+        board: targetGame?.board ?? 0,
+        whiteId: targetGame?.whiteId ?? "",
+        blackId: targetGame?.blackId ?? "",
+        previousResult: (targetGame?.result as Result) ?? null,
+        newResult: result,
+      };
+      const resultHistory = [...(prev.resultHistory ?? []), historyEntry];
+
+      return { ...prev, rounds: updatedRounds, players: playersWithBuchholz, resultHistory };
     });
   }, []);
 
