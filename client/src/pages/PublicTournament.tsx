@@ -60,6 +60,7 @@ interface PublicTournamentData {
   players: Player[];
   rounds: Round[];
   standings: PublicStandingRow[];
+  quadSections?: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
   updatedAt: string;
 }
 
@@ -820,11 +821,27 @@ function CompletedHero({
   data,
   standings,
   isDark,
+  quadSections,
 }: {
   data: PublicTournamentData;
   standings: PublicStandingRow[];
   isDark: boolean;
+  quadSections?: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
 }) {
+  const isQuadsFormat = data.format === "quads" && quadSections && quadSections.length > 0;
+  // For Quads: compute per-section champions
+  const sectionChampions = isQuadsFormat
+    ? quadSections.map(s => {
+        const sectionStandings = standings
+          .filter(r => new Set(s.playerIds).has(r.playerId))
+          .sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
+            return b.elo - a.elo;
+          });
+        return { section: s, champion: sectionStandings[0] ?? null };
+      }).filter(x => x.champion !== null)
+    : [];
   const podium = standings.slice(0, 3);
   const medalEmoji = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
 
@@ -875,8 +892,43 @@ function CompletedHero({
           </div>
         </div>
 
-        {/* Podium */}
-        {podium.length > 0 && (
+        {/* Podium — per-section champions for Quads, global top-3 otherwise */}
+        {isQuadsFormat && sectionChampions.length > 0 ? (
+          <div className="px-5 py-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 text-center">Section Champions</p>
+            <div className="space-y-2">
+              {sectionChampions.map(({ section, champion }) => (
+                <div
+                  key={section.id}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
+                    isDark
+                      ? "bg-amber-500/08 border border-amber-500/20"
+                      : "bg-amber-50/80 border border-amber-200/60"
+                  }`}
+                >
+                  <span className="text-xl w-8 text-center">🏆</span>
+                  <PlayerAvatar username={champion!.username} name={champion!.name} size={36} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{section.name}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground truncate">{champion!.name}</span>
+                      {champion!.title && <TitleBadge title={champion!.title} />}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {champion!.wins}W {champion!.draws}D {champion!.losses}L
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      {scoreFraction(champion!.points)}
+                    </span>
+                    <p className="text-xs text-muted-foreground">pts</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : podium.length > 0 ? (
           <div className="px-5 py-4">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 text-center">Final Podium</p>
             <div className="space-y-2">
@@ -914,7 +966,7 @@ function CompletedHero({
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
@@ -1514,8 +1566,22 @@ export default function PublicTournament() {
     [data, followedPlayerId, track]
   );
 
-  // Standings are precomputed server-side — no client computation needed
+    // Standings are precomputed server-side — no client computation needed
   const standings = data?.standings ?? [];
+  const quadSections = data?.quadSections ?? [];
+  const isQuads = data?.format === "quads" && quadSections.length > 0;
+  const [activeQuadSection, setActiveQuadSection] = useState<string>("all");
+
+  // Per-section standings for Quads
+  const displayStandings = useMemo(() => {
+    if (!isQuads || activeQuadSection === "all") return standings;
+    const section = quadSections.find(s => s.id === activeQuadSection);
+    if (!section) return standings;
+    const playerIdSet = new Set(section.playerIds);
+    return standings
+      .filter(r => playerIdSet.has(r.playerId))
+      .map((r, i) => ({ ...r, rank: i + 1 }));
+  }, [isQuads, activeQuadSection, standings, quadSections]);
 
   const followedPlayer = useMemo(
     () => (followedPlayerId && data ? data.players.find((p) => p.id === followedPlayerId) ?? null : null),
@@ -1552,7 +1618,7 @@ export default function PublicTournament() {
       <main className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Hero — switches to CompletedHero when tournament is finalized */}
         {isCompleted ? (
-          <CompletedHero data={data} standings={standings} isDark={isDark} />
+          <CompletedHero data={data} standings={standings} isDark={isDark} quadSections={quadSections} />
         ) : (
           <section>
             <h1
@@ -1688,8 +1754,49 @@ export default function PublicTournament() {
 
         {/* Standings — visible on mobile only when tab active, always on desktop */}
         <section className={`${activeTab !== "standings" ? "hidden sm:block" : ""}`}>
+          {/* Quads section tabs */}
+          {isQuads && (
+            <div className="mb-4">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+                <button
+                  onClick={() => setActiveQuadSection("all")}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                    activeQuadSection === "all"
+                      ? isDark
+                        ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                        : "bg-[#436850]/10 border-[#436850] text-[#436850]"
+                      : isDark
+                        ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/08"
+                        : "bg-white border-[#ADBC9F] text-[#12372A]/70 hover:bg-[#f0f9f1]"
+                  }`}
+                >
+                  All
+                </button>
+                {quadSections.map((s) => {
+                  const isActive = activeQuadSection === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setActiveQuadSection(s.id)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                        isActive
+                          ? isDark
+                            ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                            : "bg-[#436850]/10 border-[#436850] text-[#436850]"
+                          : isDark
+                            ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/08"
+                            : "bg-white border-[#ADBC9F] text-[#12372A]/70 hover:bg-[#f0f9f1]"
+                      }`}
+                    >
+                      {s.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <StandingsSection
-            standings={standings}
+            standings={displayStandings}
             followedPlayerId={followedPlayerId}
             onFollowPlayer={handleFollow}
             isDark={isDark}

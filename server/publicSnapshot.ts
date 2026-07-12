@@ -53,6 +53,13 @@ export interface StandingRow {
   losses: number;
 }
 
+export interface PublicQuadSection {
+  id: string;
+  name: string;
+  type: "quad" | "bottom_swiss";
+  playerIds: string[];
+}
+
 export interface PublicSnapshot {
   tournamentId: string;
   status: string;
@@ -65,6 +72,7 @@ export interface PublicSnapshot {
   players: PublicPlayer[];
   rounds: PublicRound[];
   standings: StandingRow[];
+  quadSections?: PublicQuadSection[];
   updatedAt: string;
 }
 
@@ -241,9 +249,9 @@ export interface BuildSnapshotInput {
   date: string;
   players: RawPlayer[];
   rounds: RawRound[];
+  quadSections?: { id: string; name: string; type: string; playerIds: string[] }[];
   updatedAt: string;
 }
-
 export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
   return {
     tournamentId: input.tournamentId,
@@ -257,6 +265,14 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
     players: input.players.map(stripPlayer),
     rounds: input.rounds.map(stripRound),
     standings: computeStandingsServer(input.players, input.rounds),
+    ...(input.quadSections && input.quadSections.length > 0 ? {
+      quadSections: input.quadSections.map(s => ({
+        id: s.id,
+        name: s.name,
+        type: s.type as "quad" | "bottom_swiss",
+        playerIds: s.playerIds,
+      })),
+    } : {}),
     updatedAt: input.updatedAt,
   };
 }

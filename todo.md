@@ -6878,3 +6878,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Redesign QuadsDirectorPanel for better visual clarity and intuitive UX (card-based sections, visual round tabs, clearer game rows)
 - [x] Per-quad SectionCompleteCard in QuadsDirectorPanel (winner podium, Player Reports, Create Recap, Print/Export per section)
+- [ ] P0: Report.tsx — Add ?section= query param filtering for per-Quad champion/standings/reports
+- [ ] P0: PublicTournament.tsx — Add section tabs and per-Quad podium (no global champion for Quads)
+- [ ] P0: directorState.ts — Use per-Quad calculateQuadStandings instead of global Swiss standings for Quads
+- [ ] P0: Director.tsx — Finalization state machine with per-section validation and co-champion display
+- [x] P0: Report.tsx section-filtered routing with per-Quad champion cards
+- [x] P0: PublicTournament.tsx section tabs and per-Quad podium (Section Champions)
+- [x] P0: Server-side quadSections in public API (publicSnapshot.ts + index.ts)
+- [x] P0: Director.tsx Tournament Complete card shows per-section champions for Quads

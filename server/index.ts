@@ -2078,6 +2078,7 @@ export function createApp() {
           format?: string;
           players?: Array<Record<string, unknown>>;
           rounds?: Array<{ number: number; games: Array<Record<string, unknown>> }>;
+          quadSections?: Array<{ id: string; name: string; type: string; playerIds: string[] }>;
         };
         const snapshot = buildSnapshot({
           tournamentId: ut.tournamentId,
@@ -2090,6 +2091,7 @@ export function createApp() {
           date: (ut as Record<string, unknown>).date as string ?? "",
           players: (s.players ?? []) as any[],
           rounds: (s.rounds ?? []) as any[],
+          quadSections: s.quadSections,
           updatedAt: stateRows[0].updatedAt?.toISOString?.() ?? new Date().toISOString(),
         });
         cached = setSnapshotCache(ut.tournamentId, snapshot);

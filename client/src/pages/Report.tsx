@@ -11,7 +11,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useChessAvatars, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
-import { useParams, Link, useLocation } from "wouter";
+import { useParams, Link, useLocation, useSearch } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { toast } from "sonner";
 
@@ -20,7 +20,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { loadTournamentState } from "@/lib/directorState";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
-import { computeAllPerformances, type PlayerPerformance } from "@/lib/performanceStats";
+import { computeAllPerformances, computeQuadSectionPerformances, type PlayerPerformance, type QuadSectionPerformances } from "@/lib/performanceStats";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import PlayerStatsCard, {
@@ -701,7 +701,24 @@ export default function ReportPage() {
       .catch(() => {});
   }, [isBracketParent, bracketGroupId]);
 
-  const performances = computeAllPerformances(players, rounds);
+    const performances = computeAllPerformances(players, rounds);
+
+  // ── Quads section-filtering ─────────────────────────────────────────────────
+  const urlSearch = useSearch();
+  const sectionParam = new URLSearchParams(urlSearch).get("section");
+  const isQuads = !isDemo && rawState?.format === "quads";
+  const quadSections = (rawState?.quadSections ?? []) as { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
+
+  const quadSectionPerfs: QuadSectionPerformances[] = isQuads
+    ? computeQuadSectionPerformances(players, rounds, quadSections)
+    : [];
+
+  const [activeSection, setActiveSection] = useState<string>(sectionParam ?? "all");
+
+  // Performances scoped to the active section (or all)
+  const displayPerformances = isQuads && activeSection !== "all"
+    ? (quadSectionPerfs.find(s => s.sectionId === activeSection)?.performances ?? performances)
+    : performances;
 
   // Fetch club avatar for PDF branding
   const { avatarUrl: clubAvatarUrl } = useClubAvatar(config?.clubId ?? null);
@@ -835,7 +852,7 @@ export default function ReportPage() {
 
   // Search
   const [search, setSearch] = useState("");
-  const filtered = performances.filter((p) =>
+  const filtered = displayPerformances.filter((p) =>
     !search ||
     p.player.name.toLowerCase().includes(search.toLowerCase()) ||
     p.player.username.toLowerCase().includes(search.toLowerCase())
@@ -1125,10 +1142,64 @@ export default function ReportPage() {
 
       {/* ── Content ── */}
       <main className="max-w-6xl mx-auto px-4 py-6">
+        {/* Quads section tabs */}
+        {isQuads && quadSectionPerfs.length > 0 && (
+          <div className="mb-5">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+              <button
+                onClick={() => setActiveSection("all")}
+                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 border ${
+                  activeSection === "all"
+                    ? isDark
+                      ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50] shadow-[0_0_12px_rgba(76,175,80,0.15)]"
+                      : "bg-[#436850]/10 border-[#436850] text-[#436850] shadow-sm"
+                    : isDark
+                      ? "bg-white/06 border-white/12 text-white/70 hover:bg-white/10"
+                      : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#f0f9f1]"
+                }`}
+              >
+                All Sections
+              </button>
+              {quadSectionPerfs.map((sp) => {
+                const isActive = activeSection === sp.sectionId;
+                const champion = sp.performances[0];
+                return (
+                  <button
+                    key={sp.sectionId}
+                    onClick={() => setActiveSection(sp.sectionId)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 border ${
+                      isActive
+                        ? isDark
+                          ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50] shadow-[0_0_12px_rgba(76,175,80,0.15)]"
+                          : "bg-[#436850]/10 border-[#436850] text-[#436850] shadow-sm"
+                        : isDark
+                          ? "bg-white/06 border-white/12 text-white/70 hover:bg-white/10"
+                          : "bg-white border-[#ADBC9F] text-[#12372A] hover:bg-[#f0f9f1]"
+                    }`}
+                  >
+                    <span>{sp.sectionName}</span>
+                    {champion && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                        isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                      }`}>
+                        🏆 {champion.player.name.split(" ")[0]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Summary banner */}
         <SummaryBanner
-          performances={performances}
-          tournamentName={tournamentName}
+          performances={displayPerformances}
+          tournamentName={
+            isQuads && activeSection !== "all"
+              ? `${quadSectionPerfs.find(s => s.sectionId === activeSection)?.sectionName ?? tournamentName}`
+              : tournamentName
+          }
           isDark={isDark}
         />
 
@@ -1249,7 +1320,56 @@ export default function ReportPage() {
             </div>
 
             {/* Podium highlight */}
-            {performances.length >= 3 && (
+            {isQuads && quadSectionPerfs.length > 0 && activeSection === "all" ? (
+              /* Per-Quad section champions grid */
+              <div className="mt-10">
+                <h3
+                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  🏆 Section Champions
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {quadSectionPerfs.map((sp) => {
+                    const champ = sp.performances[0];
+                    if (!champ) return null;
+                    return (
+                      <button
+                        key={sp.sectionId}
+                        onClick={() => setActiveSection(sp.sectionId)}
+                        className={`rounded-2xl p-4 text-left border transition-all active:scale-[0.98] ${
+                          isDark
+                            ? "bg-[#4CAF50]/08 border-[#4CAF50]/20 hover:border-[#4CAF50]/40"
+                            : "bg-[#436850]/05 border-[#436850]/20 hover:border-[#436850]/40 shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">🏆</div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${
+                              isDark ? "text-[#4CAF50]/70" : "text-[#436850]"
+                            }`}>
+                              {sp.sectionName}
+                            </p>
+                            <p className={`text-sm font-black truncate ${
+                              isDark ? "text-white" : "text-[#12372A]"
+                            }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                              {champ.player.name}
+                            </p>
+                            <p className={`text-[11px] mt-0.5 ${
+                              isDark ? "text-white/50" : "text-[#436850]"
+                            }`}>
+                              {champ.points}pts · {champ.wins}W {champ.draws}D {champ.losses}L
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : displayPerformances.length >= 3 ? (
+              /* Standard podium for non-Quads or single-section view */
               <div className="mt-10">
                 <h3
                   className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
@@ -1262,8 +1382,8 @@ export default function ReportPage() {
                   <div className="flex flex-col items-center mt-6">
                     <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#ADBC9F]/70 shadow-sm"}`}>
                       <div className="text-2xl mb-1">🥈</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{performances[1].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{performances[1].points}pts</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[1].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{displayPerformances[1].points}pts</p>
                     </div>
                     <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
                   </div>
@@ -1271,8 +1391,8 @@ export default function ReportPage() {
                   <div className="flex flex-col items-center">
                     <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#436850]/05 border-[#436850]/30 shadow-md"}`}>
                       <div className="text-2xl mb-1">🏆</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{performances[0].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"} font-semibold`}>{performances[0].points}pts</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[0].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"} font-semibold`}>{displayPerformances[0].points}pts</p>
                     </div>
                     <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08"}`} />
                   </div>
@@ -1280,23 +1400,38 @@ export default function ReportPage() {
                   <div className="flex flex-col items-center mt-8">
                     <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#ADBC9F]/70 shadow-sm"}`}>
                       <div className="text-2xl mb-1">🥉</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{performances[2].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{performances[2].points}pts</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[2].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{displayPerformances[2].points}pts</p>
                     </div>
                     <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         )}
 
         {/* ── Tab: Cross-Table ── */}
         {activeTab === "crosstable" && (
           <CrossTable
-            players={players}
-            rounds={rounds}
-            tournamentName={tournamentName}
+            players={isQuads && activeSection !== "all"
+              ? players.filter(p => quadSections.find(s => s.id === activeSection)?.playerIds.includes(p.id))
+              : players
+            }
+            rounds={isQuads && activeSection !== "all"
+              ? rounds.map(r => ({
+                  ...r,
+                  games: r.games.filter(g => {
+                    const ids = new Set(quadSections.find(s => s.id === activeSection)?.playerIds ?? []);
+                    return ids.has(g.whiteId) && (ids.has(g.blackId) || g.blackId === "BYE");
+                  }),
+                }))
+              : rounds
+            }
+            tournamentName={isQuads && activeSection !== "all"
+              ? quadSectionPerfs.find(s => s.sectionId === activeSection)?.sectionName ?? tournamentName
+              : tournamentName
+            }
             isDark={isDark}
           />
         )}
@@ -1304,9 +1439,24 @@ export default function ReportPage() {
         {/* ── Tab: Rounds ── */}
         {activeTab === "rounds" && (
           <RoundTimeline
-            players={players}
-            rounds={rounds}
-            tournamentName={tournamentName}
+            players={isQuads && activeSection !== "all"
+              ? players.filter(p => quadSections.find(s => s.id === activeSection)?.playerIds.includes(p.id))
+              : players
+            }
+            rounds={isQuads && activeSection !== "all"
+              ? rounds.map(r => ({
+                  ...r,
+                  games: r.games.filter(g => {
+                    const ids = new Set(quadSections.find(s => s.id === activeSection)?.playerIds ?? []);
+                    return ids.has(g.whiteId) && (ids.has(g.blackId) || g.blackId === "BYE");
+                  }),
+                }))
+              : rounds
+            }
+            tournamentName={isQuads && activeSection !== "all"
+              ? quadSectionPerfs.find(s => s.sectionId === activeSection)?.sectionName ?? tournamentName
+              : tournamentName
+            }
             isDark={isDark}
           />
         )}

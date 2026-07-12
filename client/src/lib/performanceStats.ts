@@ -340,3 +340,64 @@ export function computePlayerPerformance(
   const all = computeAllPerformances(players, rounds);
   return all.find((p) => p.player.id === playerId) ?? null;
 }
+
+// ─── Quads Section-Scoped Performances ───────────────────────────────────────
+
+export interface QuadSectionPerformances {
+  sectionId: string;
+  sectionName: string;
+  sectionType: "quad" | "bottom_swiss";
+  performances: PlayerPerformance[];
+}
+
+/**
+ * Compute per-section performances for a Quads tournament.
+ * Each section's players are ranked independently within their section.
+ * Badges use section-specific labels ("Quad 1 Champion" not "Champion").
+ */
+export function computeQuadSectionPerformances(
+  players: Player[],
+  rounds: Round[],
+  quadSections: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[]
+): QuadSectionPerformances[] {
+  return quadSections.map((section) => {
+    // Filter players to this section
+    const sectionPlayerIds = new Set(section.playerIds);
+    const sectionPlayers = players.filter((p) => sectionPlayerIds.has(p.id));
+
+    // Filter rounds to only include games from this section
+    const sectionRounds: Round[] = rounds.map((r) => ({
+      ...r,
+      games: r.games.filter(
+        (g) => g.sectionId === section.id ||
+          (sectionPlayerIds.has(g.whiteId) && (sectionPlayerIds.has(g.blackId) || g.blackId === "BYE"))
+      ),
+    }));
+
+    // Compute performances within section scope
+    const perfs = computeAllPerformances(sectionPlayers, sectionRounds);
+
+    // Override badges with section-specific labels
+    const updatedPerfs = perfs.map((perf) => {
+      let badgeLabel = perf.badgeLabel;
+      if (perf.rank === 1) badgeLabel = `🏆 ${section.name} Champion`;
+      else if (perf.rank === 2) badgeLabel = `🥈 2nd in ${section.name}`;
+      else if (perf.rank === 3) badgeLabel = `🥉 3rd in ${section.name}`;
+      return {
+        ...perf,
+        badgeLabel,
+        totalPlayers: sectionPlayers.length,
+        // Add section context for downstream use
+        sectionName: section.name,
+        sectionId: section.id,
+      } as PlayerPerformance & { sectionName: string; sectionId: string };
+    });
+
+    return {
+      sectionId: section.id,
+      sectionName: section.name,
+      sectionType: section.type,
+      performances: updatedPerfs,
+    };
+  });
+}
