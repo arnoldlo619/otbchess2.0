@@ -1,14 +1,13 @@
 /**
- * OTB Chess — Quads Director Panel (v2 Redesign)
+ * OTB Chess — Quads Director Panel (v3 Command Center)
  *
- * Renders inside the Tournament Director page when format === "quads".
- * Redesigned for clarity:
- *  - All sections visible simultaneously (no accordion collapse)
- *  - Per-section round tabs (R1 / R2 / R3) instead of vertical stacking
- *  - Larger, more tappable result buttons
- *  - Progress ring per section for instant status
- *  - Inline standings toggle per section
- *  - Board-centric game rows with clear White/Black distinction
+ * Section 7 spec implementation:
+ *  A. Event header bar (tournament meta, rating source, completion)
+ *  B. Active-round command center (metrics + advance/finalize CTA)
+ *  C. 2×2 quad overview grid (compact cards, leader, completion, warnings)
+ *  D. Selected quad workspace (boards left, standings right)
+ *  E. Exception tray (missing results, blockers)
+ *  G. Completion view (4 champion cards replacing operational dashboard)
  */
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -20,6 +19,12 @@ import {
   Swords,
   Pencil,
   X,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
+  Flag,
+  Activity,
 } from "lucide-react";
 import type { Player, Game, Result, Round } from "../../lib/tournamentData";
 import type { QuadSection } from "../../lib/quads";
@@ -48,9 +53,7 @@ interface QuadsDirectorPanelProps {
   onAdvanceRound?: () => void;
   onCompleteTournament?: () => void;
   isDark: boolean;
-  /** Tournament ID — used for action button links */
   tournamentId?: string;
-  /** Tournament config — passed to InstagramCarouselModal */
   tournamentConfig?: TournamentConfig | null;
 }
 
@@ -85,59 +88,232 @@ function ProgressRing({ completed, total, size = 36, isDark }: { completed: numb
   const isComplete = pct === 1;
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+      role="status"
+      aria-label={`${completed} of ${total} games complete`}
+    >
       <svg width={size} height={size} className="rotate-[-90deg]">
-        {/* Background ring */}
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={3} stroke={isDark ? "oklch(0.22 0.02 145)" : "#e5e7eb"} />
         <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          strokeWidth={3}
-          stroke={isDark ? "oklch(0.22 0.02 145)" : "#e5e7eb"}
-        />
-        {/* Progress ring */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          strokeWidth={3}
-          strokeLinecap="round"
+          cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={3} strokeLinecap="round"
           stroke={isComplete ? "oklch(0.75 0.15 85)" : "oklch(0.72 0.19 145)"}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
           className="transition-all duration-500"
         />
       </svg>
-      <span
-        className="absolute text-[9px] font-bold"
-        style={{ color: isComplete ? "oklch(0.75 0.15 85)" : (isDark ? "oklch(0.65 0.03 145)" : "#6b7280") }}
-      >
+      <span className="absolute text-[9px] font-bold" style={{ color: isComplete ? "oklch(0.75 0.15 85)" : (isDark ? "oklch(0.65 0.03 145)" : "#6b7280") }}>
         {completed}/{total}
       </span>
     </div>
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── GameRow ──────────────────────────────────────────────────────────────────
+
+function GameRow({
+  game, players, boardIndex, onEnterResult, isActive, isDark, T,
+}: {
+  game: Game; players: Player[]; boardIndex: number;
+  onEnterResult: (gameId: string, result: Result) => void;
+  isActive: boolean; isDark: boolean; T: Record<string, string>;
+}) {
+  const isBye = game.blackId === "BYE";
+  const isPending = game.result === "*";
+  const whiteWon = game.result === "1-0";
+  const blackWon = game.result === "0-1";
+  const isDraw = game.result === "½-½";
+  const [collapsed, setCollapsed] = useState(false);
+
+  const handleResultClick = (result: "1-0" | "½-½" | "0-1") => {
+    if (game.result === result) {
+      onEnterResult(game.id, "*" as Result);
+      setCollapsed(false);
+    } else {
+      onEnterResult(game.id, result);
+      setTimeout(() => setCollapsed(true), 200);
+    }
+  };
+
+  if (collapsed && !isPending) {
+    return (
+      <button
+        type="button" aria-expanded={false} aria-label="Expand game details"
+        className="w-full rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all hover:opacity-80 text-left"
+        style={{ background: T.rowBg, border: `1px solid ${T.rowBorder}`, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both", minHeight: "44px" }}
+        onClick={() => setCollapsed(false)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[9px] font-bold uppercase tracking-widest flex-shrink-0 w-5" style={{ color: T.textDim }}>B{boardIndex}</span>
+          {(() => {
+            const winnerId = whiteWon ? game.whiteId : blackWon ? game.blackId : null;
+            const loserId = whiteWon ? game.blackId : blackWon ? game.whiteId : null;
+            const winnerPlayer = players.find(p => p.id === winnerId);
+            const loserPlayer = players.find(p => p.id === loserId);
+            const winnerName = winnerPlayer?.name ?? winnerId ?? "";
+            const loserName = loserPlayer?.name ?? loserId ?? "";
+            if (isDraw) {
+              return (
+                <>
+                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.whiteId).split(" ")[0]}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textMuted }}>Draw</span>
+                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.blackId).split(" ")[0]}</span>
+                </>
+              );
+            }
+            return (
+              <>
+                <div className="flex-shrink-0">
+                  <PlayerAvatar username={winnerPlayer?.username ?? ""} name={winnerName} platform={(winnerPlayer?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={winnerPlayer?.avatarUrl} size={22} />
+                </div>
+                <span className="text-xs font-semibold truncate max-w-[80px]" style={{ color: T.green }}>{winnerName.split(" ")[0]}</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: T.greenBg, color: T.green }}>{resultLabel(game.result)}</span>
+                <span className="text-xs truncate max-w-[72px]" style={{ color: T.textDim }}>{loserName.split(" ")[0]}</span>
+              </>
+            );
+          })()}
+        </div>
+        <span className="text-[9px] flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-xl px-3 py-2.5 transition-all"
+      style={{ background: T.rowBg, border: `1px solid ${isActive && isPending ? T.greenBorder : T.rowBorder}`, opacity: !isActive && isPending ? 0.55 : 1, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+    >
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: T.textDim }}>Board {boardIndex}</span>
+        {!isPending && !isBye && (
+          <>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg, color: isDraw ? T.textMuted : T.green }}>{resultLabel(game.result)}</span>
+            <button type="button" aria-expanded={true} aria-label="Collapse game row" onClick={() => setCollapsed(true)} className="ml-auto text-[9px] px-1.5 py-0.5 rounded transition-colors" style={{ color: T.textDim, background: "transparent" }}>▲ collapse</button>
+          </>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2" style={{ background: whiteWon ? T.greenSoft : "transparent", border: `1px solid ${whiteWon ? T.greenBorder : "transparent"}` }}>
+          <span className="w-4 h-4 rounded-[4px] flex-shrink-0 border" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{getPlayerName(players, game.whiteId)}</span>
+            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>{getPlayerRating(players, game.whiteId)}</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0 flex items-center justify-center w-8">
+          {isPending ? <span className="text-[10px] font-bold" style={{ color: T.textDim }}>vs</span> : <span className="text-xs font-bold" style={{ color: T.green }}>{resultLabel(game.result)}</span>}
+        </div>
+        <div className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2 justify-end" style={{ background: blackWon ? T.greenSoft : "transparent", border: `1px solid ${blackWon ? T.greenBorder : "transparent"}` }}>
+          <div className="flex flex-col min-w-0 items-end">
+            <span className="text-sm font-semibold truncate text-right" style={{ color: isBye ? T.textDim : T.text }}>{getPlayerName(players, game.blackId)}</span>
+            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>{isBye ? "" : getPlayerRating(players, game.blackId)}</span>
+          </div>
+          <span className="w-4 h-4 rounded-[4px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
+        </div>
+      </div>
+      {isPending && isActive && !isBye && (() => {
+        const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
+        const blackName = getPlayerName(players, game.blackId).split(" ")[0];
+        const whiteSelected = game.result === "1-0";
+        const drawSelected = game.result === "½-½";
+        const blackSelected = game.result === "0-1";
+        return (
+          <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
+            <button type="button" aria-pressed={whiteSelected} aria-label={`${whiteName} wins${whiteSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("1-0")}
+              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              style={{ minHeight: "44px", paddingTop: "10px", paddingBottom: "10px", background: whiteSelected ? T.green : T.greenBg, color: whiteSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${whiteSelected ? T.green : T.greenBorder}`, transform: whiteSelected ? "scale(1.03)" : undefined, boxShadow: whiteSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none" }}>
+              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{whiteName}</span>
+              <span className="text-[9px] opacity-70 font-semibold">{whiteSelected ? "click to undo" : "wins"}</span>
+            </button>
+            <button type="button" aria-pressed={drawSelected} aria-label={`Draw${drawSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("½-½")}
+              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              style={{ minHeight: "44px", paddingTop: "10px", paddingBottom: "10px", background: drawSelected ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb") : (isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6"), color: drawSelected ? T.text : T.textMuted, border: `1.5px solid ${drawSelected ? T.cardBorder : T.cardBorder}`, transform: drawSelected ? "scale(1.03)" : undefined, boxShadow: drawSelected ? `0 4px 10px rgba(0,0,0,0.15)` : "none" }}>
+              <span className="text-[11px] font-extrabold">Draw</span>
+              <span className="text-[9px] opacity-70 font-semibold">{drawSelected ? "click to undo" : "½–½"}</span>
+            </button>
+            <button type="button" aria-pressed={blackSelected} aria-label={`${blackName} wins${blackSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("0-1")}
+              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
+              style={{ minHeight: "44px", paddingTop: "10px", paddingBottom: "10px", background: blackSelected ? T.green : T.greenBg, color: blackSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${blackSelected ? T.green : T.greenBorder}`, transform: blackSelected ? "scale(1.03)" : undefined, boxShadow: blackSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none" }}>
+              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{blackName}</span>
+              <span className="text-[9px] opacity-70 font-semibold">{blackSelected ? "click to undo" : "wins"}</span>
+            </button>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+// ─── StandingsView ────────────────────────────────────────────────────────────
+
+function StandingsView({ section, standings, players, isDark, T }: {
+  section: QuadSection; standings: ReturnType<typeof calculateQuadStandings>; players: Player[]; isDark: boolean; T: Record<string, string>;
+}) {
+  if (standings.length === 0) return <div className="py-6 text-center"><p className="text-xs" style={{ color: T.textDim }}>No standings data yet.</p></div>;
+  return (
+    <div className="space-y-1">
+      <div className="grid grid-cols-[24px_1fr_44px_32px_32px_32px_44px] gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider" style={{ color: T.textDim, background: isDark ? "oklch(0.13 0.02 145)" : "#f8fafc" }}>
+        <span>#</span><span>Player</span><span className="text-center">Pts</span><span className="text-center">W</span><span className="text-center">D</span><span className="text-center">L</span><span className="text-center">SB</span>
+      </div>
+      {standings.map((s, idx) => {
+        const isWinner = s.finalRank === 1;
+        return (
+          <div key={s.playerId} className="grid grid-cols-[24px_1fr_44px_32px_32px_32px_44px] gap-1 items-center px-2 py-2 rounded-lg transition-all" style={{ background: isWinner ? T.goldBg : (idx % 2 === 0 ? "transparent" : T.rowBg), border: isWinner ? `1px solid ${T.goldBorder}` : "1px solid transparent" }}>
+            <span className="text-xs font-bold" style={{ color: isWinner ? T.gold : T.textDim }}>{s.finalRank}</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{getPlayerName(players, s.playerId)}</span>
+              <span className="text-[10px] font-mono flex-shrink-0" style={{ color: T.textDim }}>{getPlayerRating(players, s.playerId)}</span>
+              {isWinner && <Trophy size={10} style={{ color: T.gold }} className="flex-shrink-0" />}
+            </div>
+            <span className="text-center text-sm font-bold" style={{ color: T.green }}>{s.score % 1 === 0 ? s.score : s.score.toFixed(1)}</span>
+            <span className="text-center text-xs" style={{ color: T.text }}>{s.wins}</span>
+            <span className="text-center text-xs" style={{ color: T.textMuted }}>{s.draws}</span>
+            <span className="text-center text-xs" style={{ color: T.textMuted }}>{s.losses}</span>
+            <span className="text-center text-[10px] font-mono" style={{ color: T.textMuted }}>{s.sonnebornBerger.toFixed(2)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── RoundPairings ────────────────────────────────────────────────────────────
+
+function RoundPairings({ section, games, players, roundNum, currentRound, onEnterResult, isDark, T }: {
+  section: QuadSection; games: Game[]; players: Player[]; roundNum: number; currentRound: number;
+  onEnterResult: (gameId: string, result: Result) => void; isDark: boolean; T: Record<string, string>;
+}) {
+  const roundGames = games.filter((g) => g.round === roundNum);
+  const isActive = roundNum === currentRound;
+  const roundComplete = roundGames.length > 0 && roundGames.every((g) => g.result !== "*");
+
+  if (roundGames.length === 0) return <div className="py-6 text-center"><p className="text-xs" style={{ color: T.textDim }}>No games scheduled for this round.</p></div>;
+
+  return (
+    <div className="space-y-2">
+      {roundComplete && (
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg" style={{ background: T.greenBg, border: `1px solid ${T.greenBorder}` }}>
+          <Check size={12} style={{ color: T.green }} />
+          <span className="text-xs font-semibold" style={{ color: T.green }}>Round {roundNum} complete — {roundGames.length} of {roundGames.length} results entered</span>
+        </div>
+      )}
+      {roundGames.map((game, idx) => (
+        <GameRow key={game.id} game={game} players={players} boardIndex={idx + 1} onEnterResult={onEnterResult} isActive={isActive} isDark={isDark} T={T} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function QuadsDirectorPanel({
-  sections,
-  players,
-  games,
-  currentRound,
-  totalRounds,
-  onEnterResult,
-  onSwapPlayers,
-  onRenameSection,
-  onAdvanceRound,
-  onCompleteTournament,
-  isDark,
-  tournamentId,
-  tournamentConfig,
+  sections, players, games, currentRound, totalRounds,
+  onEnterResult, onSwapPlayers, onRenameSection, onAdvanceRound, onCompleteTournament,
+  isDark, tournamentId, tournamentConfig,
 }: QuadsDirectorPanelProps) {
-  // Per-section state: which round tab is active, and pairings vs standings view
+
+  // ── State ──────────────────────────────────────────────────────────────────
   const [sectionRoundTab, setSectionRoundTab] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
     sections.forEach((s) => { init[s.id] = currentRound; });
@@ -149,18 +325,21 @@ export default function QuadsDirectorPanel({
     return init;
   });
 
+  // Command-center specific state
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(() => sections[0]?.id ?? null);
+  const [exceptionTrayOpen, setExceptionTrayOpen] = useState(false);
+  const [carouselSection, setCarouselSection] = useState<string | null>(null);
+
+  // Swap mode
   const [swapMode, setSwapMode] = useState(false);
   const [swapPlayerA, setSwapPlayerA] = useState<string | null>(null);
 
-  // Per-quad Instagram carousel modal state
-  const [carouselSection, setCarouselSection] = useState<string | null>(null);
-
-  // Inline rename state
+  // Inline rename
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-switch all section round tabs when a new round is generated
+  // Auto-switch all section round tabs when round advances
   useEffect(() => {
     setSectionRoundTab((prev) => {
       const updated: Record<string, number> = { ...prev };
@@ -176,25 +355,7 @@ export default function QuadsDirectorPanel({
     }
   }, [editingSectionId]);
 
-  const startRename = (section: { id: string; name: string }) => {
-    setEditingSectionId(section.id);
-    setEditingName(section.name);
-  };
-
-  const commitRename = (sectionId: string) => {
-    if (onRenameSection && editingName.trim()) {
-      onRenameSection(sectionId, editingName.trim());
-    }
-    setEditingSectionId(null);
-    setEditingName("");
-  };
-
-  const cancelRename = () => {
-    setEditingSectionId(null);
-    setEditingName("");
-  };
-
-  // Group games by section
+  // ── Computed data ──────────────────────────────────────────────────────────
   const gamesBySection = useMemo(() => {
     const map = new Map<string, Game[]>();
     for (const section of sections) {
@@ -203,7 +364,6 @@ export default function QuadsDirectorPanel({
     return map;
   }, [sections, games]);
 
-  // Calculate standings per section
   const standingsBySection = useMemo(() => {
     const map = new Map<string, ReturnType<typeof calculateQuadStandings>>();
     for (const section of sections) {
@@ -213,19 +373,40 @@ export default function QuadsDirectorPanel({
     return map;
   }, [sections, gamesBySection, players]);
 
-  // Section completion status
   const sectionStatus = useMemo(() => {
-    const map = new Map<string, { completed: number; total: number; pct: number }>();
+    const map = new Map<string, { completed: number; total: number; pct: number; currentCompleted: number; currentTotal: number }>();
     for (const section of sections) {
       const sectionGames = gamesBySection.get(section.id) ?? [];
       const completed = sectionGames.filter((g) => g.result !== "*").length;
       const total = sectionGames.length;
-      map.set(section.id, { completed, total, pct: total > 0 ? Math.round((completed / total) * 100) : 0 });
+      const currentRoundGames = sectionGames.filter((g) => g.round === currentRound);
+      const currentCompleted = currentRoundGames.filter((g) => g.result !== "*").length;
+      const currentTotal = currentRoundGames.length;
+      map.set(section.id, { completed, total, pct: total > 0 ? Math.round((completed / total) * 100) : 0, currentCompleted, currentTotal });
     }
     return map;
-  }, [sections, gamesBySection]);
+  }, [sections, gamesBySection, currentRound]);
 
-  // Determine if swaps are allowed (no results entered yet)
+  // Global metrics
+  const totalGames = games.length;
+  const completedGames = games.filter((g) => g.result !== "*").length;
+  const allComplete = sections.length > 0 && sections.every((s) => (sectionStatus.get(s.id)?.pct ?? 0) === 100);
+  const currentRoundGames = games.filter((g) => g.round === currentRound);
+  const currentRoundCompleted = currentRoundGames.filter((g) => g.result !== "*").length;
+  const currentRoundTotal = currentRoundGames.length;
+  const currentRoundComplete = currentRoundTotal > 0 && currentRoundCompleted === currentRoundTotal;
+
+  // Sections needing attention (have pending games in current round)
+  const sectionsNeedingAttention = sections.filter((s) => {
+    const st = sectionStatus.get(s.id)!;
+    return st.currentCompleted < st.currentTotal;
+  });
+
+  // Exception tray: missing results in current round
+  const missingResults = currentRoundGames.filter((g) => g.result === "*" && g.blackId !== "BYE");
+  const exceptionCount = missingResults.length;
+
+  // Swap
   const hasAnyResults = games.some((g) => g.result !== "*" && g.blackId !== "BYE");
   const canSwap = !!onSwapPlayers && !hasAnyResults;
 
@@ -246,6 +427,20 @@ export default function QuadsDirectorPanel({
     }
   };
 
+  const startRename = (section: { id: string; name: string }) => {
+    setEditingSectionId(section.id);
+    setEditingName(section.name);
+  };
+
+  const commitRename = (sectionId: string) => {
+    if (onRenameSection && editingName.trim()) onRenameSection(sectionId, editingName.trim());
+    setEditingSectionId(null);
+    setEditingName("");
+  };
+
+  const cancelRename = () => { setEditingSectionId(null); setEditingName(""); };
+
+  // ── Color tokens ───────────────────────────────────────────────────────────
   const T = {
     card: isDark ? "oklch(0.16 0.03 145)" : "#ffffff",
     cardBorder: isDark ? "oklch(0.26 0.04 145)" : "#e2e8f0",
@@ -260,1016 +455,541 @@ export default function QuadsDirectorPanel({
     goldBg: isDark ? "oklch(0.22 0.06 85)" : "oklch(0.95 0.06 85)",
     goldBorder: isDark ? "oklch(0.38 0.10 85)" : "oklch(0.80 0.10 85)",
     gold: "oklch(0.75 0.15 85)",
+    amber: "oklch(0.78 0.18 65)",
+    amberBg: isDark ? "oklch(0.20 0.06 65)" : "oklch(0.97 0.04 65)",
+    amberBorder: isDark ? "oklch(0.36 0.10 65)" : "oklch(0.82 0.10 65)",
     swapHighlight: isDark ? "oklch(0.28 0.12 200)" : "oklch(0.90 0.08 200)",
     swapBorder: isDark ? "oklch(0.45 0.15 200)" : "oklch(0.60 0.15 200)",
     swap: "oklch(0.65 0.18 200)",
     rowBg: isDark ? "oklch(0.13 0.02 145)" : "#f9fafb",
     rowBorder: isDark ? "oklch(0.22 0.03 145)" : "#f1f5f9",
+    bg: isDark ? "oklch(0.12 0.02 145)" : "#f8fafc",
+    headerBg: isDark ? "oklch(0.14 0.03 145)" : "#ffffff",
   };
 
-  return (
-    <div className="space-y-4">
-      {/* Top toolbar */}
-      <div className="flex items-center justify-between">
-        <h3
-          className="text-sm font-bold uppercase tracking-wider flex items-center gap-2"
-          style={{ color: T.textMuted }}
+  const selectedSection = sections.find((s) => s.id === selectedSectionId) ?? sections[0];
+
+  // ── Completion View (Section G) ────────────────────────────────────────────
+  if (allComplete) {
+    return (
+      <div className="space-y-4">
+        {/* All-complete header */}
+        <div
+          className="rounded-2xl border px-5 py-4 flex items-center justify-between"
+          style={{ background: T.goldBg, borderColor: T.goldBorder, boxShadow: `0 0 0 1px ${T.goldBorder}` }}
         >
-          <Users size={14} style={{ color: T.green }} />
-          Sections ({sections.length})
-        </h3>
-        {canSwap && (
-          <button
-            onClick={() => { setSwapMode(!swapMode); setSwapPlayerA(null); }}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
-            style={{
-              background: swapMode ? T.swapHighlight : "transparent",
-              color: swapMode ? T.swap : T.textMuted,
-              border: `1px solid ${swapMode ? T.swapBorder : T.cardBorder}`,
-            }}
-          >
-            <ArrowLeftRight size={12} />
-            {swapMode ? "Cancel Swap" : "Swap Players"}
-          </button>
-        )}
-      </div>
-
-      {/* All Section Cards — always visible */}
-      {sections.map((section) => {
-        const status = sectionStatus.get(section.id)!;
-        const standings = standingsBySection.get(section.id) ?? [];
-        const sectionGames = gamesBySection.get(section.id) ?? [];
-        const winners = status.pct === 100 ? getSectionWinners(standings) : [];
-        const winner = winners[0] ?? null;
-        const isCo = winners.length > 1;
-        const activeRound = sectionRoundTab[section.id] ?? currentRound;
-        const view = sectionView[section.id] ?? "pairings";
-
-        return (
-          <div key={section.id} className="space-y-3">
-          <div
-            className="group rounded-2xl border overflow-hidden transition-all"
-            style={{
-              background: T.card,
-              borderColor: winner ? T.goldBorder : T.cardBorder,
-              boxShadow: winner
-                ? `0 0 0 1px ${T.goldBorder}, 0 2px 12px ${isDark ? "oklch(0.75 0.15 85 / 0.08)" : "oklch(0.75 0.15 85 / 0.12)"}`
-                : "none",
-            }}
-          >
-            {/* Section Header */}
-            <div className="flex items-center justify-between px-5 py-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
-                  style={{
-                    background: section.type === "quad"
-                      ? `linear-gradient(135deg, oklch(0.22 0.08 145), oklch(0.18 0.05 145))`
-                      : `linear-gradient(135deg, oklch(0.24 0.08 85), oklch(0.20 0.05 85))`,
-                    border: `1.5px solid ${section.type === "quad" ? T.greenBorder : T.goldBorder}`,
-                    boxShadow: section.type === "quad"
-                      ? `0 4px 14px oklch(0.72 0.19 145 / 0.25), inset 0 1px 0 oklch(0.72 0.19 145 / 0.15)`
-                      : `0 4px 14px oklch(0.75 0.15 85 / 0.25), inset 0 1px 0 oklch(0.75 0.15 85 / 0.15)`,
-                  }}
-                >
-                  {/* Subtle radial shine */}
-                  <div className="absolute inset-0 rounded-2xl" style={{ background: "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12) 0%, transparent 65%)" }} />
-                  {section.type === "quad" ? (
-                    /* Chess grid / quad icon */
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="1" y="1" width="9" height="9" rx="2" fill={T.green} opacity="0.9" />
-                      <rect x="12" y="1" width="9" height="9" rx="2" fill={T.green} opacity="0.5" />
-                      <rect x="1" y="12" width="9" height="9" rx="2" fill={T.green} opacity="0.5" />
-                      <rect x="12" y="12" width="9" height="9" rx="2" fill={T.green} opacity="0.9" />
-                    </svg>
-                  ) : (
-                    /* Crown / trophy icon for non-quad sections */
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3 16h16v2H3zM3 14l3-7 5 4 5-4 3 7H3z" fill={T.gold} opacity="0.9" />
-                      <circle cx="3" cy="7" r="2" fill={T.gold} />
-                      <circle cx="11" cy="5" r="2" fill={T.gold} />
-                      <circle cx="19" cy="7" r="2" fill={T.gold} />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    {editingSectionId === section.id ? (
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          ref={renameInputRef}
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") commitRename(section.id);
-                            if (e.key === "Escape") cancelRename();
-                          }}
-                          onBlur={() => commitRename(section.id)}
-                          className="text-base font-extrabold tracking-tight rounded-lg px-2 py-0.5 outline-none w-40"
-                          style={{
-                            color: T.text,
-                            fontFamily: "'Clash Display', sans-serif",
-                            background: T.greenBg,
-                            border: `1.5px solid ${T.greenBorder}`,
-                          }}
-                        />
-                        <button
-                          onClick={cancelRename}
-                          className="w-5 h-5 flex items-center justify-center rounded-full transition-colors"
-                          style={{ color: T.textMuted }}
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="text-base font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>
-                          {section.name}
-                        </span>
-                        {onRenameSection && (
-                          <button
-                            onClick={() => startRename(section)}
-                            className="w-6 h-6 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                            style={{ color: T.textMuted }}
-                            title="Rename section"
-                          >
-                            <Pencil size={11} />
-                          </button>
-                        )}
-                      </>
-                    )}
-                    {winners.length > 0 && (
-                      <span
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
-                        style={{ background: T.goldBg, border: `1px solid ${T.goldBorder}`, color: T.gold }}
-                      >
-                        <Trophy size={10} />
-                        {isCo ? `Co-Champs: ${winners.map(w => getPlayerName(players, w.playerId).split(" ")[0]).join(" & ")}` : getPlayerName(players, winner.playerId).split(" ")[0]}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs mt-1 font-medium" style={{ color: T.textMuted }}>
-                    {formatRatingRange(section)} · {section.playerIds.length} players
-                  </div>
-                </div>
-              </div>
-              <ProgressRing completed={status.completed} total={status.total} size={44} isDark={isDark} />
+          <div className="flex items-center gap-3">
+            <Trophy size={20} style={{ color: T.gold }} />
+            <div>
+              <p className="text-sm font-black tracking-tight" style={{ color: T.gold, fontFamily: "'Clash Display', sans-serif" }}>All Quads Complete</p>
+              <p className="text-xs mt-0.5" style={{ color: T.textMuted }}>{totalRounds} rounds · {players.length} players · {sections.length} sections</p>
             </div>
-
-            {/* Swap Mode: Player chips */}
-            {swapMode && (
-              <div className="px-4 py-2.5 border-t" style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.02 145)" : "#f8fafc" }}>
-                <div className="flex flex-wrap gap-1.5">
-                  {section.playerIds.map((pid) => {
-                    const isSelected = swapPlayerA === pid;
-                    const isTarget = swapPlayerA ? !section.playerIds.includes(swapPlayerA) : false;
-                    return (
-                      <button
-                        key={pid}
-                        onClick={() => handlePlayerClick(pid)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.03] active:scale-95"
-                        style={{
-                          background: isSelected ? T.swapHighlight : (isDark ? "oklch(0.18 0.02 145)" : "#fff"),
-                          border: `1.5px solid ${isSelected ? T.swapBorder : (isTarget ? T.greenBorder : T.cardBorder)}`,
-                          color: isSelected ? T.swap : T.text,
-                          boxShadow: isSelected ? `0 0 8px ${T.swapBorder}` : "0 1px 2px rgba(0,0,0,0.05)",
-                        }}
-                      >
-                        {getPlayerName(players, pid)}
-                        <span className="ml-1.5 opacity-50 font-mono">{getPlayerRating(players, pid)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {swapPlayerA && !section.playerIds.includes(swapPlayerA) && (
-                  <p className="text-[11px] mt-2 font-medium" style={{ color: T.swap }}>
-                    Select a player above to swap with {getPlayerName(players, swapPlayerA)}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* View Toggle + Round Tabs */}
-            {!swapMode && (
-              <div
-                className="flex items-center justify-between px-4 py-2 border-t"
-                style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.02 145)" : "#fafbfc" }}
-              >
-                {/* Round tabs — horizontal scroll on mobile */}
-                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" role="tablist" aria-label="Round tabs">
-                  {Array.from({ length: totalRounds }, (_, i) => i + 1).map((roundNum) => {
-                    const isActive = activeRound === roundNum;
-                    const roundGames = sectionGames.filter((g) => g.round === roundNum);
-                    const roundComplete = roundGames.every((g) => g.result !== "*");
-                    const isCurrent = roundNum === currentRound;
-
-                    return (
-                      <button
-                        key={roundNum}
-                        type="button"
-                        role="tab"
-                        aria-selected={isActive}
-                        aria-label={`Round ${roundNum}${roundComplete ? " — complete" : isCurrent ? " — in progress" : ""}`}
-                        onClick={() => setSectionRoundTab((prev) => ({ ...prev, [section.id]: roundNum }))}
-                        className="relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
-                        style={{
-                          background: isActive ? T.greenBg : "transparent",
-                          color: isActive ? T.green : T.textMuted,
-                          border: `1px solid ${isActive ? T.greenBorder : "transparent"}`,
-                        }}
-                      >
-                        R{roundNum}
-                        {roundComplete && (
-                          <span
-                            className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center"
-                            style={{ background: T.green }}
-                          >
-                            <Check size={7} color={isDark ? "#0a1a0f" : "#fff"} strokeWidth={3} />
-                          </span>
-                        )}
-                        {isCurrent && !roundComplete && (
-                          <span
-                            className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-pulse"
-                            style={{ background: T.green, opacity: 0.7 }}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Pairings / Standings toggle */}
-                <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? "oklch(0.12 0.02 145)" : "#f1f5f9" }}>
-                  <button
-                    type="button"
-                    aria-pressed={view === "pairings"}
-                    aria-label="Show boards view"
-                    onClick={() => setSectionView((prev) => ({ ...prev, [section.id]: "pairings" }))}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
-                    style={{
-                      background: view === "pairings" ? (isDark ? T.card : "#fff") : "transparent",
-                      color: view === "pairings" ? T.green : T.textDim,
-                      boxShadow: view === "pairings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                    }}
-                  >
-                    <Swords size={10} />
-                    Boards
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={view === "standings"}
-                    aria-label="Show standings table"
-                    onClick={() => setSectionView((prev) => ({ ...prev, [section.id]: "standings" }))}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
-                    style={{
-                      background: view === "standings" ? (isDark ? T.card : "#fff") : "transparent",
-                      color: view === "standings" ? T.green : T.textDim,
-                      boxShadow: view === "standings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                    }}
-                  >
-                    <BarChart3 size={10} />
-                    Table
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Content Area */}
-            {!swapMode && (
-              <div className="px-4 pb-4 pt-2">
-                {view === "pairings" ? (
-                  <RoundPairings
-                    section={section}
-                    games={sectionGames}
-                    players={players}
-                    roundNum={activeRound}
-                    currentRound={currentRound}
-                    onEnterResult={onEnterResult}
-                    isDark={isDark}
-                    T={T}
-                  />
-                ) : (
-                  <StandingsView
-                    section={section}
-                    standings={standings}
-                    players={players}
-                    isDark={isDark}
-                    T={T}
-                  />
-                )}
-              </div>
-            )}
           </div>
+          {onCompleteTournament && (
+            <button
+              type="button"
+              onClick={onCompleteTournament}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
+              style={{ background: T.gold, color: isDark ? "#0a1a0f" : "#fff", boxShadow: `0 4px 14px oklch(0.75 0.15 85 / 0.35)` }}
+            >
+              <Flag size={14} />
+              Finalize Tournament
+            </button>
+          )}
+        </div>
 
-          {/* ── Per-Quad Section Complete Card ─────────────────────────────── */}
-          {status.pct === 100 && (() => {
+        {/* Per-section champion cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {sections.map((section) => {
+            const sectionGames = gamesBySection.get(section.id) ?? [];
             const sectionPlayers = players.filter((p) => section.playerIds.includes(p.id));
-            // Build Round objects for this section so computeStandings can rank them
             const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
             const sectionRounds: Round[] = roundNums.map((rn) => ({
-              number: rn,
-              status: "completed" as const,
-              games: sectionGames.filter((g) => g.round === rn),
+              number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn),
             }));
             const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
             const top3 = rows.slice(0, 3);
-            const sectionWinner = top3[0];
+            const standings = standingsBySection.get(section.id) ?? [];
+            const winners = getSectionWinners(standings);
+            const isCo = winners.length > 1;
 
             const medalConfig = [
-              { medalDark: "bg-amber-400/15 text-amber-300",   medalLight: "bg-amber-50 text-amber-500 border border-amber-200",   scoreColor: T.gold },
-              { medalDark: "bg-slate-400/15 text-slate-300",   medalLight: "bg-slate-50 text-slate-500 border border-slate-200",   scoreColor: isDark ? "oklch(0.65 0.01 145)" : "#6b7280" },
-              { medalDark: "bg-orange-400/15 text-orange-300", medalLight: "bg-orange-50 text-orange-500 border border-orange-200", scoreColor: isDark ? "oklch(0.62 0.08 55)" : "#b45309" },
+              { bg: isDark ? "oklch(0.24 0.08 85 / 0.3)" : "oklch(0.95 0.06 85)", border: T.goldBorder, color: T.gold },
+              { bg: isDark ? "oklch(0.18 0.02 145)" : "#f8fafc", border: T.cardBorder, color: T.textMuted },
+              { bg: isDark ? "oklch(0.20 0.05 55 / 0.2)" : "oklch(0.97 0.04 55)", border: isDark ? "oklch(0.35 0.08 55)" : "oklch(0.82 0.08 55)", color: isDark ? "oklch(0.68 0.12 55)" : "oklch(0.55 0.12 55)" },
             ];
 
             return (
               <div
+                key={section.id}
                 className="rounded-2xl border overflow-hidden animate-in fade-in slide-in-from-bottom-2"
-                style={{
-                  animationDuration: "400ms",
-                  animationFillMode: "both",
-                  background: isDark ? "oklch(0.14 0.04 85 / 0.6)" : "oklch(0.97 0.04 85 / 0.8)",
-                  borderColor: T.goldBorder,
-                  boxShadow: `0 0 0 1px ${T.goldBorder}, 0 4px 20px ${isDark ? "oklch(0.75 0.15 85 / 0.10)" : "oklch(0.75 0.15 85 / 0.15)"}`,
-                }}
+                style={{ animationDuration: "400ms", animationFillMode: "both", background: T.card, borderColor: T.goldBorder, boxShadow: `0 0 0 1px ${T.goldBorder}, 0 4px 20px ${isDark ? "oklch(0.75 0.15 85 / 0.08)" : "oklch(0.75 0.15 85 / 0.12)"}` }}
               >
-                {/* Header */}
-                <div
-                  className="flex items-center justify-between px-5 py-3 border-b"
-                  style={{ borderColor: T.goldBorder }}
-                >
+                {/* Card header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: T.goldBorder, background: isDark ? "oklch(0.18 0.05 85 / 0.3)" : "oklch(0.97 0.04 85 / 0.5)" }}>
                   <div className="flex items-center gap-2">
-                    <Trophy size={14} style={{ color: T.gold }} />
-                    <span
-                      className="text-sm font-black tracking-tight"
-                      style={{ color: T.gold, fontFamily: "'Clash Display', sans-serif" }}
-                    >
-                      {section.name} — Complete
-                    </span>
+                    <Trophy size={13} style={{ color: T.gold }} />
+                    <span className="text-sm font-black" style={{ color: T.gold, fontFamily: "'Clash Display', sans-serif" }}>{section.name}</span>
+                    {isCo && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: T.goldBg, color: T.gold, border: `1px solid ${T.goldBorder}` }}>Co-Champs</span>}
                   </div>
-                  <span className="text-[11px] font-semibold" style={{ color: T.textDim }}>
-                    {totalRounds} round{totalRounds !== 1 ? "s" : ""} · {sectionPlayers.length} players
-                  </span>
+                  <span className="text-[11px]" style={{ color: T.textDim }}>{formatRatingRange(section)}</span>
                 </div>
 
-                {/* Podium — top 3 */}
-                <div className={`divide-y`} style={{ borderColor: isDark ? "oklch(0.22 0.04 85 / 0.3)" : "oklch(0.85 0.06 85 / 0.4)" }}>
+                {/* Podium */}
+                <div className="divide-y" style={{ borderColor: isDark ? "oklch(0.22 0.04 85 / 0.3)" : "oklch(0.85 0.06 85 / 0.4)" }}>
                   {top3.map((row, idx) => {
                     const medal = medalConfig[idx];
                     const pts = row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : String(row.points);
-                    const isFirst = idx === 0;
                     return (
-                      <div
-                        key={row.player.id}
-                        className={`flex items-center gap-3 px-5 ${isFirst ? "py-4" : "py-3"}`}
-                      >
-                        {/* Medal */}
-                        <div
-                          className={`${ isFirst ? "w-10 h-10 text-lg" : "w-8 h-8 text-sm"} rounded-xl flex items-center justify-center flex-shrink-0 font-black ${
-                            isDark ? medal.medalDark : medal.medalLight
-                          }`}
-                          style={{ fontFamily: "'Clash Display', sans-serif" }}
-                        >
-                          {idx + 1}
-                        </div>
-                        {/* Name + meta */}
+                      <div key={row.player.id} className={`flex items-center gap-3 px-4 ${idx === 0 ? "py-3.5" : "py-2.5"}`}>
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black" style={{ background: medal.bg, border: `1px solid ${medal.border}`, color: medal.color, fontFamily: "'Clash Display', sans-serif" }}>{idx + 1}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span
-                              className={`${isFirst ? "text-sm" : "text-xs"} font-black truncate`}
-                              style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}
-                            >
-                              {row.player.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-semibold" style={{ color: T.textDim }}>
-                              {row.wins}W {row.draws}D {row.losses}L
-                            </span>
-                            {row.buchholz > 0 && (
-                              <span className="text-[10px]" style={{ color: T.textDim }}>· Buch. {row.buchholz.toFixed(1)}</span>
-                            )}
-                          </div>
+                          <span className={`${idx === 0 ? "text-sm" : "text-xs"} font-black truncate block`} style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{row.player.name}</span>
+                          <span className="text-[10px]" style={{ color: T.textDim }}>{row.wins}W {row.draws}D {row.losses}L · Buch. {row.buchholz.toFixed(1)}</span>
                         </div>
-                        {/* Score */}
-                        <div className="flex-shrink-0 text-right">
-                          <span
-                            className={`${isFirst ? "text-2xl" : "text-lg"} font-black tabular-nums`}
-                            style={{ color: medal.scoreColor, fontFamily: "'Clash Display', sans-serif" }}
-                          >
-                            {pts}
-                          </span>
-                          <p className="text-[10px] font-semibold" style={{ color: T.textDim }}>pts</p>
-                        </div>
+                        <span className={`${idx === 0 ? "text-2xl" : "text-lg"} font-black tabular-nums flex-shrink-0`} style={{ color: medal.color, fontFamily: "'Clash Display', sans-serif" }}>{pts}</span>
                       </div>
                     );
                   })}
                 </div>
 
                 {/* Action buttons */}
-                <div
-                  className="flex flex-wrap gap-2 px-5 pb-4 pt-3 border-t"
-                  style={{ borderColor: isDark ? "oklch(0.22 0.04 85 / 0.3)" : "oklch(0.85 0.06 85 / 0.4)" }}
-                >
-                  {/* View Results */}
+                <div className="flex flex-wrap gap-2 px-4 py-3 border-t" style={{ borderColor: isDark ? "oklch(0.22 0.04 85 / 0.3)" : "oklch(0.85 0.06 85 / 0.4)" }}>
                   {tournamentId && (
-                    <a
-                      href={`/tournament/${tournamentId}?section=${section.id}`}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                      style={{
-                        background: isDark ? T.greenBg : "oklch(0.20 0.08 145)",
-                        color: T.green,
-                        border: `1px solid ${T.greenBorder}`,
-                      }}
-                    >
-                      <BarChart3 size={13} /> View Results
+                    <a href={`/tournament/${tournamentId}/report?section=${section.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95" style={{ background: T.goldBg, color: T.gold, border: `1px solid ${T.goldBorder}` }}>
+                      <Trophy size={12} /> Reports
                     </a>
                   )}
-                  {/* Player Reports */}
-                  {tournamentId && (
-                    <a
-                      href={`/tournament/${tournamentId}/report?section=${section.id}`}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                      style={{
-                        background: isDark ? "oklch(0.22 0.06 85 / 0.4)" : "oklch(0.95 0.06 85)",
-                        color: T.gold,
-                        border: `1px solid ${T.goldBorder}`,
-                      }}
-                    >
-                      <Trophy size={13} /> Player Reports
-                    </a>
-                  )}
-                  {/* Create Recap */}
-                  <button
-                    onClick={() => setCarouselSection(section.id)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                    style={{
-                      background: isDark ? "oklch(0.16 0.02 145)" : "#fff",
-                      color: isDark ? "oklch(0.75 0.01 145)" : "#374151",
-                      border: `1px solid ${T.cardBorder}`,
-                    }}
-                  >
-                    <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
-                      <svg viewBox="0 0 24 24" fill="white" className="w-2 h-2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
-                    </div>
-                    Create Recap
+                  <button onClick={() => setCarouselSection(section.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95" style={{ background: isDark ? "oklch(0.16 0.02 145)" : "#fff", color: T.textMuted, border: `1px solid ${T.cardBorder}` }}>
+                    <div className="w-3 h-3 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex-shrink-0" />
+                    Recap
                   </button>
-                  {/* Print / Export */}
                   {tournamentId && (
-                    <a
-                      href={`/tournament/${tournamentId}/print?section=${section.id}`}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                      style={{
-                        background: isDark ? "oklch(0.16 0.02 145)" : "#fff",
-                        color: isDark ? "oklch(0.75 0.01 145)" : "#374151",
-                        border: `1px solid ${T.cardBorder}`,
-                      }}
-                    >
-                      <Swords size={13} /> Print / Export
+                    <a href={`/tournament/${tournamentId}?section=${section.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95" style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}>
+                      <BarChart3 size={12} /> Results
                     </a>
                   )}
                 </div>
               </div>
             );
-          })()}
-          </div>
-        );
-      })}
+          })}
+        </div>
 
-
-      {/* Per-quad Instagram Carousel Modal */}
-      {carouselSection && (() => {
-        const sec = sections.find((s) => s.id === carouselSection);
-        if (!sec) return null;
-        const secPlayers = players.filter((p) => sec.playerIds.includes(p.id));
-        const secGames = gamesBySection.get(sec.id) ?? [];
-        const roundNums = Array.from(new Set(secGames.map((g) => g.round))).sort((a, b) => a - b);
-        const secRounds: Round[] = roundNums.map((rn) => ({
-          number: rn,
-          status: "completed" as const,
-          games: secGames.filter((g) => g.round === rn),
-        }));
-        const secRows: StandingRow[] = computeStandings(secPlayers, secRounds);
-        return (
-          <InstagramCarouselModal
-            open={true}
-            onClose={() => setCarouselSection(null)}
-            rows={secRows}
-            config={tournamentConfig ?? null}
-            tournamentName={`${sec.name} — ${tournamentConfig?.name ?? "Tournament"}`}
-            totalRounds={totalRounds}
-            rounds={secRounds}
-          />
-        );
-      })()}
-
-      {/* Round Advancement CTA */}
-      {onAdvanceRound && (() => {
-        const currentRoundGames = games.filter((g) => g.round === currentRound);
-        const allCurrentDone = currentRoundGames.every((g) => g.result !== "*");
-        const isLastRound = currentRound >= totalRounds;
-        const allDone = games.every((g) => g.result !== "*");
-
-        if (allDone && isLastRound && onCompleteTournament) {
+        {/* Instagram Carousel Modal */}
+        {carouselSection && (() => {
+          const sec = sections.find((s) => s.id === carouselSection);
+          if (!sec) return null;
+          const sectionGames = gamesBySection.get(sec.id) ?? [];
+          const sectionPlayers = players.filter((p) => sec.playerIds.includes(p.id));
+          const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
+          const sectionRounds: Round[] = roundNums.map((rn) => ({ number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn) }));
+          const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
           return (
-            <button
-              onClick={onCompleteTournament}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{ background: T.gold, boxShadow: "0 4px 16px rgba(180,140,40,0.3)" }}
-            >
-              <Trophy size={16} />
-              Finalize Tournament
-            </button>
+            <InstagramCarouselModal
+              open={true} onClose={() => setCarouselSection(null)}
+              rows={rows} config={tournamentConfig ?? null}
+              tournamentName={`${tournamentConfig?.name ?? "Tournament"} — ${sec.name}`}
+              totalRounds={totalRounds} rounds={sectionRounds}
+            />
           );
-        }
-
-        if (allCurrentDone && !isLastRound) {
-          return (
-            <button
-              onClick={onAdvanceRound}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{
-                background: T.greenBg,
-                color: T.green,
-                border: `1.5px solid ${T.greenBorder}`,
-              }}
-            >
-              Advance to Round {currentRound + 1}
-            </button>
-          );
-        }
-
-        return null;
-      })()}
-    </div>
-  );
-}
-
-// ─── Round Pairings (single round) ──────────────────────────────────────────
-
-function RoundPairings({
-  section,
-  games,
-  players,
-  roundNum,
-  currentRound,
-  onEnterResult,
-  isDark,
-  T,
-}: {
-  section: QuadSection;
-  games: Game[];
-  players: Player[];
-  roundNum: number;
-  currentRound: number;
-  onEnterResult: (gameId: string, result: Result) => void;
-  isDark: boolean;
-  T: Record<string, string>;
-}) {
-  const roundGames = games.filter((g) => g.round === roundNum);
-  const isActiveRound = roundNum === currentRound;
-  const isCompleted = roundGames.every((g) => g.result !== "*");
-
-  if (roundGames.length === 0) {
-    return (
-      <div className="py-6 text-center">
-        <p className="text-xs" style={{ color: T.textDim }}>
-          No games scheduled for this round.
-        </p>
+        })()}
       </div>
     );
   }
 
+  // ── Operational Command Center View ───────────────────────────────────────
+
   return (
-    <div className="space-y-2">
-      {/* Round status badge */}
-      {isCompleted && (
+    <div className="space-y-4">
+
+      {/* ── A. Event Header Bar ────────────────────────────────────────────── */}
+      <div
+        className="rounded-2xl border px-5 py-3 flex items-center justify-between gap-3 flex-wrap"
+        style={{ background: T.headerBg, borderColor: T.cardBorder }}
+      >
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs font-black uppercase tracking-widest px-2 py-1 rounded-lg" style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}>QUADS</span>
+          <div className="flex items-center gap-2 text-xs" style={{ color: T.textMuted }}>
+            <Users size={12} style={{ color: T.green }} />
+            <span>{sections.length} sections · {players.length} players</span>
+          </div>
+          {tournamentConfig?.ratingType && (
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: T.textMuted }}>
+              <Activity size={12} />
+              <span className="capitalize">{tournamentConfig.ratingType} ratings</span>
+            </div>
+          )}
+          {tournamentConfig?.timePreset && (
+            <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: T.rowBg, color: T.textMuted }}>{tournamentConfig.timePreset}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs" style={{ color: T.textDim }}>{completedGames} of {totalGames} games complete</span>
+          {canSwap && (
+            <button
+              type="button"
+              onClick={() => { setSwapMode(!swapMode); setSwapPlayerA(null); }}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+              style={{ background: swapMode ? T.swapHighlight : "transparent", color: swapMode ? T.swap : T.textMuted, border: `1px solid ${swapMode ? T.swapBorder : T.cardBorder}` }}
+            >
+              <ArrowLeftRight size={12} />
+              {swapMode ? "Cancel Swap" : "Swap Players"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── B. Active-Round Command Center ────────────────────────────────── */}
+      <div
+        className="rounded-2xl border px-5 py-4"
+        style={{ background: T.card, borderColor: currentRoundComplete ? T.greenBorder : T.cardBorder }}
+      >
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          {/* Metrics */}
+          <div className="flex items-center gap-5 flex-wrap">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.textDim }}>Active Round</p>
+              <p className="text-2xl font-black tabular-nums" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{currentRound}<span className="text-sm font-semibold ml-1" style={{ color: T.textDim }}>/ {totalRounds}</span></p>
+            </div>
+            <div className="w-px h-10 self-center" style={{ background: T.cardBorder }} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.textDim }}>Results Entered</p>
+              <p className="text-xl font-black tabular-nums" style={{ color: currentRoundComplete ? T.green : T.text, fontFamily: "'Clash Display', sans-serif" }}>
+                {currentRoundCompleted}<span className="text-sm font-semibold ml-0.5" style={{ color: T.textDim }}>/ {currentRoundTotal}</span>
+              </p>
+            </div>
+            {sectionsNeedingAttention.length > 0 && (
+              <>
+                <div className="w-px h-10 self-center" style={{ background: T.cardBorder }} />
+                <div className="flex items-center gap-1.5">
+                  <AlertTriangle size={14} style={{ color: T.amber }} />
+                  <span className="text-xs font-semibold" style={{ color: T.amber }}>
+                    {sectionsNeedingAttention.length} section{sectionsNeedingAttention.length !== 1 ? "s" : ""} pending
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Primary CTA */}
+          <div className="flex flex-col items-end gap-1">
+            {currentRound < totalRounds ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onAdvanceRound}
+                  disabled={!currentRoundComplete}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  style={{ background: currentRoundComplete ? T.green : T.greenBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${T.greenBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none" }}
+                >
+                  <ArrowRight size={16} />
+                  Advance to Round {currentRound + 1}
+                </button>
+                {!currentRoundComplete && (
+                  <p className="text-[10px] text-right" style={{ color: T.textDim }}>
+                    {currentRoundTotal - currentRoundCompleted} game{currentRoundTotal - currentRoundCompleted !== 1 ? "s" : ""} remaining
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onCompleteTournament}
+                  disabled={!currentRoundComplete}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  style={{ background: currentRoundComplete ? T.gold : T.goldBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.gold, border: `1.5px solid ${T.goldBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.75 0.15 85 / 0.35)` : "none" }}
+                >
+                  <Flag size={16} />
+                  Finalize Tournament
+                </button>
+                {!currentRoundComplete && (
+                  <p className="text-[10px] text-right" style={{ color: T.textDim }}>
+                    {currentRoundTotal - currentRoundCompleted} game{currentRoundTotal - currentRoundCompleted !== 1 ? "s" : ""} remaining in Round {currentRound}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── C. 2×2 Quad Overview Grid ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {sections.map((section) => {
+          const status = sectionStatus.get(section.id)!;
+          const standings = standingsBySection.get(section.id) ?? [];
+          const winners = status.pct === 100 ? getSectionWinners(standings) : [];
+          const leader = standings[0] ?? null;
+          const isSelected = selectedSectionId === section.id;
+          const needsAttention = status.currentCompleted < status.currentTotal;
+          const isComplete = status.pct === 100;
+
+          let cardBorder = T.cardBorder;
+          let cardGlow = "none";
+          if (isComplete) { cardBorder = T.goldBorder; cardGlow = `0 0 0 1px ${T.goldBorder}`; }
+          else if (isSelected) { cardBorder = T.greenBorder; cardGlow = `0 0 0 1px ${T.greenBorder}, 0 2px 12px oklch(0.72 0.19 145 / 0.15)`; }
+          else if (needsAttention) { cardBorder = T.amberBorder; }
+
+          return (
+            <button
+              key={section.id}
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={`Select ${section.name} workspace`}
+              onClick={() => setSelectedSectionId(section.id)}
+              className="rounded-2xl border p-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative"
+              style={{ background: T.card, borderColor: cardBorder, boxShadow: cardGlow }}
+            >
+              {/* Attention pulse */}
+              {needsAttention && !isComplete && (
+                <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: T.amber }} />
+              )}
+              {/* Complete badge */}
+              {isComplete && (
+                <span className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: T.goldBg, border: `1px solid ${T.goldBorder}` }}>
+                  <Check size={10} style={{ color: T.gold }} />
+                </span>
+              )}
+
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <p className="text-sm font-black tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{section.name}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(section)} · {section.playerIds.length} players</p>
+                </div>
+                <ProgressRing completed={status.completed} total={status.total} size={36} isDark={isDark} />
+              </div>
+
+              {/* Leader */}
+              {leader && !isComplete && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-[10px] font-semibold" style={{ color: T.textDim }}>Leader:</span>
+                  <span className="text-[11px] font-bold truncate" style={{ color: T.green }}>{getPlayerName(players, leader.playerId).split(" ")[0]}</span>
+                  <span className="text-[10px] font-mono" style={{ color: T.textDim }}>{leader.score % 1 === 0 ? leader.score : leader.score.toFixed(1)}pts</span>
+                </div>
+              )}
+              {isComplete && winners.length > 0 && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Trophy size={10} style={{ color: T.gold }} />
+                  <span className="text-[11px] font-bold" style={{ color: T.gold }}>
+                    {winners.length > 1 ? `Co-Champs: ${winners.map(w => getPlayerName(players, w.playerId).split(" ")[0]).join(" & ")}` : getPlayerName(players, winners[0].playerId).split(" ")[0]}
+                  </span>
+                </div>
+              )}
+
+              {/* Current round progress */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px]" style={{ color: T.textDim }}>
+                  {status.currentCompleted} of {status.currentTotal} Round {currentRound} games complete
+                </span>
+                {isSelected && (
+                  <span className="text-[10px] font-bold" style={{ color: T.green }}>Active ▾</span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── D. Selected Quad Workspace ────────────────────────────────────── */}
+      {selectedSection && (
         <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg w-fit text-[10px] font-bold uppercase tracking-wide"
-          style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}
+          className="rounded-2xl border overflow-hidden"
+          style={{ background: T.card, borderColor: T.greenBorder, boxShadow: `0 0 0 1px ${T.greenBorder}` }}
         >
-          <Check size={10} />
-          Round {roundNum} Complete
+          {/* Workspace header */}
+          <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.03 145)" : "#fafbfc" }}>
+            <div className="flex items-center gap-3">
+              {/* Section icon */}
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+                style={{ background: `linear-gradient(135deg, oklch(0.22 0.08 145), oklch(0.18 0.05 145))`, border: `1.5px solid ${T.greenBorder}`, boxShadow: `0 4px 14px oklch(0.72 0.19 145 / 0.25)` }}>
+                <div className="absolute inset-0 rounded-xl" style={{ background: "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12) 0%, transparent 65%)" }} />
+                <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                  <rect x="1" y="1" width="9" height="9" rx="2" fill={T.green} opacity="0.9" />
+                  <rect x="12" y="1" width="9" height="9" rx="2" fill={T.green} opacity="0.5" />
+                  <rect x="1" y="12" width="9" height="9" rx="2" fill={T.green} opacity="0.5" />
+                  <rect x="12" y="12" width="9" height="9" rx="2" fill={T.green} opacity="0.9" />
+                </svg>
+              </div>
+              <div>
+                {/* Inline rename */}
+                {editingSectionId === selectedSection.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      ref={renameInputRef} value={editingName} onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") commitRename(selectedSection.id); if (e.key === "Escape") cancelRename(); }}
+                      onBlur={() => commitRename(selectedSection.id)}
+                      className="text-sm font-extrabold tracking-tight rounded-lg px-2 py-0.5 outline-none w-36"
+                      style={{ color: T.text, fontFamily: "'Clash Display', sans-serif", background: T.greenBg, border: `1.5px solid ${T.greenBorder}` }}
+                    />
+                    <button onClick={cancelRename} className="w-5 h-5 flex items-center justify-center rounded-full" style={{ color: T.textMuted }}><X size={12} /></button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{selectedSection.name}</span>
+                    {onRenameSection && (
+                      <button onClick={() => startRename(selectedSection)} className="w-5 h-5 flex items-center justify-center rounded-md transition-opacity opacity-50 hover:opacity-100" style={{ color: T.textMuted }} title="Rename section"><Pencil size={10} /></button>
+                    )}
+                  </div>
+                )}
+                <p className="text-[11px] mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(selectedSection)} · {selectedSection.playerIds.length} players</p>
+              </div>
+            </div>
+
+            {/* Round tabs + view toggle */}
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" role="tablist" aria-label="Round tabs">
+                {Array.from({ length: totalRounds }, (_, i) => i + 1).map((roundNum) => {
+                  const isActive = (sectionRoundTab[selectedSection.id] ?? currentRound) === roundNum;
+                  const sectionGames = gamesBySection.get(selectedSection.id) ?? [];
+                  const roundGames = sectionGames.filter((g) => g.round === roundNum);
+                  const roundComplete = roundGames.every((g) => g.result !== "*") && roundGames.length > 0;
+                  const isCurrent = roundNum === currentRound;
+                  return (
+                    <button key={roundNum} type="button" role="tab" aria-selected={isActive}
+                      aria-label={`Round ${roundNum}${roundComplete ? " — complete" : isCurrent ? " — in progress" : ""}`}
+                      onClick={() => setSectionRoundTab((prev) => ({ ...prev, [selectedSection.id]: roundNum }))}
+                      className="relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
+                      style={{ background: isActive ? T.greenBg : "transparent", color: isActive ? T.green : T.textMuted, border: `1px solid ${isActive ? T.greenBorder : "transparent"}` }}
+                    >
+                      R{roundNum}
+                      {roundComplete && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center" style={{ background: T.green }}><Check size={7} color={isDark ? "#0a1a0f" : "#fff"} strokeWidth={3} /></span>}
+                      {isCurrent && !roundComplete && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: T.green, opacity: 0.7 }} />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? "oklch(0.12 0.02 145)" : "#f1f5f9" }}>
+                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "pairings"} aria-label="Show boards view"
+                  onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "pairings" }))}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+                  style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
+                  <Swords size={10} />Boards
+                </button>
+                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "standings"} aria-label="Show standings table"
+                  onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "standings" }))}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+                  style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
+                  <BarChart3 size={10} />Table
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Swap mode player chips */}
+          {swapMode && (
+            <div className="px-4 py-2.5 border-b" style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.02 145)" : "#f8fafc" }}>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedSection.playerIds.map((pid) => {
+                  const isSelected = swapPlayerA === pid;
+                  const isTarget = swapPlayerA ? !selectedSection.playerIds.includes(swapPlayerA) : false;
+                  return (
+                    <button key={pid} onClick={() => handlePlayerClick(pid)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.03] active:scale-95"
+                      style={{ background: isSelected ? T.swapHighlight : (isDark ? "oklch(0.18 0.02 145)" : "#fff"), border: `1.5px solid ${isSelected ? T.swapBorder : (isTarget ? T.greenBorder : T.cardBorder)}`, color: isSelected ? T.swap : T.text, boxShadow: isSelected ? `0 0 8px ${T.swapBorder}` : "0 1px 2px rgba(0,0,0,0.05)" }}>
+                      {getPlayerName(players, pid)}
+                      <span className="ml-1.5 opacity-50 font-mono">{getPlayerRating(players, pid)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Workspace content */}
+          <div className="p-4">
+            {(sectionView[selectedSection.id] ?? "pairings") === "pairings" ? (
+              <RoundPairings
+                section={selectedSection}
+                games={gamesBySection.get(selectedSection.id) ?? []}
+                players={players}
+                roundNum={sectionRoundTab[selectedSection.id] ?? currentRound}
+                currentRound={currentRound}
+                onEnterResult={onEnterResult}
+                isDark={isDark}
+                T={T}
+              />
+            ) : (
+              <StandingsView
+                section={selectedSection}
+                standings={standingsBySection.get(selectedSection.id) ?? []}
+                players={players}
+                isDark={isDark}
+                T={T}
+              />
+            )}
+          </div>
         </div>
       )}
 
-      {/* Game rows */}
-      {roundGames.map((game, idx) => (
-        <GameRow
-          key={game.id}
-          game={game}
-          players={players}
-          boardIndex={idx + 1}
-          onEnterResult={onEnterResult}
-          isActive={isActiveRound}
-          isDark={isDark}
-          T={T}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── Game Row ─────────────────────────────────────────────────────────────────
-
-function GameRow({
-  game,
-  players,
-  boardIndex,
-  onEnterResult,
-  isActive,
-  isDark,
-  T,
-}: {
-  game: Game;
-  players: Player[];
-  boardIndex: number;
-  onEnterResult: (gameId: string, result: Result) => void;
-  isActive: boolean;
-  isDark: boolean;
-  T: Record<string, string>;
-}) {
-  const isBye = game.blackId === "BYE";
-  const isPending = game.result === "*";
-  const whiteWon = game.result === "1-0";
-  const blackWon = game.result === "0-1";
-
-  // Pending selection state — tracks which result the director has tapped but not yet confirmed
-  // Collapsed state — auto-collapses after result is confirmed; director can tap to expand
-  const [collapsed, setCollapsed] = useState(false);
-
-  const handleResultClick = (result: "1-0" | "½-½" | "0-1") => {
-    if (game.result === result) {
-      // Already set — clicking same button again clears (undo)
-      onEnterResult(game.id, "*" as Result);
-      setCollapsed(false);
-    } else {
-      // Single tap = immediately confirm + collapse
-      onEnterResult(game.id, result);
-      setTimeout(() => setCollapsed(true), 200);
-    }
-  };
-  const isDraw = game.result === "½-½";
-
-  // Collapsed summary row
-  if (collapsed && !isPending) {
-    return (
-      <button
-        type="button"
-        aria-expanded={false}
-        aria-label="Expand game details"
-        className="w-full rounded-xl px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition-all hover:opacity-80 text-left"
-        style={{
-          background: T.rowBg,
-          border: `1px solid ${T.rowBorder}`,
-          animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both",
-          minHeight: "44px",
-        }}
-        onClick={() => setCollapsed(false)}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          {/* Board label */}
-          <span className="text-[9px] font-bold uppercase tracking-widest flex-shrink-0 w-5" style={{ color: T.textDim }}>
-            B{boardIndex}
-          </span>
-          {/* Winner avatar + name */}
-          {(() => {
-            const winnerId = whiteWon ? game.whiteId : blackWon ? game.blackId : null;
-            const loserId  = whiteWon ? game.blackId : blackWon ? game.whiteId : null;
-            const winnerPlayer = players.find(p => p.id === winnerId);
-            const loserPlayer  = players.find(p => p.id === loserId);
-            const winnerName = winnerPlayer?.name ?? winnerId ?? "";
-            const loserName  = loserPlayer?.name  ?? loserId  ?? "";
-            if (isDraw) {
-              // Draw: show both names equally
-              return (
-                <>
-                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>
-                    {getPlayerName(players, game.whiteId).split(" ")[0]}
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                    style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textMuted }}
-                  >
-                    Draw
-                  </span>
-                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>
-                    {getPlayerName(players, game.blackId).split(" ")[0]}
-                  </span>
-                </>
-              );
-            }
-            return (
-              <>
-                {/* Winner avatar */}
-                <div className="flex-shrink-0">
-                  <PlayerAvatar
-                    username={winnerPlayer?.username ?? ""}
-                    name={winnerName}
-                    platform={(winnerPlayer?.platform as "chesscom" | "lichess") ?? "chesscom"}
-                    avatarUrl={winnerPlayer?.avatarUrl}
-                    size={22}
-                  />
-                </div>
-                {/* Winner name */}
-                <span className="text-xs font-semibold truncate max-w-[80px]" style={{ color: T.green }}>
-                  {winnerName.split(" ")[0]}
-                </span>
-                {/* Score badge */}
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                  style={{ background: T.greenBg, color: T.green }}
-                >
-                  {resultLabel(game.result)}
-                </span>
-                {/* Loser name */}
-                <span className="text-xs truncate max-w-[72px]" style={{ color: T.textDim }}>
-                  {loserName.split(" ")[0]}
-                </span>
-              </>
-            );
-          })()}
-        </div>
-        <span className="text-[9px] flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
-      </button>
-    );
-  }
-
-  return (
-    <div
-      className="rounded-xl px-3 py-2.5 transition-all"
-      style={{
-        background: T.rowBg,
-        border: `1px solid ${isActive && isPending ? T.greenBorder : T.rowBorder}`,
-        opacity: !isActive && isPending ? 0.55 : 1,
-        animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both",
-      }}
-    >
-      {/* Board number label */}
-      <div className="flex items-center gap-1.5 mb-2">
-        <span
-          className="text-[9px] font-bold uppercase tracking-widest"
-          style={{ color: T.textDim }}
+      {/* ── E. Exception Tray ─────────────────────────────────────────────── */}
+      <div className="rounded-2xl border overflow-hidden" style={{ background: T.card, borderColor: exceptionCount > 0 ? T.amberBorder : T.cardBorder }}>
+        <button
+          type="button"
+          aria-expanded={exceptionTrayOpen}
+          aria-label={`Exception tray — ${exceptionCount} item${exceptionCount !== 1 ? "s" : ""}`}
+          onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:opacity-80"
+          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent" }}
         >
-          Board {boardIndex}
-        </span>
-        {!isPending && !isBye && (
-          <>
-            <span
-              className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-              style={{
-                background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg,
-                color: isDraw ? T.textMuted : T.green,
-              }}
-            >
-              {resultLabel(game.result)}
+          <div className="flex items-center gap-2">
+            {exceptionCount > 0 ? <AlertTriangle size={14} style={{ color: T.amber }} /> : <Check size={14} style={{ color: T.green }} />}
+            <span className="text-xs font-semibold" style={{ color: exceptionCount > 0 ? T.amber : T.green }}>
+              {exceptionCount > 0 ? `${exceptionCount} pending result${exceptionCount !== 1 ? "s" : ""} in Round ${currentRound}` : "No exceptions — tournament running smoothly"}
             </span>
-            <button
-              type="button"
-              aria-expanded={true}
-              aria-label="Collapse game row"
-              onClick={() => setCollapsed(true)}
-              className="ml-auto text-[9px] px-1.5 py-0.5 rounded transition-colors"
-              style={{ color: T.textDim, background: "transparent" }}
-            >
-              ▲ collapse
-            </button>
-          </>
+            {exceptionCount > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: T.amber, color: isDark ? "#0a1a0f" : "#fff" }}>{exceptionCount}</span>
+            )}
+          </div>
+          {exceptionTrayOpen ? <ChevronUp size={14} style={{ color: T.textDim }} /> : <ChevronDown size={14} style={{ color: T.textDim }} />}
+        </button>
+
+        {exceptionTrayOpen && exceptionCount > 0 && (
+          <div className="px-4 pb-4 pt-1 space-y-2 border-t" style={{ borderColor: T.amberBorder }}>
+            {missingResults.map((game) => {
+              const sectionName = sections.find((s) => s.playerIds.includes(game.whiteId))?.name ?? "Unknown";
+              return (
+                <div key={game.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl" style={{ background: T.amberBg, border: `1px solid ${T.amberBorder}` }}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <AlertTriangle size={11} style={{ color: T.amber, flexShrink: 0 }} />
+                    <span className="text-xs font-semibold truncate" style={{ color: T.text }}>
+                      {getPlayerName(players, game.whiteId)} vs {getPlayerName(players, game.blackId)}
+                    </span>
+                    <span className="text-[10px] flex-shrink-0" style={{ color: T.textDim }}>· {sectionName}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); }}
+                    className="text-[10px] font-semibold px-2 py-1 rounded-lg flex-shrink-0 transition-colors"
+                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}
+                  >
+                    Go to section
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* Players row */}
-      <div className="flex items-center gap-2">
-        {/* White player */}
-        <div className={`flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2 ${whiteWon ? "" : ""}`}
-          style={{
-            background: whiteWon ? T.greenSoft : "transparent",
-            border: `1px solid ${whiteWon ? T.greenBorder : "transparent"}`,
-          }}
-        >
-          <span
-            className="w-4 h-4 rounded-[4px] flex-shrink-0 border"
-            style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }}
-          />
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold truncate" style={{ color: T.text }}>
-              {getPlayerName(players, game.whiteId)}
-            </span>
-            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>
-              {getPlayerRating(players, game.whiteId)}
-            </span>
-          </div>
-        </div>
-
-        {/* VS / Result center */}
-        <div className="flex-shrink-0 flex items-center justify-center w-8">
-          {isPending ? (
-            <span className="text-[10px] font-bold" style={{ color: T.textDim }}>vs</span>
-          ) : (
-            <span className="text-xs font-bold" style={{ color: T.green }}>
-              {resultLabel(game.result)}
-            </span>
-          )}
-        </div>
-
-        {/* Black player */}
-        <div className={`flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2 justify-end`}
-          style={{
-            background: blackWon ? T.greenSoft : "transparent",
-            border: `1px solid ${blackWon ? T.greenBorder : "transparent"}`,
-          }}
-        >
-          <div className="flex flex-col min-w-0 items-end">
-            <span className="text-sm font-semibold truncate text-right" style={{ color: isBye ? T.textDim : T.text }}>
-              {getPlayerName(players, game.blackId)}
-            </span>
-            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>
-              {isBye ? "" : getPlayerRating(players, game.blackId)}
-            </span>
-          </div>
-          <span
-            className="w-4 h-4 rounded-[4px] flex-shrink-0"
-            style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }}
-          />
-        </div>
-      </div>
-
-      {/* Result entry buttons — only for active round pending games */}
-      {isPending && isActive && !isBye && (() => {
-        const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
-        const blackName = getPlayerName(players, game.blackId).split(" ")[0];
-        // When a selection is pending, non-selected buttons are dimmed; selected button is fully highlighted
-        const hasPending = false;
-        const whiteSelected = game.result === "1-0";
-        const drawSelected = game.result === "½-½";
-        const blackSelected = game.result === "0-1";
+      {/* Instagram Carousel Modal */}
+      {carouselSection && (() => {
+        const sec = sections.find((s) => s.id === carouselSection);
+        if (!sec) return null;
+        const sectionGames = gamesBySection.get(sec.id) ?? [];
+        const sectionPlayers = players.filter((p) => sec.playerIds.includes(p.id));
+        const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
+        const sectionRounds: Round[] = roundNums.map((rn) => ({ number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn) }));
+        const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
         return (
-          <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
-            {/* White wins */}
-            <button
-              type="button"
-              aria-pressed={whiteSelected}
-              aria-label={`${whiteName} wins${whiteSelected ? " — selected, click to undo" : ""}`}
-              onClick={() => handleResultClick("1-0")}
-              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{
-                minHeight: "44px",
-                paddingTop: "10px",
-                paddingBottom: "10px",
-                background: whiteSelected
-                  ? T.green
-                  : hasPending
-                  ? (isDark ? "oklch(0.14 0.01 145)" : "#f1f5f9")
-                  : T.greenBg,
-                color: whiteSelected
-                  ? (isDark ? "#0a1a0f" : "#fff")
-                  : hasPending
-                  ? T.textDim
-                  : T.green,
-                border: `1.5px solid ${whiteSelected ? T.green : hasPending ? T.rowBorder : T.greenBorder}`,
-                opacity: hasPending && !whiteSelected ? 0.45 : 1,
-                transform: whiteSelected ? "scale(1.03)" : undefined,
-                boxShadow: whiteSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none",
-              }}
-            >
-              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{whiteName}</span>
-              <span className="text-[9px] opacity-70 font-semibold">{whiteSelected ? "click to undo" : "wins"}</span>
-            </button>
-            {/* Draw */}
-            <button
-              type="button"
-              aria-pressed={drawSelected}
-              aria-label={`Draw${drawSelected ? " — selected, click to undo" : ""}`}
-              onClick={() => handleResultClick("½-½")}
-              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{
-                minHeight: "44px",
-                paddingTop: "10px",
-                paddingBottom: "10px",
-                background: drawSelected
-                  ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb")
-                  : hasPending
-                  ? (isDark ? "oklch(0.14 0.01 145)" : "#f1f5f9")
-                  : (isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6"),
-                color: drawSelected ? T.text : hasPending ? T.textDim : T.textMuted,
-                border: `1.5px solid ${drawSelected ? T.cardBorder : hasPending ? T.rowBorder : T.cardBorder}`,
-                opacity: hasPending && !drawSelected ? 0.45 : 1,
-                transform: drawSelected ? "scale(1.03)" : undefined,
-                boxShadow: drawSelected ? `0 4px 10px rgba(0,0,0,0.15)` : "none",
-              }}
-            >
-              <span className="text-[11px] font-extrabold">Draw</span>
-              <span className="text-[9px] opacity-70 font-semibold">{drawSelected ? "click to undo" : "½–½"}</span>
-            </button>
-            {/* Black wins */}
-            <button
-              type="button"
-              aria-pressed={blackSelected}
-              aria-label={`${blackName} wins${blackSelected ? " — selected, click to undo" : ""}`}
-              onClick={() => handleResultClick("0-1")}
-              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{
-                minHeight: "44px",
-                paddingTop: "10px",
-                paddingBottom: "10px",
-                background: blackSelected
-                  ? T.green
-                  : hasPending
-                  ? (isDark ? "oklch(0.14 0.01 145)" : "#f1f5f9")
-                  : T.greenBg,
-                color: blackSelected
-                  ? (isDark ? "#0a1a0f" : "#fff")
-                  : hasPending
-                  ? T.textDim
-                  : T.green,
-                border: `1.5px solid ${blackSelected ? T.green : hasPending ? T.rowBorder : T.greenBorder}`,
-                opacity: hasPending && !blackSelected ? 0.45 : 1,
-                transform: blackSelected ? "scale(1.03)" : undefined,
-                boxShadow: blackSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none",
-              }}
-            >
-              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{blackName}</span>
-              <span className="text-[9px] opacity-70 font-semibold">{blackSelected ? "click to undo" : "wins"}</span>
-            </button>
-          </div>
+          <InstagramCarouselModal
+            open={true} onClose={() => setCarouselSection(null)}
+            rows={rows} config={tournamentConfig ?? null}
+            tournamentName={`${tournamentConfig?.name ?? "Tournament"} — ${sec.name}`}
+            totalRounds={totalRounds} rounds={sectionRounds}
+          />
         );
       })()}
-    </div>
-  );
-}
-
-// ─── Standings Sub-View ───────────────────────────────────────────────────────
-
-function StandingsView({
-  section,
-  standings,
-  players,
-  isDark,
-  T,
-}: {
-  section: QuadSection;
-  standings: ReturnType<typeof calculateQuadStandings>;
-  players: Player[];
-  isDark: boolean;
-  T: Record<string, string>;
-}) {
-  if (standings.length === 0) {
-    return (
-      <div className="py-6 text-center">
-        <p className="text-xs" style={{ color: T.textDim }}>No standings data yet.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-1">
-      {/* Header row */}
-      <div
-        className="grid grid-cols-[24px_1fr_44px_32px_32px_32px_44px] gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider"
-        style={{ color: T.textDim, background: isDark ? "oklch(0.13 0.02 145)" : "#f8fafc" }}
-      >
-        <span>#</span>
-        <span>Player</span>
-        <span className="text-center">Pts</span>
-        <span className="text-center">W</span>
-        <span className="text-center">D</span>
-        <span className="text-center">L</span>
-        <span className="text-center">SB</span>
-      </div>
-
-      {/* Player rows */}
-      {standings.map((s, idx) => {
-        const isWinner = s.finalRank === 1;
-        return (
-          <div
-            key={s.playerId}
-            className="grid grid-cols-[24px_1fr_44px_32px_32px_32px_44px] gap-1 items-center px-2 py-2 rounded-lg transition-all"
-            style={{
-              background: isWinner ? T.goldBg : (idx % 2 === 0 ? "transparent" : T.rowBg),
-              border: isWinner ? `1px solid ${T.goldBorder}` : "1px solid transparent",
-            }}
-          >
-            <span className="text-xs font-bold" style={{ color: isWinner ? T.gold : T.textDim }}>
-              {s.finalRank}
-            </span>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-sm font-semibold truncate" style={{ color: T.text }}>
-                {getPlayerName(players, s.playerId)}
-              </span>
-              <span className="text-[10px] font-mono flex-shrink-0" style={{ color: T.textDim }}>
-                {getPlayerRating(players, s.playerId)}
-              </span>
-              {isWinner && <Trophy size={10} style={{ color: T.gold }} className="flex-shrink-0" />}
-            </div>
-            <span className="text-center text-sm font-bold" style={{ color: T.green }}>
-              {s.score % 1 === 0 ? s.score : s.score.toFixed(1)}
-            </span>
-            <span className="text-center text-xs" style={{ color: T.text }}>{s.wins}</span>
-            <span className="text-center text-xs" style={{ color: T.textMuted }}>{s.draws}</span>
-            <span className="text-center text-xs" style={{ color: T.textMuted }}>{s.losses}</span>
-            <span className="text-center text-[10px] font-mono" style={{ color: T.textMuted }}>
-              {s.sonnebornBerger.toFixed(2)}
-            </span>
-          </div>
-        );
-      })}
     </div>
   );
 }

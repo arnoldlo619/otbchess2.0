@@ -6903,3 +6903,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] P2: Mobile responsive — 44px touch targets, overflow-x-auto round tabs, flex-shrink-0
 - [x] P2: Accessibility — aria-pressed, aria-selected, aria-expanded, aria-label on all interactive elements, semantic buttons
 - [x] P2: Automated tests — 63 unit tests for Quads engine (co-champions, result correction, section isolation, SB tiebreak, edge cases)
+- [x] P2: Director command-center redesign (Section 7) — event header, 2x2 grid, workspace, exception tray, completion view
