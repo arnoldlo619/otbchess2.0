@@ -113,11 +113,13 @@ function ProgressRing({ completed, total, size = 36, isDark }: { completed: numb
 // ─── ResultEntryPanel ────────────────────────────────────────────────────────
 
 function ResultEntryPanel({
-  game, players, boardIndex, onEnterResult, onClose, isDark, T,
+  game, players, boardIndex, onEnterResult, onClose, onAdvanceToNext, isDark, T,
 }: {
   game: Game; players: Player[]; boardIndex: number;
   onEnterResult: (gameId: string, result: Result) => void;
-  onClose: () => void; isDark: boolean; T: Record<string, string>;
+  onClose: () => void;
+  onAdvanceToNext: (currentGameId: string) => void;
+  isDark: boolean; T: Record<string, string>;
 }) {
   const white = players.find((p) => p.id === game.whiteId);
   const black = players.find((p) => p.id === game.blackId);
@@ -131,21 +133,23 @@ function ResultEntryPanel({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") { onClose(); return; }
-      if (e.key === "w" || e.key === "W") { onEnterResult(game.id, "1-0"); onClose(); }
-      if (e.key === "d" || e.key === "D") { onEnterResult(game.id, "½-½"); onClose(); }
-      if (e.key === "b" || e.key === "B") { onEnterResult(game.id, "0-1"); onClose(); }
+      if (e.key === "w" || e.key === "W") { onEnterResult(game.id, "1-0"); onAdvanceToNext(game.id); }
+      if (e.key === "d" || e.key === "D") { onEnterResult(game.id, "½-½"); onAdvanceToNext(game.id); }
+      if (e.key === "b" || e.key === "B") { onEnterResult(game.id, "0-1"); onAdvanceToNext(game.id); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [game.id, onEnterResult, onClose]);
+  }, [game.id, onEnterResult, onClose, onAdvanceToNext]);
 
   const handleResult = (result: "1-0" | "½-½" | "0-1") => {
     if (current === result) {
+      // Undo: clear result and stay on this game
       onEnterResult(game.id, "*" as Result);
     } else {
       onEnterResult(game.id, result);
+      onAdvanceToNext(game.id);
+      return;
     }
-    onClose();
   };
 
   return (
@@ -239,7 +243,7 @@ function ResultEntryPanel({
           <div className="px-5 mt-3 mb-6 flex-shrink-0">
             <button
               type="button"
-              onClick={() => { onEnterResult(game.id, "*" as Result); onClose(); }}
+              onClick={() => { onEnterResult(game.id, "*" as Result); }}
               className="w-full text-xs py-2 rounded-lg transition-colors"
               style={{ background: T.amberBg, color: T.amber, border: `1px solid ${T.amberBorder}` }}
             >
@@ -1136,6 +1140,25 @@ export default function QuadsDirectorPanel({
         if (!game) return null;
         const sectionGames = games.filter((g) => g.sectionId === game.sectionId);
         const boardIndex = sectionGames.filter((g) => g.round === game.round).findIndex((g) => g.id === game.id) + 1;
+
+        // Auto-advance: find next pending game in same section/round after current
+        const handleAdvanceToNext = (currentGameId: string) => {
+          const currentGame = games.find((g) => g.id === currentGameId);
+          if (!currentGame) { setSelectedGameId(null); return; }
+          const roundGames = sectionGames
+            .filter((g) => g.round === currentGame.round && g.blackId !== "BYE")
+            .sort((a, b) => a.id.localeCompare(b.id));
+          const currentIdx = roundGames.findIndex((g) => g.id === currentGameId);
+          // Look for next pending game after current index
+          const nextPending = roundGames.slice(currentIdx + 1).find((g) => g.result === "*");
+          // If none after, wrap around from beginning
+          const firstPending = !nextPending
+            ? roundGames.slice(0, currentIdx).find((g) => g.result === "*")
+            : undefined;
+          const next = nextPending ?? firstPending ?? null;
+          setSelectedGameId(next ? next.id : null);
+        };
+
         return (
           <ResultEntryPanel
             game={game}
@@ -1143,6 +1166,7 @@ export default function QuadsDirectorPanel({
             boardIndex={boardIndex}
             onEnterResult={onEnterResult}
             onClose={() => setSelectedGameId(null)}
+            onAdvanceToNext={handleAdvanceToNext}
             isDark={isDark}
             T={T}
           />
