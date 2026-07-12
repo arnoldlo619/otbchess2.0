@@ -905,6 +905,7 @@ function GameRow({
         style={{
           background: T.rowBg,
           border: `1px solid ${T.rowBorder}`,
+          animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both",
         }}
         onClick={() => setCollapsed(false)}
         title="Tap to expand"
@@ -940,6 +941,7 @@ function GameRow({
         background: T.rowBg,
         border: `1px solid ${isActive && isPending ? T.greenBorder : T.rowBorder}`,
         opacity: !isActive && isPending ? 0.55 : 1,
+        animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both",
       }}
     >
       {/* Board number label */}
