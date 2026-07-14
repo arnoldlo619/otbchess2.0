@@ -6941,3 +6941,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire Quads card to set correct mode/format in wizard state
 - [x] Ensure Quads wizard steps flow end-to-end (name, settings, creation)
 - [x] Premium UX: card design, animations, mobile-responsive
+
+## QuadsDirectorPanel — Mobile UX Premium Enhancement
+- [x] Fix color tokens: textDim dark 0.45→0.58, textMuted dark 0.60→0.72 for WCAG AA compliance
+- [x] Fix ProgressRing text from text-[9px] to text-xs
+- [x] Fix ResultEntryPanel: close button 28px→44px, board badge/rating/labels all to text-xs minimum
+- [x] Fix GameRow collapsed state: board label, player names, result badges all to text-xs/text-sm minimum
+- [x] Fix GameRow expanded state: board label, enter result badge, result badge, collapse button, ratings, vs text all to text-xs minimum
+- [x] Fix GameRow inline result buttons: player name to text-xs, sub-label to text-[11px]
+- [x] Fix StandingsView: header row, SB column, player rating all to text-xs
+- [x] Fix Command Center: Active Round/Results Entered labels and remaining games to text-xs
+- [x] Fix section cards: rating range, leader, champion, round progress all to text-xs
+- [x] Fix workspace header: rating range to text-xs, rename buttons to w-9 h-9, view toggle to text-xs with px-3 py-2
+- [x] Fix exception tray: badge count, section name, Go to section button all to text-xs with proper touch targets
+- [x] Add touch-action: manipulation to all primary interactive buttons
+- [x] Increase inline result button minHeight from 44px to 48px with 12px padding
+- [x] Add minHeight: 44px to Advance Round and Finalize Tournament buttons

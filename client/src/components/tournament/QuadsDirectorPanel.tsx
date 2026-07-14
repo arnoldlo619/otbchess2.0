@@ -103,7 +103,7 @@ function ProgressRing({ completed, total, size = 36, isDark }: { completed: numb
           className="transition-all duration-500"
         />
       </svg>
-      <span className="absolute text-[9px] font-bold" style={{ color: isComplete ? "oklch(0.75 0.15 85)" : (isDark ? "oklch(0.65 0.03 145)" : "#6b7280") }}>
+      <span className="absolute text-xs font-bold" style={{ color: isComplete ? "oklch(0.75 0.15 85)" : (isDark ? "oklch(0.72 0.03 145)" : "#6b7280") }}>
         {completed}/{total}
       </span>
     </div>
@@ -165,10 +165,10 @@ function ResultEntryPanel({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ background: T.greenBg, color: T.green }}>Board {boardIndex}</span>
-            <span className="text-xs font-semibold" style={{ color: T.textMuted }}>Enter Result</span>
+            <span className="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded" style={{ background: T.greenBg, color: T.green }}>Board {boardIndex}</span>
+            <span className="text-sm font-semibold" style={{ color: T.textMuted }}>Enter Result</span>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close result panel" className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:opacity-80" style={{ background: T.rowBg, color: T.textMuted }}>
+          <button type="button" onClick={onClose} aria-label="Close result panel" className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:opacity-80" style={{ background: T.rowBg, color: T.textMuted, touchAction: "manipulation" }}>
             <X size={14} />
           </button>
         </div>
@@ -180,7 +180,7 @@ function ResultEntryPanel({
             <PlayerAvatar username={white?.username ?? ""} name={whiteName} platform={(white?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={white?.avatarUrl} size={36} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: T.text }}>{whiteName}</p>
-              <p className="text-[11px]" style={{ color: T.textDim }}>{whiteRating} · White</p>
+              <p className="text-xs" style={{ color: T.textDim }}>{whiteRating} · White</p>
             </div>
             {current === "1-0" && <Check size={16} style={{ color: T.green, flexShrink: 0 }} />}
           </div>
@@ -189,7 +189,7 @@ function ResultEntryPanel({
             <PlayerAvatar username={black?.username ?? ""} name={blackName} platform={(black?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={black?.avatarUrl} size={36} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: T.text }}>{blackName}</p>
-              <p className="text-[11px]" style={{ color: T.textDim }}>{blackRating} · Black</p>
+              <p className="text-xs" style={{ color: T.textDim }}>{blackRating} · Black</p>
             </div>
             {current === "0-1" && <Check size={16} style={{ color: T.green, flexShrink: 0 }} />}
           </div>
@@ -197,7 +197,7 @@ function ResultEntryPanel({
 
         {/* Result buttons */}
         <div className="px-5 flex flex-col gap-2 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: T.textDim }}>Select Result</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: T.textDim }}>Select Result</p>
           {([
             { result: "1-0" as const, label: `${whiteName.split(" ")[0]} wins`, key: "W" },
             { result: "½-½" as const, label: "Draw ½–½", key: "D" },
@@ -224,7 +224,7 @@ function ResultEntryPanel({
                 <span className="text-sm">{label}</span>
                 <div className="flex items-center gap-2">
                   {isSelected && <Check size={14} style={{ color: isDrawBtn ? T.textMuted : T.green }} />}
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: T.rowBorder, color: T.textDim }}>{key}</span>
+                  <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: T.rowBorder, color: T.textDim }}>{key}</span>
                 </div>
               </button>
             );
@@ -233,7 +233,7 @@ function ResultEntryPanel({
 
         {/* Keyboard hint */}
         <div className="px-5 mt-4 flex-shrink-0">
-          <p className="text-[10px] text-center" style={{ color: T.textDim }}>
+          <p className="text-xs text-center" style={{ color: T.textDim }}>
             Press <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>W</kbd> / <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>D</kbd> / <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>B</kbd> · <kbd className="font-mono px-1 rounded" style={{ background: T.rowBorder }}>Esc</kbd> to close
           </p>
         </div>
@@ -292,7 +292,7 @@ function GameRow({
         onClick={() => setCollapsed(false)}
       >
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[9px] font-bold uppercase tracking-widest flex-shrink-0 w-5" style={{ color: T.textDim }}>B{boardIndex}</span>
+          <span className="text-xs font-bold uppercase tracking-widest flex-shrink-0 w-6" style={{ color: T.textDim }}>B{boardIndex}</span>
           {(() => {
             const winnerId = whiteWon ? game.whiteId : blackWon ? game.blackId : null;
             const loserId = whiteWon ? game.blackId : blackWon ? game.whiteId : null;
@@ -303,9 +303,9 @@ function GameRow({
             if (isDraw) {
               return (
                 <>
-                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.whiteId).split(" ")[0]}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textMuted }}>Draw</span>
-                  <span className="text-xs font-semibold truncate max-w-[72px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.blackId).split(" ")[0]}</span>
+                  <span className="text-sm font-semibold truncate max-w-[80px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.whiteId).split(" ")[0]}</span>
+                  <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textMuted }}>Draw</span>
+                  <span className="text-sm font-semibold truncate max-w-[80px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.blackId).split(" ")[0]}</span>
                 </>
               );
             }
@@ -314,14 +314,14 @@ function GameRow({
                 <div className="flex-shrink-0">
                   <PlayerAvatar username={winnerPlayer?.username ?? ""} name={winnerName} platform={(winnerPlayer?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={winnerPlayer?.avatarUrl} size={22} />
                 </div>
-                <span className="text-xs font-semibold truncate max-w-[80px]" style={{ color: T.green }}>{winnerName.split(" ")[0]}</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: T.greenBg, color: T.green }}>{resultLabel(game.result)}</span>
-                <span className="text-xs truncate max-w-[72px]" style={{ color: T.textDim }}>{loserName.split(" ")[0]}</span>
+                <span className="text-sm font-semibold truncate max-w-[88px]" style={{ color: T.green }}>{winnerName.split(" ")[0]}</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: T.greenBg, color: T.green }}>{resultLabel(game.result)}</span>
+                <span className="text-sm truncate max-w-[80px]" style={{ color: T.textDim }}>{loserName.split(" ")[0]}</span>
               </>
             );
           })()}
         </div>
-        <span className="text-[9px] flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
+        <span className="text-xs flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
       </button>
     );
   }
@@ -342,12 +342,12 @@ function GameRow({
         aria-label={canOpenPanel ? `Open result entry for Board ${boardIndex}` : undefined}
         onKeyDown={canOpenPanel ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onGameClick!(game.id); } } : undefined}
       >
-        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: T.textDim }}>Board {boardIndex}</span>
-        {canOpenPanel && <span className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: T.greenBg, color: T.green }}>Enter result →</span>}
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.textDim }}>Board {boardIndex}</span>
+        {canOpenPanel && <span className="ml-auto text-xs font-semibold px-2 py-1 rounded" style={{ background: T.greenBg, color: T.green, touchAction: "manipulation" }}>Enter result →</span>}
         {!isPending && !isBye && (
           <>
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg, color: isDraw ? T.textMuted : T.green }}>{resultLabel(game.result)}</span>
-            <button type="button" aria-expanded={true} aria-label="Collapse game row" onClick={() => setCollapsed(true)} className="ml-auto text-[9px] px-1.5 py-0.5 rounded transition-colors" style={{ color: T.textDim, background: "transparent" }}>▲ collapse</button>
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg, color: isDraw ? T.textMuted : T.green }}>{resultLabel(game.result)}</span>
+            <button type="button" aria-expanded={true} aria-label="Collapse game row" onClick={() => setCollapsed(true)} className="ml-auto text-xs px-2 py-1 rounded transition-colors" style={{ color: T.textDim, background: "transparent", touchAction: "manipulation" }}>▲ collapse</button>
           </>
         )}
       </div>
@@ -356,16 +356,16 @@ function GameRow({
           <span className="w-4 h-4 rounded-[4px] flex-shrink-0 border" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
           <div className="flex flex-col min-w-0">
             <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{getPlayerName(players, game.whiteId)}</span>
-            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>{getPlayerRating(players, game.whiteId)}</span>
+            <span className="text-xs font-mono" style={{ color: T.textDim }}>{getPlayerRating(players, game.whiteId)}</span>
           </div>
         </div>
         <div className="flex-shrink-0 flex items-center justify-center w-8">
-          {isPending ? <span className="text-[10px] font-bold" style={{ color: T.textDim }}>vs</span> : <span className="text-xs font-bold" style={{ color: T.green }}>{resultLabel(game.result)}</span>}
+          {isPending ? <span className="text-xs font-bold" style={{ color: T.textDim }}>vs</span> : <span className="text-sm font-bold" style={{ color: T.green }}>{resultLabel(game.result)}</span>}
         </div>
         <div className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2.5 py-2 justify-end" style={{ background: blackWon ? T.greenSoft : "transparent", border: `1px solid ${blackWon ? T.greenBorder : "transparent"}` }}>
           <div className="flex flex-col min-w-0 items-end">
             <span className="text-sm font-semibold truncate text-right" style={{ color: isBye ? T.textDim : T.text }}>{getPlayerName(players, game.blackId)}</span>
-            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>{isBye ? "" : getPlayerRating(players, game.blackId)}</span>
+            <span className="text-xs font-mono" style={{ color: T.textDim }}>{isBye ? "" : getPlayerRating(players, game.blackId)}</span>
           </div>
           <span className="w-4 h-4 rounded-[4px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
         </div>
@@ -380,21 +380,21 @@ function GameRow({
           <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
             <button type="button" aria-pressed={whiteSelected} aria-label={`${whiteName} wins${whiteSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("1-0")}
               className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{ minHeight: "44px", paddingTop: "10px", paddingBottom: "10px", background: whiteSelected ? T.green : T.greenBg, color: whiteSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${whiteSelected ? T.green : T.greenBorder}`, transform: whiteSelected ? "scale(1.03)" : undefined, boxShadow: whiteSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none" }}>
-              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{whiteName}</span>
-              <span className="text-[9px] opacity-70 font-semibold">{whiteSelected ? "click to undo" : "wins"}</span>
+              style={{ minHeight: "48px", paddingTop: "12px", paddingBottom: "12px", background: whiteSelected ? T.green : T.greenBg, color: whiteSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${whiteSelected ? T.green : T.greenBorder}`, transform: whiteSelected ? "scale(1.03)" : undefined, boxShadow: whiteSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none", touchAction: "manipulation" }}>
+              <span className="text-xs font-extrabold truncate max-w-full px-1">{whiteName}</span>
+              <span className="text-[11px] opacity-70 font-semibold">{whiteSelected ? "click to undo" : "wins"}</span>
             </button>
             <button type="button" aria-pressed={drawSelected} aria-label={`Draw${drawSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("½-½")}
               className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{ minHeight: "44px", paddingTop: "10px", paddingBottom: "10px", background: drawSelected ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb") : (isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6"), color: drawSelected ? T.text : T.textMuted, border: `1.5px solid ${drawSelected ? T.cardBorder : T.cardBorder}`, transform: drawSelected ? "scale(1.03)" : undefined, boxShadow: drawSelected ? `0 4px 10px rgba(0,0,0,0.15)` : "none" }}>
-              <span className="text-[11px] font-extrabold">Draw</span>
-              <span className="text-[9px] opacity-70 font-semibold">{drawSelected ? "click to undo" : "½–½"}</span>
+              style={{ minHeight: "48px", paddingTop: "12px", paddingBottom: "12px", background: drawSelected ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb") : (isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6"), color: drawSelected ? T.text : T.textMuted, border: `1.5px solid ${drawSelected ? T.cardBorder : T.cardBorder}`, transform: drawSelected ? "scale(1.03)" : undefined, boxShadow: drawSelected ? `0 4px 10px rgba(0,0,0,0.15)` : "none", touchAction: "manipulation" }}>
+              <span className="text-xs font-extrabold">Draw</span>
+              <span className="text-[11px] opacity-70 font-semibold">{drawSelected ? "click to undo" : "½–½"}</span>
             </button>
             <button type="button" aria-pressed={blackSelected} aria-label={`${blackName} wins${blackSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("0-1")}
               className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{ minHeight: "44px", paddingTop: "10px", paddingBottom: "10px", background: blackSelected ? T.green : T.greenBg, color: blackSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${blackSelected ? T.green : T.greenBorder}`, transform: blackSelected ? "scale(1.03)" : undefined, boxShadow: blackSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none" }}>
-              <span className="text-[11px] font-extrabold truncate max-w-full px-1">{blackName}</span>
-              <span className="text-[9px] opacity-70 font-semibold">{blackSelected ? "click to undo" : "wins"}</span>
+              style={{ minHeight: "48px", paddingTop: "12px", paddingBottom: "12px", background: blackSelected ? T.green : T.greenBg, color: blackSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${blackSelected ? T.green : T.greenBorder}`, transform: blackSelected ? "scale(1.03)" : undefined, boxShadow: blackSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none", touchAction: "manipulation" }}>
+              <span className="text-xs font-extrabold truncate max-w-full px-1">{blackName}</span>
+              <span className="text-[11px] opacity-70 font-semibold">{blackSelected ? "click to undo" : "wins"}</span>
             </button>
           </div>
         );
@@ -411,7 +411,7 @@ function StandingsView({ section, standings, players, isDark, T }: {
   if (standings.length === 0) return <div className="py-6 text-center"><p className="text-xs" style={{ color: T.textDim }}>No standings data yet.</p></div>;
   return (
     <div className="space-y-1">
-      <div className="grid grid-cols-[24px_1fr_44px_32px_32px_32px_44px] gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider" style={{ color: T.textDim, background: isDark ? "oklch(0.13 0.02 145)" : "#f8fafc" }}>
+      <div className="grid grid-cols-[24px_1fr_44px_32px_32px_32px_44px] gap-1 px-2 py-2 rounded-lg text-xs font-bold uppercase tracking-wider" style={{ color: T.textDim, background: isDark ? "oklch(0.13 0.02 145)" : "#f8fafc" }}>
         <span>#</span><span>Player</span><span className="text-center">Pts</span><span className="text-center">W</span><span className="text-center">D</span><span className="text-center">L</span><span className="text-center">SB</span>
       </div>
       {standings.map((s, idx) => {
@@ -421,14 +421,14 @@ function StandingsView({ section, standings, players, isDark, T }: {
             <span className="text-xs font-bold" style={{ color: isWinner ? T.gold : T.textDim }}>{s.finalRank}</span>
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-sm font-semibold truncate" style={{ color: T.text }}>{getPlayerName(players, s.playerId)}</span>
-              <span className="text-[10px] font-mono flex-shrink-0" style={{ color: T.textDim }}>{getPlayerRating(players, s.playerId)}</span>
+              <span className="text-xs font-mono flex-shrink-0" style={{ color: T.textDim }}>{getPlayerRating(players, s.playerId)}</span>
               {isWinner && <Trophy size={10} style={{ color: T.gold }} className="flex-shrink-0" />}
             </div>
             <span className="text-center text-sm font-bold" style={{ color: T.green }}>{s.score % 1 === 0 ? s.score : s.score.toFixed(1)}</span>
             <span className="text-center text-xs" style={{ color: T.text }}>{s.wins}</span>
             <span className="text-center text-xs" style={{ color: T.textMuted }}>{s.draws}</span>
             <span className="text-center text-xs" style={{ color: T.textMuted }}>{s.losses}</span>
-            <span className="text-center text-[10px] font-mono" style={{ color: T.textMuted }}>{s.sonnebornBerger.toFixed(2)}</span>
+            <span className="text-center text-xs font-mono" style={{ color: T.textMuted }}>{s.sonnebornBerger.toFixed(2)}</span>
           </div>
         );
       })}
@@ -607,8 +607,8 @@ export default function QuadsDirectorPanel({
     cardBorder: isDark ? "oklch(0.26 0.04 145)" : "#e2e8f0",
     cardHover: isDark ? "oklch(0.18 0.04 145)" : "#f8fafc",
     text: isDark ? "oklch(0.92 0.02 145)" : "#1a1a1a",
-    textMuted: isDark ? "oklch(0.60 0.03 145)" : "#6b7280",
-    textDim: isDark ? "oklch(0.45 0.02 145)" : "#9ca3af",
+    textMuted: isDark ? "oklch(0.72 0.03 145)" : "#6b7280",
+    textDim: isDark ? "oklch(0.58 0.02 145)" : "#9ca3af",
     green: "oklch(0.72 0.19 145)",
     greenBg: isDark ? "oklch(0.20 0.06 145)" : "oklch(0.96 0.04 145)",
     greenBorder: isDark ? "oklch(0.32 0.10 145)" : "oklch(0.80 0.12 145)",
@@ -809,12 +809,12 @@ export default function QuadsDirectorPanel({
           {/* Metrics */}
           <div className="flex items-center gap-5 flex-wrap">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.textDim }}>Active Round</p>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: T.textDim }}>Active Round</p>
               <p className="text-2xl font-black tabular-nums" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{currentRound}<span className="text-sm font-semibold ml-1" style={{ color: T.textDim }}>/ {totalRounds}</span></p>
             </div>
             <div className="w-px h-10 self-center" style={{ background: T.cardBorder }} />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.textDim }}>Results Entered</p>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: T.textDim }}>Results Entered</p>
               <p className="text-xl font-black tabular-nums" style={{ color: currentRoundComplete ? T.green : T.text, fontFamily: "'Clash Display', sans-serif" }}>
                 {currentRoundCompleted}<span className="text-sm font-semibold ml-0.5" style={{ color: T.textDim }}>/ {currentRoundTotal}</span>
               </p>
@@ -841,13 +841,13 @@ export default function QuadsDirectorPanel({
                   onClick={onAdvanceRound}
                   disabled={!currentRoundComplete}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{ background: currentRoundComplete ? T.green : T.greenBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${T.greenBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none" }}
+                  style={{ background: currentRoundComplete ? T.green : T.greenBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${T.greenBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none", touchAction: "manipulation", minHeight: "44px" }}
                 >
                   <ArrowRight size={16} />
                   Advance to Round {currentRound + 1}
                 </button>
                 {!currentRoundComplete && (
-                  <p className="text-[10px] text-right" style={{ color: T.textDim }}>
+                  <p className="text-xs text-right" style={{ color: T.textDim }}>
                     {currentRoundTotal - currentRoundCompleted} game{currentRoundTotal - currentRoundCompleted !== 1 ? "s" : ""} remaining
                   </p>
                 )}
@@ -859,13 +859,13 @@ export default function QuadsDirectorPanel({
                   onClick={onCompleteTournament}
                   disabled={!currentRoundComplete}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{ background: currentRoundComplete ? T.gold : T.goldBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.gold, border: `1.5px solid ${T.goldBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.75 0.15 85 / 0.35)` : "none" }}
+                  style={{ background: currentRoundComplete ? T.gold : T.goldBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.gold, border: `1.5px solid ${T.goldBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.75 0.15 85 / 0.35)` : "none", touchAction: "manipulation", minHeight: "44px" }}
                 >
                   <Flag size={16} />
                   Finalize Tournament
                 </button>
                 {!currentRoundComplete && (
-                  <p className="text-[10px] text-right" style={{ color: T.textDim }}>
+                  <p className="text-xs text-right" style={{ color: T.textDim }}>
                     {currentRoundTotal - currentRoundCompleted} game{currentRoundTotal - currentRoundCompleted !== 1 ? "s" : ""} remaining in Round {currentRound}
                   </p>
                 )}
@@ -900,7 +900,7 @@ export default function QuadsDirectorPanel({
               aria-label={`Select ${section.name} workspace`}
               onClick={() => setSelectedSectionId(section.id)}
               className="rounded-2xl border p-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99] relative"
-              style={{ background: T.card, borderColor: cardBorder, boxShadow: cardGlow }}
+              style={{ background: T.card, borderColor: cardBorder, boxShadow: cardGlow, touchAction: "manipulation" }}
             >
               {/* Attention pulse */}
               {needsAttention && !isComplete && (
@@ -916,7 +916,7 @@ export default function QuadsDirectorPanel({
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div>
                   <p className="text-sm font-black tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{section.name}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(section)} · {section.playerIds.length} players</p>
+                  <p className="text-xs mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(section)} · {section.playerIds.length} players</p>
                 </div>
                 <ProgressRing completed={status.completed} total={status.total} size={36} isDark={isDark} />
               </div>
@@ -924,15 +924,15 @@ export default function QuadsDirectorPanel({
               {/* Leader */}
               {leader && !isComplete && (
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[10px] font-semibold" style={{ color: T.textDim }}>Leader:</span>
-                  <span className="text-[11px] font-bold truncate" style={{ color: T.green }}>{getPlayerName(players, leader.playerId).split(" ")[0]}</span>
-                  <span className="text-[10px] font-mono" style={{ color: T.textDim }}>{leader.score % 1 === 0 ? leader.score : leader.score.toFixed(1)}pts</span>
+                  <span className="text-xs font-semibold" style={{ color: T.textDim }}>Leader:</span>
+                  <span className="text-xs font-bold truncate" style={{ color: T.green }}>{getPlayerName(players, leader.playerId).split(" ")[0]}</span>
+                  <span className="text-xs font-mono" style={{ color: T.textDim }}>{leader.score % 1 === 0 ? leader.score : leader.score.toFixed(1)}pts</span>
                 </div>
               )}
               {isComplete && winners.length > 0 && (
                 <div className="flex items-center gap-1.5 mb-2">
                   <Trophy size={10} style={{ color: T.gold }} />
-                  <span className="text-[11px] font-bold" style={{ color: T.gold }}>
+                  <span className="text-xs font-bold" style={{ color: T.gold }}>
                     {winners.length > 1 ? `Co-Champs: ${winners.map(w => getPlayerName(players, w.playerId).split(" ")[0]).join(" & ")}` : getPlayerName(players, winners[0].playerId).split(" ")[0]}
                   </span>
                 </div>
@@ -940,11 +940,11 @@ export default function QuadsDirectorPanel({
 
               {/* Current round progress */}
               <div className="flex items-center justify-between">
-                <span className="text-[10px]" style={{ color: T.textDim }}>
+                <span className="text-xs" style={{ color: T.textDim }}>
                   {status.currentCompleted} of {status.currentTotal} Round {currentRound} games complete
                 </span>
                 {isSelected && (
-                  <span className="text-[10px] font-bold" style={{ color: T.green }}>Active ▾</span>
+                  <span className="text-xs font-bold" style={{ color: T.green }}>Active ▾</span>
                 )}
               </div>
             </button>
@@ -983,17 +983,17 @@ export default function QuadsDirectorPanel({
                       className="text-sm font-extrabold tracking-tight rounded-lg px-2 py-0.5 outline-none w-36"
                       style={{ color: T.text, fontFamily: "'Clash Display', sans-serif", background: T.greenBg, border: `1.5px solid ${T.greenBorder}` }}
                     />
-                    <button onClick={cancelRename} className="w-5 h-5 flex items-center justify-center rounded-full" style={{ color: T.textMuted }}><X size={12} /></button>
+                      <button onClick={cancelRename} className="w-9 h-9 flex items-center justify-center rounded-full" style={{ color: T.textMuted, touchAction: "manipulation" }}><X size={14} /></button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{selectedSection.name}</span>
                     {onRenameSection && (
-                      <button onClick={() => startRename(selectedSection)} className="w-5 h-5 flex items-center justify-center rounded-md transition-opacity opacity-50 hover:opacity-100" style={{ color: T.textMuted }} title="Rename section"><Pencil size={10} /></button>
+                      <button onClick={() => startRename(selectedSection)} className="w-9 h-9 flex items-center justify-center rounded-md transition-opacity opacity-50 hover:opacity-100" style={{ color: T.textMuted, touchAction: "manipulation" }} title="Rename section"><Pencil size={12} /></button>
                     )}
                   </div>
                 )}
-                <p className="text-[11px] mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(selectedSection)} · {selectedSection.playerIds.length} players</p>
+                <p className="text-xs mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(selectedSection)} · {selectedSection.playerIds.length} players</p>
               </div>
             </div>
 
@@ -1010,7 +1010,7 @@ export default function QuadsDirectorPanel({
                     <button key={roundNum} type="button" role="tab" aria-selected={isActive}
                       aria-label={`Round ${roundNum}${roundComplete ? " — complete" : isCurrent ? " — in progress" : ""}`}
                       onClick={() => setSectionRoundTab((prev) => ({ ...prev, [selectedSection.id]: roundNum }))}
-                      className="relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
+                      className="relative px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
                       style={{ background: isActive ? T.greenBg : "transparent", color: isActive ? T.green : T.textMuted, border: `1px solid ${isActive ? T.greenBorder : "transparent"}` }}
                     >
                       R{roundNum}
@@ -1021,15 +1021,15 @@ export default function QuadsDirectorPanel({
                 })}
               </div>
               <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? "oklch(0.12 0.02 145)" : "#f1f5f9" }}>
-                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "pairings"} aria-label="Show boards view"
+                  <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "pairings"} aria-label="Show boards view"
                   onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "pairings" }))}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
                   style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
                   <Swords size={10} />Boards
                 </button>
-                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "standings"} aria-label="Show standings table"
+                  <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "standings"} aria-label="Show standings table"
                   onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "standings" }))}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
                   style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
                   <BarChart3 size={10} />Table
                 </button>
@@ -1092,7 +1092,7 @@ export default function QuadsDirectorPanel({
           aria-label={`Exception tray — ${exceptionCount} item${exceptionCount !== 1 ? "s" : ""}`}
           onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
           className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:opacity-80"
-          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent" }}
+          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent", touchAction: "manipulation", minHeight: "44px" }}
         >
           <div className="flex items-center gap-2">
             {exceptionCount > 0 ? <AlertTriangle size={14} style={{ color: T.amber }} /> : <Check size={14} style={{ color: T.green }} />}
@@ -1100,7 +1100,7 @@ export default function QuadsDirectorPanel({
               {exceptionCount > 0 ? `${exceptionCount} pending result${exceptionCount !== 1 ? "s" : ""} in Round ${currentRound}` : "No exceptions — tournament running smoothly"}
             </span>
             {exceptionCount > 0 && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: T.amber, color: isDark ? "#0a1a0f" : "#fff" }}>{exceptionCount}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: T.amber, color: isDark ? "#0a1a0f" : "#fff" }}>{exceptionCount}</span>
             )}
           </div>
           {exceptionTrayOpen ? <ChevronUp size={14} style={{ color: T.textDim }} /> : <ChevronDown size={14} style={{ color: T.textDim }} />}
@@ -1117,13 +1117,13 @@ export default function QuadsDirectorPanel({
                     <span className="text-xs font-semibold truncate" style={{ color: T.text }}>
                       {getPlayerName(players, game.whiteId)} vs {getPlayerName(players, game.blackId)}
                     </span>
-                    <span className="text-[10px] flex-shrink-0" style={{ color: T.textDim }}>· {sectionName}</span>
+                    <span className="text-xs flex-shrink-0" style={{ color: T.textDim }}>· {sectionName}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); setSelectedGameId(game.id); }}
-                    className="text-[10px] font-semibold px-2 py-1 rounded-lg flex-shrink-0 transition-colors"
-                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}
+                    className="text-xs font-semibold px-3 py-2 rounded-lg flex-shrink-0 transition-colors"
+                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}`, touchAction: "manipulation", minHeight: "36px" }}
                   >
                     Go to section
                   </button>
