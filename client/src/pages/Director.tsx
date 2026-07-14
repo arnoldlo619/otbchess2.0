@@ -30,6 +30,7 @@ import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { suggestElimCutoff, computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession, updateTournamentConfig } from "@/lib/tournamentRegistry";
+import { encodeMetaParam } from "@/lib/base64";
 import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
@@ -2228,10 +2229,8 @@ export default function Director() {
         ...(tournamentConfig.clubId ? { clubId: tournamentConfig.clubId } : {}),
         ...(tournamentConfig.clubName ? { clubName: tournamentConfig.clubName } : {}),
       };
-      // Use encodeURIComponent to make the base64 URL-safe.
-      // Standard btoa can produce +, /, = which URLSearchParams decodes incorrectly
-      // on some Android browsers (+ is decoded as space, corrupting the JSON).
-      return `${joinUrlBase}?t=${encodeURIComponent(btoa(JSON.stringify(meta)))}`;
+      // Unicode-safe base64 encoding — handles em dashes, CJK, emoji, etc.
+      return `${joinUrlBase}?t=${encodeMetaParam(meta)}`;
     } catch {
       return joinUrlBase;
     }
@@ -2650,6 +2649,7 @@ export default function Director() {
           : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
           : state.format === "roundrobin" ? "Round Robin"
           : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
+          : state.format === "quads" ? `Quads · ${state.totalRounds}R`
           : "Elimination";
         recordTournamentCompleted(
           tournamentConfig.clubId,
@@ -2713,6 +2713,7 @@ export default function Director() {
         }));
         const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
           : state.format === "roundrobin" ? "Round Robin"
+          : state.format === "quads" ? `Quads · ${state.totalRounds}R`
           : `Double Swiss · ${state.totalRounds}R`;
         recordTournamentCompleted(
           tournamentConfig.clubId,
@@ -5011,7 +5012,7 @@ export default function Director() {
                       </>
                     )}
                     {/* Late Registration button — only during Round 1 */}
-                    {!isRegistration && state.currentRound === 1 && !allResultsIn && (
+                    {!isRegistration && state.currentRound === 1 && !allResultsIn && state.format !== "quads" && (
                       <button
                         onClick={() => setShowAddPlayer(true)}
                         className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all active:scale-95 ${
@@ -5979,7 +5980,7 @@ export default function Director() {
                   <div className="divide-y">
                     {[
                       { label: "Name", value: state.tournamentName },
-                      { label: "Format", value: `${state.format === "doubleswiss" ? "Double Swiss" : state.format === "roundrobin" ? "Round Robin" : state.format === "elimination" ? "Elimination" : "Swiss"} · ${state.totalRounds} rounds` },
+                      { label: "Format", value: `${state.format === "doubleswiss" ? "Double Swiss" : state.format === "roundrobin" ? "Round Robin" : state.format === "elimination" ? "Elimination" : state.format === "quads" ? "Quads" : "Swiss"} · ${state.totalRounds} rounds` },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between px-5 py-3">
                         <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>{label}</span>
@@ -6114,6 +6115,7 @@ export default function Director() {
                                 : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
                                 : state.format === "roundrobin" ? "Round Robin"
                                 : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
+                                : state.format === "quads" ? `Quads · ${state.totalRounds}R`
                                 : "Elimination";
                               recordTournamentCompleted(
                                 tournamentConfig.clubId,

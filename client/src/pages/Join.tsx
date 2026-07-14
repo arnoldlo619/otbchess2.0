@@ -84,6 +84,7 @@ import type { ChessComProfile } from "@/hooks/useChessComProfile";
 import type { LichessProfile } from "@/hooks/useLichessProfile";
 
 import { authFetch } from "@/lib/apiFetch";
+import { decodeMetaParam, encodeMetaParam } from "@/lib/base64";
 /** Unified profile type covering both chess.com and Lichess */
 type UnifiedProfile = (ChessComProfile & { platform: "chesscom" }) | LichessProfile;
 type Platform = "chesscom" | "lichess";
@@ -311,32 +312,17 @@ function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
     const params = new URLSearchParams(search);
     const t = params.get("t");
     if (!t) return null;
-    // The ?t= value may be URL-encoded (new format) or raw base64 (old format).
-    // URLSearchParams.get() already decodes %xx sequences, but + is decoded as
-    // a space in application/x-www-form-urlencoded — which corrupts raw base64.
-    // We try the value as-is first; if atob fails, we try decodeURIComponent.
-    let b64 = t;
-    let json: string;
-    try {
-      json = atob(b64);
-    } catch {
-      // Fallback: the value may still have %xx sequences (e.g. from some QR scanners)
-      try {
-        b64 = decodeURIComponent(t);
-        json = atob(b64);
-      } catch {
-        return null;
-      }
-    }
-    return JSON.parse(json) as EmbeddedTournamentMeta;
+    // Unicode-safe decode with backward compatibility for legacy Latin-1 links
+    const parsed = decodeMetaParam(t);
+    return parsed as EmbeddedTournamentMeta | null;
   } catch {
     return null;
   }
 }
 
 export function encodeEmbeddedMeta(meta: EmbeddedTournamentMeta): string {
-  // Use encodeURIComponent so the base64 is URL-safe in all browsers.
-  return encodeURIComponent(btoa(JSON.stringify(meta)));
+  // Unicode-safe base64 encoding
+  return encodeMetaParam(meta as unknown as Record<string, unknown>);
 }
 
 // --- Main Page ----------------------------------------------------------------

@@ -31,6 +31,7 @@ import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
 import {recommendedRounds, roundsHint} from "@/lib/recommendedRounds";
 import { registerTournament, makeSlug, generateDirectorCode, grantDirectorSession } from "@/lib/tournamentRegistry";
+import { encodeMetaParam } from "@/lib/base64";
 import {
   X,
   ChevronRight,
@@ -3160,10 +3161,8 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     timePreset: data.timePreset,
     inviteCode: data.inviteCode,
   };
-  // Use encodeURIComponent to make the base64 URL-safe.
-  // btoa can produce +, /, = which URLSearchParams decodes incorrectly on Android
-  // (+ is treated as a space, corrupting the JSON and breaking the join flow).
-  const tParam = encodeURIComponent(btoa(JSON.stringify(embeddedMeta)));
+  // Unicode-safe base64 encoding — handles em dashes, CJK, emoji, chess symbols, etc.
+  const tParam = encodeMetaParam(embeddedMeta);
   const inviteUrl = `${window.location.origin}/join/${encodeURIComponent(activeSlug)}?t=${tParam}`;
 
   const copyLink = () => {

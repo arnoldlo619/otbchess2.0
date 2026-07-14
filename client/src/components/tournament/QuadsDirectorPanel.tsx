@@ -25,6 +25,7 @@ import {
   ArrowRight,
   Flag,
   Activity,
+  Grid3X3,
 } from "lucide-react";
 import type { Player, Game, Result, Round } from "../../lib/tournamentData";
 import type { QuadSection } from "../../lib/quads";
@@ -436,6 +437,102 @@ function StandingsView({ section, standings, players, isDark, T }: {
   );
 }
 
+// ─── CrossTableView ──────────────────────────────────────────────────────────
+
+function CrossTableView({ section, games, players, standings, isDark, T }: {
+  section: QuadSection; games: Game[]; players: Player[]; standings: ReturnType<typeof calculateQuadStandings>; isDark: boolean; T: Record<string, string>;
+}) {
+  // Order players by standings rank
+  const orderedPlayers = standings.length > 0
+    ? standings.map((s) => players.find((p) => p.id === s.playerId)!).filter(Boolean)
+    : section.playerIds.map((id) => players.find((p) => p.id === id)!).filter(Boolean);
+
+  // Build result lookup: resultMap[rowId][colId] = result from row player's perspective
+  const resultMap = new Map<string, Map<string, string>>();
+  for (const game of games) {
+    if (game.result === "*") continue;
+    if (!resultMap.has(game.whiteId)) resultMap.set(game.whiteId, new Map());
+    if (!resultMap.has(game.blackId)) resultMap.set(game.blackId, new Map());
+    if (game.result === "1-0") {
+      resultMap.get(game.whiteId)!.set(game.blackId, "1");
+      resultMap.get(game.blackId)!.set(game.whiteId, "0");
+    } else if (game.result === "0-1") {
+      resultMap.get(game.whiteId)!.set(game.blackId, "0");
+      resultMap.get(game.blackId)!.set(game.whiteId, "1");
+    } else {
+      resultMap.get(game.whiteId)!.set(game.blackId, "½");
+      resultMap.get(game.blackId)!.set(game.whiteId, "½");
+    }
+  }
+
+  const getResult = (rowId: string, colId: string): string => {
+    if (rowId === colId) return "×";
+    return resultMap.get(rowId)?.get(colId) ?? "•";
+  };
+
+  const getCellColor = (val: string): string => {
+    if (val === "1") return T.green;
+    if (val === "0") return isDark ? "oklch(0.70 0.18 25)" : "oklch(0.50 0.18 25)";
+    if (val === "½") return T.textMuted;
+    return T.textDim;
+  };
+
+  const getCellBg = (val: string): string => {
+    if (val === "1") return isDark ? "oklch(0.20 0.06 145 / 0.4)" : "oklch(0.95 0.04 145)";
+    if (val === "0") return isDark ? "oklch(0.18 0.05 25 / 0.3)" : "oklch(0.97 0.03 25)";
+    if (val === "×") return isDark ? "oklch(0.12 0.01 145)" : "oklch(0.92 0.01 145)";
+    return "transparent";
+  };
+
+  const getScore = (playerId: string): string => {
+    const s = standings.find((st) => st.playerId === playerId);
+    if (!s) return "-";
+    return s.score % 1 === 0 ? String(s.score) : s.score.toFixed(1);
+  };
+
+  if (orderedPlayers.length === 0) return <div className="py-6 text-center"><p className="text-xs" style={{ color: T.textDim }}>No data yet.</p></div>;
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-xs" style={{ minWidth: "320px" }}>
+        <thead>
+          <tr>
+            <th className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>#</th>
+            <th className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>Player</th>
+            {orderedPlayers.map((p, i) => (
+              <th key={p.id} className="text-center px-1 py-2.5 font-bold w-9" style={{ color: T.textDim }}>{i + 1}</th>
+            ))}
+            <th className="text-center px-2 py-2.5 font-bold" style={{ color: T.green }}>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orderedPlayers.map((rowPlayer, rowIdx) => {
+            const isWinner = standings.length > 0 && standings[0]?.playerId === rowPlayer.id;
+            return (
+              <tr key={rowPlayer.id} className="transition-colors" style={{ background: isWinner ? T.goldBg : (rowIdx % 2 === 0 ? "transparent" : T.rowBg) }}>
+                <td className="px-2 py-2.5 font-bold" style={{ color: isWinner ? T.gold : T.textDim }}>{rowIdx + 1}</td>
+                <td className="px-2 py-2.5 font-semibold whitespace-nowrap" style={{ color: T.text }}>
+                  <span className="text-sm">{rowPlayer.name}</span>
+                  <span className="ml-1.5 text-xs font-mono opacity-50">{rowPlayer.elo}</span>
+                </td>
+                {orderedPlayers.map((colPlayer) => {
+                  const val = getResult(rowPlayer.id, colPlayer.id);
+                  return (
+                    <td key={colPlayer.id} className="text-center px-1 py-2.5 font-bold text-sm" style={{ color: getCellColor(val), background: getCellBg(val) }}>
+                      {val}
+                    </td>
+                  );
+                })}
+                <td className="text-center px-2 py-2.5 font-black text-sm" style={{ color: isWinner ? T.gold : T.green }}>{getScore(rowPlayer.id)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ─── RoundPairings ────────────────────────────────────────────────────────────
 
 function RoundPairings({ section, games, players, roundNum, currentRound, onEnterResult, onGameClick, isDark, T }: {
@@ -479,8 +576,8 @@ export default function QuadsDirectorPanel({
     sections.forEach((s) => { init[s.id] = currentRound; });
     return init;
   });
-  const [sectionView, setSectionView] = useState<Record<string, "pairings" | "standings">>(() => {
-    const init: Record<string, "pairings" | "standings"> = {};
+  const [sectionView, setSectionView] = useState<Record<string, "pairings" | "standings" | "crosstable">>(() => {
+    const init: Record<string, "pairings" | "standings" | "crosstable"> = {};
     sections.forEach((s) => { init[s.id] = "pairings"; });
     return init;
   });
@@ -691,9 +788,9 @@ export default function QuadsDirectorPanel({
                   <div className="flex items-center gap-2">
                     <Trophy size={13} style={{ color: T.gold }} />
                     <span className="text-sm font-black" style={{ color: T.gold, fontFamily: "'Clash Display', sans-serif" }}>{section.name}</span>
-                    {isCo && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: T.goldBg, color: T.gold, border: `1px solid ${T.goldBorder}` }}>Co-Champs</span>}
+                    {isCo && <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{ background: T.goldBg, color: T.gold, border: `1px solid ${T.goldBorder}` }}>Co-Champs</span>}
                   </div>
-                  <span className="text-[11px]" style={{ color: T.textDim }}>{formatRatingRange(section)}</span>
+                  <span className="text-xs" style={{ color: T.textDim }}>{formatRatingRange(section)}</span>
                 </div>
 
                 {/* Podium */}
@@ -706,7 +803,7 @@ export default function QuadsDirectorPanel({
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black" style={{ background: medal.bg, border: `1px solid ${medal.border}`, color: medal.color, fontFamily: "'Clash Display', sans-serif" }}>{idx + 1}</div>
                         <div className="flex-1 min-w-0">
                           <span className={`${idx === 0 ? "text-sm" : "text-xs"} font-black truncate block`} style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{row.player.name}</span>
-                          <span className="text-[10px]" style={{ color: T.textDim }}>{row.wins}W {row.draws}D {row.losses}L · Buch. {row.buchholz.toFixed(1)}</span>
+                          <span className="text-xs" style={{ color: T.textDim }}>{row.wins}W {row.draws}D {row.losses}L · Buch. {row.buchholz.toFixed(1)}</span>
                         </div>
                         <span className={`${idx === 0 ? "text-2xl" : "text-lg"} font-black tabular-nums flex-shrink-0`} style={{ color: medal.color, fontFamily: "'Clash Display', sans-serif" }}>{pts}</span>
                       </div>
@@ -1033,6 +1130,12 @@ export default function QuadsDirectorPanel({
                   style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
                   <BarChart3 size={10} />Table
                 </button>
+                  <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "crosstable"} aria-label="Show cross-table matrix"
+                  onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "crosstable" }))}
+                  className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
+                  style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
+                  <Grid3X3 size={10} />Matrix
+                </button>
               </div>
             </div>
           </div>
@@ -1068,6 +1171,15 @@ export default function QuadsDirectorPanel({
                 currentRound={currentRound}
                 onEnterResult={onEnterResult}
                 onGameClick={(gameId) => setSelectedGameId(gameId)}
+                isDark={isDark}
+                T={T}
+              />
+            ) : (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? (
+              <CrossTableView
+                section={selectedSection}
+                games={gamesBySection.get(selectedSection.id) ?? []}
+                players={players}
+                standings={standingsBySection.get(selectedSection.id) ?? []}
                 isDark={isDark}
                 T={T}
               />

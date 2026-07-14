@@ -6957,3 +6957,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add touch-action: manipulation to all primary interactive buttons
 - [x] Increase inline result button minHeight from 44px to 48px with 12px padding
 - [x] Add minHeight: 44px to Advance Round and Finalize Tournament buttons
+
+## Quads Production Hardening (Phase 2 — Critical Correctness)
+- [x] Unicode-safe base64 encoding — replace btoa/atob with encodeMetaParam/decodeMetaParam across TournamentWizard, Director, Join
+- [x] Swiss format label leakage — add "quads" case to formatLabel in Director.tsx and PublicTournament.tsx
+- [x] Late registration blocked for quads format in directorState.ts
+- [x] Late Registration button hidden in Director.tsx for quads format
+- [x] Minimum 4 players required to start quads tournament (canStart validation)
+- [x] Cross-table view added to QuadsDirectorPanel (Matrix tab with player-vs-player results grid)
+- [x] Completion view text sizes fixed (text-[10px]/text-[11px] → text-xs)

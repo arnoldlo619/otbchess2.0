@@ -358,6 +358,11 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         result = { locked: true };
         return prev;
       }
+      // Quads: late registration is not supported — all sections/pairings are pre-generated
+      if (prev.format === "quads") {
+        result = { locked: true };
+        return prev;
+      }
       // Prevent duplicates
       if (prev.players.some((p) => p.id === player.id || (p.username && p.username === player.username))) {
         result = { duplicate: true };
@@ -973,7 +978,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const canGenerateNext = allResultsIn && state.status !== "registration" && !isSwissElimCutoff && !isSwissElimSwissPhaseComplete && !isElimBracketComplete
     && (state.format === "swiss_elim" ? state.elimPhase === "elimination" || state.currentRound < (state.swissRounds ?? state.totalRounds) : state.currentRound < state.totalRounds);
   const isRegistration = state.status === "registration";
-  const canStart = isRegistration && state.players.length >= 2;
+  const canStart = isRegistration && state.players.length >= (state.format === "quads" ? 4 : 2);
 
   // Live standings with Buchholz tiebreaks from the Swiss engine
   const liveStandings = computeStandings(state.players, state.rounds);

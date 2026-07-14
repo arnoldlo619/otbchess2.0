@@ -101,6 +101,7 @@ function formatLabel(f: string): string {
   if (f === "doubleswiss") return "Double Swiss";
   if (f === "roundrobin") return "Round Robin";
   if (f === "elimination") return "Elimination";
+  if (f === "quads") return "Quads";
   return f.charAt(0).toUpperCase() + f.slice(1);
 }
 
