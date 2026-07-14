@@ -2649,7 +2649,7 @@ export default function Director() {
           : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
           : state.format === "roundrobin" ? "Round Robin"
           : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
-          : state.format === "quads" ? `Quads · ${state.totalRounds}R`
+          : state.format === "quads" ? `Quads · ${state.quadSections?.length ?? 1} Section${(state.quadSections?.length ?? 1) > 1 ? "s" : ""} · ${state.players.length} Players · ${state.totalRounds}R`
           : "Elimination";
         recordTournamentCompleted(
           tournamentConfig.clubId,
@@ -2713,7 +2713,7 @@ export default function Director() {
         }));
         const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
           : state.format === "roundrobin" ? "Round Robin"
-          : state.format === "quads" ? `Quads · ${state.totalRounds}R`
+          : state.format === "quads" ? `Quads · ${state.quadSections?.length ?? 1} Section${(state.quadSections?.length ?? 1) > 1 ? "s" : ""} · ${state.players.length} Players · ${state.totalRounds}R`
           : `Double Swiss · ${state.totalRounds}R`;
         recordTournamentCompleted(
           tournamentConfig.clubId,
@@ -3084,7 +3084,8 @@ export default function Director() {
                     isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
                   }`}>
                     <Trophy className="w-3 h-3" />
-                    {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"}
+                    {state.format === "doubleswiss" ? "Double Swiss" : state.format === "quads" ? "Quads" : state.format === "roundrobin" ? "Round Robin" : state.format === "swiss_elim" ? "Swiss+Elim" : "Swiss"}
+                    {state.format === "quads" && state.quadSections ? ` · ${state.quadSections.length} Section${state.quadSections.length > 1 ? "s" : ""}` : ""}
                     {tournamentConfig?.timePreset ? ` · ${tournamentConfig.timePreset}` : ""}
                   </span>
                   {/* Round indicator */}
@@ -6339,10 +6340,32 @@ export default function Director() {
             <p className={`text-sm text-center mb-5 ${
               isDark ? "text-white/50" : "text-[#436850]"
             }`}>
-              This will generate Round 1 pairings for{" "}
-              <span className="font-semibold">{state.players.length} players</span>.
-              Players can no longer join after the tournament starts.
+              {state.format === "quads" ? (
+                <>
+                  This will create {Math.floor(state.players.length / 4)} quad section{Math.floor(state.players.length / 4) > 1 ? "s" : ""} with{" "}
+                  <span className="font-semibold">{state.players.length} players</span> and generate all 3 rounds.
+                  Players cannot join after the tournament starts.
+                </>
+              ) : (
+                <>
+                  This will generate Round 1 pairings for{" "}
+                  <span className="font-semibold">{state.players.length} players</span>.
+                  Players can no longer join after the tournament starts.
+                </>
+              )}
             </p>
+            {/* Quads divisible-by-4 warning */}
+            {state.format === "quads" && state.players.length % 4 !== 0 && (
+              <div className={`rounded-xl px-4 py-3 mb-4 border ${
+                isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200"
+              }`}>
+                <p className={`text-xs font-medium ${
+                  isDark ? "text-amber-300" : "text-amber-700"
+                }`}>
+                  ⚠ Quads requires groups of 4. You have {state.players.length} players ({state.players.length % 4} extra). Add {4 - (state.players.length % 4)} more player{4 - (state.players.length % 4) > 1 ? "s" : ""} or remove {state.players.length % 4} for perfect sections.
+                </p>
+              </div>
+            )}
             {/* Player count summary */}
             <div className={`rounded-xl px-4 py-3 mb-5 flex items-center justify-between ${
               isDark ? "bg-white/05" : "bg-[#FBFADA]/70"

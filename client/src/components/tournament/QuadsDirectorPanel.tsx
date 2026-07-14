@@ -597,13 +597,30 @@ export default function QuadsDirectorPanel({
   const [editingName, setEditingName] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-switch all section round tabs when round advances
+  // Ref for workspace scroll-into-view on round advance
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const prevRoundRef = useRef(currentRound);
+
+  // Auto-switch all section round tabs when round advances + scroll workspace into view
   useEffect(() => {
     setSectionRoundTab((prev) => {
       const updated: Record<string, number> = { ...prev };
       sections.forEach((s) => { updated[s.id] = currentRound; });
       return updated;
     });
+    // Also switch view back to pairings so director sees the new round's boards
+    if (prevRoundRef.current !== currentRound) {
+      setSectionView((prev) => {
+        const updated: Record<string, "pairings" | "standings" | "crosstable"> = { ...prev };
+        sections.forEach((s) => { updated[s.id] = "pairings"; });
+        return updated;
+      });
+      // Scroll workspace into view after a brief delay for DOM update
+      setTimeout(() => {
+        workspaceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      prevRoundRef.current = currentRound;
+    }
   }, [currentRound, sections]);
 
   useEffect(() => {
@@ -1052,6 +1069,7 @@ export default function QuadsDirectorPanel({
       {/* ── D. Selected Quad Workspace ────────────────────────────────────── */}
       {selectedSection && (
         <div
+          ref={workspaceRef}
           className="rounded-2xl border overflow-hidden"
           style={{ background: T.card, borderColor: T.greenBorder, boxShadow: `0 0 0 1px ${T.greenBorder}` }}
         >

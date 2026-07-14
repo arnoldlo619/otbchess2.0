@@ -10,6 +10,9 @@
 import confettiLib from "canvas-confetti";
 
 export function fireTournamentConfetti(): void {
+  // Respect prefers-reduced-motion — skip all animation
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
   // Create an explicit full-screen canvas
   const canvas = document.createElement("canvas");
   canvas.style.cssText = [
