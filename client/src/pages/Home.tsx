@@ -2104,7 +2104,7 @@ export default function Home() {
       )}
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
-      <HowItWorks />
+      <div className="hidden sm:block"><HowItWorks /></div>
       <Features />
       <PlayerDemo />
       <Showcase />
