@@ -224,13 +224,13 @@ function useDesignTokens(isDark: boolean) {
     header:        isDark ? "bg-[#0a1409]/95 border-b border-[#1e2e22]/80"          : "bg-white/95 border-b border-[#ADBC9F]/70",
     input:         isDark ? "bg-[#0a1409] border-[#243028]/70 text-white placeholder:text-white/50 focus:border-[#4a8a5a]/60" : "bg-white border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]",
     textPrimary:   isDark ? "text-white"       : "text-[#12372A]",
-    textSecondary: isDark ? "text-white/55"    : "text-[#436850]",
-    textTertiary:  isDark ? "text-white/30"    : "text-[#436850]",
+    textSecondary: isDark ? "text-white/70"    : "text-[#436850]",
+    textTertiary:  isDark ? "text-white/55"    : "text-[#436850]",
     accent:        "text-[#5B9A6A]",
     accentBg:      isDark ? "bg-[#5B9A6A]/10 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]",
     divider:       isDark ? "border-[#1e2e22]/70" : "border-[#ADBC9F]/70",
     tabActive:     isDark ? "bg-[#162018] text-white border-[#2e4a34]/50"           : "bg-white text-[#12372A] border-[#ADBC9F] shadow-sm",
-    tabInactive:   isDark ? "text-white/35 hover:text-white/60 hover:bg-white/03"   : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50/50",
+    tabInactive:   isDark ? "text-white/55 hover:text-white/80 hover:bg-white/03"   : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50/50",
     rowHover:      isDark ? "hover:bg-[#162018]/50"                                 : "hover:bg-[#FBFADA]/80",
     monoBlock:     isDark ? "bg-[#060e07] text-[#5B9A6A] border border-[#1e2e22]/60" : "bg-[#436850]/04 text-[#436850] border border-[#436850]/10",
   };
@@ -637,7 +637,7 @@ export default function MatchupPrep() {
             {/* Provider selector (V3 only) */}
             {useV3 && (
               <>
-                <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Source</span>
+                <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Source</span>
                 <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
                   {(["chesscom", "lichess"] as const).map((p) => (
                     <button
@@ -648,7 +648,7 @@ export default function MatchupPrep() {
                         const activeUser = reportV3?.opponent.username ?? searchInput.trim();
                         if (activeUser) fetchReport(activeUser, false);
                       }}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                         provider === p
                           ? "bg-[#436850] text-white shadow-sm"
                           : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
@@ -663,7 +663,7 @@ export default function MatchupPrep() {
             )}
 
             {/* Time Control */}
-            <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
+            <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
             <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
               {(["all", "rapid", "blitz"] as const).map((tc) => (
                 <button
@@ -675,7 +675,7 @@ export default function MatchupPrep() {
                     const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
                     if (activeUser) fetchReport(activeUser, false, tc);
                   }}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all capitalize ${
                   tcFilter === tc
                     ? "bg-[#436850] text-white shadow-sm"
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
@@ -690,7 +690,7 @@ export default function MatchupPrep() {
           <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
 
           {/* Game Count */}
-          <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Depth</span>
+          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Depth</span>
           <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
             {(["50", "100"] as const).map((gc) => (
               <button
@@ -701,7 +701,7 @@ export default function MatchupPrep() {
                   const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
                   if (activeUser) fetchReport(activeUser, false, undefined, gc);
                 }}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                   gameCountFilter === gc
                     ? "bg-[#436850] text-white shadow-sm"
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
@@ -716,13 +716,13 @@ export default function MatchupPrep() {
           <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
 
           {/* Color Focus */}
-          <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Color</span>
+          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Color</span>
           <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
             {(["both", "white", "black"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setColorFilter(c)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all capitalize ${
                   colorFilter === c
                     ? "bg-[#436850] text-white shadow-sm"
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
@@ -781,7 +781,7 @@ export default function MatchupPrep() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   {opponentProfile?.title && (
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"}`}>
+                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"}`}>
                       {opponentProfile.title}
                     </span>
                   )}
@@ -791,7 +791,7 @@ export default function MatchupPrep() {
                   {opponentProfile?.countryCode && (
                     <span className="text-sm">{countryCodeToFlag(opponentProfile.countryCode)}</span>
                   )}
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${isDark ? "bg-[#1e2e22] text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
+                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${isDark ? "bg-[#1e2e22] text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
                     {provider === "lichess" ? "Lichess" : "chess.com"}
                   </span>
                 </div>
@@ -803,7 +803,7 @@ export default function MatchupPrep() {
                 </p>
               </div>
               {/* V3 badge */}
-              <span className={`shrink-0 text-[10px] font-black px-2 py-1 rounded-lg ${isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"}`}>
+              <span className={`shrink-0 text-xs font-black px-2 py-1 rounded-lg ${isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"}`}>
                 V3
               </span>
             </div>
@@ -841,7 +841,7 @@ export default function MatchupPrep() {
                   <span className={activeTab === tab.id ? (isDark ? "text-[#5B9A6A]" : "text-[#436850]") : ""}>{tab.icon}</span>
                   <span>{tab.label}</span>
                   {tab.id === "lines" && enrichedLines.length > 0 && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                       activeTab === "lines"
                         ? isDark ? "bg-[#436850]/25 text-[#5B9A6A]" : "bg-[#436850]/10 text-[#436850]"
                         : isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"
@@ -973,7 +973,7 @@ function OpponentHero({
             </div>
           )}
           {opponentProfile?.countryCode && (
-            <div className="absolute bottom-0 right-0 text-[11px] leading-none select-none">
+            <div className="absolute bottom-0 right-0 text-xs leading-none select-none">
               {countryCodeToFlag(opponentProfile.countryCode)}
             </div>
           )}
@@ -986,7 +986,7 @@ function OpponentHero({
               {opp.username}
             </h2>
             {opponentProfile?.title && (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
+              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
                 isDark ? "bg-amber-500/10 border-amber-500/25 text-amber-400" : "bg-amber-50 border-amber-200 text-amber-700"
               }`}>{opponentProfile.title}</span>
             )}
@@ -1035,7 +1035,7 @@ function OpponentHero({
 function RatingChip({ label, value, isDark }: { label: string; value: number; isDark: boolean }) {
   return (
     <div className={`text-center px-2.5 py-1.5 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/70" : "bg-[#FBFADA]/70 border border-[#ADBC9F]"}`}>
-      <div className={`text-[9px] font-semibold uppercase ${isDark ? "text-white/25" : "text-[#436850]"}`}>{label}</div>
+      <div className={`text-xs font-semibold uppercase ${isDark ? "text-white/25" : "text-[#436850]"}`}>{label}</div>
       <div className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>{value}</div>
     </div>
   );
@@ -1044,7 +1044,7 @@ function RatingChip({ label, value, isDark }: { label: string; value: number; is
 function QuickStat({ label, value, highlight, isDark, t }: { label: string; value: string; highlight?: boolean; isDark: boolean; t: Tokens }) {
   return (
     <div className="text-center">
-      <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textTertiary}`}>{label}</p>
+      <p className={`text-xs font-semibold uppercase tracking-wider ${t.textTertiary}`}>{label}</p>
       <p className={`text-lg font-bold mt-0.5 ${
         highlight ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textPrimary
       }`}>{value}</p>
@@ -1089,13 +1089,13 @@ function OpeningTreeBranch({
         )}
         {node.children.length === 0 && <span className="w-3" />}
         <span className={`font-mono text-sm font-semibold ${isActive ? (isDark ? "text-[#5B9A6A]" : "text-[#436850]") : t.textPrimary}`}>{node.label}</span>
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"} ${t.textTertiary}`}>
+        <span className={`text-xs px-1.5 py-0.5 rounded-md ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"} ${t.textTertiary}`}>
           {node.pct}%
         </span>
-        <span className={`ml-auto text-[11px] font-semibold ${wrColor}`}>
+        <span className={`ml-auto text-xs font-semibold ${wrColor}`}>
           {Math.round(node.winRate * 100)}% WR
         </span>
-        <span className={`text-[10px] ${t.textTertiary}`}>
+        <span className={`text-xs ${t.textTertiary}`}>
           ({node.count})
         </span>
       </button>
@@ -1152,7 +1152,7 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
         <div className="ml-auto flex gap-1">
           <button
             onClick={() => setTreeColor("white")}
-            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+            className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
               treeColor === "white"
                 ? isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20"
                 : isDark ? "text-white/40 hover:text-white/60" : "text-[#436850] hover:text-[#436850]"
@@ -1160,7 +1160,7 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
           >As White</button>
           <button
             onClick={() => setTreeColor("black")}
-            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+            className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
               treeColor === "black"
                 ? isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20"
                 : isDark ? "text-white/40 hover:text-white/60" : "text-[#436850] hover:text-[#436850]"
@@ -1192,7 +1192,7 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
             {selectedNode && (
               <div className={`mt-2 text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"}`}>
                 <p className={`text-xs font-semibold ${t.textPrimary}`}>{selectedNode.label}</p>
-                <p className={`text-[10px] ${t.textTertiary}`}>
+                <p className={`text-xs ${t.textTertiary}`}>
                   {selectedNode.count} games • {Math.round(selectedNode.winRate * 100)}% win rate
                 </p>
               </div>
@@ -1200,7 +1200,7 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
             {activePath.length > 0 && (
               <button
                 onClick={handleReset}
-                className={`mt-2 w-full text-[10px] font-semibold py-1.5 rounded-lg transition-colors ${
+                className={`mt-2 w-full text-xs font-semibold py-1.5 rounded-lg transition-colors ${
                   isDark ? "text-white/50 hover:text-white/70 hover:bg-white/05" : "text-[#436850] hover:text-[#436850] hover:bg-[#ADBC9F]/50"
                 }`}
               >
@@ -1264,7 +1264,7 @@ function ScoutReportTab({
 
           {/* As White */}
           <div>
-            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+            <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               ♔ As White
             </p>
             <div className="space-y-1.5">
@@ -1286,7 +1286,7 @@ function ScoutReportTab({
 
           {/* As Black */}
           <div>
-            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+            <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               ♚ As Black
             </p>
             <div className="space-y-1.5">
@@ -1334,13 +1334,13 @@ function ScoutReportTab({
                 }`}>
                   {/* Side + Target + Confidence badges */}
                   <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${sideColors}`}>
+                    <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${sideColors}`}>
                       Use as {rec.useAs}
                     </span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${confColors[rec.confidence]}`}>
+                    <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full border ${confColors[rec.confidence]}`}>
                       {rec.confidence === "high" ? "High confidence" : rec.confidence === "moderate" ? "Moderate confidence" : "Low confidence"}
                     </span>
-                    <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border ${
+                    <span className={`text-xs font-semibold uppercase px-1.5 py-0.5 rounded-full border ${
                       rec.category === "opening" ? (isDark ? "bg-emerald-500/08 text-emerald-400/70 border-emerald-500/15" : "bg-emerald-50/60 text-emerald-600 border-emerald-200/60")
                       : rec.category === "middlegame" ? (isDark ? "bg-blue-500/08 text-blue-400/70 border-blue-500/15" : "bg-blue-50/60 text-blue-600 border-blue-200/60")
                       : (isDark ? "bg-purple-500/08 text-purple-400/70 border-purple-500/15" : "bg-purple-50/60 text-purple-600 border-purple-200/60")
@@ -1392,13 +1392,13 @@ function ScoutReportTab({
                 <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${
                   isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#ADBC9F]/70"
                 }`}>
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold ${
                     isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/10 text-[#436850]"
                   }`}>{i + 1}</div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className={`text-sm font-bold ${t.textPrimary}`}>{item.action}</p>
-                      <span className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full border ${catColors[item.category]}`}>
+                      <span className={`text-xs font-semibold uppercase px-1.5 py-0.5 rounded-full border ${catColors[item.category]}`}>
                         {item.category}
                       </span>
                     </div>
@@ -1425,7 +1425,7 @@ function ScoutReportTab({
                   ? isDark ? "bg-red-500/08 border border-red-500/15" : "bg-red-50/80 border border-red-200/60"
                   : isDark ? "bg-amber-500/06 border border-amber-500/12" : "bg-amber-50/60 border border-amber-200/50"
               }`}>
-                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold ${
                   w.severity === "high"
                     ? isDark ? "bg-red-500/15 text-red-400" : "bg-red-100 text-red-600"
                     : isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600"
@@ -1455,7 +1455,7 @@ function ScoutReportTab({
                 isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#ADBC9F]/70"
               }`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                  <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${
                     isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#ADBC9F]/40 text-[#12372A] border-[#ADBC9F]"
                   }`}>♔ If you have White</span>
                 </div>
@@ -1475,7 +1475,7 @@ function ScoutReportTab({
                 isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-[#ADBC9F]/70"
               }`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                  <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${
                     isDark ? "bg-[#1a1a2e] text-[#436850]/70 border-[#436850]/40/30" : "bg-[#12372A] text-white border-[#436850]/30"
                   }`}>♚ If you have Black</span>
                 </div>
@@ -1501,7 +1501,7 @@ function ScoutReportTab({
               }`}>
                 <Flame className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                 <div className="min-w-0">
-                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-amber-400/60" : "text-amber-600/50"}`}>Study First</p>
+                  <p className={`text-xs font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-amber-400/60" : "text-amber-600/50"}`}>Study First</p>
                   <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.studyFirst}</p>
                 </div>
               </div>
@@ -1522,11 +1522,11 @@ function ScoutReportTab({
           </div>
           {/* Mistake Heatmap */}
           <div className="mb-4">
-            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-2 ${t.textTertiary}`}>Where Losses Happen</p>
+            <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${t.textTertiary}`}>Where Losses Happen</p>
             <div className="flex rounded-xl overflow-hidden h-6 border border-transparent">
               {report.behavior.lossPhaseDistribution.opening > 0 && (
                 <div
-                  className={`flex items-center justify-center text-[10px] font-bold ${
+                  className={`flex items-center justify-center text-xs font-bold ${
                     isDark ? "bg-red-500/25 text-red-300" : "bg-red-100 text-red-700"
                   }`}
                   style={{ width: `${report.behavior.lossPhaseDistribution.opening}%` }}
@@ -1536,7 +1536,7 @@ function ScoutReportTab({
               )}
               {report.behavior.lossPhaseDistribution.middlegame > 0 && (
                 <div
-                  className={`flex items-center justify-center text-[10px] font-bold ${
+                  className={`flex items-center justify-center text-xs font-bold ${
                     isDark ? "bg-amber-500/25 text-amber-300" : "bg-amber-100 text-amber-700"
                   }`}
                   style={{ width: `${report.behavior.lossPhaseDistribution.middlegame}%` }}
@@ -1546,7 +1546,7 @@ function ScoutReportTab({
               )}
               {report.behavior.lossPhaseDistribution.endgame > 0 && (
                 <div
-                  className={`flex items-center justify-center text-[10px] font-bold ${
+                  className={`flex items-center justify-center text-xs font-bold ${
                     isDark ? "bg-purple-500/25 text-purple-300" : "bg-purple-100 text-purple-700"
                   }`}
                   style={{ width: `${report.behavior.lossPhaseDistribution.endgame}%` }}
@@ -1560,15 +1560,15 @@ function ScoutReportTab({
           <div className="grid grid-cols-3 gap-3 mb-3">
             <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"}`}>
               <p className={`text-lg font-bold ${t.textPrimary}`}>{report.behavior.timeoutPct}%</p>
-              <p className={`text-[10px] ${t.textTertiary}`}>Time Trouble</p>
+              <p className={`text-xs ${t.textTertiary}`}>Time Trouble</p>
             </div>
             <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"}`}>
               <p className={`text-lg font-bold ${t.textPrimary}`}>{report.behavior.resignPct}%</p>
-              <p className={`text-[10px] ${t.textTertiary}`}>Resign Rate</p>
+              <p className={`text-xs ${t.textTertiary}`}>Resign Rate</p>
             </div>
             <div className={`text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"}`}>
               <p className={`text-lg font-bold ${t.textPrimary}`}>{report.behavior.avgGameLength}</p>
-              <p className={`text-[10px] ${t.textTertiary}`}>Avg Moves</p>
+              <p className={`text-xs ${t.textTertiary}`}>Avg Moves</p>
             </div>
           </div>
           {/* Strategy note */}
@@ -1590,7 +1590,7 @@ function ScoutReportTab({
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className={`w-4 h-4 ${isDark ? "text-red-400" : "text-red-500"}`} />
             <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Problem Lines</h3>
-            <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-red-500/12 text-red-400" : "bg-red-50 text-red-600 border border-red-200/60"}`}>
+            <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-red-500/12 text-red-400" : "bg-red-50 text-red-600 border border-red-200/60"}`}>
               Based on {report.opponent.gamesAnalyzed} games
             </span>
           </div>
@@ -1611,18 +1611,18 @@ function ScoutReportTab({
                 }`}>
                   {/* Header row */}
                   <div className="flex items-start gap-3 p-3 pb-2">
-                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold ${
                       isDark ? "bg-red-500/15 text-red-400" : "bg-red-100 text-red-600"
                     }`}>{i + 1}</div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className={`text-sm font-semibold ${t.textPrimary}`}>{pl.name}</p>
-                        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${t.monoBlock}`}>{pl.eco}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                        <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${t.monoBlock}`}>{pl.eco}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                           isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
                         }`}>as {pl.color}</span>
                         {practiceCount > 0 && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                             isDark ? "bg-emerald-500/12 text-emerald-400" : "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
                           }`}>✓ Practiced {practiceCount}×</span>
                         )}
@@ -1637,10 +1637,10 @@ function ScoutReportTab({
                     isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-white border border-[#ADBC9F]/70"
                   }`}>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                      <span className={`text-xs font-bold uppercase tracking-widest ${
                         isDark ? "text-red-400/70" : "text-red-500/80"
                       }`}>Problem Move</span>
-                      <span className={`text-[10px] ${t.textTertiary}`}>move {moveNum}</span>
+                      <span className={`text-xs ${t.textTertiary}`}>move {moveNum}</span>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`font-mono text-sm font-bold px-2.5 py-1 rounded-lg ${
@@ -1657,10 +1657,10 @@ function ScoutReportTab({
                       )}
                     </div>
                     {/* Move sequence leading to the problem */}
-                    <p className={`mt-2 text-[11px] font-mono leading-relaxed ${t.textTertiary}`}>{pl.moves}</p>
+                    <p className={`mt-2 text-xs font-mono leading-relaxed ${t.textTertiary}`}>{pl.moves}</p>
                     {/* Coaching note */}
                     {pl.coachingNote && (
-                      <p className={`mt-2 text-[11px] leading-relaxed italic ${isDark ? "text-amber-300/70" : "text-amber-700/80"}`}>
+                      <p className={`mt-2 text-xs leading-relaxed italic ${isDark ? "text-amber-300/70" : "text-amber-700/80"}`}>
                         {pl.coachingNote}
                       </p>
                     )}
@@ -1782,13 +1782,13 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
       <div className="flex items-center gap-2 mb-1">
         <Activity className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
         <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Engine Analysis</h3>
-        <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+        <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border ${
           isDark ? "bg-[#436850]/12 text-[#5B9A6A] border-[#436850]/25" : "bg-[#436850]/08 text-[#436850] border-[#436850]/15"
         }`}>
           Stockfish
         </span>
       </div>
-      <p className={`text-[11px] mb-4 ${t.textTertiary}`}>
+      <p className={`text-xs mb-4 ${t.textTertiary}`}>
         {enginePatterns.gamesAnalyzed} games analyzed
         {enginePatterns.positionsAnalyzed > 0 && ` · ${enginePatterns.positionsAnalyzed} positions evaluated`}
       </p>
@@ -1802,13 +1802,13 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
             <p className={`text-base font-bold ${
               enginePatterns.avgBlundersPerGame >= 1 ? (isDark ? "text-red-400" : "text-red-600") : t.textPrimary
             }`}>{enginePatterns.avgBlundersPerGame.toFixed(1)}</p>
-            <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Blunders/game</p>
+            <p className={`text-xs font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Blunders/game</p>
           </div>
           <div className="text-center">
             <p className={`text-base font-bold ${
               enginePatterns.avgMistakesPerGame >= 1.5 ? (isDark ? "text-amber-400" : "text-amber-600") : t.textPrimary
             }`}>{enginePatterns.avgMistakesPerGame.toFixed(1)}</p>
-            <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Mistakes/game</p>
+            <p className={`text-xs font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Mistakes/game</p>
           </div>
           <div className="text-center">
             <p className={`text-base font-bold capitalize ${
@@ -1816,7 +1816,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
               : enginePatterns.worstPhase === "endgame" ? (isDark ? "text-purple-400" : "text-purple-600")
               : (isDark ? "text-amber-400" : "text-amber-600")
             }`}>{enginePatterns.worstPhase}</p>
-            <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Worst phase</p>
+            <p className={`text-xs font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Worst phase</p>
           </div>
         </div>
       )}
@@ -1845,7 +1845,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
                 {/* Label + confidence badge */}
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <p className={`text-sm font-semibold ${t.textPrimary}`}>{pattern.label}</p>
-                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${
+                  <span className={`text-xs font-bold uppercase px-1.5 py-0.5 rounded-full border ${
                     confidenceColors[pattern.confidence]
                   }`}>
                     {pattern.confidence === "high" ? "High confidence" : pattern.confidence === "moderate" ? "Moderate" : "Low confidence"}
@@ -1856,7 +1856,7 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
                 <div className="mb-1.5">{severityBar(pattern.severityScore)}</div>
 
                 {/* Frequency */}
-                <p className={`text-[10px] ${t.textTertiary}`}>
+                <p className={`text-xs ${t.textTertiary}`}>
                   Observed in {pattern.frequency}/{pattern.totalGames} games
                 </p>
               </div>
@@ -1878,9 +1878,9 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
                 {/* Evidence links */}
                 {pattern.evidence && pattern.evidence.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${t.textTertiary}`}>Evidence</p>
+                    <p className={`text-xs font-semibold uppercase tracking-widest mb-1.5 ${t.textTertiary}`}>Evidence</p>
                     {pattern.evidence.map((ev, j) => (
-                      <div key={j} className={`flex items-center gap-2 p-2 rounded-lg text-[11px] ${
+                      <div key={j} className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
                         isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"
                       }`}>
                         {ev.eco && (
@@ -1921,7 +1921,7 @@ function OpeningRow({ name, winRate, count, isDark, t }: { name: string; winRate
     <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
       <span className={`text-xs truncate ${t.textSecondary}`}>{name}</span>
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-[10px] ${t.textTertiary}`}>{count}g</span>
+        <span className={`text-xs ${t.textTertiary}`}>{count}g</span>
         <span className={`text-xs font-semibold ${wr >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : wr < 40 ? (isDark ? "text-red-400" : "text-red-500") : t.textTertiary}`}>
           {wr}%
         </span>
@@ -1998,12 +1998,12 @@ function StudyLinesTab({
             <div className="p-4 space-y-2">
               {/* Priority + metadata row */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                <span className={`text-xs font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
                   isDark ? "bg-[#436850]/15 text-[#5B9A6A]" : "bg-[#436850]/06 text-[#436850]"
                 }`}>{i + 1}</span>
                 {/* Side badge */}
                 {useAs && (
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                  <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${
                     useAs === "white"
                       ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#ADBC9F]/40 text-[#12372A] border-[#ADBC9F]"
                       : isDark ? "bg-[#1a1a2e] text-[#436850]/70 border-[#436850]/40/30" : "bg-[#12372A] text-white border-[#436850]/30"
@@ -2012,7 +2012,7 @@ function StudyLinesTab({
                   </span>
                 )}
                 {line.isTrainFirst && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
                     isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
                   }`}>
                     <Flame className="w-2.5 h-2.5" /> Study First
@@ -2020,12 +2020,12 @@ function StudyLinesTab({
                 )}
                 <PriorityBadge priority={priority} isDark={isDark} />
                 {line.lineType === "surprise" && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                     isDark ? "bg-violet-500/15 text-violet-300 border border-violet-500/25" : "bg-violet-50 text-violet-700 border border-violet-200"
                   }`}>Surprise</span>
                 )}
                 {line.collisionScore > 0 && (
-                  <span className={`text-[10px] font-medium flex items-center gap-1 ml-auto ${
+                  <span className={`text-xs font-medium flex items-center gap-1 ml-auto ${
                     line.collisionScore >= 70 ? (isDark ? "text-emerald-400" : "text-emerald-600")
                     : line.collisionScore >= 40 ? (isDark ? "text-amber-400" : "text-amber-600")
                     : t.textTertiary
@@ -2051,7 +2051,7 @@ function StudyLinesTab({
                 <div className={`p-2.5 rounded-lg ${
                   isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/60"
                 }`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                  <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${
                     isDark ? "text-[#5B9A6A]/70" : "text-[#436850]/60"
                   }`}>Main Idea</p>
                   <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{mainIdea}</p>
@@ -2063,7 +2063,7 @@ function StudyLinesTab({
                 <div className={`p-2.5 rounded-lg ${
                   isDark ? "bg-blue-500/05 border border-blue-500/10" : "bg-blue-50/50 border border-blue-200/40"
                 }`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                  <p className={`text-xs font-semibold uppercase tracking-widest mb-1 ${
                     isDark ? "text-blue-400/70" : "text-blue-600/60"
                   }`}>What to Watch For</p>
                   <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{keyPlan}</p>
@@ -2072,16 +2072,16 @@ function StudyLinesTab({
 
               {/* Confidence + sample size */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
                   line.confidence === "high" ? (isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200")
                   : line.confidence === "medium" ? (isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-700 border-amber-200")
                   : (isDark ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-red-50 text-red-600 border-red-200")
                 }`}>{confLabel}</span>
                 {sampleNote && (
-                  <span className={`text-[10px] ${t.textTertiary}`}>{sampleNote}</span>
+                  <span className={`text-xs ${t.textTertiary}`}>{sampleNote}</span>
                 )}
                 {line.confidence === "low" && (
-                  <span className={`text-[10px] italic ${isDark ? "text-red-400/60" : "text-red-500/60"}`}>
+                  <span className={`text-xs italic ${isDark ? "text-red-400/60" : "text-red-500/60"}`}>
                     Use cautiously — limited data
                   </span>
                 )}
@@ -2092,7 +2092,7 @@ function StudyLinesTab({
             <div className={`mx-4 mb-2 p-3 rounded-xl border ${
               isDark ? "bg-[#060e07] border-[#1e2e22]/50" : "bg-[#f0fdf4]/70 border-[#436850]/10"
             }`}>
-              <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
+              <p className={`text-xs font-semibold uppercase tracking-widest mb-1.5 ${
                 isDark ? "text-[#5B9A6A]/70" : "text-[#436850]/60"
               }`}>Why study this line</p>
               <p className={`text-xs leading-relaxed ${t.textSecondary}`}>
@@ -2175,7 +2175,7 @@ function PriorityBadge({ priority, isDark }: { priority: "must-know" | "likely" 
   };
   const c = config[priority];
   return (
-    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${isDark ? c.dark : c.light}`}>
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${isDark ? c.dark : c.light}`}>
       <span className={`w-1 h-1 rounded-full ${c.dot}`} />
       {c.label}
     </span>
@@ -2206,7 +2206,7 @@ function PracticeBoardTab({
           {enrichedLines.length > 0 && (
             <button
               onClick={onClearCustomLine}
-              className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors ${
+              className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${
                 isDark
                   ? "text-white/40 hover:text-white/70 hover:bg-white/06 border border-white/08"
                   : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50 border border-[#ADBC9F]"
@@ -2253,7 +2253,7 @@ function PracticeBoardTab({
           <Dumbbell className={`w-3.5 h-3.5 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
           <span className={`text-xs font-semibold ${t.textPrimary}`}>Practice Mode</span>
           {useAs && (
-            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+            <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${
               useAs === "white"
                 ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-[#ADBC9F]/40 text-[#12372A] border-[#ADBC9F]"
                 : isDark ? "bg-[#1a1a2e] text-[#436850]/70 border-[#436850]/40/30" : "bg-[#12372A] text-white border-[#436850]/30"
@@ -2268,7 +2268,7 @@ function PracticeBoardTab({
           {exploits && ` Goal: reach the ${currentLine?.name} setup because this opponent has struggled against it.`}
         </p>
         {currentLine && (
-          <p className={`text-[10px] mt-1.5 italic ${t.textTertiary}`}>
+          <p className={`text-xs mt-1.5 italic ${t.textTertiary}`}>
             Hint style: hints explain the idea behind the move, not just the notation.
           </p>
         )}
@@ -2490,7 +2490,7 @@ function RecentlyScoutedChips({
   if (usernames.length === 0) return null;
   return (
     <div className={`${t.card} p-4`}>
-      <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>Recently Scouted</p>
+      <p className={`text-xs font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>Recently Scouted</p>
       <div className="flex flex-wrap gap-2">
         {usernames.map((username) => (
           <div
@@ -2502,7 +2502,7 @@ function RecentlyScoutedChips({
             }`}
           >
             <button onClick={() => onSelect(username)} className="flex items-center gap-1.5 min-w-0">
-              <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${
+              <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold shrink-0 ${
                 isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"
               }`}>{username.charAt(0).toUpperCase()}</span>
               <span className="truncate max-w-[120px]">{username}</span>

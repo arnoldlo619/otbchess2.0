@@ -44,7 +44,7 @@ function ResultChip({ result }: { result: RoundHistoryEntry["result"] }) {
 function ColorChip({ color }: { color: "W" | "B" }) {
   return (
     <div
-      className={`w-5 h-5 rounded-sm border text-[9px] font-bold flex items-center justify-center flex-shrink-0 ${
+      className={`w-5 h-5 rounded-sm border text-xs font-bold flex items-center justify-center flex-shrink-0 ${
         color === "W"
           ? "bg-white border-[#ADBC9F] text-[#436850]"
           : "bg-[#12372A]/80 border-[#436850]/40 text-[#436850]/70"
@@ -196,14 +196,14 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
                 {flag && <span className="text-lg">{flag}</span>}
                 {player.title && (
                   <span
-                    className="px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider"
+                    className="px-1.5 py-0.5 rounded text-xs font-black tracking-wider"
                     style={{ background: accentColor + "22", color: accentColor }}
                   >
                     {player.title}
                   </span>
                 )}
                 <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  className="px-2 py-0.5 rounded-full text-xs font-bold"
                   style={{ background: accentColor + "18", color: accentColor }}
                 >
                   {badgeLabel}
@@ -216,15 +216,15 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
                 <span className="text-white/50 text-sm">
                   ELO <span className="text-white/80 font-semibold">{player.elo}</span>
                 </span>
-                <span className="text-white/30">·</span>
+                <span className="text-white/60">·</span>
                 <span className="text-white/50 text-sm">
                   Score <span className="font-bold" style={{ color: accentColor }}>{points}</span>
-                  <span className="text-white/30"> / {roundHistory.length}</span>
+                  <span className="text-white/60"> / {roundHistory.length}</span>
                 </span>
-                <span className="text-white/30">·</span>
+                <span className="text-white/60">·</span>
                 <span className="text-white/50 text-sm">
                   Rank <span className="text-white/80 font-semibold">#{rank}</span>
-                  <span className="text-white/30"> of {totalPlayers}</span>
+                  <span className="text-white/60"> of {totalPlayers}</span>
                 </span>
               </div>
             </div>
@@ -241,8 +241,8 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
           ].map(({ label, value, sub }) => (
             <div key={label} className="flex flex-col items-center py-4 px-2" style={{ background: "oklch(0.18 0.06 145)" }}>
               <span className="text-white font-bold text-lg leading-tight">{value}</span>
-              <span className="text-white/30 text-[10px] mt-0.5">{label}</span>
-              <span className="text-white/20 text-[9px]">{sub}</span>
+              <span className="text-white/60 text-xs mt-0.5">{label}</span>
+              <span className="text-white/55 text-xs">{sub}</span>
             </div>
           ))}
         </div>
@@ -250,19 +250,19 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
         {/* ── Score Progression ── */}
         {roundHistory.length >= 2 && (
           <div className="px-6 pt-5 pb-2">
-            <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">Score Progression</p>
+            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">Score Progression</p>
             <ScoreSparkline history={roundHistory} totalRounds={roundHistory.length} />
           </div>
         )}
 
         {/* ── Round-by-Round Log ── */}
         <div className="px-6 pt-4 pb-8">
-          <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-4">
+          <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">
             Round-by-Round · {roundHistory.length} games
           </p>
 
           {roundHistory.length === 0 ? (
-            <p className="text-white/30 text-sm text-center py-8">No completed games recorded.</p>
+            <p className="text-white/60 text-sm text-center py-8">No completed games recorded.</p>
           ) : (
             <div className="space-y-2">
               {roundHistory.map((entry) => (
@@ -292,7 +292,7 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
                     <div className="flex items-center gap-2">
                       <span className="text-white/90 font-semibold text-sm truncate">{entry.opponent.name}</span>
                       {entry.opponent.title && (
-                        <span className="text-[9px] font-black px-1 rounded" style={{ background: accentColor + "22", color: accentColor }}>
+                        <span className="text-xs font-black px-1 rounded" style={{ background: accentColor + "22", color: accentColor }}>
                           {entry.opponent.title}
                         </span>
                       )}
@@ -300,7 +300,7 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-white/35 text-xs">ELO {entry.opponent.elo}</span>
                       {entry.opponent.elo > player.elo && (
-                        <span className="text-[9px] text-amber-400/70">+{entry.opponent.elo - player.elo} higher</span>
+                        <span className="text-xs text-amber-400/70">+{entry.opponent.elo - player.elo} higher</span>
                       )}
                     </div>
                   </div>
@@ -316,7 +316,7 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
                     <div className="text-white/80 font-bold text-sm">
                       +{entry.pointsEarned === 0.5 ? "½" : entry.pointsEarned}
                     </div>
-                    <div className="text-white/30 text-[10px]">
+                    <div className="text-white/60 text-xs">
                       = {entry.runningScore % 1 === 0.5
                         ? `${Math.floor(entry.runningScore)}½`
                         : entry.runningScore}
@@ -344,7 +344,7 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
                   </span>
                 )}
               </div>
-              <Swords className="w-3.5 h-3.5 flex-shrink-0 text-white/20" />
+              <Swords className="w-3.5 h-3.5 flex-shrink-0 text-white/55" />
             </div>
           )}
         </div>

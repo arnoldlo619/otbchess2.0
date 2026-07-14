@@ -142,7 +142,7 @@ function TournamentStatusPill({ status }: { status?: string | null }) {
   };
   const { label, bg, text } = config[s] ?? config["registration"];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide flex-shrink-0 ${bg} ${text}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold tracking-wide flex-shrink-0 ${bg} ${text}`}>
       {s === "in_progress" && (
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
       )}
@@ -562,12 +562,12 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className={`text-xl font-bold ${text}`}>{user.displayName}</h1>
                   {user.isStaff && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold tracking-wider uppercase flex-shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wider uppercase flex-shrink-0">
                       ★ OTB Staff
                     </span>
                   )}
                   {!user.isStaff && user.isPro && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[10px] font-bold tracking-wider uppercase flex-shrink-0">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-xs font-bold tracking-wider uppercase flex-shrink-0">
                       ★ Pro
                     </span>
                   )}
@@ -1030,7 +1030,7 @@ export default function ProfilePage() {
                   ].map(({ label, value, color, bg }) => (
                     <div key={label} className={`flex flex-col items-center py-2.5 rounded-xl ${bg}`}>
                       <span className={`text-xl font-black ${color}`}>{value}</span>
-                      <span className={`text-[10px] font-medium ${muted}`}>{label}</span>
+                      <span className={`text-xs font-medium ${muted}`}>{label}</span>
                     </div>
                   ))}
                 </div>
@@ -1092,12 +1092,12 @@ export default function ProfilePage() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition ${outcomeConfig.bg} ${outcomeConfig.border}`}
                   >
                     {/* Outcome badge */}
-                    <span className={`text-[10px] font-bold tracking-widest w-9 text-center flex-shrink-0 ${outcomeConfig.text}`}>
+                    <span className={`text-xs font-bold tracking-widest w-9 text-center flex-shrink-0 ${outcomeConfig.text}`}>
                       {outcomeConfig.label}
                     </span>
 
                     {/* VS divider */}
-                    <span className={`text-[10px] font-bold ${muted} flex-shrink-0`}>vs</span>
+                    <span className={`text-xs font-bold ${muted} flex-shrink-0`}>vs</span>
 
                     {/* Opponent avatar */}
                     <div className="flex-shrink-0">
@@ -1293,7 +1293,7 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-1.5">
                           <p className={`text-sm font-semibold truncate ${text}`}>{club.name}</p>
                           {isOwner && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
                               isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
                             }`}>Owner</span>
                           )}
@@ -1319,7 +1319,7 @@ export default function ProfilePage() {
                             <>
                               <button
                                 onClick={() => navigate(`/clubs/${club.slug ?? club.id}?settings=1`)}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition ${
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition ${
                                   isDark ? "bg-amber-400/10 text-amber-400 hover:bg-amber-400/20 border border-amber-400/20" : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
                                 }`}
                                 title="Manage club"
@@ -1329,7 +1329,7 @@ export default function ProfilePage() {
                               </button>
                               <button
                                 onClick={() => navigate(`/clubs/${club.slug ?? club.id}?create=1`)}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition ${
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition ${
                                   isDark ? "bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20 border border-[#4CAF50]/20" : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
                                 }`}
                                 title="New tournament"
@@ -1528,7 +1528,7 @@ export default function ProfilePage() {
                     )}
                     {renewalLoading ? "Sending request..." : "Request Pro Renewal"}
                   </button>
-                  <p className="text-[10px] text-center px-2 leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)' }}>
+                  <p className="text-xs text-center px-2 leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)' }}>
                     Clicking this sends a renewal request to the ChessOTB.club team. We'll review and extend your access within 24 hours.
                   </p>
                 </div>

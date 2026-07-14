@@ -122,7 +122,7 @@ function LiveStandingsPanel({
   const standings = getStandings(players);
   const medals = ["🥇", "🥈", "🥉"];
   const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const textMuted = isDark ? "text-white/65" : "text-[#436850]";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
 
   return (
@@ -149,7 +149,7 @@ function LiveStandingsPanel({
             <span className="text-base w-7 text-center flex-shrink-0">
               {i < 3
                 ? medals[i]
-                : <span className={`text-sm font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>{i + 1}</span>
+                : <span className={`text-sm font-bold ${isDark ? "text-white/55" : "text-[#436850]/70"}`}>{i + 1}</span>
               }
             </span>
             <PlayerAvatar
@@ -195,7 +195,7 @@ function LiveStandingsPanel({
 // ─── Rejoin Link Card ─────────────────────────────────────────────────────────
 function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
-  const textMuted = isDark ? "text-white/40" : "text-[#436850]";
+  const textMuted = isDark ? "text-white/65" : "text-[#436850]";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   async function handleCopy() {
@@ -247,7 +247,7 @@ function PushPromptCard({
     : "bg-emerald-50 border border-emerald-200";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/60" : "text-[#436850]";
+  const textMuted = isDark ? "text-white/70" : "text-[#436850]";
 
   return (
     <div className={`mx-4 mt-3 rounded-2xl px-4 py-3.5 flex items-start gap-3 ${cardBg}`}>
@@ -328,7 +328,7 @@ function LobbyScreen({
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const textMuted = isDark ? "text-white/65" : "text-[#436850]";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
@@ -424,7 +424,7 @@ function WaitingRoundScreen({
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const textMuted = isDark ? "text-white/65" : "text-[#436850]";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
   const rank = myRank(username, players);
@@ -590,14 +590,14 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
       {/* Time display */}
       <div className="flex-1 min-w-0">
-          <p className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+          <p className={`text-xs font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/65" : "text-[#436850]"}`}>
           {isExpired ? "Time's Up" : isPaused ? "Round Timer — Paused" : "Round Timer"}
         </p>
         <p className={`text-3xl font-black font-mono leading-none tracking-tight ${textColor}`}>
           {isExpired ? "0:00" : display}
         </p>
           {!isExpired && !isPaused && remaining > 0 && (
-          <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
+          <p className={`text-xs mt-1 ${isDark ? "text-white/55" : "text-[#436850]"}`}>
             {Math.round(fraction * 100)}% remaining
           </p>
         )}
@@ -605,10 +605,10 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
       {/* Status badge */}
       {isPaused && (
-        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>Paused</span>
+        <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>Paused</span>
       )}
       {isExpired && (
-        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>Ended</span>
+        <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>Ended</span>
       )}
     </div>
   );
@@ -691,7 +691,7 @@ function MyBoardScreen({
   };
 
   const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textMuted = isDark ? "text-white/50" : "text-[#436850]";
+  const textMuted = isDark ? "text-white/65" : "text-[#436850]";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
@@ -840,7 +840,7 @@ function MyBoardScreen({
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
                         {opponent.title && (
-                          <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-700"} flex-shrink-0`}>{opponent.title}</span>
+                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-700"} flex-shrink-0`}>{opponent.title}</span>
                         )}
                       </div>
                       <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
@@ -863,7 +863,7 @@ function MyBoardScreen({
                     aria-label={showOppStats ? "Hide opponent stats" : "Show opponent stats"}
                     className={`w-full flex items-center justify-between mt-3 pt-2.5 border-t ${divider} focus:outline-none active:opacity-70 transition-opacity`}
                   >
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>
+                    <span className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
                       {showOppStats ? "Stats" : `${oppPoints} pts · ${oppWins}W ${oppDraws}D ${oppLosses}L`}
                     </span>
                     <ChevronDown
@@ -881,34 +881,34 @@ function MyBoardScreen({
                       <div className="flex items-center gap-3">
                         <div className="text-center">
                           <p className="text-base font-black text-emerald-500">{oppWins}</p>
-                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>W</p>
+                          <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>W</p>
                         </div>
                         <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
                         <div className="text-center">
                           <p className={`text-base font-black ${isDark ? "text-blue-400" : "text-blue-500"}`}>{oppDraws}</p>
-                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>D</p>
+                          <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>D</p>
                         </div>
                         <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
                         <div className="text-center">
                           <p className="text-base font-black text-red-500">{oppLosses}</p>
-                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>L</p>
+                          <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>L</p>
                         </div>
                         <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
                         <div className="text-center">
                           <p className={`text-base font-black ${accent}`}>{oppPoints}</p>
-                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>pts</p>
+                          <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>pts</p>
                         </div>
                       </div>
 
                       {/* Recent form dots (last 4 rounds, most recent rightmost) */}
                       {opponentHistory.length > 0 && (
                         <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted} mr-0.5`}>Form</p>
+                          <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted} mr-0.5`}>Form</p>
                           {opponentHistory.slice(-4).map((h, i) => (
                             <span
                               key={i}
                               title={h.result === "W" ? `R${h.round}: Win` : h.result === "L" ? `R${h.round}: Loss` : `R${h.round}: Draw`}
-                              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                               style={{
                                 background: h.result === "W" ? "rgba(74,222,128,0.15)" : h.result === "L" ? "rgba(248,113,113,0.15)" : "rgba(96,165,250,0.15)",
                                 color: h.result === "W" ? "#4ade80" : h.result === "L" ? "#f87171" : "#60a5fa",
@@ -1012,7 +1012,7 @@ function MyBoardScreen({
                       {broadcast?.broadcastStatus === "live" && (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600">
                           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          <span className="text-[9px] font-bold text-white uppercase tracking-wider">Live</span>
+                          <span className="text-xs font-bold text-white uppercase tracking-wider">Live</span>
                         </span>
                       )}
                     </div>
@@ -1091,7 +1091,7 @@ function MyBoardScreen({
                 {broadcast!.broadcastStatus === "live" && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    <span className="text-[9px] font-bold text-white uppercase tracking-wider">Live</span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Live</span>
                   </span>
                 )}
               </div>
@@ -1362,7 +1362,7 @@ export default function PlayerView() {
         <div className="space-y-2">
           <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-[#12372A]"}`}>New Round!</h2>
           <p className={`text-base font-semibold ${accent}`}>{newRoundFlashLabel}</p>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Finding your board assignment…</p>
+          <p className={`text-sm ${isDark ? "text-white/65" : "text-[#436850]"}`}>Finding your board assignment…</p>
         </div>
       </div>
     );
@@ -1412,7 +1412,7 @@ export default function PlayerView() {
         <div className={`min-h-screen ${bg} flex flex-col items-center justify-center px-6 gap-4 text-center`}>
           <RotateCcw className={`w-10 h-10 ${isDark ? "text-white/30" : "text-[#436850]/70"}`} />
           <p className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>You're not in the pairings yet.</p>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Ask the director to check your registration.</p>
+          <p className={`text-sm ${isDark ? "text-white/65" : "text-[#436850]"}`}>Ask the director to check your registration.</p>
           <Link href={`/tournament/${tournamentId}`} className="text-sm text-[#436850] underline">View standings</Link>
         </div>
       );

@@ -32,14 +32,14 @@ import { useRatingHistory, type RatingPoint, type TimeControl } from "@/hooks/us
 function PlatformBadge({ platform }: { platform?: "chesscom" | "lichess" }) {
   if (!platform) return null;
   return platform === "lichess" ? (
-    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-500">
+    <span className="inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-500">
       <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
         <path d="M19 22H5v-2h14v2M13 2a5 5 0 0 1 5 5c0 1.64-.8 3.09-2.03 4L17 13H7l1.03-2C6.8 10.09 6 8.64 6 7a5 5 0 0 1 5-5h2m0 2h-2a3 3 0 0 0-3 3c0 1.12.61 2.1 1.5 2.63L9.5 11h5l-.5-2.37A3 3 0 0 0 15.5 7a3 3 0 0 0-2.5-3z" />
       </svg>
       Lichess
     </span>
   ) : (
-    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#81b64c]/15 text-[#436850]">
+    <span className="inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded bg-[#81b64c]/15 text-[#436850]">
       <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-current">
         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
       </svg>
@@ -51,7 +51,7 @@ function PlatformBadge({ platform }: { platform?: "chesscom" | "lichess" }) {
 function ColorChip({ color }: { color: "W" | "B" }) {
   return (
     <div
-      className={`w-5 h-5 rounded-sm border text-[9px] font-bold flex items-center justify-center ${
+      className={`w-5 h-5 rounded-sm border text-xs font-bold flex items-center justify-center ${
         color === "W"
           ? "bg-white border-[#ADBC9F] text-[#436850]"
           : "bg-[#ADBC9F]/40 border-[#ADBC9F] text-[#436850]/70"
@@ -350,7 +350,7 @@ function TCPill({
   isDark: boolean;
   onClick: () => void;
 }) {
-  const base = "text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer transition-all select-none";
+  const base = "text-xs font-semibold px-1.5 py-0.5 rounded-full cursor-pointer transition-all select-none";
   const activeStyle = "bg-[#436850] text-white";
   const inactiveStyle = isDark
     ? "bg-white/08 text-white/50 hover:bg-white/15 hover:text-white/80"
@@ -387,7 +387,7 @@ function SparklineSection({
     enabled: visible && !!player.username,
   });
 
-  const textSub = isDark ? "text-white/40" : "text-[#436850]";
+  const textSub = isDark ? "text-white/65" : "text-[#436850]";
   const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
 
   // Don't render the section at all if there's an error and no data
@@ -413,11 +413,11 @@ function SparklineSection({
     <div className={`px-4 pb-4 border-t ${divider} pt-3`}>
       {/* Header row: label + trend badge */}
       <div className="flex items-center justify-between mb-2">
-        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textSub}`}>
+        <p className={`text-xs uppercase tracking-wider font-semibold ${textSub}`}>
           Rating History
         </p>
         {trendLabel && (
-          <span className={`text-[10px] font-bold tabular-nums ${trendColor}`}>
+          <span className={`text-xs font-bold tabular-nums ${trendColor}`}>
             {trendLabel} last 10
           </span>
         )}
@@ -443,7 +443,7 @@ function SparklineSection({
       )}
 
       {status === "success" && points.length < 2 && (
-        <p className={`text-[10px] ${textSub} italic`}>
+        <p className={`text-xs ${textSub} italic`}>
           {tc === "all"
             ? "Not enough rated games to display"
             : `No ${tc} games in the last 10 games`}
@@ -474,7 +474,7 @@ function CardContent({
     ? "bg-[oklch(0.22_0.06_145)] border-white/10"
     : "bg-white border-[#ADBC9F]";
   const textMain = isDark ? "text-white" : "text-[#12372A]";
-  const textSub = isDark ? "text-white/40" : "text-[#436850]";
+  const textSub = isDark ? "text-white/65" : "text-[#436850]";
   const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
   const statBg = isDark ? "bg-white/05" : "bg-[#FBFADA]/70";
 
@@ -504,7 +504,7 @@ function CardContent({
                 </span>
               )}
               {isNew && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-500 animate-pulse">
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-500 animate-pulse">
                   NEW
                 </span>
               )}
@@ -527,18 +527,18 @@ function CardContent({
       {/* ELO + Points row */}
       <div className={`grid grid-cols-2 divide-x ${isDark ? "divide-white/08" : "divide-gray-100"}`}>
         <div className={`px-4 py-3 ${statBg}`}>
-          <p className={`text-[10px] uppercase tracking-wider font-semibold ${textSub}`}>ELO</p>
+          <p className={`text-xs uppercase tracking-wider font-semibold ${textSub}`}>ELO</p>
           <p className={`text-xl font-bold tabular-nums ${textMain}`}>{player.elo}</p>
         </div>
         <div className={`px-4 py-3 ${statBg}`}>
-          <p className={`text-[10px] uppercase tracking-wider font-semibold ${textSub}`}>Points</p>
+          <p className={`text-xs uppercase tracking-wider font-semibold ${textSub}`}>Points</p>
           <p className={`text-xl font-bold tabular-nums text-[#436850]`}>{player.points}</p>
         </div>
       </div>
 
       {/* W / D / L record */}
       <div className={`px-4 py-3 border-t ${divider}`}>
-        <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${textSub}`}>
+        <p className={`text-xs uppercase tracking-wider font-semibold mb-2 ${textSub}`}>
           Record
         </p>
         {/* Bar */}
@@ -569,7 +569,7 @@ function CardContent({
             <span className={`text-xs font-semibold ${textMain}`}>{player.losses}L</span>
           </div>
           <div className="ml-auto">
-            <span className={`text-[10px] ${textSub}`}>
+            <span className={`text-xs ${textSub}`}>
               Buch. <span className={`font-semibold ${textMain}`}>{player.buchholz.toFixed(1)}</span>
             </span>
           </div>
@@ -579,7 +579,7 @@ function CardContent({
       {/* Color history */}
       {player.colorHistory.length > 0 && (
         <div className={`px-4 pb-4 border-t ${divider} pt-3`}>
-          <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${textSub}`}>
+          <p className={`text-xs uppercase tracking-wider font-semibold mb-2 ${textSub}`}>
             Colors
           </p>
           <div className="flex items-center gap-1">
@@ -589,9 +589,9 @@ function CardContent({
             {/* Next color prediction */}
             {player.colorHistory.length > 0 && (
               <>
-                <span className={`text-[10px] mx-1 ${textSub}`}>→</span>
+                <span className={`text-xs mx-1 ${textSub}`}>→</span>
                 <div
-                  className={`w-5 h-5 rounded-sm border-2 border-dashed text-[9px] font-bold flex items-center justify-center opacity-50 ${
+                  className={`w-5 h-5 rounded-sm border-2 border-dashed text-xs font-bold flex items-center justify-center opacity-50 ${
                     player.colorHistory[player.colorHistory.length - 1] === "W"
                       ? "border-[#ADBC9F] text-[#436850]"
                       : "border-[#ADBC9F] text-[#436850]"
