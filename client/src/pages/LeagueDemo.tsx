@@ -112,7 +112,7 @@ function ResultDot({ r }: { r: string }) {
   const color = r === "W" ? "oklch(0.65 0.2 145)" : r === "L" ? "oklch(0.6 0.2 25)" : "oklch(0.55 0.04 145)";
   return (
     <div
-      className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black"
+      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black"
       style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}
     >
       {r}
@@ -121,16 +121,16 @@ function ResultDot({ r }: { r: string }) {
 }
 
 function MovementIcon({ movement }: { movement: "up" | "down" | "same" }) {
-  if (movement === "up") return <span className="text-[10px] font-bold" style={{ color: "oklch(0.65 0.2 145)" }}>▲</span>;
-  if (movement === "down") return <span className="text-[10px] font-bold" style={{ color: "oklch(0.6 0.2 25)" }}>▼</span>;
-  return <span className="text-[10px]" style={{ color: "oklch(0.55 0.04 145)" }}>—</span>;
+  if (movement === "up") return <span className="text-xs font-bold" style={{ color: "oklch(0.65 0.2 145)" }}>▲</span>;
+  if (movement === "down") return <span className="text-xs font-bold" style={{ color: "oklch(0.6 0.2 25)" }}>▼</span>;
+  return <span className="text-xs" style={{ color: "oklch(0.55 0.04 145)" }}>—</span>;
 }
 
 function FormBadge({ result }: { result: string }) {
   const isW = result === "W", isL = result === "L";
   return (
     <span
-      className="inline-flex items-center justify-center w-6 h-6 rounded text-[10px] font-black"
+      className="inline-flex items-center justify-center w-7 h-7 rounded text-xs font-black"
       style={{
         background: isW ? "oklch(0.65 0.2 145 / 0.15)" : isL ? "oklch(0.6 0.2 25 / 0.15)" : "oklch(0.55 0.04 145 / 0.15)",
         color: isW ? "oklch(0.65 0.2 145)" : isL ? "oklch(0.6 0.2 25)" : "oklch(0.65 0.04 145)",
@@ -319,17 +319,15 @@ export default function LeagueDemo() {
             {/* Mobile back */}
             <button
               onClick={() => navigate("/")}
-              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
+              className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-opacity hover:opacity-70 touch-manipulation"
               style={{ color: "oklch(0.65 0.12 145)" }}
             >
-              <ArrowLeft size={15} />
+              <ArrowLeft size={18} />
             </button>
-
-
 
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
+              <span className="text-base font-bold truncate block" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
             </div>
 
             {/* Centered Live pill */}
@@ -343,13 +341,13 @@ export default function LeagueDemo() {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent }} />
-                LIVE DEMO · Week 14/16
+                Live Demo · Week 14/16
               </div>
             </div>
 
             {/* Right: section label */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold hidden sm:block" style={{ color: "oklch(0.65 0.12 145)" }}>
+              <span className="text-xs font-semibold hidden sm:block" style={{ color: "oklch(0.70 0.12 145)" }}>
                 {TABS.find(t => t.id === activeTab)?.label}
               </span>
             </div>
@@ -372,7 +370,7 @@ export default function LeagueDemo() {
                     <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
                         <BattleIcon size={16} style={{ color: accent }} />
-                        <h3 className="text-base font-bold tracking-tight" style={{ color: textMain }}>Featured Matchup — Week 14</h3>
+                        <h3 className="text-lg font-bold tracking-tight" style={{ color: textMain }}>Featured Matchup — Week 14</h3>
                       </div>
                       <span
                         className="text-xs font-semibold px-2 py-0.5 rounded-full animate-pulse"
@@ -395,8 +393,8 @@ export default function LeagueDemo() {
                             </span>
                           </div>
                           <div className="text-center mt-2">
-                            <div className="font-bold text-sm" style={{ color: textMain }}>{featuredMatchup.white.displayName}</div>
-                            <div className="text-xs" style={{ color: textMuted }}>{featuredMatchup.white.rating} ELO</div>
+                            <div className="font-bold text-base" style={{ color: textMain }}>{featuredMatchup.white.displayName}</div>
+                            <div className="text-sm" style={{ color: textMuted }}>{featuredMatchup.white.rating} ELO</div>
                           </div>
                         </div>
 
@@ -421,8 +419,8 @@ export default function LeagueDemo() {
                             </span>
                           </div>
                           <div className="text-center mt-2">
-                            <div className="font-bold text-sm" style={{ color: textMain }}>{featuredMatchup.black.displayName}</div>
-                            <div className="text-xs" style={{ color: textMuted }}>{featuredMatchup.black.rating} ELO</div>
+                            <div className="font-bold text-base" style={{ color: textMain }}>{featuredMatchup.black.displayName}</div>
+                            <div className="text-sm" style={{ color: textMuted }}>{featuredMatchup.black.rating} ELO</div>
                           </div>
                         </div>
                       </div>
@@ -431,7 +429,7 @@ export default function LeagueDemo() {
                       <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-semibold" style={{ color: textMain }}>{featuredMatchup.white.displayName.split(" ")[0]}</span>
-                          <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: textMuted }}>Head to Head</span>
+                          <span className="text-xs uppercase tracking-wider font-bold" style={{ color: textMuted }}>Head to Head</span>
                           <span className="text-xs font-semibold" style={{ color: textMain }}>{featuredMatchup.black.displayName.split(" ")[0]}</span>
                         </div>
                         <div className="flex items-center justify-between mb-1.5 text-xs font-bold">
@@ -456,7 +454,7 @@ export default function LeagueDemo() {
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
                         <RatingIcon size={14} style={{ color: accent }} />
-                        <span className="text-sm font-bold" style={{ color: textMain }}>Premier Chess League Standings</span>
+                        <span className="text-base font-bold" style={{ color: textMain }}>Premier Chess League Standings</span>
                       </div>
                       <button
                         onClick={() => setActiveTab("standings")}
@@ -469,7 +467,7 @@ export default function LeagueDemo() {
 
                     {/* Table header */}
                     <div
-                      className="hidden sm:grid items-center px-4 py-2 text-xs font-bold uppercase tracking-widest"
+                      className="hidden sm:grid items-center px-4 py-2.5 text-xs font-bold uppercase tracking-widest"
                       style={{
                         borderBottom: `1px solid ${cardBorder}`,
                         color: textMuted,
@@ -495,7 +493,7 @@ export default function LeagueDemo() {
                       return (
                         <div
                           key={p.id}
-                          className="hidden sm:grid items-center px-4 py-2.5 transition-all duration-200 hover:bg-white/5 hover:scale-[1.005] cursor-pointer"
+                          className="hidden sm:grid items-center px-4 py-3 transition-all duration-200 hover:bg-white/5 hover:scale-[1.005] cursor-pointer"
                           style={{
                             gridTemplateColumns: "2.5rem 1fr 4rem 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
                             gap: "0.5rem",
@@ -540,18 +538,18 @@ export default function LeagueDemo() {
                     {DEMO_PLAYERS.slice(0, 8).map((p, i) => (
                       <div
                         key={`m-${p.id}`}
-                        className="sm:hidden flex items-center gap-3 px-4 py-3 transition-all duration-200 hover:bg-white/5 cursor-pointer"
+                        className="sm:hidden flex items-center gap-3 px-4 py-3.5 transition-all duration-200 hover:bg-white/5 cursor-pointer"
                         style={{ borderBottom: i < 7 ? `1px solid ${cardBorder}` : "none" }}
                       >
                         <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{i + 1}</span>
                         <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</div>
-                          <div className="text-[11px]" style={{ color: textMuted }}>{p.rating} ELO</div>
+                          <div className="text-xs" style={{ color: textMuted }}>{p.rating} ELO</div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-base font-black" style={{ color: accent }}>{p.points}</div>
-                          <div className="text-[10px]" style={{ color: textMuted }}>{p.wins}W {p.draws}D {p.losses}L</div>
+                          <div className="text-lg font-black" style={{ color: accent }}>{p.points}</div>
+                          <div className="text-xs" style={{ color: textMuted }}>{p.wins}W {p.draws}D {p.losses}L</div>
                         </div>
                       </div>
                     ))}
@@ -702,14 +700,14 @@ export default function LeagueDemo() {
                             <Avatar name={featuredMatchup.white.displayName} size={24} url={getAvatar(featuredMatchup.white.chesscomUsername)} />
                           </div>
                           <span
-                            className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md"
+                            className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs font-black px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-md"
                             style={{ background: "#f0f5ee", color: "#111827", border: "1px solid #e5e7eb" }}
                           >
                             WHITE
                           </span>
                         </div>
                         <div className="text-center mt-2">
-                          <div className="font-black text-base" style={{ color: textMain }}>{featuredMatchup.white.displayName}</div>
+                          <div className="font-black text-lg" style={{ color: textMain }}>{featuredMatchup.white.displayName}</div>
                           <div className="text-xs font-medium" style={{ color: textMuted }}>@{featuredMatchup.white.chesscomUsername}</div>
                           <div className="text-sm font-bold mt-1" style={{ color: accent }}>{featuredMatchup.white.rating} ELO</div>
                         </div>
@@ -731,14 +729,14 @@ export default function LeagueDemo() {
                             <Avatar name={featuredMatchup.black.displayName} size={24} url={getAvatar(featuredMatchup.black.chesscomUsername)} />
                           </div>
                           <span
-                            className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md"
+                            className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs font-black px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-md"
                             style={{ background: "#111827", color: "#f0f5ee", border: "1px solid #374151" }}
                           >
                             BLACK
                           </span>
                         </div>
                         <div className="text-center mt-2">
-                          <div className="font-black text-base" style={{ color: textMain }}>{featuredMatchup.black.displayName}</div>
+                          <div className="font-black text-lg" style={{ color: textMain }}>{featuredMatchup.black.displayName}</div>
                           <div className="text-xs font-medium" style={{ color: textMuted }}>@{featuredMatchup.black.chesscomUsername}</div>
                           <div className="text-sm font-bold mt-1" style={{ color: accent }}>{featuredMatchup.black.rating} ELO</div>
                         </div>
@@ -802,14 +800,14 @@ export default function LeagueDemo() {
                 <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                   {/* Header */}
                   <div
-                    className="hidden sm:grid items-center px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest"
-                    style={{
-                      borderBottom: `1px solid ${cardBorder}`,
-                      color: textMuted,
-                      background: isDark ? "oklch(0.17 0.05 145)" : "#f3f4f6",
-                      gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
-                      gap: "0.5rem",
-                    }}
+                  className="hidden sm:grid items-center px-4 py-3 text-xs font-bold uppercase tracking-widest"
+                  style={{
+                    borderBottom: `1px solid ${cardBorder}`,
+                    color: textMuted,
+                    background: isDark ? "oklch(0.17 0.05 145)" : "#f3f4f6",
+                    gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
+                    gap: "0.5rem",
+                  }}
                   >
                     <span className="text-center">POS</span>
                     <span>Player</span>
@@ -830,7 +828,7 @@ export default function LeagueDemo() {
                       <div key={p.id}>
                         {/* Desktop row */}
                         <div
-                          className="hidden sm:grid items-center px-4 py-2.5 transition-colors hover:bg-white/5"
+                          className="hidden sm:grid items-center px-4 py-3 transition-colors hover:bg-white/5"
                           style={{
                             gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
                             gap: "0.5rem",
@@ -886,7 +884,7 @@ export default function LeagueDemo() {
 
                         {/* Mobile card */}
                         <div
-                          className="sm:hidden px-4 py-3.5"
+                          className="sm:hidden px-4 py-4"
                           style={{
                             borderBottom: i < DEMO_PLAYERS.length - 1 ? `1px solid ${cardBorder}` : "none",
                             background: i < 3 && podiumColor ? `${podiumColor}06` : "transparent",
@@ -928,8 +926,8 @@ export default function LeagueDemo() {
                             </div>
                             {/* Points */}
                             <div className="flex flex-col items-end flex-shrink-0">
-                              <span className="text-lg font-black" style={{ color: accent }}>{p.points}</span>
-                              <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>pts</span>
+                              <span className="text-xl font-black" style={{ color: accent }}>{p.points}</span>
+                              <span className="text-xs uppercase tracking-wide" style={{ color: textMuted }}>pts</span>
                             </div>
                           </div>
                           {/* Form dots row */}
@@ -941,7 +939,7 @@ export default function LeagueDemo() {
                           {/* Prep button */}
                           <a
                             href={`/prep/${encodeURIComponent(p.chesscomUsername)}`}
-                            className="mt-2 ml-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold"
+                            className="mt-2 ml-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
                             style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
                           >
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -978,10 +976,10 @@ export default function LeagueDemo() {
                           <Calendar size={14} style={{ color: isCurrentWeek ? accent : textMuted }} />
                           <span className="font-semibold text-sm" style={{ color: textMain }}>Week {week}</span>
                           {isCurrentWeek && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse" style={{ background: `${accent}22`, color: accent }}>Current</span>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full animate-pulse" style={{ background: `${accent}22`, color: accent }}>Current</span>
                           )}
                           {isPast && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMuted }}>Complete</span>
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMuted }}>Complete</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -996,9 +994,9 @@ export default function LeagueDemo() {
                         <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {CURRENT_WEEK_MATCHUPS.slice(0, 4).map((m, j) => (
                             <div key={j} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f9fafb" }}>
-                              <span className="text-[10px] font-bold w-4 text-center flex-shrink-0" style={{ color: textMuted }}>{j + 1}</span>
+                              <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{j + 1}</span>
                               <span className="text-xs font-semibold truncate flex-1" style={{ color: textMain }}>{m.white.displayName.split(" ")[0]}</span>
-                              <span className="text-[10px] font-bold" style={{ color: textMuted }}>vs</span>
+                              <span className="text-xs font-bold" style={{ color: textMuted }}>vs</span>
                               <span className="text-xs font-semibold truncate flex-1 text-right" style={{ color: textMain }}>{m.black.displayName.split(" ")[0]}</span>
                               {m.result ? (
                                 <CheckCircle2 size={12} style={{ color: "oklch(0.65 0.2 145)", flexShrink: 0 }} />
@@ -1084,7 +1082,7 @@ export default function LeagueDemo() {
                     <span className={`otb-icon otb-nav-tap${isActive ? " otb-icon--active" : ""}`}>
                       <Icon size={18} />
                     </span>
-                    <span className="text-[9px] font-semibold">{tab.label}</span>
+                    <span className="text-[11px] font-semibold">{tab.label}</span>
                   </button>
                 );
               })}

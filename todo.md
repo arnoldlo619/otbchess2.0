@@ -6922,3 +6922,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Member row management menu: 44px × 44px touch target
 - [x] Events filter pills: 36px height with touch-action manipulation
 - [x] All interactive elements: touch-action manipulation to eliminate 300ms tap delay
+
+## League Dashboard & Demo — Typography & Readability Upgrade
+- [x] Upgrade all sub-12px text (text-[9px], text-[10px], text-[11px]) to text-xs minimum throughout LeagueDashboard.tsx and LeagueDemo.tsx
+- [x] Upgrade mobile bottom nav labels to text-[11px] in both files
+- [x] Increase standings row heights to py-3/py-3.5 for better readability
+- [x] Upgrade match card player names from text-xs to text-sm font-semibold
+- [x] Upgrade ResultDot helper from w-5 h-5 to w-6 h-6
+- [x] Upgrade FormBadge helper from w-6 h-6 to w-7 h-7
+- [x] Upgrade desktop context bar stat labels and format badge to text-xs
+- [x] Upgrade top bar back button to 44px touch target
+- [x] Upgrade schedule match rows to py-3.5
+- [x] Upgrade history tab final standings rows to py-3.5
+- [x] Upgrade all commissioner/action badge text to text-xs
