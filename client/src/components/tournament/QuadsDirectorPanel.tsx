@@ -490,10 +490,81 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
     return s.score % 1 === 0 ? String(s.score) : s.score.toFixed(1);
   };
 
-  if (orderedPlayers.length === 0) return <div className="py-6 text-center"><p className="text-xs" style={{ color: T.textDim }}>No data yet.</p></div>;
+  if (orderedPlayers.length === 0) return (
+    <div className="py-8 text-center">
+      <div className="w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: T.rowBg }}>
+        <Grid3X3 size={18} style={{ color: T.textDim }} />
+      </div>
+      <p className="text-xs font-medium" style={{ color: T.textDim }}>Results will appear here as games are played.</p>
+    </div>
+  );
 
-  return (
-    <div className="overflow-x-auto">
+  // ── Mobile card layout (< 640px) ──────────────────────────────────────────
+  const MobileLayout = () => (
+    <div className="space-y-2">
+      {/* Player legend */}
+      <div className="flex flex-wrap gap-1.5 px-1 pb-1">
+        {orderedPlayers.map((p, i) => (
+          <span key={p.id} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+            style={{ background: T.rowBg, color: T.textMuted, border: `1px solid ${T.border ?? T.rowBg}` }}>
+            <span className="font-black" style={{ color: T.textDim }}>{i + 1}</span>
+            <span>{p.name.length > 10 ? p.name.slice(0, 10) + "…" : p.name}</span>
+          </span>
+        ))}
+      </div>
+      {/* Player rows */}
+      {orderedPlayers.map((rowPlayer, rowIdx) => {
+        const isWinner = standings.length > 0 && standings[0]?.playerId === rowPlayer.id;
+        const score = getScore(rowPlayer.id);
+        return (
+          <div key={rowPlayer.id} className="rounded-xl px-3 py-3 transition-colors"
+            style={{ background: isWinner ? T.goldBg : T.rowBg, border: `1px solid ${isWinner ? T.gold + "40" : (T.border ?? "transparent")}` }}>
+            {/* Player header */}
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                  style={{ background: isWinner ? T.gold + "30" : T.card, color: isWinner ? T.gold : T.textDim }}>
+                  {rowIdx + 1}
+                </span>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    {isWinner && <Trophy size={11} style={{ color: T.gold }} />}
+                    <span className="text-sm font-bold leading-tight" style={{ color: isWinner ? T.gold : T.text }}>
+                      {rowPlayer.name.length > 18 ? rowPlayer.name.slice(0, 18) + "…" : rowPlayer.name}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono" style={{ color: T.textDim }}>{rowPlayer.elo}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-black leading-none" style={{ color: isWinner ? T.gold : T.green }}>{score}</div>
+                <div className="text-[10px] font-medium mt-0.5" style={{ color: T.textDim }}>pts</div>
+              </div>
+            </div>
+            {/* Result cells vs each opponent */}
+            <div className="flex gap-1.5 flex-wrap">
+              {orderedPlayers.map((colPlayer, colIdx) => {
+                if (colPlayer.id === rowPlayer.id) return null;
+                const val = getResult(rowPlayer.id, colPlayer.id);
+                const label = val === "•" ? "–" : val;
+                return (
+                  <div key={colPlayer.id} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold"
+                    style={{ background: getCellBg(val) || T.card, color: getCellColor(val), minWidth: 0 }}>
+                    <span className="font-normal" style={{ color: T.textDim }}>vs {colIdx + 1}</span>
+                    <span className="font-black">{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // ── Desktop matrix table (≥ 640px) ────────────────────────────────────────
+  const DesktopLayout = () => (
+    <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
       <table className="w-full border-collapse text-xs" style={{ minWidth: "320px" }}>
         <thead>
           <tr>
@@ -511,9 +582,12 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
             return (
               <tr key={rowPlayer.id} className="transition-colors" style={{ background: isWinner ? T.goldBg : (rowIdx % 2 === 0 ? "transparent" : T.rowBg) }}>
                 <td className="px-2 py-2.5 font-bold" style={{ color: isWinner ? T.gold : T.textDim }}>{rowIdx + 1}</td>
-                <td className="px-2 py-2.5 font-semibold whitespace-nowrap" style={{ color: T.text }}>
-                  <span className="text-sm">{rowPlayer.name}</span>
-                  <span className="ml-1.5 text-xs font-mono opacity-50">{rowPlayer.elo}</span>
+                <td className="px-2 py-2.5 font-semibold" style={{ color: T.text, maxWidth: "140px" }}>
+                  <div className="flex items-center gap-1.5">
+                    {isWinner && <Trophy size={11} style={{ color: T.gold }} />}
+                    <span className="text-sm truncate">{rowPlayer.name}</span>
+                  </div>
+                  <span className="text-xs font-mono" style={{ color: T.textDim, opacity: 0.65 }}>{rowPlayer.elo}</span>
                 </td>
                 {orderedPlayers.map((colPlayer) => {
                   const val = getResult(rowPlayer.id, colPlayer.id);
@@ -529,6 +603,19 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
           })}
         </tbody>
       </table>
+    </div>
+  );
+
+  return (
+    <div style={{ touchAction: "manipulation" } as React.CSSProperties}>
+      {/* Mobile: card layout */}
+      <div className="sm:hidden">
+        <MobileLayout />
+      </div>
+      {/* Desktop: matrix table */}
+      <div className="hidden sm:block">
+        <DesktopLayout />
+      </div>
     </div>
   );
 }
