@@ -68,7 +68,7 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets";
+type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
 
 interface WizardData {
   name: string;
@@ -258,7 +258,7 @@ function HeroPanel({
 }: {
   step: number;
   isDark: boolean;
-  mode: "quickstart" | "schedule" | "large_event" | "brackets";
+  mode: "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
   onClose?: () => void;
 }) {
   const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
@@ -473,7 +473,7 @@ function ModeSelect({
   onClose,
 }: {
   isDark: boolean;
-  onSelect: (mode: "quickstart" | "schedule" | "large_event" | "brackets") => void;
+  onSelect: (mode: "quickstart" | "schedule" | "large_event" | "brackets" | "quads") => void;
   onClose: () => void;
 }) {
   return (
@@ -737,28 +737,28 @@ function ModeSelect({
             <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.25)" }} />
           </button>
 
-          {/* Multi-Tournament Brackets */}
+          {/* Quads */}
           <button
             type="button"
-            onClick={() => onSelect("brackets")}
+            onClick={() => onSelect("quads")}
             className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
             style={{
               padding: "20px 18px 24px",
-              background: "rgba(255,180,50,0.06)",
-              border: "2px solid rgba(255,180,50,0.25)",
+              background: "rgba(76,175,80,0.06)",
+              border: "2px solid rgba(76,175,80,0.25)",
               backdropFilter: "blur(12px)",
               minHeight: "200px",
               touchAction: "manipulation",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.14)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.45)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(76,175,80,0.14)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(76,175,80,0.45)";
               (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(255,180,50,0.15), 0 0 0 1px rgba(255,180,50,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(76,175,80,0.15), 0 0 0 1px rgba(76,175,80,0.08)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.06)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,180,50,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(76,175,80,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(76,175,80,0.25)";
               (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
               (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
@@ -766,20 +766,20 @@ function ModeSelect({
             {/* Top row: badge + number */}
             <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
               <span
-                className="text-[9px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
-                style={{ background: "rgba(255,180,50,0.18)", color: "#FFB432" }}
+                className="text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(76,175,80,0.18)", color: "#4CAF50" }}
               >
-                New
+                Popular
               </span>
-              <span className="text-[#FFB432]/20 text-xs font-bold font-mono hidden sm:block">04</span>
+              <span className="text-[#4CAF50]/20 text-xs font-bold font-mono hidden sm:block">04</span>
             </div>
 
-            {/* Icon */}
+            {/* Icon — 2×2 grid representing 4-player sections */}
             <div
               className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
-              style={{ background: "rgba(255,180,50,0.12)" }}
+              style={{ background: "rgba(76,175,80,0.12)" }}
             >
-              <BarChart3 className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: "#FFB432" }} strokeWidth={1.8} />
+              <Users2 className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: "#4CAF50" }} strokeWidth={1.8} />
             </div>
 
             <div className="flex-1">
@@ -787,25 +787,26 @@ function ModeSelect({
                 className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Brackets
+                Quads
               </h3>
-              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Auto-split by ELO. U1000, U1500, 1500+.
+              <p className="text-white/55 text-[12px] sm:text-[15px] leading-relaxed">
+                <span className="hidden sm:inline">4-player sections, round robin. Fair and fast.</span>
+                <span className="sm:hidden">4-player sections, round robin.</span>
               </p>
             </div>
 
             {/* Footer */}
-            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,180,50,0.12)" }}>
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,180,50,0.55)" }}>
-                <BarChart3 className="w-3.5 h-3.5" />
-                Multi-bracket management
+            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(76,175,80,0.12)" }}>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(76,175,80,0.65)" }}>
+                <Users2 className="w-3.5 h-3.5" />
+                Grouped by rating
               </div>
               <ArrowRight
                 className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-                style={{ color: "rgba(255,180,50,0.40)" }}
+                style={{ color: "rgba(76,175,80,0.50)" }}
               />
             </div>
-            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,180,50,0.40)" }} />
+            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(76,175,80,0.50)" }} />
           </button>
         </div>
       </div>
@@ -3870,7 +3871,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   }, [open, initialClubId, initialClubName]);
 
   // When entering quickstart mode, auto-fill today's date
-  const handleSelectMode = (m: "quickstart" | "schedule" | "large_event" | "brackets") => {
+  const handleSelectMode = (m: "quickstart" | "schedule" | "large_event" | "brackets" | "quads") => {
     if (m === "quickstart") {
       setData((d) => ({ ...d, date: todayIso() }));
     }
@@ -3886,6 +3887,20 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         elimCutoff: 64,
       }));
       // Use quickstart flow with pre-filled large event defaults
+      setMode("quickstart");
+      setStep(0);
+      setDirection(1);
+      return;
+    }
+    if (m === "quads") {
+      // Pre-configure Quads defaults: format quads, 3 rounds (fixed)
+      setData((d) => ({
+        ...d,
+        date: todayIso(),
+        format: "quads" as const,
+        rounds: 3,
+      }));
+      // Use quickstart flow with pre-filled Quads defaults
       setMode("quickstart");
       setStep(0);
       setDirection(1);

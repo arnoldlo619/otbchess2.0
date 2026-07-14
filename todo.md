@@ -6935,3 +6935,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Upgrade schedule match rows to py-3.5
 - [x] Upgrade history tab final standings rows to py-3.5
 - [x] Upgrade all commissioner/action badge text to text-xs
+
+## Quads Mode — Tournament Wizard Card
+- [x] Replace Brackets card with Quads card (icon, title, description, copy)
+- [x] Wire Quads card to set correct mode/format in wizard state
+- [x] Ensure Quads wizard steps flow end-to-end (name, settings, creation)
+- [x] Premium UX: card design, animations, mobile-responsive
