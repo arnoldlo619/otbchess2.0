@@ -543,7 +543,7 @@ function StatsBar() {
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden"
+      className="relative overflow-hidden mt-[30vh] sm:mt-0"
       style={{
 /* Solid green band — hard contrast edges, no top/bottom faders */
         background: "#436850",
