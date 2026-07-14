@@ -3459,6 +3459,31 @@ async function startServer() {
   runAutoExpiry();
   setInterval(runAutoExpiry, EXPIRY_INTERVAL_MS);
 
+  // ── Push Subscription Cleanup Job ─────────────────────────────────────────
+  // Delete push_subscriptions rows older than 90 days. Subscriptions that old
+  // are almost certainly expired browser sessions and will only produce 410/404
+  // errors on the next send attempt. Running this daily keeps the table lean.
+  const PUSH_SUB_TTL_DAYS = 90;
+  const PUSH_SUB_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  async function purgeExpiredSubscriptions() {
+    try {
+      const db = await getDb();
+      const cutoff = new Date(Date.now() - PUSH_SUB_TTL_DAYS * 24 * 60 * 60 * 1000);
+      const result = await db
+        .delete(pushSubscriptions)
+        .where(lt(pushSubscriptions.createdAt, cutoff));
+      const deleted = (result as unknown as { rowsAffected?: number })?.rowsAffected ?? 0;
+      if (deleted > 0) {
+        logger.info(`[push-cleanup] Purged ${deleted} expired push subscription(s) older than ${PUSH_SUB_TTL_DAYS} days.`);
+      }
+    } catch (err) {
+      logger.error("[push-cleanup] Error purging expired subscriptions:", err);
+    }
+  }
+  // Run once at startup (non-blocking), then every 24 hours
+  purgeExpiredSubscriptions();
+  setInterval(purgeExpiredSubscriptions, PUSH_SUB_CLEANUP_INTERVAL_MS);
+
   // Serve static files from dist/public in production
   const staticPath =
     process.env.NODE_ENV === "production"

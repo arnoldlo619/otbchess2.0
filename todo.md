@@ -244,9 +244,9 @@
 
 ## Subscription Cleanup Job
 
-- [ ] purgeExpiredSubscriptions() function — delete rows where created_at < NOW() - 90 days
-- [ ] Run on server startup (non-blocking)
-- [ ] Schedule to re-run every 24 hours via setInterval
+- [x] purgeExpiredSubscriptions() function — delete rows where created_at < NOW() - 90 days
+- [x] Run on server startup (non-blocking)
+- [x] Schedule to re-run every 24 hours via setInterval
 - [x] Unit tests for expiry logic
 
 ## Visual Simplification
@@ -547,13 +547,13 @@
 
 ## Director Dashboard — Home Page Redesign
 
-- [ ] Add "Home" as the default/first tab in the Director Dashboard tab bar
-- [ ] Home tab: centred Event Info card as the sole focal component, with tab buttons (Boards, Players, Standings, Settings) aligned to the right
-- [ ] Unified tab bar: Home | Boards | Players | Standings | Settings (remove separate sidebar)
-- [ ] Move Round Progress out of sidebar into a subtle inline strip in the header, directly under the tournament title (shows registered player count + time control + round progress bar)
-- [ ] Live Standings becomes a tab (not a sidebar card)
-- [ ] Remove the old sidebar layout entirely when on the Home tab
-- [ ] Header nav: tournament title left, round-progress strip centre, action buttons right
+- [x] Add "Home" as the default/first tab in the Director Dashboard tab bar
+- [x] Home tab: centred Event Info card as the sole focal component, with tab buttons (Boards, Players, Standings, Settings) aligned to the right
+- [x] Unified tab bar: Home | Boards | Players | Standings | Settings (remove separate sidebar)
+- [x] Move Round Progress out of sidebar into a subtle inline strip in the header, directly under the tournament title (shows registered player count + time control + round progress bar)
+- [x] Live Standings becomes a tab (not a sidebar card)
+- [x] Remove the old sidebar layout entirely when on the Home tab
+- [x] Header nav: tournament title left, round-progress strip centre, action buttons right
 
 ## Logo Nav Link & Tournament Dashboard Button
 
@@ -736,11 +736,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Tournament Wizard — Larger Desktop Form Fields
 
-- [ ] Increase input height to lg:h-14 (56px) on desktop, keep h-11 on mobile
-- [ ] Increase label font size to lg:text-base on desktop
-- [ ] Increase input font size to lg:text-base on desktop
-- [ ] Increase vertical gap between form fields to lg:gap-6 on desktop
-- [ ] Increase section title / step heading size on desktop
+- [x] Increase input height to lg:h-14 (56px) on desktop, keep h-11 on mobile
+- [x] Increase label font size to lg:text-xl on desktop
+- [x] Increase input font size to lg:text-base (clamp 16-18px) on desktop
+- [x] Increase vertical gap between form fields to lg:space-y-10 on desktop
+- [x] Increase section title / step heading size on desktop (lg:text-xl)
 
 ## Fix: API Routes Not Reachable in Dev (SSE/Player Sync Broken)
 
@@ -891,30 +891,30 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Director Result Confirmation Badges
 
-- [ ] Server: in-memory store for player-reported results per tournament (boardId → {result, reportedBy, timestamp})
-- [ ] Server: POST /api/tournament/:id/report-result endpoint (player submits result)
-- [ ] Server: SSE broadcast `result_reported` event to director when a player submits
-- [ ] Director: listen for `result_reported` SSE events and store pending reports in state
-- [ ] Director: BoardCard shows confirmation badge when a player has reported a result ("Alice reported: 1-0 ✓")
-- [ ] Director: one-tap confirm button on the badge applies the result via enterResult()
-- [ ] Director: badge dismissed after director confirms or manually enters a different result
-- [ ] PlayerView: wire result submission to POST /api/tournament/:id/report-result
+- [x] Server: in-memory store for player-reported results per tournament (boardId → {result, reportedBy, timestamp}) [superseded — player self-reporting removed]
+- [x] Server: POST /api/tournament/:id/report-result endpoint (player submits result) [superseded]
+- [x] Server: SSE broadcast `result_reported` event to director when a player submits [superseded]
+- [x] Director: listen for `result_reported` SSE events and store pending reports in state [superseded]
+- [x] Director: BoardCard shows confirmation badge when a player has reported a result ("Alice reported: 1-0 ✓") [superseded]
+- [x] Director: one-tap confirm button on the badge applies the result via enterResult() [superseded]
+- [x] Director: badge dismissed after director confirms or manually enters a different result [superseded]
+- [x] PlayerView: wire result submission to POST /api/tournament/:id/report-result [superseded]
 - [x] Unit tests for result report store helpers and badge display logic
 
 ## Real-Time Sync Overhaul (Live Tournament Experience)
 
-- [ ] Server: broadcast `standings_updated` SSE event whenever director enters/changes a result
-- [ ] Server: broadcast `round_generated` SSE event when director generates the next round
-- [ ] Server: GET /api/tournament/:id/live-state endpoint returns full live state (round, games, players/standings) for catch-up on connect
-- [ ] PlayerView: replace localStorage-only state with server-authoritative live state fetched on mount
-- [ ] PlayerView: open persistent SSE connection on mount (no account required — keyed by tournamentId + username in localStorage)
-- [ ] PlayerView: handle `tournament_started`, `round_started`, `round_generated`, `standings_updated`, `tournament_ended` SSE events
-- [ ] PlayerView: live standings tab showing all players ranked with score, W/D/L, and highlight for current player
-- [ ] PlayerView: board assignment card auto-updates when new round is generated (no manual refresh)
-- [ ] PlayerView: "Waiting for next round" state shown between rounds with live standings
-- [ ] PlayerView: smooth animated transition when new round pairings arrive
-- [ ] Director: broadcast standings_updated after every enterResult() call
-- [ ] Director: broadcast round_generated after generateNextRound() completes
+- [x] Server: broadcast `standings_updated` SSE event whenever director enters/changes a result [done Mar 2026]
+- [x] Server: broadcast `round_generated` SSE event when director generates the next round [done Mar 2026]
+- [x] Server: GET /api/tournament/:id/live-state endpoint returns full live state (round, games, players/standings) for catch-up on connect [done Mar 2026]
+- [x] PlayerView: replace localStorage-only state with server-authoritative live state fetched on mount [done Mar 2026]
+- [x] PlayerView: open persistent SSE connection on mount (no account required — keyed by tournamentId + username in localStorage) [done Mar 2026]
+- [x] PlayerView: handle `tournament_started`, `round_started`, `round_generated`, `standings_updated`, `tournament_ended` SSE events [done Mar 2026]
+- [x] PlayerView: live standings tab showing all players ranked with score, W/D/L, and highlight for current player [done Mar 2026]
+- [x] PlayerView: board assignment card auto-updates when new round is generated (no manual refresh) [done Mar 2026]
+- [x] PlayerView: "Waiting for next round" state shown between rounds with live standings [done Mar 2026]
+- [x] PlayerView: smooth animated transition when new round pairings arrive [done Mar 2026]
+- [x] Director: broadcast standings_updated after every enterResult() call [done Mar 2026]
+- [x] Director: broadcast round_generated after generateNextRound() completes [done Mar 2026]
 - [x] Unit tests for SSE event handling and live state reconciliation
 
 ## Real-Time Sync Overhaul — Mar 2026
@@ -935,16 +935,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Live Spectator View — Mar 2026
 
-- [ ] Audit existing /tournament/:id spectator page and SSE infrastructure
-- [ ] Spectator page: connect to standings_updated + round_started + tournament_ended SSE events
-- [ ] Spectator page: live standings table (rank, name, ELO, points, W/D/L, Buchholz)
-- [ ] Spectator page: current round boards panel (all pairings, live result badges)
-- [ ] Spectator page: round progress bar (X/N results in)
-- [ ] Spectator page: connection status badge (Live / Reconnecting)
-- [ ] Spectator page: catch-up fetch on mount via /live-state endpoint
-- [ ] Spectator page: tournament header (name, format, round, status pill)
-- [ ] Spectator page: auto-scroll / highlight when standings change
-- [ ] Spectator page: tournament_complete screen with final podium
+- [x] Audit existing /tournament/:id spectator page and SSE infrastructure [done Mar 2026]
+- [x] Spectator page: connect to standings_updated + round_started + tournament_ended SSE events [done Mar 2026]
+- [x] Spectator page: live standings table (rank, name, ELO, points, W/D/L, Buchholz) [done Mar 2026]
+- [x] Spectator page: current round boards panel (all pairings, live result badges) [done Mar 2026]
+- [x] Spectator page: round progress bar (X/N results in) [done Mar 2026]
+- [x] Spectator page: connection status badge (Live / Reconnecting) [done Mar 2026]
+- [x] Spectator page: catch-up fetch on mount via /live-state endpoint [done Mar 2026]
+- [x] Spectator page: tournament header (name, format, round, status pill) [done Mar 2026]
+- [x] Spectator page: auto-scroll / highlight when standings change [done Mar 2026]
+- [x] Spectator page: tournament_complete screen with final podium [done Mar 2026]
 - [x] Unit tests for spectator SSE state transitions
 
 ## Live Spectator View — Completed Mar 2026
@@ -963,14 +963,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Web Push Notifications — Mar 2026
 
-- [ ] Audit VAPID keys and existing push subscription infrastructure
-- [ ] Server: store push subscriptions per tournament in DB (tournament_id, player_id, subscription JSON)
-- [ ] Server: POST /api/tournament/:id/push-subscribe endpoint
-- [ ] Server: send Web Push to all subscribed players when round_started fires
-- [ ] Client: PlayerView — "Enable Notifications" prompt after player joins
-- [ ] Client: usePushSubscription hook — subscribe and POST to server
-- [ ] Service worker: handle push event and show notification with round number and board
-- [ ] Service worker: notification click → navigate to /tournament/:id/play/:username
+- [x] Audit VAPID keys and existing push subscription infrastructure [done Mar 2026]
+- [x] Server: store push subscriptions per tournament in DB (tournament_id, player_id, subscription JSON) [done Mar 2026]
+- [x] Server: POST /api/tournament/:id/push-subscribe endpoint [done Mar 2026]
+- [x] Server: send Web Push to all subscribed players when round_started fires [done Mar 2026]
+- [x] Client: PlayerView — "Enable Notifications" prompt after player joins [done Mar 2026]
+- [x] Client: usePushSubscription hook — subscribe and POST to server [done Mar 2026]
+- [x] Service worker: handle push event and show notification with round number and board [done Mar 2026]
+- [x] Service worker: notification click → navigate to /tournament/:id/play/:username [done Mar 2026]
 - [x] Unit tests for push dispatch helpers
 
 ## Delete Tournament — Mar 2026
@@ -1020,17 +1020,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Remove Player Self-Reporting — Mar 2026
 
-- [ ] Remove submit-result UI from PlayerView (result buttons, submit handler, result_submitted fetch)
-- [ ] Remove pending-results in-memory store from server/index.ts
-- [ ] Remove POST /api/tournament/:id/result endpoint
-- [ ] Remove GET /api/tournament/:id/pending-results endpoint
-- [ ] Remove DELETE /api/tournament/:id/pending-results/:gameId endpoint
-- [ ] Remove result_submitted SSE broadcast from server
-- [ ] Remove Director SSE listener for result_submitted
-- [ ] Remove pendingReports state, clearPendingReport helper from Director.tsx
-- [ ] Remove confirmation badge UI from BoardCard
-- [ ] Update PlayerView waiting/post-game screen copy: "Report your result to the director at the registration table"
-- [ ] Update unit tests to remove result-submission test cases
+- [x] Remove submit-result UI from PlayerView (result buttons, submit handler, result_submitted fetch)
+- [x] Remove pending-results in-memory store from server/index.ts
+- [x] Remove POST /api/tournament/:id/result endpoint
+- [x] Remove GET /api/tournament/:id/pending-results endpoint
+- [x] Remove DELETE /api/tournament/:id/pending-results/:gameId endpoint
+- [x] Remove result_submitted SSE broadcast from server
+- [x] Remove Director SSE listener for result_submitted
+- [x] Remove pendingReports state, clearPendingReport helper from Director.tsx
+- [x] Remove confirmation badge UI from BoardCard
+- [x] Update PlayerView waiting/post-game screen copy: "Report your result to the director at the registration table"
+- [x] Update unit tests to remove result-submission test cases
 
 ## Remove Player Self-Reporting — Completed Mar 2026
 
@@ -1167,12 +1167,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Find and fix all remaining nested <a> inside <a> violations on Home page and other pages
 
 ## Final Standings Page — Mar 2026
-- [ ] Audit existing standings/tiebreak logic and routing
+- [x] Audit existing standings/tiebreak logic and routing [done Mar 2026]
 - [x] Build FinalStandings page with Swiss tiebreak table (Pts, Bch1, Bch, SB, Prog, W, B)
 - [x] Wire /tournament/:id/results route in App.tsx
 - [x] Director "Close Tournament" redirects to /results
 - [x] Participant PlayerView auto-redirects to /results when tournament status is "completed"
-- [ ] Write vitest tests for tiebreak calculation helpers
+- [x] Write vitest tests for tiebreak calculation helpers [done Mar 2026]
 
 ## QR Code & Join Flow Bugs — Mar 2026
 
@@ -1287,10 +1287,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Make column header row sticky (top: 0) in CrossTable for vertical scroll
 
 ## Join Page QR Scanner Removal — Mar 2026
-- [ ] Remove in-app QR scanner component from Join page
-- [ ] Streamline join flow to tournament code input as primary method
-- [ ] Verify tournament code join works end-to-end
-- [ ] Clean up unused QR scanner imports/dependencies
+- [x] Remove in-app QR scanner component from Join page [done Mar 2026]
+- [x] Streamline join flow to tournament code input as primary method [done Mar 2026]
+- [x] Verify tournament code join works end-to-end [done Mar 2026]
+- [x] Clean up unused QR scanner imports/dependencies [done Mar 2026]
 
 ## Join Page Simplification
 
@@ -6898,7 +6898,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] P2: Player card labels — replace "Champion/1st of 16" with "Quad 1 Champion/2nd in Quad 2" etc.
 - [ ] P2: Mobile responsive — QuadsDirectorPanel touch targets 44px+, horizontal Quad tabs, sticky header
 - [ ] P2: Accessibility — semantic buttons, keyboard nav, focus indicators, ARIA labels, non-color states
-- [ ] P2: Unit tests — quads engine (seeding, standings, tiebreaks, co-champions, result correction)
+- [x] P2: Unit tests — quads engine (seeding, standings, tiebreaks, co-champions, result correction) [Phase 6 — 57 tests in quadsPhase6.test.ts]
 - [x] P2: Player card labels — Quad placement badges (co-champion, 2nd in Quad 2, etc.)
 - [x] P2: Mobile responsive — 44px touch targets, overflow-x-auto round tabs, flex-shrink-0
 - [x] P2: Accessibility — aria-pressed, aria-selected, aria-expanded, aria-label on all interactive elements, semantic buttons

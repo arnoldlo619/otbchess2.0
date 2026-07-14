@@ -356,8 +356,8 @@ function HeroPanel({
 
 function Label({ children, hint, isDark }: { children: React.ReactNode; hint?: string; isDark: boolean }) {
   return (
-    <div className="flex items-baseline gap-2 mb-3 lg:mb-4">
-      <label className="text-base lg:text-lg font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
+    <div className="flex items-baseline gap-2 mb-3 lg:mb-5">
+      <label className="text-base lg:text-xl font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
         {children}
       </label>
       {hint && (
@@ -407,8 +407,12 @@ function TextInput({
         autoFocus={autoFocus}
         className="w-full rounded-2xl border outline-none transition-all duration-200"
         style={{
-          padding: large ? "18px 20px 18px 56px" : Icon ? "16px 18px 16px 52px" : "16px 20px",
-          fontSize: large ? 22 : 17,
+          padding: large
+            ? "18px 20px 18px 56px"
+            : Icon
+            ? "clamp(16px, 1.8vw, 18px) 18px clamp(16px, 1.8vw, 18px) 52px"
+            : "clamp(16px, 1.8vw, 18px) 20px",
+          fontSize: large ? "clamp(22px, 2vw, 26px)" : "clamp(16px, 1.2vw, 18px)",
           fontWeight: large ? 600 : 400,
           background: isDark ? T.dInput : T.lInput,
           border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
@@ -930,7 +934,7 @@ function QuickstartForm({
   };
 
   return (
-    <div className="space-y-7 lg:space-y-9">
+    <div className="space-y-7 lg:space-y-10">
       {/* Tournament name */}
       <div>
         <Label isDark={isDark} hint="required">Tournament Name</Label>
@@ -975,8 +979,8 @@ function QuickstartForm({
       {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
       <div>
         {/* Section header — matches the Label component style */}
-        <div className="flex items-baseline gap-2 mb-3 lg:mb-4">
-          <label className="text-base lg:text-lg font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
+        <div className="flex items-baseline gap-2 mb-3 lg:mb-5">
+          <label className="text-base lg:text-xl font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
             Tournament Settings
           </label>
           {/* Smart Defaults toggle pill */}
@@ -2483,7 +2487,7 @@ function StepDetails({
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 lg:space-y-10">
       {/* Cover Image Upload */}
       <div>
         <Label isDark={isDark} hint="optional">Cover Photo</Label>
