@@ -6976,3 +6976,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Rank cell brightens on hovered row
 - [x] onMouseLeave on container clears both hover states
 - [x] transition-colors on all cells for smooth animation
+
+## Tournament Wizard Input Hover & Focus Transitions
+
+- [x] TextInput: React state-driven hover/focus (replaces inline onFocus/onBlur style mutation)
+- [x] TextInput: hover state — border lightens to #9CA3AF (light) / rgba(255,255,255,0.28) (dark), subtle drop shadow
+- [x] TextInput: focus state — green border + green ring + soft green glow, 0.18s/0.22s ease transitions
+- [x] TextInput: icon color transitions to green on focus (0.18s ease)
+- [x] TextArea: same hover/focus state system as TextInput
+- [x] TypeScript: 0 errors after refactor

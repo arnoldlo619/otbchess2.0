@@ -390,12 +390,25 @@ function TextInput({
   large?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const hoverBorder = isDark ? "rgba(255,255,255,0.28)" : "#9CA3AF";
+  const idleBorder = isDark ? T.dInputBorder : T.lInputBorder;
+  const borderColor = focused ? T.green : hovered ? hoverBorder : idleBorder;
+  const boxShadow = focused
+    ? `0 0 0 3px ${T.greenRing}, 0 2px 8px rgba(67,104,80,0.12)`
+    : hovered
+    ? `0 1px 4px rgba(0,0,0,0.08)`
+    : "none";
   return (
     <div className="relative">
       {Icon && (
         <Icon
           className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
-          style={{ color: isDark ? T.dMuted : T.lMuted }}
+          style={{
+            color: focused ? T.green : isDark ? T.dMuted : T.lMuted,
+            transition: "color 0.18s ease",
+          }}
         />
       )}
       <input
@@ -405,7 +418,7 @@ function TextInput({
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full rounded-2xl border outline-none transition-all duration-200"
+        className="w-full rounded-2xl border outline-none"
         style={{
           padding: large
             ? "18px 20px 18px 56px"
@@ -415,18 +428,16 @@ function TextInput({
           fontSize: large ? "clamp(22px, 2vw, 26px)" : "clamp(16px, 1.2vw, 18px)",
           fontWeight: large ? 600 : 400,
           background: isDark ? T.dInput : T.lInput,
-          border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+          border: `2px solid ${borderColor}`,
+          boxShadow,
           color: isDark ? T.dText : T.lText,
           lineHeight: "1.5",
+          transition: "border-color 0.18s ease, box-shadow 0.22s ease, background 0.18s ease",
         }}
-        onFocus={(e) => {
-          e.target.style.borderColor = T.green;
-          e.target.style.boxShadow = `0 0 0 3px ${T.greenRing}`;
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = isDark ? T.dInputBorder : T.lInputBorder;
-          e.target.style.boxShadow = "none";
-        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => { setFocused(false); setHovered(false); }}
       />
     </div>
   );
@@ -443,29 +454,37 @@ function TextArea({
   placeholder?: string;
   isDark: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const hoverBorder = isDark ? "rgba(255,255,255,0.28)" : "#9CA3AF";
+  const idleBorder = isDark ? T.dInputBorder : T.lInputBorder;
+  const borderColor = focused ? T.green : hovered ? hoverBorder : idleBorder;
+  const boxShadow = focused
+    ? `0 0 0 3px ${T.greenRing}, 0 2px 8px rgba(67,104,80,0.12)`
+    : hovered
+    ? `0 1px 4px rgba(0,0,0,0.08)`
+    : "none";
   return (
     <textarea
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={3}
-      className="w-full rounded-2xl border outline-none transition-all duration-200 resize-none"
+      className="w-full rounded-2xl border outline-none resize-none"
       style={{
         padding: "16px 20px",
         fontSize: 17,
         lineHeight: "1.6",
         background: isDark ? T.dInput : T.lInput,
-        border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+        border: `2px solid ${borderColor}`,
+        boxShadow,
         color: isDark ? T.dText : T.lText,
+        transition: "border-color 0.18s ease, box-shadow 0.22s ease",
       }}
-      onFocus={(e) => {
-        e.target.style.borderColor = T.green;
-        e.target.style.boxShadow = `0 0 0 3px ${T.greenRing}`;
-      }}
-      onBlur={(e) => {
-        e.target.style.borderColor = isDark ? T.dInputBorder : T.lInputBorder;
-        e.target.style.boxShadow = "none";
-      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => { setFocused(false); setHovered(false); }}
     />
   );
 }
