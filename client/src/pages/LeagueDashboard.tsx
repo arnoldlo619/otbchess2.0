@@ -186,8 +186,8 @@ function ShareModal({
   const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
   const border = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
   const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)";
-  const accent = "oklch(0.55 0.13 145)";
+  const textMuted = isDark ? "oklch(0.74 0.04 145)" : "oklch(0.38 0.05 145)";
+  const accent = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
 
   function handleCopy() {
     navigator.clipboard.writeText(joinUrl).then(() => {
@@ -334,8 +334,8 @@ function PlayerProfileModal({
   const cardBg = isDark ? "oklch(0.24 0.07 145)" : "oklch(0.96 0.02 145)";
   const border = isDark ? "oklch(0.28 0.07 145)" : "oklch(0.88 0.03 145)";
   const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)";
-  const accent = "oklch(0.55 0.13 145)";
+  const textMuted = isDark ? "oklch(0.74 0.04 145)" : "oklch(0.38 0.05 145)";
+  const accent = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
 
   const [profile, setProfile] = useState<ChessComProfile | null>(null);
   const [stats, setStats] = useState<ChessComStats | null>(null);
@@ -382,7 +382,7 @@ function PlayerProfileModal({
     { key: "chess_daily" as const, label: "Daily" },
   ];
 
-  const outcomeColor = { win: accent, loss: "oklch(0.55 0.18 25)", draw: "oklch(0.65 0.15 60)" };
+  const outcomeColor = { win: accent, loss: isDark ? "oklch(0.68 0.18 25)" : "oklch(0.42 0.18 25)", draw: isDark ? "oklch(0.72 0.15 60)" : "oklch(0.45 0.15 60)" };
   const outcomeLabel = { win: "W", loss: "L", draw: "D" };
 
   return (
@@ -552,9 +552,9 @@ function ReportResultModal({
   const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
   const border = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
   const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "oklch(0.45 0.05 145)";
-  const accent = "oklch(0.55 0.13 145)";
-  const warn = "oklch(0.65 0.18 60)";
+  const textMuted = isDark ? "oklch(0.74 0.04 145)" : "oklch(0.38 0.05 145)";
+  const accent = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
+  const warn = isDark ? "oklch(0.72 0.18 60)" : "oklch(0.45 0.18 60)";
 
   const isWhite = currentUserId === match.playerWhiteId;
   const isBlack = currentUserId === match.playerBlackId;
@@ -748,7 +748,7 @@ export default function LeagueDashboard() {
   const cardBg    = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
   const cardBorder = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
   const textMain  = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
-  const textMuted = isDark ? "oklch(0.60 0.04 145)" : "oklch(0.45 0.05 145)";
+  const textMuted = isDark ? "oklch(0.72 0.04 145)" : "oklch(0.38 0.05 145)";
   const accent    = isDark ? "oklch(0.62 0.16 145)" : "oklch(0.42 0.13 145)";
   const surfaceHover = isDark ? "oklch(0.22 0.06 145)" : "oklch(0.94 0.02 145)";
   const tabBg     = isDark ? "oklch(0.22 0.05 145)" : "oklch(0.93 0.02 145)";
@@ -1325,7 +1325,7 @@ export default function LeagueDashboard() {
                   className="relative w-12 h-11 rounded-xl flex items-center justify-center transition-all group"
                   style={{
                     background: isActive ? `${accent}22` : "transparent",
-                    color: isActive ? accent : "oklch(0.50 0.06 145)",
+                    color: isActive ? accent : isDark ? "oklch(0.62 0.06 145)" : "oklch(0.42 0.06 145)",
                   }}
                   title={tab.label}
                 >
@@ -1369,7 +1369,7 @@ export default function LeagueDashboard() {
                 onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
                 disabled={pushLoading || pushStatus === "denied"}
                 className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : "oklch(0.50 0.06 145)" }}
+                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : isDark ? "oklch(0.62 0.06 145)" : "oklch(0.42 0.06 145)" }}
                 title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
               >
                 {pushLoading ? (
@@ -1385,7 +1385,7 @@ export default function LeagueDashboard() {
             <button
               onClick={() => setShowShare(true)}
               className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: "oklch(0.50 0.06 145)" }}
+              style={{ color: isDark ? "oklch(0.62 0.06 145)" : "oklch(0.42 0.06 145)" }}
               title="Share League"
             >
               <Share2 size={16} />
@@ -1409,7 +1409,7 @@ export default function LeagueDashboard() {
             <button
               onClick={() => navigate(`/clubs/${league.clubId}`)}
               className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-opacity hover:opacity-70 touch-manipulation"
-              style={{ color: "oklch(0.65 0.12 145)" }}
+              style={{ color: "oklch(0.72 0.12 145)" }}
             >
               <ArrowLeft size={18} />
             </button>
@@ -1421,7 +1421,7 @@ export default function LeagueDashboard() {
               <span className="text-sm font-bold truncate block" style={{ color: "oklch(0.95 0.02 145)" }}>
                 {league.name}
               </span>
-              <span className="text-xs font-medium truncate block" style={{ color: "oklch(0.55 0.06 145)" }}>
+              <span className="text-xs font-medium truncate block" style={{ color: "oklch(0.72 0.06 145)" }}>
                 {league.clubName}
               </span>
             </div>
@@ -2128,25 +2128,25 @@ export default function LeagueDashboard() {
                                        (myMatchThisWeek.result === "black_win" && myMatchThisWeek.playerBlackId === user?.id);
                           const isDraw = myMatchThisWeek.result === "draw";
                           const iLost = !iWon && !isDraw;
-                          const outcomeColor = iWon ? accent : isDraw ? "oklch(0.65 0.15 60)" : "oklch(0.55 0.18 25)";
+                          const outcomeColor = iWon ? accent : isDraw ? (isDark ? "oklch(0.75 0.15 60)" : "oklch(0.45 0.15 60)") : (isDark ? "oklch(0.70 0.18 25)" : "oklch(0.42 0.18 25)");
                           const outcomeLabel = iWon ? "You Won!" : isDraw ? "Draw" : "You Lost";
                           return (
                             <>
-                              <span className="text-[11px] font-black px-3 py-1 rounded-full" style={{ background: `${outcomeColor}22`, color: outcomeColor }}>{outcomeLabel}</span>
-                              <span className="text-[9px] mt-0.5 text-center" style={{ color: textMuted }}>{resultLabel(myMatchThisWeek)}</span>
+                              <span className="text-xs font-black px-3 py-1 rounded-full" style={{ background: `${outcomeColor}22`, color: outcomeColor }}>{outcomeLabel}</span>
+                              <span className="text-xs mt-0.5 text-center" style={{ color: textMuted }}>{resultLabel(myMatchThisWeek)}</span>
                             </>
                           );
                         })()}
                       </>
                     ) : myMatchThisWeek.resultStatus === "disputed" ? (
                       <>
-                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Disputed</span>
-                        <span className="text-[9px] mt-0.5" style={{ color: textMuted }}>Commissioner will resolve</span>
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: isDark ? "oklch(0.45 0.18 25)" : "oklch(0.55 0.18 25)", color: "#fff" }}>Disputed</span>
+                        <span className="text-xs mt-0.5" style={{ color: textMuted }}>Commissioner will resolve</span>
                       </>
                     ) : myMatchThisWeek.resultStatus === "awaiting_confirmation" ? (
                       <>
-                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.55 0.15 60)", color: "#fff" }}>Pending</span>
-                        <span className="text-[9px] mt-0.5" style={{ color: textMuted }}>Commissioner will report</span>
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: isDark ? "oklch(0.55 0.15 60)" : "oklch(0.48 0.15 60)", color: "#fff" }}>Pending</span>
+                        <span className="text-xs mt-0.5" style={{ color: textMuted }}>Commissioner will report</span>
                       </>
                     ) : (
                       <>
@@ -2159,13 +2159,13 @@ export default function LeagueDashboard() {
                         {canReport(myMatchThisWeek) ? (
                           <button
                             onClick={() => setReportingMatch(myMatchThisWeek)}
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
+                            className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1"
                             style={{ background: accent, color: "#fff" }}
                           >
                             Report
                           </button>
                         ) : (
-                          <span className="text-[9px] mt-0.5 text-center" style={{ color: textMuted }}>Play your match &amp; tell the commissioner the result</span>
+                          <span className="text-xs mt-0.5 text-center" style={{ color: textMuted }}>Play your match &amp; tell the commissioner the result</span>
                         )}
                       </>
                     )}
@@ -2670,9 +2670,9 @@ export default function LeagueDashboard() {
                       <div className="flex items-center justify-between text-xs font-semibold">
                         <span style={{ color: textMain }}>{myMatchThisWeek.playerWhiteName.split(" ")[0]}</span>
                         <div className="flex items-center gap-2">
-                          <span style={{ color: "oklch(0.65 0.2 145)" }}>{h2hWins}W</span>
+                          <span style={{ color: isDark ? "oklch(0.75 0.2 145)" : "oklch(0.35 0.18 145)" }}>{h2hWins}W</span>
                           <span style={{ color: textMuted }}>{h2hDraws}D</span>
-                          <span style={{ color: "oklch(0.6 0.2 25)" }}>{h2hLosses}L</span>
+                          <span style={{ color: isDark ? "oklch(0.70 0.2 25)" : "oklch(0.42 0.2 25)" }}>{h2hLosses}L</span>
                         </div>
                         <span style={{ color: textMain }}>{myMatchThisWeek.playerBlackName.split(" ")[0]}</span>
                       </div>
@@ -2716,15 +2716,15 @@ export default function LeagueDashboard() {
                         const results = parseLastResults(s?.lastResults).slice(-5);
                         return (
                           <div key={pid} className="flex items-center gap-2">
-                            <span className="text-[11px] font-medium w-20 truncate" style={{ color: textMuted }}>{name.split(" ")[0]}</span>
+                            <span className="text-xs font-medium w-20 truncate" style={{ color: textMuted }}>{name.split(" ")[0]}</span>
                             <div className="flex gap-1">
                               {results.length === 0 ? (
-                                <span className="text-[10px]" style={{ color: textMuted }}>No results yet</span>
+                                <span className="text-xs" style={{ color: textMuted }}>No results yet</span>
                               ) : (
                                 results.map((r, i) => (
                                   <span
                                     key={i}
-                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black"
+                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
                                     style={{
                                       background: r === "W" ? "oklch(0.55 0.2 145)" : r === "L" ? "oklch(0.45 0.2 25)" : "oklch(0.55 0.15 60)",
                                       color: "#fff",
@@ -2736,7 +2736,7 @@ export default function LeagueDashboard() {
                               )}
                             </div>
                             {s && (
-                              <span className="text-[10px] font-semibold ml-1" style={{ color: textMuted }}>
+                              <span className="text-xs font-semibold ml-1" style={{ color: textMuted }}>
                                 {s.wins}W {s.draws}D {s.losses}L
                               </span>
                             )}
@@ -2817,7 +2817,7 @@ export default function LeagueDashboard() {
               return (
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   {dl ? (
-                    <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: isOverdue ? "oklch(0.55 0.2 25)" : isClose ? "oklch(0.65 0.18 60)" : textMuted }}>
+                    <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: isOverdue ? (isDark ? "oklch(0.70 0.2 25)" : "oklch(0.42 0.2 25)") : isClose ? (isDark ? "oklch(0.75 0.18 60)" : "oklch(0.45 0.18 60)") : textMuted }}>
                       <Clock size={12} />
                       {isOverdue ? "Overdue" : "Due"}: {dl.toLocaleDateString(undefined, { month: "short", day: "numeric" })} at {dl.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                     </span>
@@ -2998,7 +2998,7 @@ export default function LeagueDashboard() {
                             className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
                             style={{
                               background: isDark ? "oklch(0.32 0.10 80)" : "oklch(0.92 0.08 80)",
-                              color: isDark ? "oklch(0.88 0.15 80)" : "oklch(0.40 0.12 80)",
+                              color: isDark ? "oklch(0.92 0.15 80)" : "oklch(0.35 0.12 80)",
                               border: `1px solid oklch(0.65 0.14 80 / 0.4)`,
                             }}
                           >
@@ -3171,9 +3171,9 @@ export default function LeagueDashboard() {
                         <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{gamesPlayed}</span>
 
                         {/* W / D / L */}
-                        <span className="text-center text-sm font-semibold" style={{ color: "oklch(0.65 0.2 145)" }}>{s.wins}</span>
+                        <span className="text-center text-sm font-semibold" style={{ color: isDark ? "oklch(0.75 0.2 145)" : "oklch(0.35 0.18 145)" }}>{s.wins}</span>
                         <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{s.draws}</span>
-                        <span className="text-center text-sm font-medium" style={{ color: "oklch(0.6 0.2 25)" }}>{s.losses}</span>
+                        <span className="text-center text-sm font-medium" style={{ color: isDark ? "oklch(0.70 0.2 25)" : "oklch(0.42 0.2 25)" }}>{s.losses}</span>
 
                         {/* Points */}
                         <div className="flex items-center justify-center">

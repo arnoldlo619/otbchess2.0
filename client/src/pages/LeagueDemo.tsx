@@ -108,8 +108,12 @@ function Avatar({ name, size = 9, url }: { name: string; size?: number; url?: st
   );
 }
 
-function ResultDot({ r }: { r: string }) {
-  const color = r === "W" ? "oklch(0.65 0.2 145)" : r === "L" ? "oklch(0.6 0.2 25)" : "oklch(0.55 0.04 145)";
+function ResultDot({ r, isDark = true }: { r: string; isDark?: boolean }) {
+  const color = r === "W"
+    ? (isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)")
+    : r === "L"
+    ? (isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)")
+    : (isDark ? "oklch(0.72 0.04 145)" : "oklch(0.42 0.04 145)");
   return (
     <div
       className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black"
@@ -120,21 +124,26 @@ function ResultDot({ r }: { r: string }) {
   );
 }
 
-function MovementIcon({ movement }: { movement: "up" | "down" | "same" }) {
-  if (movement === "up") return <span className="text-xs font-bold" style={{ color: "oklch(0.65 0.2 145)" }}>▲</span>;
-  if (movement === "down") return <span className="text-xs font-bold" style={{ color: "oklch(0.6 0.2 25)" }}>▼</span>;
-  return <span className="text-xs" style={{ color: "oklch(0.55 0.04 145)" }}>—</span>;
+function MovementIcon({ movement, isDark = true }: { movement: "up" | "down" | "same"; isDark?: boolean }) {
+  if (movement === "up") return <span className="text-xs font-bold" style={{ color: isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)" }}>▲</span>;
+  if (movement === "down") return <span className="text-xs font-bold" style={{ color: isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)" }}>▼</span>;
+  return <span className="text-xs" style={{ color: isDark ? "oklch(0.72 0.04 145)" : "oklch(0.42 0.04 145)" }}>—</span>;
 }
 
-function FormBadge({ result }: { result: string }) {
+function FormBadge({ result, isDark = true }: { result: string; isDark?: boolean }) {
   const isW = result === "W", isL = result === "L";
+  const color = isW
+    ? (isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)")
+    : isL
+    ? (isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)")
+    : (isDark ? "oklch(0.72 0.04 145)" : "oklch(0.42 0.04 145)");
   return (
     <span
       className="inline-flex items-center justify-center w-7 h-7 rounded text-xs font-black"
       style={{
-        background: isW ? "oklch(0.65 0.2 145 / 0.15)" : isL ? "oklch(0.6 0.2 25 / 0.15)" : "oklch(0.55 0.04 145 / 0.15)",
-        color: isW ? "oklch(0.65 0.2 145)" : isL ? "oklch(0.6 0.2 25)" : "oklch(0.65 0.04 145)",
-        border: `1px solid ${isW ? "oklch(0.65 0.2 145 / 0.3)" : isL ? "oklch(0.6 0.2 25 / 0.3)" : "oklch(0.55 0.04 145 / 0.3)"}`,
+        background: `${color}20`,
+        color,
+        border: `1px solid ${color}40`,
       }}
     >
       {result}
@@ -200,8 +209,8 @@ export default function LeagueDemo() {
   const cardBg    = isDark ? "oklch(0.20 0.06 145)" : "#ffffff";
   const cardBorder = isDark ? "oklch(0.28 0.07 145)" : "#e5e7eb";
   const textMain  = isDark ? "#f0f5ee" : "#111827";
-  const textMuted = isDark ? "oklch(0.78 0.04 145)" : "#4b5563";
-  const accent    = "oklch(0.55 0.13 145)";
+  const textMuted = isDark ? "oklch(0.78 0.04 145)" : "#374151";
+  const accent    = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
 
   const featuredMatchup = CURRENT_WEEK_MATCHUPS[0]; // Magnus vs Hikaru
   const _upcomingMatchups = CURRENT_WEEK_MATCHUPS.slice(0, 5);
@@ -267,7 +276,7 @@ export default function LeagueDemo() {
                   className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
                   style={{
                     background: isActive ? accent : "transparent",
-                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)",
                   }}
                   title={tab.label}
                 >
@@ -294,7 +303,7 @@ export default function LeagueDemo() {
             <button
               onClick={() => navigate("/")}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: "oklch(0.55 0.08 145)" }}
+              style={{ color: isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)" }}
               title="Back to Home"
             >
               <ArrowLeft size={16} />
@@ -433,14 +442,14 @@ export default function LeagueDemo() {
                           <span className="text-xs font-semibold" style={{ color: textMain }}>{featuredMatchup.black.displayName.split(" ")[0]}</span>
                         </div>
                         <div className="flex items-center justify-between mb-1.5 text-xs font-bold">
-                          <span style={{ color: "oklch(0.65 0.2 145)" }}>{h2hW}W</span>
+                          <span style={{ color: isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)" }}>{h2hW}W</span>
                           <span style={{ color: textMuted }}>{h2hD}D</span>
-                          <span style={{ color: "oklch(0.6 0.2 25)" }}>{h2hL}L</span>
+                          <span style={{ color: isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)" }}>{h2hL}L</span>
                         </div>
                         <div className="flex rounded-full overflow-hidden h-2">
-                          <div style={{ width: `${(h2hW / h2hTotal) * 100}%`, background: "oklch(0.65 0.2 145)" }} />
-                          <div style={{ width: `${(h2hD / h2hTotal) * 100}%`, background: "oklch(0.45 0.04 145)" }} />
-                          <div style={{ width: `${(h2hL / h2hTotal) * 100}%`, background: "oklch(0.6 0.2 25)" }} />
+                          <div style={{ width: `${(h2hW / h2hTotal) * 100}%`, background: isDark ? "oklch(0.65 0.2 145)" : "oklch(0.45 0.18 145)" }} />
+                          <div style={{ width: `${(h2hD / h2hTotal) * 100}%`, background: isDark ? "oklch(0.45 0.04 145)" : "oklch(0.72 0.04 145)" }} />
+                          <div style={{ width: `${(h2hL / h2hTotal) * 100}%`, background: isDark ? "oklch(0.6 0.2 25)" : "oklch(0.50 0.2 25)" }} />
                         </div>
                       </div>
                     </div>
@@ -514,7 +523,7 @@ export default function LeagueDemo() {
                             <Avatar name={p.displayName} size={8} url={getAvatar(p.chesscomUsername)} />
                             <div className="min-w-0">
                               <div className="flex items-center gap-1">
-                                <MovementIcon movement={p.movement} />
+                                <MovementIcon movement={p.movement} isDark={isDark} />
                                 <span className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
                               </div>
                               <span className="text-xs truncate block" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
@@ -528,7 +537,7 @@ export default function LeagueDemo() {
                             <span className="text-sm font-black px-1.5 py-0.5 rounded" style={{ color: accent, background: `${accent}18` }}>{p.points}</span>
                           </div>
                           <div className="flex gap-0.5 justify-center">
-                            {lastArr.map((r, j) => <ResultDot key={j} r={r} />)}
+                            {lastArr.map((r, j) => <ResultDot key={j} r={r} isDark={isDark} />)}
                           </div>
                         </div>
                       );
@@ -751,12 +760,12 @@ export default function LeagueDemo() {
                         <span className="text-xs font-semibold" style={{ color: textMain }}>{featuredMatchup.black.displayName.split(" ")[0]}</span>
                       </div>
                       <div className="flex items-center justify-between mb-2 text-sm font-bold">
-                        <span style={{ color: "oklch(0.65 0.2 145)" }}>{h2hW}W</span>
+                        <span style={{ color: isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)" }}>{h2hW}W</span>
                         <span style={{ color: textMuted }}>{h2hD}D</span>
-                        <span style={{ color: "oklch(0.6 0.2 25)" }}>{h2hL}L</span>
+                        <span style={{ color: isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)" }}>{h2hL}L</span>
                       </div>
                       <div className="flex rounded-full overflow-hidden h-2.5">
-                        <div className="transition-all" style={{ width: `${(h2hW / h2hTotal) * 100}%`, background: "oklch(0.65 0.2 145)" }} />
+                        <div className="transition-all" style={{ width: `${(h2hW / h2hTotal) * 100}%`, background: isDark ? "oklch(0.65 0.2 145)" : "oklch(0.45 0.18 145)" }} />
                         <div className="transition-all" style={{ width: `${(h2hD / h2hTotal) * 100}%`, background: "oklch(0.45 0.04 145)" }} />
                         <div className="transition-all" style={{ width: `${(h2hL / h2hTotal) * 100}%`, background: "oklch(0.6 0.2 25)" }} />
                       </div>
@@ -773,7 +782,7 @@ export default function LeagueDemo() {
                           <Avatar name={p.displayName} size={7} url={getAvatar(p.chesscomUsername)} />
                           <span className="text-xs font-semibold flex-1 truncate" style={{ color: textMain }}>{p.displayName}</span>
                           <div className="flex gap-1">
-                            {p.lastResults.split(",").map((r, j) => <FormBadge key={j} result={r} />)}
+                            {p.lastResults.split(",").map((r, j) => <FormBadge key={j} result={r} isDark={isDark} />)}
                           </div>
                         </div>
                       ))}
@@ -849,7 +858,7 @@ export default function LeagueDemo() {
                             <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <MovementIcon movement={p.movement} />
+                                <MovementIcon movement={p.movement} isDark={isDark} />
                                 <span className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
                                 {p.streak.length >= 3 && (
                                   <span
@@ -863,22 +872,22 @@ export default function LeagueDemo() {
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[11px] truncate block" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
+                              <span className="text-xs truncate block" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
                             </div>
                           </div>
                           <div className="flex flex-col items-center">
                             <span className="text-sm font-bold" style={{ color: textMain }}>{p.rating}</span>
-                            <span className="text-[9px] uppercase tracking-wide" style={{ color: textMuted }}>ELO</span>
+                            <span className="text-xs uppercase tracking-wide" style={{ color: textMuted }}>ELO</span>
                           </div>
                           <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{gamesPlayed}</span>
-                          <span className="text-center text-sm font-semibold" style={{ color: "oklch(0.65 0.2 145)" }}>{p.wins}</span>
+                          <span className="text-center text-sm font-semibold" style={{ color: isDark ? "oklch(0.78 0.2 145)" : "oklch(0.35 0.18 145)" }}>{p.wins}</span>
                           <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{p.draws}</span>
-                          <span className="text-center text-sm font-medium" style={{ color: "oklch(0.6 0.2 25)" }}>{p.losses}</span>
+                          <span className="text-center text-sm font-medium" style={{ color: isDark ? "oklch(0.72 0.2 25)" : "oklch(0.42 0.2 25)" }}>{p.losses}</span>
                           <div className="flex items-center justify-center">
                             <span className="text-sm font-black px-2 py-0.5 rounded-lg" style={{ color: accent, background: `${accent}18` }}>{p.points}</span>
                           </div>
                           <div className="flex gap-1 justify-center">
-                            {lastArr.map((r, j) => <ResultDot key={j} r={r} />)}
+                            {lastArr.map((r, j) => <ResultDot key={j} r={r} isDark={isDark} />)}
                           </div>
                         </div>
 
@@ -905,7 +914,7 @@ export default function LeagueDemo() {
                               <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1">
-                                  <MovementIcon movement={p.movement} />
+                                  <MovementIcon movement={p.movement} isDark={isDark} />
                                   <span className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
                                   {p.streak && p.streak.length >= 2 && (
                                     <span
@@ -933,7 +942,7 @@ export default function LeagueDemo() {
                           {/* Form dots row */}
                           {p.lastResults && (
                             <div className="flex gap-1 mt-2 ml-11">
-                              {p.lastResults.split(",").map((r, j) => <ResultDot key={j} r={r} />)}
+                              {p.lastResults.split(",").map((r, j) => <ResultDot key={j} r={r} isDark={isDark} />)}
                             </div>
                           )}
                           {/* Prep button */}
@@ -1076,7 +1085,7 @@ export default function LeagueDemo() {
                     className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all"
                     style={{
                       background: isActive ? `${accent}22` : "transparent",
-                      color: isActive ? accent : "oklch(0.55 0.08 145)",
+                      color: isActive ? accent : "oklch(0.72 0.06 145)",
                     }}
                   >
                     <span className={`otb-icon otb-nav-tap${isActive ? " otb-icon--active" : ""}`}>
