@@ -575,17 +575,6 @@ function StatsBar() {
           ))}
         </div>
 
-        {/* Bridge label into next section — mobile only */}
-        <div className="sm:hidden text-center mt-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">
-            How it works
-          </p>
-          <div className="flex justify-center mt-2">
-            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="opacity-40">
-              <path d="M1 1L8 9L15 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </div>
       </div>
     </section>
   );
