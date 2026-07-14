@@ -2479,6 +2479,9 @@ export default function ClubDashboard() {
   const [rbNotes, setRbNotes] = useState("");
   const [rbSaving, setRbSaving] = useState(false);
 
+  // Mobile "More" overflow menu state
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+
   // Transfer ownership state
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferTargetId, setTransferTargetId] = useState<string | null>(null);
@@ -3318,30 +3321,40 @@ export default function ClubDashboard() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
-            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
+            className="flex-shrink-0 flex items-center gap-2 px-2 lg:px-5 py-1 lg:py-2.5 otb-header-safe relative"
             style={{
               background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
               backdropFilter: "blur(12px)",
               borderBottom: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)"}`,
+              minHeight: "52px",
             }}
           >
-            {/* Mobile back button */}
+            {/* Mobile back button — 44×44 touch target */}
             <button
               onClick={() => navigate("/clubs")}
-              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
-              style={{ color: "oklch(0.65 0.12 145)" }}
+              aria-label="Back to clubs"
+              className="lg:hidden flex items-center justify-center rounded-xl transition-all active:scale-95 flex-shrink-0"
+              style={{
+                width: "44px",
+                height: "44px",
+                color: "oklch(0.65 0.12 145)",
+                touchAction: "manipulation",
+              }}
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={20} strokeWidth={2.5} />
             </button>
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
+              <p className="text-[15px] font-bold leading-tight truncate" style={{ color: "#ffffff", fontFamily: "'Clash Display', sans-serif" }}>
                 {club.name}
-              </span>
+              </p>
+              <p className="text-[10px] font-medium" style={{ color: "oklch(0.55 0.08 145)" }}>
+                {members.length} members
+              </p>
             </div>
-            {/* Center: Join Club QR button — owner/director only */}
+            {/* Center: Join Club QR button — owner/director only, hidden on very small screens */}
             {isOwnerOrDirector && (
-              <div className="absolute left-1/2 -translate-x-1/2">
+              <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2">
                 <button
                   onClick={() => setShowJoinQRModal(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
@@ -3349,6 +3362,7 @@ export default function ClubDashboard() {
                     background: `${accent}22`,
                     border: `1px solid ${accent}55`,
                     color: accent,
+                    touchAction: "manipulation",
                   }}
                 >
                   <QrCode size={12} />
@@ -3357,7 +3371,25 @@ export default function ClubDashboard() {
               </div>
             )}
             {/* Right side: avatar dropdown */}
-            <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Mobile QR shortcut for owners */}
+              {isOwnerOrDirector && (
+                <button
+                  onClick={() => setShowJoinQRModal(true)}
+                  aria-label="Join Club QR"
+                  className="sm:hidden flex items-center justify-center rounded-xl transition-all active:scale-95"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    background: `${accent}22`,
+                    border: `1px solid ${accent}44`,
+                    color: accent,
+                    touchAction: "manipulation",
+                  }}
+                >
+                  <QrCode size={16} />
+                </button>
+              )}
               <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>
@@ -3478,7 +3510,7 @@ export default function ClubDashboard() {
           })()}
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-28 lg:pb-6">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-[80px] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
                 {/* ── CLUB BANNER ─────────────────────────────────────────── */}
@@ -3489,7 +3521,7 @@ export default function ClubDashboard() {
                       ref={bannerRef}
                       className={`relative rounded-3xl overflow-hidden mb-5${!club.bannerUrl ? " chess-board-bg" : ""}`}
                       style={{
-                        minHeight: "clamp(120px, 20vw, 200px)",
+                        minHeight: "clamp(160px, 22vw, 220px)",
                         ...(club.bannerUrl ? {
                           backgroundImage: `url(${club.bannerUrl})`,
                           backgroundSize: "cover",
@@ -3508,13 +3540,20 @@ export default function ClubDashboard() {
                         }}
                       />
                       {/* Content */}
-                      <div className="relative z-10 flex items-center gap-5 p-5 sm:p-6">
-                        {/* Club avatar — clickable for owners to open Settings */}
+                      <div className="relative z-10 flex items-end gap-4 p-4 sm:p-6 pt-10 sm:pt-12">
+                        {/* Club avatar — clickable for owners to open Settings, 44px min touch target */}
                         <div
-                          className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg${isOwnerOrDirector ? " cursor-pointer group/avatar" : ""}`}
-                          style={{ background: accent, border: `2px solid ${accent}66` }}
+                          className={`relative w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl${isOwnerOrDirector ? " cursor-pointer group/avatar" : ""}`}
+                          style={{
+                            background: accent,
+                            border: `2.5px solid ${accent}88`,
+                            boxShadow: `0 4px 20px ${accent}44`,
+                            touchAction: "manipulation",
+                          }}
                           onClick={isOwnerOrDirector ? () => { setTab("settings"); setSettingsSubTab("profile"); } : undefined}
                           title={isOwnerOrDirector ? "Edit club profile" : undefined}
+                          role={isOwnerOrDirector ? "button" : undefined}
+                          aria-label={isOwnerOrDirector ? "Edit club profile" : undefined}
                         >
                           {club.avatarUrl ? (
                             <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
@@ -3523,43 +3562,49 @@ export default function ClubDashboard() {
                           )}
                           {/* Camera overlay for owners */}
                           {isOwnerOrDirector && (
-                            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                            <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
                               <Camera className="w-5 h-5 text-white" />
                               <span className="text-[9px] font-bold text-white leading-tight">Edit</span>
                             </div>
                           )}
                         </div>
                         {/* Club identity */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white truncate">
+                        <div className="flex-1 min-w-0 pb-0.5">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <h1 className="text-[18px] sm:text-2xl font-black tracking-tight text-white leading-tight" style={{ fontFamily: "'Clash Display', sans-serif" }}>
                               {club.name}
                             </h1>
                             {club.isPublic ? (
-                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: `${accent}33`, color: accent }}>Public</span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${accent}33`, color: accent, border: `1px solid ${accent}44` }}>Public</span>
                             ) : (
-                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)" }}>Private</span>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)", border: "1px solid oklch(0.30 0.05 145)" }}>Private</span>
                             )}
                           </div>
                           {club.description && (
-                            <p className="text-sm leading-relaxed line-clamp-2" style={{ color: "oklch(0.70 0.08 145)" }}>
+                            <p className="text-[12px] leading-relaxed line-clamp-2 mb-1.5" style={{ color: "oklch(0.68 0.08 145)" }}>
                               {club.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                          <div className="flex items-center gap-3 text-[11px]" style={{ color: "oklch(0.55 0.08 145)" }}>
                             <span className="flex items-center gap-1">
                               <Users className="w-3 h-3" style={{ color: accent }} />
-                              <span className="font-semibold text-white">{club.memberCount}</span> members
+                              <span className="font-bold text-white">{club.memberCount}</span>
+                              <span>members</span>
                             </span>
+                            <span className="w-px h-3" style={{ background: "oklch(0.35 0.05 145)" }} />
                             <span className="flex items-center gap-1">
                               <Trophy className="w-3 h-3" style={{ color: accent }} />
-                              <span className="font-semibold text-white">{club.tournamentCount}</span> tournaments
+                              <span className="font-bold text-white">{club.tournamentCount}</span>
+                              <span>events</span>
                             </span>
                             {club.location && (
-                              <span className="hidden sm:flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {flag} {club.location}
-                              </span>
+                              <>
+                                <span className="w-px h-3 hidden sm:block" style={{ background: "oklch(0.35 0.05 145)" }} />
+                                <span className="hidden sm:flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {flag} {club.location}
+                                </span>
+                              </>
                             )}
                           </div>
                         </div>
@@ -3818,11 +3863,14 @@ export default function ClubDashboard() {
                     <button
                       key={f.key}
                       onClick={() => setEventsFilter(f.key)}
-                      className="px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95"
-                      style={eventsFilter === f.key
-                        ? { background: accent, color: "#0a1a0f" }
-                        : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }
-                      }
+                      className="px-4 rounded-full text-xs font-bold transition-all active:scale-95"
+                      style={{
+                        height: "36px",
+                        touchAction: "manipulation",
+                        ...(eventsFilter === f.key
+                          ? { background: accent, color: "#0a1a0f" }
+                          : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" })
+                      }}
                     >
                       {f.label}
                     </button>
@@ -4404,11 +4452,14 @@ export default function ClubDashboard() {
                 <button
                   key={st}
                   onClick={() => setMembersSubTab(st)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
-                  style={membersSubTab === st
-                    ? { background: "oklch(0.22 0.08 145)", color: "#4CAF50" }
-                    : { color: "oklch(0.55 0.08 145)" }
-                  }
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
+                  style={{
+                    height: "44px",
+                    touchAction: "manipulation",
+                    ...(membersSubTab === st
+                      ? { background: "oklch(0.22 0.08 145)", color: "#4CAF50" }
+                      : { color: "oklch(0.55 0.08 145)" })
+                  }}
                 >
                   {st === "members" ? <Users className="w-3.5 h-3.5" /> : st === "battles" ? <Swords className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
                   {st === "members" ? "Members" : st === "battles" ? "Battles" : "Attendance"}
@@ -4655,7 +4706,8 @@ export default function ClubDashboard() {
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
                 placeholder={`Search ${members.length} members…`}
-                className="w-full bg-white/07 border border-white/10 rounded-xl pl-4 pr-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/25 transition-colors"
+                className="w-full bg-white/07 border border-white/10 rounded-xl pl-4 pr-4 text-white text-sm placeholder-white/30 outline-none focus:border-white/25 transition-colors"
+              style={{ height: "44px" }}
               />
             </div>
 
@@ -4751,8 +4803,8 @@ export default function ClubDashboard() {
                             <div className="relative">
                               <button
                                 onClick={() => setMemberMenuOpenId(memberMenuOpenId === m.userId ? null : m.userId)}
-                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                                style={{ color: "rgba(255,255,255,0.35)" }}
+                                className="flex items-center justify-center rounded-xl transition-colors hover:bg-white/10 active:scale-95"
+                                style={{ color: "rgba(255,255,255,0.35)", width: "44px", height: "44px", touchAction: "manipulation" }}
                                 title="Member actions"
                               >
                                 <MoreVertical className="w-3.5 h-3.5" />
@@ -5208,27 +5260,30 @@ export default function ClubDashboard() {
 
 
                 {/* Announcement composer */}
-                  <form onSubmit={submitAnnouncement} className="p-4 flex gap-3">
-                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
-                      <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={36} className="w-full h-full object-cover" />
+                  <form onSubmit={submitAnnouncement} className="p-4 flex gap-3 items-start">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 mt-0.5">
+                      <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={40} className="w-full h-full object-cover" />
                     </div>
-                    <div className="flex-1 flex gap-2">
+                    <div className="flex-1 flex flex-col gap-2">
                       <input
                         value={announcementText}
                         onChange={(e) => setAnnouncementText(e.target.value)}
                         placeholder="Post an announcement to the club…"
                         maxLength={500}
-                        className="flex-1 bg-transparent text-white text-sm placeholder-white/30 outline-none"
+                        className="w-full bg-transparent text-white text-[15px] placeholder-white/30 outline-none leading-relaxed"
+                        style={{ minHeight: "40px" }}
                       />
-                      <button
-                        type="submit"
-                        disabled={!announcementText.trim() || postingAnnouncement}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
-                        style={{ background: accent }}
-                      >
-                        <Megaphone className="w-3.5 h-3.5" />
-                        Post
-                      </button>
+                      <div className="flex items-center justify-end">
+                        <button
+                          type="submit"
+                          disabled={!announcementText.trim() || postingAnnouncement}
+                          className="flex items-center gap-1.5 px-4 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
+                          style={{ background: accent, height: "36px", touchAction: "manipulation" }}
+                        >
+                          <Megaphone className="w-3.5 h-3.5" />
+                          Post
+                        </button>
+                      </div>
                     </div>
                   </form>
 
@@ -7727,33 +7782,111 @@ export default function ClubDashboard() {
         );
       })()}
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
+      {/* "More" overlay drawer for owner-only tabs */}
+      {mobileMoreOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 z-40"
+            onClick={() => setMobileMoreOpen(false)}
+          />
+          {/* Drawer */}
+          <div
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden"
+            style={{
+              background: isDark ? "oklch(0.18 0.06 145 / 0.98)" : "rgba(12,26,16,0.98)",
+              backdropFilter: "blur(20px)",
+              border: `1px solid ${isDark ? "oklch(0.26 0.07 145)" : "oklch(0.28 0.09 145)"}`,
+              borderBottom: "none",
+              paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))",
+            }}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-center mb-3" style={{ color: "oklch(0.45 0.08 145)" }}>Owner Tools</p>
+            <div className="grid grid-cols-3 gap-2 px-4 pb-2">
+              {clubTabs.filter(ct => ct.ownerOnly).map((ct) => {
+                const Icon = ct.icon;
+                const isActive = tab === ct.id;
+                return (
+                  <button
+                    key={ct.id}
+                    onClick={() => { setTab(ct.id); setMobileMoreOpen(false); }}
+                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all active:scale-95 relative"
+                    style={{
+                      background: isActive ? `${accent}22` : "rgba(255,255,255,0.05)",
+                      border: `1px solid ${isActive ? `${accent}55` : "rgba(255,255,255,0.08)"}`,
+                      color: isActive ? accent : "oklch(0.65 0.08 145)",
+                      touchAction: "manipulation",
+                    }}
+                    aria-label={ct.label}
+                  >
+                    <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                      <Icon size={22} />
+                    </span>
+                    <span className="text-[11px] font-semibold">{ct.label}</span>
+                    {(ct.badge ?? 0) > 0 && (
+                      <span
+                        className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                        style={{ background: accent, color: "#fff" }}
+                      >
+                        {ct.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around"
         style={{
           background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(15,31,20,0.97)",
           backdropFilter: "blur(12px)",
           borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
-          paddingTop: "8px",
-          paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
+          paddingTop: "4px",
+          paddingBottom: "calc(4px + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {clubTabs.map((ct) => {
+        {/* Primary tabs: Feed, Events, Members, Leagues, Settings — always visible */}
+        {clubTabs.filter(ct => !ct.ownerOnly).map((ct) => {
           const Icon = ct.icon;
           const isActive = tab === ct.id;
           return (
             <button
               key={ct.id}
-              onClick={() => setTab(ct.id)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
-              style={{ color: isActive ? accent : "oklch(0.55 0.08 145)" }}
+              onClick={() => { setTab(ct.id); setMobileMoreOpen(false); }}
+              aria-label={ct.label}
+              className="flex flex-col items-center gap-0.5 relative transition-all active:scale-95"
+              style={{
+                minWidth: "44px",
+                minHeight: "52px",
+                paddingTop: "6px",
+                paddingBottom: "6px",
+                paddingLeft: "8px",
+                paddingRight: "8px",
+                color: isActive ? accent : "oklch(0.50 0.07 145)",
+                touchAction: "manipulation",
+              }}
             >
+              {/* Active indicator dot */}
+              {isActive && (
+                <span
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
+                  style={{ background: accent }}
+                />
+              )}
               <span className={`otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                <Icon size={18} />
+                <Icon size={20} />
               </span>
-              <span className="text-[9px] font-medium">{ct.label}</span>
+              <span className="text-[10px] font-semibold mt-0.5" style={{ letterSpacing: "0.01em" }}>{ct.label}</span>
               {(ct.badge ?? 0) > 0 && (
                 <span
-                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                  className="absolute top-1 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
                   style={{ background: accent, color: "#fff" }}
                 >
                   {ct.badge}
@@ -7762,6 +7895,33 @@ export default function ClubDashboard() {
             </button>
           );
         })}
+        {/* "More" button — only shown to owners/directors */}
+        {isOwnerOrDirector && (
+          <button
+            onClick={() => setMobileMoreOpen(prev => !prev)}
+            aria-label="More owner tools"
+            className="flex flex-col items-center gap-0.5 relative transition-all active:scale-95"
+            style={{
+              minWidth: "44px",
+              minHeight: "52px",
+              paddingTop: "6px",
+              paddingBottom: "6px",
+              paddingLeft: "8px",
+              paddingRight: "8px",
+              color: (tab === "overview" || tab === "qr" || tab === "growth") ? accent : (mobileMoreOpen ? accent : "oklch(0.50 0.07 145)"),
+              touchAction: "manipulation",
+            }}
+          >
+            {(tab === "overview" || tab === "qr" || tab === "growth") && (
+              <span
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
+                style={{ background: accent }}
+              />
+            )}
+            <MoreHorizontal size={20} />
+            <span className="text-[10px] font-semibold mt-0.5" style={{ letterSpacing: "0.01em" }}>More</span>
+          </button>
+        )}
       </div>
     </div>
   );

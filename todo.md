@@ -6904,3 +6904,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] P2: Accessibility — aria-pressed, aria-selected, aria-expanded, aria-label on all interactive elements, semantic buttons
 - [x] P2: Automated tests — 63 unit tests for Quads engine (co-champions, result correction, section isolation, SB tiebreak, edge cases)
 - [x] P2: Director command-center redesign (Section 7) — event header, 2x2 grid, workspace, exception tray, completion view
+
+## Clubs Dashboard — Mobile UX Improvements (ui-ux-pro-max)
+
+- [x] Bottom nav: 5 primary tabs (Feed, Events, Members, Leagues, Settings) + "More" overflow drawer for owner-only tabs (Overview, QR, Growth)
+- [x] Bottom nav: 44px min touch targets, 10px labels, active indicator pill at top
+- [x] "More" drawer: glass backdrop, handle bar, 3-column grid for owner tools, 44px touch targets
+- [x] Hero banner: min-height increased from 120px to 160px on mobile
+- [x] Hero banner: avatar improved to 72px with box-shadow glow, 44px touch target role
+- [x] Hero banner: content aligned to bottom (items-end), better padding pt-10 on mobile
+- [x] Hero banner: stats row uses separator pipes, 11px text, bold values
+- [x] Hero banner: Public/Private badge with border for better contrast
+- [x] Scrollable content: WebkitOverflowScrolling touch for momentum scrolling
+- [x] Feed composer: stacked layout on mobile, 40px avatar, 15px input text, 36px Post button
+- [x] Members sub-tab nav: 44px height touch targets with touch-action manipulation
+- [x] Members search input: 44px height
+- [x] Member row management menu: 44px × 44px touch target
+- [x] Events filter pills: 36px height with touch-action manipulation
+- [x] All interactive elements: touch-action manipulation to eliminate 300ms tap delay
