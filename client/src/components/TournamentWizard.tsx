@@ -495,13 +495,14 @@ function ModeSelect({
         }}
       />
 
-      {/* Close button */}
+      {/* Close button — 44px touch target */}
       <button
         onClick={onClose}
-        className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)" }}
+        className="absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center transition-colors"
+        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)", touchAction: "manipulation" }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.18)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)"; }}
+        aria-label="Close wizard"
       >
         <X className="w-4 h-4" />
       </button>
@@ -526,19 +527,20 @@ function ModeSelect({
           <p className="text-white/50 text-base">How would you like to get started?</p>
         </div>
 
-        {/* Mode cards — premium 2×2 grid on desktop */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 lg:max-w-5xl">
+        {/* Mode cards — 2-col grid on mobile, 2-col on desktop */}
+        <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-6 lg:max-w-5xl">
           {/* Quickstart */}
           <button
             type="button"
             onClick={() => onSelect("quickstart")}
-            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
             style={{
-              padding: "32px 32px 40px",
+              padding: "20px 18px 24px",
               background: "rgba(77,105,64,0.22)",
               border: "2px solid rgba(77,105,64,0.50)",
               backdropFilter: "blur(12px)",
-              minHeight: "280px",
+              minHeight: "200px",
+              touchAction: "manipulation",
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.38)";
@@ -554,38 +556,38 @@ function ModeSelect({
             }}
           >
             {/* Top row: badge + number */}
-            <div className="flex items-center justify-between w-full mb-5">
+            <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
               <span
-                className="text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase"
+                className="text-[9px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
                 style={{ background: T.green, color: "#FFFFFF" }}
               >
                 Recommended
               </span>
-              <span className="text-white/20 text-sm font-bold font-mono">01</span>
+              <span className="text-white/20 text-xs font-bold font-mono hidden sm:block">01</span>
             </div>
 
             {/* Icon */}
             <div
-              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
               style={{ background: "rgba(255,255,255,0.12)" }}
             >
-              <Bolt className="w-7 h-7 text-white" strokeWidth={1.8} />
+              <Bolt className="w-5 h-5 sm:w-7 sm:h-7 text-white" strokeWidth={1.8} />
             </div>
 
             <div className="flex-1">
               <h3
-                className="text-[22px] sm:text-2xl font-black text-white mb-2"
+                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Quickstart
               </h3>
-              <p className="text-white/50 text-[15px] leading-relaxed">
-                Fill in just a name and location. We handle the rest — perfect for same-day tournaments.
+              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
+                Name &amp; location only. Ready in seconds.
               </p>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
                 <Clock className="w-3.5 h-3.5" />
                 Ready in under 30 seconds
@@ -595,19 +597,21 @@ function ModeSelect({
                 style={{ color: "rgba(255,255,255,0.35)" }}
               />
             </div>
+            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.35)" }} />
           </button>
 
           {/* Schedule Tournament */}
           <button
             type="button"
             onClick={() => onSelect("schedule")}
-            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
             style={{
-              padding: "32px 32px 40px",
+              padding: "20px 18px 24px",
               background: "rgba(255,255,255,0.05)",
               border: "2px solid rgba(255,255,255,0.10)",
               backdropFilter: "blur(12px)",
-              minHeight: "280px",
+              minHeight: "200px",
+              touchAction: "manipulation",
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
@@ -623,33 +627,33 @@ function ModeSelect({
             }}
           >
             {/* Top row: number */}
-            <div className="flex items-center justify-between w-full mb-5">
+            <div className="hidden sm:flex items-center justify-between w-full mb-5">
               <span />
               <span className="text-white/20 text-sm font-bold font-mono">02</span>
             </div>
 
             {/* Icon */}
             <div
-              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
               style={{ background: "rgba(255,255,255,0.08)" }}
             >
-              <Calendar className="w-7 h-7 text-white" strokeWidth={1.8} />
+              <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-white" strokeWidth={1.8} />
             </div>
 
             <div className="flex-1">
               <h3
-                className="text-[22px] sm:text-2xl font-black text-white mb-2"
+                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Schedule Tournament
+                Schedule
               </h3>
-              <p className="text-white/50 text-[15px] leading-relaxed">
-                Full setup wizard — choose format, rounds, time control, and rating system.
+              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
+                Full wizard — format, rounds, time &amp; ratings.
               </p>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
                 <Clock className="w-3.5 h-3.5" />
                 ~2 minutes · 4 steps
@@ -659,19 +663,21 @@ function ModeSelect({
                 style={{ color: "rgba(255,255,255,0.25)" }}
               />
             </div>
+            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.25)" }} />
           </button>
 
           {/* Large Event */}
           <button
             type="button"
             onClick={() => onSelect("large_event")}
-            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
             style={{
-              padding: "32px 32px 40px",
+              padding: "20px 18px 24px",
               background: "rgba(255,255,255,0.05)",
               border: "2px solid rgba(255,255,255,0.10)",
               backdropFilter: "blur(12px)",
-              minHeight: "280px",
+              minHeight: "200px",
+              touchAction: "manipulation",
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
@@ -687,38 +693,38 @@ function ModeSelect({
             }}
           >
             {/* Top row: badge + number */}
-            <div className="flex items-center justify-between w-full mb-5">
+            <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
               <span
-                className="text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase"
+                className="text-[9px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
                 style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)" }}
               >
                 New
               </span>
-              <span className="text-white/20 text-sm font-bold font-mono">03</span>
+              <span className="text-white/20 text-xs font-bold font-mono hidden sm:block">03</span>
             </div>
 
             {/* Icon */}
             <div
-              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
               style={{ background: "rgba(255,255,255,0.08)" }}
             >
-              <img src={OTB_LOGO_URL} alt="OTB" className="w-7 h-7 object-contain drop-shadow-sm" />
+              <img src={OTB_LOGO_URL} alt="OTB" className="w-5 h-5 sm:w-7 sm:h-7 object-contain drop-shadow-sm" />
             </div>
 
             <div className="flex-1">
               <h3
-                className="text-[22px] sm:text-2xl font-black text-white mb-2"
+                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Large Event
               </h3>
-              <p className="text-white/50 text-[15px] leading-relaxed">
-                Swiss rounds to seed players, then a single-elimination bracket. Built for 30+ player events.
+              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
+                Swiss + elimination bracket. 30+ players.
               </p>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
                 <Users className="w-3.5 h-3.5" />
                 Up to 100 players
@@ -728,19 +734,21 @@ function ModeSelect({
                 style={{ color: "rgba(255,255,255,0.25)" }}
               />
             </div>
+            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.25)" }} />
           </button>
 
           {/* Multi-Tournament Brackets */}
           <button
             type="button"
             onClick={() => onSelect("brackets")}
-            className="group relative flex flex-col items-start rounded-[28px] border text-left transition-all duration-300 overflow-hidden"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
             style={{
-              padding: "32px 32px 40px",
+              padding: "20px 18px 24px",
               background: "rgba(255,180,50,0.06)",
               border: "2px solid rgba(255,180,50,0.25)",
               backdropFilter: "blur(12px)",
-              minHeight: "280px",
+              minHeight: "200px",
+              touchAction: "manipulation",
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,180,50,0.14)";
@@ -756,38 +764,38 @@ function ModeSelect({
             }}
           >
             {/* Top row: badge + number */}
-            <div className="flex items-center justify-between w-full mb-5">
+            <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
               <span
-                className="text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase"
+                className="text-[9px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
                 style={{ background: "rgba(255,180,50,0.18)", color: "#FFB432" }}
               >
                 New
               </span>
-              <span className="text-[#FFB432]/20 text-sm font-bold font-mono">04</span>
+              <span className="text-[#FFB432]/20 text-xs font-bold font-mono hidden sm:block">04</span>
             </div>
 
             {/* Icon */}
             <div
-              className="flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
               style={{ background: "rgba(255,180,50,0.12)" }}
             >
-              <BarChart3 className="w-7 h-7" style={{ color: "#FFB432" }} strokeWidth={1.8} />
+              <BarChart3 className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: "#FFB432" }} strokeWidth={1.8} />
             </div>
 
             <div className="flex-1">
               <h3
-                className="text-[22px] sm:text-2xl font-black text-white mb-2"
+                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Rating Brackets
+                Brackets
               </h3>
-              <p className="text-white/50 text-[15px] leading-relaxed">
-                Auto-split players by ELO into separate tournaments. U1000, U1500, 1500+ — each runs independently.
+              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
+                Auto-split by ELO. U1000, U1500, 1500+.
               </p>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,180,50,0.12)" }}>
+            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,180,50,0.12)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,180,50,0.55)" }}>
                 <BarChart3 className="w-3.5 h-3.5" />
                 Multi-bracket management
@@ -797,6 +805,7 @@ function ModeSelect({
                 style={{ color: "rgba(255,180,50,0.40)" }}
               />
             </div>
+            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,180,50,0.40)" }} />
           </button>
         </div>
       </div>
@@ -4104,18 +4113,18 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
         {/* ── Mobile top bar ── */}
         <div
-          className="lg:hidden flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0 border-b"
+          className="lg:hidden flex items-center justify-between px-4 pt-3 pb-3 flex-shrink-0 border-b"
           style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "#F0F0F0" }}
         >
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
-              <img src={OTB_LOGO_URL} alt="OTB" className="w-4 h-4 object-contain" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
+              <img src={OTB_LOGO_URL} alt="OTB" className="w-4.5 h-4.5 object-contain" />
             </div>
-            <div className="flex flex-col leading-none">
-              <span className="text-[9px] font-semibold tracking-widest uppercase" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            <div className="flex flex-col leading-none gap-0.5">
+              <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                 Step {step + 1} of {totalSteps}
               </span>
-              <span className="text-sm font-bold" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+              <span className="text-[15px] font-bold leading-none" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
                 {stepLabel}
               </span>
             </div>
@@ -4126,17 +4135,19 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
                 key={i}
                 className="rounded-full transition-all duration-300"
                 style={{
-                  width: i === step ? 18 : 5,
-                  height: 5,
+                  width: i === step ? 20 : 6,
+                  height: 6,
                   background: i === step ? T.green : i < step ? "rgba(77,105,64,0.5)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
                 }}
               />
             ))}
           </div>
+          {/* 44px close button */}
           <button
             onClick={() => setMode("select")}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
-            style={{ background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6", color: isDark ? T.dSub : T.lSub }}
+            className="w-11 h-11 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+            style={{ background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6", color: isDark ? T.dSub : T.lSub, touchAction: "manipulation" }}
+            aria-label="Back to mode selection"
           >
             <X className="w-4 h-4" />
           </button>
@@ -4161,19 +4172,19 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         </div>
 
         {/* Step content */}
-        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: "touch" }}>
           <div
-            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-8 sm:py-10 pb-6"
+            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-5 sm:py-10 pb-6"
             key={`${mode}-${step}`}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
             {/* Mobile step eyebrow */}
-            <p className="lg:hidden text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            <p className="lg:hidden text-[11px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
               {stepEyebrow}
             </p>
             {/* Mobile step title */}
             <h2
-              className="lg:hidden text-2xl font-bold mb-6"
+              className="lg:hidden text-xl font-bold mb-4"
               style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
             >
               {stepTitle}
@@ -4198,20 +4209,23 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
         {/* ── Mobile bottom nav ── */}
         <div
-          className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-5 border-t"
-          style={{ paddingTop: '1rem', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))', borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
+          className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-4 border-t"
+          style={{ paddingTop: '0.875rem', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))', borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
         >
+          {/* Primary CTA — 56px height for easy tap */}
           <button
             type="button"
             onClick={handleNext}
             disabled={!canAdvance}
-            className="w-full flex items-center justify-center gap-2 text-base font-semibold rounded-2xl transition-all duration-200"
+            className="w-full flex items-center justify-center gap-2 text-base font-bold rounded-2xl transition-all duration-200 active:scale-[0.98]"
             style={{
+              minHeight: "52px",
               padding: "14px 24px",
               background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#FBFADA",
               color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
               cursor: canAdvance ? "pointer" : "not-allowed",
               boxShadow: canAdvance ? `0 4px 18px rgba(77,105,64,0.35)` : "none",
+              touchAction: "manipulation",
             }}
           >
             {isShareStep ? (
@@ -4220,11 +4234,12 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
               <>Continue <ChevronRight className="w-5 h-5" /></>
             )}
           </button>
+          {/* Back — 44px touch target */}
           <button
             type="button"
             onClick={handleBack}
-            className="w-full flex items-center justify-center gap-1 text-sm font-medium rounded-xl transition-all duration-200 py-2"
-            style={{ color: isDark ? T.dSub : T.lSub }}
+            className="w-full flex items-center justify-center gap-1.5 text-sm font-medium rounded-xl transition-all duration-200 active:scale-[0.98]"
+            style={{ minHeight: "44px", color: isDark ? T.dSub : T.lSub, touchAction: "manipulation" }}
           >
             <ChevronLeft className="w-4 h-4" />
             {step === 0 ? "Back to options" : "Back"}

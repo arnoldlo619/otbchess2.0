@@ -589,7 +589,8 @@ function BoardCard({
                   : "Draw";
                 toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
-              className={`flex-1 py-3.5 px-2 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
+              style={{ minHeight: "48px", touchAction: "manipulation" }}
+            className={`flex-1 py-3.5 px-2 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
                   ? opt.isDraw
                     ? isDark
@@ -2889,7 +2890,7 @@ export default function Director() {
           }`}
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3">
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-1.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
                 isDark ? "bg-[#4CAF50]/25" : "bg-[#436850]/15"
@@ -2922,14 +2923,15 @@ export default function Director() {
                   }).catch(() => {});
                 }
               }}
-              className={`group flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+              style={{ minHeight: "44px", touchAction: "manipulation" }}
+              className={`group flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 ${
                 isDark
                   ? "bg-[#4CAF50] text-white hover:bg-[#3d9e42] shadow-[0_2px_10px_rgba(76,175,80,0.35)]"
                   : "bg-[#436850] text-white hover:bg-[#2d5235] shadow-[0_2px_10px_rgba(61,107,71,0.25)]"
               }`}
             >
-              <Zap className="w-3.5 h-3.5" />
-              Generate Round {state.currentRound + 1}
+              <Zap className="w-4 h-4" />
+              <span>Generate Round {state.currentRound + 1}</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
             </button>
           </div>
@@ -2962,7 +2964,8 @@ export default function Director() {
             </div>
             <button
               onClick={() => setShowSwissSummaryModal(true)}
-              className={`group flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+              style={{ minHeight: "44px", touchAction: "manipulation" }}
+              className={`group flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 ${
                 isDark
                   ? "bg-amber-500 text-black hover:bg-amber-400 shadow-[0_2px_10px_rgba(245,158,11,0.35)]"
                   : "bg-amber-500 text-white hover:bg-amber-600 shadow-[0_2px_10px_rgba(245,158,11,0.25)]"
@@ -3032,7 +3035,7 @@ export default function Director() {
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h1
-                    className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
+                    className={`text-xl sm:text-2xl font-black tracking-tight leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
                     {state.tournamentName}
@@ -3276,6 +3279,7 @@ export default function Director() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  style={{ touchAction: "manipulation", minHeight: "44px" }}
                   className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
                     activeTab === tab.id
                       ? isDark
@@ -3344,8 +3348,8 @@ export default function Director() {
                         </span>
                       </div>
                       {/* Check-in + Payment count badges */}
-                      <div className="flex items-center gap-2">
-                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
                           checkedInIds.size === state.players.length && state.players.length > 0
                             ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
                             : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
@@ -3356,7 +3360,7 @@ export default function Director() {
                         {state.players.length > 0 && (() => {
                           const paid = state.players.filter((p) => p.paymentStatus === "cash" || p.paymentStatus === "card").length;
                           return (
-                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
                               paid === state.players.length
                                 ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-700"
                                 : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
@@ -3393,7 +3397,8 @@ export default function Director() {
                                   });
                                   toast.success(`Pairings will use ${rt === "blitz" ? "Blitz" : "Rapid"} ratings`);
                                 }}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                style={{ minHeight: "44px", touchAction: "manipulation" }}
+                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
                                   active
                                     ? isDark ? "bg-[#436850]/25 text-[#6FCF7F] border border-[#436850]/40" : "bg-[#436850]/10 text-[#436850] border border-[#436850]/25"
                                     : isDark ? "bg-white/05 text-white/40 border border-transparent" : "bg-[#ADBC9F]/40 text-[#436850] border border-transparent"
@@ -3501,6 +3506,7 @@ export default function Director() {
                               return (
                                 <div
                                   key={p.id}
+                                  style={{ minHeight: "52px", touchAction: "manipulation" }}
                                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
                                     isCheckedIn
                                       ? isDark ? "bg-[#436850]/08 hover:bg-[#436850]/15" : "bg-green-50/60 hover:bg-green-50"
@@ -3599,7 +3605,8 @@ export default function Director() {
                                   {/* Edit player button */}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); setEditingPlayer(p); }}
-                                    className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                    style={{ minWidth: "32px", minHeight: "32px", touchAction: "manipulation" }}
+                                    className={`flex-shrink-0 p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
                                       isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
                                     }`}
                                     title="Edit player name / ELO"
@@ -3609,7 +3616,8 @@ export default function Director() {
                                   {/* Remove button */}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); removePlayer(p.id); toast.success(`${p.name} removed`); }}
-                                    className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                    style={{ minWidth: "32px", minHeight: "32px", touchAction: "manipulation" }}
+                                    className={`flex-shrink-0 p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
                                       isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
                                     }`}
                                     title="Remove player"
@@ -3697,6 +3705,7 @@ export default function Director() {
                             }
                           }}
                           placeholder="Walk-in name (press Enter)"
+                          style={{ minHeight: "44px" }}
                           className={`flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none transition-colors ${
                             isDark
                               ? "bg-white/04 border-white/08 text-white placeholder:text-white/25 focus:border-[#4CAF50]/40"
@@ -3728,7 +3737,8 @@ export default function Director() {
                             setWalkInName("");
                           }}
                           disabled={!walkInName.trim()}
-                          className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                          style={{ minHeight: "44px", touchAction: "manipulation" }}
+                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                             walkInName.trim()
                               ? isDark ? "bg-[#436850]/30 text-[#4CAF50] hover:bg-[#436850]/50" : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
                               : isDark ? "bg-white/04 text-white/20" : "bg-[#ADBC9F]/40 text-[#436850]/70"
@@ -4895,7 +4905,8 @@ export default function Director() {
                       value={playerSearch}
                       onChange={(e) => setPlayerSearch(e.target.value)}
                       placeholder="Search name, username, ELO…"
-                      className={`w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border outline-none transition-colors ${
+                      style={{ minHeight: "44px" }}
+                      className={`w-full pl-8 pr-8 py-2.5 text-sm rounded-lg border outline-none transition-colors ${
                         isDark
                           ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50 focus:bg-white/08"
                           : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
@@ -4917,7 +4928,8 @@ export default function Director() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => setShowFilters((f) => !f)}
-                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all ${
+                      style={{ minHeight: "44px", touchAction: "manipulation" }}
+                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-lg border transition-all ${
                         showFilters || activeFilterCount > 0
                           ? isDark
                             ? "bg-[#436850]/30 border-[#4CAF50]/40 text-[#4CAF50]"
@@ -4944,7 +4956,8 @@ export default function Director() {
                     {state.players.length > 0 && (
                       <button
                         onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
-                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all ${
+                        style={{ minHeight: "44px", touchAction: "manipulation" }}
+                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-lg border transition-all ${
                           isDark
                             ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
                             : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F]"
