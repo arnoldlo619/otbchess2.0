@@ -6966,3 +6966,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Minimum 4 players required to start quads tournament (canStart validation)
 - [x] Cross-table view added to QuadsDirectorPanel (Matrix tab with player-vs-player results grid)
 - [x] Completion view text sizes fixed (text-[10px]/text-[11px] → text-xs)
+
+## CrossTableView Desktop Hover Effect
+- [x] Add hoveredRow/hoveredCol state to CrossTableView
+- [x] Implement getHighlightBg() helper for cross-highlight background logic
+- [x] Column headers highlight on hover (brighten color + subtle bg tint)
+- [x] Row background highlights on hover (green tint overlay)
+- [x] Intersection cell gets green accent outline + scale(1.08) + z-index elevation
+- [x] Rank cell brightens on hovered row
+- [x] onMouseLeave on container clears both hover states
+- [x] transition-colors on all cells for smooth animation

@@ -490,6 +490,25 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
     return s.score % 1 === 0 ? String(s.score) : s.score.toFixed(1);
   };
 
+  // Hover state: track hovered row/col player indices for cross-highlight
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+
+  const getHighlightBg = (rowIdx: number, colIdx: number, val: string, isWinner: boolean): string => {
+    const isHoveredRow = hoveredRow === rowIdx;
+    const isHoveredCol = hoveredCol === colIdx;
+    const isIntersection = hoveredRow === rowIdx && hoveredCol === colIdx;
+    // Result-specific bg takes precedence at the intersection cell
+    if (isIntersection && val !== "×" && val !== "•") return getCellBg(val);
+    if (isIntersection) return isDark ? "oklch(0.30 0.06 145 / 0.5)" : "oklch(0.88 0.05 145 / 0.7)";
+    if (isHoveredRow || isHoveredCol) return isDark ? "oklch(0.22 0.04 145 / 0.35)" : "oklch(0.93 0.03 145 / 0.5)";
+    // Default cell bg
+    if (val !== "×" && val !== "•") return getCellBg(val);
+    if (val === "×") return getCellBg(val);
+    if (isWinner) return T.goldBg;
+    return "transparent";
+  };
+
   if (orderedPlayers.length === 0) return (
     <div className="py-8 text-center">
       <div className="w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: T.rowBg }}>
@@ -564,14 +583,23 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
 
   // ── Desktop matrix table (≥ 640px) ────────────────────────────────────────
   const DesktopLayout = () => (
-    <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+    <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+      onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}>
       <table className="w-full border-collapse text-xs" style={{ minWidth: "320px" }}>
         <thead>
           <tr>
             <th className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>#</th>
             <th className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>Player</th>
             {orderedPlayers.map((p, i) => (
-              <th key={p.id} className="text-center px-1 py-2.5 font-bold w-9" style={{ color: T.textDim }}>{i + 1}</th>
+              <th key={p.id}
+                className="text-center px-1 py-2.5 font-bold w-9 cursor-default transition-colors"
+                style={{
+                  color: hoveredCol === i ? T.text : T.textDim,
+                  background: hoveredCol === i ? (isDark ? "oklch(0.22 0.04 145 / 0.35)" : "oklch(0.93 0.03 145 / 0.5)") : "transparent",
+                }}
+                onMouseEnter={() => setHoveredCol(i)}>
+                {i + 1}
+              </th>
             ))}
             <th className="text-center px-2 py-2.5 font-bold" style={{ color: T.green }}>Pts</th>
           </tr>
@@ -579,25 +607,52 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
         <tbody>
           {orderedPlayers.map((rowPlayer, rowIdx) => {
             const isWinner = standings.length > 0 && standings[0]?.playerId === rowPlayer.id;
+            const isHoveredRow = hoveredRow === rowIdx;
             return (
-              <tr key={rowPlayer.id} className="transition-colors" style={{ background: isWinner ? T.goldBg : (rowIdx % 2 === 0 ? "transparent" : T.rowBg) }}>
-                <td className="px-2 py-2.5 font-bold" style={{ color: isWinner ? T.gold : T.textDim }}>{rowIdx + 1}</td>
-                <td className="px-2 py-2.5 font-semibold" style={{ color: T.text, maxWidth: "140px" }}>
+              <tr key={rowPlayer.id}
+                className="transition-colors cursor-default"
+                onMouseEnter={() => setHoveredRow(rowIdx)}
+                style={{ background: isHoveredRow && !isWinner ? (isDark ? "oklch(0.22 0.04 145 / 0.35)" : "oklch(0.93 0.03 145 / 0.5)") : isWinner ? T.goldBg : (rowIdx % 2 === 0 ? "transparent" : T.rowBg) }}>
+                {/* Rank cell */}
+                <td className="px-2 py-2.5 font-bold transition-colors"
+                  style={{ color: isWinner ? T.gold : isHoveredRow ? T.text : T.textDim }}>
+                  {rowIdx + 1}
+                </td>
+                {/* Player name cell */}
+                <td className="px-2 py-2.5 font-semibold transition-colors" style={{ color: T.text, maxWidth: "140px" }}>
                   <div className="flex items-center gap-1.5">
                     {isWinner && <Trophy size={11} style={{ color: T.gold }} />}
-                    <span className="text-sm truncate">{rowPlayer.name}</span>
+                    <span className="text-sm truncate" style={{ color: isWinner ? T.gold : isHoveredRow ? T.text : T.text }}>{rowPlayer.name}</span>
                   </div>
                   <span className="text-xs font-mono" style={{ color: T.textDim, opacity: 0.65 }}>{rowPlayer.elo}</span>
                 </td>
-                {orderedPlayers.map((colPlayer) => {
+                {/* Result cells */}
+                {orderedPlayers.map((colPlayer, colIdx) => {
                   const val = getResult(rowPlayer.id, colPlayer.id);
+                  const isIntersection = hoveredRow === rowIdx && hoveredCol === colIdx;
                   return (
-                    <td key={colPlayer.id} className="text-center px-1 py-2.5 font-bold text-sm" style={{ color: getCellColor(val), background: getCellBg(val) }}>
+                    <td key={colPlayer.id}
+                      className="text-center px-1 py-2.5 font-bold text-sm transition-colors"
+                      onMouseEnter={() => setHoveredCol(colIdx)}
+                      style={{
+                        color: isIntersection ? (val === "1" ? T.green : val === "0" ? (isDark ? "oklch(0.70 0.18 25)" : "oklch(0.50 0.18 25)") : val === "½" ? T.textMuted : T.textDim) : getCellColor(val),
+                        background: getHighlightBg(rowIdx, colIdx, val, isWinner),
+                        outline: isIntersection ? `2px solid ${isDark ? "oklch(0.55 0.14 145 / 0.6)" : "oklch(0.45 0.14 145 / 0.5)"}` : "none",
+                        outlineOffset: "-2px",
+                        borderRadius: isIntersection ? "4px" : "0",
+                        transform: isIntersection ? "scale(1.08)" : "scale(1)",
+                        zIndex: isIntersection ? 1 : 0,
+                        position: "relative",
+                      }}>
                       {val}
                     </td>
                   );
                 })}
-                <td className="text-center px-2 py-2.5 font-black text-sm" style={{ color: isWinner ? T.gold : T.green }}>{getScore(rowPlayer.id)}</td>
+                {/* Score cell */}
+                <td className="text-center px-2 py-2.5 font-black text-sm transition-colors"
+                  style={{ color: isWinner ? T.gold : isHoveredRow ? T.green : T.green }}>
+                  {getScore(rowPlayer.id)}
+                </td>
               </tr>
             );
           })}
