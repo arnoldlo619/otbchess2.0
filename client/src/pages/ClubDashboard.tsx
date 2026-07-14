@@ -2480,7 +2480,23 @@ export default function ClubDashboard() {
   const [rbSaving, setRbSaving] = useState(false);
 
   // Mobile "More" overflow menu state
+  // mobileMoreOpen = true means drawer is mounted (open or closing)
+  // mobileMoreVisible = true means CSS animated-in state
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [mobileMoreVisible, setMobileMoreVisible] = useState(false);
+
+  // Animate More drawer open: mount → next frame → slide up
+  // Close: slide down → onTransitionEnd → unmount
+  const openMoreDrawer = () => {
+    setMobileMoreOpen(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setMobileMoreVisible(true));
+    });
+  };
+  const closeMoreDrawer = () => {
+    setMobileMoreVisible(false);
+    // Unmount happens in onTransitionEnd on the drawer div
+  };
 
   // Transfer ownership state
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -7782,44 +7798,77 @@ export default function ClubDashboard() {
         );
       })()}
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
-      {/* "More" overlay drawer for owner-only tabs */}
-      {mobileMoreOpen && (
+      {/* "More" overlay drawer for owner-only tabs — always mounted, animated in/out */}
+      {(mobileMoreOpen || mobileMoreVisible) && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop — fades in/out */}
           <div
             className="lg:hidden fixed inset-0 z-40"
-            onClick={() => setMobileMoreOpen(false)}
+            onClick={() => closeMoreDrawer()}
+            style={{
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: mobileMoreVisible ? "blur(6px)" : "blur(0px)",
+              WebkitBackdropFilter: mobileMoreVisible ? "blur(6px)" : "blur(0px)",
+              opacity: mobileMoreVisible ? 1 : 0,
+              transition: "opacity 280ms cubic-bezier(0.32, 0.72, 0, 1), backdrop-filter 280ms cubic-bezier(0.32, 0.72, 0, 1)",
+            }}
           />
-          {/* Drawer */}
+          {/* Drawer — slides up from bottom */}
           <div
             className="lg:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden"
             style={{
               background: isDark ? "oklch(0.18 0.06 145 / 0.98)" : "rgba(12,26,16,0.98)",
-              backdropFilter: "blur(20px)",
-              border: `1px solid ${isDark ? "oklch(0.26 0.07 145)" : "oklch(0.28 0.09 145)"}`,
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: `1px solid ${isDark ? "oklch(0.28 0.08 145)" : "oklch(0.30 0.09 145)"}`,
               borderBottom: "none",
               paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))",
+              transform: mobileMoreVisible ? "translateY(0)" : "translateY(100%)",
+              transition: "transform 320ms cubic-bezier(0.32, 0.72, 0, 1)",
+              willChange: "transform",
+            }}
+            onTransitionEnd={(e) => {
+              // Unmount after slide-down completes (only on the transform transition)
+              if (!mobileMoreVisible && e.propertyName === "transform") setMobileMoreOpen(false);
             }}
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3.5 pb-2">
+              <div
+                className="w-10 h-1 rounded-full transition-all duration-200"
+                style={{ background: mobileMoreVisible ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.10)" }}
+              />
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-center mb-3" style={{ color: "oklch(0.45 0.08 145)" }}>Owner Tools</p>
+            {/* Section label */}
+            <p
+              className="text-[10px] font-bold uppercase tracking-widest text-center mb-3"
+              style={{
+                color: "oklch(0.48 0.10 145)",
+                opacity: mobileMoreVisible ? 1 : 0,
+                transform: mobileMoreVisible ? "translateY(0)" : "translateY(8px)",
+                transition: "opacity 260ms 60ms cubic-bezier(0.32, 0.72, 0, 1), transform 260ms 60ms cubic-bezier(0.32, 0.72, 0, 1)",
+              }}
+            >
+              Owner Tools
+            </p>
+            {/* Tool grid — each card staggers in */}
             <div className="grid grid-cols-3 gap-2 px-4 pb-2">
-              {clubTabs.filter(ct => ct.ownerOnly).map((ct) => {
+              {clubTabs.filter(ct => ct.ownerOnly).map((ct, i) => {
                 const Icon = ct.icon;
                 const isActive = tab === ct.id;
                 return (
                   <button
                     key={ct.id}
-                    onClick={() => { setTab(ct.id); setMobileMoreOpen(false); }}
-                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all active:scale-95 relative"
+                    onClick={() => { setTab(ct.id); closeMoreDrawer(); }}
+                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl active:scale-95 relative"
                     style={{
                       background: isActive ? `${accent}22` : "rgba(255,255,255,0.05)",
                       border: `1px solid ${isActive ? `${accent}55` : "rgba(255,255,255,0.08)"}`,
                       color: isActive ? accent : "oklch(0.65 0.08 145)",
                       touchAction: "manipulation",
+                      opacity: mobileMoreVisible ? 1 : 0,
+                      transform: mobileMoreVisible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.95)",
+                      transition: `opacity 240ms ${80 + i * 40}ms cubic-bezier(0.32, 0.72, 0, 1), transform 240ms ${80 + i * 40}ms cubic-bezier(0.32, 0.72, 0, 1)`,
                     }}
                     aria-label={ct.label}
                   >
@@ -7859,7 +7908,7 @@ export default function ClubDashboard() {
           return (
             <button
               key={ct.id}
-              onClick={() => { setTab(ct.id); setMobileMoreOpen(false); }}
+              onClick={() => { setTab(ct.id); closeMoreDrawer(); }}
               aria-label={ct.label}
               className="flex flex-col items-center gap-0.5 relative transition-all active:scale-95"
               style={{
@@ -7898,7 +7947,7 @@ export default function ClubDashboard() {
         {/* "More" button — only shown to owners/directors */}
         {isOwnerOrDirector && (
           <button
-            onClick={() => setMobileMoreOpen(prev => !prev)}
+            onClick={() => mobileMoreVisible ? closeMoreDrawer() : openMoreDrawer()}
             aria-label="More owner tools"
             className="flex flex-col items-center gap-0.5 relative transition-all active:scale-95"
             style={{
