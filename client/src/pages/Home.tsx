@@ -403,7 +403,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const LIGHT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at6.00.48PM_cf9817c3.png";
 
   return (
-    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-0 md:pb-10 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
+    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-[18vh] sm:pb-0 md:pb-10 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
       {/* Chess board texture */}
       <div className={`absolute inset-0 chess-board-bg pointer-events-none ${isDark ? "opacity-40" : "opacity-60"}`} />
 
@@ -543,7 +543,7 @@ function StatsBar() {
   return (
     <section
       ref={ref}
-      className="relative overflow-hidden mt-[15vh] sm:mt-0"
+      className="relative overflow-hidden mt-0"
       style={{
 /* Solid green band — hard contrast edges, no top/bottom faders */
         background: "#436850",
