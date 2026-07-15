@@ -6997,3 +6997,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Mobile top bar: safe-area-inset-top aware padding
 - [x] ModeSelect content: safe-area-inset-top aware padding
 - [x] Continue button: already flex-shrink-0 in bottom nav, safe-area-inset-bottom padding applied
+
+## Matchup Prep Production Fix (Jul 2026)
+
+- [x] Root cause: data/ecoByEpd.json not copied to production container — openingBook.ts threw ENOENT on every V3 prep request
+- [x] Fix: add && cp -r data dist/data to build script in package.json so the opening book ships with the production bundle
+- [x] Fix: update openingBook.ts path resolver to use existsSync(cwdPath) as primary check (works in both dev and prod) with import.meta.url relative path as fallback
+- [x] TypeScript: 0 errors after fix
+- [x] Build verified: dist/data/ecoByEpd.json present after pnpm build

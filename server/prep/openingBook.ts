@@ -1,7 +1,7 @@
 // server/prep/openingBook.ts — load and query the EPD-keyed opening book
 // Book file: data/ecoByEpd.json (3,733 positions, committed as-is from packet-4)
 
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 
@@ -14,14 +14,22 @@ export interface BookEntry {
 let _book: Record<string, BookEntry> | null = null;
 
 function resolveBookPath(): string {
-  // Works in both ESM and CJS contexts
+  // In production, the server bundle is at dist/index.js and data/ is copied
+  // alongside it as dist/data/ during build. process.cwd() is /usr/src in
+  // the Cloud Run container, so data/ is at /usr/src/data/.
+  // In development, process.cwd() is the project root, same layout.
+  // We try the cwd-relative path first (works in both envs), then fall back
+  // to a path relative to this source file (works in dev with tsx/ts-node).
+  const cwdPath = join(process.cwd(), "data/ecoByEpd.json");
+  try {
+    if (existsSync(cwdPath)) return cwdPath;
+  } catch { /* fall through */ }
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     return join(__dirname, "../../data/ecoByEpd.json");
   } catch {
-    // CJS fallback
-    return join(process.cwd(), "data/ecoByEpd.json");
+    return cwdPath;
   }
 }
 
