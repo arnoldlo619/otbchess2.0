@@ -101,7 +101,7 @@ function ToolCard({
   return (
     <div
       onClick={handleClick}
-      className={`group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl ${
+      className={`group relative overflow-hidden rounded-2xl cursor-pointer ${
         isHero ? "col-span-2 row-span-1 min-h-[320px] sm:min-h-[360px]" :
         isTall ? "col-span-1 row-span-2 min-h-[320px]" :
         "col-span-1 row-span-1 min-h-[220px]"
@@ -110,24 +110,46 @@ function ToolCard({
         boxShadow: isDark
           ? "0 2px 24px rgba(0,0,0,0.4)"
           : "0 2px 16px rgba(67,104,80,0.08)",
+        transition: "transform 0.32s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s ease, border-color 0.22s ease",
+        willChange: "transform",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px) scale(1.012)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = isDark
+          ? "0 16px 48px rgba(0,0,0,0.55), 0 0 0 1.5px rgba(91,154,106,0.38)"
+          : "0 16px 40px rgba(67,104,80,0.18), 0 0 0 1.5px rgba(67,104,80,0.30)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = "";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = isDark
+          ? "0 2px 24px rgba(0,0,0,0.4)"
+          : "0 2px 16px rgba(67,104,80,0.08)";
       }}
     >
-      {/* Background image */}
+      {/* Background image with parallax-like scale on hover */}
       <div className="absolute inset-0 overflow-hidden">
         <img
           src={tool.image}
           alt={tool.title}
-          className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+          className="w-full h-full object-cover object-top group-hover:scale-[1.06]"
+          style={{ transition: "transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)" }}
           loading="lazy"
           decoding="async"
         />
-        {/* Gradient overlay — heavier at bottom for text legibility */}
+        {/* Gradient overlay — lightens slightly on hover via opacity */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-80"
           style={{
             background: isHero
               ? "linear-gradient(135deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.15) 100%)"
               : "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.10) 100%)",
+          }}
+        />
+        {/* Accent glow — fades in on hover */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at 20% 80%, ${tool.accent}22 0%, transparent 65%)`,
           }}
         />
       </div>
@@ -142,20 +164,21 @@ function ToolCard({
         </div>
       )}
 
-      {/* Content */}
+      {/* Content — lifts slightly on hover */}
       <div
         className={`absolute inset-0 flex flex-col justify-end p-5 sm:p-6 ${
           isHero ? "sm:max-w-[55%]" : ""
         }`}
+        style={{ transition: "transform 0.32s cubic-bezier(0.34,1.56,0.64,1)" }}
       >
         {/* Tagline */}
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-white/50 mb-1.5">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-white/50 mb-1.5 transition-colors duration-200 group-hover:text-white/70">
           {tool.tagline}
         </p>
 
         {/* Title */}
         <h2
-          className={`font-bold text-white leading-tight mb-2 ${
+          className={`font-bold text-white leading-tight mb-2 transition-colors duration-200 ${
             isHero ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"
           }`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -165,44 +188,44 @@ function ToolCard({
 
         {/* Description — only on hero and tall */}
         {(isHero || isTall) && (
-          <p className="text-sm text-white/65 leading-relaxed mb-3 line-clamp-2">
+          <p className="text-sm text-white/65 leading-relaxed mb-3 line-clamp-2 transition-colors duration-200 group-hover:text-white/80">
             {tool.description}
           </p>
         )}
 
-        {/* Highlight pills */}
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        {/* Highlight pills — shift up slightly on hover */}
+        <div className="flex flex-wrap gap-1.5 mb-4 transition-transform duration-300 group-hover:-translate-y-0.5">
           {tool.highlights.map((h) => (
             <span
               key={h}
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/10 backdrop-blur-sm"
+              className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/10 backdrop-blur-sm transition-all duration-200 group-hover:bg-white/15 group-hover:border-white/20 group-hover:text-white/85"
             >
               {h}
             </span>
           ))}
         </div>
 
-        {/* CTA */}
+        {/* CTA — arrow slides on hover */}
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white transition-all duration-200 group-hover:gap-2.5"
-            style={{ color: "#7ab88a" }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold transition-all duration-200 group-hover:gap-3"
+            style={{ color: "#7ab88a", transition: "gap 0.2s ease, color 0.2s ease" }}
           >
-            {tool.cta}
+            <span className="transition-colors duration-200 group-hover:text-[#9dd4a8]">{tool.cta}</span>
             {tool.external ? (
-              <ExternalLink className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <ExternalLink
+                className="w-3.5 h-3.5 shrink-0"
+                style={{ transition: "transform 0.2s ease" }}
+              />
             ) : (
-              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+              <ArrowRight
+                className="w-3.5 h-3.5 shrink-0"
+                style={{ transition: "transform 0.22s cubic-bezier(0.34,1.56,0.64,1)" }}
+              />
             )}
           </span>
         </div>
       </div>
-
-      {/* Hover ring */}
-      <div
-        className="absolute inset-0 rounded-2xl ring-0 group-hover:ring-2 transition-all duration-300 pointer-events-none"
-        style={{ "--tw-ring-color": "rgba(91,154,106,0.35)" } as React.CSSProperties}
-      />
     </div>
   );
 }
