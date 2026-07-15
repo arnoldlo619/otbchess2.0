@@ -522,16 +522,23 @@ function ModeSelect({
         }}
       />
 
-      {/* Close button — 44px touch target, respects notch safe area */}
+      {/* Close button — fixed position so it always floats above scrollable content */}
       <button
         onClick={onClose}
-        className="absolute right-4 w-11 h-11 rounded-full flex items-center justify-center transition-colors"
-        style={{ top: "max(1rem, env(safe-area-inset-top))", background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)", touchAction: "manipulation" }}
+        className="fixed right-4 w-12 h-12 rounded-full flex items-center justify-center transition-colors"
+        style={{
+          top: "max(1rem, env(safe-area-inset-top))",
+          zIndex: 210,
+          background: "rgba(255,255,255,0.10)",
+          color: "rgba(255,255,255,0.70)",
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+        }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.18)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)"; }}
         aria-label="Close wizard"
       >
-        <X className="w-4 h-4" />
+        <X className="w-5 h-5" />
       </button>
 
       {/* Content */}
