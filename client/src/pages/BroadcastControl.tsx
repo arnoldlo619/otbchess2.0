@@ -24,6 +24,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { QRCodeSVG } from "qrcode.react";
 import { ChessnutProPanel } from "@/components/ChessnutProPanel";
 import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Broadcast {
@@ -614,14 +615,7 @@ export default function BroadcastControl() {
 
   // ─── Loading state ────────────────────────────────────────────────────────
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0d1a0f]">
-        <div className="flex flex-col items-center gap-5">
-          <BarLoader bars={8} barWidth={8} barHeight={52} color="bg-[#7CF562]" speed={1.2} />
-          <span className="text-xs text-white/50 tracking-widest uppercase">Loading broadcast…</span>
-        </div>
-      </div>
-    );
+    return <OTBLoader fullPage isDark label="Loading broadcast control…" />;
   }
 
   if (!broadcast) {

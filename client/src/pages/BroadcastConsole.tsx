@@ -27,6 +27,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
 import { ChessnutBoardPanel } from "@/components/ChessnutBoardPanel";
 import { QRCodeSVG } from "qrcode.react";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Broadcast {
@@ -824,12 +825,7 @@ export default function BroadcastConsole() {
   // ─── Loading state ────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0d1a0f]">
-        <div className="flex flex-col items-center gap-5">
-          <BarLoader bars={8} barWidth={8} barHeight={52} color="bg-[#7CF562]" speed={1.2} />
-          <span className="text-xs text-white/50 tracking-widest uppercase">Loading broadcast console…</span>
-        </div>
-      </div>
+      <OTBLoader fullPage isDark label="Loading broadcast console…" />
     );
   }
 

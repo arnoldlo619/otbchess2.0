@@ -44,6 +44,7 @@ import { authFetch } from "@/lib/apiFetch";
 import { TournamentsIcon, BattleIcon, MembersIcon, RatingIcon, ProfileIcon } from "@/components/OtbIcons";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { AchievementBadgeGrid } from "@/components/tournament/AchievementBadge";
+import { OTBLoader } from "@/components/OTBLoader";
 interface EditState {
   displayName: string;
   chesscomUsername: string;
@@ -478,9 +479,7 @@ export default function ProfilePage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#436850]" />
-      </div>
+      <OTBLoader fullPage isDark />
     );
   }
 

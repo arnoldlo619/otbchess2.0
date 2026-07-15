@@ -21,6 +21,7 @@ import { authFetch } from "@/lib/apiFetch";
 import { useRoute, useLocation } from "wouter";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { MoveTreePanel } from "@/components/MoveTreePanel";
+import { OTBLoader } from "@/components/OTBLoader";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -1603,7 +1604,7 @@ export default function RepertoireBuilder() {
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0d1a0f] text-white" : "bg-[#FBFADA]/70 text-[#12372A]"}`}>
-        <Loader2 className="animate-spin" size={32} />
+        <OTBLoader size={80} />
       </div>
     );
   }

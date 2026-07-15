@@ -23,6 +23,7 @@ import {
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { authFetch } from "@/lib/apiFetch";
+import { OTBLoader } from "@/components/OTBLoader";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Tag { name: string; category: string; slug: string; }
 
@@ -241,7 +242,7 @@ function OpeningDetailContent() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-[#FBFADA]/70"}`}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+          <OTBLoader size={72} />
           <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>Loading opening...</span>
         </div>
       </div>

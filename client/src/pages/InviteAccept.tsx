@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 
 import { authFetch } from "@/lib/apiFetch";
+import { OTBLoader } from "@/components/OTBLoader";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface InviteDetails {
@@ -147,7 +148,7 @@ export default function InviteAccept() {
   if (loadingInvite) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.20 0.06 145)" }}>
-        <Loader2 className="w-8 h-8 animate-spin text-white/40" />
+        <OTBLoader size={72} />
       </div>
     );
   }

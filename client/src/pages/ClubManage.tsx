@@ -22,6 +22,7 @@ import {
   TrendingUp, UserPlus, Clock, ChevronRight, LayoutDashboard
 } from "lucide-react";
 import { ClubShareModal } from "@/components/ClubShareModal";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ── Onboarding Checklist Steps ───────────────────────────────────────────────
 interface ChecklistStep {
@@ -203,7 +204,7 @@ export default function ClubManage() {
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0d1a0f]" : "bg-[#F5F0E8]"}`}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-[#4D6940] border-t-transparent animate-spin" />
+          <OTBLoader size={72} />
           <span className={`text-sm font-medium ${textMuted}`}>Loading dashboard…</span>
         </div>
       </div>

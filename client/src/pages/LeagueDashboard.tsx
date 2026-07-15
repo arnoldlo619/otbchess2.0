@@ -21,8 +21,8 @@ import AuthModal from "@/components/AuthModal";
 import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { logger } from "@/lib/logger";
-
 import { authFetch } from "@/lib/apiFetch";
+import { OTBLoader } from "@/components/OTBLoader";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
   id: number;
@@ -1237,14 +1237,7 @@ export default function LeagueDashboard() {
     .slice(0, 5);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: pageBg }}>
-        <div
-          className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: `${accent} transparent ${accent} ${accent}` }}
-        />
-      </div>
-    );
+    return <OTBLoader fullPage isDark />;
   }
   if (!league) {
     return (

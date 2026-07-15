@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { authFetch } from "@/lib/apiFetch";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -362,9 +363,7 @@ export default function AdminStaff() {
   // ── Loading / redirect states ────────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0d1f12] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#4CAF50] animate-spin" />
-      </div>
+      <OTBLoader fullPage isDark />
     );
   }
   if (!user?.isStaff) return null;

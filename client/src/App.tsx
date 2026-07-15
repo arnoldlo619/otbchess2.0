@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
 import BarLoader from "@/components/ui/bar-loader";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
 // Each page is split into its own JS chunk, dramatically reducing initial bundle
@@ -75,6 +76,7 @@ const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0d1a0f]">
+      <OTBLoader size={80} />
       <div className="flex flex-col items-center gap-5">
         <BarLoader bars={8} barWidth={8} barHeight={52} color="bg-[#7CF562]" speed={1.2} />
         <span className="text-xs text-[#6B6B50] dark:text-[#7CF562]/60 font-medium tracking-widest uppercase">Loading…</span>

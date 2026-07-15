@@ -32,6 +32,7 @@ import CrossTable from "@/components/CrossTable";
 import RoundTimeline from "@/components/RoundTimeline";
 import { ShareResultsModal, useShareModal } from "@/components/ShareResultsModal";
 import PlayerCardExpandedModal from "@/components/PlayerCardExpandedModal";
+import { OTBLoader } from "@/components/OTBLoader";
 import {
   ChevronLeft,
   Download,
@@ -915,7 +916,7 @@ export default function ReportPage() {
           isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
         }`}
       >
-        <Loader2 className="w-8 h-8 animate-spin text-[#4CAF50]" />
+        <OTBLoader size={80} />
       </div>
     );
   }
