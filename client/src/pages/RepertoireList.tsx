@@ -257,31 +257,32 @@ export default function RepertoireList() {
       <div className="fixed inset-0 chess-board-bg opacity-[0.18] pointer-events-none z-0" />
       {/* Header — platform standard */}
       <div
-        className="sticky top-0 z-40 flex items-center gap-3 px-4 lg:px-5 py-2.5"
-        style={{
-          background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "oklch(0.15 0.04 145 / 0.97)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid oklch(0.22 0.06 145)",
-        }}
+        className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${
+          isDark ? "bg-[#0a1409]/95 border-b border-[#1e2e22]/80" : "bg-white/95 border-b border-[#ADBC9F]/70"
+        }`}
       >
-        <div className="flex items-center gap-3 w-full">
-          {/* Left: back + title */}
-          <button
-            onClick={() => navigate("/training")}
-            className="p-1.5 rounded-lg transition-opacity hover:opacity-70"
-            style={{ color: "oklch(0.65 0.12 145)" }}
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold text-white truncate">
-              Opening Repertoire Builder
-            </h1>
-            <p className="text-xs text-white/50">Build and study your opening lines</p>
+        {/* Nav row */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-2 pb-1 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/training")}
+              className={`p-1.5 rounded-lg transition-colors ${
+                isDark ? "text-white/40 hover:text-white/70 hover:bg-white/05" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/30"
+              }`}
+              aria-label="Back to Training"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <span
+              className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"
+              }`}
+            >
+              <BookOpen size={12} />
+              Repertoire Builder
+            </span>
           </div>
-
-          {/* Right side: New Repertoire + avatar */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative">
               <button
                 onClick={() => {
@@ -290,19 +291,29 @@ export default function RepertoireList() {
                   setShowColorPicker(!showColorPicker);
                 }}
                 disabled={creating}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm transition bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-sm transition ${
+                  isDark
+                    ? "bg-[#436850] text-white hover:bg-[#4a8a5a] active:scale-95"
+                    : "bg-[#436850] text-white hover:bg-[#2d5237] active:scale-95"
+                }`}
               >
                 {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                 New
               </button>
               {showColorPicker && (
-                <div className="absolute right-0 top-full mt-2 rounded-xl border shadow-xl z-50 overflow-hidden bg-[#0f1f12] border-white/10">
-                  <button onClick={() => createRepertoire("white")} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-white/5 transition">
-                    <div className="w-5 h-5 rounded-full bg-white border border-[#ADBC9F]" />
+                <div className={`absolute right-0 top-full mt-2 rounded-xl border shadow-xl z-50 overflow-hidden ${
+                  isDark ? "bg-[#0f1c11] border-[#1e2e22]" : "bg-white border-[#ADBC9F]"
+                }`}>
+                  <button onClick={() => createRepertoire("white")} className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition ${
+                    isDark ? "text-white hover:bg-white/05" : "text-[#12372A] hover:bg-[#FBFADA]"
+                  }`}>
+                    <div className="w-4 h-4 rounded-full bg-white border border-[#ADBC9F]" />
                     <span>Play as White</span>
                   </button>
-                  <button onClick={() => createRepertoire("black")} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-white/5 transition">
-                    <div className="w-5 h-5 rounded-full bg-[#12372A] border border-[#436850]/40" />
+                  <button onClick={() => createRepertoire("black")} className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition ${
+                    isDark ? "text-white hover:bg-white/05" : "text-[#12372A] hover:bg-[#FBFADA]"
+                  }`}>
+                    <div className="w-4 h-4 rounded-full bg-[#12372A] border border-[#436850]/40" />
                     <span>Play as Black</span>
                   </button>
                 </div>
@@ -310,6 +321,20 @@ export default function RepertoireList() {
             </div>
             <AvatarNavDropdown currentPage="Tools" />
           </div>
+        </div>
+        {/* Page title row */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-3">
+          <h1
+            className={`text-xl sm:text-2xl font-bold tracking-tight ${
+              isDark ? "text-white" : "text-[#12372A]"
+            }`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Opening Repertoire
+          </h1>
+          <p className={`text-xs mt-0.5 ${ isDark ? "text-white/45" : "text-[#436850]/70" }`}>
+            Build and study your opening lines
+          </p>
         </div>
       </div>
 

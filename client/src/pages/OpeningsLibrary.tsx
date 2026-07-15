@@ -484,33 +484,50 @@ function OpeningsLibraryContent() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-[#FBFADA]/70"}`}>
-      <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-[#ADBC9F]/70 bg-white/90"}`}>
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className={`border-b backdrop-blur-xl sticky top-0 z-30 otb-header-safe ${
+        isDark ? "border-[#1e2e22]/80 bg-[#0a1409]/95" : "border-[#ADBC9F]/70 bg-white/95"
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 pt-2 pb-3">
           {/* Nav bar */}
           <div className="flex items-center justify-between gap-3 mb-2">
-            <NavLogo />
+            <div className="flex items-center gap-2">
+              <NavLogo />
+              <span className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"
+              }`}>
+                <BookOpen className="w-3 h-3" />
+                Openings Library
+              </span>
+            </div>
             <AvatarNavDropdown />
           </div>
           {/* Title row + filter toggle */}
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <BookOpen className="w-5 h-5 text-emerald-400 shrink-0" />
-              <div className="min-w-0">
-                <h1 className={`text-base font-bold truncate ${isDark ? "text-white/90" : "text-[#12372A]"}`}>Openings Library</h1>
-                <p className={`text-[11px] hidden sm:block ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                  {allOpenings.length} openings &middot; {allOpenings.reduce((s, o) => s + o.lineCount, 0)} study lines
-                </p>
-              </div>
+            <div className="min-w-0">
+              <h1
+                className={`text-xl sm:text-2xl font-bold tracking-tight ${
+                  isDark ? "text-white" : "text-[#12372A]"
+                }`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Openings Library
+              </h1>
+              <p className={`text-xs mt-0.5 ${
+                isDark ? "text-white/45" : "text-[#436850]/70"
+              }`}>
+                {allOpenings.length > 0 ? `${allOpenings.length} openings · ${allOpenings.reduce((s, o) => s + o.lineCount, 0)} study lines` : "Explore and study opening theory"}
+              </p>
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`shrink-0 p-2.5 rounded-lg border transition-all ${
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
                 showFilters || hasActiveFilters
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                  : isDark ? "bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/60" : "bg-[#ADBC9F]/40 border-[#ADBC9F] text-[#436850] hover:text-[#436850]"
+                  ? "bg-[#436850]/15 border-[#436850]/40 text-[#5B9A6A]"
+                  : isDark ? "bg-white/04 border-[#1e2e22] text-white/40 hover:text-white/70" : "bg-[#ADBC9F]/30 border-[#ADBC9F] text-[#436850] hover:text-[#12372A]"
               }`}
             >
-              <Filter className="w-4 h-4" />
+              <Filter className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Filter</span>
             </button>
           </div>
           {/* Search bar — full width below title on all screen sizes */}
