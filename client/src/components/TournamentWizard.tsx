@@ -508,6 +508,9 @@ function ModeSelect({
           ? "oklch(0.14 0.04 145)"
           : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #436850 100%)",
         animation: "wizardFadeIn 0.3s ease both",
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
       }}
     >
       {/* Chess-board texture */}
@@ -519,11 +522,11 @@ function ModeSelect({
         }}
       />
 
-      {/* Close button — 44px touch target */}
+      {/* Close button — 44px touch target, respects notch safe area */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center transition-colors"
-        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)", touchAction: "manipulation" }}
+        className="absolute right-4 w-11 h-11 rounded-full flex items-center justify-center transition-colors"
+        style={{ top: "max(1rem, env(safe-area-inset-top))", background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)", touchAction: "manipulation" }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.18)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)"; }}
         aria-label="Close wizard"
@@ -532,7 +535,7 @@ function ModeSelect({
       </button>
 
       {/* Content */}
-      <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 pt-16 pb-12 sm:pt-20 sm:pb-16 flex flex-col items-center gap-6 sm:gap-8">
+      <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 pb-12 sm:pb-16 flex flex-col items-center gap-6 sm:gap-8" style={{ paddingTop: "max(4rem, calc(env(safe-area-inset-top) + 3.5rem))" }}>
         {/* Logo */}
         <img
           src="/manus-storage/otbchesslogo_brilliant_v2_04cf93cb.webp"
@@ -3885,10 +3888,26 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         clubId: initialClubId ?? null,
         clubName: initialClubName ?? null,
       });
-      // Prevent background scroll on iOS/Android while wizard is open
-      const prev = document.body.style.overflow;
+      // Prevent background scroll on iOS/Android while wizard is open.
+      // iOS Safari requires position:fixed + capturing the current scrollY to
+      // avoid the page jumping back to top when the lock is released.
+      const scrollY = window.scrollY;
+      const prevOverflow = document.body.style.overflow;
+      const prevPosition = document.body.style.position;
+      const prevTop = document.body.style.top;
+      const prevWidth = document.body.style.width;
       document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = prev; };
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        document.body.style.position = prevPosition;
+        document.body.style.top = prevTop;
+        document.body.style.width = prevWidth;
+        // Restore scroll position after releasing the lock
+        window.scrollTo(0, scrollY);
+      };
     }
   }, [open, initialClubId, initialClubName]);
 
@@ -4136,7 +4155,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex"
-      style={{ background: isDark ? T.dBg : T.lBg, animation: "wizardFadeIn 0.3s ease both" }}
+      style={{ background: isDark ? T.dBg : T.lBg, animation: "wizardFadeIn 0.3s ease both", overscrollBehavior: "contain", touchAction: "pan-y" }}
     >
       {/* ── Left hero panel (hidden on mobile) ── */}
       <div className="hidden lg:flex lg:w-[32%] xl:w-[34%] flex-shrink-0">
@@ -4144,14 +4163,14 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       </div>
 
       {/* ── Right input panel ── */}
-      <div className="flex-1 flex flex-col relative overflow-hidden" style={{ background: isDark ? T.dPanel : "#FFFFFF" }}>
+      <div className="flex-1 flex flex-col relative overflow-hidden" style={{ background: isDark ? T.dPanel : "#FFFFFF", height: "100%", maxHeight: "100dvh", touchAction: "pan-y" }}>
         {/* Progress bar */}
         <ProgressBar step={step} total={totalSteps} isDark={isDark} />
 
         {/* ── Mobile top bar ── */}
         <div
-          className="lg:hidden flex items-center justify-between px-4 pt-3 pb-3 flex-shrink-0 border-b"
-          style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "#F0F0F0" }}
+          className="lg:hidden flex items-center justify-between px-4 pb-3 flex-shrink-0 border-b"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", borderColor: isDark ? "rgba(255,255,255,0.07)" : "#F0F0F0" }}
         >
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
@@ -4209,7 +4228,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         </div>
 
         {/* Step content */}
-        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
           <div
             className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-5 sm:py-10 pb-6"
             key={`${mode}-${step}`}

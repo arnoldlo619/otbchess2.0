@@ -6985,3 +6985,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] TextInput: icon color transitions to green on focus (0.18s ease)
 - [x] TextArea: same hover/focus state system as TextInput
 - [x] TypeScript: 0 errors after refactor
+
+## Tournament Wizard Mobile Scroll & Overlay Fix
+
+- [x] Lock body scroll when wizard is open (position:fixed + top:-scrollY + width:100% + overflow:hidden, restores scroll position on close)
+- [x] Prevent background landing page touch/scroll events from propagating through wizard overlay
+- [x] Wizard root container: overscroll-behavior:contain + -webkit-overflow-scrolling:touch on inner scroll container
+- [x] Wizard root container: overscroll-behavior:contain on both ModeSelect and main wizard portal
+- [x] Wizard uses position:fixed inset-0 z-[200] — fully covers viewport
+- [x] Close button: safe-area-inset-top aware, 44px tap target
+- [x] Mobile top bar: safe-area-inset-top aware padding
+- [x] ModeSelect content: safe-area-inset-top aware padding
+- [x] Continue button: already flex-shrink-0 in bottom nav, safe-area-inset-bottom padding applied
