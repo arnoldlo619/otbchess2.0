@@ -4235,7 +4235,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         </div>
 
         {/* Step content */}
-        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
+        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", scrollPaddingBottom: "8rem" }}>
           <div
             className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-5 sm:py-10 pb-6"
             key={`${mode}-${step}`}
@@ -4273,7 +4273,15 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         {/* ── Mobile bottom nav ── */}
         <div
           className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-4 border-t"
-          style={{ paddingTop: '0.875rem', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))', borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
+          style={{
+            paddingTop: '0.875rem',
+            paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+            borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
+            background: isDark ? T.dPanel : "#FFFFFF",
+            position: "sticky",
+            bottom: 0,
+            zIndex: 10,
+          }}
         >
           {/* Primary CTA — 56px height for easy tap */}
           <button
