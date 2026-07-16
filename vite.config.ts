@@ -335,6 +335,10 @@ export default defineConfig({
     emptyOutDir: true,
     // pdf-export chunk (jsPDF + autoTable) is intentionally large but only loaded on demand
     chunkSizeWarningLimit: 700,
+    // Inject modulepreload polyfill so <link rel="modulepreload"> works on all browsers.
+    // This ensures Vite's preload hints fire correctly, reducing the window where a
+    // navigation triggers a dynamic import for a chunk that hasn't been fetched yet.
+    modulePreload: { polyfill: true },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -360,6 +364,19 @@ export default defineConfig({
           ) return "react-vendor";
           // Wouter router
           if (id.includes("wouter")) return "router";
+          // Chess engine / board libs — shared between Director, Tournament, PlayerView
+          if (
+            id.includes("chess.js") ||
+            id.includes("chessground") ||
+            id.includes("cm-chessboard") ||
+            id.includes("@mliebelt/pgn")
+          ) return "chess-engine";
+          // Stockfish WASM — very large, isolated
+          if (id.includes("stockfish")) return "stockfish";
+          // Lucide icons — shared everywhere, keep in one chunk
+          if (id.includes("lucide-react")) return "icons";
+          // Sonner toast + next-themes — tiny shared utilities
+          if (id.includes("sonner") || id.includes("next-themes")) return "ui-utils";
         },
       },
     },
