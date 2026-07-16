@@ -1163,56 +1163,299 @@ function Features() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [, navigate] = useLocation();
 
+  // Feature data — hero (index 0) gets the large bento card
   const features = [
-    { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs", href: "/clubs", tooltip: "Manage your club roster, events & ELO history" },
-    { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — built for OTB club players.", tag: "Training", href: "/repertoire", tooltip: "Study openings with interactive boards & drills" },
-    { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered", href: "/prep", tooltip: "Enter a username to generate a full scout report" },
-    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature", href: "/league-demo", tooltip: "See a live demo of weekly club league matchups" },
-    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time", href: "/tournaments", tooltip: "Browse live and past tournament standings" },
-    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready", href: "/clubs", tooltip: "Explore clubs using automated shareable content" },
+    { icon: <Shield className="w-6 h-6" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs", href: "/clubs", hero: true },
+    { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze openings, problem lines, and blunder patterns before you sit down.", tag: "AI-Powered", href: "/prep" },
+    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize members to show up weekly for Club League Matchup Games with a season champion.", tag: "Club Feature", href: "/league-demo" },
+    { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, coaching notes, and spaced-repetition drills.", tag: "Training", href: "/repertoire" },
+    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators and members.", tag: "Real-Time", href: "/tournaments" },
+    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics for Instagram or WhatsApp.", tag: "Share-Ready", href: "/clubs" },
   ];
+
+  const accentGreen = isDark ? "oklch(0.72 0.18 145)" : "oklch(0.38 0.14 145)";
+  const cardBg = isDark ? "oklch(0.19 0.06 145 / 0.85)" : "oklch(0.97 0.02 145 / 0.90)";
+  const cardBorder = isDark ? "oklch(0.32 0.08 145 / 0.45)" : "oklch(0.55 0.10 145 / 0.22)";
+  const tagBg = isDark ? "oklch(0.28 0.09 145 / 0.75)" : "oklch(0.38 0.10 145 / 0.12)";
+  const tagColor = isDark ? "oklch(0.78 0.16 145)" : "oklch(0.32 0.12 145)";
+  const iconBg = isDark ? "oklch(0.28 0.09 145 / 0.7)" : "oklch(0.38 0.10 145 / 0.12)";
+  const descColor = isDark ? "oklch(0.68 0.07 145)" : "oklch(0.38 0.09 152)";
+  const titleColor = isDark ? "oklch(0.93 0.05 145)" : "oklch(0.18 0.07 155)";
+
+  const handleNav = (href: string) => {
+    if (href.startsWith("/")) navigate(href);
+    else window.open(href, "_blank", "noopener");
+  };
 
   return (
     <section
       id="features"
-      className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#EEF5EE]"}`}
+      className={`py-14 sm:py-20 lg:py-28 transition-colors duration-500 relative overflow-hidden ${
+        isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[oklch(0.95_0.02_145)]"
+      }`}
       ref={ref}
     >
-      <div className="container">
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
-            style={{ animationFillMode: "forwards" }}>
-            Platform Features
-          </p>
-          <h2 className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
-            Take your club to the next level
-          </h2>
+      {/* Subtle radial depth glow from top-center */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: isDark
+            ? "radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.35 0.12 145 / 0.18) 0%, transparent 70%)"
+            : "radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.60 0.12 145 / 0.12) 0%, transparent 70%)",
+        }}
+      />
+      {/* Micro chess grid texture */}
+      <div className={`absolute inset-0 chess-board-bg pointer-events-none ${
+        isDark ? "opacity-[0.035]" : "opacity-[0.06]"
+      }`} />
+
+      <div className="container relative z-10">
+        {/* Left-aligned header with vertical accent bar */}
+        <div className={`flex items-start gap-4 mb-10 sm:mb-14 lg:mb-16 ${
+          inView ? "animate-fade-up-soft" : "opacity-0"
+        }`} style={{ animationFillMode: "forwards" }}>
+          {/* Green vertical accent bar */}
+          <div
+            className="hidden sm:block flex-shrink-0 w-1 rounded-full mt-1"
+            style={{
+              height: "72px",
+              background: `linear-gradient(to bottom, ${accentGreen}, transparent)`,
+            }}
+          />
+          <div>
+            {/* Badge pill */}
+            <span
+              className={`inline-flex items-center gap-1.5 text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-3 ${
+                inView ? "animate-badge-pop" : "opacity-0"
+              }`}
+              style={{
+                background: tagBg,
+                color: tagColor,
+                border: `1px solid ${cardBorder}`,
+                animationFillMode: "forwards",
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: accentGreen }} />
+              Platform Features
+            </span>
+            <h2
+              className="text-3xl sm:text-4xl lg:text-6xl font-semibold tracking-tight"
+              style={{
+                fontFamily: "'Clash Display', sans-serif",
+                color: titleColor,
+                lineHeight: 1.05,
+              }}
+            >
+              Take your club to
+              <br />
+              <span style={{ color: accentGreen }}>the next level.</span>
+            </h2>
+            <p
+              className="mt-3 text-sm sm:text-base max-w-lg"
+              style={{ color: descColor }}
+            >
+              Every tool a chess club owner needs — tournaments, leagues, scouting, and community — in one platform.
+            </p>
+          </div>
         </div>
 
-        {/* Feature cards — animated DynamicSquare grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((feature, i) => {
-            const f = feature as { href?: string; tooltip?: string };
-            return (
+        {/* Bento grid — row 1: hero (left, tall) + 2 stacked (right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 mb-4 sm:mb-5">
+          {/* Hero card — spans 2 cols on lg */}
+          <div
+            className={`lg:col-span-2 transition-all duration-500 ${
+              inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
+            style={{ transitionDelay: "80ms" }}
+          >
+            <div
+              className="relative rounded-2xl overflow-hidden cursor-pointer group h-full min-h-[240px] sm:min-h-[280px]"
+              style={{
+                background: isDark
+                  ? "linear-gradient(135deg, oklch(0.22 0.09 145) 0%, oklch(0.17 0.07 145) 100%)"
+                  : "linear-gradient(135deg, oklch(0.40 0.12 145) 0%, oklch(0.32 0.10 145) 100%)",
+                border: `1px solid ${isDark ? "oklch(0.38 0.10 145 / 0.5)" : "oklch(0.55 0.12 145 / 0.3)"}`,
+                boxShadow: isDark
+                  ? "0 0 40px oklch(0.35 0.12 145 / 0.15), 0 4px 24px oklch(0 0 0 / 0.3)"
+                  : "0 0 40px oklch(0.55 0.12 145 / 0.12), 0 4px 24px oklch(0 0 0 / 0.08)",
+              }}
+              onClick={() => handleNav("/clubs")}
+            >
+              {/* Chess grid texture on hero card */}
+              <div className={`absolute inset-0 chess-board-bg pointer-events-none ${
+                isDark ? "opacity-[0.06]" : "opacity-[0.10]"
+              }`} />
+              {/* Hover glow sweep */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{
+                  background: isDark
+                    ? "radial-gradient(ellipse 60% 60% at 30% 50%, oklch(0.55 0.18 145 / 0.12) 0%, transparent 70%)"
+                    : "radial-gradient(ellipse 60% 60% at 30% 50%, oklch(0.85 0.12 145 / 0.20) 0%, transparent 70%)",
+                }}
+              />
+              <div className="relative z-10 p-6 sm:p-8 flex flex-col h-full">
+                {/* Icon + tag row */}
+                <div className="flex items-center justify-between mb-5">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: isDark ? "oklch(0.30 0.10 145 / 0.6)" : "oklch(1 0 0 / 0.18)",
+                      color: isDark ? "oklch(0.82 0.18 145)" : "oklch(1 0 0 / 0.95)",
+                      border: `1px solid ${isDark ? "oklch(0.42 0.12 145 / 0.5)" : "oklch(1 0 0 / 0.25)"}`,
+                    }}
+                  >
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <span
+                    className="text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full"
+                    style={{
+                      background: isDark ? "oklch(0.28 0.09 145 / 0.7)" : "oklch(1 0 0 / 0.18)",
+                      color: isDark ? "oklch(0.78 0.16 145)" : "oklch(1 0 0 / 0.90)",
+                      border: `1px solid ${isDark ? "oklch(0.40 0.10 145 / 0.5)" : "oklch(1 0 0 / 0.25)"}`,
+                    }}
+                  >
+                    For Clubs
+                  </span>
+                </div>
+                {/* Title */}
+                <h3
+                  className="text-xl sm:text-2xl lg:text-3xl font-semibold leading-tight mb-3"
+                  style={{
+                    fontFamily: "'Clash Display', sans-serif",
+                    color: isDark ? "oklch(0.94 0.06 145)" : "oklch(1 0 0 / 0.97)",
+                  }}
+                >
+                  Club Management
+                </h3>
+                {/* Description */}
+                <p
+                  className="text-sm sm:text-base leading-relaxed flex-1"
+                  style={{ color: isDark ? "oklch(0.72 0.09 145)" : "oklch(1 0 0 / 0.78)" }}
+                >
+                  Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.
+                </p>
+                {/* CTA */}
+                <div className="mt-6">
+                  <button
+                    className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:gap-3"
+                    style={{
+                      background: isDark ? "oklch(0.30 0.10 145 / 0.7)" : "oklch(1 0 0 / 0.18)",
+                      color: isDark ? "oklch(0.88 0.12 145)" : "oklch(1 0 0 / 0.95)",
+                      border: `1px solid ${isDark ? "oklch(0.42 0.12 145 / 0.5)" : "oklch(1 0 0 / 0.28)"}`,
+                    }}
+                  >
+                    Explore clubs <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column — 2 stacked cards */}
+          <div className="flex flex-col gap-4 sm:gap-5">
+            {features.slice(1, 3).map((feature, i) => (
               <div
                 key={feature.title}
-                className={`transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-                style={{ transitionDelay: `${(i + 1) * 80}ms` }}
+                className={`flex-1 transition-all duration-500 ${
+                  inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: `${(i + 2) * 80}ms` }}
               >
-                <DynamicSquare
-                  title={feature.title}
-                  description={feature.description}
-                  tag={feature.tag}
-                  icon={feature.icon}
-                  buttonText={f.href ? "View feature" : undefined}
-                  buttonHref={f.href}
-                  isDark={isDark}
-                />
+                <div
+                  className="relative rounded-2xl overflow-hidden cursor-pointer group h-full min-h-[120px]"
+                  style={{
+                    background: cardBg,
+                    border: `1px solid ${cardBorder}`,
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                  }}
+                  onClick={() => handleNav(feature.href || "/")}
+                >
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
+                    style={{ background: isDark ? "oklch(0.30 0.08 145 / 0.15)" : "oklch(0.55 0.10 145 / 0.06)" }}
+                  />
+                  <div className="relative z-10 p-5 sm:p-6 flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-3">
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center"
+                        style={{ background: iconBg, color: accentGreen }}
+                      >
+                        {feature.icon}
+                      </div>
+                      <span
+                        className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                        style={{ background: tagBg, color: tagColor, border: `1px solid ${cardBorder}` }}
+                      >
+                        {feature.tag}
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-semibold leading-snug mb-1.5" style={{ color: titleColor }}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm leading-relaxed flex-1" style={{ color: descColor }}>
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        </div>
+
+        {/* Row 2 — 3 equal cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+          {features.slice(3).map((feature, i) => (
+            <div
+              key={feature.title}
+              className={`transition-all duration-500 ${
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: `${(i + 4) * 80}ms` }}
+            >
+              <div
+                className="relative rounded-2xl overflow-hidden cursor-pointer group h-full min-h-[160px]"
+                style={{
+                  background: cardBg,
+                  border: `1px solid ${cardBorder}`,
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                }}
+                onClick={() => handleNav(feature.href || "/")}
+              >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none"
+                  style={{ background: isDark ? "oklch(0.30 0.08 145 / 0.15)" : "oklch(0.55 0.10 145 / 0.06)" }}
+                />
+                <div className="relative z-10 p-5 sm:p-6 flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center"
+                      style={{ background: iconBg, color: accentGreen }}
+                    >
+                      {feature.icon}
+                    </div>
+                    <span
+                      className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                      style={{ background: tagBg, color: tagColor, border: `1px solid ${cardBorder}` }}
+                    >
+                      {feature.tag}
+                    </span>
+                  </div>
+                  <h3 className="text-sm sm:text-base font-semibold leading-snug mb-1.5" style={{ color: titleColor }}>
+                    {feature.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm leading-relaxed flex-1" style={{ color: descColor }}>
+                    {feature.description}
+                  </p>
+                  <div className="mt-3 flex items-center gap-1 text-xs font-semibold" style={{ color: accentGreen }}>
+                    View feature <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
