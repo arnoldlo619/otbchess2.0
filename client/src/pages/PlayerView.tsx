@@ -746,6 +746,21 @@ function MyBoardScreen({
   const [showFilmSheet, setShowFilmSheet] = useState(false);
   const [showOppStats, setShowOppStats] = useState(true);
 
+  // ── Pairing pulse: fire when round or opponent changes ──────────────────
+  const [logoPulse, setLogoPulse] = useState(false);
+  const prevPairingKey = useRef<string>("");
+  const pairingKey = `${round}-${game.board}-${game.whiteId}-${game.blackId}`;
+  useEffect(() => {
+    if (prevPairingKey.current && prevPairingKey.current !== pairingKey) {
+      setLogoPulse(false);
+      // Force re-mount of animation class via double-rAF
+      requestAnimationFrame(() => requestAnimationFrame(() => setLogoPulse(true)));
+      const t = setTimeout(() => setLogoPulse(false), 1600 * 3 + 200);
+      return () => clearTimeout(t);
+    }
+    prevPairingKey.current = pairingKey;
+  }, [pairingKey]);
+
   useEffect(() => {
     if (!tournamentId || tournamentId === "otb-demo-2026") return;
     authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/broadcast`)
@@ -963,7 +978,7 @@ function MyBoardScreen({
                     <img
                       src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
                       alt="OTB!!"
-                      className="w-4 h-4 object-contain opacity-80"
+                      className={`w-4 h-4 object-contain opacity-80${logoPulse ? " pairing-logo-pulse" : ""}`}
                     />
                     <p
                       className="text-[10px] font-black uppercase tracking-[0.18em]"
