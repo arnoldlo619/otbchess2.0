@@ -1348,12 +1348,7 @@ function Showcase() {
               {/* Hover overlay — subtle green tint */}
               <div className="absolute inset-0 bg-[oklch(0.45_0.14_145)]/0 group-hover:bg-[oklch(0.45_0.14_145)]/10 transition-colors duration-300 pointer-events-none" />
 
-              {/* Tag — top-left, small uppercase */}
-              <div className="absolute top-4 left-4 z-10">
-                <span className="text-[11px] font-bold tracking-widest uppercase text-white/90">
-                  {feature.tag}
-                </span>
-              </div>
+              {/* Tag label removed for minimalist look */}
 
               {/* Title + description — bottom-left overlay */}
               <div className="absolute bottom-5 left-5 right-14 z-10">
