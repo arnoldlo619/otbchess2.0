@@ -1,5 +1,14 @@
 # OTB Chess — Project TODO
 
+## Phase 2 — Theme Token Migration & Light-Mode Contrast Fixes
+
+- [x] Add 8 OTB semantic CSS tokens to index.css (:root and .dark) — `--otb-surface-page`, `--otb-surface-card`, `--otb-surface-elevated`, `--otb-text-primary`, `--otb-text-secondary`, `--otb-text-muted`, `--otb-border`, `--otb-accent`
+- [x] Register semantic tokens in @theme inline block for Tailwind utility access
+- [x] Fix OpeningDetailDemo.tsx — add isDark guards to all text-white/*, nav bar, card backgrounds, and sub-components (StatBar, LineRow)
+- [x] Fix OpeningsLibraryDemo.tsx — add isDark guards to nav bar, search input, filter chips, opening cards, featured cards, section headers, and teaser block
+- [x] Fix ClubDashboard.tsx — add isDark guard to PlayerOfMonthWidget card header border (border-white/8 → sage in light mode)
+- [x] Confirm ClubDashboard is intentionally always-dark (shader/dark-green background, no light-mode page surface needed)
+
 ## Core Platform
 
 - [x] Tournament creation wizard (name, format, rounds, time control, venue, date)

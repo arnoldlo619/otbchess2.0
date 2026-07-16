@@ -2125,7 +2125,7 @@ function PlayerOfMonthWidget({
   return (
     <div className={`rounded-3xl border ${card} overflow-hidden`}>
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-white/8 flex items-center gap-2">
+      <div className={`px-5 py-3.5 border-b ${isDark ? "border-white/8" : "border-[#ADBC9F]/50"} flex items-center gap-2`}>
         <Crown className="w-4 h-4 text-amber-400" />
         <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/50" : "text-[#436850]"}`}>
           Player of the Month
