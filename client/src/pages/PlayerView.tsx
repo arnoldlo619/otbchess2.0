@@ -958,12 +958,20 @@ function MyBoardScreen({
               />
               <div className="relative flex items-center justify-between px-5 py-5">
                 <div>
-                  <p
-                    className="text-[10px] font-black uppercase tracking-[0.18em] mb-1"
-                    style={{ color: isDark ? "oklch(0.60 0.12 145)" : "oklch(0.75 0.10 145)" }}
-                  >
-                    Your Assignment
-                  </p>
+                  {/* OTB!! logo + label */}
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
+                      alt="OTB!!"
+                      className="w-4 h-4 object-contain opacity-80"
+                    />
+                    <p
+                      className="text-[10px] font-black uppercase tracking-[0.18em]"
+                      style={{ color: isDark ? "oklch(0.60 0.12 145)" : "oklch(0.75 0.10 145)" }}
+                    >
+                      Your Assignment
+                    </p>
+                  </div>
                   <p
                     className="text-4xl font-black leading-none"
                     style={{ color: "white" }}
