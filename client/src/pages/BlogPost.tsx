@@ -8,7 +8,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { useAuthContext } from "@/context/AuthContext";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
-import { ArrowLeft, Calendar, Clock, ChevronRight, ExternalLink, Building2, LayoutDashboard, Trophy, GraduationCap } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, ChevronRight, ExternalLink, Building2, LayoutDashboard, Trophy, GraduationCap, Share2, Copy, Check, Twitter, MessageCircle } from "lucide-react";
 
 // ─── Shared post data (mirrors Blog.tsx POSTS, extended with content) ─────────
 export interface BlogPostData {
@@ -903,8 +903,71 @@ export default function BlogPost() {
     path: "/blog",
   });
 
+  // JSON-LD structured data for article SEO
+  useEffect(() => {
+    if (!post) return;
+    const existingScript = document.getElementById("jsonld-article");
+    if (existingScript) existingScript.remove();
+    const script = document.createElement("script");
+    script.id = "jsonld-article";
+    script.type = "application/ld+json";
+    const canonicalUrl = `https://chessotb.club/blog/${post.slug}`;
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: post.title,
+      description: post.excerpt,
+      image: post.image.startsWith("http") ? post.image : undefined,
+      datePublished: new Date(post.date).toISOString(),
+      dateModified: new Date(post.date).toISOString(),
+      author: {
+        "@type": "Organization",
+        name: post.author,
+        url: "https://chessotb.club",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "ChessOTB.club",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png",
+        },
+      },
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": canonicalUrl,
+      },
+      url: canonicalUrl,
+      articleSection: post.category,
+      wordCount: post.sections.reduce((acc, s) => acc + s.content.reduce((a: number, b: unknown) => a + (typeof b === "string" ? (b as string).split(" ").length : 0), 0), 0),
+    });
+    document.head.appendChild(script);
+    return () => {
+      document.getElementById("jsonld-article")?.remove();
+    };
+  }, [post]);
+
   // Active TOC section tracking
   const [activeSection, setActiveSection] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Fallback for older browsers
+      const el = document.createElement("textarea");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -1111,6 +1174,67 @@ export default function BlogPost() {
                 </div>
               );
             })()}
+
+            {/* ── Share bar ── */}
+            <div
+              className={`mt-10 pt-8 border-t ${isDark ? "border-white/10" : "border-[#ADBC9F]/50"}`}
+            >
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 ${
+                  isDark ? "text-white/40" : "text-[#436850]/60"
+                }`}>
+                  <Share2 className="w-3.5 h-3.5" />
+                  Share this article
+                </span>
+                {/* Copy link */}
+                <button
+                  onClick={handleCopyLink}
+                  aria-label="Copy link to clipboard"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    copied
+                      ? isDark
+                        ? "bg-green-500/20 border-green-500/40 text-green-400"
+                        : "bg-green-100 border-green-300 text-green-700"
+                      : isDark
+                        ? "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                        : "bg-white border-[#ADBC9F]/50 text-[#436850] hover:border-[#436850]/50 hover:bg-[#F0F5E8]"
+                  }`}
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? "Copied!" : "Copy link"}
+                </button>
+                {/* Twitter/X */}
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : `https://chessotb.club/blog/${post.slug}`)}&via=ChessOTB`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on X (Twitter)"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    isDark
+                      ? "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                      : "bg-white border-[#ADBC9F]/50 text-[#436850] hover:border-[#436850]/50 hover:bg-[#F0F5E8]"
+                  }`}
+                >
+                  <Twitter className="w-3.5 h-3.5" />
+                  X / Twitter
+                </a>
+                {/* WhatsApp */}
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`${post.title} — ${typeof window !== 'undefined' ? window.location.href : `https://chessotb.club/blog/${post.slug}`}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on WhatsApp"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    isDark
+                      ? "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                      : "bg-white border-[#ADBC9F]/50 text-[#436850] hover:border-[#436850]/50 hover:bg-[#F0F5E8]"
+                  }`}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  WhatsApp
+                </a>
+              </div>
+            </div>
 
             {/* ── Back to blog CTA ── */}
             <div

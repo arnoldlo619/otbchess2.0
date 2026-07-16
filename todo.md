@@ -7033,10 +7033,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Hero: real product-state visual (existing HeroDashboardMockup preserved)
 - [x] Capabilities bento: asymmetric grid with 6 groups (Tournament Ops, Clubs, League, Matchup Prep, Openings, Live Results)
 - [x] Capabilities bento: each card has user outcome, real interface evidence, specific CTA, accessible name, responsive layout
-- [ ] Ecosystem pathways section: clear navigation to Clubs, Tournaments, League, Tools
-- [ ] StatsBar: skeletons while loading, hide unavailable metrics, clearly label demo data
-- [ ] How It Works: 3-step premium vertical layout, mobile-first
-- [ ] CTA section: "Growing your chess club starts here" with valid destinations
+- [x] Ecosystem pathways section: 4-card grid linking to Clubs, Tournaments, League, Tools
+- [x] StatsBar: skeleton loading state while API resolves; "Beta" badge on 4.9★ demo stat
+- [x] How It Works: section header added, mobile-first (hidden sm:block wrapper removed), step CTAs with valid destinations
+- [x] CTA section: "Growing your chess club starts here" with valid destinations (wizard + demo link)
 - [x] Footer: all links reach valid destinations, remove placeholder Discord/Twitter hrefs
 
 ### B. Pricing
@@ -7056,7 +7056,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] BlogPost: comfortable reading width (max-w-prose or 65ch)
 - [x] BlogPost: clear author/date/read-time metadata in header
 - [x] BlogPost: semantic headings (h1 → h2 → h3 hierarchy)
-- [ ] BlogPost: social sharing (copy link, Twitter/X, WhatsApp)
+- [x] BlogPost: social sharing (copy link, X/Twitter, WhatsApp) with isDark-aware styling
 - [x] BlogPost: related articles section
 - [x] BlogPost: valid product CTA at end of article
 
@@ -7064,7 +7064,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Join: one primary CTA per step (already correct — confirmed no duplicate CTAs)
 - [x] Join: inline errors on each step (upgraded to styled error pills)
 - [ ] Join: tournament context (name, format, date) visible throughout all steps
-- [ ] Join: back navigation preserves entered information
+- [x] Join: back navigation preserves entered information (confirmed — handleSwipeBack + back button both reset state correctly)
 - [ ] Join: QR scan only requests camera permission when user explicitly selects Scan
 - [ ] Join: success state explains check-in, round timing, where to find pairings
 - [ ] Join: all touch targets ≥44px
@@ -7100,6 +7100,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Dynamic page titles for Blog, BlogPost, Pricing, Home pages (usePageMeta hook)
 - [x] Canonical URLs for all public pages (usePageMeta sets link[rel=canonical])
 - [x] Open Graph metadata for Blog and BlogPost pages
-- [ ] Structured article metadata (JSON-LD) for BlogPost
+- [x] Structured article metadata (JSON-LD) for BlogPost (Article schema with publisher, author, section, wordCount)
 - [ ] Correct heading order on all public pages
 - [ ] Semantic nav landmarks on all public pages

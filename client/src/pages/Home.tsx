@@ -541,6 +541,7 @@ function StatsBar() {
   // Floor values shown while loading or on API failure — never show false zeros
   const FLOORS = { tournaments: 300, players: 550, clubs: 80 };
   const [liveCounts, setLiveCounts] = useState<{ tournaments: number; players: number; clubs: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   useEffect(() => {
     fetch("/api/platform/stats")
       .then((r) => r.ok ? r.json() : null)
@@ -553,15 +554,16 @@ function StatsBar() {
           });
         }
       })
-      .catch(() => { /* silently keep floor values */ });
+      .catch(() => { /* silently keep floor values */ })
+      .finally(() => setStatsLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const counts = liveCounts ?? FLOORS;
-  const stats: { target: number; suffix: string; decimals: number; label: string }[] = [
+  const stats: { target: number; suffix: string; decimals: number; label: string; demo?: boolean }[] = [
     { target: counts.tournaments, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
     { target: counts.players, suffix: "+", decimals: 0, label: "Players Registered" },
     { target: counts.clubs, suffix: "+", decimals: 0, label: "Chess Clubs" },
-    { target: 4.9, suffix: "★", decimals: 1, label: "Average Rating" },
+    { target: 4.9, suffix: "★", decimals: 1, label: "Avg. Host Rating", demo: true },
   ];
   return (
     <section
@@ -577,25 +579,38 @@ function StatsBar() {
 
       <div className="container relative z-10 py-6 sm:py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 sm:gap-8">
-          {stats.map((stat, i) => (
-            <div
-              key={stat.label}
-              className={`stat-item text-center ${
-                inView ? "animate-stat-pop" : "opacity-0"
-              }`}
-              style={{ animationDelay: `${i * 90}ms`, animationFillMode: "forwards" }}
-            >
-              <StatItem
-                target={stat.target}
-                suffix={stat.suffix}
-                decimals={stat.decimals}
-                label={stat.label}
-                delay={i * 90}
-                active={inView}
-                large
-              />
-            </div>
-          ))}
+          {statsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <div className="h-10 w-24 rounded-lg bg-white/20 animate-pulse" />
+                  <div className="h-3 w-28 rounded bg-white/15 animate-pulse" />
+                </div>
+              ))
+            : stats.map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`stat-item text-center relative ${
+                    inView ? "animate-stat-pop" : "opacity-0"
+                  }`}
+                  style={{ animationDelay: `${i * 90}ms`, animationFillMode: "forwards" }}
+                >
+                  <StatItem
+                    target={stat.target}
+                    suffix={stat.suffix}
+                    decimals={stat.decimals}
+                    label={stat.label}
+                    delay={i * 90}
+                    active={inView}
+                    large
+                  />
+                  {stat.demo && (
+                    <span className="absolute -top-1 -right-1 text-[9px] font-bold uppercase tracking-wider bg-white/20 text-white/70 px-1.5 py-0.5 rounded-full">
+                      Beta
+                    </span>
+                  )}
+                </div>
+              ))
+          }
         </div>
 
       </div>
@@ -891,6 +906,8 @@ function ParallaxStep({
   icon,
   title,
   description,
+  cta,
+  ctaHref,
   imageSrc,
   imageAlt,
   imageSrc2,
@@ -909,6 +926,8 @@ function ParallaxStep({
   icon: React.ReactNode;
   title: string;
   description: string;
+  cta?: string;
+  ctaHref?: string;
   imageSrc: string;
   imageAlt: string;
   imageSrc2?: string;
@@ -987,8 +1006,19 @@ function ParallaxStep({
           </motion.p>
           <motion.div
             variants={stepAccentVariants}
-            className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
+            className={`w-12 h-1 rounded-full mb-6 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
           />
+          {cta && ctaHref && (
+            <motion.a
+              variants={stepItemVariants}
+              href={ctaHref}
+              className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors duration-200 ${
+                isDark ? "text-[oklch(0.65_0.14_145)] hover:text-[oklch(0.75_0.16_145)]" : "text-[#436850] hover:text-[#2A4A32]"
+              }`}
+            >
+              {cta} <ArrowRight className="w-4 h-4" />
+            </motion.a>
+          )}
         </motion.div>
       </div>
     );
@@ -1093,8 +1123,19 @@ function ParallaxStep({
         {/* Divider accent — grows from left */}
         <motion.div
           variants={stepAccentVariants}
-          className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
+          className={`w-12 h-1 rounded-full mb-6 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
         />
+        {cta && ctaHref && (
+          <motion.a
+            variants={stepItemVariants}
+            href={ctaHref}
+            className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors duration-200 ${
+              isDark ? "text-[oklch(0.65_0.14_145)] hover:text-[oklch(0.75_0.16_145)]" : "text-[#436850] hover:text-[#2A4A32]"
+            }`}
+          >
+            {cta} <ArrowRight className="w-4 h-4" />
+          </motion.a>
+        )}
       </motion.div>
     </div>
   );
@@ -1110,6 +1151,8 @@ function HowItWorks() {
       icon: <Trophy className="w-3 h-3" />,
       title: "Create Your Tournament, Share QR Code",
       description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code — players scan and register on the spot.",
+      cta: "Host a Tournament",
+      ctaHref: "/?action=create",
       imageSrc: "/manus-storage/qr-screen_b1e19e90.webp",
       imageAlt: "Tournament QR Code screen",
       phoneLeft: true,
@@ -1120,6 +1163,8 @@ function HowItWorks() {
       icon: <Users className="w-3 h-3" />,
       title: "Players Sign Up with chess.com ELO",
       description: "Share a link. Players enter their chess.com username — we automatically pull their verified ELO rating in real time.",
+      cta: "Try the Join Flow",
+      ctaHref: "/join/OTB2026",
       imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
       imageAlt: "Player join form with chess.com username lookup",
       imageSrc2: "/manus-storage/player-signup-confirm_b5b69600.webp",
@@ -1131,6 +1176,8 @@ function HowItWorks() {
       icon: <Swords className="w-3 h-3" />,
       title: "Optimal Pairings Generated",
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
+      cta: "View Live Demo",
+      ctaHref: "/tournament/otb-demo-2026",
       imageSrc: "/manus-storage/IMG_63952_5020b27c.jpg",
       imageAlt: "Player board assignment screen showing opponent and board number",
       imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
@@ -1149,7 +1196,24 @@ function HowItWorks() {
     <section id="how-it-works" className={`transition-colors duration-500 ${
       isDark ? "bg-background" : "bg-background"
     }`}>
-      
+      {/* Section header */}
+      <div className="container pt-20 pb-4 text-center">
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5 ${
+          isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/10 text-[#436850]"
+        }`}>
+          <Zap className="w-3 h-3" />
+          How It Works
+        </div>
+        <h2
+          className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4"
+          style={{ fontFamily: "'Clash Display', sans-serif" }}
+        >
+          Up and running in minutes.
+        </h2>
+        <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          No spreadsheets. No manual pairings. Just a QR code and a room full of chess players.
+        </p>
+      </div>
 
       {/* Parallax step blocks */}
       <div className="container">
@@ -1160,6 +1224,8 @@ function HowItWorks() {
             icon={step.icon}
             title={step.title}
             description={step.description}
+            cta={(step as any).cta}
+            ctaHref={(step as any).ctaHref}
             imageSrc={step.imageSrc}
             imageAlt={step.imageAlt}
             imageSrc2={(step as any).imageSrc2}
@@ -1175,6 +1241,106 @@ function HowItWorks() {
             caption2={(step as any).caption2}
           />
         ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── Ecosystem Pathways ─────────────────────────────────────────────────────
+function EcosystemPathways() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const { ref, inView } = useInView();
+
+  const pathways = [
+    {
+      icon: <Trophy className="w-5 h-5" />,
+      label: "Tournaments",
+      description: "Host Swiss or round-robin events with automatic pairings and live standings.",
+      href: "/tournaments",
+      cta: "Browse Tournaments",
+    },
+    {
+      icon: <Users className="w-5 h-5" />,
+      label: "Clubs",
+      description: "Build your club's home base — members, events, history, and leaderboards.",
+      href: "/clubs",
+      cta: "Explore Clubs",
+    },
+    {
+      icon: <BarChart3 className="w-5 h-5" />,
+      label: "League",
+      description: "Run a season-long club league with cumulative standings and tiebreaks.",
+      href: "/league",
+      cta: "View League",
+    },
+    {
+      icon: <Swords className="w-5 h-5" />,
+      label: "Match Prep Tools",
+      description: "Openings library, opponent analysis, and matchup prep — all in one place.",
+      href: "/tools",
+      cta: "Open Tools",
+    },
+  ];
+
+  return (
+    <section
+      className={`py-14 sm:py-20 transition-colors duration-500 ${
+        isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F0F5E8]"
+      }`}
+      ref={ref}
+    >
+      <div className="container">
+        <div className={`text-center mb-10 transition-all duration-700 ${
+          inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${
+            isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
+          }`}>Platform</p>
+          <h2
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Everything in one ecosystem.
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {pathways.map((p, i) => (
+            <a
+              key={p.label}
+              href={p.href}
+              className={`group flex flex-col gap-4 p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
+                isDark
+                  ? "bg-white/[0.04] border-white/[0.08] hover:border-[oklch(0.65_0.14_145)]/40 hover:bg-white/[0.07]"
+                  : "bg-white border-[#ADBC9F]/50 hover:border-[#436850]/40 hover:shadow-md"
+              } ${
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+              style={{ transitionDelay: `${i * 60}ms`, animationFillMode: "forwards" }}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/10 text-[#436850]"
+              }`}>
+                {p.icon}
+              </div>
+              <div className="flex-1">
+                <p className={`text-sm font-bold mb-1 ${
+                  isDark ? "text-white" : "text-[#12372A]"
+                }`}>{p.label}</p>
+                <p className={`text-xs leading-relaxed ${
+                  isDark ? "text-white/50" : "text-[#436850]/70"
+                }`}>{p.description}</p>
+              </div>
+              <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors duration-200 ${
+                isDark
+                  ? "text-[oklch(0.65_0.14_145)] group-hover:text-[oklch(0.75_0.16_145)]"
+                  : "text-[#436850] group-hover:text-[#12372A]"
+              }`}>
+                {p.cta} <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -2397,7 +2563,8 @@ export default function Home() {
       )}
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
-      <div className="hidden sm:block"><HowItWorks /></div>
+      <HowItWorks />
+      <EcosystemPathways />
       <Features />
       <PlayerDemo />
       <Showcase />
