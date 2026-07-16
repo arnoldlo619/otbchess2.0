@@ -46,6 +46,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
 import { V3ScoutReportSkeleton } from "@/components/prep/V3ScoutReportSkeleton";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -73,7 +73,7 @@ const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
 
 // ── Official platform loading fallback ──────────────────────────────────────────────────
 function PageLoader() {
-  return <OTBLoader fullPage size={160} />;
+  return <OTBLoader fullPage />;
 }
 
 function Router() {

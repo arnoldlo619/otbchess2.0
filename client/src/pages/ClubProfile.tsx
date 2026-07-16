@@ -879,7 +879,7 @@ export default function ClubProfile() {
     const search = typeof window !== "undefined" ? window.location.search : "";
     const p = new URLSearchParams(search);
     const t = p.get("tab");
-    const valid = ["events", "members", "tournaments", "feed", "leagues"] as const;
+    const valid = ["events", "members", "feed", "leagues"] as const;
     return (valid as readonly string[]).includes(t ?? "") ? (t as typeof valid[number]) : "feed";
   })();
 
@@ -887,13 +887,20 @@ export default function ClubProfile() {
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
+  const [activeTab, setActiveTab] = useState<"events" | "members" | "feed" | "leagues">(initialTab);
   // Tracks which tabs the user has visited — clears badge indicators on first visit
   const [seenTabs, setSeenTabs] = useState<Set<string>>(new Set([initialTab]));
-  const handleTabChange = (tab: "events" | "members" | "tournaments" | "feed" | "leagues") => {
+  const handleTabChange = (tab: "events" | "members" | "feed" | "leagues") => {
     setActiveTab(tab);
     setSeenTabs(prev => { const next = new Set(prev); next.add(tab); return next; });
   };
+  // Redirect legacy "tournaments" deep-links to "events" tab
+  useEffect(() => {
+    if ((activeTab as string) === "tournaments") {
+      setActiveTab("events");
+      setEventsFilter("tournaments");
+    }
+  }, [activeTab]);
   // Sidebar is now always icon-only (Partiful-style rail)
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -1465,26 +1472,23 @@ export default function ClubProfile() {
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
           <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
-            {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
+            {(["feed", "events", "members", "leagues"] as const).map((t) => {
               const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {
                 feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
                 events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
                 members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
-                tournaments: <OtbTournaments size={22} accentColor={isActive ? accent : undefined} />,
                 leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
               };
               const labelMap: Record<string, string> = {
                 feed: "Feed",
                 events: "Events",
                 members: "Members",
-                tournaments: "Tournaments",
                 leagues: "Leagues",
               };
               const badgeMap: Record<string, number> = {
-                events: clubEvents.length,
+                events: clubEvents.length + tournaments.length + liveTournaments.length,
                 feed: feedEvents.length,
-                tournaments: tournaments.length + liveTournaments.length,
                 leagues: clubLeagues.length,
               };
               const badge = seenTabs.has(t) ? 0 : (badgeMap[t] ?? 0);
@@ -1633,8 +1637,7 @@ export default function ClubProfile() {
                     seenTabs={seenTabs as Set<import("@/components/club/ClubTabs").ClubTab>}
                     badges={{
                       feed: feedEvents.length,
-                      events: clubEvents.length,
-                      tournaments: tournaments.length + liveTournaments.length,
+                      events: clubEvents.length + tournaments.length + liveTournaments.length,
                       leagues: clubLeagues.length,
                     }}
                     accent={accent}
@@ -2954,9 +2957,8 @@ export default function ClubProfile() {
           );
         })()}
 
-        {/* ── Tournaments tab ─────────────────────────────────────────────────────── */}
-        {/* Club owners should be able to populate new tournaments in the Club Tournaments tab page. Optimally implement while efficiently conserving tokens */}
-        {activeTab === "tournaments" && (         <div className="space-y-4 animate-in fade-in duration-200">
+        {/* ── Tournaments tab — merged into Events tab via filter chips ── */}
+        {(activeTab as string) === "tournaments" && (         <div className="space-y-4 animate-in fade-in duration-200">
 
             {/* ── Owner-only Host Tournament CTA ────────────────────────────── */}
             {/* TODO: Ensure tournament creation flow is optimized and user-friendly */}
@@ -4338,13 +4340,12 @@ export default function ClubProfile() {
           paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
+        {(["feed", "events", "members", "leagues"] as const).map((t) => {
           const isActive = activeTab === t;
           const iconMap: Record<string, React.ReactNode> = {
             feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
             events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
             members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
-            tournaments: <OtbTournaments size={22} accentColor={isActive ? accent : undefined} />,
             leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
           };
           return (

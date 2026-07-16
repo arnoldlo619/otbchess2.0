@@ -1,21 +1,17 @@
 /**
  * ClubTabs — Premium horizontal tab bar for the club profile page.
- * Replaces the sidebar-only navigation with a visible tab strip
- * that works on both mobile and desktop, while the sidebar remains
- * for desktop quick-access.
- *
- * Uses custom OTB chess-native icons instead of generic Lucide icons.
+ * Four tabs: Feed | Events | Members | Leagues
+ * (Tournaments are accessible via the Events tab filter chips)
  */
 import React from "react";
 import {
   FeedIcon,
   EventsIcon,
   MembersIcon,
-  TournamentsIcon,
   LeaguesIcon,
 } from "@/components/OtbIcons";
 
-export type ClubTab = "feed" | "events" | "members" | "tournaments" | "leagues";
+export type ClubTab = "feed" | "events" | "members" | "leagues";
 
 interface TabConfig {
   id: ClubTab;
@@ -35,11 +31,10 @@ interface ClubTabsProps {
 
 export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark }: ClubTabsProps) {
   const tabs: TabConfig[] = [
-    { id: "feed",        label: "Feed",        icon: FeedIcon },
-    { id: "events",      label: "Events",      icon: EventsIcon },
-    { id: "members",     label: "Members",     icon: MembersIcon },
-    { id: "tournaments", label: "Tournaments", icon: TournamentsIcon },
-    { id: "leagues",     label: "Leagues",     icon: LeaguesIcon },
+    { id: "feed",    label: "Feed",    icon: FeedIcon },
+    { id: "events",  label: "Events",  icon: EventsIcon },
+    { id: "members", label: "Members", icon: MembersIcon },
+    { id: "leagues", label: "Leagues", icon: LeaguesIcon },
   ];
 
   return (

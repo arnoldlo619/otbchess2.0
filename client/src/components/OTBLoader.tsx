@@ -15,7 +15,7 @@
 import { useEffect, useState } from "react";
 
 interface OTBLoaderProps {
-  /** Width/height of the animation in px. Default: 96 (inline) / 180 (fullPage) */
+  /** Width/height of the animation in px. Default: 120 (inline) / 240 (fullPage) */
   size?: number;
   /** Optional text label shown below the animation */
   label?: string;
@@ -58,8 +58,8 @@ export function OTBLoader({
 
   const dark = isDark !== undefined ? isDark : autoDark;
 
-  // Default size: 180px for fullPage, 96px for inline
-  const resolvedSize = size ?? (fullPage ? 180 : 96);
+  // Default size: 240px for fullPage, 120px for inline
+  const resolvedSize = size ?? (fullPage ? 240 : 120);
 
   const inner = (
     <div

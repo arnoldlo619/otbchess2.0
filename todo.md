@@ -7005,3 +7005,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: update openingBook.ts path resolver to use existsSync(cwdPath) as primary check (works in both dev and prod) with import.meta.url relative path as fallback
 - [x] TypeScript: 0 errors after fix
 - [x] Build verified: dist/data/ecoByEpd.json present after pnpm build
+- [x] Club sidebar: removed Tournaments tab, consolidated into Events tab (Feed, Events, Members, Leagues)
