@@ -55,7 +55,7 @@ export function LeagueDropdown() {
         overflowY: "auto",
       }}
     >
-      {/* ── Quick Nav: Overview + Demo ── */}
+      {/* ── Quick Nav: Feature Page + Demo ── */}
       <div className="flex border-b border-white/[0.07]">
         <a
           href="/league"
@@ -63,7 +63,7 @@ export function LeagueDropdown() {
           className="group flex-1 flex items-center justify-center gap-2 px-3 py-3 text-xs font-semibold text-white/50 hover:text-white/90 hover:bg-white/[0.05] transition-colors border-r border-white/[0.07]"
         >
           <LayoutGrid className="w-3.5 h-3.5 flex-shrink-0 group-hover:text-[oklch(0.75_0.18_145)] transition-colors" />
-          Overview
+          How It Works
         </a>
         <a
           href="/league-demo"
@@ -71,7 +71,7 @@ export function LeagueDropdown() {
           className="group flex-1 flex items-center justify-center gap-2 px-3 py-3 text-xs font-semibold text-white/50 hover:text-white/90 hover:bg-white/[0.05] transition-colors"
         >
           <PlayCircle className="w-3.5 h-3.5 flex-shrink-0 group-hover:text-[oklch(0.75_0.18_145)] transition-colors" />
-          Demo
+          View Demo
         </a>
       </div>
 

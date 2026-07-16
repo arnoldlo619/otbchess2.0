@@ -97,16 +97,9 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       .catch(() => setMyLeagues([]));
   }, [isGuest2]);
 
-  // Pick the best league to navigate to:
-  // 1. Active league (status = "active") first
-  // 2. Any league (draft, completed)
-  // 3. Fallback to /league overview page
-  const leagueNavUrl = (() => {
-    if (!myLeagues.length) return "/league";
-    const active = myLeagues.find((l) => l.status === "active");
-    const target = active ?? myLeagues[0];
-    return `/league/${target.id}`;
-  })();
+  // League header button always goes to the feature overview page (/league).
+  // The dropdown lets users jump directly to their personal league dashboards.
+  const leagueNavUrl = "/league";
 
   const dashboardUrl     = getDashboardUrl();
   const dashboardTooltip = getDashboardTooltip();
@@ -120,9 +113,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     { name: "League",
       url: leagueNavUrl,
       icon: LeaguesIcon,
-      tooltip: myLeagues.length
-        ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name)
-        : "Explore OTB Leagues",
+      tooltip: "OTB Leagues — how it works",
       dropdown: <LeagueDropdown />,
       onClick: (e: React.MouseEvent) => {
         e.preventDefault();
