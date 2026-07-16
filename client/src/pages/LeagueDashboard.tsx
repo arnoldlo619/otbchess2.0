@@ -1536,10 +1536,10 @@ export default function LeagueDashboard() {
           {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
           <div
             className="flex-shrink-0 relative overflow-hidden"
-            style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
+            style={{ height: "140px", borderBottom: `1px solid ${cardBorder}` }}
           >
-            {/* Animated ASCII art fills the full banner */}
-            <AsciiArt className="absolute inset-0 w-full h-full" />
+            {/* Animated ASCII art — contain so the full trophy is visible, anchored right */}
+            <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
 
             {/* Dark gradient overlay so text stays legible */}
             <div

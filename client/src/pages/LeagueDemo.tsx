@@ -368,7 +368,7 @@ export default function LeagueDemo() {
             className="flex-shrink-0 relative overflow-hidden"
             style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
           >
-            <AsciiArt className="absolute inset-0 w-full h-full" />
+            <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
             <div
               className="absolute inset-0"
               style={{

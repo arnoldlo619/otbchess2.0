@@ -3,8 +3,19 @@
  * Animated ASCII art video banner. Drop it behind your content:
  * <div className="relative h-40"><AsciiArt className="absolute inset-0" /></div>
  * Source: https://21st.dev/community/ascii/editor?from=835f9c49-9087-4db1-a02d-62a0d38bff59
+ *
+ * Uses objectFit: "contain" so the full trophy animation is always visible.
+ * Pass `style` to override objectPosition or other CSS properties per usage.
  */
-export function AsciiArt({ className }: { className?: string }) {
+import React from "react";
+
+export function AsciiArt({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <video
       className={className}
@@ -19,7 +30,9 @@ export function AsciiArt({ className }: { className?: string }) {
         display: "block",
         width: "100%",
         height: "100%",
-        objectFit: "cover",
+        objectFit: "contain",
+        objectPosition: "center center",
+        ...style,
       }}
     />
   );
