@@ -971,10 +971,10 @@ function MyBoardScreen({
               className="mx-4 mt-4 rounded-2xl overflow-hidden"
               style={{
                 background: isDark
-                  ? "linear-gradient(135deg, oklch(0.20 0.09 145) 0%, oklch(0.16 0.07 145) 100%)"
-                  : "linear-gradient(135deg, oklch(0.32 0.10 145) 0%, oklch(0.26 0.09 145) 100%)",
-                border: `1px solid ${isDark ? "oklch(0.32 0.10 145)" : "oklch(0.38 0.10 145)"}`,
-                boxShadow: isDark ? "0 4px 24px oklch(0.20 0.09 145 / 0.50)" : "0 4px 24px oklch(0.32 0.10 145 / 0.35)",
+                  ? "linear-gradient(135deg, oklch(0.22 0.10 145) 0%, oklch(0.18 0.08 145) 100%)"
+                  : "linear-gradient(135deg, oklch(0.34 0.11 145) 0%, oklch(0.28 0.10 145) 100%)",
+                border: `1px solid ${isDark ? "oklch(0.35 0.11 145)" : "oklch(0.42 0.11 145)"}`,
+                boxShadow: isDark ? "0 4px 24px oklch(0.12 0.06 145 / 0.70)" : "0 4px 24px oklch(0.28 0.10 145 / 0.45)",
               }}
             >
               {/* Subtle chess pattern overlay */}
@@ -1011,9 +1011,9 @@ function MyBoardScreen({
                     <span
                       className="text-xs font-black px-2.5 py-1 rounded-full"
                       style={{
-                        background: myColor === "white" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.30)",
+                        background: myColor === "white" ? "oklch(1 0 0 / 0.30)" : "oklch(0 0 0 / 0.50)",
                         color: "white",
-                        border: "1px solid rgba(255,255,255,0.20)",
+                        border: "1px solid oklch(1 0 0 / 0.35)",
                       }}
                     >
                       {colorLabel}
@@ -1021,7 +1021,7 @@ function MyBoardScreen({
                     {rank > 0 && (
                       <span
                         className="text-xs font-semibold px-2 py-1 rounded-full"
-                        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.75)" }}
+                        style={{ background: "oklch(1 0 0 / 0.20)", color: "oklch(1 0 0 / 0.95)" }}
                       >
                         Rank #{rank}
                       </span>
@@ -1031,9 +1031,9 @@ function MyBoardScreen({
                 <div
                   className="w-20 h-20 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0"
                   style={{
-                    background: myColor === "white" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.25)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    textShadow: "0 2px 8px rgba(0,0,0,0.30)",
+                    background: myColor === "white" ? "oklch(1 0 0 / 0.22)" : "oklch(0 0 0 / 0.45)",
+                    border: "1px solid oklch(1 0 0 / 0.25)",
+                    textShadow: "0 2px 12px rgba(0,0,0,0.55)",
                   }}
                 >
                   {myColor === "white" ? "♔" : "♚"}
