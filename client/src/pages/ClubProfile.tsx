@@ -133,6 +133,8 @@ import {
   Repeat2,
   Send,
   MoreVertical,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import {
   FeedIcon as OtbFeed,
@@ -2384,20 +2386,83 @@ export default function ClubProfile() {
             </div>
 
             {filteredItems.length === 0 ? (
-              <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
-                <Calendar className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
-                <p className={`text-sm font-semibold ${textMain} mb-1`}>No events yet</p>
-                <p className={`text-xs ${textMuted}`}>Events and tournaments hosted by this club will appear here.</p>
-                {(isOwner || isDirector) && (
-                  <button
-                    onClick={() => setShowCreateEvent(true)}
-                    className={`mt-4 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
-                      isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]"
-                    }`}
-                  >
-                    Create First Event
-                  </button>
-                )}
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden relative`} style={{ minHeight: 320 }}>
+                {/* Chess-grid SVG background motif */}
+                <svg aria-hidden="true" className="absolute inset-0 w-full h-full opacity-[0.035] pointer-events-none" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="chess-empty-events" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                      <rect x="0" y="0" width="16" height="16" fill={isDark ? "#fff" : "#12372A"} />
+                      <rect x="16" y="16" width="16" height="16" fill={isDark ? "#fff" : "#12372A"} />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#chess-empty-events)" />
+                </svg>
+                {/* Radial glow */}
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, background: isDark ? "radial-gradient(ellipse 60% 55% at 50% 45%, oklch(0.55 0.13 145 / 0.13) 0%, transparent 75%)" : "radial-gradient(ellipse 60% 55% at 50% 45%, oklch(0.55 0.13 145 / 0.07) 0%, transparent 75%)" }} />
+                {/* Content */}
+                <div className="relative flex flex-col items-center justify-center text-center px-8 py-20" style={{ zIndex: 2 }}>
+                  {/* Icon with glow ring */}
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 rounded-full blur-2xl opacity-40" style={{ background: "oklch(0.55 0.13 145)", transform: "scale(1.8)" }} />
+                    <div className={`relative w-20 h-20 rounded-3xl flex items-center justify-center ${
+                      isDark ? "bg-[oklch(0.55_0.13_145/0.15)] border border-[oklch(0.55_0.13_145/0.25)]" : "bg-[oklch(0.55_0.13_145/0.10)] border border-[oklch(0.55_0.13_145/0.20)]"
+                    }`}>
+                      <Calendar className={`w-9 h-9 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  {/* Headline */}
+                  <h3 className={`text-xl font-bold tracking-tight mb-2 ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {eventsFilter === "tournaments" ? "No tournaments yet" : eventsFilter === "events" ? "No events yet" : "Nothing scheduled yet"}
+                  </h3>
+                  {/* Sub-copy — context aware */}
+                  <p className={`text-sm leading-relaxed max-w-xs mb-8 ${textMuted}`}>
+                    {(isOwner || isDirector)
+                      ? eventsFilter === "tournaments"
+                        ? "Host your first OTB tournament and let members sign up, track pairings, and see live standings."
+                        : "Schedule events, game nights, and tournaments to keep your club active and members engaged."
+                      : joined
+                      ? "Check back soon — the club director will post events and tournaments here."
+                      : "Join this club to get notified when events and tournaments are scheduled."}
+                  </p>
+                  {/* CTAs */}
+                  {(isOwner || isDirector) ? (
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        onClick={() => setShowCreateEvent(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+                        style={{ background: "oklch(0.55 0.13 145)", color: "#fff", boxShadow: "0 4px 20px oklch(0.55 0.13 145 / 0.35)" }}
+                      >
+                        <Calendar className="w-4 h-4" strokeWidth={2} />
+                        Create Event
+                      </button>
+                      <button
+                        onClick={() => setShowWizard(true)}
+                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98] ${
+                          isDark ? "bg-white/8 text-white/80 hover:bg-white/14 border border-white/10" : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]/70 border border-[#ADBC9F]/60"
+                        }`}
+                      >
+                        <Trophy className="w-4 h-4" strokeWidth={2} />
+                        Host Tournament
+                      </button>
+                    </div>
+                  ) : joined ? (
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold ${
+                      isDark ? "bg-white/6 text-white/40 border border-white/8" : "bg-[#ADBC9F]/30 text-[#436850] border border-[#ADBC9F]/50"
+                    }`}>
+                      <Bell className="w-3.5 h-3.5" strokeWidth={2} />
+                      You'll be notified when events are posted
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+                      style={{ background: "oklch(0.55 0.13 145)", color: "#fff", boxShadow: "0 4px 20px oklch(0.55 0.13 145 / 0.35)" }}
+                    >
+                      Join Club
+                      <ArrowRight className="w-4 h-4" strokeWidth={2} />
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <>
@@ -3372,44 +3437,75 @@ export default function ClubProfile() {
                 <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "oklch(0.55 0.13 145) transparent oklch(0.55 0.13 145) oklch(0.55 0.13 145)" }} />
               </div>
             ) : clubLeagues.length === 0 && !showCreateLeague ? (
-              <div className={`rounded-3xl border ${cardBorder} ${card} py-12 text-center px-6`}>
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-                  isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/8"
-                }`}>
-                  <Award className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                </div>
-                <p className={`text-base font-bold ${textMain} mb-1`}>No Leagues Yet</p>
-                {isOwner ? (
-                  <>
-                    <p className={`text-xs ${textMuted} mb-4 max-w-xs mx-auto`}>
-                      Leagues are the best way to keep your members engaged week over week. Create a round-robin or Swiss league and let the standings speak.
-                    </p>
-                    <button
-                      onClick={() => setShowCreateLeague(true)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
-                    >
-                      <PlusCircle className="w-4 h-4" />
-                      Create First League
-                    </button>
-                  </>
-                ) : joined ? (
-                  <>
-                    <p className={`text-xs ${textMuted} mb-4 max-w-xs mx-auto`}>
-                      This club hasn't started a league yet. Let the director know you're interested — it only takes a nudge!
-                    </p>
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden relative`} style={{ minHeight: 320 }}>
+                {/* Chess-grid SVG background motif */}
+                <svg aria-hidden="true" className="absolute inset-0 w-full h-full opacity-[0.035] pointer-events-none" style={{ zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="chess-empty-leagues" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                      <rect x="0" y="0" width="16" height="16" fill={isDark ? "#fff" : "#12372A"} />
+                      <rect x="16" y="16" width="16" height="16" fill={isDark ? "#fff" : "#12372A"} />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#chess-empty-leagues)" />
+                </svg>
+                {/* Radial glow */}
+                <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, background: isDark ? "radial-gradient(ellipse 60% 55% at 50% 45%, oklch(0.55 0.13 145 / 0.13) 0%, transparent 75%)" : "radial-gradient(ellipse 60% 55% at 50% 45%, oklch(0.55 0.13 145 / 0.07) 0%, transparent 75%)" }} />
+                {/* Content */}
+                <div className="relative flex flex-col items-center justify-center text-center px-8 py-20" style={{ zIndex: 2 }}>
+                  {/* Icon with glow ring */}
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 rounded-full blur-2xl opacity-40" style={{ background: "oklch(0.55 0.13 145)", transform: "scale(1.8)" }} />
+                    <div className={`relative w-20 h-20 rounded-3xl flex items-center justify-center ${
+                      isDark ? "bg-[oklch(0.55_0.13_145/0.15)] border border-[oklch(0.55_0.13_145/0.25)]" : "bg-[oklch(0.55_0.13_145/0.10)] border border-[oklch(0.55_0.13_145/0.20)]"
+                    }`}>
+                      <Award className={`w-9 h-9 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  {/* Headline */}
+                  <h3 className={`text-xl font-bold tracking-tight mb-2 ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    No leagues yet
+                  </h3>
+                  {/* Sub-copy — context aware */}
+                  <p className={`text-sm leading-relaxed max-w-xs mb-8 ${textMuted}`}>
+                    {isOwner
+                      ? "Leagues keep members engaged week over week. Create a round-robin or Swiss league and let the standings speak."
+                      : joined
+                      ? "This club hasn't started a league yet. Let the director know you're interested — it only takes a nudge!"
+                      : "Join this club to participate in leagues when they start."}
+                  </p>
+                  {/* CTAs */}
+                  {isOwner ? (
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        onClick={() => setShowCreateLeague(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+                        style={{ background: "oklch(0.55 0.13 145)", color: "#fff", boxShadow: "0 4px 20px oklch(0.55 0.13 145 / 0.35)" }}
+                      >
+                        <PlusCircle className="w-4 h-4" strokeWidth={2} />
+                        Create First League
+                      </button>
+                    </div>
+                  ) : joined ? (
                     <button
                       onClick={() => toast.success("Your interest has been noted! The club director will be notified.")}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={{ background: "oklch(0.55 0.13 145 / 0.12)", color: "oklch(0.55 0.13 145)" }}
+                      className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98] ${
+                        isDark ? "bg-white/8 text-white/80 hover:bg-white/14 border border-white/10" : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]/70 border border-[#ADBC9F]/60"
+                      }`}
                     >
-                      <Bell className="w-4 h-4" />
+                      <Sparkles className="w-4 h-4" strokeWidth={2} />
                       Request a League
                     </button>
-                  </>
-                ) : (
-                  <p className={`text-xs ${textMuted}`}>Join the club to participate in leagues when they start.</p>
-                )}
+                  ) : (
+                    <button
+                      onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
+                      style={{ background: "oklch(0.55 0.13 145)", color: "#fff", boxShadow: "0 4px 20px oklch(0.55 0.13 145 / 0.35)" }}
+                    >
+                      Join Club
+                      <ArrowRight className="w-4 h-4" strokeWidth={2} />
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (() => {
               const activeLeagues = clubLeagues.filter((lg) => lg.status !== "completed");
