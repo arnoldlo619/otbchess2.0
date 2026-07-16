@@ -23,6 +23,7 @@ import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
 import { OTBLoader } from "@/components/OTBLoader";
+import { AsciiArt } from "@/components/ui/d60-hero";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
   id: number;
@@ -1532,52 +1533,89 @@ export default function LeagueDashboard() {
             </div>
           </div>
 
-          {/* ── LEAGUE HERO CONTEXT BAR (desktop) ────────────────────────────── */}
+          {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
           <div
-            className="hidden lg:flex flex-shrink-0 items-center gap-4 px-6 py-3"
-            style={{
-              background: isDark ? "oklch(0.16 0.05 145)" : "oklch(0.95 0.02 145)",
-              borderBottom: `1px solid ${cardBorder}`,
-            }}
+            className="flex-shrink-0 relative overflow-hidden"
+            style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
           >
-            {/* Season progress ring */}
-            <div className="relative w-10 h-10 flex-shrink-0">
-              <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="15" fill="none" stroke={isDark ? "oklch(0.25 0.05 145)" : "oklch(0.88 0.03 145)"} strokeWidth="3" />
-                <circle
-                  cx="18" cy="18" r="15" fill="none"
-                  stroke={accent}
-                  strokeWidth="3"
-                  strokeDasharray={`${progressPct * 0.942} 100`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold" style={{ color: accent }}>
-                {progressPct}%
-              </span>
+            {/* Animated ASCII art fills the full banner */}
+            <AsciiArt className="absolute inset-0 w-full h-full" />
+
+            {/* Dark gradient overlay so text stays legible */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
+              }}
+            />
+
+            {/* Green accent glow from left edge */}
+            <div
+              className="absolute inset-y-0 left-0 w-1"
+              style={{ background: accent, boxShadow: `0 0 24px 4px ${accent}88` }}
+            />
+
+            {/* Stats content — overlaid on the video */}
+            <div className="relative z-10 h-full flex items-center gap-6 px-6">
+              {/* League name + format */}
+              <div className="flex-1 min-w-0">
+                <h2
+                  className="text-xl font-black truncate leading-tight"
+                  style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+                >
+                  {league.name}
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.55)" }}>{league.clubName}</span>
+                  <span
+                    className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider"
+                    style={{ background: `${accent}30`, color: accent, border: `1px solid ${accent}50` }}
+                  >
+                    {league.formatType.replace(/_/g, " ")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
+
+              {/* Season progress ring */}
+              <div className="hidden sm:flex flex-col items-center gap-1 flex-shrink-0">
+                <div className="relative w-11 h-11">
+                  <svg className="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
+                    <circle
+                      cx="18" cy="18" r="15" fill="none"
+                      stroke={accent}
+                      strokeWidth="3"
+                      strokeDasharray={`${progressPct * 0.942} 100`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black" style={{ color: accent }}>
+                    {progressPct}%
+                  </span>
+                </div>
+                <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>Progress</span>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
+
+              {/* Stats pills */}
+              <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
+                {[
+                  { label: "Players", value: `${league.players.length}/${league.maxPlayers}` },
+                  { label: "Matches", value: `${completedMatchCount}/${totalMatches}` },
+                  { label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="text-center">
+                    <div className="text-sm font-black" style={{ color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{value}</div>
+                    <div className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {/* Stats row */}
-            <div className="flex items-center gap-5 flex-1">
-              <div>
-                <span className="text-xs uppercase tracking-wide font-medium block" style={{ color: textMuted }}>Players</span>
-                <span className="text-sm font-bold" style={{ color: textMain }}>{league.players.length}/{league.maxPlayers}</span>
-              </div>
-              <div>
-                <span className="text-xs uppercase tracking-wide font-medium block" style={{ color: textMuted }}>Matches</span>
-                <span className="text-sm font-bold" style={{ color: textMain }}>{completedMatchCount}/{totalMatches}</span>
-              </div>
-              <div>
-                <span className="text-xs uppercase tracking-wide font-medium block" style={{ color: textMuted }}>Week</span>
-                <span className="text-sm font-bold" style={{ color: textMain }}>{league.currentWeek}/{league.totalWeeks}</span>
-              </div>
-            </div>
-            {/* Format badge */}
-            <span
-              className="text-xs px-2.5 py-1 rounded-lg font-semibold uppercase tracking-wide"
-              style={{ background: `${accent}15`, color: accent, border: `1px solid ${accent}33` }}
-            >
-              {league.formatType.replace(/_/g, " ")}
-            </span>
           </div>
 
           {/* Guest CTA banner */}

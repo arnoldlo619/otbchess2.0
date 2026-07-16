@@ -18,6 +18,7 @@ import {
 import {
   DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon,
 } from "@/components/OtbIcons";
+import { AsciiArt } from "@/components/ui/d60-hero";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -359,6 +360,56 @@ export default function LeagueDemo() {
               <span className="text-xs font-semibold hidden sm:block" style={{ color: "oklch(0.70 0.12 145)" }}>
                 {TABS.find(t => t.id === activeTab)?.label}
               </span>
+            </div>
+          </div>
+
+          {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
+          <div
+            className="flex-shrink-0 relative overflow-hidden"
+            style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
+          >
+            <AsciiArt className="absolute inset-0 w-full h-full" />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
+              }}
+            />
+            <div
+              className="absolute inset-y-0 left-0 w-1"
+              style={{ background: accent, boxShadow: `0 0 24px 4px ${accent}88` }}
+            />
+            <div className="relative z-10 h-full flex items-center gap-6 px-6">
+              <div className="flex-1 min-w-0">
+                <h2
+                  className="text-xl font-black truncate leading-tight"
+                  style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+                >
+                  ChessOTB Club League
+                </h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.55)" }}>Demo Season</span>
+                  <span
+                    className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider"
+                    style={{ background: `${accent}30`, color: accent, border: `1px solid ${accent}50` }}
+                  >
+                    Round Robin
+                  </span>
+                </div>
+              </div>
+              <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
+              <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
+                {[
+                  { label: "Players", value: "8/8" },
+                  { label: "Matches", value: "42/56" },
+                  { label: "Week", value: "14/16" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="text-center">
+                    <div className="text-sm font-black" style={{ color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{value}</div>
+                    <div className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
