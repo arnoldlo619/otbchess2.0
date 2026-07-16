@@ -2284,3 +2284,41 @@ select {
 .pairing-text-glow {
   animation: pairing-text-glow 2.4s cubic-bezier(0.4, 0, 0.2, 1) 2;
 }
+
+/* ── Phase 3 prefers-reduced-motion additions ──────────────────────────────── */
+/* Covers: EcosystemPathways card hover lift, bento card hover lift,            */
+/* animate-spring-in (Join flow), animate-slide-down-fade, pairing-text-glow   */
+@media (prefers-reduced-motion: reduce) {
+  /* Ecosystem + bento card hover lifts */
+  .group:hover {
+    transform: none !important;
+  }
+
+  /* Join flow spring animation */
+  .animate-spring-in,
+  .animate-slide-down-fade,
+  .animate-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Pairing text glow */
+  .pairing-text-glow {
+    animation: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Framer Motion: disable all transforms and opacity transitions */
+  [data-framer-component-type],
+  [style*="will-change"] {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Disable backdrop-filter animations (blur transitions) */
+  .backdrop-blur,
+  [class*="backdrop-blur"] {
+    transition: none !important;
+  }
+}

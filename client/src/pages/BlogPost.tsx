@@ -1044,7 +1044,7 @@ export default function BlogPost() {
       <div className="max-w-6xl mx-auto px-4 pt-28 pb-10 sm:pt-32 sm:pb-16">
 
         {/* ── Breadcrumb ── */}
-        <nav className="flex items-center gap-2 mb-6 flex-wrap">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-6 flex-wrap">
           <Link
             href="/blog"
             className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
@@ -1300,7 +1300,7 @@ export default function BlogPost() {
                 <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/40" : "text-[#436850]/60"}`}>
                   On this page
                 </p>
-                <nav className="flex flex-col gap-0.5">
+                <nav aria-label="Table of contents" className="flex flex-col gap-0.5">
                   {post.sections.map((section) => (
                     <TocItem
                       key={section.id}

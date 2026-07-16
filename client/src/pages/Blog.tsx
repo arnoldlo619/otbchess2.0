@@ -397,7 +397,7 @@ export default function Blog() {
             Chess Journal
           </span>
           <h1
-            className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-3 ${
+            className={`text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-3 ${
               isDark ? "text-white" : "text-[#12372A]"
             }`}
             style={{ fontFamily: "'Clash Display', Georgia, serif" }}

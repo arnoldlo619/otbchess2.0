@@ -1139,6 +1139,17 @@ export default function JoinPage() {
                     type="text"
                     value={tournamentCode}
                     onChange={(e) => { setTournamentCode(e.target.value.toUpperCase()); setError(""); }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const raw = e.clipboardData.getData("text");
+                      // Extract code from a /join/:code URL if pasted
+                      const urlMatch = raw.match(/\/join\/([A-Za-z0-9]+)/);
+                      const code = urlMatch
+                        ? urlMatch[1].toUpperCase()
+                        : raw.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 12);
+                      setTournamentCode(code);
+                      setError("");
+                    }}
                     placeholder="e.g. OTB2026"
                     maxLength={12}
                     className={`${inputBase} !pl-10 font-mono font-bold tracking-widest uppercase text-base`}

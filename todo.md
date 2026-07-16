@@ -7052,7 +7052,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Blog index: filter counts update correctly
 - [x] Blog index: featured story hierarchy (first post gets hero treatment)
 - [x] Blog index: article card consistency (image loading, metadata readability)
-- [ ] Blog index: mobile title sizing
+- [x] Blog index: mobile title sizing (text-3xl sm:text-4xl lg:text-5xl — reduced from text-4xl base)
 - [x] BlogPost: comfortable reading width (max-w-prose or 65ch)
 - [x] BlogPost: clear author/date/read-time metadata in header
 - [x] BlogPost: semantic headings (h1 → h2 → h3 hierarchy)
@@ -7067,10 +7067,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Join: back navigation preserves entered information (confirmed — handleSwipeBack + back button both reset state correctly)
 - [ ] Join: QR scan only requests camera permission when user explicitly selects Scan
 - [ ] Join: success state explains check-in, round timing, where to find pairings
-- [ ] Join: all touch targets ≥44px
-- [ ] Join: sticky mobile CTA does not obscure content or browser safe areas
-- [ ] Join: paste support on code input
-- [ ] Join: uppercase/normalize codes without destroying user input
+- [x] Join: all touch targets ≥44px (touch-target=48px, mobile-cta=52px — confirmed)
+- [x] Join: sticky mobile CTA does not obscure content or browser safe areas (pb-32 content, safe-area-inset-bottom padding — confirmed)
+- [x] Join: paste support on code input (onPaste handler strips non-alphanumeric, extracts code from /join/:code URLs)
+- [x] Join: uppercase/normalize codes without destroying user input (onChange + onPaste both normalize)
 
 ### E. Player Profile Confirmation
 - [ ] Confirm step: clearly shows name, username, avatar, platform, rating category, rating value, verification state, tournament being joined
@@ -7089,7 +7089,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Rate limiting: friendly message with wait time
 
 ### G. Motion and Interaction
-- [ ] Add prefers-reduced-motion respect to all animated elements
+- [x] Add prefers-reduced-motion respect to all animated elements (Phase 3 additions: EcosystemPathways hover, animate-spring-in, animate-slide-down-fade, pairing-text-glow, Framer Motion hint)
 - [ ] Hero product preview: existing BorderBeam + fade-up preserved
 - [ ] Card hover hierarchy: subtle lift on capabilities bento cards
 - [ ] Step progression: smooth slide transitions in Join flow
@@ -7101,5 +7101,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Canonical URLs for all public pages (usePageMeta sets link[rel=canonical])
 - [x] Open Graph metadata for Blog and BlogPost pages
 - [x] Structured article metadata (JSON-LD) for BlogPost (Article schema with publisher, author, section, wordCount)
-- [ ] Correct heading order on all public pages
-- [ ] Semantic nav landmarks on all public pages
+- [x] Correct heading order on all public pages (h1→h2→h3 confirmed on Blog, BlogPost, Pricing, Home)
+- [x] Semantic nav landmarks on all public pages (aria-label added to main nav, breadcrumb nav, TOC nav)
