@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache, tournamentBroadcastSettings } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache, tournamentBroadcastSettings, dbClubs } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -500,6 +500,33 @@ export function createApp() {
 
     return { report, fromCache: false };
   }
+
+  // ── Platform stats: GET /api/platform/stats ─────────────────────────────
+  // Returns real DB counts for the landing page stats bar. Cached 10 min in-memory.
+  let platformStatsCache: { data: Record<string, number>; ts: number } | null = null;
+  app.get("/api/platform/stats", async (_req, res) => {
+    try {
+      const now = Date.now();
+      if (platformStatsCache && now - platformStatsCache.ts < 10 * 60 * 1000) {
+        return res.json(platformStatsCache.data);
+      }
+      const db = await getDb();
+      const { count } = await import("drizzle-orm");
+      const [tCount] = await db.select({ value: count() }).from(tournamentState);
+      const [pCount] = await db.select({ value: count() }).from(tournamentPlayers);
+      const [cCount] = await db.select({ value: count() }).from(dbClubs);
+      const data: Record<string, number> = {
+        tournaments: tCount?.value ?? 0,
+        players: pCount?.value ?? 0,
+        clubs: cCount?.value ?? 0,
+      };
+      platformStatsCache = { data, ts: now };
+      return res.json(data);
+    } catch (err) {
+      logger.error("[platform/stats]", err);
+      return res.status(500).json({ error: "stats unavailable" });
+    }
+  });
 
   // ── Matchup Prep Engine: GET /api/prep/:username ──────────────────────────
   // Full matchup preparation report with 24h server-side caching.

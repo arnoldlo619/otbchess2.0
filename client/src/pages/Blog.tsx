@@ -279,7 +279,7 @@ export default function Blog() {
   // ── Nav items ─────────────────────────────────────────────────────────────
   const navItems = [
     { name: "Clubs",       url: "/clubs",         icon: Building2 },
-    { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
+    { name: "Tournaments", url: "/tournaments", icon: LayoutDashboard },
     { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
     { name: "Tools",       url: "/training",     icon: GraduationCap },
   ];
@@ -496,12 +496,13 @@ export default function Blog() {
               Free for chess clubs. Swiss pairings, QR check-in, live standings.
             </p>
           </div>
-          <Link href="/create">
-            <button className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/40 text-white text-sm font-semibold hover:bg-white hover:text-[#12372A] transition-all duration-200 whitespace-nowrap">
-              Start your free trial
-              <ArrowUpRight className="w-4 h-4" />
-            </button>
-          </Link>
+          <a
+            href="/?action=create"
+            className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/40 text-white text-sm font-semibold hover:bg-white hover:text-[#12372A] transition-all duration-200 whitespace-nowrap"
+          >
+            Start your free trial
+            <ArrowUpRight className="w-4 h-4" />
+          </a>
         </div>
       </div>
     </div>

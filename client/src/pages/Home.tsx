@@ -535,10 +535,29 @@ function StatsBar() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  // Floor values shown while loading or on API failure — never show false zeros
+  const FLOORS = { tournaments: 300, players: 550, clubs: 80 };
+  const [liveCounts, setLiveCounts] = useState<{ tournaments: number; players: number; clubs: number } | null>(null);
+  useEffect(() => {
+    fetch("/api/platform/stats")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { tournaments?: number; players?: number; clubs?: number } | null) => {
+        if (data && typeof data.tournaments === "number") {
+          setLiveCounts({
+            tournaments: Math.max(data.tournaments, FLOORS.tournaments),
+            players: Math.max(data.players ?? 0, FLOORS.players),
+            clubs: Math.max(data.clubs ?? 0, FLOORS.clubs),
+          });
+        }
+      })
+      .catch(() => { /* silently keep floor values */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const counts = liveCounts ?? FLOORS;
   const stats: { target: number; suffix: string; decimals: number; label: string }[] = [
-    { target: 300, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
-    { target: 550, suffix: "+", decimals: 0, label: "Players Registered" },
-    { target: 80, suffix: "+", decimals: 0, label: "Chess Clubs" },
+    { target: counts.tournaments, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
+    { target: counts.players, suffix: "+", decimals: 0, label: "Players Registered" },
+    { target: counts.clubs, suffix: "+", decimals: 0, label: "Chess Clubs" },
     { target: 4.9, suffix: "★", decimals: 1, label: "Average Rating" },
   ];
   return (

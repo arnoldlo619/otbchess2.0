@@ -1856,7 +1856,7 @@ export default function JoinPage() {
             {loading ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Looking up profile…</>
             ) : (
-              <>Look up my ELO <ArrowRight className="w-4 h-4" /></>
+              <>Find My Profile <ArrowRight className="w-4 h-4" /></>
             )}
           </button>
         )}

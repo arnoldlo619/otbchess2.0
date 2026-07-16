@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch } from "wouter";
@@ -6,7 +6,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
-import { OTBLoader } from "@/components/OTBLoader";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
 // Each page is split into its own JS chunk, dramatically reducing initial bundle
@@ -71,9 +70,56 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const JoinClub = lazy(() => import("./pages/JoinClub"));
 const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
 
-// ── Official platform loading fallback ──────────────────────────────────────────────────
+// ── Thin top progress bar — replaces full-screen loader on route transitions ────────────
+function RouteProgressBar() {
+  const [visible, setVisible] = useState(false);
+  const [width, setWidth] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setVisible(true);
+    setWidth(0);
+    // Animate to 85% quickly, then stall — completes when component unmounts
+    let w = 0;
+    const step = () => {
+      w = w < 40 ? w + 8 : w < 70 ? w + 3 : w < 85 ? w + 0.5 : w;
+      setWidth(Math.min(w, 85));
+      if (w < 85) rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      // Complete the bar on unmount (page loaded)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      setWidth(100);
+      timerRef.current = setTimeout(() => setVisible(false), 300);
+    };
+  }, []);
+
+  if (!visible) return null;
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 9999,
+        height: 3,
+        width: `${width}%`,
+        background: "linear-gradient(90deg, oklch(0.65 0.18 145), oklch(0.75 0.20 145))",
+        transition: width === 100 ? "width 0.2s ease-out, opacity 0.3s ease 0.2s" : "width 0.4s ease-out",
+        opacity: width === 100 ? 0 : 1,
+        borderRadius: "0 2px 2px 0",
+        boxShadow: "0 0 8px oklch(0.65 0.18 145 / 0.6)",
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
 function PageLoader() {
-  return <OTBLoader fullPage />;
+  return <RouteProgressBar />;
 }
 
 function Router() {
@@ -151,6 +197,8 @@ function Router() {
         <Route path={"/recap/:slug"} component={TournamentRecap} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/dashboard/tools/chessnut-bluetooth-test-lab"} component={ChessnutTestLab} />
+        {/* /create — redirect to home with wizard open */}
+        <Route path={"/create"} component={() => { if (typeof window !== "undefined") { window.location.replace("/?action=create"); } return null; }} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
