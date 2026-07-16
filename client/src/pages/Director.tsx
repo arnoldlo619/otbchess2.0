@@ -3848,6 +3848,7 @@ export default function Director() {
                       isDark={isDark}
                       tournamentId={tournamentId}
                       tournamentConfig={tournamentConfig}
+                      tournamentStatus={state.status}
                     />
                   )}
                   {/* ── Round Pairings standalone header row ─────────────────────────────────────── */}

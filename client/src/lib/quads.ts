@@ -534,7 +534,11 @@ export function calculateQuadStandings(
     };
   }
 
-  // Process completed games
+  // Process completed games using integer half-points (win=2, draw=1, loss=0)
+  // to avoid floating-point drift. Converted to 0/0.5/1 only for display.
+  const halfPoints: Record<string, number> = {};
+  for (const playerId of section.playerIds) halfPoints[playerId] = 0;
+
   for (const game of sectionGames) {
     const white = standings[game.whiteId];
     const black = standings[game.blackId];
@@ -543,19 +547,24 @@ export function calculateQuadStandings(
     black.blackGames++;
 
     if (game.result === "1-0") {
-      white.score += 1;
+      halfPoints[game.whiteId] = (halfPoints[game.whiteId] ?? 0) + 2;
       white.wins++;
       black.losses++;
     } else if (game.result === "0-1") {
-      black.score += 1;
+      halfPoints[game.blackId] = (halfPoints[game.blackId] ?? 0) + 2;
       black.wins++;
       white.losses++;
     } else if (game.result === "½-½") {
-      white.score += 0.5;
+      halfPoints[game.whiteId] = (halfPoints[game.whiteId] ?? 0) + 1;
+      halfPoints[game.blackId] = (halfPoints[game.blackId] ?? 0) + 1;
       white.draws++;
-      black.score += 0.5;
       black.draws++;
     }
+  }
+
+  // Convert integer half-points to display score (÷2)
+  for (const playerId of section.playerIds) {
+    standings[playerId].score = (halfPoints[playerId] ?? 0) / 2;
   }
 
   // Process bye games (Bottom Swiss only)
@@ -677,13 +686,18 @@ function rankStandings(
           if (b.score !== a.score) return b.score - a.score;
           break;
         case "direct": {
-          const tiedIds = standings
-            .filter((s) => s.score === a.score)
-            .map((s) => s.playerId);
-          if (tiedIds.length > 1) {
-            const deA = calculateDirectEncounter(a.playerId, tiedIds, games);
-            const deB = calculateDirectEncounter(b.playerId, tiedIds, games);
-            if (deB !== deA) return deB - deA;
+          // Only apply H2H when exactly these two players are tied in score
+          // (spec: "Head-to-head when exactly two players are tied")
+          // For multi-way ties, still compute H2H among the tied group
+          if (a.score === b.score) {
+            const tiedIds = standings
+              .filter((s) => s.score === a.score)
+              .map((s) => s.playerId);
+            if (tiedIds.length >= 2) {
+              const deA = calculateDirectEncounter(a.playerId, tiedIds, games);
+              const deB = calculateDirectEncounter(b.playerId, tiedIds, games);
+              if (deB !== deA) return deB - deA;
+            }
           }
           break;
         }

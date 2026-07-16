@@ -166,9 +166,11 @@ function SummaryBanner({
   const avgPerf = Math.round(
     performances.reduce((s, p) => s + p.performanceRating, 0) / performances.length
   );
-  const totalGames = performances.reduce((s, p) => s + p.wins + p.draws + p.losses, 0) / 2;
-  const decisiveGames = performances.reduce((s, p) => s + p.wins, 0) / 2;
-  const drawRate = totalGames > 0 ? Math.round((1 - decisiveGames / totalGames) * 100) : 0;
+  // Each game appears once per player in performances, so divide by 2 to avoid double-counting
+  const totalDraws = performances.reduce((s, p) => s + p.draws, 0) / 2;
+  const totalWins = performances.reduce((s, p) => s + p.wins, 0) / 2;
+  // Draw rate = draws / (wins + draws) — excludes unplayed/forfeit games from denominator
+  const drawRate = (totalWins + totalDraws) > 0 ? Math.round((totalDraws / (totalWins + totalDraws)) * 100) : 0;
 
   return (
     <div

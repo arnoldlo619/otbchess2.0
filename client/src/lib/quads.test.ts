@@ -894,3 +894,149 @@ describe("generateQuadTournament edge cases", () => {
     expect(allAssigned.length).toBe(16);
   });
 });
+
+// ─── New tests: tiedIds fix, H2H tiebreak, draw rate ─────────────────────────
+
+describe("rankStandings — tiedIds only includes players with matching score", () => {
+  it("H2H correctly breaks tie when one player beat the other directly", () => {
+    const players = makePlayers(4, 1600, -50);
+    const section: QuadSection = {
+      id: "s1",
+      name: "Quad 1",
+      type: "quad",
+      orderIndex: 0,
+      ratingMin: 1450,
+      ratingMax: 1600,
+      playerIds: players.map((p) => p.id),
+      localSeeds: { p1: 1, p2: 2, p3: 3, p4: 4 },
+      status: "active",
+    };
+    // p1 beats p2 directly; both end up with 1 point
+    // p1: beat p2, lost to p3 → 1pt; p2: lost to p1, beat p4 → 1pt
+    const games: Game[] = [
+      makeGame("g1", "p1", "p2", "1-0", "s1", 1, 1),
+      makeGame("g2", "p3", "p4", "1-0", "s1", 1, 2),
+      makeGame("g3", "p3", "p1", "1-0", "s1", 2, 1),
+      makeGame("g4", "p2", "p4", "1-0", "s1", 2, 2),
+    ];
+    const standings = calculateQuadStandings(section, games, players);
+    const p1 = standings.find((s) => s.playerId === "p1")!;
+    const p2 = standings.find((s) => s.playerId === "p2")!;
+    expect(p1.score).toBe(1);
+    expect(p2.score).toBe(1);
+    // p1 beat p2 directly → p1 should rank higher via H2H
+    expect(p1.finalRank).toBeLessThan(p2.finalRank);
+  });
+
+  it("players with different scores are not included in tiedIds", () => {
+    const players = makePlayers(4, 1600, -50);
+    const section: QuadSection = {
+      id: "s1",
+      name: "Quad 1",
+      type: "quad",
+      orderIndex: 0,
+      ratingMin: 1450,
+      ratingMax: 1600,
+      playerIds: players.map((p) => p.id),
+      localSeeds: { p1: 1, p2: 2, p3: 3, p4: 4 },
+      status: "active",
+    };
+    // p1=2pts, p2=2pts (tied), p3=0pts, p4=0pts
+    const games: Game[] = [
+      makeGame("g1", "p1", "p3", "1-0", "s1", 1, 1),
+      makeGame("g2", "p2", "p4", "1-0", "s1", 1, 2),
+      makeGame("g3", "p1", "p4", "1-0", "s1", 2, 1),
+      makeGame("g4", "p2", "p3", "1-0", "s1", 2, 2),
+    ];
+    const standings = calculateQuadStandings(section, games, players);
+    const p1 = standings.find((s) => s.playerId === "p1")!;
+    const p3 = standings.find((s) => s.playerId === "p3")!;
+    expect(p1.score).toBe(2);
+    expect(p3.score).toBe(0);
+    // p1 (2pts) must rank above p3 (0pts)
+    expect(p1.finalRank).toBeLessThan(p3.finalRank);
+  });
+});
+
+describe("draw rate formula — draws / (wins + draws)", () => {
+  it("draw rate is 100% when all games are draws", () => {
+    const players = makePlayers(4, 1600, -50);
+    const section: QuadSection = {
+      id: "s1", name: "Quad 1", type: "quad", orderIndex: 0,
+      ratingMin: 1450, ratingMax: 1600,
+      playerIds: players.map((p) => p.id),
+      localSeeds: { p1: 1, p2: 2, p3: 3, p4: 4 }, status: "active",
+    };
+    const games: Game[] = [
+      makeGame("g1", "p1", "p2", "½-½", "s1", 1, 1),
+      makeGame("g2", "p3", "p4", "½-½", "s1", 1, 2),
+    ];
+    const standings = calculateQuadStandings(section, games, players);
+    const totalDraws = standings.reduce((s, p) => s + p.draws, 0) / 2;
+    const totalWins = standings.reduce((s, p) => s + p.wins, 0);
+    const drawRate = totalWins + totalDraws > 0 ? (totalDraws / (totalWins + totalDraws)) * 100 : 0;
+    expect(drawRate).toBe(100);
+  });
+
+  it("draw rate is 0% when all games are decisive", () => {
+    const players = makePlayers(4, 1600, -50);
+    const section: QuadSection = {
+      id: "s1", name: "Quad 1", type: "quad", orderIndex: 0,
+      ratingMin: 1450, ratingMax: 1600,
+      playerIds: players.map((p) => p.id),
+      localSeeds: { p1: 1, p2: 2, p3: 3, p4: 4 }, status: "active",
+    };
+    const games: Game[] = [
+      makeGame("g1", "p1", "p2", "1-0", "s1", 1, 1),
+      makeGame("g2", "p3", "p4", "1-0", "s1", 1, 2),
+    ];
+    const standings = calculateQuadStandings(section, games, players);
+    const totalDraws = standings.reduce((s, p) => s + p.draws, 0) / 2;
+    const totalWins = standings.reduce((s, p) => s + p.wins, 0);
+    const drawRate = totalWins + totalDraws > 0 ? (totalDraws / (totalWins + totalDraws)) * 100 : 0;
+    expect(drawRate).toBe(0);
+  });
+
+  it("draw rate is 50% for 1 draw and 1 decisive game", () => {
+    const players = makePlayers(4, 1600, -50);
+    const section: QuadSection = {
+      id: "s1", name: "Quad 1", type: "quad", orderIndex: 0,
+      ratingMin: 1450, ratingMax: 1600,
+      playerIds: players.map((p) => p.id),
+      localSeeds: { p1: 1, p2: 2, p3: 3, p4: 4 }, status: "active",
+    };
+    const games: Game[] = [
+      makeGame("g1", "p1", "p2", "1-0", "s1", 1, 1),
+      makeGame("g2", "p3", "p4", "½-½", "s1", 1, 2),
+    ];
+    const standings = calculateQuadStandings(section, games, players);
+    const totalDraws = standings.reduce((s, p) => s + p.draws, 0) / 2;
+    const totalWins = standings.reduce((s, p) => s + p.wins, 0);
+    const drawRate = totalWins + totalDraws > 0 ? (totalDraws / (totalWins + totalDraws)) * 100 : 0;
+    expect(drawRate).toBe(50);
+  });
+});
+
+describe("getSectionWinners — idempotency", () => {
+  it("returns same winners regardless of how many times called on same standings", () => {
+    const players = makePlayers(4, 1600, -50);
+    const section: QuadSection = {
+      id: "s1", name: "Quad 1", type: "quad", orderIndex: 0,
+      ratingMin: 1450, ratingMax: 1600,
+      playerIds: players.map((p) => p.id),
+      localSeeds: { p1: 1, p2: 2, p3: 3, p4: 4 }, status: "active",
+    };
+    const games: Game[] = [
+      makeGame("g1", "p1", "p2", "1-0", "s1", 1, 1),
+      makeGame("g2", "p3", "p4", "1-0", "s1", 1, 2),
+      makeGame("g3", "p1", "p3", "1-0", "s1", 2, 1),
+      makeGame("g4", "p2", "p4", "1-0", "s1", 2, 2),
+      makeGame("g5", "p1", "p4", "1-0", "s1", 3, 1),
+      makeGame("g6", "p2", "p3", "1-0", "s1", 3, 2),
+    ];
+    const standings = calculateQuadStandings(section, games, players);
+    const winners1 = getSectionWinners(standings);
+    const winners2 = getSectionWinners(standings);
+    expect(winners1.map((w) => w.playerId)).toEqual(winners2.map((w) => w.playerId));
+  });
+});

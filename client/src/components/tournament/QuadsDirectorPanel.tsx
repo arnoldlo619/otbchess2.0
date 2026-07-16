@@ -56,6 +56,8 @@ interface QuadsDirectorPanelProps {
   isDark: boolean;
   tournamentId?: string;
   tournamentConfig?: TournamentConfig | null;
+  /** Tournament lifecycle status — disables Finalize button once already completed */
+  tournamentStatus?: "registration" | "in_progress" | "completed" | "paused";
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -709,8 +711,9 @@ function RoundPairings({ section, games, players, roundNum, currentRound, onEnte
 export default function QuadsDirectorPanel({
   sections, players, games, currentRound, totalRounds,
   onEnterResult, onSwapPlayers, onRenameSection, onAdvanceRound, onCompleteTournament,
-  isDark, tournamentId, tournamentConfig,
+  isDark, tournamentId, tournamentConfig, tournamentStatus,
 }: QuadsDirectorPanelProps) {
+  const isAlreadyCompleted = tournamentStatus === "completed";
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [sectionRoundTab, setSectionRoundTab] = useState<Record<string, number>>(() => {
@@ -905,12 +908,14 @@ export default function QuadsDirectorPanel({
           {onCompleteTournament && (
             <button
               type="button"
-              onClick={onCompleteTournament}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
-              style={{ background: T.gold, color: isDark ? "#0a1a0f" : "#fff", boxShadow: `0 4px 14px oklch(0.75 0.15 85 / 0.35)` }}
+              onClick={isAlreadyCompleted ? undefined : onCompleteTournament}
+              disabled={isAlreadyCompleted}
+              aria-label={isAlreadyCompleted ? "Tournament already finalized" : "Finalize Tournament"}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ background: T.gold, color: isDark ? "#0a1a0f" : "#fff", boxShadow: isAlreadyCompleted ? "none" : `0 4px 14px oklch(0.75 0.15 85 / 0.35)` }}
             >
-              <Flag size={14} />
-              Finalize Tournament
+              {isAlreadyCompleted ? <Check size={14} /> : <Flag size={14} />}
+              {isAlreadyCompleted ? "Finalized" : "Finalize Tournament"}
             </button>
           )}
         </div>
@@ -1112,13 +1117,14 @@ export default function QuadsDirectorPanel({
               <>
                 <button
                   type="button"
-                  onClick={onCompleteTournament}
-                  disabled={!currentRoundComplete}
+                  onClick={isAlreadyCompleted ? undefined : onCompleteTournament}
+                  disabled={!currentRoundComplete || isAlreadyCompleted}
+                  aria-label={isAlreadyCompleted ? "Tournament already finalized" : "Finalize Tournament"}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{ background: currentRoundComplete ? T.gold : T.goldBg, color: currentRoundComplete ? (isDark ? "#0a1a0f" : "#fff") : T.gold, border: `1.5px solid ${T.goldBorder}`, boxShadow: currentRoundComplete ? `0 4px 14px oklch(0.75 0.15 85 / 0.35)` : "none", touchAction: "manipulation", minHeight: "44px" }}
+                  style={{ background: (currentRoundComplete && !isAlreadyCompleted) ? T.gold : T.goldBg, color: (currentRoundComplete && !isAlreadyCompleted) ? (isDark ? "#0a1a0f" : "#fff") : T.gold, border: `1.5px solid ${T.goldBorder}`, boxShadow: (currentRoundComplete && !isAlreadyCompleted) ? `0 4px 14px oklch(0.75 0.15 85 / 0.35)` : "none", touchAction: "manipulation", minHeight: "44px" }}
                 >
-                  <Flag size={16} />
-                  Finalize Tournament
+                  {isAlreadyCompleted ? <Check size={16} /> : <Flag size={16} />}
+                  {isAlreadyCompleted ? "Finalized" : "Finalize Tournament"}
                 </button>
                 {!currentRoundComplete && (
                   <p className="text-xs text-right" style={{ color: T.textDim }}>

@@ -715,11 +715,14 @@ function StandingsSection({
   followedPlayerId,
   onFollowPlayer,
   isDark,
+  isQuadsFormat = false,
 }: {
   standings: PublicStandingRow[];
   followedPlayerId: string | null;
   onFollowPlayer: (playerId: string) => void;
   isDark: boolean;
+  /** When true, shows Sonneborn-Berger tiebreak label instead of Buchholz */
+  isQuadsFormat?: boolean;
 }) {
   const standingRows = standings;
   const [expanded, setExpanded] = useState(true);
@@ -755,7 +758,7 @@ function StandingsSection({
             <span>#</span>
             <span>Player</span>
             <span className="text-center w-12">Pts</span>
-            <span className="text-right w-14">Buch.</span>
+            <span className="text-right w-14">{isQuadsFormat ? "SB" : "Buch."}</span>
           </div>
 
           {standingRows.map((row) => {
@@ -1801,6 +1804,7 @@ export default function PublicTournament() {
             followedPlayerId={followedPlayerId}
             onFollowPlayer={handleFollow}
             isDark={isDark}
+            isQuadsFormat={isQuads}
           />
         </section>
 
