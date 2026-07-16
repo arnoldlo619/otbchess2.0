@@ -1840,7 +1840,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
           background: "radial-gradient(ellipse at 50% 50%, oklch(0.22 0.10 145 / 0.70) 0%, oklch(0.28 0.12 145 / 0.90) 100%)",
         }}
       />
-      <div className="absolute inset-0 chess-board-bg opacity-5 pointer-events-none" />
+      <div className="absolute inset-0 chess-board-bg opacity-[0.12] pointer-events-none" />
 
       <div className="container relative z-10">
         <div
