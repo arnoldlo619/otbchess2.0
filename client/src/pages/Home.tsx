@@ -1913,12 +1913,12 @@ function Footer() {
       {/* Animated ASCII trophy backdrop */}
       <AsciiArt
         className="absolute inset-0 w-full h-full"
-        style={{ objectFit: "cover", objectPosition: "center center", opacity: 0.18 }}
+        style={{ objectFit: "contain", objectPosition: "center center", opacity: 0.38 }}
       />
-      {/* Dark overlay to keep footer text legible */}
+      {/* Dark overlay — lighter in center to reveal trophy, darker at edges to keep text legible */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "linear-gradient(135deg, oklch(0.12 0.05 145 / 0.88) 0%, oklch(0.10 0.04 145 / 0.82) 100%)" }}
+        style={{ background: "radial-gradient(ellipse 70% 90% at 50% 50%, oklch(0.12 0.05 145 / 0.68) 0%, oklch(0.10 0.04 145 / 0.90) 100%)" }}
       />
       <div className="container relative z-10">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
