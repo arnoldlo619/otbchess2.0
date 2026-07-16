@@ -748,15 +748,25 @@ function MyBoardScreen({
 
   // ── Pairing pulse: fire when round or opponent changes ──────────────────
   const [logoPulse, setLogoPulse] = useState(false);
+  const [pairingGlow, setPairingGlow] = useState(false);
   const prevPairingKey = useRef<string>("");
   const pairingKey = `${round}-${game.board}-${game.whiteId}-${game.blackId}`;
   useEffect(() => {
     if (prevPairingKey.current && prevPairingKey.current !== pairingKey) {
+      // 1. Haptic vibration (pattern: 40ms on, 30ms off, 60ms on)
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([40, 30, 60]);
+      }
+      // 2. Logo pulse + text glow — force CSS re-trigger via double-rAF
       setLogoPulse(false);
-      // Force re-mount of animation class via double-rAF
-      requestAnimationFrame(() => requestAnimationFrame(() => setLogoPulse(true)));
-      const t = setTimeout(() => setLogoPulse(false), 1600 * 3 + 200);
-      return () => clearTimeout(t);
+      setPairingGlow(false);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        setLogoPulse(true);
+        setPairingGlow(true);
+      }));
+      const tLogo = setTimeout(() => setLogoPulse(false), 1600 * 3 + 200);
+      const tGlow = setTimeout(() => setPairingGlow(false), 2400 * 2 + 200);
+      return () => { clearTimeout(tLogo); clearTimeout(tGlow); };
     }
     prevPairingKey.current = pairingKey;
   }, [pairingKey]);
@@ -988,7 +998,7 @@ function MyBoardScreen({
                     </p>
                   </div>
                   <p
-                    className="text-4xl font-black leading-none"
+                    className={`text-4xl font-black leading-none${pairingGlow ? " pairing-text-glow" : ""}`}
                     style={{ color: "white" }}
                   >
                     Board {game.board}
@@ -1076,7 +1086,7 @@ function MyBoardScreen({
                           >{opponent.title}</span>
                         )}
                         <p
-                          className="text-lg font-black truncate"
+                          className={`text-lg font-black truncate${pairingGlow ? " pairing-text-glow" : ""}`}
                           style={{ color: isDark ? "oklch(0.96 0.02 145)" : "oklch(0.15 0.06 145)" }}
                         >{opponent.name || opponent.username}</p>
                       </div>
