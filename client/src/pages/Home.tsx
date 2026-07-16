@@ -69,6 +69,7 @@ import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { DynamicSquare } from "@/components/ui/dynamic-square";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
+import { AsciiArt } from "@/components/ui/d60-hero";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -1837,11 +1838,20 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
 
   return (
     <section className="py-16 sm:py-20 lg:py-28 bg-[#436850] relative overflow-hidden" ref={ref}>
-      <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
+      {/* Animated ASCII art backdrop */}
+      <AsciiArt className="absolute inset-0 w-full h-full opacity-30" />
+      {/* Dark overlay to preserve text legibility */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at 50% 50%, oklch(0.55 0.18 145 / 0.18) 0%, transparent 65%)",
+          background: "linear-gradient(135deg, oklch(0.28 0.12 145 / 0.82) 0%, oklch(0.22 0.10 145 / 0.70) 50%, oklch(0.28 0.12 145 / 0.82) 100%)",
+        }}
+      />
+      <div className="absolute inset-0 chess-board-bg opacity-5 pointer-events-none" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at 50% 50%, oklch(0.55 0.18 145 / 0.12) 0%, transparent 65%)",
         }}
       />
 
