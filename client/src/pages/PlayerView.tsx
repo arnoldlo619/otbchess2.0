@@ -201,6 +201,10 @@ function LiveStandingsPanel({
         player={profilePlayer}
         onClose={() => setProfilePlayer(null)}
         isDark={isDark}
+        rank={profilePlayer ? standings.findIndex((p) => p.id === profilePlayer.id) + 1 : undefined}
+        totalPlayers={players.length}
+        currentRound={currentRound}
+        totalRounds={totalRounds}
       />
     </div>
   );

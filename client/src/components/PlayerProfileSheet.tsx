@@ -161,9 +161,17 @@ interface PlayerProfileSheetProps {
   player: Player | null;
   onClose: () => void;
   isDark: boolean;
+  /** 1-based rank of the player in the current standings */
+  rank?: number;
+  /** Total number of players in the tournament */
+  totalPlayers?: number;
+  /** Current round number */
+  currentRound?: number;
+  /** Total rounds in the tournament */
+  totalRounds?: number;
 }
 
-export function PlayerProfileSheet({ player, onClose, isDark }: PlayerProfileSheetProps) {
+export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers, currentRound, totalRounds }: PlayerProfileSheetProps) {
   const [chessProfile, setChessProfile] = useState<ChessProfile | null>(null);
   const [eloHistory, setEloHistory] = useState<EloHistory | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -361,10 +369,99 @@ export function PlayerProfileSheet({ player, onClose, isDark }: PlayerProfileShe
                 </div>
                 {/* Tournament ELO */}
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-xs font-semibold" style={{ color: textMuted }}>Tournament ELO:</span>
+                  <span className="text-xs font-semibold" style={{ color: textMuted }}>ELO:</span>
                   <span className="text-sm font-black tabular-nums" style={{ color: accent }}>{player.elo}</span>
                 </div>
               </div>
+            </div>
+
+            {/* ── Divider ── */}
+            <div style={{ height: 1, background: dividerColor }} />
+
+            {/* ── Tournament Performance ── */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: textMuted }}>Tournament Performance</span>
+                {currentRound && totalRounds && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.22 0.06 145)" : "oklch(0.92 0.03 145)", color: textMuted }}>
+                    Round {currentRound}/{totalRounds}
+                  </span>
+                )}
+              </div>
+
+              {/* Rank + Points hero row */}
+              <div className="flex gap-2 mb-2">
+                {/* Rank */}
+                {rank && totalPlayers && (
+                  <div
+                    className="flex-1 flex flex-col items-center justify-center py-3 rounded-2xl"
+                    style={{ background: rank <= 3 ? `${accent}18` : isDark ? "oklch(0.20 0.05 145)" : "oklch(0.93 0.02 145)", border: rank <= 3 ? `1px solid ${accent}44` : `1px solid ${dividerColor}` }}
+                  >
+                    <span className="text-2xl leading-none">
+                      {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: textMuted }}>of {totalPlayers}</span>
+                  </div>
+                )}
+                {/* Points */}
+                <div
+                  className="flex-1 flex flex-col items-center justify-center py-3 rounded-2xl"
+                  style={{ background: isDark ? "oklch(0.20 0.06 145)" : "oklch(0.93 0.02 145)", border: `1px solid ${dividerColor}` }}
+                >
+                  <span className="text-2xl font-black tabular-nums leading-none" style={{ color: accent }}>
+                    {player.points % 1 === 0 ? player.points.toFixed(0) : player.points.toFixed(1)}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: textMuted }}>Points</span>
+                </div>
+                {/* Buchholz */}
+                <div
+                  className="flex-1 flex flex-col items-center justify-center py-3 rounded-2xl"
+                  style={{ background: isDark ? "oklch(0.20 0.05 145)" : "oklch(0.93 0.02 145)", border: `1px solid ${dividerColor}` }}
+                >
+                  <span className="text-2xl font-black tabular-nums leading-none" style={{ color: textMain }}>
+                    {player.buchholz.toFixed(1)}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: textMuted }}>Buch.</span>
+                </div>
+              </div>
+
+              {/* W / D / L tournament record */}
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl" style={{ background: "oklch(0.35 0.12 145 / 0.15)", border: "1px solid oklch(0.45 0.15 145 / 0.25)" }}>
+                  <span className="text-base font-black" style={{ color: "#4CAF50" }}>{player.wins}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "oklch(0.55 0.10 145)" }}>W</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl" style={{ background: isDark ? "oklch(0.20 0.04 145 / 0.5)" : "oklch(0.92 0.02 145)", border: `1px solid ${dividerColor}` }}>
+                  <span className="text-base font-black" style={{ color: textMuted }}>{player.draws}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>D</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl" style={{ background: "oklch(0.30 0.12 15 / 0.15)", border: "1px solid oklch(0.45 0.12 15 / 0.25)" }}>
+                  <span className="text-base font-black" style={{ color: "#ef4444" }}>{player.losses}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "oklch(0.55 0.10 15)" }}>L</span>
+                </div>
+              </div>
+
+              {/* Color history */}
+              {player.colorHistory && player.colorHistory.length > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>Colors:</span>
+                  <div className="flex gap-1">
+                    {player.colorHistory.map((c, idx) => (
+                      <div
+                        key={idx}
+                        className="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black"
+                        style={{
+                          background: c === "W" ? (isDark ? "oklch(0.90 0.02 145)" : "white") : (isDark ? "oklch(0.18 0.06 145)" : "oklch(0.22 0.06 145)"),
+                          color: c === "W" ? "oklch(0.18 0.06 145)" : "oklch(0.90 0.02 145)",
+                          border: `1px solid ${dividerColor}`,
+                        }}
+                      >
+                        {c}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Divider ── */}
