@@ -2435,7 +2435,7 @@ export default function ClubDashboard() {
   const [showAllUpcomingMeetups, setShowAllUpcomingMeetups] = useState(false);
   const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
   const [editMeetupId, setEditMeetupId] = useState<string | null>(null);
-  const [eventsFilter, setEventsFilter] = useState<"all" | "meetups" | "tournaments">("all");
+  const [eventsFilter, setEventsFilter] = useState<"all" | "meetups" | "tournaments" | "leagues">("all");
   const [showPastTournaments, setShowPastTournaments] = useState(false);
   const [showAllUpcomingTmts, setShowAllUpcomingTmts] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
@@ -2924,10 +2924,11 @@ export default function ClubDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isOwnerOrDirector]);
 
-  // Load leagues when leagues tab is opened
+  // Redirect old leagues tab deep-links to Events tab with leagues filter
   useEffect(() => {
     if (tab === "leagues" && club) {
-      fetchClubLeagues();
+      setEventsFilter("leagues");
+      setTab("events");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, club]);
@@ -3196,7 +3197,7 @@ export default function ClubDashboard() {
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
     { id: "members", label: "Members", icon: MembersIcon },
     // battles tab removed - now a sub-tab of Feed
-    { id: "leagues", label: "Leagues", icon: LeaguesIcon },
+    // leagues consolidated into Events sub-tab filter
     { id: "qr", label: "QR Tools", icon: QrShareIcon, ownerOnly: true },
     { id: "growth", label: "Growth", icon: RatingIcon, ownerOnly: true },
     { id: "settings", label: "Settings", icon: OtbSettingsIcon },
@@ -3308,28 +3309,9 @@ export default function ClubDashboard() {
             })}
           </nav>
 
-          {/* Bottom: avatar + settings */}
+          {/* Bottom: settings only — avatar is in the top-right header */}
           <div className="pb-5 flex flex-col gap-0.5 px-2">
             <div className="h-px mb-2 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
-            <div
-              className="relative flex flex-row items-center gap-3 rounded-xl"
-              style={{ height: "44px", paddingLeft: "8px", paddingRight: "16px" }}
-            >
-              <AvatarNavDropdown currentPage="Clubs" variant="sidebar" />
-            </div>
-            {isOwnerOrDirector && (
-              <button
-                onClick={() => setTab("settings")}
-                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
-                aria-label="Settings"
-              >
-                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={24} /></span>
-                <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
-              </button>
-            )}
           </div>
         </aside>
 
@@ -3872,6 +3854,7 @@ export default function ClubDashboard() {
                 { key: "all", label: "All" },
                 { key: "meetups", label: "Meetups" },
                 { key: "tournaments", label: "Tournaments" },
+                { key: "leagues", label: "Leagues" },
               ];
               return (
                 <div className="flex items-center gap-2">
@@ -7104,7 +7087,7 @@ export default function ClubDashboard() {
           </div>
         )}
          {/* ── LEAGUES TAB ─────────────────────────────────────────────────── */}
-        {tab === "leagues" && (
+        {tab === "events" && eventsFilter === "leagues" && (
           <div className="space-y-6">
             {/* Header row */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -7901,7 +7884,7 @@ export default function ClubDashboard() {
           paddingBottom: "calc(4px + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {/* Primary tabs: Feed, Events, Members, Leagues, Settings — always visible */}
+        {/* Primary tabs: Feed, Events, Members, Settings — always visible (Leagues is an Events sub-tab) */}
         {clubTabs.filter(ct => !ct.ownerOnly).map((ct) => {
           const Icon = ct.icon;
           const isActive = tab === ct.id;
