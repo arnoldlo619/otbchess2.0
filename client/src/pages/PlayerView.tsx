@@ -1011,9 +1011,9 @@ function MyBoardScreen({
                     <span
                       className="text-xs font-black px-2.5 py-1 rounded-full"
                       style={{
-                        background: myColor === "white" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.30)",
+                        background: myColor === "white" ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.55)",
                         color: "white",
-                        border: "1px solid rgba(255,255,255,0.20)",
+                        border: "1px solid rgba(255,255,255,0.40)",
                       }}
                     >
                       {colorLabel}
@@ -1021,7 +1021,7 @@ function MyBoardScreen({
                     {rank > 0 && (
                       <span
                         className="text-xs font-semibold px-2 py-1 rounded-full"
-                        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.75)" }}
+                        style={{ background: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.95)" }}
                       >
                         Rank #{rank}
                       </span>
@@ -1031,9 +1031,9 @@ function MyBoardScreen({
                 <div
                   className="w-20 h-20 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0"
                   style={{
-                    background: myColor === "white" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.25)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    textShadow: "0 2px 8px rgba(0,0,0,0.30)",
+                    background: myColor === "white" ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.48)",
+                    border: "1px solid rgba(255,255,255,0.30)",
+                    textShadow: "0 2px 12px rgba(0,0,0,0.50)",
                   }}
                 >
                   {myColor === "white" ? "♔" : "♚"}
