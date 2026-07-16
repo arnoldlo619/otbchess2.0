@@ -2375,7 +2375,7 @@ export default function ClubDashboard() {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
-  const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("home");
+  const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("profile");
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
   const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
   const [attendanceView, setAttendanceView] = useState<"by-meetup" | "by-member">("by-meetup");
@@ -5988,9 +5988,9 @@ export default function ClubDashboard() {
             {/* Settings sub-tab navigation */}
             <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
               {([
+                ...(isOwnerOrDirector ? [{ id: "profile" as const, icon: <Settings2 className="w-3.5 h-3.5" />, label: "Club Profile" }] : []),
                 { id: "home" as const, icon: <BarChart2 className="w-3.5 h-3.5" />, label: isOwnerOrDirector ? "Analytics" : "Home" },
                 { id: "payments" as const, icon: <Wallet className="w-3.5 h-3.5" />, label: "Payments" },
-                ...(isOwnerOrDirector ? [{ id: "profile" as const, icon: <Settings2 className="w-3.5 h-3.5" />, label: "Club Profile" }] : []),
                 ...(isOwnerOrDirector ? [{ id: "join" as const, icon: <UserPlus className="w-3.5 h-3.5" />, label: "Join" }] : []),
                 ...(isClubOwner ? [{ id: "danger" as const, icon: <Trash className="w-3.5 h-3.5" />, label: "Danger" }] : []),
               ]).map(({ id: v, icon, label }) => (
