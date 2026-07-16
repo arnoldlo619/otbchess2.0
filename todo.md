@@ -7006,3 +7006,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] TypeScript: 0 errors after fix
 - [x] Build verified: dist/data/ecoByEpd.json present after pnpm build
 - [x] Club sidebar: removed Tournaments tab, consolidated into Events tab (Feed, Events, Members, Leagues)
+
+## Club Event Page Fixes (Session Jul 15 2026)
+
+- [x] MeetupEventPage sidebarTabs — removed Leagues/Settings, now 4 tabs: Feed, Events, Members, Settings
+- [x] CheckInPage sidebarTabs — removed Leagues, now 4 tabs: Feed, Events, Members, Settings
+- [x] MeetupEventPage — auto-RSVP owner/director as "Going" via useEffect (fires when isOwnerOrDirector + event loaded)
+- [x] MeetupEventPage — RSVP buttons hidden for owners/directors (auto-set, no manual selection needed)
+- [x] CheckInPage — redirect to /clubs/:clubId/meetup/:eventId after successful check-in
+- [x] MeetupEventPage — 30-second polling interval added so owner sees new check-ins from members in real-time

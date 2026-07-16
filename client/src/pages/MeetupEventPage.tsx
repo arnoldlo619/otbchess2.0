@@ -23,7 +23,6 @@ import {
   Minus,
   ExternalLink,
   Megaphone,
-  Trophy,
   Settings2,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
@@ -158,6 +157,29 @@ export default function MeetupEventPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, event?.id, isOwnerOrDirector]);
 
+  // Auto-RSVP owner/director as "going" when they open the event page
+  useEffect(() => {
+    if (!user || !event || !isOwnerOrDirector) return;
+    const existing = getUserRSVP(event.id, user.id);
+    if (existing?.status === "going") return;
+    upsertRSVP(
+      event.id,
+      event.clubId,
+      user.id,
+      user.displayName ?? user.email ?? user.id,
+      "going",
+      user.avatarUrl ?? null
+    );
+    setRsvps(getEventRSVPs(event.id));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, event?.id, isOwnerOrDirector]);
+
+  // 30-second polling so owner sees new check-ins from members in real-time
+  useEffect(() => {
+    const interval = setInterval(() => { refresh(); }, 30_000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
   async function handleRsvp(status: "going" | "maybe" | "not_going") {
     if (!user || !event) return;
     setRsvpSubmitting(true);
@@ -168,12 +190,11 @@ export default function MeetupEventPage() {
 
   const accent = club?.accentColor ?? event?.accentColor ?? "#4CAF50";
 
-  // Sidebar nav tabs (mirrors ClubDashboard)
+  // Sidebar nav tabs (mirrors ClubDashboard — 4 tabs, no standalone Leagues)
   const sidebarTabs = [
     { id: "feed", label: "Feed", icon: Megaphone },
     { id: "events", label: "Events", icon: Calendar },
     { id: "members", label: "Members", icon: Users },
-    { id: "leagues", label: "Leagues", icon: Trophy },
     { id: "settings", label: "Settings", icon: Settings2 },
   ];
 
@@ -516,8 +537,8 @@ export default function MeetupEventPage() {
                       </div>
                     </div>
 
-                    {/* RSVP buttons */}
-                    {user && (
+                    {/* RSVP buttons — hidden for owners/directors (auto-set to Going) */}
+                    {user && !isOwnerOrDirector && (
                       <div
                         className="rounded-2xl px-5 py-4 transition-all duration-300 hover:border-white/15"
                         style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}

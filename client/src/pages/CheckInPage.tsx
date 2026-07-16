@@ -21,7 +21,6 @@ import {
   Loader2,
   ChevronLeft,
   Megaphone,
-  Trophy,
   Settings2,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
@@ -72,7 +71,6 @@ const sidebarTabs = [
   { id: "feed", label: "Feed", icon: Megaphone },
   { id: "events", label: "Events", icon: Calendar },
   { id: "members", label: "Members", icon: Users },
-  { id: "leagues", label: "Leagues", icon: Trophy },
   { id: "settings", label: "Settings", icon: Settings2 },
 ];
 
@@ -223,6 +221,8 @@ export default function CheckInPage() {
     checkInToEvent(event.id, user.id);
     await refresh();
     setCheckingIn(false);
+    // Redirect member to the event page so they can see who else is checked in
+    navigate(`/clubs/${event.clubId}/meetup/${event.id}`);
   }
 
   const accentColor = event?.accentColor ?? club?.accentColor ?? "#4CAF50";
