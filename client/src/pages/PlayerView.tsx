@@ -882,9 +882,13 @@ function MyBoardScreen({
         className="otb-header-safe"
         style={{
           background: isDark
-            ? "linear-gradient(180deg, oklch(0.14 0.06 145) 0%, oklch(0.12 0.05 145) 100%)"
-            : "linear-gradient(180deg, oklch(0.97 0.02 85) 0%, oklch(0.96 0.02 85) 100%)",
-          borderBottom: `1px solid ${isDark ? "oklch(0.22 0.05 145)" : "oklch(0.87 0.04 85)"}`,
+            ? "linear-gradient(180deg, oklch(0.16 0.08 145) 0%, oklch(0.13 0.06 145) 100%)"
+            : "linear-gradient(180deg, oklch(0.94 0.04 145) 0%, oklch(0.92 0.04 145) 100%)",
+          borderBottom: `1px solid ${isDark ? "oklch(0.28 0.08 145)" : "oklch(0.80 0.07 145)"}`,
+          backgroundImage: isDark
+            ? "linear-gradient(180deg, oklch(0.16 0.08 145) 0%, oklch(0.13 0.06 145) 100%), repeating-conic-gradient(oklch(1 0 0 / 0.04) 0% 25%, transparent 0% 50%)"
+            : "linear-gradient(180deg, oklch(0.94 0.04 145) 0%, oklch(0.92 0.04 145) 100%), repeating-conic-gradient(oklch(0.30 0.10 145 / 0.06) 0% 25%, transparent 0% 50%)",
+          backgroundSize: "auto, 14px 14px",
         }}
       >
         {/* Top row: name + round badge + connection */}
@@ -975,7 +979,7 @@ function MyBoardScreen({
             >
               {/* Subtle chess pattern overlay */}
               <div
-                className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                className="absolute inset-0 pointer-events-none opacity-[0.09]"
                 style={{
                   backgroundImage: "repeating-conic-gradient(oklch(1 0 0) 0% 25%, transparent 0% 50%)",
                   backgroundSize: "16px 16px",
