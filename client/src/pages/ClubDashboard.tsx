@@ -205,6 +205,7 @@ import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
 import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
+import { ShaderBackground } from "@/components/ui/shader-r";
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -3205,6 +3206,8 @@ export default function ClubDashboard() {
 
   // Club background image — set via ClubSettingsPanel > ClubBackgroundPicker
   const clubBgImage = (club as { backgroundImage?: string | null }).backgroundImage ?? null;
+  // Use the animated shader as the default background when no custom/preset image is selected
+  const useShaderDefault = !clubBgImage;
 
   return (
     <div
@@ -3219,6 +3222,17 @@ export default function ClubDashboard() {
         } : {}),
       }}
     >
+      {/* Default animated shader background — shown when no custom/preset background is set */}
+      {useShaderDefault && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <ShaderBackground className="absolute inset-0 w-full h-full opacity-60" />
+          {/* Subtle dark overlay to keep UI elements legible over the shader */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "oklch(0.12 0.06 145 / 0.55)" }}
+          />
+        </div>
+      )}
       {/* Dark overlay when a background template is active — ensures readability */}
       {clubBgImage && (
         <div
