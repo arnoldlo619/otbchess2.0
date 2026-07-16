@@ -127,73 +127,165 @@ function LiveStandingsPanel({
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const [profilePlayer, setProfilePlayer] = useState<Player | null>(null);
 
+  const rankColors = [
+    { bg: isDark ? "oklch(0.26 0.10 80 / 0.20)" : "oklch(0.95 0.08 80)", border: isDark ? "oklch(0.40 0.12 80 / 0.40)" : "oklch(0.82 0.10 80)", text: isDark ? "oklch(0.82 0.14 80)" : "oklch(0.42 0.12 80)" },  // Gold
+    { bg: isDark ? "oklch(0.26 0.04 220 / 0.20)" : "oklch(0.95 0.03 220)", border: isDark ? "oklch(0.40 0.06 220 / 0.40)" : "oklch(0.80 0.05 220)", text: isDark ? "oklch(0.78 0.08 220)" : "oklch(0.40 0.08 220)" }, // Silver
+    { bg: isDark ? "oklch(0.26 0.08 50 / 0.20)" : "oklch(0.95 0.06 50)", border: isDark ? "oklch(0.40 0.10 50 / 0.40)" : "oklch(0.82 0.08 50)", text: isDark ? "oklch(0.80 0.12 50)" : "oklch(0.44 0.10 50)" },  // Bronze
+  ];
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between px-1 mb-3">
-        <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>Live Standings</p>
-        <p className={`text-xs ${textMuted}`}>Round {currentRound} of {totalRounds}</p>
+    <div>
+      {/* Section header */}
+      <div className="flex items-center justify-between px-1 mb-4">
+        <p
+          className="text-[10px] font-black uppercase tracking-[0.18em]"
+          style={{ color: isDark ? "oklch(0.50 0.10 145)" : "oklch(0.44 0.10 145)" }}
+        >Live Standings</p>
+        <span
+          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+          style={{
+            background: isDark ? "oklch(0.22 0.06 145)" : "oklch(0.90 0.03 145)",
+            color: isDark ? "oklch(0.55 0.08 145)" : "oklch(0.44 0.08 145)",
+          }}
+        >R{currentRound}/{totalRounds}</span>
       </div>
+
+      <div className="space-y-2">
       {standings.map((p, i) => {
         const isMe = p.username.toLowerCase() === username.toLowerCase();
+        const isTop3 = i < 3;
+        const rc = isTop3 ? rankColors[i] : null;
         return (
           <div
             key={p.id}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-              isMe
-                ? isDark
-                  ? "bg-[#436850]/30 border border-[#4CAF50]/40"
-                  : "bg-[#436850]/08 border border-[#436850]/25"
-                : i < 3
-                ? isDark ? "bg-white/04" : "bg-[#FBFADA]/70"
-                : ""
-            }`}
+            className="flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all"
+            style={{
+              background: isMe
+                ? isDark ? "oklch(0.22 0.09 145 / 0.60)" : "oklch(0.88 0.06 145 / 0.35)"
+                : isTop3
+                ? rc!.bg
+                : isDark ? "oklch(0.17 0.05 145)" : "oklch(0.98 0.01 85)",
+              border: `1px solid ${isMe
+                ? isDark ? "oklch(0.40 0.12 145 / 0.60)" : "oklch(0.60 0.10 145 / 0.40)"
+                : isTop3
+                ? rc!.border
+                : isDark ? "oklch(0.24 0.06 145)" : "oklch(0.88 0.03 85)"}`,
+              boxShadow: isMe ? (isDark ? "0 0 0 1px oklch(0.40 0.12 145 / 0.20)" : "0 0 0 1px oklch(0.60 0.10 145 / 0.15)") : "none",
+            }}
           >
-            <span className="text-base w-7 text-center flex-shrink-0">
-              {i < 3
-                ? medals[i]
-                : <span className={`text-sm font-bold ${isDark ? "text-white/55" : "text-[#436850]/70"}`}>{i + 1}</span>
-              }
-            </span>
+            {/* Rank indicator */}
+            <div
+              className="w-7 flex-shrink-0 flex items-center justify-center"
+            >
+              {isTop3 ? (
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black"
+                  style={{ background: rc!.bg, color: rc!.text, border: `1px solid ${rc!.border}` }}
+                >
+                  {i === 0 ? "1" : i === 1 ? "2" : "3"}
+                </div>
+              ) : (
+                <span
+                  className="text-sm font-bold tabular-nums"
+                  style={{ color: isDark ? "oklch(0.40 0.05 145)" : "oklch(0.60 0.06 145)" }}
+                >{i + 1}</span>
+              )}
+            </div>
+
+            {/* Avatar — tappable */}
             <button
-              className="flex-shrink-0 rounded-full active:scale-90 transition-transform touch-manipulation"
+              className="flex-shrink-0 active:scale-90 transition-transform touch-manipulation"
               onClick={() => setProfilePlayer(p)}
               aria-label={`View ${p.name || p.username}'s profile`}
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <PlayerAvatar
-                username={p.username}
-                name={p.name || p.username}
-                platform={p.platform ?? "chesscom"}
-                avatarUrl={p.avatarUrl}
-                size={32}
-              />
-            </button>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className={`text-sm font-bold truncate ${isMe ? accent : textMain}`}>
-                  {p.name?.split(" ")[0] ?? p.username}
-                  {isMe && <span className={`ml-1 text-xs ${accent}`}>(you)</span>}
-                </span>
-                {p.title && (
-                  <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1 py-0.5 rounded flex-shrink-0">
-                    {p.title}
-                  </span>
-                )}
+              <div
+                className="rounded-xl overflow-hidden"
+                style={{
+                  width: 40, height: 40,
+                  border: `2px solid ${isMe
+                    ? isDark ? "oklch(0.50 0.12 145)" : "oklch(0.44 0.10 145)"
+                    : isTop3 ? rc!.border : isDark ? "oklch(0.28 0.07 145)" : "oklch(0.82 0.04 85)"}`,
+                }}
+              >
+                <PlayerAvatar
+                  username={p.username}
+                  name={p.name || p.username}
+                  platform={p.platform ?? "chesscom"}
+                  avatarUrl={p.avatarUrl}
+                  size={40}
+                />
               </div>
-              <span className={`text-xs ${textMuted}`}>
-                {p.wins}W {p.draws}D {p.losses}L · {p.elo} ELO
-              </span>
+            </button>
+
+            {/* Name + record */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                {p.title && (
+                  <span
+                    className="text-[10px] font-black px-1 py-0.5 rounded flex-shrink-0"
+                    style={{
+                      background: isDark ? "oklch(0.30 0.10 80 / 0.25)" : "oklch(0.94 0.06 80)",
+                      color: isDark ? "oklch(0.78 0.12 80)" : "oklch(0.44 0.10 80)",
+                    }}
+                  >{p.title}</span>
+                )}
+                <span
+                  className="text-sm font-bold truncate"
+                  style={{
+                    color: isMe
+                      ? isDark ? "oklch(0.80 0.14 145)" : "oklch(0.30 0.10 145)"
+                      : isDark ? "oklch(0.92 0.02 145)" : "oklch(0.18 0.06 145)",
+                  }}
+                >
+                  {p.name?.split(" ")[0] ?? p.username}
+                  {isMe && <span className="ml-1 text-[10px] font-black" style={{ color: isDark ? "oklch(0.60 0.12 145)" : "oklch(0.44 0.10 145)" }}>(you)</span>}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-[10px] font-semibold"
+                  style={{ color: isDark ? "oklch(0.45 0.06 145)" : "oklch(0.55 0.07 145)" }}
+                >{p.wins}W·{p.draws}D·{p.losses}L</span>
+                <span style={{ color: isDark ? "oklch(0.30 0.05 145)" : "oklch(0.75 0.04 145)" }}>·</span>
+                <span
+                  className="text-[10px] font-semibold"
+                  style={{ color: isDark ? "oklch(0.45 0.06 145)" : "oklch(0.55 0.07 145)" }}
+                >{p.elo} ELO</span>
+              </div>
             </div>
-            <span className={`text-lg font-black tabular-nums flex-shrink-0 ${isMe ? accent : textMain}`}>
-              {p.points}
-            </span>
+
+            {/* Points — hero data point */}
+            <div className="flex-shrink-0 text-right">
+              <span
+                className="text-xl font-black tabular-nums leading-none"
+                style={{
+                  color: isMe
+                    ? isDark ? "oklch(0.80 0.14 145)" : "oklch(0.30 0.10 145)"
+                    : isTop3
+                    ? rc!.text
+                    : isDark ? "oklch(0.92 0.02 145)" : "oklch(0.18 0.06 145)",
+                }}
+              >
+                {p.points % 1 === 0 ? p.points : p.points.toFixed(1)}
+              </span>
+              <p
+                className="text-[9px] font-semibold uppercase tracking-wider mt-0.5"
+                style={{ color: isDark ? "oklch(0.40 0.05 145)" : "oklch(0.60 0.06 145)" }}
+              >pts</p>
+            </div>
           </div>
         );
       })}
+      </div>
+
       {standings.length === 0 && (
-        <div className={`text-center py-8 ${textMuted}`}>
+        <div
+          className="text-center py-10"
+          style={{ color: isDark ? "oklch(0.40 0.05 145)" : "oklch(0.60 0.06 145)" }}
+        >
           <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">Standings will appear here once games begin.</p>
+          <p className="text-sm">Standings will appear once games begin.</p>
         </div>
       )}
       {/* Tap-to-profile sheet — slides up on mobile when a player avatar is tapped */}
@@ -760,46 +852,73 @@ function MyBoardScreen({
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col overflow-hidden`}>
-      {/* Header */}
-      <div className={`px-5 otb-header-safe pb-4 border-b ${divider}`}>
-        <div className="flex items-center justify-between gap-3">
-          <h1 className={`text-lg font-bold ${textMain} flex-1 leading-tight truncate`}>{tournamentName}</h1>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${accentBg} ${accent} flex-shrink-0 whitespace-nowrap`}>
+      {/* ── Premium header ── */}
+      <div
+        className="otb-header-safe"
+        style={{
+          background: isDark
+            ? "linear-gradient(180deg, oklch(0.14 0.06 145) 0%, oklch(0.12 0.05 145) 100%)"
+            : "linear-gradient(180deg, oklch(0.97 0.02 85) 0%, oklch(0.96 0.02 85) 100%)",
+          borderBottom: `1px solid ${isDark ? "oklch(0.22 0.05 145)" : "oklch(0.87 0.04 85)"}`,
+        }}
+      >
+        {/* Top row: name + round badge + connection */}
+        <div className="flex items-center gap-2.5 px-4 pt-3 pb-1">
+          <div className="flex-1 min-w-0">
+            <p
+              className="text-[10px] font-black uppercase tracking-[0.18em] mb-0.5"
+              style={{ color: isDark ? "oklch(0.50 0.10 145)" : "oklch(0.44 0.10 145)" }}
+            >
+              OTB!! · Live
+            </p>
+            <h1
+              className="text-base font-black leading-tight truncate"
+              style={{ color: isDark ? "oklch(0.96 0.02 145)" : "oklch(0.15 0.06 145)" }}
+            >
+              {tournamentName}
+            </h1>
+          </div>
+          <span
+            className="text-xs font-black px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{
+              background: isDark ? "oklch(0.22 0.08 145)" : "oklch(0.88 0.06 145)",
+              color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)",
+              border: `1px solid ${isDark ? "oklch(0.32 0.10 145)" : "oklch(0.76 0.08 145)"}`,
+            }}
+          >
             R{round}/{totalRounds}
           </span>
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
-      </div>
-      {/* Tab bar */}
-      <div className={`flex border-b ${divider} relative`}>
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              activeTab === tab
-                ? `${accent} border-b-2 ${isDark ? "border-[#4CAF50]" : "border-[#436850]"}`
-                : textMuted
-            }`}
-          >
-            {tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` (#${rank})` : ""}` : "Tools"}
-          </button>
-        ))}
-      </div>
-      {/* Swipe dot indicators */}
-      <div className="flex justify-center gap-1.5 py-2">
-        {TABS.map((tab, i) => (
-          <button
-            key={tab}
-            onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
-            className={`rounded-full transition-all duration-300 ${
-              activeTab === tab
-                ? `w-5 h-1.5 ${isDark ? "bg-[#4CAF50]" : "bg-[#436850]"}`
-                : `w-1.5 h-1.5 ${isDark ? "bg-white/20" : "bg-[#ADBC9F]"}`
-            }`}
-            aria-label={`Go to ${tab} tab`}
-          />
-        ))}
+
+        {/* ── Pill tab bar ── */}
+        <div className="flex gap-1.5 px-4 pb-3 pt-2">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab;
+            const label = tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` #${rank}` : ""}` : "Tools";
+            return (
+              <button
+                key={tab}
+                onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
+                className="flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95"
+                style={{
+                  background: isActive
+                    ? isDark ? "oklch(0.28 0.10 145)" : "oklch(0.32 0.10 145)"
+                    : "transparent",
+                  color: isActive
+                    ? isDark ? "oklch(0.85 0.14 145)" : "white"
+                    : isDark ? "oklch(0.55 0.06 145)" : "oklch(0.44 0.08 145)",
+                  border: isActive
+                    ? `1px solid ${isDark ? "oklch(0.40 0.12 145)" : "oklch(0.40 0.10 145)"}`
+                    : "1px solid transparent",
+                  boxShadow: isActive ? (isDark ? "0 2px 8px oklch(0.28 0.10 145 / 0.40)" : "0 2px 8px oklch(0.32 0.10 145 / 0.30)") : "none",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       {/* Sliding panel container */}
       <div
@@ -818,19 +937,68 @@ function MyBoardScreen({
         >
           {/* ── Board panel ── */}
           <div className="flex flex-col overflow-y-auto" style={{ width: `${100 / TABS.length}%` }}>
-            {/* Board assignment */}
-            <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4`}>
-              <div className="flex items-center justify-between">
+            {/* ── Board assignment hero card ── */}
+            <div
+              className="mx-4 mt-4 rounded-2xl overflow-hidden"
+              style={{
+                background: isDark
+                  ? "linear-gradient(135deg, oklch(0.20 0.09 145) 0%, oklch(0.16 0.07 145) 100%)"
+                  : "linear-gradient(135deg, oklch(0.32 0.10 145) 0%, oklch(0.26 0.09 145) 100%)",
+                border: `1px solid ${isDark ? "oklch(0.32 0.10 145)" : "oklch(0.38 0.10 145)"}`,
+                boxShadow: isDark ? "0 4px 24px oklch(0.20 0.09 145 / 0.50)" : "0 4px 24px oklch(0.32 0.10 145 / 0.35)",
+              }}
+            >
+              {/* Subtle chess pattern overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                style={{
+                  backgroundImage: "repeating-conic-gradient(oklch(1 0 0) 0% 25%, transparent 0% 50%)",
+                  backgroundSize: "16px 16px",
+                }}
+              />
+              <div className="relative flex items-center justify-between px-5 py-5">
                 <div>
-                  <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-1`}>Your Assignment</p>
-                  <p className={`text-3xl font-black ${textMain}`}>Board {game.board}</p>
-                  <p className={`text-sm font-semibold mt-0.5 ${accent}`}>Playing as {colorLabel}</p>
+                  <p
+                    className="text-[10px] font-black uppercase tracking-[0.18em] mb-1"
+                    style={{ color: isDark ? "oklch(0.60 0.12 145)" : "oklch(0.75 0.10 145)" }}
+                  >
+                    Your Assignment
+                  </p>
+                  <p
+                    className="text-4xl font-black leading-none"
+                    style={{ color: "white" }}
+                  >
+                    Board {game.board}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span
+                      className="text-xs font-black px-2.5 py-1 rounded-full"
+                      style={{
+                        background: myColor === "white" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.30)",
+                        color: "white",
+                        border: "1px solid rgba(255,255,255,0.20)",
+                      }}
+                    >
+                      {colorLabel}
+                    </span>
+                    {rank > 0 && (
+                      <span
+                        className="text-xs font-semibold px-2 py-1 rounded-full"
+                        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.75)" }}
+                      >
+                        Rank #{rank}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${
-                  myColor === "black"
-                    ? isDark ? "bg-white/05 text-[#12372A]" : "bg-[#12372A] text-white"
-                    : isDark ? "bg-white/10 text-white" : "bg-white text-[#12372A]"
-                }`}>
+                <div
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0"
+                  style={{
+                    background: myColor === "white" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.25)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    textShadow: "0 2px 8px rgba(0,0,0,0.30)",
+                  }}
+                >
                   {myColor === "white" ? "♔" : "♚"}
                 </div>
               </div>
@@ -839,36 +1007,78 @@ function MyBoardScreen({
             <div className="mx-4 mt-3">
               <PlayerTimerBanner snap={timerSnapshot} isDark={isDark} />
             </div>
-            {/* Opponent card */}
-            <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
-              <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-3`}>Your Opponent</p>
+            {/* ── Opponent card ── */}
+            <div
+              className="mx-4 mt-3 rounded-2xl px-5 py-4"
+              style={{
+                background: isDark ? "oklch(0.17 0.06 145)" : "oklch(0.98 0.02 85)",
+                border: `1px solid ${isDark ? "oklch(0.25 0.07 145)" : "oklch(0.88 0.04 85)"}`,
+                boxShadow: isDark ? "0 2px 12px oklch(0.10 0.04 145 / 0.40)" : "0 2px 12px oklch(0 0 0 / 0.05)",
+              }}
+            >
+              <p
+                className="text-[10px] font-black uppercase tracking-[0.18em] mb-3"
+                style={{ color: isDark ? "oklch(0.50 0.10 145)" : "oklch(0.44 0.10 145)" }}
+              >Your Opponent</p>
               {opponent ? (
                 <div>
                   {/* Top row: avatar + name + rating */}
                   <div className="flex items-center gap-4">
-                    <PlayerAvatar
-                      username={opponent.username}
-                      name={opponent.name || opponent.username}
-                      platform={opponent.platform ?? "chesscom"}
-                      avatarUrl={opponent.avatarUrl}
-                      size={56}
-                      className="flex-shrink-0"
-                    />
+                    <div
+                      className="flex-shrink-0 rounded-2xl overflow-hidden"
+                      style={{
+                        width: 72, height: 72,
+                        border: `2px solid ${isDark ? "oklch(0.32 0.10 145)" : "oklch(0.76 0.08 145)"}`,
+                        boxShadow: isDark ? "0 0 0 1px oklch(0.20 0.06 145)" : "0 0 0 1px oklch(0.90 0.03 85)",
+                      }}
+                    >
+                      <PlayerAvatar
+                        username={opponent.username}
+                        name={opponent.name || opponent.username}
+                        platform={opponent.platform ?? "chesscom"}
+                        avatarUrl={opponent.avatarUrl}
+                        size={72}
+                      />
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
                         {opponent.title && (
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-700"} flex-shrink-0`}>{opponent.title}</span>
+                          <span
+                            className="text-xs font-black px-1.5 py-0.5 rounded-md flex-shrink-0"
+                            style={{
+                              background: isDark ? "oklch(0.30 0.10 80 / 0.30)" : "oklch(0.95 0.06 80)",
+                              color: isDark ? "oklch(0.80 0.12 80)" : "oklch(0.45 0.10 80)",
+                              border: `1px solid ${isDark ? "oklch(0.40 0.10 80 / 0.40)" : "oklch(0.85 0.08 80)"}`,
+                            }}
+                          >{opponent.title}</span>
                         )}
+                        <p
+                          className="text-lg font-black truncate"
+                          style={{ color: isDark ? "oklch(0.96 0.02 145)" : "oklch(0.15 0.06 145)" }}
+                        >{opponent.name || opponent.username}</p>
                       </div>
-                      <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
-                      {/* Tournament rating + rank */}
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className={`text-sm font-semibold ${accent}`}>{oppRating} Rating</span>
+                      <p
+                        className="text-xs mb-1.5"
+                        style={{ color: isDark ? "oklch(0.55 0.06 145)" : "oklch(0.44 0.08 145)" }}
+                      >@{opponent.username}</p>
+                      {/* Rating + rank pills */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className="text-xs font-black px-2 py-0.5 rounded-full"
+                          style={{
+                            background: isDark ? "oklch(0.22 0.08 145)" : "oklch(0.88 0.06 145)",
+                            color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)",
+                          }}
+                        >{oppRating} ELO</span>
                         {oppRank > 0 && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/08 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
-                            #{oppRank} of {players.length}
-                          </span>
+                          <span
+                            className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                            style={{
+                              background: isDark ? "oklch(0.20 0.05 145)" : "oklch(0.93 0.02 85)",
+                              color: isDark ? "oklch(0.55 0.06 145)" : "oklch(0.44 0.08 145)",
+                              border: `1px solid ${isDark ? "oklch(0.28 0.06 145)" : "oklch(0.85 0.03 85)"}`,
+                            }}
+                          >#{oppRank} of {players.length}</span>
                         )}
                       </div>
                     </div>
@@ -952,21 +1162,67 @@ function MyBoardScreen({
                 </div>
               )}
             </div>
-            {/* Post-game instruction */}
-            <div className={`mx-4 mt-3 mb-4 pb-safe space-y-3`}>
+            {/* ── Post-game instruction ── */}
+            <div className="mx-4 mt-3 mb-4 pb-safe space-y-3">
               {opponent ? (
-                <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-                  <p className="text-2xl mb-2">🏁</p>
-                  <p className={`text-sm font-bold ${accent} mb-1`}>Game finished?</p>
-                  <p className={`text-sm ${textMuted}`}>
-                    The winner should report the result to the director at the registration table.
-                  </p>
+                <div
+                  className="rounded-2xl px-5 py-4"
+                  style={{
+                    background: isDark ? "oklch(0.17 0.06 145)" : "oklch(0.98 0.02 85)",
+                    border: `1px solid ${isDark ? "oklch(0.25 0.07 145)" : "oklch(0.88 0.04 85)"}`,
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                      style={{
+                        background: isDark ? "oklch(0.22 0.08 145)" : "oklch(0.88 0.06 145)",
+                      }}
+                    >
+                      <CheckCircle2
+                        className="w-5 h-5"
+                        style={{ color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)" }}
+                      />
+                    </div>
+                    <div>
+                      <p
+                        className="text-sm font-black mb-0.5"
+                        style={{ color: isDark ? "oklch(0.96 0.02 145)" : "oklch(0.15 0.06 145)" }}
+                      >Game finished?</p>
+                      <p
+                        className="text-xs leading-relaxed"
+                        style={{ color: isDark ? "oklch(0.55 0.06 145)" : "oklch(0.44 0.08 145)" }}
+                      >
+                        The winner should report the result to the director at the registration table.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-                  <p className={`text-sm font-semibold ${accent}`}>
-                    You have a bye this round — ½ point awarded automatically.
-                  </p>
+                <div
+                  className="rounded-2xl px-5 py-4"
+                  style={{
+                    background: isDark ? "oklch(0.17 0.06 145)" : "oklch(0.98 0.02 85)",
+                    border: `1px solid ${isDark ? "oklch(0.25 0.07 145)" : "oklch(0.88 0.04 85)"}`,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: isDark ? "oklch(0.22 0.08 145)" : "oklch(0.88 0.06 145)" }}
+                    >
+                      <Crown
+                        className="w-5 h-5"
+                        style={{ color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)" }}
+                      />
+                    </div>
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)" }}
+                    >
+                      You have a bye this round — ½ point awarded automatically.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -984,9 +1240,16 @@ function MyBoardScreen({
           </div>
 
           {/* ── Tools panel ── */}
-          <div className="overflow-y-auto px-4 py-4 pb-safe space-y-3" style={{ width: `${100 / TABS.length}%` }}>
-            <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
-            {/* Chess Clock */}
+          <div className="overflow-y-auto px-4 py-4 pb-safe" style={{ width: `${100 / TABS.length}%` }}>
+            {/* Section header */}
+            <div className="flex items-center justify-between px-1 mb-4">
+              <p
+                className="text-[10px] font-black uppercase tracking-[0.18em]"
+                style={{ color: isDark ? "oklch(0.50 0.10 145)" : "oklch(0.44 0.10 145)" }}
+              >Game Tools</p>
+            </div>
+
+            {/* ── Chess Clock — PRIMARY hero card ── */}
             <a
               href={(() => {
                 const p1 = myColor === "white" ? username : (opponent?.username ?? "");
@@ -995,73 +1258,123 @@ function MyBoardScreen({
                 if (!p1 || !p2) return base;
                 return `${base}&p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}&myColor=${myColor}`;
               })()}
-              className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
-                isDark ? "bg-white/05 hover:bg-white/08" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
-              } transition-colors`}
+              className="block rounded-2xl overflow-hidden active:scale-[0.98] transition-transform mb-3"
+              style={{
+                background: isDark
+                  ? "linear-gradient(135deg, oklch(0.20 0.09 145) 0%, oklch(0.16 0.07 145) 100%)"
+                  : "linear-gradient(135deg, oklch(0.32 0.10 145) 0%, oklch(0.26 0.09 145) 100%)",
+                border: `1px solid ${isDark ? "oklch(0.32 0.10 145)" : "oklch(0.38 0.10 145)"}`,
+                boxShadow: isDark ? "0 4px 20px oklch(0.20 0.09 145 / 0.45)" : "0 4px 20px oklch(0.32 0.10 145 / 0.30)",
+              }}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/08"
-                }`}>
-                  <Timer className={`w-5 h-5 ${accent}`} />
+              <div className="flex items-center justify-between px-5 py-5">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)" }}
+                  >
+                    <Timer className="w-6 h-6" style={{ color: "white" }} />
+                  </div>
+                  <div>
+                    <p className="text-base font-black" style={{ color: "white" }}>Chess Clock</p>
+                    <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>Full-screen OTB game clock</p>
+                  </div>
                 </div>
-                <div>
-                  <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
-                  <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.12)" }}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                 </div>
               </div>
-              <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </a>
-            {/* Watch Stream — visible only when broadcast is active */}
-            {hasBroadcast && (
+
+            {/* ── Secondary tools ── */}
+            <div className="space-y-2">
+              {/* Watch Stream — visible only when broadcast is active */}
+              {hasBroadcast && (
+                <button
+                  onClick={() => setShowStreamSheet(true)}
+                  className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-transform"
+                  style={{
+                    background: isDark ? "oklch(0.17 0.05 145)" : "oklch(0.98 0.01 85)",
+                    border: `1px solid ${isDark ? "oklch(0.24 0.06 145)" : "oklch(0.88 0.03 85)"}`,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: isDark ? "oklch(0.22 0.08 145)" : "oklch(0.88 0.06 145)" }}
+                    >
+                      <MonitorPlay
+                        className="w-5 h-5"
+                        style={{ color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)" }}
+                      />
+                    </div>
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <p
+                          className="text-sm font-bold"
+                          style={{ color: isDark ? "oklch(0.92 0.02 145)" : "oklch(0.18 0.06 145)" }}
+                        >Watch Stream</p>
+                        {broadcast?.broadcastStatus === "live" && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-wider">Live</span>
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        className="text-xs mt-0.5"
+                        style={{ color: isDark ? "oklch(0.50 0.06 145)" : "oklch(0.50 0.07 145)" }}
+                      >{broadcast?.broadcastTitle || `Board ${broadcast?.featuredBoardNumber ?? 1} broadcast`}</p>
+                    </div>
+                  </div>
+                  <svg
+                    className="w-4 h-4 flex-shrink-0"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    style={{ color: isDark ? "oklch(0.40 0.05 145)" : "oklch(0.60 0.06 145)" }}
+                  ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </button>
+              )}
+
+              {/* Film / Stream Game */}
               <button
-                onClick={() => setShowStreamSheet(true)}
-                className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-colors ${
-                  isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F]/70"
-                }`}
+                onClick={() => setShowFilmSheet(true)}
+                className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-transform"
+                style={{
+                  background: isDark ? "oklch(0.17 0.05 145)" : "oklch(0.98 0.01 85)",
+                  border: `1px solid ${isDark ? "oklch(0.24 0.06 145)" : "oklch(0.88 0.03 85)"}`,
+                }}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/08"}`}>
-                    <MonitorPlay className={`w-5 h-5 ${accent}`} />
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: isDark ? "oklch(0.22 0.08 145)" : "oklch(0.88 0.06 145)" }}
+                  >
+                    <Video
+                      className="w-5 h-5"
+                      style={{ color: isDark ? "oklch(0.72 0.14 145)" : "oklch(0.32 0.10 145)" }}
+                    />
                   </div>
                   <div className="text-left">
-                    <div className="flex items-center gap-2">
-                      <p className={`text-sm font-bold ${textMain}`}>Watch Stream</p>
-                      {broadcast?.broadcastStatus === "live" && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          <span className="text-xs font-bold text-white uppercase tracking-wider">Live</span>
-                        </span>
-                      )}
-                    </div>
-                    <p className={`text-xs ${textMuted}`}>
-                      {broadcast?.broadcastTitle || `Board ${broadcast?.featuredBoardNumber ?? 1} broadcast`}
-                    </p>
+                    <p
+                      className="text-sm font-bold"
+                      style={{ color: isDark ? "oklch(0.92 0.02 145)" : "oklch(0.18 0.06 145)" }}
+                    >Film / Stream</p>
+                    <p
+                      className="text-xs mt-0.5"
+                      style={{ color: isDark ? "oklch(0.50 0.06 145)" : "oklch(0.50 0.07 145)" }}
+                    >Record your board for streaming or content</p>
                   </div>
                 </div>
-                <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <svg
+                  className="w-4 h-4 flex-shrink-0"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  style={{ color: isDark ? "oklch(0.40 0.05 145)" : "oklch(0.60 0.06 145)" }}
+                ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </button>
-            )}
-            {/* Film / Stream Game */}
-            <button
-              onClick={() => setShowFilmSheet(true)}
-              className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-colors ${
-                isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F]/70"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/08"
-                }`}>
-                  <Video className={`w-5 h-5 ${accent}`} />
-                </div>
-                <div className="text-left">
-                  <p className={`text-sm font-bold ${textMain}`}>Film / Stream</p>
-                  <p className={`text-xs ${textMuted}`}>Record your board for streaming or content</p>
-                </div>
-              </div>
-              <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </button>
+            </div>
           </div>
         </div>
       </div>
