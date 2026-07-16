@@ -48,6 +48,7 @@ import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { resolveTournament } from "@/lib/tournamentRegistry";
+import { PlayerProfileSheet } from "@/components/PlayerProfileSheet";
 import type { Game, Player, Round } from "@/lib/tournamentData";
 import { getStandings } from "@/lib/tournamentData";
 import { TournamentCompleteScreen } from "./TournamentCompleteScreen";
@@ -124,6 +125,7 @@ function LiveStandingsPanel({
   const textMain = isDark ? "text-white" : "text-[#12372A]";
   const textMuted = isDark ? "text-white/65" : "text-[#436850]";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
+  const [profilePlayer, setProfilePlayer] = useState<Player | null>(null);
 
   return (
     <div className="space-y-2">
@@ -152,14 +154,20 @@ function LiveStandingsPanel({
                 : <span className={`text-sm font-bold ${isDark ? "text-white/55" : "text-[#436850]/70"}`}>{i + 1}</span>
               }
             </span>
-            <PlayerAvatar
-              username={p.username}
-              name={p.name || p.username}
-              platform={p.platform ?? "chesscom"}
-              avatarUrl={p.avatarUrl}
-              size={32}
-              className="flex-shrink-0"
-            />
+            <button
+              className="flex-shrink-0 rounded-full active:scale-90 transition-transform touch-manipulation"
+              onClick={() => setProfilePlayer(p)}
+              aria-label={`View ${p.name || p.username}'s profile`}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <PlayerAvatar
+                username={p.username}
+                name={p.name || p.username}
+                platform={p.platform ?? "chesscom"}
+                avatarUrl={p.avatarUrl}
+                size={32}
+              />
+            </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className={`text-sm font-bold truncate ${isMe ? accent : textMain}`}>
@@ -188,6 +196,12 @@ function LiveStandingsPanel({
           <p className="text-sm">Standings will appear here once games begin.</p>
         </div>
       )}
+      {/* Tap-to-profile sheet — slides up on mobile when a player avatar is tapped */}
+      <PlayerProfileSheet
+        player={profilePlayer}
+        onClose={() => setProfilePlayer(null)}
+        isDark={isDark}
+      />
     </div>
   );
 }

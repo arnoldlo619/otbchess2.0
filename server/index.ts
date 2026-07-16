@@ -1005,6 +1005,74 @@ export function createApp() {
     }
   });
 
+  // ── Proxy: GET /api/chess/player/:username/elo-history ─────────────────────
+  // Returns the ELO rating progression over the player's last 50 games.
+  // Each entry: { index, rating, result, timeClass, date }
+  app.get("/api/chess/player/:username/elo-history", chessProxyLimiter, async (req, res) => {
+    try {
+      const username = req.params.username.toLowerCase().trim();
+      const headers = {
+        "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
+        "Accept": "application/json",
+      };
+
+      // Fetch archives list
+      const archivesRes = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`, { headers, signal: AbortSignal.timeout(8000) });
+      if (!archivesRes.ok) {
+        res.status(archivesRes.status === 404 ? 404 : 502).json({ error: "Player not found" });
+        return;
+      }
+      const archivesData = await archivesRes.json() as { archives: string[] };
+      const archives: string[] = archivesData.archives ?? [];
+      if (archives.length === 0) {
+        res.json({ games: [], minRating: null, maxRating: null, currentRating: null });
+        return;
+      }
+
+      // Fetch last 2 months to get enough games
+      const recentArchives = archives.slice(-2);
+      const gameArrays = await Promise.all(
+        recentArchives.map(async (url) => {
+          const r = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+          if (!r.ok) return [];
+          const d = await r.json() as { games: Record<string, unknown>[] };
+          return d.games ?? [];
+        })
+      );
+
+      const allGames = gameArrays.flat();
+      const last50 = allGames.slice(-50);
+
+      // Extract ELO progression — chess.com stores rating on each player object
+      const eloSeries: { index: number; rating: number; result: string; timeClass: string; date: string }[] = [];
+      for (let i = 0; i < last50.length; i++) {
+        const game = last50[i] as Record<string, unknown>;
+        const white = game.white as Record<string, unknown>;
+        const black = game.black as Record<string, unknown>;
+        const isWhite = (white?.username as string)?.toLowerCase() === username;
+        const playerSide = isWhite ? white : black;
+        const rating = playerSide?.rating as number | undefined;
+        const result = (isWhite ? white?.result : black?.result) as string ?? "";
+        const timeClass = (game.time_class as string) ?? "rapid";
+        const endTime = game.end_time as number | undefined;
+        const date = endTime ? new Date(endTime * 1000).toISOString().slice(0, 10) : "";
+        if (rating) {
+          eloSeries.push({ index: i, rating, result, timeClass, date });
+        }
+      }
+
+      const ratings = eloSeries.map((g) => g.rating);
+      const minRating = ratings.length > 0 ? Math.min(...ratings) : null;
+      const maxRating = ratings.length > 0 ? Math.max(...ratings) : null;
+      const currentRating = ratings.length > 0 ? ratings[ratings.length - 1] : null;
+
+      res.json({ games: eloSeries, minRating, maxRating, currentRating });
+    } catch (err) {
+      logger.error("[elo history proxy]", err);
+      res.status(502).json({ error: "Could not fetch ELO history" });
+    }
+  });
+
   // ── Proxy: GET /api/avatar-proxy?url=... ─────────────────────────────────────
   // Fetches a remote avatar image (chess.com, lichess, etc.) server-side and
   // re-serves it with permissive CORS headers so html2canvas can draw it onto
