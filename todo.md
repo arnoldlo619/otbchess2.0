@@ -7024,3 +7024,82 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] MeetupEventPage — RSVP buttons hidden for owners/directors (auto-set, no manual selection needed)
 - [x] CheckInPage — redirect to /clubs/:clubId/meetup/:eventId after successful check-in
 - [x] MeetupEventPage — 30-second polling interval added so owner sees new check-ins from members in real-time
+
+## Phase 3 — Premium Marketing, Conversion, Journal, Join and Onboarding Experience
+
+### A. Landing Page
+- [x] Hero: exact three-part message "Chess Clubs, / Chess Tournaments, / Over The Board." with Anton treatment
+- [x] Hero: primary CTA "Host Tournament", secondary "Join Tournament", tertiary "View Live Demo"
+- [x] Hero: real product-state visual (existing HeroDashboardMockup preserved)
+- [x] Capabilities bento: asymmetric grid with 6 groups (Tournament Ops, Clubs, League, Matchup Prep, Openings, Live Results)
+- [x] Capabilities bento: each card has user outcome, real interface evidence, specific CTA, accessible name, responsive layout
+- [ ] Ecosystem pathways section: clear navigation to Clubs, Tournaments, League, Tools
+- [ ] StatsBar: skeletons while loading, hide unavailable metrics, clearly label demo data
+- [ ] How It Works: 3-step premium vertical layout, mobile-first
+- [ ] CTA section: "Growing your chess club starts here" with valid destinations
+- [x] Footer: all links reach valid destinations, remove placeholder Discord/Twitter hrefs
+
+### B. Pricing
+- [x] Pricing: honest beta state — "Everything is free during open beta"
+- [x] Pricing: remove actionable "Get Pro" payment button (replace with waitlist/notify CTA)
+- [x] Pricing: one recommended plan highlighted clearly
+- [x] Pricing: feature comparison semantic and mobile-friendly
+- [x] Pricing: FAQ section for real purchase questions
+- [x] Pricing: no dark low-contrast text inside highlighted plan
+
+### C. Journal
+- [x] Blog index: category filters keyboard accessible with selected state and URL param
+- [x] Blog index: filter counts update correctly
+- [x] Blog index: featured story hierarchy (first post gets hero treatment)
+- [x] Blog index: article card consistency (image loading, metadata readability)
+- [ ] Blog index: mobile title sizing
+- [x] BlogPost: comfortable reading width (max-w-prose or 65ch)
+- [x] BlogPost: clear author/date/read-time metadata in header
+- [x] BlogPost: semantic headings (h1 → h2 → h3 hierarchy)
+- [ ] BlogPost: social sharing (copy link, Twitter/X, WhatsApp)
+- [x] BlogPost: related articles section
+- [x] BlogPost: valid product CTA at end of article
+
+### D. Join Tournament Flow
+- [x] Join: one primary CTA per step (already correct — confirmed no duplicate CTAs)
+- [x] Join: inline errors on each step (upgraded to styled error pills)
+- [ ] Join: tournament context (name, format, date) visible throughout all steps
+- [ ] Join: back navigation preserves entered information
+- [ ] Join: QR scan only requests camera permission when user explicitly selects Scan
+- [ ] Join: success state explains check-in, round timing, where to find pairings
+- [ ] Join: all touch targets ≥44px
+- [ ] Join: sticky mobile CTA does not obscure content or browser safe areas
+- [ ] Join: paste support on code input
+- [ ] Join: uppercase/normalize codes without destroying user input
+
+### E. Player Profile Confirmation
+- [ ] Confirm step: clearly shows name, username, avatar, platform, rating category, rating value, verification state, tournament being joined
+- [ ] Confirm step: allow correction before final registration
+- [ ] Confirm step: never imply official federation verification (chess.com/Lichess only)
+
+### F. Error and Recovery States
+- [x] 404: existing page extended with error variant system (?error= param)
+- [x] Invalid tournament code: NotFound variant with recovery path to /join
+- [x] Closed registration: NotFound variant with alternative action to /tournaments
+- [ ] Tournament already started: clear message + spectator link
+- [x] Player already registered: existing capToast system handles this
+- [x] Username not found: NotFound variant with suggestion
+- [ ] Rating unavailable: graceful fallback (allow manual entry)
+- [x] Network failure: NotFound variant with retry button
+- [ ] Rate limiting: friendly message with wait time
+
+### G. Motion and Interaction
+- [ ] Add prefers-reduced-motion respect to all animated elements
+- [ ] Hero product preview: existing BorderBeam + fade-up preserved
+- [ ] Card hover hierarchy: subtle lift on capabilities bento cards
+- [ ] Step progression: smooth slide transitions in Join flow
+- [ ] Form confirmation: success animation on registration complete
+- [ ] No excessive scroll-triggered movement
+
+### H. SEO and Sharing
+- [x] Dynamic page titles for Blog, BlogPost, Pricing, Home pages (usePageMeta hook)
+- [x] Canonical URLs for all public pages (usePageMeta sets link[rel=canonical])
+- [x] Open Graph metadata for Blog and BlogPost pages
+- [ ] Structured article metadata (JSON-LD) for BlogPost
+- [ ] Correct heading order on all public pages
+- [ ] Semantic nav landmarks on all public pages

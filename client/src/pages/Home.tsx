@@ -22,6 +22,7 @@ import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
@@ -433,9 +434,11 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </div>
 
             <h1
-              className="opacity-0-init animate-fade-in-up text-[2.15rem] sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.08] tracking-tight mb-3 sm:mb-6 text-foreground"
+              className="opacity-0-init animate-fade-in-up text-[2.15rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.06] tracking-tight mb-3 sm:mb-6 text-foreground"
               style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
             >
+              Chess Clubs,
+              <br />
               Chess Tournaments,
               <br />
               <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}>
@@ -1177,61 +1180,344 @@ function HowItWorks() {
   );
 }
 
-// ─── Features ────────────────────────────────────────────────────────────────
+// ─── Capabilities Bento ───────────────────────────────────────────────────────
+// Asymmetric bento grid covering 6 platform capability groups.
+// Row 1: Tournament Operations (wide, 2/3) + Clubs & Community (narrow, 1/3)
+// Row 2: League (1/3) + Matchup Prep (1/3) + Openings & Training (1/3)
+// Row 3: Live Results & Shareable Content (full-width)
+
+interface BentoCardProps {
+  tag: string;
+  title: string;
+  description: string;
+  cta: string;
+  href: string;
+  icon: React.ReactNode;
+  screenshot?: string;
+  screenshotAlt?: string;
+  isDark: boolean;
+  inView: boolean;
+  delay?: number;
+  accent?: boolean; // highlights the primary card
+  className?: string;
+}
+
+function BentoCard({
+  tag, title, description, cta, href, icon, screenshot, screenshotAlt,
+  isDark, inView, delay = 0, accent = false, className = "",
+}: BentoCardProps) {
+  const [, navigate] = useLocation();
+  const prefersReducedMotion = typeof window !== "undefined"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    : false;
+
+  const handleNav = () => {
+    if (href.startsWith("/")) navigate(href);
+    else window.open(href, "_blank", "noopener");
+  };
+
+  const surface = accent
+    ? isDark
+      ? "bg-[oklch(0.28_0.10_145)] border-[oklch(0.55_0.14_145)/0.35]"
+      : "bg-[#436850] border-[#2A4A32]/20"
+    : isDark
+      ? "bg-[oklch(0.22_0.07_145)] border-white/[0.07]"
+      : "bg-white border-[#ADBC9F]/50";
+
+  const tagColor = accent
+    ? isDark ? "text-[#7CF562] bg-[oklch(0.20_0.08_145)] border-[oklch(0.45_0.12_145)/0.5]" : "text-white bg-white/20 border-white/30"
+    : isDark ? "text-[oklch(0.65_0.14_145)] bg-[oklch(0.18_0.06_145)] border-[oklch(0.38_0.10_145)/0.5]" : "text-[#436850] bg-[#EEF5EE] border-[#ADBC9F]/50";
+
+  const titleColor = accent
+    ? isDark ? "text-white" : "text-white"
+    : isDark ? "text-[oklch(0.93_0.05_145)]" : "text-[#12372A]";
+
+  const descColor = accent
+    ? isDark ? "text-white/70" : "text-white/80"
+    : isDark ? "text-[oklch(0.68_0.07_145)]" : "text-[#436850]";
+
+  const ctaColor = accent
+    ? isDark
+      ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+      : "bg-white/20 hover:bg-white/30 text-white border-white/30"
+    : isDark
+      ? "bg-[oklch(0.27_0.08_145)] hover:bg-[oklch(0.32_0.10_145)] text-[oklch(0.88_0.08_145)] border-[oklch(0.38_0.10_145)/0.5]"
+      : "bg-[#EEF5EE] hover:bg-[#436850] hover:text-white text-[#12372A] border-[#ADBC9F]/50";
+
+  return (
+    <div
+      className={`group relative rounded-2xl border overflow-hidden cursor-pointer flex flex-col transition-all duration-500 ${surface} ${className} ${
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      }`}
+      style={{ transitionDelay: `${delay}ms` }}
+      onClick={handleNav}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleNav(); } }}
+      aria-label={`${tag}: ${title}`}
+    >
+      {/* Hover lift — respects reduced motion */}
+      <div
+        className={`absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300 ${
+          prefersReducedMotion ? "" : "group-hover:opacity-100 opacity-0"
+        }`}
+        style={{
+          boxShadow: isDark
+            ? "0 8px 32px oklch(0.12 0.05 145 / 0.6), 0 0 0 1px oklch(0.55 0.14 145 / 0.15)"
+            : "0 8px 32px rgba(67,104,80,0.14), 0 0 0 1px rgba(67,104,80,0.12)",
+        }}
+      />
+
+      {/* Screenshot — shown when provided */}
+      {screenshot && (
+        <div className="relative overflow-hidden" style={{ aspectRatio: "16/9", flexShrink: 0 }}>
+          <img
+            src={screenshot}
+            alt={screenshotAlt ?? title}
+            className={`w-full h-full object-cover object-top transition-transform duration-700 ease-out ${
+              prefersReducedMotion ? "" : "group-hover:scale-[1.04]"
+            }`}
+            loading="lazy"
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: isDark
+                ? "linear-gradient(to bottom, transparent 60%, oklch(0.22 0.07 145 / 0.85) 100%)"
+                : "linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.85) 100%)",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="flex flex-col gap-3 p-5 sm:p-6 flex-1">
+        {/* Tag + icon row */}
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={`text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border ${tagColor}`}
+          >
+            {tag}
+          </span>
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              accent
+                ? isDark ? "bg-white/10" : "bg-white/20"
+                : isDark ? "bg-[oklch(0.30_0.09_145)/0.7]" : "bg-[#436850]/10"
+            }`}
+            style={{ color: accent ? (isDark ? "#7CF562" : "#fff") : isDark ? "#7CF562" : "#436850" }}
+          >
+            {icon}
+          </div>
+        </div>
+
+        {/* Title */}
+        <h3
+          className={`text-base sm:text-lg font-semibold leading-snug ${titleColor}`}
+          style={{ fontFamily: "'Clash Display', sans-serif" }}
+        >
+          {title}
+        </h3>
+
+        {/* Description */}
+        <p className={`text-xs sm:text-sm leading-relaxed flex-1 ${descColor}`}>
+          {description}
+        </p>
+
+        {/* CTA */}
+        <button
+          className={`mt-1 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 ${ctaColor}`}
+          style={{ minHeight: "44px" }}
+          onClick={(e) => { e.stopPropagation(); handleNav(); }}
+          aria-label={cta}
+        >
+          {cta}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Features() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const features = [
-    { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs", href: "/clubs", tooltip: "Manage your club roster, events & ELO history" },
-    { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — built for OTB club players.", tag: "Training", href: "/repertoire", tooltip: "Study openings with interactive boards & drills" },
-    { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered", href: "/prep", tooltip: "Enter a username to generate a full scout report" },
-    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature", href: "/league-demo", tooltip: "See a live demo of weekly club league matchups" },
-    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time", href: "/tournaments", tooltip: "Browse live and past tournament standings" },
-    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready", href: "/clubs", tooltip: "Explore clubs using automated shareable content" },
-  ];
-
   return (
     <section
       id="features"
-      className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#EEF5EE]"}`}
+      className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}
       ref={ref}
     >
       <div className="container">
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
-            style={{ animationFillMode: "forwards" }}>
-            Platform Features
+        {/* Section header */}
+        <div className={`text-center mb-8 sm:mb-12 lg:mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>
+            Platform Capabilities
           </p>
-          <h2 className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
-            Take your club to the next level
+          <h2
+            className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Everything your club needs
           </h2>
+          <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${isDark ? "text-white/55" : "text-[#436850]"}`}>
+            Six integrated tools — from running your first tournament to building a year-round club league.
+          </p>
         </div>
 
-        {/* Feature cards — animated DynamicSquare grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((feature, i) => {
-            const f = feature as { href?: string; tooltip?: string };
-            return (
-              <div
-                key={feature.title}
-                className={`transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-                style={{ transitionDelay: `${(i + 1) * 80}ms` }}
+        {/* ── Bento grid ── */}
+        {/* Row 1: Tournament Operations (wide) + Clubs & Community (narrow) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <BentoCard
+            tag="Tournament Operations"
+            title="Swiss Pairings & Live Standings"
+            description="Create a tournament in under 3 minutes. Players register by scanning a QR code, we pull their chess.com ELO and generate optimal pairings automatically. Live standings update as results come in."
+            cta="Host a Tournament"
+            href="/?action=create"
+            icon={<Trophy className="w-4 h-4" />}
+            screenshot="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png"
+            screenshotAlt="Swiss Tournament Director Dashboard showing live pairings and standings"
+            isDark={isDark}
+            inView={inView}
+            delay={80}
+            accent
+            className="sm:col-span-2"
+          />
+          <BentoCard
+            tag="Clubs & Community"
+            title="Club Roster & Events"
+            description="Manage your club roster, post events, run polls, and track every member's OTB ELO history — all in one place."
+            cta="Explore Clubs"
+            href="/clubs"
+            icon={<Shield className="w-4 h-4" />}
+            isDark={isDark}
+            inView={inView}
+            delay={160}
+            className="sm:col-span-1"
+          />
+        </div>
+
+        {/* Row 2: League + Matchup Prep + Openings */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <BentoCard
+            tag="League"
+            title="Weekly Club League"
+            description="Season-long matchups with a live leaderboard. Give members a reason to show up every week."
+            cta="View League Demo"
+            href="/league-demo"
+            icon={<Zap className="w-4 h-4" />}
+            isDark={isDark}
+            inView={inView}
+            delay={240}
+          />
+          <BentoCard
+            tag="Matchup Preparation"
+            title="Scout Your Next Opponent"
+            description="AI-powered scouting report: openings, problem lines, and blunder patterns from their chess.com history — before you sit down."
+            cta="Try Scout Report"
+            href="/prep"
+            icon={<Brain className="w-4 h-4" />}
+            isDark={isDark}
+            inView={inView}
+            delay={320}
+          />
+          <BentoCard
+            tag="Openings & Training"
+            title="Build Your OTB Repertoire"
+            description="Study 18+ openings with interactive boards, coaching notes, and spaced-repetition drills — built for over-the-board club players."
+            cta="Study Openings"
+            href="/repertoire"
+            icon={<BookOpen className="w-4 h-4" />}
+            isDark={isDark}
+            inView={inView}
+            delay={400}
+          />
+        </div>
+
+        {/* Row 3: Live Results & Shareable Content — full-width horizontal card */}
+        <div
+          className={`group relative rounded-2xl border overflow-hidden cursor-pointer flex flex-col sm:flex-row items-stretch transition-all duration-500 ${
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          } ${
+            isDark
+              ? "bg-[oklch(0.22_0.07_145)] border-white/[0.07]"
+              : "bg-white border-[#ADBC9F]/50"
+          }`}
+          style={{ transitionDelay: "480ms" }}
+          onClick={() => { const [, nav] = [null, (p: string) => { window.location.href = p; }]; nav("/tournaments"); }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.href = "/tournaments"; } }}
+          aria-label="Live Results & Shareable Content: view live standings"
+        >
+          {/* Left: text content */}
+          <div className="flex flex-col gap-3 p-5 sm:p-6 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className={`text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border ${
+                  isDark
+                    ? "text-[oklch(0.65_0.14_145)] bg-[oklch(0.18_0.06_145)] border-[oklch(0.38_0.10_145)/0.5]"
+                    : "text-[#436850] bg-[#EEF5EE] border-[#ADBC9F]/50"
+                }`}
               >
-                <DynamicSquare
-                  title={feature.title}
-                  description={feature.description}
-                  tag={feature.tag}
-                  icon={feature.icon}
-                  buttonText={f.href ? "View feature" : undefined}
-                  buttonHref={f.href}
-                  isDark={isDark}
-                />
+                Live Results & Sharing
+              </span>
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  isDark ? "bg-[oklch(0.30_0.09_145)/0.7]" : "bg-[#436850]/10"
+                }`}
+                style={{ color: isDark ? "#7CF562" : "#436850" }}
+              >
+                <BarChart3 className="w-4 h-4" />
               </div>
-            );
-          })}
+            </div>
+            <h3
+              className={`text-base sm:text-lg font-semibold leading-snug ${
+                isDark ? "text-[oklch(0.93_0.05_145)]" : "text-[#12372A]"
+              }`}
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              Real-Time Standings & Auto-Generated Recap Posts
+            </h3>
+            <p className={`text-xs sm:text-sm leading-relaxed ${
+              isDark ? "text-[oklch(0.68_0.07_145)]" : "text-[#436850]"
+            }`}>
+              Leaderboards update the moment a result is entered. Share a public link with spectators, or auto-generate tournament recap posts, player cards, and standings graphics for Instagram or WhatsApp.
+            </p>
+            <button
+              className={`mt-1 w-full sm:w-auto rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 ${
+                isDark
+                  ? "bg-[oklch(0.27_0.08_145)] hover:bg-[oklch(0.32_0.10_145)] text-[oklch(0.88_0.08_145)] border-[oklch(0.38_0.10_145)/0.5]"
+                  : "bg-[#EEF5EE] hover:bg-[#436850] hover:text-white text-[#12372A] border-[#ADBC9F]/50"
+              }`}
+              style={{ minHeight: "44px" }}
+              onClick={(e) => { e.stopPropagation(); window.location.href = "/tournaments"; }}
+              aria-label="View live standings"
+            >
+              View Live Standings
+            </button>
+          </div>
+          {/* Right: screenshot */}
+          <div
+            className="relative overflow-hidden sm:w-[45%] flex-shrink-0"
+            style={{ minHeight: "180px" }}
+          >
+            <img
+              src="/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png"
+              alt="Live pairings and standings board"
+              className="absolute inset-0 w-full h-full object-cover object-top"
+              loading="lazy"
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: isDark
+                  ? "linear-gradient(to right, oklch(0.22 0.07 145 / 0.6) 0%, transparent 40%)"
+                  : "linear-gradient(to right, rgba(255,255,255,0.6) 0%, transparent 40%)",
+              }}
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -1910,8 +2196,8 @@ function Footer() {
     ],
     Community: [
       { label: "Join a Tournament", href: "/join" },
-      { label: "Discord", href: "https://discord.gg" },
-      { label: "Twitter", href: "https://twitter.com" },
+      { label: "Discord", href: "https://discord.gg/chessotb" },
+      { label: "X / Twitter", href: "https://x.com/chessotbclub" },
       { label: "chess.com", href: "https://chess.com" },
     ],
     Company: [
@@ -2005,20 +2291,12 @@ export default function Home() {
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
 
-  // SEO: set page title, description, and keywords on mount
-  useEffect(() => {
-    document.title = "ChessOTB.club — Chess Tournaments Over The Board";
-    const desc = document.querySelector("meta[name='description']");
-    if (desc) desc.setAttribute("content", "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and elimination brackets. Free for chess clubs.");
-    let kw = document.querySelector("meta[name='keywords']");
-    if (!kw) {
-      kw = document.createElement("meta");
-      kw.setAttribute("name", "keywords");
-      document.head.appendChild(kw);
-    }
-    kw.setAttribute("content", "chess tournament, over the board chess, OTB chess, Swiss pairings, chess club tournament, chess bracket, chess standings, chess.com ELO");
-    return () => { document.title = "ChessOTB.club"; };
-  }, []);
+  // SEO
+  usePageMeta({
+    title: "ChessOTB.club — The Home for Over-the-Board Chess",
+    description: "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and QR check-in. Free for chess clubs.",
+    path: "/",
+  });
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {

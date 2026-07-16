@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -225,8 +226,34 @@ function BlogCard({ post, isDark }: { post: BlogPost; isDark: boolean }) {
 export default function Blog() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [activeCategory, setActiveCategory] = useState("All");
+
+  // ── URL-state for category filter ────────────────────────────────────────
+  const getCategoryFromUrl = (): string => {
+    if (typeof window === "undefined") return "All";
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("category") ?? "All";
+    return ALL_CATEGORIES.includes(cat) ? cat : "All";
+  };
+  const [activeCategory, setActiveCategory] = useState<string>(getCategoryFromUrl);
   const [page, setPage] = useState(1);
+
+  usePageMeta({
+    title: "Chess Journal — ChessOTB.club",
+    description: "Club spotlights, tournament strategy, platform updates, and community stories from the OTB chess world.",
+    path: "/blog",
+  });
+
+  const handleCategoryChange = useCallback((cat: string) => {
+    setActiveCategory(cat);
+    setPage(1);
+    const url = new URL(window.location.href);
+    if (cat === "All") {
+      url.searchParams.delete("category");
+    } else {
+      url.searchParams.set("category", cat);
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, []);
   const { user } = useAuthContext();
 
   // ── League smart routing ──────────────────────────────────────────────────
@@ -404,7 +431,10 @@ export default function Blog() {
             return (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryChange(cat)}
+                role="tab"
+                aria-selected={active}
+                aria-label={`Filter by ${cat} (${count} post${count !== 1 ? "s" : ""})`}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 border ${
                   active
                     ? isDark

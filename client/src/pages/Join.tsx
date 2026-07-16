@@ -1150,8 +1150,11 @@ export default function JoinPage() {
                   />
                 </div>
                 {error && (
-                  <div className="flex items-start gap-2 text-red-500 text-xs mt-2.5">
-                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
+                  <div className={`flex items-start gap-2 text-xs mt-2.5 px-3 py-2.5 rounded-xl border ${
+                    isDark ? "bg-red-500/10 border-red-500/25 text-red-300" : "bg-red-50 border-red-200 text-red-700"
+                  }`}>
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
                   </div>
                 )}
                 <button
@@ -1424,8 +1427,11 @@ export default function JoinPage() {
                 </div>
 
                 {error && (
-                  <div className="flex items-start gap-2 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}
+                  <div className={`flex items-start gap-2 text-sm px-3 py-2.5 rounded-xl border ${
+                    isDark ? "bg-red-500/10 border-red-500/25 text-red-300" : "bg-red-50 border-red-200 text-red-700"
+                  }`}>
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
                   </div>
                 )}
               </div>
@@ -1516,8 +1522,11 @@ export default function JoinPage() {
                       : "Try: DrNykterstein · Hikaru · penguingim1"}
                   </p>
                   {error && (
-                    <div className="flex items-start gap-2 text-red-500 text-xs mt-2.5">
-                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
+                    <div className={`flex items-start gap-2 text-xs mt-2.5 px-3 py-2.5 rounded-xl border ${
+                      isDark ? "bg-red-500/10 border-red-500/25 text-red-300" : "bg-red-50 border-red-200 text-red-700"
+                    }`}>
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                      <span>{error}</span>
                     </div>
                   )}
                 </div>
@@ -1672,8 +1681,11 @@ export default function JoinPage() {
                 </div>
               </div>
               {error && (
-                <div className="flex items-start gap-2 text-red-500 text-xs px-1">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
+                <div className={`flex items-start gap-2 text-xs px-3 py-2.5 rounded-xl border ${
+                  isDark ? "bg-red-500/10 border-red-500/25 text-red-300" : "bg-red-50 border-red-200 text-red-700"
+                }`}>
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
               )}
             </div>

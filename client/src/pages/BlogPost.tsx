@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -887,6 +888,21 @@ export default function BlogPost() {
 
   const post = POSTS.find((p) => p.slug === slug);
 
+  // Per-article SEO
+  usePageMeta(post ? {
+    title: `${post.title} — ChessOTB.club`,
+    description: post.excerpt,
+    image: post.image.startsWith("http") ? post.image : undefined,
+    path: `/blog/${post.slug}`,
+    type: "article",
+    publishedTime: new Date(post.date).toISOString(),
+    author: post.author,
+  } : {
+    title: "Post Not Found — ChessOTB.club",
+    description: "This article could not be found.",
+    path: "/blog",
+  });
+
   // Active TOC section tracking
   const [activeSection, setActiveSection] = useState<string>("");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -1024,14 +1040,15 @@ export default function BlogPost() {
               />
             </div>
 
-            {/* Article body */}
-            <div className="prose-content">
+            {/* Article body — constrained to optimal reading width */}
+            <div className="prose-content max-w-[68ch]">
               {post.sections.map((section) => (
-                <section key={section.id} id={section.id} className="mb-10 scroll-mt-24">
+                <section key={section.id} id={section.id} className="mb-12 scroll-mt-24">
                   <h2
-                    className={`text-xl sm:text-2xl font-bold mb-4 ${
+                    className={`text-xl sm:text-2xl font-bold mb-4 leading-snug ${
                       isDark ? "text-white" : "text-[#12372A]"
                     }`}
+                    style={{ fontFamily: "'Clash Display', Georgia, serif" }}
                   >
                     {section.heading}
                   </h2>
@@ -1042,9 +1059,62 @@ export default function BlogPost() {
               ))}
             </div>
 
+            {/* ── Related articles ── */}
+            {(() => {
+              const relatedSorted = [
+                ...POSTS.filter((p) => p.slug !== post.slug && p.category === post.category),
+                ...POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category),
+              ].slice(0, 3);
+              if (relatedSorted.length === 0) return null;
+              return (
+                <div
+                  className={`mt-12 pt-8 border-t ${
+                    isDark ? "border-white/10" : "border-[#ADBC9F]/50"
+                  }`}
+                >
+                  <p className={`text-xs font-bold uppercase tracking-widest mb-5 ${
+                    isDark ? "text-white/40" : "text-[#436850]/60"
+                  }`}>
+                    More from the Journal
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-5">
+                    {relatedSorted.map((rel) => (
+                      <Link key={rel.slug} href={`/blog/${rel.slug}`}>
+                        <article className={`group flex flex-col gap-2 cursor-pointer rounded-xl overflow-hidden border transition-all duration-200 hover:-translate-y-0.5 ${
+                          isDark
+                            ? "border-white/[0.07] bg-white/[0.03] hover:border-white/15"
+                            : "border-[#ADBC9F]/40 bg-white hover:border-[#436850]/30 hover:shadow-sm"
+                        }`}>
+                          <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                            <img
+                              src={rel.image}
+                              alt={rel.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="px-3.5 pb-3.5 pt-1 flex flex-col gap-1">
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                              isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
+                            }`}>{rel.category}</span>
+                            <p className={`text-sm font-semibold leading-snug line-clamp-2 ${
+                              isDark ? "text-white/85" : "text-[#12372A]"
+                            }`}>{rel.title}</p>
+                            <p className={`text-xs ${
+                              isDark ? "text-white/35" : "text-[#ADBC9F]"
+                            }`}>{rel.readTime}</p>
+                          </div>
+                        </article>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* ── Back to blog CTA ── */}
             <div
-              className={`mt-12 pt-8 border-t flex items-center justify-between flex-wrap gap-4 ${
+              className={`mt-10 pt-8 border-t flex items-center justify-between flex-wrap gap-4 ${
                 isDark ? "border-white/10" : "border-[#ADBC9F]/50"
               }`}
             >
