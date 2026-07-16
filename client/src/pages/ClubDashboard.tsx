@@ -2389,6 +2389,7 @@ export default function ClubDashboard() {
   // ── QR Tools state ────────────────────────────────────────────────────────
   const [qrEventId, setQrEventId] = useState<string | null>(null);
   const [qrMode, setQrMode] = useState<"join" | "rsvp" | "checkin">("join");
+  const [qrTabCopied, setQrTabCopied] = useState(false);
   // ── Join Club QR modal (header button) ───────────────────────────────────
   const [showJoinQRModal, setShowJoinQRModal] = useState(false);
   const [joinQRCopied, setJoinQRCopied] = useState(false);
@@ -3435,86 +3436,113 @@ export default function ClubDashboard() {
               img.src = "data:image/svg+xml;base64," + btoa(svgData);
             }
             return (
-              <div className="modal-overlay z-50" onClick={() => setShowJoinQRModal(false)}>
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowJoinQRModal(false)} />
-                <div
-                  className="relative z-10 w-full max-w-sm my-auto rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
-                  style={{ background: "oklch(0.22 0.06 145)", marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Accent bar */}
-                  <div className="h-1" style={{ background: `linear-gradient(90deg, ${accent}88, ${accent}, ${accent}88)` }} />
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/08">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${accent}33` }}>
-                        <QrCode className="w-4 h-4" style={{ color: accent }} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-white leading-tight" style={{ fontFamily: "'Clash Display', sans-serif" }}>Join Club QR Code</p>
-                        <p className="text-xs text-white/40">{club.name}</p>
-                      </div>
+              <div
+                className="fixed inset-0 z-[100] flex flex-col"
+                style={{ background: "oklch(0.14 0.07 145)" }}
+                onClick={() => setShowJoinQRModal(false)}
+              >
+                {/* Sticky top bar */}
+                <div className="flex-shrink-0 flex items-center justify-end px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
+                  <button
+                    onClick={() => setShowJoinQRModal(false)}
+                    aria-label="Close QR screen"
+                    className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-90 touch-manipulation"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-col items-center gap-6 sm:gap-8 px-6 py-4 pb-10 w-full max-w-2xl mx-auto text-center">
+
+                    {/* Title */}
+                    <div>
+                      <p className="text-white/40 text-sm font-semibold uppercase tracking-[0.2em] mb-1">Join the club</p>
+                      <h1
+                        className="text-white text-2xl sm:text-4xl font-bold leading-tight"
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        {club.name}
+                      </h1>
                     </div>
-                    <button
-                      onClick={() => setShowJoinQRModal(false)}
-                      className="flex items-center gap-1.5 h-11 px-3 rounded-xl font-semibold text-sm bg-white/10 text-white hover:bg-white/18 border border-white/15 transition-all active:scale-95"
-                    >
-                      <X className="w-4 h-4" strokeWidth={2.5} />
-                      <span>Close</span>
-                    </button>
-                  </div>
-                  {/* QR Code */}
-                  <div className="px-5 py-6 flex flex-col items-center gap-5">
+
+                    {/* QR code */}
                     <div className="relative">
-                      <div className="p-4 bg-white rounded-2xl shadow-lg">
+                      <div className="absolute inset-0 rounded-3xl bg-[#4CAF50]/20 blur-2xl scale-110 pointer-events-none" />
+                      <div className="relative p-5 sm:p-7 bg-white rounded-3xl shadow-2xl">
                         <QRCodeSVG
                           id="club-join-qr"
                           value={joinUrl}
-                          size={200}
+                          size={220}
                           level="H"
                           includeMargin={false}
                           fgColor="#1a1a1a"
                           bgColor="#ffffff"
                         />
                       </div>
-                      {/* Corner decorations */}
-                      {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos) => (
+                      {(["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"] as const).map((pos) => (
                         <div
                           key={pos}
-                          className={`absolute ${pos} w-5 h-5 ${pos.includes("top") && pos.includes("left") ? "border-t-2 border-l-2 rounded-tl-xl" : pos.includes("top") && pos.includes("right") ? "border-t-2 border-r-2 rounded-tr-xl" : pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-xl" : "border-b-2 border-r-2 rounded-br-xl"}`}
-                          style={{ borderColor: accent }}
+                          className={`absolute ${pos} w-6 h-6 border-[#4CAF50] ${
+                            pos.includes("top") && pos.includes("left")    ? "border-t-2 border-l-2 rounded-tl-2xl" :
+                            pos.includes("top") && pos.includes("right")   ? "border-t-2 border-r-2 rounded-tr-2xl" :
+                            pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-2xl" :
+                            "border-b-2 border-r-2 rounded-br-2xl"
+                          }`}
                         />
                       ))}
                     </div>
-                    {/* Info */}
-                    <div className="w-full rounded-xl px-4 py-3 flex items-start gap-3" style={{ background: `${accent}15` }}>
-                      <Users size={14} className="mt-0.5 flex-shrink-0" style={{ color: accent }} />
-                      <p className="text-xs leading-relaxed text-white/60">
-                        Members scan this code to join <span className="text-white/80 font-semibold">{club.name}</span>. If they're not signed in, they'll be prompted to create an account first — then automatically added.
+
+                    {/* Copy link pill */}
+                    <div className="flex flex-col items-center gap-2">
+                      <p
+                        className="text-xs font-semibold uppercase tracking-[0.25em] transition-colors duration-300"
+                        style={{ color: joinQRCopied ? "#4CAF50" : "rgba(255,255,255,0.35)" }}
+                      >
+                        {joinQRCopied ? "Copied!" : "Or copy the link"}
                       </p>
-                    </div>
-                    {/* Actions */}
-                    <div className="w-full grid grid-cols-2 gap-2">
                       <button
                         onClick={handleCopyJoinLink}
-                        className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-all ${
-                          joinQRCopied
-                            ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#436850]/15"
-                            : "border-white/10 text-white/70 hover:bg-white/05"
-                        }`}
+                        title="Click to copy"
+                        aria-label="Copy join link"
+                        className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl transition-all duration-300 active:scale-95 touch-manipulation overflow-hidden"
+                        style={{
+                          background: joinQRCopied ? "rgba(76,175,80,0.18)" : "rgba(255,255,255,0.06)",
+                          border: joinQRCopied ? "1.5px solid rgba(76,175,80,0.55)" : "1.5px solid rgba(255,255,255,0.12)",
+                          boxShadow: joinQRCopied ? "0 0 28px 4px rgba(76,175,80,0.25), inset 0 0 16px rgba(76,175,80,0.10)" : "none",
+                        }}
                       >
-                        {joinQRCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        {joinQRCopied ? "Copied!" : "Copy Link"}
-                      </button>
-                      <button
-                        onClick={handleDownloadJoinQR}
-                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-md"
-                        style={{ background: accent }}
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Save QR
+                        {joinQRCopied && (
+                          <span
+                            className="pointer-events-none absolute inset-0 rounded-2xl"
+                            style={{ background: "radial-gradient(circle at 50% 50%, rgba(76,175,80,0.22) 0%, transparent 70%)", animation: "otb-code-flash 0.45s ease-out forwards" }}
+                          />
+                        )}
+                        <span
+                          className="relative font-mono font-bold tracking-[0.15em] text-lg sm:text-xl select-all transition-colors duration-300 break-all max-w-xs"
+                          style={{ color: joinQRCopied ? "#6EE77A" : "#ffffff", textShadow: joinQRCopied ? "0 0 18px rgba(76,175,80,0.70)" : "none" }}
+                        >
+                          {joinUrl.replace(/^https?:\/\//, "")}
+                        </span>
+                        <span className="relative text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0">
+                          {joinQRCopied ? <Check className="w-5 h-5" style={{ color: "#4CAF50" }} /> : <Copy className="w-5 h-5" />}
+                        </span>
                       </button>
                     </div>
+
+                    {/* Short URL hint */}
+                    <p className="text-white/25 text-xs font-mono tracking-wide">{joinUrl}</p>
+
+                    {/* Download button */}
+                    <button
+                      onClick={handleDownloadJoinQR}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white border border-white/10 hover:border-white/20 transition-all active:scale-95"
+                    >
+                      <Download className="w-4 h-4" />
+                      Save QR Image
+                    </button>
+
                   </div>
                 </div>
               </div>
@@ -5433,33 +5461,91 @@ export default function ClubDashboard() {
               </div>
             )}
             {(qrMode === "join" || ((qrMode === "rsvp" || qrMode === "checkin") && qrEventId)) && (
-              <div className="flex flex-col items-center gap-5">
-                <div className="p-5 rounded-3xl" style={{ background: "#fff" }}>
-                  <QRCodeSVG
-                    value={qrUrl}
-                    size={220}
-                    bgColor="#ffffff"
-                    fgColor="#0a1a0f"
-                    level="H"
-                    includeMargin={false}
-                  />
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="text-white font-semibold text-sm">
-                    {qrMode === "join" ? `Join ${club.name}` : qrMode === "rsvp" ? `RSVP: ${selectedEvent?.title}` : `Check-In: ${selectedEvent?.title}`}
+              <div className="flex flex-col items-center gap-6 py-4">
+
+                {/* Title */}
+                <div className="text-center">
+                  <p className="text-white/40 text-xs font-semibold uppercase tracking-[0.2em] mb-1">
+                    {qrMode === "join" ? "Join the club" : qrMode === "rsvp" ? "RSVP for event" : "Check in to event"}
                   </p>
-                  <p className="text-white/40 text-xs font-mono break-all max-w-xs">{qrUrl}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(qrUrl); toast.success("Link copied!"); }}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95"
-                    style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                  <h2
+                    className="text-white text-xl sm:text-2xl font-bold leading-tight"
+                    style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
-                    <Copy className="w-3.5 h-3.5" />
-                    Copy Link
+                    {qrMode === "join" ? club.name : selectedEvent?.title ?? ""}
+                  </h2>
+                </div>
+
+                {/* QR code */}
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-3xl bg-[#4CAF50]/20 blur-2xl scale-110 pointer-events-none" />
+                  <div className="relative p-5 sm:p-7 bg-white rounded-3xl shadow-2xl">
+                    <QRCodeSVG
+                      value={qrUrl}
+                      size={220}
+                      bgColor="#ffffff"
+                      fgColor="#1a1a1a"
+                      level="H"
+                      includeMargin={false}
+                    />
+                  </div>
+                  {(["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"] as const).map((pos) => (
+                    <div
+                      key={pos}
+                      className={`absolute ${pos} w-6 h-6 border-[#4CAF50] ${
+                        pos.includes("top") && pos.includes("left")    ? "border-t-2 border-l-2 rounded-tl-2xl" :
+                        pos.includes("top") && pos.includes("right")   ? "border-t-2 border-r-2 rounded-tr-2xl" :
+                        pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-2xl" :
+                        "border-b-2 border-r-2 rounded-br-2xl"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                {/* OR ENTER THIS CODE / copy pill */}
+                <div className="flex flex-col items-center gap-2 w-full">
+                  <p
+                    className="text-xs font-semibold uppercase tracking-[0.25em] transition-colors duration-300"
+                    style={{ color: qrTabCopied ? "#4CAF50" : "rgba(255,255,255,0.35)" }}
+                  >
+                    {qrTabCopied ? "Copied!" : "Or enter this code"}
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(qrUrl);
+                      setQrTabCopied(true);
+                      setTimeout(() => setQrTabCopied(false), 1800);
+                    }}
+                    title="Click to copy"
+                    aria-label="Copy QR link"
+                    className="group relative flex items-center gap-3 px-6 py-3.5 rounded-2xl transition-all duration-300 active:scale-95 touch-manipulation overflow-hidden w-full justify-center"
+                    style={{
+                      background: qrTabCopied ? "rgba(76,175,80,0.18)" : "rgba(255,255,255,0.06)",
+                      border: qrTabCopied ? "1.5px solid rgba(76,175,80,0.55)" : "1.5px solid rgba(255,255,255,0.12)",
+                      boxShadow: qrTabCopied ? "0 0 28px 4px rgba(76,175,80,0.25), inset 0 0 16px rgba(76,175,80,0.10)" : "none",
+                    }}
+                  >
+                    {qrTabCopied && (
+                      <span
+                        className="pointer-events-none absolute inset-0 rounded-2xl"
+                        style={{ background: "radial-gradient(circle at 50% 50%, rgba(76,175,80,0.22) 0%, transparent 70%)", animation: "otb-code-flash 0.45s ease-out forwards" }}
+                      />
+                    )}
+                    <span
+                      className="relative font-mono font-bold tracking-[0.2em] text-base sm:text-lg select-all transition-colors duration-300 break-all"
+                      style={{ color: qrTabCopied ? "#6EE77A" : "#ffffff", textShadow: qrTabCopied ? "0 0 18px rgba(76,175,80,0.70)" : "none" }}
+                    >
+                      {qrUrl.replace(/^https?:\/\/[^/]+/, "") || "/"}
+                    </span>
+                    <span className="relative text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0">
+                      {qrTabCopied ? <Check className="w-4 h-4" style={{ color: "#4CAF50" }} /> : <Copy className="w-4 h-4" />}
+                    </span>
                   </button>
                 </div>
+
+                {/* Full URL hint */}
+                <p className="text-white/25 text-xs font-mono tracking-wide break-all text-center max-w-xs">{qrUrl}</p>
+
               </div>
             )}
             {(qrMode === "rsvp" || qrMode === "checkin") && !qrEventId && (
