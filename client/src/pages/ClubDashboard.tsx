@@ -3214,7 +3214,9 @@ export default function ClubDashboard() {
     <div
       className="min-h-screen"
       style={{
-        background: "oklch(0.20 0.06 145)",
+        // When shader is active, use transparent background so the fixed canvas shows through.
+        // When a custom/preset image is set, use it as the page background.
+        background: useShaderDefault ? "transparent" : "oklch(0.20 0.06 145)",
         ...(clubBgImage ? {
           backgroundImage: `url(${clubBgImage})`,
           backgroundSize: "cover",
@@ -3226,11 +3228,13 @@ export default function ClubDashboard() {
       {/* Default animated shader background — shown when no custom/preset background is set */}
       {useShaderDefault && (
         <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-          <ShaderBackground className="absolute inset-0 w-full h-full opacity-60" />
-          {/* Subtle dark overlay to keep UI elements legible over the shader */}
+          <div className="absolute inset-0" style={{ opacity: 0.75 }}>
+            <ShaderBackground className="w-full h-full" />
+          </div>
+          {/* Dark overlay for legibility */}
           <div
             className="absolute inset-0"
-            style={{ background: "oklch(0.12 0.06 145 / 0.55)" }}
+            style={{ background: "oklch(0.10 0.05 145 / 0.50)" }}
           />
         </div>
       )}

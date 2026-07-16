@@ -155,6 +155,7 @@ import { ClubHero } from "@/components/club/ClubHero";
 import { ClubTabs } from "@/components/club/ClubTabs";
 import { ClubPromoModal } from "@/components/club/ClubPromoModal";
 import { ClubQRProjectionModal } from "@/components/club/ClubQRProjectionModal";
+import { ShaderBackground } from "@/components/ui/shader-r";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1429,8 +1430,20 @@ export default function ClubProfile() {
   // this re-derives automatically whenever the owner saves a new color in Settings.
   const accent = club?.accentColor ?? (isDark ? "#4CAF50" : "#436850");
 
+  const clubBgForProfile = (club as { backgroundImage?: string | null }).backgroundImage ?? club.bannerUrl ?? null;
+  const useShaderDefault = !clubBgForProfile;
+
   return (
-    <div className={`min-h-screen ${bg}`}>
+    <div className={`min-h-screen ${useShaderDefault ? "" : bg}`} style={{ background: useShaderDefault ? "transparent" : undefined }}>
+      {/* Default animated shader background */}
+      {useShaderDefault && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <div className="absolute inset-0" style={{ opacity: 0.75 }}>
+            <ShaderBackground className="w-full h-full" />
+          </div>
+          <div className="absolute inset-0" style={{ background: "oklch(0.10 0.05 145 / 0.50)" }} />
+        </div>
+      )}
       <div className="flex h-[100dvh] overflow-hidden">
 
         {/* ── LEFT SIDEBAR — Partiful-style: icon rail expands to icon+label rows on hover ─── */}
