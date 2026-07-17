@@ -129,7 +129,11 @@ describe("Leagues server auth middleware", () => {
 
 describe("LeagueDashboard fetch credentials", () => {
   it("includes credentials on match result POST", () => {
-    expect(leagueDashboardCode).toContain('method: "POST",\n      credentials: "include",\n      headers: { "Content-Type": "application/json" },\n      body: JSON.stringify({ result })');
+    // Uses plain fetch with credentials + commissioner override flag in body
+    expect(leagueDashboardCode).toContain('method: "POST",');
+    expect(leagueDashboardCode).toContain('credentials: "include",');
+    expect(leagueDashboardCode).toContain('headers: { "Content-Type": "application/json" },');
+    expect(leagueDashboardCode).toContain('commissionerOverride: true');
   });
 
   it("includes credentials on dispute resolve PATCH", () => {
@@ -145,31 +149,30 @@ describe("LeagueDashboard fetch credentials", () => {
   });
 
   it("includes credentials on join-requests fetch", () => {
-    expect(leagueDashboardCode).toContain('fetch(`/api/leagues/${leagueId}/join-requests`, { credentials: "include" })');
+    // Uses authFetch wrapper (which always includes credentials + Bearer token)
+    expect(leagueDashboardCode).toContain('authFetch(`/api/leagues/${leagueId}/join-requests`, { credentials: "include" })');
   });
 
   it("includes credentials on invites fetch", () => {
-    expect(leagueDashboardCode).toContain('fetch(`/api/leagues/${leagueId}/invites`, { credentials: "include" })');
+    // Uses authFetch wrapper (which always includes credentials + Bearer token)
+    expect(leagueDashboardCode).toContain('authFetch(`/api/leagues/${leagueId}/invites`, { credentials: "include" })');
   });
 
   it("includes credentials on push status fetch", () => {
-    expect(leagueDashboardCode).toContain('fetch(`/api/leagues/${leagueId}/push/status`, { credentials: "include" })');
+    // Uses authFetch wrapper (which always includes credentials + Bearer token)
+    expect(leagueDashboardCode).toContain('authFetch(`/api/leagues/${leagueId}/push/status`, { credentials: "include" })');
   });
 });
 
 describe("ClubProfile league creation credentials", () => {
   it("includes credentials on league creation POST", () => {
-    // The ClubProfile creates leagues via POST /api/leagues with credentials
-    expect(clubProfileCode).toContain('fetch("/api/leagues", {\n                              method: "POST",\n                              credentials: "include"');
+    // The ClubProfile creates leagues via apiFetch (which always includes credentials + Bearer token)
+    expect(clubProfileCode).toContain('apiFetch<{ leagueId?: string; id?: string }>("/api/leagues", {');
+    expect(clubProfileCode).toContain('method: "POST",');
   });
 
   it("includes credentials on join-request POST", () => {
-    // The join-request POST in ClubProfile includes credentials
-    expect(clubProfileCode).toContain('fetch(`/api/leagues/${lgId}/join-request`');
-    // Find the fetch block and verify credentials are present
-    const joinReqIdx = clubProfileCode.indexOf('fetch(`/api/leagues/${lgId}/join-request`');
-    expect(joinReqIdx).toBeGreaterThan(-1);
-    const block = clubProfileCode.slice(joinReqIdx, joinReqIdx + 200);
-    expect(block).toContain('credentials: "include"');
+    // The join-request POST in ClubProfile uses apiFetch (which always includes credentials + Bearer token)
+    expect(clubProfileCode).toContain('apiFetch(`/api/leagues/${lgId}/join-request`, { method: "POST" })');
   });
 });

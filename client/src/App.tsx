@@ -167,8 +167,8 @@ function Router() {
         <Route path={"/league/new"} component={CreateLeague} />
         <Route path={"/league-demo"} component={LeagueDemo} />
         <Route path={"/league/:leagueId/history"} component={LeagueHistory} />
-        <Route path={"/league/:leagueId"} component={LeagueDashboard} />
         <Route path={"/leagues/:leagueId/history"} component={LeagueHistory} />
+        <Route path={"/league/:leagueId"} component={LeagueDashboard} />
         <Route path={"/leagues/:leagueId"} component={LeagueDashboard} />
         <Route path={"/prep/:username"} component={MatchupPrep} />
         <Route path={"/prep"} component={MatchupPrep} />

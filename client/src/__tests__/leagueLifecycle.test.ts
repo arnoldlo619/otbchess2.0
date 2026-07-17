@@ -133,8 +133,9 @@ describe("Season Start Flow", () => {
   });
 
   it("pre-warms prep cache for players with chess.com usernames", () => {
-    // The prep cache pre-warming logic is present; the log was removed as part of console cleanup
-    expect(leaguesCode).toContain("[league-prep] Failed to pre-warm for");
+    // The pre-warm fires via prewarmPrepCacheForPairings; error is logged via logger.warn
+    expect(leaguesCode).toContain("[league-prep] Pre-warm error:");
+    expect(leaguesCode).toContain("prewarmPrepCacheForPairings");
   });
 });
 
@@ -143,20 +144,26 @@ describe("Match Result Reporting", () => {
     expect(leaguesCode).toContain('!["white_win", "black_win", "draw"].includes(result)');
   });
 
-  it("implements dual-confirmation flow", () => {
-    expect(leaguesCode).toContain('updateFields.resultStatus = "awaiting_confirmation"');
+  it("commissioner results are immediately finalized", () => {
+    // Simplified to commissioner-only reporting — no dual-confirmation needed
+    expect(leaguesCode).toContain('resultStatus: "completed"');
+    expect(leaguesCode).toContain("Result finalized by commissioner");
   });
 
-  it("handles disputed results when players disagree", () => {
-    expect(leaguesCode).toContain('updateFields.resultStatus = "disputed"');
+  it("commissioner can override or reset a result", () => {
+    // PATCH endpoint allows commissioner to override/reset; reset clears dual-confirmation fields
+    expect(leaguesCode).toContain("Clear dual-confirmation fields on reset");
+    expect(leaguesCode).toContain('resultStatus: result ? "completed" : "pending"');
   });
 
   it("auto-finalizes when commissioner reports", () => {
     expect(leaguesCode).toContain("Result finalized by commissioner");
   });
 
-  it("prevents duplicate reports from same player", () => {
-    expect(leaguesCode).toContain("You already reported a result");
+  it("prevents reporting on already-finalized matches", () => {
+    // Once a match is finalized, further reports are rejected with 409
+    expect(leaguesCode).toContain('resultStatus === "completed"');
+    expect(leaguesCode).toContain("Result already finalized");
   });
 });
 

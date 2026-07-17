@@ -1715,8 +1715,8 @@ export function extractProblemLines(
 
   for (const [, group] of Array.from(groups.entries())) {
     const totalGames = group.goodTokens.length + group.badTokens.length;
-    // Require at least 8 games per group with 3+ losses for statistically reliable divergence detection
-    if (totalGames < 8 || group.badTokens.length < 3) continue;
+    // Require at least 5 games per group with 3+ losses for statistically reliable divergence detection
+    if (totalGames < 5 || group.badTokens.length < 3) continue;
 
     const lossRate = group.badTokens.length / totalGames;
     if (lossRate < 0.35) continue; // only show lines with meaningful loss rate
