@@ -7132,13 +7132,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### E. Board and Result-Entry Cards
 - [x] Result controls ≥44px high (confirmed: minHeight 48px on result buttons, 44px on undo/clear)
 - [x] Selected results visually unmistakable (strong highlight, scale, border glow)
-- [ ] Result correction with confirmation dialog
+- [x] Result correction with confirmation dialog (inline confirmation strip on BoardCard: intercepts result changes when game.result !== "*", shows "Change to [result]?" with Confirm/Cancel)
 - [x] Save success/failure announcement (toast on every result entry)
 - [x] Keyboard result entry (1=White wins, 2=Black wins, 3=Draw — confirmed via useEffect)
 - [ ] Progressive disclosure for broadcast/device controls (collapse by default)
 
 ### F. Players & Check-in
-- [ ] Capacity and attendance summary in Players tab header
+- [x] Capacity and attendance summary in Players tab header (Registered X/Y with capacity bar + FULL/NEAR FULL badge; Checked In X/Y with % and progress bar; both color-coded green/amber/red)
 - [ ] Batch check-in safe and reversible
 - [ ] Destructive removal requires confirmation dialog
 - [ ] Icon actions need labels and ≥44px targets

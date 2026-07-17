@@ -104,6 +104,7 @@ import {
   Swords,
   Radio,
   Plug,
+  AlertTriangle,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -281,6 +282,7 @@ function BoardCard({
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
   const isComplete = game.result !== "*";
+  const [pendingCorrection, setPendingCorrection] = useState<Result | null>(null);
 
   return (
     <div
@@ -578,10 +580,18 @@ function BoardCard({
           // When a result is set, dim the non-selected buttons
           const hasResult = game.result && game.result !== "*";
           const isDimmed = !isSelected && !!hasResult;
+          const isPendingThis = pendingCorrection === opt.value;
           return (
             <button
               key={opt.value}
               onClick={() => {
+                // If a result is already set and director taps a DIFFERENT result → require confirmation
+                if (hasResult && !isSelected) {
+                  if (navigator.vibrate) navigator.vibrate(30);
+                  setPendingCorrection(opt.value);
+                  return;
+                }
+                // Tapping the already-selected result (deselect) or entering a fresh result
                 if (navigator.vibrate) navigator.vibrate(isSelected ? [30, 20, 30] : 40);
                 onResult(game.id, opt.value);
                 const resultLabel =
@@ -652,6 +662,56 @@ function BoardCard({
           </>
         )}
       </div>
+      )}
+
+      {/* Inline correction confirmation strip — shown when director taps a different result on a completed board */}
+      {!editMode && pendingCorrection && (
+        <div className={`mx-4 mb-4 rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs ${
+          isDark
+            ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+            : "bg-amber-50 border-amber-200 text-amber-700"
+        }`}>
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="flex-1 font-medium">
+            Change to{" "}
+            <strong>
+              {pendingCorrection === "1-0"
+                ? `${white?.name?.split(" ")[0] ?? "White"} wins`
+                : pendingCorrection === "0-1"
+                ? `${black?.name?.split(" ")[0] ?? "Black"} wins`
+                : "Draw"}
+            </strong>?
+          </span>
+          <button
+            onClick={() => {
+              if (navigator.vibrate) navigator.vibrate(40);
+              onResult(game.id, pendingCorrection);
+              const resultLabel =
+                pendingCorrection === "1-0" ? `${white?.name ?? "White"} wins`
+                : pendingCorrection === "0-1" ? `${black?.name ?? "Black"} wins`
+                : "Draw";
+              toast.success(`Board ${game.board}: corrected → ${resultLabel}`);
+              setPendingCorrection(null);
+            }}
+            className={`px-2.5 py-1 rounded-lg font-semibold transition-all active:scale-95 ${
+              isDark
+                ? "bg-amber-500/25 hover:bg-amber-500/40 text-amber-300"
+                : "bg-amber-100 hover:bg-amber-200 text-amber-700"
+            }`}
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => setPendingCorrection(null)}
+            className={`px-2.5 py-1 rounded-lg font-medium transition-all active:scale-95 ${
+              isDark
+                ? "bg-white/06 hover:bg-white/10 text-white/50"
+                : "bg-white hover:bg-[#FBFADA] text-[#436850]/60 border border-[#ADBC9F]"
+            }`}
+          >
+            Cancel
+          </button>
+        </div>
       )}
     </div>
   );
@@ -4923,7 +4983,117 @@ export default function Director() {
           {/* ── Players Tab ─────────────────────────────────────────────────── */}
           {activeTab === "players" && (
             <div className="space-y-3">
-              {/* ── Search + Filter Toolbar ──────────────────────────────────────── */}
+              {/* ── Capacity + Attendance Summary Strip ─────────────────────────── */}
+              {(() => {
+                const total = state.players.length;
+                const maxCap = tournamentConfig?.maxPlayers ?? 0;
+                const checkedIn = checkedInIds.size;
+                const capacityPct = maxCap > 0 ? Math.min(100, Math.round((total / maxCap) * 100)) : null;
+                const checkInPct = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
+                const isNearCapacity = capacityPct !== null && capacityPct >= 90;
+                const isFullCapacity = capacityPct !== null && capacityPct >= 100;
+                return (
+                  <div className={`rounded-xl border p-3 ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
+                  }`}>
+                    <div className="flex flex-wrap gap-3">
+                      {/* Registered players */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Users className={`w-3.5 h-3.5 flex-shrink-0 ${
+                          isDark ? "text-white/40" : "text-[#436850]"
+                        }`} />
+                        <div>
+                          <div className={`text-xs font-medium ${
+                            isDark ? "text-white/60" : "text-[#436850]/70"
+                          }`}>Registered</div>
+                          <div className={`text-sm font-bold tabular-nums ${
+                            isFullCapacity
+                              ? "text-red-400"
+                              : isNearCapacity
+                              ? "text-amber-400"
+                              : isDark ? "text-white/90" : "text-[#12372A]"
+                          }`}>
+                            {total}{maxCap > 0 ? ` / ${maxCap}` : ""}
+                            {isFullCapacity && <span className="ml-1 text-[10px] font-semibold text-red-400">• FULL</span>}
+                            {isNearCapacity && !isFullCapacity && <span className="ml-1 text-[10px] font-semibold text-amber-400">• NEAR FULL</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Capacity progress bar */}
+                      {capacityPct !== null && (
+                        <div className="flex-1 min-w-[80px] flex flex-col justify-center gap-1">
+                          <div className={`text-[10px] font-medium ${
+                            isDark ? "text-white/40" : "text-[#436850]/60"
+                          }`}>{capacityPct}% capacity</div>
+                          <div className={`h-1.5 rounded-full overflow-hidden ${
+                            isDark ? "bg-white/10" : "bg-[#ADBC9F]/30"
+                          }`}>
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                isFullCapacity ? "bg-red-400" : isNearCapacity ? "bg-amber-400" : "bg-[#4CAF50]"
+                              }`}
+                              style={{ width: `${capacityPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Divider */}
+                      <div className={`w-px self-stretch ${
+                        isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"
+                      }`} />
+
+                      {/* Check-in status */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 ${
+                          checkedIn === total && total > 0
+                            ? "text-[#4CAF50]"
+                            : isDark ? "text-white/40" : "text-[#436850]"
+                        }`} />
+                        <div>
+                          <div className={`text-xs font-medium ${
+                            isDark ? "text-white/60" : "text-[#436850]/70"
+                          }`}>Checked In</div>
+                          <div className={`text-sm font-bold tabular-nums ${
+                            checkedIn === total && total > 0
+                              ? "text-[#4CAF50]"
+                              : isDark ? "text-white/90" : "text-[#12372A]"
+                          }`}>
+                            {checkedIn} / {total}
+                            {total > 0 && (
+                              <span className={`ml-1 text-[10px] font-medium ${
+                                isDark ? "text-white/40" : "text-[#436850]/60"
+                              }`}>({checkInPct}%)</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Check-in progress bar */}
+                      {total > 0 && (
+                        <div className="flex-1 min-w-[80px] flex flex-col justify-center gap-1">
+                          <div className={`text-[10px] font-medium ${
+                            isDark ? "text-white/40" : "text-[#436850]/60"
+                          }`}>{checkInPct}% checked in</div>
+                          <div className={`h-1.5 rounded-full overflow-hidden ${
+                            isDark ? "bg-white/10" : "bg-[#ADBC9F]/30"
+                          }`}>
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                checkedIn === total ? "bg-[#4CAF50]" : "bg-blue-400"
+                              }`}
+                              style={{ width: `${checkInPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Search + Filter Toolbar ─────────────────────────────────────── */}
               <div className={`rounded-xl border p-3 space-y-3 ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
               }`}>
