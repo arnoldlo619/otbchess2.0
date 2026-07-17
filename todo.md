@@ -7184,3 +7184,131 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Round progression unit tests (6-player multi-round, repeat-opponent avoidance)
 - [x] Result entry and correction unit tests (7 tests: 1-0, 0-1, ½-½, bye skip, correction 1-0→½-½, color history, unrelated players)
 - [ ] Finalization unit tests
+
+## Phase 5 — Clubs, League, Tools and Chess Training Ecosystem Redesign
+
+### A. Clubs Discovery (/clubs)
+- [ ] Single canonical search bar (name, location, category, description)
+- [ ] Filters: country/region, club type, sort order, verified/active
+- [ ] URL-encoded search params
+- [ ] Clear result count
+- [ ] Useful empty state
+- [ ] Consistent card aspect ratios with high-quality image fallback
+- [ ] Membership count, location, category, verified badge
+- [ ] Featured clubs clearly distinguished
+- [ ] No horizontally clipped carousel cards
+- [ ] Mobile filter drawer
+- [ ] Efficient rendering for large directories (virtualization)
+
+### B. Public Club Profile (/clubs/:id)
+- [ ] Premium club identity hero/banner (no collision with nav)
+- [ ] Tabs: Home, Feed, Events, Tournaments, League, Members, About
+- [ ] Public vs owner action separation
+- [ ] Long names and missing imagery graceful handling
+- [ ] Mobile tab scroll without overflow
+- [ ] Join/follow action
+- [ ] Upcoming events, recent tournaments, league info
+- [ ] Members/leaders where privacy allows
+- [ ] About and contact information
+
+### C. Club Owner Workspace (/clubs/:id/home)
+- [ ] Application shell with sidebar navigation
+- [ ] Dashboard hierarchy: status → upcoming → tasks → activity → growth
+- [ ] Actionable information prioritized (not equally-weighted metric cards)
+- [ ] Overview, Feed, Members, Events, Tournaments, League, Content, Settings areas
+
+### D. Club Feed
+- [ ] Post hierarchy with author identity, date/time, media
+- [ ] Event attachments, polls, comments/reactions
+- [ ] Empty states
+- [ ] Composer with moderation controls
+- [ ] Safe confirmation for deletion
+- [ ] No rough transition between banner/sidebar/feed
+- [ ] No oversized blank header consuming first viewport
+
+### E. Club Creation
+- [ ] Progressive flow: name → location → type → description → image → public/private → review
+- [ ] Slug preview
+- [ ] Duplicate-name feedback
+- [ ] Image crop guidance
+- [ ] Clear public visibility explanation
+- [ ] Success state with next recommended actions
+
+### F. League Dashboard
+- [ ] Season identity and status header
+- [ ] Current week + featured matchup
+- [ ] Fix nested white scrollbars
+- [ ] Fix cramped right-side matchup panel
+- [ ] Fix tiny text
+- [ ] Desktop: main content + contextual side panel
+- [ ] Tablet/mobile: stacked content or drawer
+- [ ] No competing vertical scroll containers
+
+### G. League Standings
+- [ ] Semantic responsive table (rank, player, rating, W/D/L, points, form)
+- [ ] Scoring explanation
+- [ ] Movement indicators with text alternatives
+- [ ] Mobile card format
+- [ ] Sticky headers only when useful
+- [ ] No clipped usernames or tooltip-only details
+
+### H. Matchups, Schedule and History
+- [ ] Matchup cards: board, players, ratings, color, status, result, due time
+- [ ] Schedule: week/date grouping, current week highlight, completed/future states
+- [ ] History: search, filters, result, opponent, date, rating change, link to details
+
+### I. Tools Hub (/training)
+- [ ] Curated chess preparation workspace layout
+- [ ] Bento grid with proper card hierarchy
+- [ ] Tool cards explain: what, who, input, outcome, status (internal/external/beta/coming soon)
+- [ ] Image-overlay readability
+- [ ] Consistent CTA placement
+- [ ] External-tool labeling
+- [ ] Coming Soon non-actionable presentation
+- [ ] Mobile stacking without empty spaces
+
+### J. Openings Library
+- [ ] Correct dark and light themes
+- [ ] Balanced featured and repertoire grids
+- [ ] Search and filters
+- [ ] White and Black groupings with difficulty and line count
+- [ ] Clear demo/locked state
+- [ ] Accessible board previews (no 64-square a11y noise)
+- [ ] Consistent card heights
+- [ ] Mobile layout
+- [ ] Clear CTA into study or drill mode
+
+### K. Matchup Prep
+- [ ] Coherent tool workspace (input → loading → report)
+- [ ] Player confirmation step
+- [ ] Distinguish observed data from inferred recommendations
+- [ ] Source-game sample size shown
+- [ ] Incomplete-data states
+- [ ] Charts only where they clarify real patterns
+- [ ] High information density without tiny typography
+- [ ] Do not overstate AI certainty
+
+### L. Repertoire and Video Entry Points
+- [ ] Shared application shell with tool identity
+- [ ] Navigation, theme, error states, loading states
+- [ ] Responsive behavior
+- [ ] External navigation clearly marked
+
+### M. Performance
+- [ ] Club image lazy loading
+- [ ] Search debouncing
+- [ ] List virtualization for large directories
+- [ ] League table efficient rendering
+- [ ] Route prefetching
+- [ ] No heavy module loading on Tools landing page
+
+### N. Testing
+- [ ] Club discovery filters and navigation tests
+- [ ] Public club profile tests
+- [ ] Owner vs public action separation tests
+- [ ] League navigation and standings tests
+- [ ] Tools cards and external-link tests
+- [ ] Openings filters and demo state tests
+- [ ] Matchup Prep loading/success/failure tests
+- [ ] Dark/light theme tests
+- [ ] Phases 1-4 regression tests remain green

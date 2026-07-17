@@ -1,7 +1,6 @@
 /**
  * ClubTabs — Premium horizontal tab bar for the club profile page.
- * Four tabs: Feed | Events | Members | Leagues
- * (Tournaments are accessible via the Events tab filter chips)
+ * Six tabs: Home | Feed | Events | Members | Leagues | About
  */
 import React from "react";
 import {
@@ -9,9 +8,11 @@ import {
   EventsIcon,
   MembersIcon,
   LeaguesIcon,
+  HomeIcon,
 } from "@/components/OtbIcons";
+import { Info } from "lucide-react";
 
-export type ClubTab = "feed" | "events" | "members" | "leagues";
+export type ClubTab = "home" | "feed" | "events" | "members" | "leagues" | "about";
 
 interface TabConfig {
   id: ClubTab;
@@ -29,12 +30,19 @@ interface ClubTabsProps {
   isDark: boolean;
 }
 
+// Lucide wrapper to match OtbIcon interface
+function AboutIcon({ size = 20, accentColor }: { size?: number; accentColor?: string }) {
+  return <Info size={size} color={accentColor || "currentColor"} strokeWidth={2} /> as React.ReactElement;
+}
+
 export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark }: ClubTabsProps) {
   const tabs: TabConfig[] = [
+    { id: "home",    label: "Home",    icon: HomeIcon },
     { id: "feed",    label: "Feed",    icon: FeedIcon },
     { id: "events",  label: "Events",  icon: EventsIcon },
     { id: "members", label: "Members", icon: MembersIcon },
     { id: "leagues", label: "Leagues", icon: LeaguesIcon },
+    { id: "about",   label: "About",   icon: AboutIcon },
   ];
 
   return (
@@ -71,7 +79,7 @@ export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark
             aria-selected={isActive}
             aria-controls={`tabpanel-${tab.id}`}
             onClick={() => onChange(tab.id)}
-            className="relative flex items-center gap-1.5 px-3.5 py-2 rounded-[14px] text-xs font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 group"
+            className="relative flex items-center gap-1.5 px-3 py-2 rounded-[14px] text-xs font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 group"
             style={{
               background: isActive
                 ? isDark

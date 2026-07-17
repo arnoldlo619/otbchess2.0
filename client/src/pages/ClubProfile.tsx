@@ -135,6 +135,7 @@ import {
   MoreVertical,
   Sparkles,
   ArrowRight,
+  Info,
 } from "lucide-react";
 import {
   FeedIcon as OtbFeed,
@@ -142,6 +143,7 @@ import {
   MembersIcon as OtbMembers,
   TournamentsIcon as OtbTournaments,
   LeaguesIcon as OtbLeagues,
+  HomeIcon as OtbHome,
 } from "@/components/OtbIcons";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -878,22 +880,23 @@ export default function ClubProfile() {
   const isDark = theme === "dark";
 
   // Read optional ?tab= query param for deep-linking (e.g. from League Dashboard champion banner)
-  const initialTab = (() => {
+  type ClubTabId = "home" | "feed" | "events" | "members" | "leagues" | "about";
+  const initialTab: ClubTabId = (() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
     const p = new URLSearchParams(search);
     const t = p.get("tab");
-    const valid = ["events", "members", "feed", "leagues"] as const;
-    return (valid as readonly string[]).includes(t ?? "") ? (t as typeof valid[number]) : "feed";
+    const valid: ClubTabId[] = ["home", "events", "members", "feed", "leagues", "about"];
+    return valid.includes(t as ClubTabId) ? (t as ClubTabId) : "home";
   })();
 
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"events" | "members" | "feed" | "leagues">(initialTab);
+  const [activeTab, setActiveTab] = useState<ClubTabId>(initialTab);
   // Tracks which tabs the user has visited — clears badge indicators on first visit
   const [seenTabs, setSeenTabs] = useState<Set<string>>(new Set([initialTab]));
-  const handleTabChange = (tab: "events" | "members" | "feed" | "leagues") => {
+  const handleTabChange = (tab: ClubTabId) => {
     setActiveTab(tab);
     setSeenTabs(prev => { const next = new Set(prev); next.add(tab); return next; });
   };
@@ -1487,19 +1490,23 @@ export default function ClubProfile() {
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
           <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
-            {(["feed", "events", "members", "leagues"] as const).map((t) => {
+            {(["home", "feed", "events", "members", "leagues", "about"] as const).map((t) => {
               const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {
+                home: <OtbHome size={22} accentColor={isActive ? accent : undefined} />,
                 feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
                 events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
                 members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
                 leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
+                about: <Info size={22} color={isActive ? accent : undefined} />,
               };
               const labelMap: Record<string, string> = {
+                home: "Home",
                 feed: "Feed",
                 events: "Events",
                 members: "Members",
                 leagues: "Leagues",
+                about: "About",
               };
               const badgeMap: Record<string, number> = {
                 events: clubEvents.length + tournaments.length + liveTournaments.length,
@@ -1681,6 +1688,171 @@ export default function ClubProfile() {
             {/* ── PADDED CONTENT BELOW HERO ─────────────────────────── */}
             <div className="px-4 lg:pl-[88px] lg:pr-8 xl:pl-[96px] xl:pr-12 py-5">
               <div className="max-w-5xl mx-auto">
+
+        {/* ── Home tab (overview) ─────────────────────────────────────────── */}
+        {activeTab === "home" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Onboarding checklist for new club owners */}
+            {isOwner && club.memberCount <= 3 && (() => {
+              const steps = [
+                { done: !!club.description && club.description.length > 20, label: "Write a club description" },
+                { done: !!club.bannerUrl, label: "Add a banner image" },
+                { done: club.memberCount > 1, label: "Invite your first member" },
+                { done: (liveTournaments.length + (tournaments.filter(t => t.status === "upcoming" || t.status === "active").length)) > 0, label: "Host a tournament" },
+              ];
+              const completed = steps.filter((s) => s.done).length;
+              if (completed === steps.length) return null;
+              return (
+                <div className={`rounded-3xl border ${isDark ? "border-[#4CAF50]/25 bg-[#4CAF50]/5" : "border-[#436850]/20 bg-[#436850]/5"} p-5`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h2 className={`text-sm font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Set Up Your Club</h2>
+                      <p className={`text-xs ${textMuted} mt-0.5`}>{completed} of {steps.length} steps complete</p>
+                    </div>
+                    <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"}`}>{Math.round((completed / steps.length) * 100)}%</div>
+                  </div>
+                  <div className={`h-1.5 rounded-full mb-4 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`}>
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(completed / steps.length) * 100}%`, background: "oklch(0.55 0.13 145)" }} />
+                  </div>
+                  <div className="space-y-2">
+                    {steps.map((step, i) => (
+                      <div key={i} className={`flex items-center gap-3 text-sm ${step.done ? textMuted : textMain}`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${step.done ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40" : "bg-[#436850]/15 border-[#436850]/30" : isDark ? "border-white/20 bg-transparent" : "border-[#ADBC9F] bg-transparent"}`}>
+                          {step.done && <Check className={`w-3 h-3 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />}
+                        </div>
+                        <span className={step.done ? "line-through opacity-50" : ""}>{step.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* About snippet */}
+            {club.description && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>About</h3>
+                  <button onClick={() => handleTabChange("about")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>More →</button>
+                </div>
+                <p className={`text-sm leading-relaxed line-clamp-3 ${isDark ? "text-white/75" : "text-[#12372A]/85"}`}>{club.description}</p>
+              </div>
+            )}
+
+            {/* Upcoming events preview */}
+            {(() => {
+              const upcoming = [
+                ...clubEvents.filter(e => new Date(e.startAt) >= new Date()).slice(0, 2).map(e => ({ type: "event" as const, title: e.title, date: e.startAt })),
+                ...liveTournaments.filter(t => new Date(t.date || Date.now()) >= new Date(new Date().toDateString())).slice(0, 2).map(t => ({ type: "tournament" as const, title: t.name, date: t.date || new Date().toISOString() })),
+              ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 3);
+              if (upcoming.length === 0) return null;
+              return (
+                <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                  <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                    <div className="flex items-center gap-2">
+                      <Calendar className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                      <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Upcoming</h3>
+                    </div>
+                    <button onClick={() => handleTabChange("events")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View all →</button>
+                  </div>
+                  <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                    {upcoming.map((item, i) => (
+                      <div key={i} className={`flex items-center gap-3 px-5 py-3`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${item.type === "tournament" ? isDark ? "bg-amber-500/15" : "bg-amber-50" : isDark ? "bg-[#4CAF50]/15" : "bg-[#436850]/10"}`}>
+                          {item.type === "tournament" ? <Trophy className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} /> : <Calendar className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${textMain}`}>{item.title}</p>
+                          <p className={`text-xs ${textMuted}`}>{new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Recent activity preview */}
+            {feedEvents.length > 0 && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                  <div className="flex items-center gap-2">
+                    <Zap className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Recent Activity</h3>
+                  </div>
+                  <button onClick={() => handleTabChange("feed")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>See all →</button>
+                </div>
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"} max-h-[200px] overflow-hidden`}>
+                  {feedEvents.slice(0, 3).map((event) => (
+                    <div key={event.id} className="px-5 py-3 flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isDark ? "bg-[#4CAF50]" : "bg-[#436850]"}`} />
+                      <p className={`text-sm truncate flex-1 ${textMain}`}>{event.description || event.detail?.slice(0, 60) || "Activity"}</p>
+                      <span className={`text-xs flex-shrink-0 ${textMuted}`}>{new Date(event.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top members preview */}
+            {members.length > 0 && (() => {
+              const ownerFirst = [...members].sort((a, b) => {
+                const ro = { owner: 0, director: 1, member: 2 };
+                return (ro[a.role as keyof typeof ro] ?? 2) - (ro[b.role as keyof typeof ro] ?? 2);
+              });
+              const top = ownerFirst.slice(0, 4);
+              return (
+                <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                  <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                    <div className="flex items-center gap-2">
+                      <Users className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                      <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Members</h3>
+                      <span className={`text-xs ${textMuted}`}>{members.length}</span>
+                    </div>
+                    <button onClick={() => handleTabChange("members")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View all →</button>
+                  </div>
+                  <div className="flex items-center gap-3 px-5 py-4">
+                    {top.map((m) => (
+                      <div key={m.userId} className="flex flex-col items-center gap-1">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
+                          <PlayerAvatar username={m.chesscomUsername ?? m.lichessUsername ?? m.displayName} platform={m.chesscomUsername ? "chesscom" : m.lichessUsername ? "lichess" : undefined} name={m.displayName} size={40} showBadge={false} />
+                        </div>
+                        <span className={`text-[10px] font-medium truncate max-w-[56px] ${textMuted}`}>{m.displayName?.split(" ")[0]}</span>
+                      </div>
+                    ))}
+                    {members.length > 4 && (
+                      <button onClick={() => handleTabChange("members")} className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? "bg-white/8 text-white/50" : "bg-[#ADBC9F]/30 text-[#436850]"}`}>+{members.length - 4}</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* League preview */}
+            {clubLeagues.length > 0 && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                  <div className="flex items-center gap-2">
+                    <Award className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                    <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>League</h3>
+                  </div>
+                  <button onClick={() => handleTabChange("leagues")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View →</button>
+                </div>
+                <div className="px-5 py-3">
+                  {clubLeagues.filter(lg => lg.status === "active").slice(0, 1).map(lg => (
+                    <div key={lg.id} className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-sm font-semibold ${textMain}`}>{lg.name}</p>
+                        <p className={`text-xs ${textMuted}`}>Week {lg.currentWeek} of {lg.totalWeeks} · {lg.playerCount} players</p>
+                      </div>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: "oklch(0.55 0.13 145 / 0.15)", color: "oklch(0.55 0.13 145)" }}>Active</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (() => {
@@ -3654,14 +3826,138 @@ export default function ClubProfile() {
                 </div>
               );
             })()}
+                    </div>
+        )}
+
+        {/* ── About tab ───────────────────────────────────────────────────── */}
+        {activeTab === "about" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Description */}
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className={`text-base font-bold uppercase tracking-wider ${isDark ? "text-white" : "text-[#436850]"}`}>About {club.name}</h2>
+                {(isOwner || isDirector) && (
+                  <button onClick={() => setShowEditModal(true)} className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]"}`}>Edit</button>
+                )}
+              </div>
+              {club.description ? (
+                <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{club.description}</p>
+              ) : (
+                <p className={`text-sm italic ${textMuted}`}>No description yet.</p>
+              )}
+              {/* Inline details grid */}
+              <div className={`grid grid-cols-2 gap-3 pt-4 mt-4 border-t ${isDark ? "border-white/8" : "border-[#ADBC9F]/50"}`}>
+                <div className="flex items-center gap-2">
+                  <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{flag} {club.location || "Location not set"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Hash className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{categoryLabel}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>Founded {formatYear(club.foundedAt)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Crown className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.ownerName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.memberCount} members</span>
+                </div>
+                {club.website && (
+                  <div className="col-span-2 flex items-center gap-2">
+                    <Globe className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <a href={club.website.startsWith("http") ? club.website : `https://${club.website}`} target="_blank" rel="noopener noreferrer" className={`text-xs font-medium truncate transition-opacity hover:opacity-70 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>
+                      {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                    </a>
+                    <ExternalLink className={`w-3 h-3 flex-shrink-0 ${textMuted}`} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* What to Expect */}
+            {club.whatToExpect && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-[#436850]"}`}>What to Expect</h2>
+                <p className={`text-sm leading-relaxed ${isDark ? "text-white/75" : "text-[#12372A]/85"}`}>{club.whatToExpect}</p>
+              </div>
+            )}
+
+            {/* Links & Contact */}
+            {(club.discord || club.twitter || club.instagram || (club as any).tiktok || club.youtube || (club as any).linktree || (club as any).meetingDay || (club as any).contactEmail || (club as any).contactPhone || (club as any).facebook || (club as any).xUrl || (club as any).meetupUrl) && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Links & Contact</h2>
+                <div className="flex flex-col gap-1.5">
+                  {club.discord && (
+                    <a href={club.discord} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
+                      <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Discord</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.instagram && (
+                    <a href={club.instagram.startsWith("http") ? club.instagram : `https://instagram.com/${club.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
+                      <Camera className={`w-4 h-4 text-pink-500`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Instagram</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.youtube && (
+                    <a href={club.youtube} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
+                      <Play className={`w-4 h-4 text-red-500`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>YouTube</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {((club as any).meetingDay || (club as any).meetingTime) && (
+                    <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-white/3" : "bg-[#FBFADA]/70"}`}>
+                      <Clock className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                      <div>
+                        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
+                          {[(club as any).meetingDay, (club as any).meetingTime].filter(Boolean).join(" · ")}
+                        </p>
+                        {(club as any).meetingNotes && <p className={`text-xs mt-0.5 ${textMuted}`}>{(club as any).meetingNotes}</p>}
+                      </div>
+                    </div>
+                  )}
+                  {(club as any).contactEmail && (
+                    <a href={`mailto:${(club as any).contactEmail}`} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
+                      <Mail className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{(club as any).contactEmail}</span>
+                    </a>
+                  )}
+                  {(club as any).contactPhone && (
+                    <a href={`tel:${(club as any).contactPhone}`} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
+                      <Phone className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{(club as any).contactPhone}</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Contact owner CTA for non-members */}
+            {user && !isOwner && !isDirector && (
+              <button
+                onClick={() => setShowContactOwner(true)}
+                className={`w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border text-sm font-semibold transition-all ${isDark ? "border-white/15 text-white/70 hover:bg-white/5" : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"}`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Contact Club Owner
+              </button>
+            )}
           </div>
         )}
+
             </div>{/* close max-w-6xl */}
           </div>{/* close padded content */}
           </div>{/* close scrollable */}
         </div>{/* close main content area */}
       </div>{/* close flex h-screen */}
-
       {/* ── Tournament Wizard (owner-only, pre-linked to this club) ──────────── */}
       <TournamentWizard
         open={showWizard}
@@ -4449,13 +4745,15 @@ export default function ClubProfile() {
           paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {(["feed", "events", "members", "leagues"] as const).map((t) => {
+        {(["home", "feed", "events", "members", "leagues", "about"] as const).map((t) => {
           const isActive = activeTab === t;
           const iconMap: Record<string, React.ReactNode> = {
-            feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
-            events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
-            members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
-            leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
+            home: <OtbHome size={20} accentColor={isActive ? accent : undefined} />,
+            feed: <OtbFeed size={20} accentColor={isActive ? accent : undefined} />,
+            events: <OtbEvents size={20} accentColor={isActive ? accent : undefined} />,
+            members: <OtbMembers size={20} accentColor={isActive ? accent : undefined} />,
+            leagues: <OtbLeagues size={20} accentColor={isActive ? accent : undefined} />,
+            about: <Info size={20} color={isActive ? accent : "oklch(0.45 0.06 145)"} />,
           };
           return (
             <button
