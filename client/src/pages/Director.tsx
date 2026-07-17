@@ -2403,6 +2403,8 @@ export default function Director() {
   // ── End / Delete tournament confirm state ────────────────────────────────
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // ── Player removal confirmation (registration phase) ─────────────────────
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   // ── Bulk ELO refresh state ────────────────────────────────────────────────
   const [isRefreshingElo, setIsRefreshingElo] = useState(false);
@@ -3433,7 +3435,7 @@ export default function Director() {
                           Check-In Roster
                         </span>
                       </div>
-                      {/* Check-in + Payment count badges */}
+                      {/* Check-in + Payment count badges + batch actions */}
                       <div className="flex flex-wrap items-center gap-1.5">
                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
                           checkedInIds.size === state.players.length && state.players.length > 0
@@ -3443,6 +3445,41 @@ export default function Director() {
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>{checkedInIds.size} / {state.players.length} checked in</span>
                         </div>
+                        {/* Batch check-in / uncheck-all */}
+                        {state.players.length > 0 && (
+                          checkedInIds.size < state.players.length ? (
+                            <button
+                              onClick={() => {
+                                const all = new Set(state.players.map((p) => p.id));
+                                setCheckedInIds(all);
+                                try { localStorage.setItem(checkInKey, JSON.stringify(Array.from(all))); } catch {}
+                                toast.success(`All ${state.players.length} players checked in`);
+                              }}
+                              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                                isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25" : "bg-green-100 text-green-700 hover:bg-green-200"
+                              }`}
+                              title="Check in all players"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              Check In All
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setCheckedInIds(new Set());
+                                try { localStorage.setItem(checkInKey, JSON.stringify([])); } catch {}
+                                toast.success("All players unchecked");
+                              }}
+                              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                                isDark ? "bg-white/08 text-white/50 hover:bg-white/12" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]/60"
+                              }`}
+                              title="Uncheck all players"
+                            >
+                              <X className="w-3 h-3" />
+                              Uncheck All
+                            </button>
+                          )
+                        )}
                         {state.players.length > 0 && (() => {
                           const paid = state.players.filter((p) => p.paymentStatus === "cash" || p.paymentStatus === "card").length;
                           return (
@@ -3546,9 +3583,9 @@ export default function Director() {
 
                     {/* Player roster with check-in chips */}
                     <div className="px-4 sm:px-6 py-3">
-                      {/* Column headers */}
+                      {/* Column headers — desktop only */}
                       {state.players.length > 0 && (
-                        <div className={`flex items-center gap-2.5 px-3 pb-1.5 mb-1 border-b ${
+                        <div className={`hidden sm:flex items-center gap-2.5 px-3 pb-1.5 mb-1 border-b ${
                           isDark ? "border-white/08" : "border-[#ADBC9F]"
                         }`}>
                           {/* Match row layout: checkbox(w-5) + rank(w-4) + avatar(w-[30px]) + name(flex-1) */}
@@ -3589,17 +3626,109 @@ export default function Director() {
                             })
                             .map((p, idx) => {
                               const isCheckedIn = checkedInIds.has(p.id);
+                              const elo = p.rapidElo ?? p.blitzElo ?? p.elo;
                               return (
-                                <div
-                                  key={p.id}
-                                  style={{ minHeight: "52px", touchAction: "manipulation" }}
-                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
-                                    isCheckedIn
-                                      ? isDark ? "bg-[#436850]/08 hover:bg-[#436850]/15" : "bg-green-50/60 hover:bg-green-50"
-                                      : isDark ? "hover:bg-white/04" : "hover:bg-[#FBFADA]"
-                                  }`}
-                                  onClick={() => toggleCheckIn(p.id)}
-                                >
+                                <div key={p.id}>
+                                  {/* ── Mobile card (<640px) ────────────────────────────────────────────────────── */}
+                                  <div
+                                    className={`sm:hidden rounded-xl mb-1 transition-all ${
+                                      isCheckedIn
+                                        ? isDark ? "bg-[#436850]/08" : "bg-green-50/60"
+                                        : isDark ? "bg-white/02" : "bg-white"
+                                    } border ${
+                                      isCheckedIn
+                                        ? isDark ? "border-[#4CAF50]/20" : "border-green-200"
+                                        : isDark ? "border-white/06" : "border-[#ADBC9F]/50"
+                                    }`}
+                                  >
+                                    {/* Top row: check-in + avatar + name + status */}
+                                    <div
+                                      className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer"
+                                      style={{ touchAction: "manipulation" }}
+                                      onClick={() => toggleCheckIn(p.id)}
+                                    >
+                                      <button
+                                        className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                                          isCheckedIn
+                                            ? "bg-[#436850] text-white"
+                                            : isDark ? "border border-white/15" : "border border-[#ADBC9F]"
+                                        }`}
+                                        onClick={(e) => { e.stopPropagation(); toggleCheckIn(p.id); }}
+                                        aria-label={isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
+                                      >
+                                        {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                      </button>
+                                      <PlayerAvatar username={p.username} name={p.name} size={32} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
+                                      <div className="flex-1 min-w-0">
+                                        <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
+                                        {p.username && <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>}
+                                      </div>
+                                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        {elo != null && (
+                                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                            isDark ? "bg-white/06 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
+                                          }`}>{elo}</span>
+                                        )}
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                          isCheckedIn
+                                            ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-100 text-green-700"
+                                            : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
+                                        }`}>{isCheckedIn ? "In" : "Reg"}</span>
+                                      </div>
+                                    </div>
+                                    {/* Bottom row: payment + actions */}
+                                    <div
+                                      className={`flex items-center justify-between gap-2 px-3 pb-2.5 border-t ${
+                                        isDark ? "border-white/05" : "border-[#ADBC9F]/30"
+                                      }`}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <div className="flex items-center gap-1.5 pt-2">
+                                        <button
+                                          onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
+                                          style={{ minHeight: "36px" }}
+                                          className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                                            p.paymentStatus === "cash"
+                                              ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                                              : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
+                                          }`}
+                                        >💵 Cash</button>
+                                        <button
+                                          onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
+                                          style={{ minHeight: "36px" }}
+                                          className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                                            p.paymentStatus === "card"
+                                              ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
+                                              : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
+                                          }`}
+                                        >💳 Card</button>
+                                      </div>
+                                      {pendingRemoveId === p.id ? (
+                                        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-bold mt-2 ${
+                                          isDark ? "bg-red-500/15 border border-red-500/25" : "bg-red-50 border border-red-200"
+                                        }`}>
+                                          <span className={isDark ? "text-red-400" : "text-red-600"}>Remove?</span>
+                                          <button onClick={() => { removePlayer(p.id); setPendingRemoveId(null); toast.success(`${p.name} removed`); }} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center px-2 py-1 rounded-lg text-xs font-bold ${ isDark ? "bg-red-500/25 text-red-400" : "bg-red-100 text-red-700"}`} aria-label="Confirm remove">Yes</button>
+                                          <button onClick={() => setPendingRemoveId(null)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center px-2 py-1 rounded-lg text-xs font-bold ${ isDark ? "bg-white/08 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`} aria-label="Cancel remove">No</button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-0.5 mt-2">
+                                          <button onClick={() => setEditingPlayer(p)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${ isDark ? "text-white/40 hover:bg-white/08" : "text-[#436850] hover:bg-[#ADBC9F]/50"}`} aria-label={`Edit ${p.name}`}><Pencil className="w-3.5 h-3.5" /></button>
+                                          <button onClick={() => setPendingRemoveId(p.id)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${ isDark ? "text-red-400 hover:bg-red-500/15" : "text-red-400 hover:bg-red-50"}`} aria-label={`Remove ${p.name}`}><X className="w-3.5 h-3.5" /></button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {/* ── Desktop row (≥640px) ─────────────────────────────────────────────────────────── */}
+                                  <div
+                                    style={{ minHeight: "52px", touchAction: "manipulation" }}
+                                    className={`hidden sm:flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
+                                      isCheckedIn
+                                        ? isDark ? "bg-[#436850]/08 hover:bg-[#436850]/15" : "bg-green-50/60 hover:bg-green-50"
+                                        : isDark ? "hover:bg-white/04" : "hover:bg-[#FBFADA]"
+                                    }`}
+                                    onClick={() => toggleCheckIn(p.id)}
+                                  >
                                   {/* Check-in indicator */}
                                   <button
                                     className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
@@ -3688,28 +3817,62 @@ export default function Director() {
                                       💳 Card
                                     </button>
                                   </div>
-                                  {/* Edit player button */}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setEditingPlayer(p); }}
-                                    style={{ minWidth: "32px", minHeight: "32px", touchAction: "manipulation" }}
-                                    className={`flex-shrink-0 p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
-                                      isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
-                                    }`}
-                                    title="Edit player name / ELO"
-                                  >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                  </button>
-                                  {/* Remove button */}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); removePlayer(p.id); toast.success(`${p.name} removed`); }}
-                                    style={{ minWidth: "32px", minHeight: "32px", touchAction: "manipulation" }}
-                                    className={`flex-shrink-0 p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
-                                      isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
-                                    }`}
-                                    title="Remove player"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
+                                  {/* Edit + Remove action buttons — always visible on mobile, hover-reveal on desktop */}
+                                  {pendingRemoveId === p.id ? (
+                                    /* Inline confirmation strip */
+                                    <div
+                                      className={`flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-bold flex-shrink-0 ${
+                                        isDark ? "bg-red-500/15 border border-red-500/25" : "bg-red-50 border border-red-200"
+                                      }`}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <span className={isDark ? "text-red-400" : "text-red-600"}>Remove?</span>
+                                      <button
+                                        onClick={() => { removePlayer(p.id); setPendingRemoveId(null); toast.success(`${p.name} removed`); }}
+                                        style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                        className={`flex items-center justify-center px-2 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                                          isDark ? "bg-red-500/25 text-red-400 hover:bg-red-500/40" : "bg-red-100 text-red-700 hover:bg-red-200"
+                                        }`}
+                                        aria-label="Confirm remove player"
+                                      >Yes</button>
+                                      <button
+                                        onClick={() => setPendingRemoveId(null)}
+                                        style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                        className={`flex items-center justify-center px-2 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                                          isDark ? "bg-white/08 text-white/60 hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]/60"
+                                        }`}
+                                        aria-label="Cancel remove player"
+                                      >No</button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                      {/* Edit button */}
+                                      <button
+                                        onClick={() => setEditingPlayer(p)}
+                                        style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                        className={`flex items-center justify-center rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
+                                          isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
+                                        }`}
+                                        title="Edit player name / ELO"
+                                        aria-label={`Edit ${p.name}`}
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </button>
+                                      {/* Remove button */}
+                                      <button
+                                        onClick={() => setPendingRemoveId(p.id)}
+                                        style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                        className={`flex items-center justify-center rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
+                                          isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
+                                        }`}
+                                        title="Remove player"
+                                        aria-label={`Remove ${p.name}`}
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -6232,7 +6395,8 @@ export default function Director() {
                 </div>
               )}
 
-              {/* ── Style-Aware Pairings ──────────────────────────────────── */}
+              {/* ── Style-Aware Pairings — Swiss/DoubleSwiss only (not Quads) ──── */}
+              {state.format !== "quads" && (
               <div className={`rounded-2xl border overflow-hidden ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
               }`}>
@@ -6263,6 +6427,7 @@ export default function Director() {
                   />
                 </div>
               </div>
+              )}{/* end state.format !== "quads" */}
 
               {/* Editable tournament settings panel */}
               {tournamentId !== "otb-demo-2026" ? (

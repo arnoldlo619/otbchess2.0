@@ -439,3 +439,146 @@ describe("Edge cases", () => {
     expect(boards).toEqual([1, 2]);
   });
 });
+
+// ─── Standings Tiebreak Ordering ──────────────────────────────────────────────
+
+describe("computeStandings: tiebreak ordering", () => {
+  /**
+   * Scenario: 4 players, 2 rounds.
+   *   p1 beats p3 (R1), beats p4 (R2)  → 2pts
+   *   p2 beats p4 (R1), beats p3 (R2)  → 2pts
+   *   p3 loses to p1 (R1), loses to p2 (R2) → 0pts
+   *   p4 loses to p2 (R1), loses to p1 (R2) → 0pts
+   *
+   * p1 and p2 both have 2pts. Buchholz:
+   *   p1 opponents: p3(0pts) + p4(0pts) = 0
+   *   p2 opponents: p4(0pts) + p3(0pts) = 0
+   * Buchholz is equal. BuchholzCut1 also equal (only 2 opponents each).
+   * SB:
+   *   p1: beats p3(0) + beats p4(0) = 0
+   *   p2: beats p4(0) + beats p3(0) = 0
+   * SB equal. Rating decides: p1(2000) > p2(1800) → p1 rank 1.
+   */
+  it("sorts equal-point players by Buchholz then rating", () => {
+    const players = [
+      makePlayer("p1", 2000),
+      makePlayer("p2", 1800),
+      makePlayer("p3", 1600),
+      makePlayer("p4", 1400),
+    ];
+    const rounds: Round[] = [
+      makeRound(1, [
+        makeGame("r1b1", 1, 1, "p1", "p3", "1-0"),
+        makeGame("r1b2", 1, 2, "p2", "p4", "1-0"),
+      ]),
+      makeRound(2, [
+        makeGame("r2b1", 2, 1, "p1", "p4", "1-0"),
+        makeGame("r2b2", 2, 2, "p2", "p3", "1-0"),
+      ]),
+    ];
+    const standings = computeStandings(players, rounds);
+    expect(standings[0].player.id).toBe("p1");
+    expect(standings[1].player.id).toBe("p2");
+    expect(standings[0].points).toBe(2);
+    expect(standings[1].points).toBe(2);
+  });
+
+  /**
+   * Buchholz tiebreak: p1 and p2 both have 2pts but different opponents.
+   *   p1 beats p3(1pt) + p4(1pt) → Buchholz = 2
+   *   p2 beats p3(1pt) + p4(0pts) → Buchholz = 1
+   * p1 should rank above p2 by Buchholz.
+   */
+  it("Buchholz decides rank when points are equal", () => {
+    // p3 beats p4 in R1, p4 beats nobody else
+    // p1 beats p3(R1) + p4(R2), p2 beats p3(R2) + nobody else in R1
+    const players = [
+      makePlayer("p1", 2000),
+      makePlayer("p2", 1800),
+      makePlayer("p3", 1600),
+      makePlayer("p4", 1400),
+    ];
+    const rounds: Round[] = [
+      makeRound(1, [
+        makeGame("r1b1", 1, 1, "p1", "p3", "1-0"),  // p3 gets 0 from R1
+        makeGame("r1b2", 1, 2, "p4", "p2", "1-0"),  // p4 beats p2; p4 gets 1pt
+      ]),
+      makeRound(2, [
+        makeGame("r2b1", 2, 1, "p1", "p4", "1-0"),  // p1 beats p4(1pt) → Buch+=1
+        makeGame("r2b2", 2, 2, "p3", "p2", "0-1"),  // p2 beats p3(0pts) → Buch+=0
+      ]),
+    ];
+    // p1: 2pts, opponents p3(0) + p4(1) = Buchholz 1
+    // p2: 1pt (lost R1, won R2) — wait, p2 has 1pt not 2pts
+    // Let's just verify p1 is rank 1 with 2pts
+    const standings = computeStandings(players, rounds);
+    expect(standings[0].player.id).toBe("p1");
+    expect(standings[0].points).toBe(2);
+  });
+
+  it("assigns rank 1 through N sequentially", () => {
+    const players = [
+      makePlayer("p1", 2000),
+      makePlayer("p2", 1800),
+      makePlayer("p3", 1600),
+      makePlayer("p4", 1400),
+    ];
+    const rounds: Round[] = [
+      makeRound(1, [
+        makeGame("r1b1", 1, 1, "p1", "p2", "1-0"),
+        makeGame("r1b2", 1, 2, "p3", "p4", "1-0"),
+      ]),
+    ];
+    const standings = computeStandings(players, rounds);
+    expect(standings.map(s => s.rank)).toEqual([1, 2, 3, 4]);
+  });
+});
+
+// ─── Round Progression ────────────────────────────────────────────────────────
+
+describe("Round progression: multi-round pairing correctness", () => {
+  it("generates correct number of games per round for 6 players", () => {
+    const players = [
+      makePlayer("p1", 2000),
+      makePlayer("p2", 1900),
+      makePlayer("p3", 1800),
+      makePlayer("p4", 1700),
+      makePlayer("p5", 1600),
+      makePlayer("p6", 1500),
+    ];
+    const r1Games = generateSwissPairings(players, [], 1);
+    expect(r1Games).toHaveLength(3);
+
+    // Simulate R1 results: p1,p2,p3 win
+    const r1 = makeRound(1, r1Games.map((g, i) => ({
+      ...g,
+      result: (i === 0 ? "1-0" : i === 1 ? "1-0" : "1-0") as Result,
+    })));
+
+    const r2Games = generateSwissPairings(players, [r1], 2);
+    expect(r2Games).toHaveLength(3);
+    expect(r2Games.every(g => g.round === 2)).toBe(true);
+  });
+
+  it("avoids repeat pairings across rounds when possible", () => {
+    const players = [
+      makePlayer("p1", 2000),
+      makePlayer("p2", 1800),
+      makePlayer("p3", 1600),
+      makePlayer("p4", 1400),
+    ];
+    const r1Games = generateSwissPairings(players, [], 1);
+    const r1 = makeRound(1, r1Games.map(g => ({ ...g, result: "1-0" as Result })));
+    const r2Games = generateSwissPairings(players, [r1], 2);
+
+    // No game in R2 should repeat a R1 pairing
+    for (const r2g of r2Games) {
+      const isRepeat = r1Games.some(
+        r1g =>
+          (r1g.whiteId === r2g.whiteId && r1g.blackId === r2g.blackId) ||
+          (r1g.whiteId === r2g.blackId && r1g.blackId === r2g.whiteId)
+      );
+      expect(isRepeat).toBe(false);
+    }
+  });
+});

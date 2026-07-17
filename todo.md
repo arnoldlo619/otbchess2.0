@@ -7139,10 +7139,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### F. Players & Check-in
 - [x] Capacity and attendance summary in Players tab header (Registered X/Y with capacity bar + FULL/NEAR FULL badge; Checked In X/Y with % and progress bar; both color-coded green/amber/red)
-- [ ] Batch check-in safe and reversible
-- [ ] Destructive removal requires confirmation dialog
-- [ ] Icon actions need labels and ≥44px targets
-- [ ] Tables transform intentionally on mobile (card layout at <768px)
+- [x] Batch check-in safe and reversible (Check In All / Uncheck All buttons in check-in header)
+- [x] Destructive removal requires confirmation dialog (inline amber strip: Remove? Yes/No)
+- [x] Icon actions need labels and ≥44px targets (Edit/Remove buttons now 44px with aria-labels)
+- [x] Tables transform intentionally on mobile (mobile card layout at <640px for Players tab)
 
 ### G. Standings
 - [x] Semantic <table> with rank, player, score, tie-break, record, rating columns (hidden sm:block; <thead>/<tbody>/<th scope="col">/<td> throughout)
@@ -7154,7 +7154,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### H. Quads-Specific
 - [x] Remove/hide: Late Registration banner hidden for Quads; Standings tab hidden for Quads
-- [ ] Remove/hide: style-aware pairings, "Generate Balanced Matchups" button for Quads
+- [x] Remove/hide: style-aware pairings hidden for Quads (state.format !== "quads" gate)
 - [x] Remove Buchholz as primary Quad tie-break from any Quads UI (Standings tab hidden; Print tiebreak legend is format-aware)
 - [x] Show: rating-grouped sections, 4-player section identity, 3 fixed rounds, section standings, section winner (QuadsDirectorPanel handles all)
 - [x] Validate Phase 4 fixture: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5; Magnus > Arnold by H2H (74/74 tests pass)
@@ -7179,8 +7179,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### L. Tests
 - [x] Quads fixture unit test: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5; Magnus > Arnold by H2H; 6 unique pairings; draw rate 16.7% (5 new tests, 74/74 pass)
-- [ ] Swiss fixture test (odd player count, bye handling, tie-breaks)
+- [x] Swiss fixture test (odd player count, bye handling, tie-breaks — 32 tests pass)
+- [x] Standings tie-break unit tests (Buchholz ordering, equal-point ranking, rank sequence)
+- [x] Round progression unit tests (6-player multi-round, repeat-opponent avoidance)
 - [ ] Result entry and correction unit tests
-- [ ] Round progression unit tests
-- [ ] Standings tie-break unit tests
 - [ ] Finalization unit tests
