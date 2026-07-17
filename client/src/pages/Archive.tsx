@@ -6,8 +6,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { useArchiveAuth } from "@/hooks/useArchiveAuth";
-import ArchivePasswordModal from "@/components/ArchivePasswordModal";
+import { useAuthContext } from "@/context/AuthContext";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -428,7 +427,7 @@ function UserTournamentCard({
     : state?.status === "in_progress"
     ? isDark ? "bg-amber-500/15 text-amber-400 border-amber-500/25" : "bg-amber-50 text-amber-700 border-amber-200"
     : isDark ? "bg-white/05 text-white/40 border-white/10" : "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]";
-  const formatLabel = config.format === "swiss" ? "Swiss" : config.format === "roundrobin" ? "Round Robin" : "Elimination";
+  const formatLabel = config.format === "swiss" ? "Swiss" : config.format === "doubleswiss" ? "Double Swiss" : config.format === "roundrobin" ? "Round Robin" : config.format === "quads" ? "Quads" : config.format === "swiss_elim" ? "Swiss + Elim" : config.format === "elimination" ? "Elimination" : (config.format ?? "Unknown");
   return (
     <div className={`rounded-2xl border overflow-hidden ${
       isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
@@ -697,12 +696,8 @@ export default function Archive() {
 
   const activeFilters = (formatFilter !== "All" ? 1 : 0) + (search.trim() ? 1 : 0);
 
-  // ── Admin password gate ──────────────────────────────────────────────────
-  const { isUnlocked, attempt } = useArchiveAuth();
-  if (!isUnlocked) {
-    return <ArchivePasswordModal onAttempt={attempt} />;
-  }
-  // ────────────────────────────────────────────────────────────────────────
+  // ── Auth context: delete is only available to logged-in users ──────────────
+  const { user } = useAuthContext();
 
   // Delete a user tournament: call server API, then remove from localStorage
   const handleDeleteTournament = async (id: string): Promise<void> => {
@@ -766,7 +761,7 @@ export default function Archive() {
             <NavLogo />
           </div>
 
-          <Link href="/">
+          <Link href="/tournaments/new">
             <button
               className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#436850] text-white hover:bg-[#3a5230] transition-colors"
             >
@@ -979,7 +974,7 @@ export default function Archive() {
             </div>
             <div className="space-y-3">
               {userTournaments.map((config) => (
-                <UserTournamentCard key={config.id} config={config} isDark={isDark} onDelete={handleDeleteTournament} />
+                <UserTournamentCard key={config.id} config={config} isDark={isDark} onDelete={user ? handleDeleteTournament : undefined} />
               ))}
             </div>
             <div className={`border-b ${
@@ -1051,7 +1046,7 @@ export default function Archive() {
           <p className={`text-sm mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             Your next tournament will appear right here.
           </p>
-          <Link href="/">
+          <Link href="/tournaments/new">
             <button className="px-5 py-2.5 rounded-xl bg-[#436850] text-white text-sm font-semibold hover:bg-[#3a5230] transition-colors">
               Create Tournament →
             </button>

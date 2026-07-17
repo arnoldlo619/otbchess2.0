@@ -197,8 +197,12 @@ function Router() {
         <Route path={"/recap/:slug"} component={TournamentRecap} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/dashboard/tools/chessnut-bluetooth-test-lab"} component={ChessnutTestLab} />
-        {/* /create — redirect to home with wizard open */}
-        <Route path={"/create"} component={() => { if (typeof window !== "undefined") { window.location.replace("/?action=create"); } return null; }} />
+        {/* /tournaments/new — opens TournamentWizard (Home handles ?action=create) */}
+        <Route path={"/tournaments/new"} component={() => { if (typeof window !== "undefined") { window.location.replace("/?action=create"); } return null; }} />
+        {/* /create — redirect to /tournaments/new */}
+        <Route path={"/create"} component={() => { if (typeof window !== "undefined") { window.location.replace("/tournaments/new"); } return null; }} />
+        {/* /tools — redirect to /training */}
+        <Route path={"/tools"} component={() => { if (typeof window !== "undefined") { window.location.replace("/training"); } return null; }} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

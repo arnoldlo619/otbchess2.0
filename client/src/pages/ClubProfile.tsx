@@ -5083,7 +5083,8 @@ function TournamentCard({
     : tournament.format === "roundrobin" ? "Round Robin"
     : tournament.format === "elimination" ? "Elimination"
     : tournament.format === "swiss_elim" ? "Swiss + Elim"
-    : tournament.format;
+    : tournament.format === "quads" ? "Quads"
+    : (tournament.format ?? "Unknown");
 
   const statusColor =
     tournStatus === "active" ? "text-green-500 bg-green-500/10 border-green-500/20"

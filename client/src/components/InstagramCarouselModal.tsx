@@ -363,6 +363,7 @@ function formatFormat(fmt?: string): string {
   if (fmt === "roundrobin") return "Round Robin";
   if (fmt === "elimination") return "Elimination";
   if (fmt === "swiss_elim") return "Swiss + Elimination";
+  if (fmt === "quads") return "Quads";
   return fmt ?? "Swiss";
 }
 

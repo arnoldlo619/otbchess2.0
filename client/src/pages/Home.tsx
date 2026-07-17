@@ -1373,15 +1373,9 @@ function BentoCard({
   tag, title, description, cta, href, icon, screenshot, screenshotAlt,
   isDark, inView, delay = 0, accent = false, className = "",
 }: BentoCardProps) {
-  const [, navigate] = useLocation();
   const prefersReducedMotion = typeof window !== "undefined"
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;
-
-  const handleNav = () => {
-    if (href.startsWith("/")) navigate(href);
-    else window.open(href, "_blank", "noopener");
-  };
 
   const surface = accent
     ? isDark
@@ -1412,15 +1406,12 @@ function BentoCard({
       : "bg-[#EEF5EE] hover:bg-[#436850] hover:text-white text-[#12372A] border-[#ADBC9F]/50";
 
   return (
-    <div
+    <Link
+      href={href}
       className={`group relative rounded-2xl border overflow-hidden cursor-pointer flex flex-col transition-all duration-500 ${surface} ${className} ${
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
       style={{ transitionDelay: `${delay}ms` }}
-      onClick={handleNav}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleNav(); } }}
       aria-label={`${tag}: ${title}`}
     >
       {/* Hover lift — respects reduced motion */}
@@ -1492,16 +1483,15 @@ function BentoCard({
         </p>
 
         {/* CTA */}
-        <button
-          className={`mt-1 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 ${ctaColor}`}
-          style={{ minHeight: "44px" }}
-          onClick={(e) => { e.stopPropagation(); handleNav(); }}
-          aria-label={cta}
+        <div
+          className={`mt-1 w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide border text-center transition-all duration-200 ${ctaColor}`}
+          style={{ minHeight: "44px", display: "flex", alignItems: "center", justifyContent: "center" }}
+          aria-hidden="true"
         >
           {cta}
-        </button>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

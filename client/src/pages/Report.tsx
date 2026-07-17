@@ -169,8 +169,10 @@ function SummaryBanner({
   // Each game appears once per player in performances, so divide by 2 to avoid double-counting
   const totalDraws = performances.reduce((s, p) => s + p.draws, 0) / 2;
   const totalWins = performances.reduce((s, p) => s + p.wins, 0) / 2;
-  // Draw rate = draws / (wins + draws) — excludes unplayed/forfeit games from denominator
-  const drawRate = (totalWins + totalDraws) > 0 ? Math.round((totalDraws / (totalWins + totalDraws)) * 100) : 0;
+  const totalLosses = performances.reduce((s, p) => s + p.losses, 0) / 2;
+  // Draw rate = draws / total completed games (wins + draws + losses)
+  const totalGames = totalWins + totalDraws + totalLosses;
+  const drawRate = totalGames > 0 ? Math.round((totalDraws / totalGames) * 100) : 0;
 
   return (
     <div

@@ -6181,6 +6181,7 @@ export default function Director() {
                           : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
                           : state.format === "roundrobin" ? "Round Robin"
                           : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
+                          : state.format === "quads" ? `Quads · ${state.quadSections?.length ?? 1} Section${(state.quadSections?.length ?? 1) > 1 ? "s" : ""} · ${state.players.length} Players · ${state.totalRounds}R`
                           : "Elimination";
                         recordTournamentCompleted(
                           tournamentConfig.clubId,

@@ -274,15 +274,16 @@ export default function Pricing() {
                 Everything you need to run a club tournament.
               </p>
             </div>
-            <Link href="/join">
-              <button className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border group ${
+            <Link
+              href="/join"
+              className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border flex items-center justify-center ${
                 isDark
                   ? "border-white/10 text-white/70 hover:bg-white/[0.07] hover:border-white/20 hover:text-white"
                   : "border-[#436850]/20 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/40"
               }`}
-              style={{ minHeight: "44px" }}>
-                Get started free
-              </button>
+              style={{ minHeight: "44px" }}
+            >
+              Get started free
             </Link>
           </motion.div>
 
@@ -323,14 +324,13 @@ export default function Pricing() {
             </div>
 
             {/* CTA: no payment modal — direct to join/explore */}
-            <Link href="/join">
-              <button
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-black transition-all duration-200 relative hover:shadow-lg hover:shadow-[#22c55e]/30 active:scale-[0.98]"
-                style={{ minHeight: "44px" }}
-              >
-                <Sparkles className="w-4 h-4" />
-                Start using Pro — it's free
-              </button>
+            <Link
+              href="/join"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-black transition-all duration-200 relative hover:shadow-lg hover:shadow-[#22c55e]/30 active:scale-[0.98]"
+              style={{ minHeight: "44px" }}
+            >
+              <Sparkles className="w-4 h-4" />
+              Start using Pro — it's free
             </Link>
 
             {/* View Demo link */}
@@ -420,21 +420,21 @@ export default function Pricing() {
             <div className={`grid grid-cols-[1fr_100px_100px] ${isDark ? "bg-white/[0.025]" : "bg-[#436850]/[0.025]"}`}>
               <div className="px-5 py-4" />
               <div className="px-3 py-4 flex justify-center">
-                <Link href="/join">
-                  <button className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-200 ${isDark ? "border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.06]" : "border-[#436850]/20 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/35"}`}
-                    style={{ minHeight: "36px" }}>
-                    Get free
-                  </button>
+                <Link
+                  href="/join"
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-200 flex items-center justify-center ${isDark ? "border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.06]" : "border-[#436850]/20 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/35"}`}
+                  style={{ minHeight: "36px" }}
+                >
+                  Get free
                 </Link>
               </div>
               <div className="px-3 py-4 flex justify-center">
-                <Link href="/join">
-                  <button
-                    className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-black transition-all duration-200 hover:shadow-md hover:shadow-[#22c55e]/25 active:scale-95"
-                    style={{ minHeight: "36px" }}
-                  >
-                    Start free
-                  </button>
+                <Link
+                  href="/join"
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-black transition-all duration-200 hover:shadow-md hover:shadow-[#22c55e]/25 active:scale-95 flex items-center justify-center"
+                  style={{ minHeight: "36px" }}
+                >
+                  Start free
                 </Link>
               </div>
             </div>
@@ -537,36 +537,35 @@ export default function Pricing() {
             No credit card. No account required to host your first tournament.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/?action=create">
-              <button
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-white text-[#436850] hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-                style={{ minHeight: "44px" }}
-              >
-                Host a Tournament
-                <ArrowRight className="w-4 h-4" />
-              </button>
+            <Link
+              href="/tournaments/new"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-white text-[#436850] hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              style={{ minHeight: "44px" }}
+            >
+              Host a Tournament
+              <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/join">
-              <button
-                className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold border transition-all duration-200 hover:-translate-y-0.5 ${
-                  isDark
-                    ? "border-white/20 text-white/80 hover:bg-white/10 hover:text-white"
-                    : "border-white/40 text-white hover:bg-white/20"
-                }`}
-                style={{ minHeight: "44px" }}
-              >
-                Join a Tournament
-              </button>
+            <Link
+              href="/join"
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold border transition-all duration-200 hover:-translate-y-0.5 ${
+                isDark
+                  ? "border-white/20 text-white/80 hover:bg-white/10 hover:text-white"
+                  : "border-white/40 text-white hover:bg-white/20"
+              }`}
+              style={{ minHeight: "44px" }}
+            >
+              Join a Tournament
             </Link>
           </div>
         </motion.div>
 
         {/* ── Back to home ──────────────────────────────────────────────────── */}
         <div className="mt-10 text-center">
-          <Link href="/">
-            <button className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? "text-white/30 hover:text-white/60" : "text-[#9CA3AF] hover:text-[#436850]"}`}>
-              ← Back to home
-            </button>
+          <Link
+            href="/"
+            className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? "text-white/30 hover:text-white/60" : "text-[#9CA3AF] hover:text-[#436850]"}`}
+          >
+            ← Back to home
           </Link>
         </div>
       </div>

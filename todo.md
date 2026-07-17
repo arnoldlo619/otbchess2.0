@@ -7439,3 +7439,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] GO/NO-GO recommendation with evidence
 - [ ] Deployment checklist
 - [ ] Rollback plan
+
+## P0 Release-Recovery Sprint
+
+- [ ] P0-1a: Add /tournaments/new route (opens TournamentWizard)
+- [ ] P0-1b: Fix /create to redirect to /tournaments/new (preserve query params)
+- [ ] P0-1c: Add /tools route redirecting to /training
+- [ ] P0-1d: Remove admin password gate from /tournaments (Archive) public route; move admin gate to /admin/tournaments
+- [ ] P0-1e: Audit and fix all broken CTAs (Host Tournament, View Live Demo, Tools, footer links)
+- [ ] P0-2: Create canonical getTournamentFormatLabel() helper; fix all inline format ternaries missing quads case
+- [ ] P0-3: Create canonical getTournamentStatus() selector; ensure completed tournaments never show Live badge
+- [ ] P0-4: Fix quads live standings to use calculateQuadStandings (not Swiss computeStandings); remove Buchholz label from QuadsDirectorPanel
+- [ ] P0-5: Fix draw rate formula in Report.tsx to use completedGames as denominator; fix generateResultsPdf to skip Buchholz page for quads
+- [ ] P0-6: Fix nested interactive elements in Pricing.tsx and other pages (Link wrapping button)
+- [ ] P0-7: Fix duplicate H1 in tournament report export cards (aria-hidden on export-only clones)
+- [ ] P0-8: Verify homepage zero-stat flash is fixed (already has skeleton + FLOORS)
+- [ ] P0-9: Add unit tests for format label, status selector, draw rate, quads tiebreaks

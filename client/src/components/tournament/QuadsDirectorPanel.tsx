@@ -929,11 +929,18 @@ export default function QuadsDirectorPanel({
             const sectionRounds: Round[] = roundNums.map((rn) => ({
               number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn),
             }));
-            const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
-            const top3 = rows.slice(0, 3);
+            // Use calculateQuadStandings (SB + H2H tiebreaks) — NOT the Swiss engine
             const standings = standingsBySection.get(section.id) ?? [];
             const winners = getSectionWinners(standings);
             const isCo = winners.length > 1;
+            const top3 = standings.slice(0, 3).map((s) => ({
+              player: sectionPlayers.find((p) => p.id === s.playerId) ?? { id: s.playerId, name: "Unknown", username: "", elo: 0, wins: s.wins, draws: s.draws, losses: s.losses, points: s.score, platform: "chesscom" as const },
+              points: s.score,
+              wins: s.wins,
+              draws: s.draws,
+              losses: s.losses,
+              sonnebornBerger: s.sonnebornBerger,
+            }));
 
             const medalConfig = [
               { bg: isDark ? "oklch(0.24 0.08 85 / 0.3)" : "oklch(0.95 0.06 85)", border: T.goldBorder, color: T.gold },
@@ -967,7 +974,7 @@ export default function QuadsDirectorPanel({
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black" style={{ background: medal.bg, border: `1px solid ${medal.border}`, color: medal.color, fontFamily: "'Clash Display', sans-serif" }}>{idx + 1}</div>
                         <div className="flex-1 min-w-0">
                           <span className={`${idx === 0 ? "text-sm" : "text-xs"} font-black truncate block`} style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{row.player.name}</span>
-                          <span className="text-xs" style={{ color: T.textDim }}>{row.wins}W {row.draws}D {row.losses}L · Buch. {row.buchholz.toFixed(1)}</span>
+                          <span className="text-xs" style={{ color: T.textDim }}>{row.wins}W {row.draws}D {row.losses}L · SB {(row.sonnebornBerger ?? 0).toFixed(2)}</span>
                         </div>
                         <span className={`${idx === 0 ? "text-2xl" : "text-lg"} font-black tabular-nums flex-shrink-0`} style={{ color: medal.color, fontFamily: "'Clash Display', sans-serif" }}>{pts}</span>
                       </div>
