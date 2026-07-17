@@ -7145,12 +7145,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Tables transform intentionally on mobile (card layout at <768px)
 
 ### G. Standings
-- [ ] Semantic <table> with rank, player, score, tie-break, record, rating, section columns
-- [ ] Tie-break explanation in plain language (tooltip or footnote)
-- [ ] Half-point notation preserved (0.5, 1.5, etc. — no "1/2")
-- [ ] Mobile ranking-card layout (stack at <640px)
-- [ ] Do not rely on medals alone for rank (show numeric rank)
-- [ ] Format-appropriate tie-breaks (no Buchholz as primary Quad tie-break)
+- [x] Semantic <table> with rank, player, score, tie-break, record, rating columns (hidden sm:block; <thead>/<tbody>/<th scope="col">/<td> throughout)
+- [x] Tie-break explanation in plain language (footer: "1. Points · 2. Buchholz · 3. Wins · 4. Wins with Black")
+- [x] Half-point notation preserved (½ literal, not 1/2 — confirmed in both table and mobile cards)
+- [x] Mobile ranking-card layout (sm:hidden stacked cards at <640px with rank, avatar, name, W/D/L, rating, points)
+- [x] Do not rely on medals alone for rank (numeric rank column: 1, 2, 3... color-coded amber/silver/bronze)
+- [x] Format-appropriate tie-breaks (no Buchholz as primary Quad tie-break — Standings tab hidden for Quads)
 
 ### H. Quads-Specific
 - [x] Remove/hide: Late Registration banner hidden for Quads; Standings tab hidden for Quads

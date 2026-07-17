@@ -4842,119 +4842,213 @@ export default function Director() {
                 <div className={`rounded-2xl border overflow-hidden animate-table-enter ${
                   isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-[#ADBC9F]/80 shadow-sm"
                 }`} style={{ animationDelay: "200ms" }}>
-                  {/* Table header */}
-                  <div className={`grid ${
-                    isDoubleSwiss
-                      ? "grid-cols-[2rem_1fr_2.5rem_4.5rem_4.5rem_3rem]"
-                      : "grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem]"
-                  } gap-x-2 px-4 py-2.5 border-b ${
-                    isDark ? "border-white/08 bg-white/02" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70/60"
-                  }`}>
-                    {["#", "Player", "Pts", "W / D / L", ...(isDoubleSwiss ? ["Match"] : [])].map((col, ci) => (
-                      <span key={ci} className={`text-[10px] font-black uppercase tracking-[0.1em] ${
-                        ci === 0 ? "text-center" : ci >= 2 ? "text-right" : ""
-                      } ${
-                        isDark ? "text-white/30" : "text-[#436850]"
-                      }`}>{col}</span>
-                    ))}
-                    <span className={`text-[10px] font-black uppercase tracking-[0.1em] text-right inline-flex items-center justify-end gap-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
-                      Buch.<TiebreakTooltip type="buchholz" position="above" />
-                    </span>
+
+                  {/* ── Desktop semantic table (hidden on mobile) ── */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full border-collapse" role="grid" aria-label="Tournament standings">
+                      <caption className="sr-only">Full tournament standings — Round {state.currentRound} of {state.totalRounds}</caption>
+                      <thead>
+                        <tr className={`border-b ${
+                          isDark ? "border-white/08 bg-white/02" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"
+                        }`}>
+                          <th scope="col" className={`w-8 px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-center ${
+                            isDark ? "text-white/30" : "text-[#436850]"
+                          }`}>#</th>
+                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-left ${
+                            isDark ? "text-white/30" : "text-[#436850]"
+                          }`}>Player</th>
+                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                            isDark ? "text-white/30" : "text-[#436850]"
+                          }`}>Pts</th>
+                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                            isDark ? "text-white/30" : "text-[#436850]"
+                          }`}>W/D/L</th>
+                          {isDoubleSwiss && (
+                            <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                              isDark ? "text-white/30" : "text-[#436850]"
+                            }`}>Match</th>
+                          )}
+                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                            isDark ? "text-white/30" : "text-[#436850]"
+                          }`}>
+                            <span className="inline-flex items-center justify-end gap-0.5">
+                              Buch.<TiebreakTooltip type="buchholz" position="above" />
+                            </span>
+                          </th>
+                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                            isDark ? "text-white/30" : "text-[#436850]"
+                          }`}>Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {standingsData.map((row, i) => {
+                          const p = row.player;
+                          const isLeader = i === 0;
+                          const isPodium = i < 3;
+                          const rowDelay = 260 + i * 40;
+                          return (
+                            <tr
+                              key={p.id}
+                              className={`animate-row-slide-up transition-colors ${
+                                isLeader
+                                  ? isDark ? "bg-amber-500/06 hover:bg-amber-500/10" : "bg-amber-50/70 hover:bg-amber-50"
+                                  : isPodium
+                                  ? isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]/60"
+                                  : isDark ? "hover:bg-white/02" : "hover:bg-[#FBFADA]/40"
+                              } ${
+                                i > 0 ? (isDark ? "border-t border-white/04" : "border-t border-[#ADBC9F]/50") : ""
+                              }`}
+                              style={{ animationDelay: `${rowDelay}ms` }}
+                            >
+                              {/* Rank */}
+                              <td className={`w-8 px-3 py-2.5 text-[11px] font-black text-center tabular-nums ${
+                                isLeader
+                                  ? isDark ? "text-amber-400" : "text-amber-600"
+                                  : i === 1
+                                  ? isDark ? "text-[#436850]/70" : "text-[#436850]"
+                                  : i === 2
+                                  ? isDark ? "text-orange-400" : "text-orange-600"
+                                  : isDark ? "text-white/25" : "text-[#436850]/70"
+                              }`}>{i + 1}</td>
+
+                              {/* Player */}
+                              <td className="px-3 py-2.5">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <PlayerAvatar
+                                    username={p.username}
+                                    name={p.name}
+                                    size={28}
+                                    platform={p.platform}
+                                    avatarUrl={p.avatarUrl}
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1">
+                                      <span className={`text-xs font-bold truncate ${
+                                        isDark ? "text-white" : "text-[#12372A]"
+                                      }`}>{p.name.split(" ")[0]}</span>
+                                      {p.title && (
+                                        <span className={`flex-shrink-0 text-[9px] font-black px-1 py-0.5 rounded ${
+                                          isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
+                                        }`}>{p.title}</span>
+                                      )}
+                                    </div>
+                                    <span className={`text-[10px] ${
+                                      isDark ? "text-white/25" : "text-[#436850]"
+                                    }`}>@{p.username}</span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Points */}
+                              <td className={`px-3 py-2.5 text-sm font-black tabular-nums text-right ${
+                                isLeader
+                                  ? isDark ? "text-amber-400" : "text-amber-600"
+                                  : isDark ? "text-white" : "text-[#12372A]"
+                              }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
+                              </td>
+
+                              {/* W/D/L */}
+                              <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right ${
+                                isDark ? "text-white/40" : "text-[#436850]"
+                              }`}>{row.wins}/{row.draws}/{row.losses}</td>
+
+                              {/* Match W/D/L — Double Swiss only */}
+                              {isDoubleSwiss && (
+                                <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right font-semibold ${
+                                  row.matchW > row.matchL
+                                    ? isDark ? "text-emerald-400" : "text-emerald-600"
+                                    : row.matchL > row.matchW
+                                    ? isDark ? "text-red-400" : "text-red-500"
+                                    : isDark ? "text-white/40" : "text-[#436850]"
+                                }`}>
+                                  {row.matchW}/{row.matchD}/{row.matchL}
+                                </td>
+                              )}
+
+                              {/* Buchholz */}
+                              <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right ${
+                                isDark ? "text-white/30" : "text-[#436850]"
+                              }`}>{row.buchholz.toFixed(1)}</td>
+
+                              {/* Rating */}
+                              <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right ${
+                                isDark ? "text-white/30" : "text-[#436850]"
+                              }`}>{p.elo ?? "—"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
 
-                  {/* Rows */}
-                  <div className="divide-y divide-transparent">
+                  {/* ── Mobile ranking cards (visible only on mobile) ── */}
+                  <div className="sm:hidden divide-y">
                     {standingsData.map((row, i) => {
                       const p = row.player;
                       const isLeader = i === 0;
-                      const isPodium = i < 3;
                       const rowDelay = 260 + i * 40;
+                      const rankColor = isLeader
+                        ? isDark ? "text-amber-400" : "text-amber-600"
+                        : i === 1
+                        ? isDark ? "text-[#436850]/70" : "text-[#436850]"
+                        : i === 2
+                        ? isDark ? "text-orange-400" : "text-orange-600"
+                        : isDark ? "text-white/30" : "text-[#436850]/60";
                       return (
                         <div
                           key={p.id}
-                          className={`grid animate-row-slide-up ${
-                            isDoubleSwiss
-                              ? "grid-cols-[2rem_1fr_2.5rem_4.5rem_4.5rem_3rem]"
-                              : "grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem]"
-                          } gap-x-2 items-center px-4 py-2.5 transition-colors ${
+                          className={`flex items-center gap-3 px-4 py-3 animate-row-slide-up transition-colors ${
                             isLeader
-                              ? isDark ? "bg-amber-500/06 hover:bg-amber-500/10" : "bg-amber-50/70 hover:bg-amber-50"
-                              : isPodium
-                              ? isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]/60"
-                              : isDark ? "hover:bg-white/02" : "hover:bg-[#FBFADA]/40"
+                              ? isDark ? "bg-amber-500/06" : "bg-amber-50/70"
+                              : isDark ? "" : ""
                           } ${
-                            i > 0 ? (isDark ? "border-t border-white/04" : "border-t border-[#ADBC9F]/70/80") : ""
+                            i > 0 ? (isDark ? "border-t border-white/04" : "border-t border-[#ADBC9F]/50") : ""
                           }`}
                           style={{ animationDelay: `${rowDelay}ms` }}
                         >
-                          {/* Rank */}
-                          <span className={`text-[11px] font-black text-center tabular-nums ${
-                            isLeader
-                              ? isDark ? "text-amber-400" : "text-amber-600"
-                              : i === 1
-                              ? isDark ? "text-[#436850]/70" : "text-[#436850]"
-                              : i === 2
-                              ? isDark ? "text-orange-400" : "text-orange-600"
-                              : isDark ? "text-white/25" : "text-[#436850]/70"
-                          }`}>{i + 1}</span>
+                          {/* Rank number */}
+                          <span className={`w-6 text-sm font-black text-center tabular-nums flex-shrink-0 ${rankColor}`}>{i + 1}</span>
 
-                          {/* Player */}
-                          <div className="flex items-center gap-2 min-w-0">
-                            <PlayerAvatar
-                              username={p.username}
-                              name={p.name}
-                              size={28}
-                              platform={p.platform}
-                              avatarUrl={p.avatarUrl}
-                            />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className={`text-xs font-bold truncate ${
-                                  isDark ? "text-white" : "text-[#12372A]"
-                                }`}>{p.name.split(" ")[0]}</span>
-                                {p.title && (
-                                  <span className={`flex-shrink-0 text-[9px] font-black px-1 py-0.5 rounded ${
-                                    isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
-                                  }`}>{p.title}</span>
-                                )}
-                              </div>
-                              <span className={`text-[10px] tabular-nums ${
-                                isDark ? "text-white/25" : "text-[#436850]"
-                              }`}>{p.elo}</span>
+                          {/* Avatar */}
+                          <PlayerAvatar
+                            username={p.username}
+                            name={p.name}
+                            size={32}
+                            platform={p.platform}
+                            avatarUrl={p.avatarUrl}
+                          />
+
+                          {/* Name + record */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className={`text-xs font-bold truncate ${
+                                isDark ? "text-white" : "text-[#12372A]"
+                              }`}>{p.name.split(" ")[0]}</span>
+                              {p.title && (
+                                <span className={`flex-shrink-0 text-[9px] font-black px-1 py-0.5 rounded ${
+                                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
+                                }`}>{p.title}</span>
+                              )}
                             </div>
+                            <span className={`text-[10px] tabular-nums ${
+                              isDark ? "text-white/30" : "text-[#436850]"
+                            }`}>{row.wins}W {row.draws}D {row.losses}L · {p.elo ?? "—"}</span>
                           </div>
 
                           {/* Points */}
-                          <span className={`text-sm font-black tabular-nums text-right ${
-                            isLeader
-                              ? isDark ? "text-amber-400" : "text-amber-600"
-                              : isDark ? "text-white" : "text-[#12372A]"
-                          }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                            {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
-                          </span>
-
-                          {/* W/D/L (individual games) */}
-                          <span className={`text-[10px] tabular-nums text-right ${
-                            isDark ? "text-white/40" : "text-[#436850]"
-                          }`}>{row.wins}/{row.draws}/{row.losses}</span>
-
-                          {/* Match W/D/L — Double Swiss only */}
-                          {isDoubleSwiss && (
-                            <span className={`text-[10px] tabular-nums text-right font-semibold ${
-                              row.matchW > row.matchL
-                                ? isDark ? "text-emerald-400" : "text-emerald-600"
-                                : row.matchL > row.matchW
-                                ? isDark ? "text-red-400" : "text-red-500"
-                                : isDark ? "text-white/40" : "text-[#436850]"
-                            }`}>
-                              {row.matchW}/{row.matchD}/{row.matchL}
+                          <div className="text-right flex-shrink-0">
+                            <span className={`text-base font-black tabular-nums ${
+                              isLeader
+                                ? isDark ? "text-amber-400" : "text-amber-600"
+                                : isDark ? "text-white" : "text-[#12372A]"
+                            }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                              {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                             </span>
-                          )}
-
-                          {/* Buchholz */}
-                          <span className={`text-[10px] tabular-nums text-right ${
-                            isDark ? "text-white/30" : "text-[#436850]"
-                          }`}>{row.buchholz.toFixed(1)}</span>
+                            <p className={`text-[9px] ${
+                              isDark ? "text-white/25" : "text-[#436850]"
+                            }`}>pts</p>
+                          </div>
                         </div>
                       );
                     })}
@@ -4962,7 +5056,7 @@ export default function Director() {
 
                   {/* Tiebreak footer */}
                   <div className={`flex items-start gap-2 px-4 py-3 border-t ${
-                    isDark ? "border-white/06 bg-white/01" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70/40"
+                    isDark ? "border-white/06 bg-white/01" : "border-[#ADBC9F]/70 bg-[#FBFADA]/40"
                   }`}>
                     <Info className={`w-3 h-3 mt-0.5 flex-shrink-0 ${
                       isDark ? "text-white/20" : "text-[#436850]/70"
@@ -4970,7 +5064,7 @@ export default function Director() {
                     <p className={`text-[10px] leading-relaxed ${
                       isDark ? "text-white/25" : "text-[#436850]"
                     }`}>
-                      <span className="font-bold">Tiebreak: Buchholz</span> — sum of opponents' scores. Higher = stronger opposition faced.
+                      <span className="font-bold">Tiebreak order:</span> 1. Points · 2. Buchholz (sum of opponents' scores) · 3. Wins · 4. Wins with Black. Higher Buchholz = stronger opposition faced.
                     </p>
                   </div>
                 </div>
