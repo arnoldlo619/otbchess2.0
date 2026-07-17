@@ -7121,11 +7121,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### C. Director Workspace IA
 - [x] Required action area: always answers "what should director do next?" (sticky banners: Generate Round, Generate Elimination Bracket, etc.)
-- [ ] De-emphasize secondary actions (Share, Print, Broadcast, Connect Board, Reports, Edit pairings)
+- [x] De-emphasize secondary actions (Player Reports, Print/Export, Create Recap, Live Stream collapsed under ‹More› toggle; View Results remains primary CTA)
 - [ ] Status band: text + icon + color, never contradictory
 
 ### D. Round Navigation
-- [ ] Communicate result completion count per round in round navigator
+- [x] Communicate result completion count per round in round navigator (X/Y shown under each dot in VerticalRoundTracker; amber while in-progress, green when complete)
 - [ ] Mobile: compact selector or horizontal scroll with snap behavior
 - [ ] Do not expose future-round controls as actionable
 

@@ -1085,6 +1085,11 @@ function VerticalRoundTracker({
         const roundData = rounds.find((rd) => rd.number === r);
         const isComplete = roundData?.status === "completed";
         const isCurrent = r === currentRound;
+        // Per-round completion count
+        const roundGames = roundData?.games.filter((g) => g.whiteId !== "BYE") ?? [];
+        const roundDone = roundGames.filter((g) => g.result !== "*").length;
+        const roundTotal = roundGames.length;
+        const showCount = roundTotal > 0 && (isCurrent || isComplete);
         // Show a phase divider between Swiss and Elim rounds
         const isFirstElimRound = swissRounds && elimPhase === "elimination" && r === swissRounds + 1;
 
@@ -1127,10 +1132,27 @@ function VerticalRoundTracker({
               )}
             </div>
 
+            {/* Per-round completion count — shown for current and completed rounds */}
+            {showCount && (
+              <span
+                className={`text-[9px] font-bold tabular-nums leading-none mt-0.5 mb-0.5 ${
+                  isComplete
+                    ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
+                    : roundDone === roundTotal
+                    ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
+                    : isDark ? "text-amber-400" : "text-amber-600"
+                }`}
+              >
+                {roundDone}/{roundTotal}
+              </span>
+            )}
+
             {/* Connector line — taller: h-7 */}
             {r < totalRounds && (
               <div
-                className={`w-0.5 h-7 rounded-full transition-all duration-300 ${
+                className={`w-0.5 ${
+                  showCount ? "h-4" : "h-7"
+                } rounded-full transition-all duration-300 ${
                   isComplete
                     ? "bg-[#436850]"
                     : isDark
@@ -2269,6 +2291,7 @@ export default function Director() {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showUploadRSVP, setShowUploadRSVP] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
+  const [showSecondaryActions, setShowSecondaryActions] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   // ── Multi-Tournament Brackets: parent detection + child bracket list ──────
@@ -4242,51 +4265,72 @@ export default function Director() {
                           })}
                         </div>
                         )}
-                        {/* Action buttons */}
-                        <div className={`flex flex-wrap gap-2 px-5 pb-4 pt-3 border-t ${ isDark ? "border-white/06" : "border-[#436850]/08"}`}>
-                          <button
-                            onClick={() => window.location.href = `/tournament/${tournamentId}`}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                              isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#436850] text-white hover:bg-[#2d5235]"
-                            }`}>
-                            <BarChart3 className="w-4 h-4" /> View Results
-                          </button>
-                          <button
-                            onClick={() => window.location.href = `/tournament/${tournamentId}/report`}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                              isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
-                            }`}>
-                            <Trophy className="w-4 h-4" /> Player Reports
-                          </button>
-                          <button
-                            onClick={() => window.location.href = `/tournament/${tournamentId}/print`}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                              isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-[#ADBC9F] text-[#12372A]/85 hover:bg-[#FBFADA]"
-                            }`}>
-                            <Download className="w-4 h-4" /> Print / Export
-                          </button>
-                          {/* Instagram Carousel Recap */}
-                          <button
-                            onClick={() => setShowCarousel(true)}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                              isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-[#ADBC9F] text-[#12372A]/85 hover:bg-[#FBFADA]"
-                            }`}
-                          >
-                            <div className="w-4 h-4 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
-                              <svg viewBox="0 0 24 24" fill="white" className="w-2.5 h-2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
+                        {/* Action buttons — primary CTA + collapsed secondary actions */}
+                        <div className={`px-5 pb-4 pt-3 border-t ${ isDark ? "border-white/06" : "border-[#436850]/08"}`}>
+                          {/* Primary action row */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => window.location.href = `/tournament/${tournamentId}`}
+                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                                isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#436850] text-white hover:bg-[#2d5235]"
+                              }`}>
+                              <BarChart3 className="w-4 h-4" /> View Results
+                            </button>
+                            {/* More options toggle */}
+                            <button
+                              onClick={() => setShowSecondaryActions((v) => !v)}
+                              aria-expanded={showSecondaryActions}
+                              aria-label="More post-round actions"
+                              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
+                                isDark
+                                  ? "bg-white/08 text-white/50 hover:bg-white/12 hover:text-white/70"
+                                  : "bg-white border border-[#ADBC9F] text-[#436850]/70 hover:bg-[#FBFADA]"
+                              }`}
+                            >
+                              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${ showSecondaryActions ? "rotate-180" : ""}`} />
+                              More
+                            </button>
+                          </div>
+
+                          {/* Secondary actions — collapsed by default */}
+                          {showSecondaryActions && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <button
+                                onClick={() => window.location.href = `/tournament/${tournamentId}/report`}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/75 hover:bg-[#FBFADA]"
+                                }`}>
+                                <Trophy className="w-3.5 h-3.5" /> Player Reports
+                              </button>
+                              <button
+                                onClick={() => window.location.href = `/tournament/${tournamentId}/print`}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/75 hover:bg-[#FBFADA]"
+                                }`}>
+                                <Download className="w-3.5 h-3.5" /> Print / Export
+                              </button>
+                              <button
+                                onClick={() => setShowCarousel(true)}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/75 hover:bg-[#FBFADA]"
+                                }`}
+                              >
+                                <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
+                                  <svg viewBox="0 0 24 24" fill="white" className="w-2 h-2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
+                                </div>
+                                Create Recap
+                              </button>
+                              <button
+                                onClick={() => setShowSpectatorQR(true)}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-[#436850]/10 border border-[#436850]/20 text-[#436850] hover:bg-[#436850]/15"
+                                }`}
+                              >
+                                <Cast className="w-3.5 h-3.5" />
+                                Live Stream
+                              </button>
                             </div>
-                            Create Recap
-                          </button>
-                          {/* Live Stream — project live standings on a screen */}
-                          <button
-                            onClick={() => setShowSpectatorQR(true)}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                              isDark ? "bg-white/10 text-white hover:bg-white/15" : "bg-[#436850]/15 border border-[#436850]/30 text-white hover:bg-[#436850]/25"
-                            }`}
-                          >
-                            <Cast className="w-4 h-4" />
-                            Live Stream
-                          </button>
+                          )}
                         </div>
                       </div>
                     );
