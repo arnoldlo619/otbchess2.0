@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
+import { getFormatConfig } from "@/lib/formatRegistry";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
@@ -255,14 +256,28 @@ function HeroPanel({
   step,
   isDark,
   mode,
+  format,
   onClose,
 }: {
   step: number;
   isDark: boolean;
   mode: "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
+  format?: string;
   onClose?: () => void;
 }) {
-  const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
+  // For quickstart mode, use format-aware copy from FORMAT_REGISTRY
+  const formatConfig = format ? getFormatConfig(format) : null;
+  const quickstartHero = formatConfig
+    ? {
+        ...QUICKSTART_HERO,
+        hero: {
+          eyebrow: "Quickstart",
+          title: formatConfig.wizardHeroTitle,
+          body: formatConfig.wizardHeroBody,
+        },
+      }
+    : QUICKSTART_HERO;
+  const s = mode === "quickstart" ? quickstartHero : SCHEDULE_STEPS[step];
   const Icon = s.icon;
   const iconImg = (s as { iconImg?: string }).iconImg;
 
@@ -851,7 +866,7 @@ function ModeSelect({
               </p>
               {/* Metadata chips */}
               <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>4–∞ players</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>Multiples of 4 (4, 8, 12…)</span>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>3 rounds fixed</span>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>No Swiss pairings</span>
               </div>
@@ -4194,7 +4209,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     >
       {/* ── Left hero panel (hidden on mobile) ── */}
       <div className="hidden lg:flex lg:w-[32%] xl:w-[34%] flex-shrink-0">
-        <HeroPanel step={heroStep} isDark={isDark} mode={mode} onClose={() => onClose()} />
+        <HeroPanel step={heroStep} isDark={isDark} mode={mode} format={data.format} onClose={() => onClose()} />
       </div>
 
       {/* ── Right input panel ── */}

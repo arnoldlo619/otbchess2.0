@@ -15,6 +15,7 @@ import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry
 import { useVisibilitySync } from "./useVisibilitySync";
 import { generateQuadTournament, swapPlayersBetweenSections, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
 import { generateMockQuadsTournament, generateCompletedMockQuadsTournament, generateCoChampionMockQuadsTournament } from "./mockQuadsData";
+import { isPlayerCountValid } from "./formatRegistry";
 
 // ─── Schema Version ───────────────────────────────────────────────────────────
 // Bump this when the DirectorState shape changes to force a clean reset
@@ -978,7 +979,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const canGenerateNext = allResultsIn && state.status !== "registration" && !isSwissElimCutoff && !isSwissElimSwissPhaseComplete && !isElimBracketComplete
     && (state.format === "swiss_elim" ? state.elimPhase === "elimination" || state.currentRound < (state.swissRounds ?? state.totalRounds) : state.currentRound < state.totalRounds);
   const isRegistration = state.status === "registration";
-  const canStart = isRegistration && state.players.length >= (state.format === "quads" ? 4 : 2);
+  const canStart = isRegistration && isPlayerCountValid(state.format, state.players.length);
 
   // Live standings with Buchholz tiebreaks from the Swiss engine
   const liveStandings = computeStandings(state.players, state.rounds);

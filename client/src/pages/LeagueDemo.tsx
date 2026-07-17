@@ -231,7 +231,7 @@ export default function LeagueDemo() {
     <>
     <div className="min-h-screen" style={{ background: pageBg }}>
       {/* ── MAIN LAYOUT ─────────────────────────────────────────────────────── */}
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex min-h-screen">
 
         {/* ── LEFT ICON RAIL (desktop) ──────────────────────────────────────── */}
         <aside
@@ -414,13 +414,13 @@ export default function LeagueDemo() {
           </div>
 
           {/* ── SCROLLABLE CONTENT ────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
 
             {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (
-              <div className="flex h-full">
+              <div className="flex">
                 {/* Main content */}
-                <div className="flex-1 p-4 lg:p-6 space-y-5 overflow-y-auto">
+                <div className="flex-1 p-4 lg:p-6 space-y-5">
 
                   {/* Featured Matchup Hero */}
                   <div
@@ -678,7 +678,7 @@ export default function LeagueDemo() {
                 </div>
                 {/* ── RIGHT PANEL: Upcoming Matchups ─────────────────────────── */}
                 <div
-                  className="hidden xl:flex flex-col w-72 flex-shrink-0 border-l overflow-y-auto"
+                  className="hidden xl:flex flex-col w-72 flex-shrink-0 border-l "
                   style={{ borderColor: cardBorder, background: isDark ? "oklch(0.17 0.05 145)" : "#f9fafb" }}
                 >
                   <div className="px-4 py-3 flex items-center justify-between sticky top-0 z-10" style={{ borderBottom: `1px solid ${cardBorder}`, background: isDark ? "oklch(0.17 0.05 145)" : "#f9fafb" }}>

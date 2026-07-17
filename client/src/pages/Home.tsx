@@ -64,6 +64,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
+import { DESKTOP_NAV_ITEMS, MOBILE_NAV_ITEMS, NAV_CTA_PRIMARY, isNavItemActive } from "@/lib/navRegistry";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
@@ -171,11 +172,7 @@ function Nav({
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const navLinks: { label: string; id: string }[] = [];
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const [currentPath] = useLocation();
 
   return (
     <nav
@@ -198,30 +195,48 @@ function Nav({
           />
         </Link>
 
-        {/* Desktop Links — centre (empty if navLinks is empty) */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <button
-              key={link.id}
-              onClick={() => scrollTo(link.id)}
-              className={`text-sm font-medium transition-colors duration-200 ${
-                isDark
-                  ? "text-white/60 hover:text-white"
-                  : "text-[#436850] hover:text-[#436850]"
-              }`}
-            >
-              {link.label}
-            </button>
-          ))}
+        {/* Desktop Links — canonical order from NAV_REGISTRY */}
+        <div className="hidden md:flex items-center gap-1">
+          {DESKTOP_NAV_ITEMS.map((item) => {
+            const isActive = isNavItemActive(item, currentPath);
+            return (
+              <Link
+                key={item.key}
+                href={item.path}
+                className={`min-h-[44px] px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center ${
+                  isActive
+                    ? isDark ? "text-white bg-white/10" : "text-[#12372A] bg-[#436850]/12"
+                    : isDark ? "text-white/60 hover:text-white hover:bg-white/08" : "text-[#436850] hover:text-[#12372A] hover:bg-[#436850]/08"
+                }`}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Right-side: Sign In / Avatar → Archive → Toggle → [Tournament Dashboard] */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Right-side: Host Tournament CTA + Sign In / Avatar + Theme Toggle */}
+        <div className="hidden md:flex items-center gap-3">
+          {/* Host Tournament CTA */}
+          <Link
+            href={NAV_CTA_PRIMARY.path}
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center border ${
+              isDark
+                ? "bg-[#436850] text-white border-[#436850] hover:bg-[#2A4A32]"
+                : "bg-[#436850] text-white border-[#436850] hover:bg-[#2A4A32]"
+            }`}
+          >
+            {NAV_CTA_PRIMARY.label}
+          </Link>
+
           {user ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                aria-label="User menu"
+                aria-expanded={userMenuOpen}
+                className={`min-h-[44px] flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all border ${
                   user.isGuest
                     ? isDark ? "border-amber-500/30 text-amber-300 hover:bg-amber-500/10" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
                     : isDark
@@ -283,43 +298,22 @@ function Nav({
           ) : (
             <button
               onClick={onSignIn}
-              className={`text-sm font-medium transition-colors ${
-                isDark ? "text-white/70 hover:text-white" : "text-[#436850] hover:text-[#2A4A32]"
+              className={`min-h-[44px] px-3 py-2 text-sm font-medium transition-colors rounded-lg ${
+                isDark ? "text-white/70 hover:text-white hover:bg-white/08" : "text-[#436850] hover:text-[#2A4A32] hover:bg-[#436850]/08"
               }`}
             >
               Sign In
             </button>
           )}
-          <Link href="/clubs">
-            <span
-              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
-                isDark
-                  ? "text-white/60 hover:text-white"
-                  : "text-[#436850] hover:text-[#436850]"
-              }`}
-            >
-              Clubs
-            </span>
-          </Link>
-          <Link href="/record">
-            <span
-              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
-                isDark
-                  ? "text-white/60 hover:text-white"
-                  : "text-[#436850] hover:text-[#436850]"
-              }`}
-            >
-              Analyze
-            </span>
-          </Link>
           <ThemeToggle />
-
         </div>
 
         {/* Mobile: toggle + menu */}
         <div className="md:hidden flex items-center gap-2">
           <button
-            className="p-2 text-foreground"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground rounded-lg"
+            aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -330,22 +324,40 @@ function Nav({
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-[#F2F7F3] border-[#436850]/12"}`}>
-          {navLinks.map((link) => (
-            <button
-              key={link.id}
-              onClick={() => { scrollTo(link.id); setMobileOpen(false); }}
-              className={`block w-full text-left py-3 text-sm font-medium border-b last:border-0 ${
-                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
-              }`}
-            >
-              {link.label}
-            </button>
-          ))}
+          {/* Host Tournament CTA — top of mobile menu */}
+          <Link
+            href={NAV_CTA_PRIMARY.path}
+            className={`flex items-center justify-center min-h-[48px] w-full mt-3 mb-2 rounded-xl text-sm font-semibold transition-colors ${
+              isDark ? "bg-[#436850] text-white" : "bg-[#436850] text-white"
+            }`}
+            onClick={() => setMobileOpen(false)}
+          >
+            {NAV_CTA_PRIMARY.label}
+          </Link>
+          {/* Canonical nav items */}
+          {MOBILE_NAV_ITEMS.map((item) => {
+            const isActive = isNavItemActive(item, currentPath);
+            return (
+              <Link
+                key={item.key}
+                href={item.path}
+                className={`flex items-center min-h-[48px] w-full py-3 text-sm font-medium border-b ${
+                  isActive
+                    ? isDark ? "text-white border-white/08" : "text-[#12372A] border-[#ADBC9F]"
+                    : isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
+                }`}
+                onClick={() => setMobileOpen(false)}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
           {user ? (
             <>
               <Link
                 href="/profile"
-                className={`block w-full py-3 text-sm font-medium border-b ${
+                className={`flex items-center min-h-[48px] w-full py-3 text-sm font-medium border-b ${
                   isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
                 }`}
                 onClick={() => setMobileOpen(false)}
@@ -354,7 +366,7 @@ function Nav({
               </Link>
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
-                className={`block w-full text-left py-3 text-sm font-medium border-b text-red-500 ${
+                className={`flex items-center min-h-[48px] w-full text-left py-3 text-sm font-medium border-b text-red-500 ${
                   isDark ? "border-white/08" : "border-[#ADBC9F]"
                 }`}
               >
@@ -364,34 +376,13 @@ function Nav({
           ) : (
             <button
               onClick={() => { onSignIn(); setMobileOpen(false); }}
-              className={`block w-full text-left py-3 text-sm font-medium border-b ${
+              className={`flex items-center min-h-[48px] w-full text-left py-3 text-sm font-medium border-b ${
                 isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
               }`}
             >
               Sign In
             </button>
           )}
-          <Link href="/clubs">
-            <span
-              className={`block w-full py-3 text-sm font-medium border-b ${
-                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
-              }`}
-              onClick={() => setMobileOpen(false)}
-            >
-              Clubs
-            </span>
-          </Link>
-          <Link href="/record">
-            <span
-              className={`block w-full py-3 text-sm font-medium border-b ${
-                isDark ? "text-white/70 border-white/08" : "text-[#436850] border-[#ADBC9F]"
-              }`}
-              onClick={() => setMobileOpen(false)}
-            >
-              Analyze
-            </span>
-          </Link>
-
         </div>
       )}
     </nav>
@@ -1510,16 +1501,16 @@ function Features() {
         {/* Section header */}
         <div className={`text-center mb-8 sm:mb-12 lg:mb-16 transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}>
-            Platform Capabilities
+            Platform
           </p>
           <h2
             className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            Everything your club needs
+            Everything in one ecosystem.
           </h2>
           <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${isDark ? "text-white/55" : "text-[#436850]"}`}>
-            Six integrated tools — from running your first tournament to building a year-round club league.
+            Tournaments, clubs, leagues, and match prep — one platform, built for OTB chess.
           </p>
         </div>
 
@@ -2345,22 +2336,23 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer() {
   const links: Record<string, { label: string; href: string }[]> = {
-    Product: [
-      { label: "Features", href: "/#features" },
-      { label: "How It Works", href: "/#how-it-works" },
+    Platform: [
+      { label: "Clubs", href: "/clubs" },
+      { label: "Tournaments", href: "/tournaments" },
+      { label: "League", href: "/league" },
+      { label: "Tools", href: "/training" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Host Tournament", href: "/tournaments/new" },
     ],
     Community: [
+      { label: "Host Tournament", href: "/tournaments/new" },
       { label: "Join a Tournament", href: "/join" },
       { label: "Discord", href: "https://discord.gg/chessotb" },
       { label: "X / Twitter", href: "https://x.com/chessotbclub" },
-      { label: "chess.com", href: "https://chess.com" },
     ],
     Company: [
       { label: "About", href: "/#how-it-works" },
-      { label: "Contact", href: "mailto:info@chessotb.club" },
       { label: "Blog", href: "/blog" },
+      { label: "Contact", href: "mailto:info@chessotb.club" },
       { label: "Terms", href: "/terms" },
     ],
   };
@@ -2555,10 +2547,8 @@ export default function Home() {
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
       <HowItWorks />
-      <EcosystemPathways />
       <Features />
       <PlayerDemo />
-      <Showcase />
       <Testimonials />
       <CTASection onCreateTournament={() => setWizardOpen(true)} />
       <Footer />

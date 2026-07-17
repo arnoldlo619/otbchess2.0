@@ -37,6 +37,7 @@ import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
+import { getPlayerCountError } from "@/lib/formatRegistry";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
@@ -6907,18 +6908,22 @@ export default function Director() {
                 </>
               )}
             </p>
-            {/* Quads divisible-by-4 warning */}
-            {state.format === "quads" && state.players.length % 4 !== 0 && (
-              <div className={`rounded-xl px-4 py-3 mb-4 border ${
-                isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200"
-              }`}>
-                <p className={`text-xs font-medium ${
-                  isDark ? "text-amber-300" : "text-amber-700"
+            {/* Capacity warning — driven by centralized formatRegistry policy */}
+            {(() => {
+              const capacityError = state.players.length > 0 ? getPlayerCountError(state.format, state.players.length) : null;
+              if (!capacityError) return null;
+              return (
+                <div className={`rounded-xl px-4 py-3 mb-4 border ${
+                  isDark ? "bg-amber-500/10 border-amber-500/30" : "bg-amber-50 border-amber-200"
                 }`}>
-                  ⚠ Quads requires groups of 4. You have {state.players.length} players ({state.players.length % 4} extra). Add {4 - (state.players.length % 4)} more player{4 - (state.players.length % 4) > 1 ? "s" : ""} or remove {state.players.length % 4} for perfect sections.
-                </p>
-              </div>
-            )}
+                  <p className={`text-xs font-medium ${
+                    isDark ? "text-amber-300" : "text-amber-700"
+                  }`}>
+                    ⚠ {capacityError}
+                  </p>
+                </div>
+              );
+            })()}
             {/* Player count summary */}
             <div className={`rounded-xl px-4 py-3 mb-5 flex items-center justify-between ${
               isDark ? "bg-white/05" : "bg-[#FBFADA]/70"
