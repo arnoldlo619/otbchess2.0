@@ -1,3 +1,4 @@
+import "./sentry.js"; // Must be first — initializes Sentry before any other module
 import express from "express";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";

@@ -488,12 +488,12 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
             >
               <Link
-                href="/tournament/otb-demo-2026/manage"
+                href="/tournaments/new"
                 className={`text-sm font-medium underline underline-offset-4 ${
                   isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#436850]"
                 }`}
               >
-                View live demo →
+                Host your first tournament →
               </Link>
             </div>
           </div>
@@ -1178,7 +1178,7 @@ function HowItWorks() {
       title: "Optimal Pairings Generated",
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
       cta: "View Live Demo",
-      ctaHref: "/tournament/otb-demo-2026",
+      ctaHref: "/tournaments/new",
       imageSrc: "/manus-storage/IMG_63952_5020b27c.jpg",
       imageAlt: "Player board assignment screen showing opponent and board number",
       imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
@@ -2340,7 +2340,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             </button>
             <SpinBorderButton
               variant="glass"
-              onClick={() => window.location.href = "/tournament/otb-demo-2026/manage"}
+              onClick={() => window.location.href = "/tournaments/new"}
             >
               View Live Demo
               <ArrowRight className="w-4 h-4" />
@@ -2359,7 +2359,7 @@ function Footer() {
       { label: "Features", href: "/#features" },
       { label: "How It Works", href: "/#how-it-works" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Demo", href: "/tournament/otb-demo-2026/manage" },
+      { label: "Host Tournament", href: "/tournaments/new" },
     ],
     Community: [
       { label: "Join a Tournament", href: "/join" },

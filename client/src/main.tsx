@@ -1,3 +1,4 @@
+import "./lib/sentry"; // Must be first — initializes Sentry before any other module
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { logger } from "@/lib/logger";
