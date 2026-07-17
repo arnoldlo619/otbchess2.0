@@ -235,7 +235,7 @@ export default function LeagueDemo() {
 
         {/* ── LEFT ICON RAIL (desktop) ──────────────────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 py-4 gap-1 relative chess-board-bg sticky top-0 self-start h-screen"
           style={{
             borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
           }}
@@ -246,7 +246,7 @@ export default function LeagueDemo() {
             style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
           />
           {/* Sidebar content — sits above the chess-pattern overlay */}
-          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
+          <div className="relative z-10 flex flex-col items-center w-full h-full">
 
           {/* Logo / back to home */}
           <button
