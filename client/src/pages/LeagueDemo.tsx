@@ -355,12 +355,7 @@ export default function LeagueDemo() {
               </div>
             </div>
 
-            {/* Right: section label */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold hidden sm:block" style={{ color: "oklch(0.70 0.12 145)" }}>
-                {TABS.find(t => t.id === activeTab)?.label}
-              </span>
-            </div>
+
           </div>
 
           {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
