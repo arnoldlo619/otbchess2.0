@@ -765,7 +765,7 @@ function ModeSelect({
                 className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Large Event
+                Large Event (Swiss + Elim)
               </h3>
               <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
                 Swiss qualification rounds, then a seeded elimination bracket. Best for open events.
