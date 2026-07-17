@@ -429,9 +429,9 @@ function WallChart({
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className={headerBg}>
-              <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-8`}>#</th>
-              <th className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor}`}>Player</th>
-              <th className={`text-center px-3 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-16`}>ELO</th>
+              <th scope="col" className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-8`}>#</th>
+              <th scope="col" className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor}`}>Player</th>
+              <th scope="col" className={`text-center px-3 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-16`}>ELO</th>
               {Array.from({ length: totalRounds }, (_, i) => i + 1).map((r) => (
                 <th
                   key={r}
@@ -444,8 +444,8 @@ function WallChart({
                   R{r}
                 </th>
               ))}
-              <th className={`text-center px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-16`}>Pts</th>
-              <th className={`text-center px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-20`}>Buch.</th>
+              <th scope="col" className={`text-center px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-16`}>Pts</th>
+              <th scope="col" className={`text-center px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-20`}>Buch.</th>
             </tr>
           </thead>
           <tbody>

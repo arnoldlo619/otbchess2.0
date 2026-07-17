@@ -7312,3 +7312,130 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Matchup Prep loading/success/failure tests (4 data quality tests)
 - [x] Dark/light theme tests (4 token consistency tests)
 - [x] Phases 1-4 regression tests remain green (5934/5934 pass)
+
+## Phase 6 — Platform-Wide QA, Performance and Release Readiness
+
+### A. Route Audit
+- [ ] Canonical route inventory document
+- [ ] All public static routes return 200 (no 404)
+- [ ] All dynamic routes (clubs/:id, tournaments/:id, etc.) have correct fallbacks
+- [ ] No broken CTAs on Home, Pricing, Join pages
+- [ ] No stale slugs in navigation
+- [ ] No redirect loops
+- [ ] Blog/Journal routes valid
+- [ ] Training routes valid
+- [ ] Error pages (404, 500) render correctly
+
+### B. Design System Compliance
+- [ ] Raw color audit (no unapproved hex/rgb outside token set)
+- [ ] Typography audit (no unapproved font sizes or weights)
+- [ ] Spacing audit (no arbitrary px values outside scale)
+- [ ] Border radius audit (consistent rounded-* usage)
+- [ ] Icon consistency (all icons from OtbIcons or lucide-react)
+- [ ] Button/form component audit (no ad-hoc inline button styles)
+- [ ] Missing dark/light theme variants
+- [ ] Duplicate patterns consolidated into shared components
+- [ ] Legacy allowlist exceptions documented
+
+### C. Visual QA
+- [ ] 360×800 mobile layout (no horizontal overflow)
+- [ ] 390×844 iPhone 14 layout
+- [ ] 768×1024 tablet layout
+- [ ] 1280×800 laptop layout
+- [ ] 1440×900 desktop layout
+- [ ] Dark theme visual review
+- [ ] Light theme visual review
+- [ ] Long content (long names, long descriptions)
+- [ ] Missing imagery (broken image fallbacks)
+- [ ] Empty data states
+- [ ] Loading states
+- [ ] Error states
+
+### D. Cross-Browser QA
+- [ ] Chrome (latest) — primary browser
+- [ ] Safari/WebKit — CSS grid, backdrop-filter, oklch
+- [ ] Firefox — flexbox, CSS variables
+- [ ] Keyboard navigation works in all browsers
+- [ ] Touch events on mobile browsers
+
+### E. Accessibility
+- [ ] Zero critical Axe violations
+- [ ] Zero serious Axe violations
+- [ ] No keyboard trap in any modal or drawer
+- [ ] All principal controls have accessible labels
+- [ ] Focus order logical on all principal pages
+- [ ] Landmark regions on all pages (main, nav, header, footer)
+- [ ] Form labels on all inputs
+- [ ] Table semantics (thead, th scope)
+- [ ] Reduced-motion: no essential animation-only feedback
+- [ ] WCAG AA contrast in both themes
+
+### F. Performance
+- [ ] JavaScript bundle size audit (total + per-chunk)
+- [ ] LCP ≤2.5s (lab equivalent)
+- [ ] CLS ≤0.1
+- [ ] INP ≤200ms
+- [ ] Cached route transition ≤500ms
+- [ ] Result interaction feedback ≤100ms
+- [ ] No unnecessary full-screen route loader
+- [ ] No main-thread blocking from decorative animation
+- [ ] Image optimization (lazy loading, correct sizes)
+- [ ] Font loading strategy (no FOIT)
+
+### G. Functional Regression
+- [ ] All 5934 client tests pass
+- [ ] Tournament: Quick Start, Schedule, Quads, Swiss flows
+- [ ] Tournament: Registration, check-in, pairings, result entry
+- [ ] Tournament: Round progression, standings, finalization
+- [ ] Tournament: Public sync, reports, print, broadcast
+- [ ] Community: Club discovery, public profile, creation, feed
+- [ ] Community: Members, events, league navigation
+- [ ] Training: Tools hub, openings, matchup prep, repertoire
+- [ ] Marketing: Landing, pricing, journal, join, errors
+
+### H. Data and State Correctness
+- [ ] Half-point scores (0.5) preserved correctly
+- [ ] Tie-break labels match format (Swiss vs Quads)
+- [ ] No loading errors shown as factual zeros
+- [ ] Demo data clearly labeled
+- [ ] Status consistent across director/public/player views
+
+### I. Resilience
+- [ ] Offline transition shows graceful error
+- [ ] API timeout shows retry option
+- [ ] Chess.com lookup failure shows clear error
+- [ ] Invalid slug shows 404 with recovery link
+- [ ] Duplicate registration blocked with clear message
+- [ ] Browser refresh during multi-step flows preserves state
+
+### J. Content QA
+- [ ] Consistent "ChessOTB.club" naming throughout
+- [ ] Consistent "OTB!!" usage
+- [ ] No Swiss language in Quads contexts
+- [ ] No placeholder text in production UI
+- [ ] No fictional claims presented as verified
+- [ ] Consistent capitalization and punctuation
+- [ ] Clear button labels (no "Click here")
+- [ ] Concise empty/error states
+
+### K. Observability
+- [ ] Frontend error logging verified (Sentry or equivalent)
+- [ ] Failed API requests logged
+- [ ] Core Web Vitals reporting
+- [ ] SSE reconnect frequency monitored
+- [ ] No sensitive user data in logs
+
+### L. CI Quality Gates
+- [ ] TypeScript check in CI (0 errors)
+- [ ] ESLint in CI (0 errors)
+- [ ] Unit tests in CI (all pass)
+- [ ] Production build succeeds
+- [ ] Internal link validation
+- [ ] Performance budget check documented
+
+### M. Release Decision
+- [ ] P0/P1/P2/P3 issue classification
+- [ ] Production-readiness report
+- [ ] GO/NO-GO recommendation with evidence
+- [ ] Deployment checklist
+- [ ] Rollback plan

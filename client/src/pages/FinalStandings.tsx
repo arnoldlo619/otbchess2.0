@@ -739,23 +739,23 @@ export default function FinalStandings() {
                   {/* Header */}
                   <thead>
                     <tr className={`${thBg} border-b ${border}`}>
-                      <th className={`text-left text-xs font-bold uppercase tracking-wider px-4 py-2.5 w-10 ${thText}`}>#</th>
-                      <th className={`text-left text-xs font-bold uppercase tracking-wider px-2 py-2.5 ${thText}`}>Player</th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-16 ${thText}`}>Rating</th>
+                      <th scope="col" className={`text-left text-xs font-bold uppercase tracking-wider px-4 py-2.5 w-10 ${thText}`}>#</th>
+                      <th scope="col" className={`text-left text-xs font-bold uppercase tracking-wider px-2 py-2.5 ${thText}`}>Player</th>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-16 ${thText}`}>Rating</th>
                       {/* Highlighted tiebreak columns — matching the red-boxed area in the reference */}
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 rounded-t-sm`} style={{ color: accent, backgroundColor: isDark ? "rgba(61,107,71,0.15)" : "rgba(61,107,71,0.08)" }}>Pts</th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 ${thText}`}>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 rounded-t-sm`} style={{ color: accent, backgroundColor: isDark ? "rgba(61,107,71,0.15)" : "rgba(61,107,71,0.08)" }}>Pts</th>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 ${thText}`}>
                         <span className="inline-flex items-center justify-end gap-0.5">Bch1<TiebreakTooltip type="bc1" position="below" /></span>
                       </th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 ${thText}`}>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 ${thText}`}>
                         <span className="inline-flex items-center justify-end gap-0.5">Bch<TiebreakTooltip type="buchholz" position="below" /></span>
                       </th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 ${thText}`}>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-12 ${thText}`}>
                         <span className="inline-flex items-center justify-end gap-0.5">SB<TiebreakTooltip type="sb" position="below" /></span>
                       </th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-8 ${thText}`}>W</th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-8 ${thText}`}>D</th>
-                      <th className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-8 ${thText}`}>L</th>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-8 ${thText}`}>W</th>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-8 ${thText}`}>D</th>
+                      <th scope="col" className={`text-right text-xs font-bold uppercase tracking-wider px-2 py-2.5 w-8 ${thText}`}>L</th>
                     </tr>
                   </thead>
                   <tbody>

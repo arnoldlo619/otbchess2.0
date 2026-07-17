@@ -3211,7 +3211,6 @@ export default function ClubProfile() {
         {(activeTab as string) === "tournaments" && (         <div className="space-y-4 animate-in fade-in duration-200">
 
             {/* ── Owner-only Host Tournament CTA ────────────────────────────── */}
-            {/* TODO: Ensure tournament creation flow is optimized and user-friendly */}
             {isOwner ? (
               <button
                 onClick={() => setShowWizard(true)}
@@ -5168,13 +5167,13 @@ function TournamentCard({
                     <table className="w-full text-xs">
                       <thead>
                         <tr className={`${textMuted}`}>
-                          <th className="text-left pb-2 pr-2 font-semibold w-6">#</th>
-                          <th className="text-left pb-2 pr-2 font-semibold">Player</th>
-                          <th className="text-center pb-2 px-2 font-semibold">Pts</th>
-                          <th className="text-center pb-2 px-2 font-semibold">W</th>
-                          <th className="text-center pb-2 px-2 font-semibold">D</th>
-                          <th className="text-center pb-2 px-2 font-semibold">L</th>
-                          <th className="text-center pb-2 pl-2 font-semibold">Buch</th>
+                          <th scope="col" className="text-left pb-2 pr-2 font-semibold w-6">#</th>
+                          <th scope="col" className="text-left pb-2 pr-2 font-semibold">Player</th>
+                          <th scope="col" className="text-center pb-2 px-2 font-semibold">Pts</th>
+                          <th scope="col" className="text-center pb-2 px-2 font-semibold">W</th>
+                          <th scope="col" className="text-center pb-2 px-2 font-semibold">D</th>
+                          <th scope="col" className="text-center pb-2 px-2 font-semibold">L</th>
+                          <th scope="col" className="text-center pb-2 pl-2 font-semibold">Buch</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -5422,12 +5421,12 @@ function RoundRobinMatrix({
         <table className="text-xs w-full">
           <thead>
             <tr>
-              <th className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>#</th>
-              <th className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>Player</th>
+              <th scope="col" className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>#</th>
+              <th scope="col" className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>Player</th>
               {sorted.map((_, i) => (
-                <th key={i} className={`text-center pb-2 px-1 font-semibold ${textMuted} w-7`}>{i + 1}</th>
+                <th scope="col" key={i} className={`text-center pb-2 px-1 font-semibold ${textMuted} w-7`}>{i + 1}</th>
               ))}
-              <th className={`text-center pb-2 pl-2 font-bold`} style={{ color: accent }}>Pts</th>
+              <th scope="col" className={`text-center pb-2 pl-2 font-bold`} style={{ color: accent }}>Pts</th>
             </tr>
           </thead>
           <tbody>
@@ -5659,13 +5658,13 @@ function LeagueCard({
                   <table className="w-full text-xs">
                     <thead>
                       <tr className={textMuted}>
-                        <th className="text-left pb-2 pr-1 font-semibold w-5">#</th>
-                        <th className="text-left pb-2 pr-2 font-semibold">Player</th>
-                        <th className="text-center pb-2 px-1 font-semibold w-7">W</th>
-                        <th className="text-center pb-2 px-1 font-semibold w-7">D</th>
-                        <th className="text-center pb-2 px-1 font-semibold w-7">L</th>
-                        <th className="text-center pb-2 px-1 font-bold w-10" style={{ color: accent }}>Pts</th>
-                        <th className="text-center pb-2 pl-2 font-semibold">Form</th>
+                        <th scope="col" className="text-left pb-2 pr-1 font-semibold w-5">#</th>
+                        <th scope="col" className="text-left pb-2 pr-2 font-semibold">Player</th>
+                        <th scope="col" className="text-center pb-2 px-1 font-semibold w-7">W</th>
+                        <th scope="col" className="text-center pb-2 px-1 font-semibold w-7">D</th>
+                        <th scope="col" className="text-center pb-2 px-1 font-semibold w-7">L</th>
+                        <th scope="col" className="text-center pb-2 px-1 font-bold w-10" style={{ color: accent }}>Pts</th>
+                        <th scope="col" className="text-center pb-2 pl-2 font-semibold">Form</th>
                       </tr>
                     </thead>
                     <tbody>

@@ -1112,16 +1112,16 @@ function CreateEventModal({
           {/* Date + Start + End */}
           <div>
             <label className={labelCls}>Date *</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} />
+            <input type="date" aria-label="Event date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Start Time</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={inputCls} />
+              <input type="time" aria-label="Start time" value={startTime} onChange={e => setStartTime(e.target.value)} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>End Time</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
+              <input type="time" aria-label="End time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
 
@@ -1284,16 +1284,16 @@ function EditEventModal({
 
           <div>
             <label className={labelCls}>Date *</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
+            <input type="date" aria-label="Event date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Start Time</label>
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
+              <input type="time" aria-label="Start time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>End Time</label>
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
+              <input type="time" aria-label="End time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
 
@@ -6054,11 +6054,11 @@ export default function ClubDashboard() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-white/40 text-xs font-semibold block mb-1.5">Start Date</label>
-                          <input type="date" value={seasonStartDate} onChange={e => setSeasonStartDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none" />
+                          <input type="date" aria-label="Season start date" value={seasonStartDate} onChange={e => setSeasonStartDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none" />
                         </div>
                         <div>
                           <label className="text-white/40 text-xs font-semibold block mb-1.5">End Date</label>
-                          <input type="date" value={seasonEndDate} onChange={e => setSeasonEndDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none" />
+                          <input type="date" aria-label="Season end date" value={seasonEndDate} onChange={e => setSeasonEndDate(e.target.value)} className="w-full px-3 py-2 rounded-xl text-sm text-white bg-white/08 border border-white/10 outline-none" />
                         </div>
                       </div>
                       <button

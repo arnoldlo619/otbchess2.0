@@ -438,6 +438,11 @@ export function createApp() {
   // ── Auth routes ─────────────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
 
+  // ── Health check ─────────────────────────────────────────────────────────────────────
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", ts: Date.now() });
+  });
+
   // ── Prep Cache Helper ─────────────────────────────────────────────────────────
   // 24-hour TTL: returns cached report if fresh, otherwise builds + caches.
   const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -3624,3 +3629,13 @@ const isMain = process.argv[1] &&
 if (isMain) {
   startServer().catch((err) => logger.error('[server] Fatal startup error:', err));
 }
+
+// Global error handlers — prevent silent crashes in production
+process.on('unhandledRejection', (reason) => {
+  logger.error('[process] Unhandled promise rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  logger.error('[process] Uncaught exception:', err);
+  // Give the logger time to flush before exiting
+  setTimeout(() => process.exit(1), 500);
+});
