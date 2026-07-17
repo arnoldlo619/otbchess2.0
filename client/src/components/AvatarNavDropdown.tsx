@@ -692,36 +692,50 @@ export function AvatarNavDropdown({
           )}
         </button>
       ) : (
-        /* ── Default pill trigger: avatar + chevron ── */
-        <button
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30 hover:bg-white/10 active:bg-white/15" : "bg-white/80 hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F] shadow-sm"} backdrop-blur-md`}
+        /* ── Default pill trigger: avatar link + chevron toggle ── */
+        <div
+          className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30" : "bg-white/80 shadow-sm"} backdrop-blur-md overflow-hidden`}
           style={{ padding: "3px 8px 3px 3px" }}
         >
-          {/* Avatar circle */}
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-            style={{
-              background:
-                user && !user.isGuest
-                  ? "#436850"
-                  : user?.isGuest
-                  ? "rgba(245,158,11,0.15)"
-                  : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-            }}
+          {/* Avatar circle — links to /profile for signed-in users */}
+          {user && !user.isGuest ? (
+            <Link
+              href="/profile"
+              aria-label="View your profile"
+              className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ring-0 hover:ring-2 hover:ring-[#4CAF50]/60 transition-all"
+              style={{ background: "#436850" }}
+              onClick={() => setOpen(false)}
+            >
+              <AvatarCircle user={user} />
+            </Link>
+          ) : (
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+              style={{
+                background:
+                  user?.isGuest
+                    ? "rgba(245,158,11,0.15)"
+                    : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+              }}
+            >
+              <AvatarCircle user={user} />
+            </div>
+          )}
+          {/* Chevron — toggles dropdown */}
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className={`flex items-center transition-colors rounded-sm px-0.5 py-0.5 ${isDark ? "hover:bg-white/10 active:bg-white/15" : "hover:bg-[#ADBC9F]/50 active:bg-[#ADBC9F]"}`}
           >
-            <AvatarCircle user={user} />
-          </div>
-          {/* Chevron */}
-          <motion.div
-            animate={{ rotate: open ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
-          </motion.div>
-        </button>
+            <motion.div
+              animate={{ rotate: open ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
+            </motion.div>
+          </button>
+        </div>
       )}
 
       {/* ── Backdrop ── */}
