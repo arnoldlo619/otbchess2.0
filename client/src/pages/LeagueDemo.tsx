@@ -340,20 +340,8 @@ export default function LeagueDemo() {
               <span className="text-base font-bold truncate block" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
             </div>
 
-            {/* Centered Live pill */}
-            <div className="flex-1 flex justify-center">
-              <div
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-                style={{
-                  background: "oklch(0.22 0.10 145)",
-                  color: accent,
-                  border: `1px solid ${accent}44`,
-                }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent }} />
-                Live Demo · Week 14/16
-              </div>
-            </div>
+            {/* Spacer to keep mobile title centred */}
+            <div className="flex-1" />
 
 
           </div>
@@ -376,12 +364,26 @@ export default function LeagueDemo() {
             />
             <div className="relative z-10 h-full flex items-center gap-6 px-6">
               <div className="flex-1 min-w-0">
-                <h2
-                  className="text-xl font-black truncate leading-tight"
-                  style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
-                >
-                  ChessOTB Club League
-                </h2>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h2
+                    className="text-xl font-black truncate leading-tight"
+                    style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+                  >
+                    ChessOTB Club League
+                  </h2>
+                  {/* Live Demo pill — merged from top bar */}
+                  <div
+                    className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
+                    style={{
+                      background: "oklch(0.22 0.10 145)",
+                      color: accent,
+                      border: `1px solid ${accent}44`,
+                    }}
+                  >
+                    <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: accent }} />
+                    Live Demo
+                  </div>
+                </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.55)" }}>Demo Season</span>
                   <span
