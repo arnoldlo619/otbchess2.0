@@ -4,12 +4,23 @@
  * Replaces the full-bleed banner with a contained rounded module that aligns
  * to the same grid as the content cards below. All existing data props and
  * action handlers are threaded through unchanged.
+ *
+ * Layout (owner/director view):
+ *   - Top-right: nothing (no crowded badge pile)
+ *   - Identity row: avatar + name + Owner/Director badge (inline) + Verified + Beginner Friendly
+ *   - Owner actions row: Promo + Share QR (clean, below identity)
+ *   - Stats row, social links as before
+ *
+ * Layout (member/visitor view):
+ *   - Top-right: Follow + Join/Leave buttons
+ *   - Identity row: avatar + name + Verified + Beginner Friendly
  */
 import React from "react";
 import { motion } from "framer-motion";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
   CheckCircle2, Camera, X, Instagram, Sparkles, QrCode,
+  Crown, Shield,
 } from "lucide-react";
 
 // Shared fade-up variants for staggered hero entrance
@@ -172,122 +183,68 @@ export function ClubHero({
       {/* ── Content ── */}
       <div className="relative z-10 p-6 sm:p-8 flex flex-col gap-5">
 
-        {/* Top row: action buttons (avatar dropdown moved to sidebar) */}
-        <motion.div
-          className="flex items-start justify-between gap-3 flex-wrap"
-          variants={heroFadeUp}
-          initial="hidden"
-          animate="visible"
-          custom={0.05}
-        >
-          <div className="flex-shrink-0" />
-          {/* Action buttons — right-aligned in hero */}
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {!isOwner && (
+        {/* Top row: Follow/Join actions for non-owners only (right-aligned) */}
+        {(!isOwner && !isDirector) && (
+          <motion.div
+            className="flex items-start justify-end gap-2 flex-wrap"
+            variants={heroFadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={0.05}
+          >
+            <button
+              onClick={onFollow}
+              disabled={followingLoading}
+              className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={following
+                ? { borderColor: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.65)", background: "rgba(0,0,0,0.40)", backdropFilter: "blur(8px)" }
+                : { borderColor: `${accent}88`, color: accent, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(8px)", outlineColor: accent }
+              }
+              aria-label={following ? "Unfollow club" : "Follow club"}
+            >
+              {followingLoading
+                ? <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                : <Bell size={11} />
+              }
+              {following ? "Following" : "Follow"}
+              {followerCount > 0 && (
+                <span className="opacity-60 tabular-nums">
+                  {followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}
+                </span>
+              )}
+            </button>
+            {joined ? (
               <button
-                onClick={onFollow}
-                disabled={followingLoading}
-                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                style={following
-                  ? { borderColor: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.65)", background: "rgba(0,0,0,0.40)", backdropFilter: "blur(8px)" }
-                  : { borderColor: `${accent}88`, color: accent, background: "rgba(0,0,0,0.40)", backdropFilter: "blur(8px)", outlineColor: accent }
-                }
-                aria-label={following ? "Unfollow club" : "Follow club"}
+                onClick={onLeave}
+                disabled={joining}
+                className="text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all hover:opacity-80 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ borderColor: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.65)", background: "rgba(0,0,0,0.40)", backdropFilter: "blur(8px)" }}
+                aria-label="Leave club"
               >
-                {followingLoading
-                  ? <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-                  : <Bell size={11} />
-                }
-                {following ? "Following" : "Follow"}
-                {followerCount > 0 && (
-                  <span className="opacity-60 tabular-nums">
-                    {followerCount >= 1000 ? `${(followerCount / 1000).toFixed(1)}k` : followerCount}
-                  </span>
-                )}
+                {joining ? "…" : "Leave"}
+              </button>
+            ) : (
+              <button
+                onClick={onJoin}
+                disabled={joining}
+                className="text-xs font-bold px-4 py-2 rounded-xl transition-all hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{
+                  background: accent,
+                  color: "#fff",
+                  boxShadow: `0 4px 16px ${accent}44`,
+                  outlineColor: accent,
+                }}
+                aria-label={isPublic ? "Join club" : "Request to join club"}
+              >
+                {joining ? "…" : isPublic ? "Join" : "Request"}
               </button>
             )}
-            {!isOwner && !isDirector && (
-              joined ? (
-                <button
-                  onClick={onLeave}
-                  disabled={joining}
-                  className="text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all hover:opacity-80 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                  style={{ borderColor: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.65)", background: "rgba(0,0,0,0.40)", backdropFilter: "blur(8px)" }}
-                  aria-label="Leave club"
-                >
-                  {joining ? "…" : "Leave"}
-                </button>
-              ) : (
-                <button
-                  onClick={onJoin}
-                  disabled={joining}
-                  className="text-xs font-bold px-4 py-2 rounded-xl transition-all hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                  style={{
-                    background: accent,
-                    color: "#fff",
-                    boxShadow: `0 4px 16px ${accent}44`,
-                    outlineColor: accent,
-                  }}
-                  aria-label={isPublic ? "Join club" : "Request to join club"}
-                >
-                  {joining ? "…" : isPublic ? "Join" : "Request"}
-                </button>
-              )
-            )}
-            {(isOwner || isDirector) && (
-              <>
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                  style={{
-                    background: "rgba(245,197,66,0.12)",
-                    borderColor: "rgba(245,197,66,0.30)",
-                    color: "#f5c542",
-                  }}
-                >
-                  {isOwner ? "Owner" : "Director"}
-                </span>
-                {onCreatePromo && (
-                  <button
-                    onClick={onCreatePromo}
-                    className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    style={{
-                      borderColor: "rgba(76,175,80,0.40)",
-                      color: "#4CAF50",
-                      background: "rgba(76,175,80,0.12)",
-                      backdropFilter: "blur(8px)",
-                      outlineColor: "#4CAF50",
-                    }}
-                    aria-label="Create promotional graphic"
-                  >
-                    <Sparkles size={11} />
-                    Promo
-                  </button>
-                )}
-                {onShareQR && (
-                  <button
-                    onClick={onShareQR}
-                    className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border transition-all hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    style={{
-                      borderColor: "rgba(59,130,246,0.40)",
-                      color: "#93C5FD",
-                      background: "rgba(59,130,246,0.12)",
-                      backdropFilter: "blur(8px)",
-                      outlineColor: "#3B82F6",
-                    }}
-                    aria-label="Share Club QR code projection"
-                  >
-                    <QrCode size={11} />
-                    Share QR
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Main identity row: avatar + name + meta */}
         <motion.div
-          className="flex items-end gap-4 sm:gap-5 sm:-mt-14 lg:-mt-16 sm:pr-36 lg:pr-44"
+          className="flex items-end gap-4 sm:gap-5"
           variants={heroFadeUp}
           initial="hidden"
           animate="visible"
@@ -318,6 +275,20 @@ export function ClubHero({
               >
                 {name}
               </h1>
+              {/* Owner/Director badge — inline with name, not crowded in top-right */}
+              {(isOwner || isDirector) && (
+                <span
+                  className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                  style={{
+                    background: "rgba(245,197,66,0.14)",
+                    border: "1px solid rgba(245,197,66,0.32)",
+                    color: "#f5c542",
+                  }}
+                >
+                  {isOwner ? <Crown size={9} /> : <Shield size={9} />}
+                  {isOwner ? "Owner" : "Director"}
+                </span>
+              )}
               {isVerified && (
                 <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
                   style={{ background: "oklch(0.25 0.10 220)", color: "oklch(0.75 0.14 220)" }}>
@@ -352,6 +323,52 @@ export function ClubHero({
             </div>
           </div>
         </motion.div>
+
+        {/* Owner action buttons — clean row below identity, only for owners/directors */}
+        {(isOwner || isDirector) && (onCreatePromo || onShareQR) && (
+          <motion.div
+            className="flex items-center gap-2 flex-wrap"
+            variants={heroFadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={0.22}
+          >
+            {onCreatePromo && (
+              <button
+                onClick={onCreatePromo}
+                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl border transition-all hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{
+                  borderColor: "rgba(76,175,80,0.35)",
+                  color: "#4CAF50",
+                  background: "rgba(76,175,80,0.10)",
+                  backdropFilter: "blur(8px)",
+                  outlineColor: "#4CAF50",
+                }}
+                aria-label="Create promotional graphic"
+              >
+                <Sparkles size={11} />
+                Promo
+              </button>
+            )}
+            {onShareQR && (
+              <button
+                onClick={onShareQR}
+                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl border transition-all hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{
+                  borderColor: "rgba(59,130,246,0.35)",
+                  color: "#93C5FD",
+                  background: "rgba(59,130,246,0.10)",
+                  backdropFilter: "blur(8px)",
+                  outlineColor: "#3B82F6",
+                }}
+                aria-label="Share Club QR code projection"
+              >
+                <QrCode size={11} />
+                Share QR
+              </button>
+            )}
+          </motion.div>
+        )}
 
         {/* Stats row */}
         <motion.div
@@ -454,7 +471,7 @@ export function ClubHero({
               if (file) onBannerFile(file);
             }}
           />
-          {/* Banner action buttons */}
+          {/* Banner action buttons — top-right, camera only (no badge crowding) */}
           <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
             {bannerUploading ? (
               <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
