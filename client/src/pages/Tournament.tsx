@@ -126,20 +126,30 @@ function ScorePill({ points }: { points: number }) {
 
 // ─── Live Pulse Indicator ─────────────────────────────────────────────────────
 function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number; totalRounds: number; status: string }) {
-  const isLive = status === "in_progress" || status === "paused";
-  if (!isLive) {
+  // Mutually exclusive states — never show Live + Completed simultaneously
+  if (status === "completed") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground bg-muted border border-border px-3 py-1.5 rounded-full">
-        Completed
+      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">
+        Complete
       </span>
     );
   }
-  return (
-    <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-      Live · Round {currentRound} of {totalRounds}
-    </span>
-  );
+  if (status === "paused") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-400/25 text-amber-100 border border-amber-400/40">
+        Paused
+      </span>
+    );
+  }
+  if (status === "in_progress") {
+    return (
+      <span className="inline-flex items-center gap-2 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">
+        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+        Live · R{currentRound}/{totalRounds}
+      </span>
+    );
+  }
+  return null;
 }
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────

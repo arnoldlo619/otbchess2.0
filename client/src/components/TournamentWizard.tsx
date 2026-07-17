@@ -631,7 +631,7 @@ function ModeSelect({
             <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
                 <Clock className="w-3.5 h-3.5" />
-                Setup method · no format config
+                Setup method · picks format for you
               </div>
               <ArrowRight
                 className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"

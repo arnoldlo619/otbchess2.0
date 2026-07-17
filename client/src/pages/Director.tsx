@@ -283,6 +283,7 @@ function BoardCard({
   const black = players.find((p) => p.id === game.blackId)!;
   const isComplete = game.result !== "*";
   const [pendingCorrection, setPendingCorrection] = useState<Result | null>(null);
+  const [showBroadcastControls, setShowBroadcastControls] = useState(false);
 
   return (
     <div
@@ -347,8 +348,23 @@ function BoardCard({
             </span>
           )}
         </div>
-        {/* Broadcast button — opens broadcast control for this board */}
+        {/* Broadcast / device controls — collapsed by default */}
         {!editMode && tournamentId && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowBroadcastControls(v => !v); }}
+              className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 ${
+                showBroadcastControls
+                  ? isDark ? "bg-white/10 border-white/20 text-white/70" : "bg-[#ADBC9F]/50 border-[#436850]/30 text-[#436850]"
+                  : isDark ? "bg-white/04 border-white/10 text-white/35 hover:bg-white/08" : "bg-[#FBFADA] border-[#ADBC9F]/60 text-[#436850]/60 hover:bg-[#ADBC9F]/30"
+              }`}
+              title="Broadcast &amp; device controls"
+              aria-label="Toggle broadcast controls"
+            >
+              <Radio className="w-3 h-3" />
+              <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showBroadcastControls ? "rotate-180" : ""}`} />
+            </button>
+            {showBroadcastControls && (
           <a
             href={(() => {
               const params = new URLSearchParams();
@@ -431,6 +447,8 @@ function BoardCard({
             <Plug className="w-3 h-3" />
             Connect Board
           </button>
+            )}
+          </div>
         )}
         {!editMode && isComplete && (
           <span
@@ -3111,6 +3129,65 @@ export default function Director() {
                   tournamentId={state.tournamentId}
                   onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
                 />
+              </div>
+            )}
+
+            {/* ── Mobile Round Navigator — horizontal scroll with snap (hidden md+) ── */}
+            {!isRegistration && (
+              <div className="md:hidden">
+                <div
+                  className={`flex items-center gap-0 rounded-2xl px-4 py-2.5 overflow-x-auto scrollbar-none scroll-smooth ${
+                    isDark ? "bg-white/05 border border-white/08" : "bg-[#FBFADA]/70 border border-[#ADBC9F]"
+                  }`}
+                  style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}
+                >
+                  <span className={`text-[9px] font-bold uppercase tracking-widest mr-3 shrink-0 ${
+                    isDark ? "text-white/30" : "text-[#436850]"
+                  }`}>Rounds</span>
+                  {Array.from({ length: state.totalRounds }, (_, i) => i + 1).map((r) => {
+                    const roundData = state.rounds.find((rd) => rd.number === r);
+                    const isComplete = roundData?.status === "completed";
+                    const isCurrent = r === state.currentRound;
+                    const roundGames = roundData?.games.filter((g) => g.whiteId !== "BYE") ?? [];
+                    const roundDone = roundGames.filter((g) => g.result !== "*").length;
+                    const roundTotal = roundGames.length;
+                    const showCount = roundTotal > 0 && (isCurrent || isComplete);
+                    return (
+                      <div key={r} className="flex items-center" style={{ scrollSnapAlign: "center" }}>
+                        <div className="flex flex-col items-center">
+                          <div className={`relative flex items-center justify-center w-9 h-9 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
+                            isComplete ? "bg-[#436850] text-white shadow-md"
+                            : isCurrent
+                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] border-2 border-[#4CAF50]" : "bg-[#436850]/10 text-[#436850] border-2 border-[#436850]"
+                              : isDark ? "bg-white/06 text-white/25 border border-white/10" : "bg-white text-[#436850]/70 border border-[#ADBC9F]"
+                          }`}>
+                            {isCurrent && <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: isDark ? "#4CAF50" : "#436850" }} />}
+                            {isComplete ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span>{r}</span>}
+                          </div>
+                          {showCount && (
+                            <span className={`text-[9px] font-bold tabular-nums leading-none mt-0.5 ${
+                              isComplete || roundDone === roundTotal
+                                ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
+                                : isDark ? "text-amber-400" : "text-amber-600"
+                            }`}>{roundDone}/{roundTotal}</span>
+                          )}
+                        </div>
+                        {r < state.totalRounds && (
+                          <div className={`h-0.5 w-5 shrink-0 rounded-full mx-1 ${
+                            isComplete ? "bg-[#436850]" : isDark ? "bg-white/10" : "bg-[#ADBC9F]"
+                          }`} />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {state.currentRound > state.totalRounds && (
+                    <div className="ml-2 flex items-center shrink-0">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-md" style={{ background: "#436850" }}>
+                        <Trophy className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

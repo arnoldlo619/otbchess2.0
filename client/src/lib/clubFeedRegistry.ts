@@ -571,7 +571,7 @@ export function recordTournamentCompleted(
     actorName: winnerName,
     description: `${tournamentName} concluded`,
     detail,
-    linkHref: `/tournament/${tournamentId}/report`,
+    linkHref: `/tournament/${tournamentId}/results`,
     linkLabel: "View results",
     tournamentName,
     tournamentId,

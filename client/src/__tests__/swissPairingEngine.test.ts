@@ -582,3 +582,113 @@ describe("Round progression: multi-round pairing correctness", () => {
     }
   });
 });
+
+// ─── Result Entry & Correction ────────────────────────────────────────────────
+
+import { applyResultToPlayers } from "../lib/swiss";
+
+describe("applyResultToPlayers: result entry", () => {
+  function makeFullPlayer(id: string, elo = 1500): Player {
+    return {
+      id,
+      name: id,
+      username: id,
+      elo,
+      pairingRating: elo,
+      country: "US",
+      points: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      colorHistory: [],
+      seed: 0,
+    };
+  }
+
+  it("awards 1 point to white on 1-0", () => {
+    const players = [makeFullPlayer("p1"), makeFullPlayer("p2")];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "p1", blackId: "p2", result: "*" };
+    const updated = applyResultToPlayers(players, game, "1-0");
+    const p1 = updated.find((p) => p.id === "p1")!;
+    const p2 = updated.find((p) => p.id === "p2")!;
+    expect(p1.points).toBe(1);
+    expect(p1.wins).toBe(1);
+    expect(p2.points).toBe(0);
+    expect(p2.losses).toBe(1);
+  });
+
+  it("awards 1 point to black on 0-1", () => {
+    const players = [makeFullPlayer("p1"), makeFullPlayer("p2")];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "p1", blackId: "p2", result: "*" };
+    const updated = applyResultToPlayers(players, game, "0-1");
+    const p1 = updated.find((p) => p.id === "p1")!;
+    const p2 = updated.find((p) => p.id === "p2")!;
+    expect(p2.points).toBe(1);
+    expect(p2.wins).toBe(1);
+    expect(p1.points).toBe(0);
+    expect(p1.losses).toBe(1);
+  });
+
+  it("awards 0.5 points each on ½-½", () => {
+    const players = [makeFullPlayer("p1"), makeFullPlayer("p2")];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "p1", blackId: "p2", result: "*" };
+    const updated = applyResultToPlayers(players, game, "½-½");
+    const p1 = updated.find((p) => p.id === "p1")!;
+    const p2 = updated.find((p) => p.id === "p2")!;
+    expect(p1.points).toBe(0.5);
+    expect(p1.draws).toBe(1);
+    expect(p2.points).toBe(0.5);
+    expect(p2.draws).toBe(1);
+  });
+
+  it("skips bye games (whiteId === BYE)", () => {
+    const players = [makeFullPlayer("p1")];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "BYE", blackId: "p1", result: "*" };
+    const updated = applyResultToPlayers(players, game, "1-0");
+    // Should return unchanged players
+    expect(updated[0].points).toBe(0);
+  });
+
+  it("corrects a previously entered result (1-0 → ½-½)", () => {
+    const players = [makeFullPlayer("p1"), makeFullPlayer("p2")];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "p1", blackId: "p2", result: "*" };
+    // First entry: white wins
+    const after1 = applyResultToPlayers(players, game, "1-0");
+    // Correction: change to draw
+    const gameAfter1 = { ...game, result: "1-0" as Result };
+    const after2 = applyResultToPlayers(after1, gameAfter1, "½-½");
+    const p1 = after2.find((p) => p.id === "p1")!;
+    const p2 = after2.find((p) => p.id === "p2")!;
+    // p1 should have 0.5 pts (1 reversed, 0.5 added), p2 should have 0.5 pts (loss reversed, draw added)
+    expect(p1.points).toBe(0.5);
+    expect(p1.wins).toBe(0);
+    expect(p1.draws).toBe(1);
+    expect(p2.points).toBe(0.5);
+    expect(p2.losses).toBe(0);
+    expect(p2.draws).toBe(1);
+  });
+
+  it("adds color history only on first entry, not on correction", () => {
+    const players = [makeFullPlayer("p1"), makeFullPlayer("p2")];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "p1", blackId: "p2", result: "*" };
+    const after1 = applyResultToPlayers(players, game, "1-0");
+    const p1After1 = after1.find((p) => p.id === "p1")!;
+    expect(p1After1.colorHistory).toEqual(["W"]);
+
+    // Correct the result
+    const gameAfter1 = { ...game, result: "1-0" as Result };
+    const after2 = applyResultToPlayers(after1, gameAfter1, "0-1");
+    const p1After2 = after2.find((p) => p.id === "p1")!;
+    // Color history should NOT grow on correction
+    expect(p1After2.colorHistory).toEqual(["W"]);
+  });
+
+  it("does not modify unrelated players", () => {
+    const players = [makeFullPlayer("p1"), makeFullPlayer("p2"), makeFullPlayer("p3", 1600)];
+    const game: Game = { id: "g1", round: 1, board: 1, whiteId: "p1", blackId: "p2", result: "*" };
+    const updated = applyResultToPlayers(players, game, "1-0");
+    const p3 = updated.find((p) => p.id === "p3")!;
+    expect(p3.points).toBe(0);
+    expect(p3.wins).toBe(0);
+  });
+});

@@ -271,11 +271,11 @@ export function LiveBoardsSection({ tournamentId, isDark }: LiveBoardsSectionPro
         </Link>
       </div>
 
-      {/* Board thumbnails grid */}
+      {/* Board thumbnails grid — capped at 3 previews */}
       <div className="p-3">
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
                 className={`rounded-2xl overflow-hidden animate-pulse ${isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"}`}
@@ -284,11 +284,25 @@ export function LiveBoardsSection({ tournamentId, isDark }: LiveBoardsSectionPro
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {broadcasts.map((b) => (
-              <BoardCard key={b.id} broadcast={b} isDark={isDark} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {broadcasts.slice(0, 3).map((b) => (
+                <BoardCard key={b.id} broadcast={b} isDark={isDark} />
+              ))}
+            </div>
+            {broadcasts.length > 3 && (
+              <div className="mt-3 text-center">
+                <Link href={`/tournament/${tournamentId}/broadcasts`}>
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                    isDark ? "bg-white/06 text-white/50 hover:bg-white/10 hover:text-white/70" : "bg-[#ADBC9F]/30 text-[#436850] hover:bg-[#ADBC9F]/50"
+                  }`}>
+                    +{broadcasts.length - 3} more boards
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
