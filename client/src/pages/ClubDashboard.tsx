@@ -190,6 +190,7 @@ import {
   UserX,
   Lightbulb,
   MoreHorizontal,
+  ChevronRight,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -3729,127 +3730,199 @@ export default function ClubDashboard() {
         <TabTransition tabKey={tab}>
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${accent}22` }}>
-                <BarChart2 className="w-5 h-5" style={{ color: accent }} />
-              </div>
-              <div>
-                <h2 className="text-white font-bold text-lg">Club Overview</h2>
-                <p className="text-white/40 text-xs">Quick stats and actions for {club.name}</p>
-              </div>
-            </div>
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Members", value: members.length, icon: Users, color: accent },
-                { label: "Upcoming Events", value: upcomingEvents.length + tournamentEvents.filter(isUpcoming).length, icon: Calendar, color: "#60a5fa" },
-                { label: "Battles Played", value: battles.filter(b => b.status === "completed").length, icon: Swords, color: "#f59e0b" },
-                { label: "Feed Posts", value: feedEvents.length, icon: Megaphone, color: "#a78bfa" },
-              ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="rounded-2xl border border-white/08 p-4 flex flex-col gap-2" style={{ background: "oklch(0.16 0.05 145)" }}>
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}22` }}>
-                    <Icon className="w-4 h-4" style={{ color }} />
+          <div className="space-y-5">
+            {/* ── 1. Current Club Status — single prominent card ── */}
+            <div className="rounded-2xl border border-white/08 p-5" style={{ background: "oklch(0.16 0.05 145)" }}>
+              <div className="flex items-center gap-3 mb-4">
+                {club.avatarUrl ? (
+                  <img src={club.avatarUrl} alt="" className="w-11 h-11 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${accent}22` }}>
+                    <BarChart2 className="w-5 h-5" style={{ color: accent }} />
                   </div>
-                  <div className="text-2xl font-bold text-white">{value}</div>
-                  <div className="text-white/40 text-xs font-medium">{label}</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-white font-bold text-base truncate">{club.name}</h2>
+                  <p className="text-white/40 text-xs">{members.length} members · {feedEvents.length} posts · {battles.filter(b => b.status === "completed").length} battles</p>
                 </div>
-              ))}
-            </div>
-            {/* Quick actions */}
-            <div>
-              <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">Quick Actions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  onClick={() => setShowMeetupWizard(true)}
-                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/08 hover:border-white/20 transition-all text-left group"
-                  style={{ background: "oklch(0.16 0.05 145)" }}
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
-                    <Plus className="w-4 h-4" style={{ color: accent }} />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">New Meetup</p>
-                    <p className="text-white/40 text-xs">Schedule a club event</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setShowTournamentWizard(true)}
-                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/08 hover:border-white/20 transition-all text-left group"
-                  style={{ background: "oklch(0.16 0.05 145)" }}
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(96,165,250,0.15)" }}>
-                    <GanttChart className="w-4 h-4 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">New Tournament</p>
-                    <p className="text-white/40 text-xs">Create a rated event</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => { setTab("qr"); setQrMode("join"); }}
-                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/08 hover:border-white/20 transition-all text-left group"
-                  style={{ background: "oklch(0.16 0.05 145)" }}
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(167,139,250,0.15)" }}>
-                    <QrCode className="w-4 h-4 text-violet-400" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">QR Tools</p>
-                    <p className="text-white/40 text-xs">Join & check-in codes</p>
-                  </div>
+                <button onClick={() => navigate(`/clubs/${club.id}`)} className="flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 transition-colors">
+                  Public Page
                 </button>
               </div>
+              {/* Inline compact metrics row — not equal-weight cards */}
+              <div className="flex items-center gap-4 flex-wrap">
+                {(() => {
+                  const newThisMonth = members.filter(m => { const j = new Date(m.joinedAt); const n = new Date(); return j.getMonth() === n.getMonth() && j.getFullYear() === n.getFullYear(); }).length;
+                  return newThisMonth > 0 ? (
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-[#4CAF50]">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      +{newThisMonth} member{newThisMonth > 1 ? "s" : ""} this month
+                    </span>
+                  ) : null;
+                })()}
+                {upcomingEvents.length > 0 && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-blue-400">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {upcomingEvents.length} upcoming event{upcomingEvents.length > 1 ? "s" : ""}
+                  </span>
+                )}
+                {pendingInvites.length > 0 && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400">
+                    <UserPlus className="w-3.5 h-3.5" />
+                    {pendingInvites.length} pending invite{pendingInvites.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
             </div>
-            {/* Upcoming events preview */}
-            {upcomingEvents.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Upcoming Events</h3>
-                  <button onClick={() => setTab("events")} className="text-xs font-semibold transition-colors" style={{ color: accent }}>View All</button>
+
+            {/* ── 2. Tasks Needing Attention — only when there are actionable items ── */}
+            {(pendingInvites.length > 0 || !club.description || !club.avatarUrl || upcomingEvents.length === 0) && (
+              <div className="rounded-2xl border border-amber-500/20 p-4" style={{ background: "oklch(0.16 0.06 85 / 0.12)" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-amber-300 text-sm font-bold">Needs Attention</h3>
                 </div>
                 <div className="space-y-2">
-                  {upcomingEvents.slice(0, 3).map(ev => (
-                    <div key={ev.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.14 0.04 240)" }}>
-                      <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: accent }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-semibold truncate">{ev.title}</p>
-                        <p className="text-white/40 text-xs">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
+                  {pendingInvites.length > 0 && (
+                    <button onClick={() => setTab("members")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
+                      <span>{pendingInvites.length} pending invite{pendingInvites.length > 1 ? "s" : ""} awaiting response</span>
+                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    </button>
+                  )}
+                  {!club.description && (
+                    <button onClick={() => setTab("settings")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
+                      <span>Missing club description — add one to attract members</span>
+                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    </button>
+                  )}
+                  {!club.avatarUrl && (
+                    <button onClick={() => setTab("settings")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
+                      <span>No club logo uploaded</span>
+                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    </button>
+                  )}
+                  {upcomingEvents.length === 0 && (
+                    <button onClick={() => setShowMeetupWizard(true)} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
+                      <span>No upcoming events — create one to keep members engaged</span>
+                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── 3. Upcoming Event (next one, prominent) ── */}
+            {upcomingEvents.length > 0 && (() => {
+              const next = upcomingEvents[0];
+              const dateStr = new Date(next.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+              return (
+                <div className="rounded-2xl border border-white/08 p-4" style={{ background: "oklch(0.16 0.05 145)" }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Next Event</h3>
+                    {upcomingEvents.length > 1 && (
+                      <button onClick={() => setTab("events")} className="text-xs font-semibold" style={{ color: accent }}>+{upcomingEvents.length - 1} more</button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}18` }}>
+                      <Calendar className="w-5 h-5" style={{ color: accent }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-bold truncate">{next.title}</p>
+                      <p className="text-white/50 text-xs">{dateStr}</p>
+                    </div>
+                    <button
+                      onClick={() => openRsvpPanel(next.id)}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-105"
+                      style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                    >
+                      <Users className="w-3 h-3" />
+                      RSVPs
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 4. Quick Actions — compact row ── */}
+            <div>
+              <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">Quick Actions</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true), color: accent },
+                  { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true), color: "#60a5fa" },
+                  { icon: QrCode, label: "QR Tools", action: () => { setTab("qr"); setQrMode("join"); }, color: "#a78bfa" },
+                  { icon: Megaphone, label: "Post", action: () => setTab("feed"), color: "#f59e0b" },
+                ].map(({ icon: Icon, label, action, color }) => (
+                  <button
+                    key={label}
+                    onClick={action}
+                    className="flex items-center gap-2.5 p-3 rounded-xl border border-white/06 hover:border-white/15 transition-all text-left"
+                    style={{ background: "oklch(0.14 0.04 145)" }}
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
+                      <Icon className="w-4 h-4" style={{ color }} />
+                    </div>
+                    <span className="text-white/80 text-xs font-semibold">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── 5. Recent Activity ── */}
+            {feedEvents.length > 0 && (
+              <div className="rounded-2xl border border-white/08 overflow-hidden" style={{ background: "oklch(0.16 0.05 145)" }}>
+                <div className="px-4 py-3 border-b border-white/06 flex items-center justify-between">
+                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Recent Activity</h3>
+                  <button onClick={() => setTab("feed")} className="text-xs font-semibold" style={{ color: accent }}>View All</button>
+                </div>
+                <div className="divide-y divide-white/05">
+                  {feedEvents.slice(0, 4).map(ev => (
+                    <div key={ev.id} className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}15` }}>
+                        {ev.type === "announcement" && <Megaphone className="w-3.5 h-3.5" style={{ color: accent }} />}
+                        {ev.type === "poll" && <BarChart2 className="w-3.5 h-3.5" style={{ color: accent }} />}
+                        {ev.type === "rsvp_form" && <Calendar className="w-3.5 h-3.5" style={{ color: accent }} />}
+                        {!["announcement", "poll", "rsvp_form"].includes(ev.type) && <Zap className="w-3.5 h-3.5" style={{ color: accent }} />}
                       </div>
-                      <button
-                        onClick={() => openRsvpPanel(ev.id)}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-105"
-                        style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
-                      >
-                        <Users className="w-3 h-3" />
-                        RSVPs
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white/90 text-sm truncate">
+                          {ev.type === "announcement" ? ev.detail?.slice(0, 60) : ev.type === "poll" ? ev.pollQuestion?.slice(0, 60) : ev.type === "rsvp_form" ? ev.rsvpTitle : ev.description}
+                        </p>
+                        <p className="text-white/30 text-xs">{new Date(ev.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            {/* Recent members */}
+
+            {/* ── 6. Member Growth — compact avatar strip ── */}
             {members.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Recent Members</h3>
-                  <button onClick={() => setTab("members")} className="text-xs font-semibold transition-colors" style={{ color: accent }}>View All</button>
+                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Members ({members.length})</h3>
+                  <button onClick={() => setTab("members")} className="text-xs font-semibold" style={{ color: accent }}>Manage</button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[...members].sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()).slice(0, 8).map(m => (
-                    <div key={m.userId} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/06" style={{ background: "oklch(0.14 0.04 240)" }}>
+                    <div key={m.userId} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/06" style={{ background: "oklch(0.14 0.04 145)" }}>
                       <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={24} className="rounded-full" />
                       <span className="text-white text-xs font-medium">{m.displayName}</span>
                       <RoleBadge role={m.role} />
                     </div>
                   ))}
+                  {members.length > 8 && (
+                    <button onClick={() => setTab("members")} className="flex items-center justify-center px-3 py-2 rounded-xl border border-white/06 text-white/40 text-xs font-medium hover:text-white/70 transition-colors" style={{ background: "oklch(0.14 0.04 145)" }}>
+                      +{members.length - 8} more
+                    </button>
+                  )}
                 </div>
               </div>
             )}
+
             {/* Empty state for new clubs */}
-            {members.length <= 1 && upcomingEvents.length === 0 && (
+            {members.length <= 1 && upcomingEvents.length === 0 && feedEvents.length === 0 && (
               <div className="rounded-2xl border border-dashed border-white/10 py-12 flex flex-col items-center gap-3 text-center px-6">
                 <Zap className="w-10 h-10 opacity-20 text-white" />
                 <p className="text-white/50 font-semibold">Your club is ready to grow</p>

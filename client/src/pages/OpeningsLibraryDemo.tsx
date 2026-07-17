@@ -157,7 +157,7 @@ function OpeningCardComponent({
               .map((tag) => (
                 <span
                   key={tag.slug}
-                  className={`px-1.5 py-0.5 rounded text-[9px] ${tagText} border`}
+                  className={`px-1.5 py-0.5 rounded text-[10px] ${tagText} border`}
                 >
                   {tag.name}
                 </span>

@@ -482,7 +482,7 @@ function PlayerProfileModal({
                       {rating ?? "—"}
                     </div>
                     {best && best !== rating && (
-                      <div className="text-[9px] mt-0.5" style={{ color: textMuted }}>↑{best}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>↑{best}</div>
                     )}
                   </div>
                 );
@@ -1596,7 +1596,7 @@ export default function LeagueDashboard() {
                     {progressPct}%
                   </span>
                 </div>
-                <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>Progress</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>Progress</span>
               </div>
 
               {/* Divider */}
@@ -1611,7 +1611,7 @@ export default function LeagueDashboard() {
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
                     <div className="text-sm font-black" style={{ color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{value}</div>
-                    <div className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>{label}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>{label}</div>
                   </div>
                 ))}
               </div>
@@ -1891,7 +1891,7 @@ export default function LeagueDashboard() {
                         url={player.avatarUrl} chesscomUrl={getChesscomAvatar(player.chesscomUsername)} name={player.displayName} size={rank === 1 ? 16 : 12} ring glow loading={isChesscomAvatarLoading(player.chesscomUsername)} />
                     </button>
                     <span
-                      className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] shadow-lg font-bold"
+                      className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-lg font-bold"
                       style={{ background: medalColor, color: "#fff", fontSize: "9px" }}
                     >{medal}</span>
                   </div>
@@ -2069,7 +2069,7 @@ export default function LeagueDashboard() {
                           {/* My outcome pill */}
                           {isMyMatch && (
                             <span
-                              className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                              className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
                               style={{ background: `${outcomeColor}22`, color: outcomeColor }}
                             >
                               {iWon ? "W" : isDraw ? "D" : "L"}
@@ -4060,7 +4060,7 @@ export default function LeagueDashboard() {
           </div>{/* end main content column */}
 
           {/* ── RIGHT PANEL: Upcoming Matchups (desktop only) ─────────────── */}
-          <div className="hidden lg:flex flex-col gap-3 w-72 flex-shrink-0">
+          <div className="hidden lg:flex flex-col gap-3 w-80 flex-shrink-0">
 
             {/* Header row */}
             <div className="flex items-center justify-between">

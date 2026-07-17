@@ -808,6 +808,15 @@ export default function MatchupPrep() {
                 </div>
                 <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
                   {reportV3.dataQuality.parsed} games analyzed
+                  {reportV3.dataQuality.grade !== "A" && (
+                    <span className={`ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                      reportV3.dataQuality.grade === "B" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                      reportV3.dataQuality.grade === "C" ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
+                      "bg-red-500/10 text-red-500 border border-red-500/20"
+                    }`}>
+                      {reportV3.dataQuality.grade === "B" ? "Fair data" : reportV3.dataQuality.grade === "C" ? "Limited data" : "Sparse data"}
+                    </span>
+                  )}
                   {reportV3.opponent.avgRating !== null && ` · ~${reportV3.opponent.avgRating} avg rating`}
                   {reportV3.opponent.timeControlSplit.rapid && ` · ${reportV3.opponent.timeControlSplit.rapid.games} rapid`}
                   {reportV3.opponent.timeControlSplit.blitz && ` · ${reportV3.opponent.timeControlSplit.blitz.games} blitz`}
