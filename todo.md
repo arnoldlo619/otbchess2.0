@@ -7103,3 +7103,84 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Structured article metadata (JSON-LD) for BlogPost (Article schema with publisher, author, section, wordCount)
 - [x] Correct heading order on all public pages (h1→h2→h3 confirmed on Blog, BlogPost, Pricing, Home)
 - [x] Semantic nav landmarks on all public pages (aria-label added to main nav, breadcrumb nav, TOC nav)
+
+## Phase 4 — End-to-End Tournament Creation, Director and Spectator Experience
+
+### A. Format Chooser
+- [x] Add full metadata to each format card: best use case, player range, round structure, setup time, sections/elimination info
+- [x] Add visible keyboard focus ring to all format cards (not just hover)
+- [ ] Ensure "Quick Start" copy does not imply it is a tournament format
+
+### B. Status Vocabulary Migration
+- [x] Migrate status "registration" → "Registration Open" display label (confirmed: already uses human-readable labels in Director; internal state values unchanged)
+- [x] Migrate status "in_progress" → "Live" display label (confirmed: Command Center strip uses contextual language)
+- [ ] Add "Between Rounds", "Ready to Start", "Awaiting Finalization", "Draft", "Cancelled" display states
+- [ ] Display status through text, icon, and color on all surfaces
+- [ ] Show save/sync state separately from tournament state
+- [ ] Finalization states: pending, success, error, idempotent retry
+
+### C. Director Workspace IA
+- [x] Required action area: always answers "what should director do next?" (sticky banners: Generate Round, Generate Elimination Bracket, etc.)
+- [ ] De-emphasize secondary actions (Share, Print, Broadcast, Connect Board, Reports, Edit pairings)
+- [ ] Status band: text + icon + color, never contradictory
+
+### D. Round Navigation
+- [ ] Communicate result completion count per round in round navigator
+- [ ] Mobile: compact selector or horizontal scroll with snap behavior
+- [ ] Do not expose future-round controls as actionable
+
+### E. Board and Result-Entry Cards
+- [x] Result controls ≥44px high (confirmed: minHeight 48px on result buttons, 44px on undo/clear)
+- [x] Selected results visually unmistakable (strong highlight, scale, border glow)
+- [ ] Result correction with confirmation dialog
+- [x] Save success/failure announcement (toast on every result entry)
+- [x] Keyboard result entry (1=White wins, 2=Black wins, 3=Draw — confirmed via useEffect)
+- [ ] Progressive disclosure for broadcast/device controls (collapse by default)
+
+### F. Players & Check-in
+- [ ] Capacity and attendance summary in Players tab header
+- [ ] Batch check-in safe and reversible
+- [ ] Destructive removal requires confirmation dialog
+- [ ] Icon actions need labels and ≥44px targets
+- [ ] Tables transform intentionally on mobile (card layout at <768px)
+
+### G. Standings
+- [ ] Semantic <table> with rank, player, score, tie-break, record, rating, section columns
+- [ ] Tie-break explanation in plain language (tooltip or footnote)
+- [ ] Half-point notation preserved (0.5, 1.5, etc. — no "1/2")
+- [ ] Mobile ranking-card layout (stack at <640px)
+- [ ] Do not rely on medals alone for rank (show numeric rank)
+- [ ] Format-appropriate tie-breaks (no Buchholz as primary Quad tie-break)
+
+### H. Quads-Specific
+- [x] Remove/hide: Late Registration banner hidden for Quads; Standings tab hidden for Quads
+- [ ] Remove/hide: style-aware pairings, "Generate Balanced Matchups" button for Quads
+- [x] Remove Buchholz as primary Quad tie-break from any Quads UI (Standings tab hidden; Print tiebreak legend is format-aware)
+- [x] Show: rating-grouped sections, 4-player section identity, 3 fixed rounds, section standings, section winner (QuadsDirectorPanel handles all)
+- [x] Validate Phase 4 fixture: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5; Magnus > Arnold by H2H (74/74 tests pass)
+
+### I. Public Tournament Page
+- [ ] Spectator-first hierarchy: status → current round → pairings → standings → history → reports
+- [ ] Status band meets WCAG AA contrast requirements
+- [ ] Max 2–3 live board previews (not 4 tiny boards across full width)
+- [x] Mobile board cards (grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 — confirmed in LiveBoardsSection)
+- [x] Live updates with subtle connection-state feedback (SSEConnectionBadge + polling fallback — confirmed)
+- [ ] No contradictory Live + Completed states simultaneously
+
+### J. Reports, Print, Sharing
+- [x] Print views: white background, black text, printer-safe spacing (@media print CSS — confirmed in Print.tsx)
+- [x] No escaped Unicode strings visible to users (uses literal ½ throughout — confirmed)
+- [ ] Mathematically accurate scores, placements, draw rate in reports
+- [x] Tiebreak legend is format-aware: Buchholz for Swiss, H2H + Sonneborn-Berger for Quads
+
+### K. Responsive Director Operation
+- [ ] Verify director workflow at 360px, 390px, 768px, 1024px, 1440px
+- [ ] No critical action hidden behind hover-only interaction
+
+### L. Tests
+- [x] Quads fixture unit test: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5; Magnus > Arnold by H2H; 6 unique pairings; draw rate 16.7% (5 new tests, 74/74 pass)
+- [ ] Swiss fixture test (odd player count, bye handling, tie-breaks)
+- [ ] Result entry and correction unit tests
+- [ ] Round progression unit tests
+- [ ] Standings tie-break unit tests
+- [ ] Finalization unit tests

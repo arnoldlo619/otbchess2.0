@@ -567,7 +567,8 @@ function ModeSelect({
           <button
             type="button"
             onClick={() => onSelect("quickstart")}
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
+            aria-label="Quickstart — set up a tournament in under 30 seconds"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
               background: "rgba(77,105,64,0.22)",
@@ -616,15 +617,21 @@ function ModeSelect({
                 Quickstart
               </h3>
               <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Name &amp; location only. Ready in seconds.
+                Name &amp; location only. Start playing in under 30 seconds.
               </p>
+              {/* Metadata chips */}
+              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }}>4–32 players</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }}>Swiss format</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }}>Auto rounds</span>
+              </div>
             </div>
 
             {/* Footer */}
             <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
                 <Clock className="w-3.5 h-3.5" />
-                Ready in under 30 seconds
+                Setup method · no format config
               </div>
               <ArrowRight
                 className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
@@ -638,7 +645,8 @@ function ModeSelect({
           <button
             type="button"
             onClick={() => onSelect("schedule")}
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
+            aria-label="Schedule — full wizard with format, rounds, time control and ratings"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
               background: "rgba(255,255,255,0.05)",
@@ -682,8 +690,14 @@ function ModeSelect({
                 Schedule
               </h3>
               <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Full wizard — format, rounds, time &amp; ratings.
+                Swiss, Quads, or Elimination. Full config — format, rounds, time &amp; ratings.
               </p>
+              {/* Metadata chips */}
+              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>4–100 players</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Swiss · Quads · Elim</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Configurable rounds</span>
+              </div>
             </div>
 
             {/* Footer */}
@@ -704,7 +718,8 @@ function ModeSelect({
           <button
             type="button"
             onClick={() => onSelect("large_event")}
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
+            aria-label="Large Event — Swiss qualification rounds into elimination bracket, 30 to 100 players"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
               background: "rgba(255,255,255,0.05)",
@@ -753,15 +768,21 @@ function ModeSelect({
                 Large Event
               </h3>
               <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Swiss + elimination bracket. 30+ players.
+                Swiss qualification rounds, then a seeded elimination bracket. Best for open events.
               </p>
+              {/* Metadata chips */}
+              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>30–100 players</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Swiss + Elimination</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Seeded bracket</span>
+              </div>
             </div>
 
             {/* Footer */}
             <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
                 <Users className="w-3.5 h-3.5" />
-                Up to 100 players
+                Up to 100 players · ~5 min setup
               </div>
               <ArrowRight
                 className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
@@ -775,7 +796,8 @@ function ModeSelect({
           <button
             type="button"
             onClick={() => onSelect("quads")}
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97]"
+            aria-label="Quads — 4-player rating-grouped sections, 3-round round robin, no Swiss pairings"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
               background: "rgba(76,175,80,0.06)",
@@ -824,16 +846,22 @@ function ModeSelect({
                 Quads
               </h3>
               <p className="text-white/55 text-[12px] sm:text-[15px] leading-relaxed">
-                <span className="hidden sm:inline">4-player sections, round robin. Fair and fast.</span>
-                <span className="sm:hidden">4-player sections, round robin.</span>
+                <span className="hidden sm:inline">Rating-grouped sections of 4. Every player faces each section opponent once. Fair and fast.</span>
+                <span className="sm:hidden">4-player sections, round robin. Grouped by rating.</span>
               </p>
+              {/* Metadata chips */}
+              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>4–∞ players</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>3 rounds fixed</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>No Swiss pairings</span>
+              </div>
             </div>
 
             {/* Footer */}
             <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(76,175,80,0.12)" }}>
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(76,175,80,0.65)" }}>
                 <Users2 className="w-3.5 h-3.5" />
-                Grouped by rating
+                Grouped by rating · ~1 min setup
               </div>
               <ArrowRight
                 className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"

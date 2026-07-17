@@ -3274,7 +3274,8 @@ export default function Director() {
               {([
                 { id: "home", label: "Home" },
                 { id: "players", label: "Players" },
-                { id: "standings", label: "Standings" },
+                // Standings tab is hidden for Quads — section standings live in QuadsDirectorPanel (Home tab)
+                ...(state.format !== "quads" ? [{ id: "standings" as const, label: "Standings" }] : []),
                 ...(isElimFormat ? [{ id: "bracket" as const, label: "Bracket" }] : []),
                 { id: "settings", label: "Settings" },
               ] as { id: TabId; label: string }[]).map((tab) => (
@@ -4291,8 +4292,8 @@ export default function Director() {
                     );
                   })()}
 
-                  {/* Late Registration banner — Round 1 only */}
-                  {state.currentRound === 1 && !allResultsIn && (
+                  {/* Late Registration banner — Round 1 only (not for Quads: sections are fixed) */}
+                  {state.format !== "quads" && state.currentRound === 1 && !allResultsIn && (
                     <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border ${
                       isDark
                         ? "bg-amber-500/08 border-amber-500/25 text-amber-300"

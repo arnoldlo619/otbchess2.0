@@ -998,12 +998,18 @@ export default function PrintPage() {
                   Current Standings
                 </h2>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                  Sorted by points, then Buchholz tiebreak, then {ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round {tournament.currentRound - 1}.
+                  {realConfig?.format === "quads"
+                    ? `Sorted by points, then Head-to-Head, then Sonneborn-Berger. Updated after Round ${tournament.currentRound - 1}.`
+                    : `Sorted by points, then Buchholz tiebreak, then ${ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round ${tournament.currentRound - 1}.`
+                  }
                 </p>
               </div>
               <StandingsTable players={players} rounds={tournament.roundData as Round[]} isDark={isDark} />
               <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
-                Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses
+                {realConfig?.format === "quads"
+                  ? "Tiebreak: Head-to-Head · Sonneborn-Berger (opponent scores weighted by result) · Wins · W = Wins · D = Draws · L = Losses"
+                  : "Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses"
+                }
               </p>
             </div>
           )}

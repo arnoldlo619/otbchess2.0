@@ -1040,3 +1040,87 @@ describe("getSectionWinners — idempotency", () => {
     expect(winners1.map((w) => w.playerId)).toEqual(winners2.map((w) => w.playerId));
   });
 });
+
+// ─── Phase 4 Canonical Fixture ────────────────────────────────────────────────
+// Spec: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5
+// Magnus > Arnold by H2H (Magnus beat Arnold directly)
+// 6 unique pairings, 1 draw (Hikaru-Levy), draw rate = 1/6 ≈ 16.7%
+
+describe("Phase 4 canonical Quads fixture", () => {
+  const magnus = makePlayer("magnus", 2850, { name: "Magnus" });
+  const arnold = makePlayer("arnold", 2700, { name: "Arnold" });
+  const hikaru = makePlayer("hikaru", 2600, { name: "Hikaru" });
+  const levy   = makePlayer("levy",   2400, { name: "Levy"   });
+  const players = [magnus, arnold, hikaru, levy];
+
+  const section: QuadSection = {
+    id: "s1",
+    name: "Quad 1",
+    type: "quad",
+    orderIndex: 0,
+    ratingMin: 2400,
+    ratingMax: 2850,
+    playerIds: ["magnus", "arnold", "hikaru", "levy"],
+    localSeeds: { magnus: 1, arnold: 2, hikaru: 3, levy: 4 },
+    status: "completed",
+  };
+
+  // Round schedule (seed 1v4, 2v3 | 3v1, 4v2 | 1v2, 3v4):
+  // R1: Magnus(W) vs Levy(B) → 1-0  | Arnold(W) vs Hikaru(B) → 0-1
+  // R2: Hikaru(W) vs Magnus(B) → 0-1 | Levy(W) vs Arnold(B) → 0-1
+  // R3: Magnus(W) vs Arnold(B) → 1-0 | Hikaru(W) vs Levy(B) → ½-½
+  //
+  // Scores: Magnus = 3×1 = 3 half-pts → wait, use integer half-points:
+  //   Magnus: win(2)+win(2)+win(2) = 6 hp → 3.0 pts? No — 3 wins = 3 pts
+  //   But spec says Magnus 2, Arnold 2. Let's re-read spec:
+  //   Magnus 2, Arnold 2 means 2 wins each out of 3 rounds.
+  //   Magnus: beats Levy, beats Arnold, loses to Hikaru? No — spec says Magnus > Arnold by H2H.
+  //   Let's construct: Magnus beats Arnold (R3 1-0), Magnus beats Levy (R1 1-0), Magnus loses to Hikaru (R2 0-1)
+  //   Arnold beats Hikaru (R1 1-0), Arnold beats Levy (R2 1-0), Arnold loses to Magnus (R3 0-1)
+  //   Hikaru beats Magnus (R2 1-0), Hikaru draws Levy (R3 ½-½), Hikaru loses to Arnold (R1 0-1)
+  //   Levy loses to Magnus (R1 0-1), loses to Arnold (R2 0-1), draws Hikaru (R3 ½-½)
+  //   Scores: Magnus=2, Arnold=2, Hikaru=1+0.5=1.5, Levy=0.5 ✓
+  const games: Game[] = [
+    makeGame("g1", "magnus", "levy",   "1-0", "s1", 1, 1),  // Magnus beats Levy
+    makeGame("g2", "arnold", "hikaru", "1-0", "s1", 1, 2),  // Arnold beats Hikaru
+    makeGame("g3", "hikaru", "magnus", "1-0", "s1", 2, 1),  // Hikaru beats Magnus
+    makeGame("g4", "levy",   "arnold", "0-1", "s1", 2, 2),  // Arnold beats Levy
+    makeGame("g5", "magnus", "arnold", "1-0", "s1", 3, 1),  // Magnus beats Arnold (H2H)
+    makeGame("g6", "hikaru", "levy",   "½-½", "s1", 3, 2),  // Hikaru draws Levy
+  ];
+
+  it("produces correct final scores: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5", () => {
+    const standings = calculateQuadStandings(section, games, players);
+    const byId = Object.fromEntries(standings.map((s) => [s.playerId, s]));
+    expect(byId["magnus"].score).toBe(2);
+    expect(byId["arnold"].score).toBe(2);
+    expect(byId["hikaru"].score).toBe(1.5);
+    expect(byId["levy"].score).toBe(0.5);
+  });
+
+  it("ranks Magnus above Arnold by H2H (Magnus beat Arnold directly)", () => {
+    const standings = calculateQuadStandings(section, games, players);
+    const byId = Object.fromEntries(standings.map((s) => [s.playerId, s]));
+    expect(byId["magnus"].finalRank).toBeLessThan(byId["arnold"].finalRank);
+  });
+
+  it("produces 6 unique pairings (complete round-robin)", () => {
+    const pairings = new Set(
+      games.map((g) => [g.whiteId, g.blackId].sort().join("|"))
+    );
+    expect(pairings.size).toBe(6);
+  });
+
+  it("draw rate is 1/6 ≈ 16.7%", () => {
+    const draws = games.filter((g) => g.result === "½-½").length;
+    const rate = draws / games.length;
+    expect(rate).toBeCloseTo(1 / 6, 2);
+  });
+
+  it("Hikaru ranks 3rd and Levy ranks 4th", () => {
+    const standings = calculateQuadStandings(section, games, players);
+    const byId = Object.fromEntries(standings.map((s) => [s.playerId, s]));
+    expect(byId["hikaru"].finalRank).toBe(3);
+    expect(byId["levy"].finalRank).toBe(4);
+  });
+});
