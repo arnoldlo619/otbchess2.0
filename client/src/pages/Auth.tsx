@@ -337,16 +337,16 @@ export default function AuthPage() {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-sm font-semibold tracking-tight text-white">OTB Chess</span>
+              <span className="text-base font-semibold tracking-tight text-white">OTB Chess</span>
             </div>
 
             {/* Tagline */}
             <div className="relative mt-auto">
-              <h2 className="max-w-[16ch] text-[26px] leading-[1.2] font-bold tracking-tight text-white text-balance">
+              <h2 className="max-w-[16ch] text-[32px] leading-[1.2] font-bold tracking-tight text-white text-balance">
                 Where chess happens.{" "}
                 <span className="text-[oklch(0.75_0.14_145)]">Over the board.</span>
               </h2>
-              <p className="mt-3 text-sm text-white/50 max-w-[22ch] leading-relaxed">
+              <p className="mt-3 text-base text-white/60 max-w-[22ch] leading-relaxed">
                 Host tournaments, track ratings, and connect with your chess community.
               </p>
             </div>
@@ -368,7 +368,7 @@ export default function AuthPage() {
                   </div>
                 ))}
               </div>
-              <span className="text-xs text-white/50">
+              <span className="text-sm text-white/60">
                 Join 700+ OTB players
               </span>
             </div>
