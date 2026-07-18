@@ -298,7 +298,7 @@ export default function AuthPage() {
       {/* Back to home link */}
       <a
         href="/"
-        className="fixed top-4 left-4 z-10 flex items-center gap-1.5 text-white/50 hover:text-white/80 text-sm transition"
+        className="fixed top-4 left-4 z-10 flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium transition"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="hidden sm:inline">Back to home</span>
@@ -342,10 +342,10 @@ export default function AuthPage() {
 
             {/* Tagline */}
             <div className="relative mt-auto">
-              <h2 className="max-w-[16ch] text-[32px] leading-[1.2] font-bold tracking-tight text-white text-balance">
+              <h1 className="max-w-[16ch] text-[42px] leading-[1.1] font-extrabold tracking-tight text-white text-balance">
                 Where chess happens.{" "}
                 <span className="text-[oklch(0.75_0.14_145)]">Over the board.</span>
-              </h2>
+              </h1>
               <p className="mt-3 text-base text-white/60 max-w-[22ch] leading-relaxed">
                 Host tournaments, track ratings, and connect with your chess community.
               </p>
@@ -773,7 +773,7 @@ export default function AuthPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[11px] text-white/25 mt-5">
+        <p className="text-center text-[12px] text-white/55 mt-5">
           By continuing, you agree to our{" "}
           <a href="/terms" className="hover:text-white/50 underline underline-offset-2">Terms</a>
           {" & "}
