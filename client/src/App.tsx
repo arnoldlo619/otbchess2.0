@@ -69,6 +69,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const JoinClub = lazy(() => import("./pages/JoinClub"));
 const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
+const TournamentOverview = lazy(() => import("./pages/TournamentOverview"));
 const AuthPage = lazy(() => import("./pages/Auth"));
 
 // ── Thin top progress bar — replaces full-screen loader on route transitions ────────────
@@ -168,6 +169,7 @@ function Router() {
         <Route path={"/tournament/:id/report"} component={ReportPage} />
         <Route path={"/director-access"} component={DirectorAccessPage} />
         <Route path={"/tournament/:id/results"} component={FinalStandings} />
+        <Route path={"/tournament/:id/overview"} component={TournamentOverview} />
         <Route path={"/tournament/:id/clock"} component={ChessClock} />
         <Route path={"/clock"} component={ChessClock} />
         <Route path={"/profile"} component={ProfilePage} />

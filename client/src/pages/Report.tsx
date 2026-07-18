@@ -1255,6 +1255,97 @@ export default function ReportPage() {
               </div>
             </div>
 
+
+            {/* Podium highlight */}
+            {isQuads && quadSectionPerfs.length > 0 && activeSection === "all" ? (
+              /* Per-Quad section champions grid */
+              <div className="mt-10">
+                <h3
+                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  🏆 Section Champions
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {quadSectionPerfs.map((sp) => {
+                    const champ = sp.performances[0];
+                    if (!champ) return null;
+                    return (
+                      <button
+                        key={sp.sectionId}
+                        onClick={() => setActiveSection(sp.sectionId)}
+                        className={`rounded-2xl p-4 text-left border transition-all active:scale-[0.98] ${
+                          isDark
+                            ? "bg-[#4CAF50]/08 border-[#4CAF50]/20 hover:border-[#4CAF50]/40"
+                            : "bg-[#436850]/05 border-[#436850]/20 hover:border-[#436850]/40 shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">🏆</div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-bold uppercase tracking-widest mb-0.5 ${
+                              isDark ? "text-[#4CAF50]/70" : "text-[#436850]"
+                            }`}>
+                              {sp.sectionName}
+                            </p>
+                            <p className={`text-base font-black truncate ${
+                              isDark ? "text-white" : "text-[#12372A]"
+                            }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                              {champ.player.name}
+                            </p>
+                            <p className={`text-xs mt-0.5 ${
+                              isDark ? "text-white/50" : "text-[#436850]"
+                            }`}>
+                              {champ.points}pts · {champ.wins}W {champ.draws}D {champ.losses}L
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : displayPerformances.length >= 3 ? (
+              /* Standard podium for non-Quads or single-section view */
+              <div className="mt-10">
+                <h3
+                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  🏆 Podium
+                </h3>
+                <div className="grid grid-cols-3 gap-3 items-end">
+                  {/* 2nd */}
+                  <div className="flex flex-col items-center mt-6">
+                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#ADBC9F]/70 shadow-sm"}`}>
+                      <div className="text-2xl mb-1">🥈</div>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[1].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{displayPerformances[1].points}pts</p>
+                    </div>
+                    <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
+                  </div>
+                  {/* 1st */}
+                  <div className="flex flex-col items-center">
+                    <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#436850]/05 border-[#436850]/30 shadow-md"}`}>
+                      <div className="text-2xl mb-1">🏆</div>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[0].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"} font-semibold`}>{displayPerformances[0].points}pts</p>
+                    </div>
+                    <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08"}`} />
+                  </div>
+                  {/* 3rd */}
+                  <div className="flex flex-col items-center mt-8">
+                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#ADBC9F]/70 shadow-sm"}`}>
+                      <div className="text-2xl mb-1">🥉</div>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[2].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{displayPerformances[2].points}pts</p>
+                    </div>
+                    <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             {/* Section heading */}
             <div className="flex items-center justify-between mb-4">
               <h3
@@ -1324,95 +1415,6 @@ export default function ReportPage() {
               })}
             </div>
 
-            {/* Podium highlight */}
-            {isQuads && quadSectionPerfs.length > 0 && activeSection === "all" ? (
-              /* Per-Quad section champions grid */
-              <div className="mt-10">
-                <h3
-                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  🏆 Section Champions
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {quadSectionPerfs.map((sp) => {
-                    const champ = sp.performances[0];
-                    if (!champ) return null;
-                    return (
-                      <button
-                        key={sp.sectionId}
-                        onClick={() => setActiveSection(sp.sectionId)}
-                        className={`rounded-2xl p-4 text-left border transition-all active:scale-[0.98] ${
-                          isDark
-                            ? "bg-[#4CAF50]/08 border-[#4CAF50]/20 hover:border-[#4CAF50]/40"
-                            : "bg-[#436850]/05 border-[#436850]/20 hover:border-[#436850]/40 shadow-sm"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="text-2xl">🏆</div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${
-                              isDark ? "text-[#4CAF50]/70" : "text-[#436850]"
-                            }`}>
-                              {sp.sectionName}
-                            </p>
-                            <p className={`text-sm font-black truncate ${
-                              isDark ? "text-white" : "text-[#12372A]"
-                            }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                              {champ.player.name}
-                            </p>
-                            <p className={`text-[11px] mt-0.5 ${
-                              isDark ? "text-white/50" : "text-[#436850]"
-                            }`}>
-                              {champ.points}pts · {champ.wins}W {champ.draws}D {champ.losses}L
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : displayPerformances.length >= 3 ? (
-              /* Standard podium for non-Quads or single-section view */
-              <div className="mt-10">
-                <h3
-                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-[#12372A]"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  🏆 Podium
-                </h3>
-                <div className="grid grid-cols-3 gap-3 items-end">
-                  {/* 2nd */}
-                  <div className="flex flex-col items-center mt-6">
-                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#ADBC9F]/70 shadow-sm"}`}>
-                      <div className="text-2xl mb-1">🥈</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[1].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{displayPerformances[1].points}pts</p>
-                    </div>
-                    <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
-                  </div>
-                  {/* 1st */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#436850]/05 border-[#436850]/30 shadow-md"}`}>
-                      <div className="text-2xl mb-1">🏆</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[0].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"} font-semibold`}>{displayPerformances[0].points}pts</p>
-                    </div>
-                    <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08"}`} />
-                  </div>
-                  {/* 3rd */}
-                  <div className="flex flex-col items-center mt-8">
-                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-[#ADBC9F]/70 shadow-sm"}`}>
-                      <div className="text-2xl mb-1">🥉</div>
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{displayPerformances[2].player.name}</p>
-                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-[#436850]"}`}>{displayPerformances[2].points}pts</p>
-                    </div>
-                    <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-[#ADBC9F]/40"}`} />
-                  </div>
-                </div>
-              </div>
-            ) : null}
           </div>
         )}
 

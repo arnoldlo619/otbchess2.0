@@ -7468,3 +7468,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Support ?tab=signin|signup|guest query param for deep-linking
 - [x] Support ?redirect=/path query param — after login, navigate to redirect path
 - [x] Authenticated users visiting /auth are redirected to /
+
+## Quads Post-Tournament UI Fixes
+- [x] Fix Quads TournamentComplete banner: overlapping text, cramped layout, font sizes
+- [x] Build /tournament/:id/overview page: winners podium per section + player report cards
+- [x] Auto-navigate to /overview after Quads tournament completes (View Results + auto-nav)
+- [x] Move Podium section to top of Report page cards tab
+- [x] Increase font sizes in Report page podium/section champions block

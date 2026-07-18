@@ -4571,7 +4571,7 @@ export default function Director() {
                           {/* Primary action row */}
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => window.location.href = `/tournament/${tournamentId}`}
+                              onClick={() => window.location.href = `/tournament/${tournamentId}/overview`}
                               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                                 isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#436850] text-white hover:bg-[#2d5235]"
                               }`}>
@@ -6205,7 +6205,7 @@ export default function Director() {
                       } catch { /* ignore */ }
                       toast.success("Tournament finalized!");
                       // Navigate to Final Standings page
-                      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
+                      setTimeout(() => navigate(`/tournament/${tournamentId}/overview`), 900);
                     }}
                   />
                 );
@@ -6693,7 +6693,7 @@ export default function Director() {
                               logger.error("[director] Failed to broadcast tournament_ended");
                             }
                             toast.success("Tournament finalized!");
-                            setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
+                            setTimeout(() => navigate(`/tournament/${tournamentId}/overview`), 900);
                           }}
                           className="flex-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors"
                         >
