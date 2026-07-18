@@ -3741,51 +3741,7 @@ export default function ClubDashboard() {
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (
           <div className="space-y-5">
-            {/* ── 1. Current Club Status — single prominent card ── */}
-            <div className="rounded-2xl border border-white/08 p-5" style={{ background: "oklch(0.16 0.05 145)" }}>
-              <div className="flex items-center gap-3 mb-4">
-                {club.avatarUrl ? (
-                  <img src={club.avatarUrl} alt="" className="w-11 h-11 rounded-xl object-cover" />
-                ) : (
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${accent}22` }}>
-                    <BarChart2 className="w-5 h-5" style={{ color: accent }} />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-white font-bold text-base truncate">{club.name}</h2>
-                  <p className="text-white/40 text-xs">{members.length} members · {feedEvents.length} posts · {battles.filter(b => b.status === "completed").length} battles</p>
-                </div>
-                <button onClick={() => navigate(`/clubs/${club.id}`)} className="flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 transition-colors">
-                  Public Page
-                </button>
-              </div>
-              {/* Inline compact metrics row — not equal-weight cards */}
-              <div className="flex items-center gap-4 flex-wrap">
-                {(() => {
-                  const newThisMonth = members.filter(m => { const j = new Date(m.joinedAt); const n = new Date(); return j.getMonth() === n.getMonth() && j.getFullYear() === n.getFullYear(); }).length;
-                  return newThisMonth > 0 ? (
-                    <span className="flex items-center gap-1.5 text-xs font-medium text-[#4CAF50]">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      +{newThisMonth} member{newThisMonth > 1 ? "s" : ""} this month
-                    </span>
-                  ) : null;
-                })()}
-                {upcomingEvents.length > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-blue-400">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {upcomingEvents.length} upcoming event{upcomingEvents.length > 1 ? "s" : ""}
-                  </span>
-                )}
-                {pendingInvites.length > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400">
-                    <UserPlus className="w-3.5 h-3.5" />
-                    {pendingInvites.length} pending invite{pendingInvites.length > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* ── 2. Tasks Needing Attention — only when there are actionable items ── */}
+  {/* ── 1. Tasks Needing Attention — only when there are actionable items ── */}
             {(pendingInvites.length > 0 || !club.description || !club.avatarUrl || upcomingEvents.length === 0) && (
               <div className="rounded-2xl border border-amber-500/20 p-4" style={{ background: "oklch(0.16 0.06 85 / 0.12)" }}>
                 <div className="flex items-center gap-2 mb-3">
