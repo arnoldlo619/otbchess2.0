@@ -2854,10 +2854,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Goal 1 — Expanded Player Cards
 
-- [ ] Add `roundHistory` field to `PlayerPerformance` (array of per-round: round#, opponent name/elo, color, result, points)
-- [ ] Build `PlayerCardExpandedModal` component: full-screen overlay with round-by-round game log, opponent avatars, result chips, running score
-- [ ] Add "View Full Card" / expand button on each PlayerStatsCard in Report page
-- [ ] Show performance rating trend, color balance chart, and head-to-head summary in expanded view
+- [x] Add `roundHistory` field to `PlayerPerformance` (array of per-round: round#, opponent name/elo, color, result, points)
+- [x] Build `PlayerCardExpandedModal` component: full-screen overlay with round-by-round game log, opponent avatars, result chips, running score
+- [x] Add "View Full Card" / expand button on each PlayerStatsCard in Report page
+- [x] Show performance rating trend, color balance chart, and head-to-head summary in expanded view
 
 ## Goal 2 — Profile Page Enhancements
 

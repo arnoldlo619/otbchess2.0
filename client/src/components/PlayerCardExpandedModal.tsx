@@ -125,7 +125,7 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
   }, []);
 
   const { player, rank, totalPlayers, points, wins, draws, losses,
-    performanceRating, ratingChange, longestStreak, whiteGames: _whiteGames, blackGames: _blackGames,
+    performanceRating, ratingChange, longestStreak, whiteGames, blackGames,
     buchholz, badge: _badge, badgeLabel, roundHistory, bestWin } = perf;
 
   const flag = player.country ? FLAG_EMOJI[player.country] ?? "" : "";
@@ -247,11 +247,39 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
           ))}
         </div>
 
-        {/* ── Score Progression ── */}
-        {roundHistory.length >= 2 && (
-          <div className="px-6 pt-5 pb-2">
-            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">Score Progression</p>
-            <ScoreSparkline history={roundHistory} totalRounds={roundHistory.length} />
+        {/* ── Color Balance + Score Progression ── */}
+        {(whiteGames + blackGames > 0 || roundHistory.length >= 2) && (
+          <div className="px-6 pt-5 pb-4 border-b border-white/08 grid gap-6" style={{ gridTemplateColumns: whiteGames + blackGames > 0 && roundHistory.length >= 2 ? '1fr 1fr' : '1fr' }}>
+            {/* Color Balance */}
+            {whiteGames + blackGames > 0 && (
+              <div>
+                <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">Color Balance</p>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-white/55 text-xs w-5 text-right font-semibold">{whiteGames}</span>
+                  <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: 'oklch(0.26 0.05 145)' }}>
+                    <div
+                      className="h-full rounded-l-full"
+                      style={{
+                        width: `${(whiteGames / (whiteGames + blackGames)) * 100}%`,
+                        background: 'rgba(255,255,255,0.80)',
+                      }}
+                    />
+                  </div>
+                  <span className="text-white/55 text-xs w-5 font-semibold">{blackGames}</span>
+                </div>
+                <div className="flex justify-between text-[10px] text-white/30 px-7">
+                  <span>White</span>
+                  <span>Black</span>
+                </div>
+              </div>
+            )}
+            {/* Score Progression */}
+            {roundHistory.length >= 2 && (
+              <div>
+                <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-3">Score Progression</p>
+                <ScoreSparkline history={roundHistory} totalRounds={roundHistory.length} />
+              </div>
+            )}
           </div>
         )}
 
