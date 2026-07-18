@@ -1,6 +1,6 @@
 /**
  * ClubTabs — Premium horizontal tab bar for the club profile page.
- * Six tabs: Home | Feed | Events | Members | Leagues | About
+ * Five tabs: Home | Feed | Events | Members | Leagues
  */
 import React from "react";
 import {
@@ -10,9 +10,8 @@ import {
   LeaguesIcon,
   HomeIcon,
 } from "@/components/OtbIcons";
-import { Info } from "lucide-react";
 
-export type ClubTab = "home" | "feed" | "events" | "members" | "leagues" | "about";
+export type ClubTab = "home" | "feed" | "events" | "members" | "leagues";
 
 interface TabConfig {
   id: ClubTab;
@@ -30,11 +29,6 @@ interface ClubTabsProps {
   isDark: boolean;
 }
 
-// Lucide wrapper to match OtbIcon interface
-function AboutIcon({ size = 20, accentColor }: { size?: number; accentColor?: string }) {
-  return <Info size={size} color={accentColor || "currentColor"} strokeWidth={2} /> as React.ReactElement;
-}
-
 export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark }: ClubTabsProps) {
   const tabs: TabConfig[] = [
     { id: "home",    label: "Home",    icon: HomeIcon },
@@ -42,7 +36,6 @@ export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark
     { id: "events",  label: "Events",  icon: EventsIcon },
     { id: "members", label: "Members", icon: MembersIcon },
     { id: "leagues", label: "Leagues", icon: LeaguesIcon },
-    { id: "about",   label: "About",   icon: AboutIcon },
   ];
 
   return (
