@@ -3580,7 +3580,7 @@ export default function ClubDashboard() {
                         className="absolute inset-0"
                         style={{
                           background: club.bannerUrl
-                            ? `linear-gradient(135deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.65) 100%)`
+                            ? `linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.18) 100%)`
                             : `linear-gradient(135deg, ${accent}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)`,
                         }}
                       />
@@ -3626,11 +3626,11 @@ export default function ClubDashboard() {
                             )}
                           </div>
                           {club.description && (
-                            <p className="text-[12px] leading-relaxed line-clamp-2 mb-1.5" style={{ color: "oklch(0.68 0.08 145)" }}>
+                            <p className="text-[12px] leading-relaxed line-clamp-2 mb-1.5" style={{ color: "rgba(255,255,255,0.82)", textShadow: "0 1px 4px rgba(0,0,0,0.55)" }}>
                               {club.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-3 text-[11px]" style={{ color: "oklch(0.55 0.08 145)" }}>
+                          <div className="flex items-center gap-3 text-[11px]" style={{ color: "rgba(255,255,255,0.62)", textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                             <span className="flex items-center gap-1">
                               <Users className="w-3 h-3" style={{ color: accent }} />
                               <span className="font-bold text-white">{club.memberCount}</span>
@@ -3645,8 +3645,8 @@ export default function ClubDashboard() {
                             {club.location && (
                               <>
                                 <span className="w-px h-3 hidden sm:block" style={{ background: "oklch(0.35 0.05 145)" }} />
-                                <span className="hidden sm:flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
+                                <span className="hidden sm:flex items-center gap-1" style={{ color: "rgba(255,255,255,0.62)" }}>
+                                  <MapPin className="w-3 h-3" style={{ color: "rgba(255,255,255,0.55)" }} />
                                   {flag} {club.location}
                                 </span>
                               </>
