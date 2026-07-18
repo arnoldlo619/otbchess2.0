@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
 import { loadTournamentState } from "@/lib/directorState";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { fireTournamentConfetti } from "@/lib/confetti";
 import {
   computeAllPerformances,
   computeQuadSectionPerformances,
@@ -317,6 +318,12 @@ export default function TournamentOverview() {
   const localState = loadTournamentState(tournamentId);
   const [serverState, setServerState] = useState<DirectorState | null>(null);
   const [serverLoading, setServerLoading] = useState(true);
+
+  // 🎉 Celebratory confetti on mount — fired when auto-navigated after tournament finalized
+  useEffect(() => {
+    const t = setTimeout(() => fireTournamentConfetti(), 400);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!tournamentId) return;
