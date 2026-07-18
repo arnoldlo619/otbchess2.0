@@ -284,7 +284,9 @@ export default function AuthPage() {
     : "/api/auth/google";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[oklch(0.17_0.06_145)] chess-board-bg p-4 sm:p-6">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[oklch(0.17_0.06_145)] chess-board-bg p-4 sm:p-6 relative">
+      {/* Dark semi-transparent overlay for minimalist smoothness */}
+      <div className="pointer-events-none absolute inset-0 bg-black/40" />
       {/* Back to home link */}
       <a
         href="/"
@@ -294,7 +296,7 @@ export default function AuthPage() {
         <span className="hidden sm:inline">Back to home</span>
       </a>
 
-      <div className="w-full max-w-3xl">
+      <div className="w-full max-w-3xl relative z-10">
         {/* Card */}
         <div className="grid w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl md:grid-cols-2"
           style={{ background: "oklch(0.20 0.06 145)" }}>
@@ -359,7 +361,7 @@ export default function AuthPage() {
                 ))}
               </div>
               <span className="text-xs text-white/50">
-                Join 12,000+ OTB players
+                Join 700+ OTB players
               </span>
             </div>
           </div>
