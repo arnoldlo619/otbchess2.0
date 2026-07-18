@@ -68,6 +68,8 @@ import {
 
 import { authFetch } from "@/lib/apiFetch";
 import { getFormatConfig } from "@/lib/formatRegistry";
+import { apiListMyClubs } from "@/lib/clubsApi";
+import type { Club } from "@/lib/clubRegistry";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
@@ -223,6 +225,199 @@ const T = {
   dInput: "oklch(0.25 0.07 145)",
   dInputBorder: "rgba(255,255,255,0.12)",
 };
+
+// ─── Club Link Dropdown ─────────────────────────────────────────────────────
+
+/**
+ * Shown in the wizard for signed-in users who own at least one club.
+ * Lets them link the new tournament to one of their clubs so it appears
+ * on that club's Events page automatically.
+ */
+function ClubLinkDropdown({
+  data,
+  onChange,
+  isDark,
+  ownedClubs,
+  loading,
+}: {
+  data: WizardData;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
+  ownedClubs: Club[];
+  loading: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  if (!loading && ownedClubs.length === 0) return null;
+
+  const selected = ownedClubs.find((c) => c.id === data.clubId) ?? null;
+
+  const handleSelect = (club: Club | null) => {
+    onChange({ clubId: club?.id ?? null, clubName: club?.name ?? null });
+    setOpen(false);
+  };
+
+  return (
+    <div>
+      <label
+        className="block text-sm font-semibold mb-2"
+        style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}
+      >
+        Link to Club
+      </label>
+      <div className="relative" ref={dropRef}>
+        {/* Trigger button */}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="w-full flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all duration-200"
+          style={{
+            background: isDark ? T.dInput : T.lInput,
+            border: `2px solid ${
+              open
+                ? T.green
+                : selected
+                ? isDark ? "rgba(77,105,64,0.50)" : "#9DC4A8"
+                : isDark ? T.dInputBorder : T.lInputBorder
+            }`,
+          }}
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+          ) : selected ? (
+            <>
+              {selected.avatarUrl ? (
+                <img src={selected.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
+                  style={{ background: selected.accentColor || T.green }}
+                >
+                  {selected.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="flex-1 text-sm font-semibold truncate" style={{ color: isDark ? T.dText : T.lText }}>
+                {selected.name}
+              </span>
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} />
+            </>
+          ) : (
+            <>
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(77,105,64,0.10)" }}
+              >
+                <Link2 className="w-3.5 h-3.5" style={{ color: isDark ? T.dMuted : T.lSub }} />
+              </div>
+              <span className="flex-1 text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                No club linked
+              </span>
+            </>
+          )}
+          <ChevronDown
+            className="w-4 h-4 flex-shrink-0 transition-transform duration-200"
+            style={{
+              color: isDark ? T.dMuted : T.lMuted,
+              transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          />
+        </button>
+
+        {/* Dropdown panel */}
+        {open && (
+          <div
+            className="absolute z-50 left-0 right-0 mt-1.5 rounded-2xl border overflow-hidden shadow-xl"
+            style={{
+              background: isDark ? T.dPanel : "#FFFFFF",
+              border: `1.5px solid ${isDark ? "rgba(255,255,255,0.12)" : "#E5E7EB"}`,
+              boxShadow: isDark
+                ? "0 8px 32px rgba(0,0,0,0.50)"
+                : "0 8px 32px rgba(0,0,0,0.12)",
+            }}
+          >
+            {/* None option */}
+            <button
+              type="button"
+              onClick={() => handleSelect(null)}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-black/5"
+              style={{
+                background: !selected ? (isDark ? "rgba(77,105,64,0.12)" : "rgba(77,105,64,0.06)") : "transparent",
+              }}
+            >
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(77,105,64,0.10)" }}
+              >
+                <XCircle className="w-3.5 h-3.5" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              </div>
+              <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>No club linked</span>
+              {!selected && <Check className="w-3.5 h-3.5 ml-auto" style={{ color: T.green }} />}
+            </button>
+
+            {/* Owned clubs */}
+            {ownedClubs.map((club) => (
+              <button
+                key={club.id}
+                type="button"
+                onClick={() => handleSelect(club)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-black/5"
+                style={{
+                  background:
+                    data.clubId === club.id
+                      ? isDark ? "rgba(77,105,64,0.15)" : "rgba(77,105,64,0.08)"
+                      : "transparent",
+                }}
+              >
+                {club.avatarUrl ? (
+                  <img src={club.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
+                    style={{ background: club.accentColor || T.green }}
+                  >
+                    {club.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: isDark ? T.dText : T.lText }}>
+                    {club.name}
+                  </p>
+                  {club.location && (
+                    <p className="text-xs truncate" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                      {club.location}
+                    </p>
+                  )}
+                </div>
+                {data.clubId === club.id && (
+                  <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Helper text */}
+      <p className="mt-1.5 text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+        {selected
+          ? `This tournament will appear on the ${selected.name} events page.`
+          : "Link this tournament to one of your clubs so it shows up on the club's events page."}
+      </p>
+    </div>
+  );
+}
 
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
@@ -898,12 +1093,16 @@ function QuickstartForm({
   onChange,
   isDark,
   onSubmit,
+  ownedClubs,
+  loadingClubs,
 }: {
   data: WizardData;
   onChange: (p: Partial<WizardData>) => void;
   isDark: boolean;
   /** Called when the user presses Enter in a text field and the form is valid. */
   onSubmit?: () => void;
+  ownedClubs: Club[];
+  loadingClubs: boolean;
 }) {
   // Smart Defaults toggle — OFF by default, user opts in
   const [smartDefaults, setSmartDefaults] = useState(false);
@@ -1047,6 +1246,17 @@ function QuickstartForm({
           isDark={isDark}
         />
       </div>
+
+      {/* Link to Club — only shown for signed-in owners */}
+      {(loadingClubs || ownedClubs.length > 0) && (
+        <ClubLinkDropdown
+          data={data}
+          onChange={onChange}
+          isDark={isDark}
+          ownedClubs={ownedClubs}
+          loading={loadingClubs}
+        />
+      )}
 
       {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
       <div>
@@ -2520,10 +2730,14 @@ function StepDetails({
   data,
   onChange,
   isDark,
+  ownedClubs,
+  loadingClubs,
 }: {
   data: WizardData;
   onChange: (p: Partial<WizardData>) => void;
   isDark: boolean;
+  ownedClubs: Club[];
+  loadingClubs: boolean;
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -2689,6 +2903,33 @@ function StepDetails({
           })}
         </div>
       </div>
+
+      {/* Link to Club — only shown for signed-in owners with at least one club */}
+      {(loadingClubs || ownedClubs.length > 0) && (
+        <ClubLinkDropdown
+          data={data}
+          onChange={onChange}
+          isDark={isDark}
+          ownedClubs={ownedClubs}
+          loading={loadingClubs}
+        />
+      )}
+      {/* Fallback: static badge when pre-linked (e.g. from club dashboard) */}
+      {!loadingClubs && ownedClubs.length === 0 && data.clubId && data.clubName && (
+        <div
+          className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
+          style={{
+            background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA",
+            border: `1.5px solid ${isDark ? "rgba(77,105,64,0.30)" : "#C6D9C9"}`,
+          }}
+        >
+          <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
+          <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>Linked to club:</span>
+          <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+            {data.clubName}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -3469,22 +3710,6 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
         </div>
       </div>
 
-      {/* ── Club badge ──────────────────────────────────────────────────── */}
-      {data.clubId && data.clubName && (
-        <div
-          className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
-          style={{
-            background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA",
-            border: `1.5px solid ${isDark ? "rgba(77,105,64,0.30)" : "#C6D9C9"}`,
-          }}
-        >
-          <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
-          <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>Linked to club:</span>
-          <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
-            {data.clubName}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
@@ -3925,6 +4150,21 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useKeyboardScroll(scrollContainerRef, 24);
 
+  // Owned clubs for the "Link to Club" dropdown
+  const [ownedClubs, setOwnedClubs] = useState<Club[]>([]);
+  const [loadingClubs, setLoadingClubs] = useState(false);
+  useEffect(() => {
+    if (!open || !user || user.isGuest) return;
+    setLoadingClubs(true);
+    apiListMyClubs()
+      .then((clubs) => {
+        // Only show clubs where this user is the owner
+        setOwnedClubs(clubs.filter((c) => c.ownerId === user.id));
+      })
+      .catch(() => setOwnedClubs([]))
+      .finally(() => setLoadingClubs(false));
+  }, [open, user]);
+
   // Reset on open + body scroll lock
   useEffect(() => {
     if (open) {
@@ -4297,11 +4537,11 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             </h2>
 
             {/* Quickstart path */}
-            {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} onSubmit={canAdvance ? handleNext : undefined} />}
+            {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} onSubmit={canAdvance ? handleNext : undefined} ownedClubs={ownedClubs} loadingClubs={loadingClubs} />}
             {mode === "quickstart" && step === 1 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
 
             {/* Schedule path */}
-            {mode === "schedule" && step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} />}
+            {mode === "schedule" && step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} ownedClubs={ownedClubs} loadingClubs={loadingClubs} />}
             {mode === "schedule" && step === 1 && <StepFormat data={data} onChange={patch} isDark={isDark} />}
             {mode === "schedule" && step === 2 && <StepTime data={data} onChange={patch} isDark={isDark} />}
             {mode === "schedule" && step === 3 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
