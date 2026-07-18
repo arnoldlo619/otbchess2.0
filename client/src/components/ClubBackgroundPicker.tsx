@@ -26,6 +26,73 @@ export interface SilkSettings {
   noise: number;
 }
 
+/** Named Silk themes — quick full-setting presets */
+export const SILK_THEMES: Array<{
+  id: string;
+  label: string;
+  emoji: string;
+  settings: SilkSettings;
+  /** CSS gradient used for the theme card preview thumbnail */
+  gradient: string;
+}> = [
+  {
+    id: "forest",
+    label: "Forest",
+    emoji: "🌲",
+    settings: { speed: 4, color: "#1a4d2e", noise: 1.4 },
+    gradient: "linear-gradient(135deg, #0a2e14 0%, #1a4d2e 50%, #0d3320 100%)",
+  },
+  {
+    id: "ocean",
+    label: "Ocean",
+    emoji: "🌊",
+    settings: { speed: 6, color: "#0d2b4d", noise: 2.0 },
+    gradient: "linear-gradient(135deg, #061a30 0%, #0d2b4d 50%, #0a3a5c 100%)",
+  },
+  {
+    id: "lava",
+    label: "Lava",
+    emoji: "🌋",
+    settings: { speed: 8, color: "#4d1a0a", noise: 2.8 },
+    gradient: "linear-gradient(135deg, #2a0800 0%, #4d1a0a 40%, #7a2200 100%)",
+  },
+  {
+    id: "void",
+    label: "Void",
+    emoji: "🌌",
+    settings: { speed: 3, color: "#0d0d1a", noise: 1.0 },
+    gradient: "linear-gradient(135deg, #05050f 0%, #0d0d1a 50%, #12102a 100%)",
+  },
+  {
+    id: "aurora",
+    label: "Aurora",
+    emoji: "✨",
+    settings: { speed: 5, color: "#1a3d4d", noise: 1.8 },
+    gradient: "linear-gradient(135deg, #0a2030 0%, #1a3d4d 40%, #0d4d3a 100%)",
+  },
+  {
+    id: "amethyst",
+    label: "Amethyst",
+    emoji: "💜",
+    settings: { speed: 5, color: "#2d1a4d", noise: 1.6 },
+    gradient: "linear-gradient(135deg, #160a2a 0%, #2d1a4d 50%, #3d1060 100%)",
+  },
+  {
+    id: "ember",
+    label: "Ember",
+    emoji: "🔥",
+    settings: { speed: 10, color: "#4d2a0a", noise: 3.2 },
+    gradient: "linear-gradient(135deg, #2a1000 0%, #4d2a0a 40%, #6b3800 100%)",
+  },
+  {
+    id: "midnight",
+    label: "Midnight",
+    emoji: "🌙",
+    settings: { speed: 2.5, color: "#0d1a2e", noise: 0.8 },
+    gradient: "linear-gradient(135deg, #060d18 0%, #0d1a2e 50%, #101e38 100%)",
+  },
+];
+
 /** Preset color swatches for Silk */
 const SILK_COLOR_PRESETS = [
   { hex: "#1a4d2e", label: "Forest" },
@@ -290,6 +357,63 @@ export function ClubBackgroundPicker({
                 rotation={0}
                 className="w-full h-full"
               />
+            </div>
+          </div>
+
+          {/* ── Theme presets ─────────────────────────────────────────── */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold text-white/55 tracking-wide uppercase block">
+              Themes
+            </label>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {SILK_THEMES.map((theme) => {
+                const isActive =
+                  liveColor.toLowerCase() === theme.settings.color.toLowerCase() &&
+                  Math.abs(liveSpeed - theme.settings.speed) < 0.1 &&
+                  Math.abs(liveNoise - theme.settings.noise) < 0.05;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => onSilkSettingsChange(theme.settings)}
+                    className="flex-shrink-0 flex flex-col items-center gap-1 focus:outline-none group"
+                    aria-label={`Apply ${theme.label} theme`}
+                    aria-pressed={isActive}
+                  >
+                    {/* Thumbnail */}
+                    <div
+                      className="w-14 h-9 rounded-lg border-2 transition-all duration-150 group-hover:scale-105 overflow-hidden relative"
+                      style={{
+                        background: theme.gradient,
+                        borderColor: isActive ? "rgba(255,255,255,0.80)" : "rgba(255,255,255,0.12)",
+                        boxShadow: isActive ? `0 0 0 2px ${accent}` : "none",
+                      }}
+                    >
+                      {/* Subtle shimmer lines to hint at silk motion */}
+                      <div
+                        className="absolute inset-0 opacity-30"
+                        style={{
+                          backgroundImage: "repeating-linear-gradient(120deg, transparent, transparent 8px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0.08) 9px)",
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center text-base leading-none">
+                        {theme.emoji}
+                      </span>
+                      {isActive && (
+                        <div
+                          className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                          style={{ background: accent }}
+                        >
+                          <Check className="w-2 h-2 text-white" strokeWidth={3} />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[9px] font-semibold text-white/45 tracking-wide">
+                      {theme.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
