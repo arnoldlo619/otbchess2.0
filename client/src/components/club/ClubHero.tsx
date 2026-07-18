@@ -17,6 +17,8 @@
  */
 import React from "react";
 import { motion } from "framer-motion";
+import Silk from "../Silk";
+import { SILK_BG_VALUE } from "../ClubBackgroundPicker";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
   CheckCircle2, Camera, X, Instagram, Sparkles, QrCode,
@@ -95,7 +97,9 @@ export function ClubHero({
   avatarDropdown, isDark, onCreatePromo, onShareQR,
 }: ClubHeroProps) {
   // bannerUrl (custom upload) takes priority; backgroundImage (template) is fallback
-  const heroBg = bannerUrl || backgroundImage || null;
+  // SILK_BG_VALUE is a special sentinel — render the Silk WebGL animation instead of an image
+  const isSilk = !bannerUrl && backgroundImage === SILK_BG_VALUE;
+  const heroBg = isSilk ? null : (bannerUrl || backgroundImage || null);
 
   return (
     <div
@@ -120,6 +124,20 @@ export function ClubHero({
             backgroundPosition: "center",
           }}
         />
+      )}
+
+      {/* Silk animated WebGL background */}
+      {isSilk && (
+        <div className="absolute inset-0 pointer-events-none">
+          <Silk
+            speed={5}
+            scale={1}
+            color="#1a4d2e"
+            noiseIntensity={1.5}
+            rotation={0}
+            className="w-full h-full"
+          />
+        </div>
       )}
 
       {/* Gradient overlay — multi-stop scrim ensures text readability at all positions */}

@@ -1,12 +1,17 @@
 /**
- * ClubBackgroundPicker — 5-template background image selector for club pages.
+ * ClubBackgroundPicker — background selector for club pages.
  *
  * Renders a horizontal scroll grid of thumbnail cards. Selecting a template
- * calls onSelect with the /manus-storage path. A "None" option resets to the
- * default micro-grid pattern.
+ * calls onChange with the /manus-storage path. A "None" option resets to the
+ * default micro-grid pattern. The special "__silk__" value enables the Silk
+ * animated WebGL background.
  */
 import React from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
+import Silk from "./Silk";
+
+/** Sentinel value stored in club.backgroundImage to indicate the Silk animated background */
+export const SILK_BG_VALUE = "__silk__";
 
 export interface BackgroundTemplate {
   id: string;
@@ -53,6 +58,8 @@ export function ClubBackgroundPicker({
   onChange,
   accent = "#4CAF50",
 }: ClubBackgroundPickerProps) {
+  const silkSelected = value === SILK_BG_VALUE;
+
   return (
     <div className="space-y-3">
       <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
@@ -108,6 +115,51 @@ export function ClubBackgroundPicker({
             </span>
           </div>
           {!value && (
+            <div
+              className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ background: accent }}
+            >
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            </div>
+          )}
+        </button>
+
+        {/* ── Silk animated option ─────────────────────────────────────── */}
+        <button
+          type="button"
+          onClick={() => onChange(SILK_BG_VALUE)}
+          className={`relative flex-shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+            silkSelected
+              ? "shadow-lg scale-[1.03]"
+              : "border-white/10 hover:border-white/30"
+          }`}
+          style={{
+            width: 120,
+            height: 72,
+            borderColor: silkSelected ? accent : undefined,
+          }}
+          aria-label="Silk animated background"
+          aria-pressed={silkSelected}
+        >
+          {/* Live mini Silk preview */}
+          <div className="absolute inset-0 pointer-events-none">
+            <Silk
+              speed={5}
+              scale={1}
+              color="#1a4d2e"
+              noiseIntensity={1.5}
+              rotation={0}
+              className="w-full h-full"
+            />
+          </div>
+          {/* Label scrim */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1 flex items-center gap-1">
+            <Sparkles className="w-2.5 h-2.5 text-white/90" />
+            <span className="text-[9px] font-semibold text-white/90 tracking-wide">
+              Silk
+            </span>
+          </div>
+          {silkSelected && (
             <div
               className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
               style={{ background: accent }}
