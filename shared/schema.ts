@@ -38,8 +38,11 @@ export const users = mysqlTable(
     // Login credential — must be unique
     email: varchar("email", { length: 255 }).notNull().unique(),
 
-    // bcrypt hash of the user's password
-    passwordHash: text("password_hash").notNull(),
+    // bcrypt hash of the user's password (null for OAuth-only accounts)
+    passwordHash: text("password_hash"),
+
+    // Google OAuth subject ID (null for email/password accounts)
+    googleId: varchar("google_id", { length: 255 }).unique(),
 
     // How the user appears in the UI
     displayName: varchar("display_name", { length: 100 }).notNull(),

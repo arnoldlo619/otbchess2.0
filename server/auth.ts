@@ -210,6 +210,10 @@ export function createAuthRouter(): Router {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
+      // OAuth-only accounts have no password — reject email/password login
+      if (!user.passwordHash) {
+        return res.status(401).json({ error: "This account uses Google sign-in. Please use 'Continue with Google' to sign in." });
+      }
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
         return res.status(401).json({ error: "Invalid email or password" });
@@ -890,6 +894,23 @@ export function createAuthRouter(): Router {
       logger.error("[change-password] error:", err);
       return res.status(500).json({ error: "Failed to update password" });
     }
+  });
+
+  // ── GET /api/auth/google ─────────────────────────────────────────────────
+  // Initiates Google OAuth flow by redirecting to Google's authorization endpoint.
+  router.get("/google", (req, res) => {
+    const redirectUri = `${process.env.APP_URL ?? "https://chessotb.club"}/api/oauth/callback`;
+    const state = Buffer.from(JSON.stringify({ ts: Date.now() })).toString("base64url");
+    const params = new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID ?? "",
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      state,
+      access_type: "offline",
+      prompt: "select_account",
+    });
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
   });
 
   return router;

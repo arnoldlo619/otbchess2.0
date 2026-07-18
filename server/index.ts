@@ -439,6 +439,108 @@ export function createApp() {
   // ── Auth routes ─────────────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
 
+  // ── Google OAuth callback ────────────────────────────────────────────────────
+  // Handles the redirect from Google after the user approves sign-in.
+  // Exchanges the code for tokens, fetches the user's Google profile,
+  // upserts a user row, sets a JWT cookie, and redirects to the app.
+  app.get("/api/oauth/callback", async (req, res) => {
+    const { code, error: oauthError } = req.query as { code?: string; error?: string };
+    const redirectBase = process.env.APP_URL ?? "https://chessotb.club";
+
+    if (oauthError || !code) {
+      return res.redirect(`${redirectBase}/?auth_error=${encodeURIComponent(oauthError ?? "access_denied")}`);
+    }
+
+    try {
+      const redirectUri = `${redirectBase}/api/oauth/callback`;
+
+      // Exchange code for tokens
+      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          code,
+          client_id: process.env.GOOGLE_CLIENT_ID ?? "",
+          client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+          redirect_uri: redirectUri,
+          grant_type: "authorization_code",
+        }),
+      });
+      const tokenData = await tokenRes.json() as { access_token?: string; error?: string };
+      if (!tokenData.access_token) {
+        logger.error("[oauth] token exchange failed:", tokenData);
+        return res.redirect(`${redirectBase}/?auth_error=token_exchange_failed`);
+      }
+
+      // Fetch Google user profile
+      const profileRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      });
+      const profile = await profileRes.json() as {
+        id?: string; email?: string; name?: string; picture?: string;
+      };
+      if (!profile.id || !profile.email) {
+        return res.redirect(`${redirectBase}/?auth_error=profile_fetch_failed`);
+      }
+
+      const db = await getDb();
+      const { users: usersTable } = await import("../shared/schema.js");
+      const { eq: eqOp, or: orOp } = await import("drizzle-orm");
+      const { nanoid: nid } = await import("nanoid");
+
+      // Find existing user by googleId or email
+      const [existing] = await db
+        .select()
+        .from(usersTable)
+        .where(orOp(eqOp(usersTable.googleId, profile.id), eqOp(usersTable.email, profile.email!)))
+        .limit(1);
+
+      let userId: string;
+
+      if (existing) {
+        // Link Google account if not already linked
+        if (!existing.googleId) {
+          await db.update(usersTable)
+            .set({ googleId: profile.id, updatedAt: new Date() })
+            .where(eqOp(usersTable.id, existing.id));
+        }
+        userId = existing.id;
+      } else {
+        // Create new account
+        userId = nid();
+        await db.insert(usersTable).values({
+          id: userId,
+          email: profile.email!,
+          passwordHash: null,
+          googleId: profile.id,
+          displayName: profile.name ?? profile.email!.split("@")[0],
+          avatarUrl: profile.picture ?? null,
+        });
+        // Send welcome email (fire-and-forget)
+        const { sendWelcomeEmail } = await import("./platformEmail.js");
+        sendWelcomeEmail({ to: profile.email!, displayName: profile.name ?? "Chess Player" }).catch(
+          (e: unknown) => logger.error("[oauth] welcome email failed:", e)
+        );
+      }
+
+      // Sign JWT and set cookie
+      const jwtLib = await import("jsonwebtoken");
+      const token = jwtLib.default.sign({ sub: userId }, process.env.JWT_SECRET!, { expiresIn: "30d" });
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+
+      logger.info(`[oauth] Google sign-in: ${profile.email} (${userId})`);
+      return res.redirect(`${redirectBase}/`);
+    } catch (err) {
+      logger.error("[oauth] callback error:", err);
+      return res.redirect(`${redirectBase}/?auth_error=server_error`);
+    }
+  });
+
   // ── Health check ─────────────────────────────────────────────────────────────────────
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", ts: Date.now() });

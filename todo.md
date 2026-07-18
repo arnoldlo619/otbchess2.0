@@ -855,12 +855,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Google OAuth (Continue with Google)
 
-- [ ] Audit OAUTH_SERVER_URL and Manus OAuth portal flow
-- [ ] Server: GET /api/auth/google — redirect to Google OAuth via Manus OAuth portal
-- [ ] Server: GET /api/auth/google/callback — exchange code for user info, upsert user, set JWT cookie
-- [ ] AuthModal: add "Continue with Google" button above the email/password form
-- [ ] AuthModal: show a divider ("or") between Google button and email form
-- [ ] Client: handle OAuth redirect back to app and update auth state
+- [x] Audit OAUTH_SERVER_URL and Manus OAuth portal flow
+- [x] Server: GET /api/auth/google — redirect to Google OAuth via Manus OAuth portal
+- [x] Server: GET /api/auth/google/callback — exchange code for user info, upsert user, set JWT cookie
+- [x] AuthModal: add "Continue with Google" button above the email/password form
+- [x] AuthModal: show a divider ("or") between Google button and email form
+- [x] Client: handle OAuth redirect back to app and update auth state
 - [x] Unit tests for OAuth callback user upsert logic
 
 ## AuthModal UX Polish
@@ -2473,10 +2473,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] TypeScript: 0 errors
 
 ## Format Selector in Quickstart Smart Defaults (Mar 18 2026)
-- [ ] Add Format row to Quickstart Smart Defaults card with inline picker
-- [ ] Format options: Swiss, Double Swiss, Round Robin, Single Elimination
-- [ ] Inline picker matches existing Rounds/Max Players/Time Control pattern
-- [ ] Auto-update recommended rounds when format changes (e.g. Round Robin = n-1 rounds)
+- [x] Add Format row to Quickstart Smart Defaults card with inline picker
+- [x] Format options: Swiss, Double Swiss, Round Robin, Single Elimination
+- [x] Inline picker matches existing Rounds/Max Players/Time Control pattern
+- [x] Auto-update recommended rounds when format changes (e.g. Round Robin = n-1 rounds)
 - [x] TypeScript: 0 errors
 
 ## Format Selector in Quickstart Smart Defaults
@@ -2629,8 +2629,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## View Results Page — Layout Fixes
 
-- [ ] Fix Share/Director/Print action bar overlapping the tournament title header
-- [ ] Fix Score Distribution bars overflowing to the right of the container
+- [x] Fix Share/Director/Print action bar overlapping the tournament title header
+- [x] Fix Score Distribution bars overflowing to the right of the container
 - [x] TypeScript: 0 errors
 
 ## View Results Page — Layout Fixes

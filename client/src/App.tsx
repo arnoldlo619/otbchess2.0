@@ -123,6 +123,26 @@ function PageLoader() {
 }
 
 function Router() {
+  // Show a toast if Google OAuth redirected back with an error
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get("auth_error");
+    if (authError) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("auth_error");
+      window.history.replaceState({}, "", url.toString());
+      import("sonner").then(({ toast }) => {
+        const messages: Record<string, string> = {
+          access_denied: "Google sign-in was cancelled.",
+          token_exchange_failed: "Google sign-in failed \u2014 please try again.",
+          profile_fetch_failed: "Could not retrieve your Google profile.",
+          server_error: "An unexpected error occurred during sign-in.",
+        };
+        toast.error(messages[authError] ?? "Google sign-in failed.");
+      });
+    }
+  }, []);
+
   return (
     <>
     {/* Skip to main content — accessibility */}
