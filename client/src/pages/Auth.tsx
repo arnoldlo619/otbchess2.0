@@ -308,7 +308,7 @@ export default function AuthPage() {
           >
             {/* Chess board subtle overlay */}
             <div
-              className="pointer-events-none absolute inset-0 opacity-[0.06]"
+              className="pointer-events-none absolute inset-0 opacity-[0.03]"
               style={{
                 backgroundImage: "repeating-conic-gradient(oklch(0.97 0.02 110) 0% 25%, oklch(0.73 0.07 145) 0% 50%)",
                 backgroundSize: "32px 32px",
