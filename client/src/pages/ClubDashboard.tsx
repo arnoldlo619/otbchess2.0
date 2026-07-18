@@ -2919,6 +2919,18 @@ export default function ClubDashboard() {
     }
   }
 
+  // Set default landing tab once club + role are resolved:
+  // owners/directors land on Overview; regular members land on Feed.
+  const defaultTabApplied = useRef(false);
+  useEffect(() => {
+    if (loading || defaultTabApplied.current) return;
+    defaultTabApplied.current = true;
+    if (isOwnerOrDirector) {
+      setTab("overview");
+    }
+    // members already default to "feed" via useState initial value
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isOwnerOrDirector]);
   // Load pending invites when Members tab is opened (owner/director only)
   useEffect(() => {
     if (tab === "members" && isOwnerOrDirector) {
