@@ -306,7 +306,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
         {/* Background Image Templates */}
         <div className="mt-6 pt-5 border-t border-white/[0.06]">
           <ClubBackgroundPicker
-            value={(club as { backgroundImage?: string | null }).backgroundImage ?? null}
+            value={club.backgroundImage ?? null}
             onChange={(path) => {
               (onClubChange as (p: Record<string, unknown>) => void)({ backgroundImage: path });
               authFetch(`/api/clubs/${club.id}`, {
@@ -325,9 +325,9 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
             }}
             accent={accentColor}
             silkSettings={{
-              speed: (club as { silkSpeed?: number | null }).silkSpeed ?? 5,
-              color: (club as { silkColor?: string | null }).silkColor ?? "#1a4d2e",
-              noise: (club as { silkNoise?: number | null }).silkNoise ?? 1.5,
+              speed: club.silkSpeed ?? 5,
+              color: club.silkColor ?? "#1a4d2e",
+              noise: club.silkNoise ?? 1.5,
             }}
             onSilkSettingsChange={(settings: SilkSettings) => {
               (onClubChange as (p: Record<string, unknown>) => void)({

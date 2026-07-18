@@ -1433,7 +1433,7 @@ export default function ClubProfile() {
   // this re-derives automatically whenever the owner saves a new color in Settings.
   const accent = club?.accentColor ?? (isDark ? "#4CAF50" : "#436850");
 
-  const clubBgForProfile = (club as { backgroundImage?: string | null }).backgroundImage ?? club.bannerUrl ?? null;
+  const clubBgForProfile = club.backgroundImage ?? club.bannerUrl ?? null;
   const useShaderDefault = !clubBgForProfile;
 
   return (
@@ -1614,10 +1614,10 @@ export default function ClubProfile() {
                   name={club.name}
                   avatarUrl={club.avatarUrl}
                   bannerUrl={club.bannerUrl}
-                  backgroundImage={(club as { backgroundImage?: string | null }).backgroundImage ?? null}
-                  silkSpeed={(club as { silkSpeed?: number | null }).silkSpeed ?? null}
-                  silkColor={(club as { silkColor?: string | null }).silkColor ?? null}
-                  silkNoise={(club as { silkNoise?: number | null }).silkNoise ?? null}
+                  backgroundImage={club.backgroundImage ?? null}
+                  silkSpeed={club.silkSpeed ?? null}
+                  silkColor={club.silkColor ?? null}
+                  silkNoise={club.silkNoise ?? null}
                   avatarBroken={avatarBroken}
                   flag={flag}
                   accent={accent}

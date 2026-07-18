@@ -39,6 +39,14 @@ export interface Club {
   avatarUrl: string | null;
   /** CDN URL for the club banner/cover image */
   bannerUrl: string | null;
+  /** Background image template path, or "__silk__" for the animated Silk WebGL background */
+  backgroundImage?: string | null;
+  /** Silk animation speed (1–15) */
+  silkSpeed?: number | null;
+  /** Silk animation base color (hex) */
+  silkColor?: string | null;
+  /** Silk noise intensity (0.2–4) */
+  silkNoise?: number | null;
   /** Primary brand colour (hex) used for the banner gradient overlay */
   accentColor: string;
   /** User ID of the founding director */

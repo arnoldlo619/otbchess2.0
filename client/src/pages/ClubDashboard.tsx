@@ -207,6 +207,8 @@ import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { ShaderBackground } from "@/components/ui/shader-r";
+import Silk from "@/components/Silk";
+import { SILK_DEFAULTS } from "@/components/ClubBackgroundPicker";
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -3217,7 +3219,8 @@ export default function ClubDashboard() {
   ];
 
   // Club background image — set via ClubSettingsPanel > ClubBackgroundPicker
-  const clubBgImage = (club as { backgroundImage?: string | null }).backgroundImage ?? null;
+  const clubBgImage = club.backgroundImage ?? null;
+  const isSilkBg = clubBgImage === "__silk__";
   // Use the animated shader as the default background when no custom/preset image is selected
   const useShaderDefault = !clubBgImage;
 
@@ -3228,7 +3231,7 @@ export default function ClubDashboard() {
         // When shader is active, use transparent background so the fixed canvas shows through.
         // When a custom/preset image is set, use it as the page background.
         background: useShaderDefault ? "transparent" : "oklch(0.20 0.06 145)",
-        ...(clubBgImage ? {
+        ...(!isSilkBg && clubBgImage ? {
           backgroundImage: `url(${clubBgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center top",
@@ -3236,6 +3239,25 @@ export default function ClubDashboard() {
         } : {}),
       }}
     >
+      {/* Silk animated background — shown when Silk is selected */}
+      {isSilkBg && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <div className="absolute inset-0" style={{ opacity: 0.85 }}>
+            <Silk
+              speed={club.silkSpeed ?? SILK_DEFAULTS.speed}
+              scale={1}
+              color={club.silkColor ?? SILK_DEFAULTS.color}
+              noiseIntensity={club.silkNoise ?? SILK_DEFAULTS.noise}
+              rotation={0}
+              className="w-full h-full"
+            />
+          </div>
+          <div
+            className="absolute inset-0"
+            style={{ background: "oklch(0.10 0.05 145 / 0.40)" }}
+          />
+        </div>
+      )}
       {/* Default animated shader background — shown when no custom/preset background is set */}
       {useShaderDefault && (
         <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
