@@ -69,6 +69,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const JoinClub = lazy(() => import("./pages/JoinClub"));
 const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
+const AuthPage = lazy(() => import("./pages/Auth"));
 
 // ── Thin top progress bar — replaces full-screen loader on route transitions ────────────
 function RouteProgressBar() {
@@ -155,6 +156,7 @@ function Router() {
     <main id="main-content">
     <Suspense fallback={<PageLoader />}>
       <Switch>
+        <Route path={"/auth"} component={AuthPage} />
         <Route path={"/"} component={Home} />
         <Route path={"/tournament/:id"} component={TournamentPage} />
         <Route path={"/tournament/:id/manage"} component={Director} />

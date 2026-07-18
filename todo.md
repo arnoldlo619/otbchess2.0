@@ -2333,17 +2333,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Truncate long usernames in all nav user menus to max-w-[80px] truncate; added flex-none min-w-0 to rightSlot wrapper in AnimeNavBar
 
 ## Instagram Carousel Tournament Recap (Mar 17 2026)
-- [ ] Build InstagramCarouselModal component with 5 branded slides
-- [ ] Slide 1: Cover — tournament name, club name, date, OTB branding, champion name
-- [ ] Slide 2: Podium — top 3 players with ELO, points, and medal styling
-- [ ] Slide 3: Full standings — ranked player list with scores
-- [ ] Slide 4: Tournament stats — total players, rounds, format, avg ELO, top upset
-- [ ] Slide 5: CTA — "Play at [Club Name]" with OTB branding and join info
-- [ ] Per-slide PNG export using html2canvas (1080x1080 Instagram square format)
-- [ ] ZIP download of all slides via JSZip
-- [ ] "Create Instagram Recap" button on FinalStandings page
-- [ ] Club name branding support (from TournamentConfig.clubName)
-- [ ] Light/dark slide theme toggle in the modal
+- [x] Build InstagramCarouselModal component with 5 branded slides
+- [x] Slide 1: Cover — tournament name, club name, date, OTB branding, champion name
+- [x] Slide 2: Podium — top 3 players with ELO, points, and medal styling
+- [x] Slide 3: Full standings — ranked player list with scores
+- [x] Slide 4: Tournament stats — total players, rounds, format, avg ELO, top upset
+- [x] Slide 5: CTA — "Play at [Club Name]" with OTB branding and join info
+- [x] Per-slide PNG export using html2canvas (1080x1080 Instagram square format)
+- [x] ZIP download of all slides via JSZip
+- [x] "Create Instagram Recap" button on FinalStandings page
+- [x] Club name branding support (from TournamentConfig.clubName)
+- [x] Light/dark slide theme toggle in the modal
 
 ## Instagram Carousel Tournament Recap — Completed (Mar 17 2026)
 - [x] Build InstagramCarouselModal component with 5 branded slides
@@ -7455,3 +7455,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] P0-7: Fix duplicate H1 in tournament report export cards (aria-hidden on export-only clones)
 - [ ] P0-8: Verify homepage zero-stat flash is fixed (already has skeleton + FLOORS)
 - [ ] P0-9: Add unit tests for format label, status selector, draw rate, quads tiebreaks
+
+## Dedicated /auth Page (SignIn6 Layout Remix)
+- [x] Build AuthPage.tsx: two-panel layout (left brand panel + right form panel)
+- [x] Left panel: forest green gradient, chess-board-bg overlay, OTB logo, tagline, avatar social proof
+- [x] Right panel: Sign In / Sign Up / Guest tabs with all existing form logic ported from AuthModal
+- [x] Google OAuth button above the email/password divider on Sign In + Sign Up tabs
+- [x] Forgot password inline view (email input → success message)
+- [x] Mobile: left panel collapses to compact branded top bar
+- [x] Route /auth added to App.tsx
+- [x] AvatarNavDropdown "Sign In" → navigates to /auth instead of opening modal
+- [x] Support ?tab=signin|signup|guest query param for deep-linking
+- [x] Support ?redirect=/path query param — after login, navigate to redirect path
+- [x] Authenticated users visiting /auth are redirected to /

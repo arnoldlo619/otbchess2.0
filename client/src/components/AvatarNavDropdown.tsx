@@ -314,7 +314,7 @@ export function AvatarNavDropdown({
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [open, setOpen]   = useState(false);
-  const [location]        = useLocation();
+  const [location, navigateTo] = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
   const triggerRef        = useRef<HTMLButtonElement>(null);
   const avatarInputRef    = useRef<HTMLInputElement>(null);
@@ -352,7 +352,7 @@ export function AvatarNavDropdown({
     };
     reader.readAsDataURL(file);
   }, [updateProfile]);
-  // Internal auth modal — used when the parent page doesn't provide onSignInClick
+  // Internal auth modal — kept for backward compat with pages that pass onSignInClick
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
   // Pro upgrade modal
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -361,7 +361,12 @@ export function AvatarNavDropdown({
     if (onSignInClick) {
       onSignInClick();
     } else {
-      setInternalAuthOpen(true);
+      // Navigate to the dedicated /auth page, preserving current path as redirect
+      const currentPath = window.location.pathname;
+      const redirect = currentPath && currentPath !== "/" && currentPath !== "/auth"
+        ? `?redirect=${encodeURIComponent(currentPath)}`
+        : "";
+      navigateTo(`/auth${redirect}`);
     }
   };
 
