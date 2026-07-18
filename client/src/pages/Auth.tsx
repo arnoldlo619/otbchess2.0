@@ -284,7 +284,15 @@ export default function AuthPage() {
     : "/api/auth/google";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[oklch(0.17_0.06_145)] chess-board-bg p-4 sm:p-6 relative">
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 relative"
+      style={{
+        backgroundImage: "url('/manus-storage/auth-bg_d6364218.jpeg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       {/* Dark semi-transparent overlay for minimalist smoothness */}
       <div className="pointer-events-none absolute inset-0 bg-black/40" />
       {/* Back to home link */}
