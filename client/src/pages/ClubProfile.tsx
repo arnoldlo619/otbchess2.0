@@ -1728,16 +1728,55 @@ export default function ClubProfile() {
               );
             })()}
 
-            {/* About snippet */}
-            {club.description && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>About</h3>
-
-                </div>
-                <p className={`text-sm leading-relaxed line-clamp-3 ${isDark ? "text-white/75" : "text-[#12372A]/85"}`}>{club.description}</p>
+            {/* About — full card (description + details) */}
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>About</h3>
+                {(isOwner || isDirector) && (
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                      isDark
+                        ? "bg-white/10 text-white hover:bg-white/20"
+                        : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]"
+                    }`}
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
-            )}
+              {club.description && (
+                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
+                  {club.description}
+                </p>
+              )}
+              <div className={`grid grid-cols-2 gap-3 pt-3 border-t ${isDark ? "border-white/8" : "border-[#ADBC9F]/50"}`}>
+                {club.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{flag} {club.location}</span>
+                  </div>
+                )}
+                {club.category && (
+                  <div className="flex items-center gap-2">
+                    <Hash className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{categoryLabel}</span>
+                  </div>
+                )}
+                {club.foundedAt && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{formatDate(club.foundedAt)}</span>
+                  </div>
+                )}
+                {club.ownerName && (
+                  <div className="flex items-center gap-2">
+                    <Crown className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.ownerName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Upcoming events preview */}
             {(() => {
@@ -1856,6 +1895,18 @@ export default function ClubProfile() {
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (() => {
+          if (!joined) return (
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
+                <Users className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
+              </div>
+              <div>
+                <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only</h3>
+                <p className={`text-sm ${textMuted} max-w-xs`}>The member directory is only visible to club members. Join to see who's in the club.</p>
+              </div>
+              <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
+            </div>
+          );
           // Filter and sort members
           const filteredMembers = members.filter((m) => {
             const matchesSearch = (() => {
@@ -2060,6 +2111,25 @@ export default function ClubProfile() {
         {/* ── Feed tab ──────────────────────────────────────────────────────── */}
         {activeTab === "feed" && (
           <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Non-member gate */}
+            {!joined ? (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
+                  <MessageSquare className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
+                </div>
+                <div>
+                  <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only Feed</h3>
+                  <p className={`text-sm ${textMuted} max-w-xs`}>Posts, polls, and announcements are only visible to club members. Join to participate in the conversation.</p>
+                </div>
+                <button
+                  onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }}
+                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}
+                >
+                  Join Club
+                </button>
+              </div>
+            ) : (
+              <>
             {/* Onboarding checklist for new club owners */}
             {isOwner && club.memberCount <= 3 && (() => {
               const steps = [
@@ -2109,294 +2179,6 @@ export default function ClubProfile() {
             })()}
 
 
-
-            {/* Club Description & Details (Feed tab only) */}
-            {/* Description */}
-            {/* Combined About & Details — consolidated into a single card */}
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-base font-bold uppercase tracking-wider ${isDark ? "text-white" : "text-[#436850]"}`}>
-                  About
-                </h2>
-                {(isOwner || isDirector) && (
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                      isDark
-                        ? "bg-white/10 text-white hover:bg-white/20"
-                        : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]"
-                    }`}
-                  >
-                    Edit
-                  </button>
-                )}
-              </div>
-              {club.description && (
-                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
-                  {club.description}
-                </p>
-              )}
-              {/* Inline details grid */}
-              <div className={`grid grid-cols-2 gap-3 pt-3 border-t ${isDark ? "border-white/8" : "border-[#ADBC9F]/50"}`}>
-                <div className="flex items-center gap-2">
-                  <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{flag} {club.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Hash className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{categoryLabel}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{formatDate(club.foundedAt)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Crown className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                  <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.ownerName}</span>
-                </div>
-                {club.website && (
-                  <div className="col-span-2 flex items-center gap-2">
-                    <Globe className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                    <a
-                      href={club.website.startsWith("http") ? club.website : `https://${club.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`text-xs font-medium truncate transition-opacity hover:opacity-70 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}
-                    >
-                      {club.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-                    </a>
-                    <ExternalLink className={`w-3 h-3 flex-shrink-0 ${textMuted}`} />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Social links + meeting schedule + contact */}
-            {(club.discord || club.twitter || club.instagram || club.tiktok || club.youtube || club.linktree || club.meetingDay || club.contactEmail || club.contactPhone || club.facebook || club.xUrl || club.meetupUrl) && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                  Links & Info
-                </h2>
-                <div className="flex flex-col gap-1.5">
-                  {club.discord && (
-                    <a href={club.discord} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Discord</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.instagram && (
-                    <a href={club.instagram.startsWith("http") ? club.instagram : `https://instagram.com/${club.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Camera className={`w-4 h-4 text-pink-500`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Instagram</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.tiktok && (
-                    <a href={club.tiktok.startsWith("http") ? club.tiktok : `https://tiktok.com/@${club.tiktok.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Video className={`w-4 h-4 ${isDark ? "text-white/70" : "text-[#12372A]/85"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>TikTok</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.youtube && (
-                    <a href={club.youtube} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Play className={`w-4 h-4 text-red-500`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>YouTube</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.linktree && (
-                    <a href={club.linktree} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Link2 className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Linktree</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {(club.meetingDay || club.meetingTime) && (
-                    <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-white/3" : "bg-[#FBFADA]/70"}`}>
-                      <Clock className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                      <div>
-                        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
-                          {[club.meetingDay, club.meetingTime].filter(Boolean).join(" · ")}
-                        </p>
-                        {club.meetingNotes && (
-                          <p className={`text-xs mt-0.5 ${textMuted}`}>{club.meetingNotes}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {club.contactEmail && (
-                    <a href={`mailto:${club.contactEmail}`}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Mail className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{club.contactEmail}</span>
-                    </a>
-                  )}
-                  {club.contactPhone && (
-                    <a href={`tel:${club.contactPhone}`}
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <Phone className={`w-4 h-4 ${isDark ? "text-white/50" : "text-[#436850]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{club.contactPhone}</span>
-                    </a>
-                  )}
-                  {club.facebook && (
-                    <a href={club.facebook.startsWith("http") ? club.facebook : `https://facebook.com/${club.facebook.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Facebook</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.xUrl && (
-                    <a href={club.xUrl.startsWith("http") ? club.xUrl : `https://x.com/${club.xUrl.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <svg className={`w-4 h-4 ${isDark ? "text-white/70" : "text-[#12372A]/85"}`} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>X / Twitter</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.meetupUrl && (
-                    <a href={club.meetupUrl} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-[#FBFADA]"}`}>
-                      <MapPin className={`w-4 h-4 text-red-500`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Meetup</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* What to Expect section */}
-            {club.whatToExpect && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                  What to Expect
-                </h2>
-                <p className={`text-sm leading-relaxed ${isDark ? "text-white/75" : "text-[#12372A]/85"}`}>
-                  {club.whatToExpect}
-                </p>
-              </div>
-            )}
-
-
-            {/* ── Post composer (owner/director only) ─────────────────────── */}
-            {(isOwner || isDirector) && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                {/* Composer header */}
-                <div className={`px-5 pt-4 pb-3 border-b ${divider} flex items-center gap-2`}>
-                  {/* Actor avatar */}
-                  <div className="relative flex-shrink-0">
-                    {user?.avatarUrl ? (
-                      <img src={user.avatarUrl} alt={user.displayName} className="w-9 h-9 rounded-full object-cover" />
-                    ) : (
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${
-                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]"
-                      }`}>{user?.displayName?.charAt(0).toUpperCase() ?? "?"}</div>
-                    )}
-                    {(isOwner || isDirector) && (
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ${
-                        isOwner ? "bg-amber-500" : "bg-[#4CAF50]"
-                      }`} style={{ width: 16, height: 16 }}>
-                        {isOwner ? <Crown className="w-2.5 h-2.5 text-white" /> : <Shield className="w-2.5 h-2.5 text-white" />}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`text-sm font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>
-                    {user?.displayName}
-                  </span>
-                </div>
-                {/* Textarea */}
-                <div className="px-5 pt-4">
-                  <textarea
-                    value={announcementDraft}
-                    onChange={(e) => setAnnouncementDraft(e.target.value)}
-                    placeholder="Share an update, announcement, or highlight with the club…"
-                    rows={3}
-                    maxLength={600}
-                    className={`w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none border transition-colors ${
-                      isDark
-                        ? "bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-[#4CAF50]/40"
-                        : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40"
-                    }`}
-                  />
-                </div>
-                {/* Image preview */}
-                {composerImagePreview && (
-                  <div className="px-5 pt-2 relative">
-                    <div className="relative rounded-2xl overflow-hidden">
-                      <img
-                        src={composerImagePreview}
-                        alt="Attachment preview"
-                        className="w-full max-h-64 object-cover rounded-2xl"
-                      />
-                      <button
-                        onClick={() => { setComposerImageFile(null); setComposerImagePreview(null); }}
-                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
-                        title="Remove image"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/* Toolbar + Post button */}
-                <div className={`px-5 py-3 flex items-center justify-between gap-3`}>
-                  <div className="flex items-center gap-1">
-                    {/* Image upload button */}
-                    <button
-                      onClick={() => composerImageInputRef.current?.click()}
-                      title="Attach image"
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                        composerImagePreview
-                          ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#436850]/15 text-[#436850]"
-                          : isDark ? "text-white/40 hover:text-white/70 hover:bg-white/8" : "text-[#436850]/60 hover:text-[#436850] hover:bg-[#ADBC9F]/30"
-                      }`}
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      <span>{composerImagePreview ? "Change" : "Photo"}</span>
-                    </button>
-                    <input
-                      ref={composerImageInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        setComposerImageFile(file);
-                        const reader = new FileReader();
-                        reader.onload = (ev) => setComposerImagePreview(ev.target?.result as string);
-                        reader.readAsDataURL(file);
-                        e.target.value = "";
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs ${textMuted} ${announcementDraft.length > 550 ? "text-amber-400" : ""}`}>
-                      {announcementDraft.length}/600
-                    </span>
-                    <button
-                      onClick={handlePostAnnouncement}
-                      disabled={!announcementDraft.trim() || postingAnnouncement}
-                      className={`px-5 py-1.5 rounded-xl text-xs font-bold transition-all disabled:opacity-40 ${
-                        isDark
-                          ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A] disabled:hover:bg-[#4CAF50]"
-                          : "bg-[#436850] text-white hover:bg-[#3a5230] disabled:hover:bg-[#436850]"
-                      }`}
-                    >
-                      {postingAnnouncement ? "Posting…" : "Post"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* ── Top Members / Leaderboard Preview ──────────────────────── */}
             {members.length > 0 && (() => {
@@ -2512,11 +2294,25 @@ export default function ClubProfile() {
                 </div>
               </div>
             )}
+              </>
+            )}
           </div>
         )}
 
         {/* ── Events tab ──────────────────────────────────────────────────────────── */}
         {activeTab === "events" && (() => {
+          if (!joined) return (
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
+                <Calendar className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
+              </div>
+              <div>
+                <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only Events</h3>
+                <p className={`text-sm ${textMuted} max-w-xs`}>Club events and tournaments are only visible to members. Join to see upcoming events and RSVP.</p>
+              </div>
+              <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
+            </div>
+          );
           const now = new Date();
           // Merge clubEvents and live tournaments into a unified list
           const allItems = [
@@ -3391,6 +3187,18 @@ export default function ClubProfile() {
 
         {/* ── Leagues tab ──────────────────────────────────────────────────── */}
         {activeTab === "leagues" && (
+          !joined ? (
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
+                <Award className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
+              </div>
+              <div>
+                <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only Leagues</h3>
+                <p className={`text-sm ${textMuted} max-w-xs`}>Club leagues and standings are only visible to members. Join to compete and track your progress.</p>
+              </div>
+              <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
+            </div>
+          ) :
           <div className="space-y-4 animate-in fade-in duration-200">
             {/* Commissioner CTA */}
             {isOwner && (
