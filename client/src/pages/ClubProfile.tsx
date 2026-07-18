@@ -1615,6 +1615,9 @@ export default function ClubProfile() {
                   avatarUrl={club.avatarUrl}
                   bannerUrl={club.bannerUrl}
                   backgroundImage={(club as { backgroundImage?: string | null }).backgroundImage ?? null}
+                  silkSpeed={(club as { silkSpeed?: number | null }).silkSpeed ?? null}
+                  silkColor={(club as { silkColor?: string | null }).silkColor ?? null}
+                  silkNoise={(club as { silkNoise?: number | null }).silkNoise ?? null}
                   avatarBroken={avatarBroken}
                   flag={flag}
                   accent={accent}

@@ -6,7 +6,7 @@ import React, { useState, useRef } from "react";
 import { Settings2, Save, Globe, Lock, MapPin, FileText, Type, Palette, Check, Link2, Instagram, MessageCircle, Phone, Mail, Calendar, Megaphone, Tag, Flag } from "lucide-react";
 import { ClubAvatarUpload } from "./ClubAvatarUpload";
 import { ClubBannerUpload } from "./ClubBannerUpload";
-import { ClubBackgroundPicker } from "./ClubBackgroundPicker";
+import { ClubBackgroundPicker, type SilkSettings } from "./ClubBackgroundPicker";
 import { toast } from "sonner";
 import type { Club } from "@/lib/clubRegistry";
 import { authFetch } from "@/lib/apiFetch";
@@ -324,6 +324,28 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               }).catch(() => toast.error("Background update failed."));
             }}
             accent={accentColor}
+            silkSettings={{
+              speed: (club as { silkSpeed?: number | null }).silkSpeed ?? 5,
+              color: (club as { silkColor?: string | null }).silkColor ?? "#1a4d2e",
+              noise: (club as { silkNoise?: number | null }).silkNoise ?? 1.5,
+            }}
+            onSilkSettingsChange={(settings: SilkSettings) => {
+              (onClubChange as (p: Record<string, unknown>) => void)({
+                silkSpeed: settings.speed,
+                silkColor: settings.color,
+                silkNoise: settings.noise,
+              });
+              authFetch(`/api/clubs/${club.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  silkSpeed: settings.speed,
+                  silkColor: settings.color,
+                  silkNoise: settings.noise,
+                }),
+              }).catch(() => toast.error("Silk settings update failed."));
+            }}
           />
         </div>
       </div>

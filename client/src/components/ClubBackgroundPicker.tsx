@@ -6,12 +6,37 @@
  * default micro-grid pattern. The special "__silk__" value enables the Silk
  * animated WebGL background.
  */
-import React from "react";
+import React, { useCallback } from "react";
 import { Check, X, Sparkles } from "lucide-react";
 import Silk from "./Silk";
 
 /** Sentinel value stored in club.backgroundImage to indicate the Silk animated background */
 export const SILK_BG_VALUE = "__silk__";
+
+/** Default Silk settings */
+export const SILK_DEFAULTS = {
+  speed: 5,
+  color: "#1a4d2e",
+  noise: 1.5,
+} as const;
+
+export interface SilkSettings {
+  speed: number;
+  color: string;
+  noise: number;
+}
+
+/** Preset color swatches for Silk */
+const SILK_COLOR_PRESETS = [
+  { hex: "#1a4d2e", label: "Forest" },
+  { hex: "#0d2137", label: "Deep Navy" },
+  { hex: "#2d1a4d", label: "Violet" },
+  { hex: "#4d1a1a", label: "Crimson" },
+  { hex: "#1a3d4d", label: "Teal" },
+  { hex: "#4d3d1a", label: "Amber" },
+  { hex: "#1a1a1a", label: "Obsidian" },
+  { hex: "#0a2a0a", label: "Deep Green" },
+];
 
 export interface BackgroundTemplate {
   id: string;
@@ -51,14 +76,37 @@ interface ClubBackgroundPickerProps {
   value: string | null | undefined;
   onChange: (path: string | null) => void;
   accent?: string;
+  /** Current Silk settings — used to populate the panel when Silk is active */
+  silkSettings?: SilkSettings | null;
+  /** Called when any Silk setting changes — parent should persist immediately */
+  onSilkSettingsChange?: (settings: SilkSettings) => void;
 }
 
 export function ClubBackgroundPicker({
   value,
   onChange,
   accent = "#4CAF50",
+  silkSettings,
+  onSilkSettingsChange,
 }: ClubBackgroundPickerProps) {
   const silkSelected = value === SILK_BG_VALUE;
+
+  // Resolved live settings (fall back to defaults)
+  const liveSpeed = silkSettings?.speed ?? SILK_DEFAULTS.speed;
+  const liveColor = silkSettings?.color ?? SILK_DEFAULTS.color;
+  const liveNoise = silkSettings?.noise ?? SILK_DEFAULTS.noise;
+
+  const updateSilk = useCallback(
+    (patch: Partial<SilkSettings>) => {
+      onSilkSettingsChange?.({
+        speed: liveSpeed,
+        color: liveColor,
+        noise: liveNoise,
+        ...patch,
+      });
+    },
+    [liveSpeed, liveColor, liveNoise, onSilkSettingsChange]
+  );
 
   return (
     <div className="space-y-3">
@@ -141,13 +189,13 @@ export function ClubBackgroundPicker({
           aria-label="Silk animated background"
           aria-pressed={silkSelected}
         >
-          {/* Live mini Silk preview */}
+          {/* Live mini Silk preview — uses current settings */}
           <div className="absolute inset-0 pointer-events-none">
             <Silk
-              speed={5}
+              speed={liveSpeed}
               scale={1}
-              color="#1a4d2e"
-              noiseIntensity={1.5}
+              color={liveColor}
+              noiseIntensity={liveNoise}
               rotation={0}
               className="w-full h-full"
             />
@@ -215,6 +263,153 @@ export function ClubBackgroundPicker({
           );
         })}
       </div>
+
+      {/* ── Silk settings panel (shown only when Silk is selected) ──────── */}
+      {silkSelected && onSilkSettingsChange && (
+        <div
+          className="rounded-2xl border p-4 space-y-4 mt-1"
+          style={{
+            background: "rgba(10,30,15,0.85)",
+            borderColor: "rgba(118,255,136,0.12)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          {/* Header row */}
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5" style={{ color: accent }} />
+            <span className="text-xs font-bold tracking-wide text-white/80">
+              Silk Settings
+            </span>
+            {/* Live preview strip */}
+            <div className="ml-auto w-16 h-6 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+              <Silk
+                speed={liveSpeed}
+                scale={1}
+                color={liveColor}
+                noiseIntensity={liveNoise}
+                rotation={0}
+                className="w-full h-full"
+              />
+            </div>
+          </div>
+
+          {/* Speed slider */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-white/55 tracking-wide uppercase">
+                Speed
+              </label>
+              <span className="text-[11px] font-mono text-white/40 tabular-nums">
+                {liveSpeed.toFixed(1)}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={15}
+              step={0.5}
+              value={liveSpeed}
+              onChange={(e) => updateSilk({ speed: parseFloat(e.target.value) })}
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, ${accent} 0%, ${accent} ${((liveSpeed - 1) / 14) * 100}%, rgba(255,255,255,0.12) ${((liveSpeed - 1) / 14) * 100}%, rgba(255,255,255,0.12) 100%)`,
+                accentColor: accent,
+              }}
+            />
+            <div className="flex justify-between text-[9px] text-white/25">
+              <span>Slow</span>
+              <span>Fast</span>
+            </div>
+          </div>
+
+          {/* Noise intensity slider */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-white/55 tracking-wide uppercase">
+                Noise Intensity
+              </label>
+              <span className="text-[11px] font-mono text-white/40 tabular-nums">
+                {liveNoise.toFixed(1)}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0.2}
+              max={4}
+              step={0.1}
+              value={liveNoise}
+              onChange={(e) => updateSilk({ noise: parseFloat(e.target.value) })}
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, ${accent} 0%, ${accent} ${((liveNoise - 0.2) / 3.8) * 100}%, rgba(255,255,255,0.12) ${((liveNoise - 0.2) / 3.8) * 100}%, rgba(255,255,255,0.12) 100%)`,
+                accentColor: accent,
+              }}
+            />
+            <div className="flex justify-between text-[9px] text-white/25">
+              <span>Subtle</span>
+              <span>Intense</span>
+            </div>
+          </div>
+
+          {/* Color presets */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold text-white/55 tracking-wide uppercase block">
+              Color
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {SILK_COLOR_PRESETS.map(({ hex, label }) => {
+                const isSelected = liveColor.toLowerCase() === hex.toLowerCase();
+                return (
+                  <button
+                    key={hex}
+                    type="button"
+                    title={label}
+                    onClick={() => updateSilk({ color: hex })}
+                    className="w-7 h-7 rounded-full border-2 transition-all duration-150 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+                    style={{
+                      background: hex,
+                      borderColor: isSelected ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.15)",
+                      boxShadow: isSelected ? `0 0 0 2px ${accent}` : "none",
+                    }}
+                    aria-label={label}
+                    aria-pressed={isSelected}
+                  />
+                );
+              })}
+              {/* Custom color input */}
+              <label
+                className="w-7 h-7 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-white/40 transition-colors relative overflow-hidden"
+                title="Custom color"
+              >
+                <span className="text-[8px] text-white/40 font-bold select-none">+</span>
+                <input
+                  type="color"
+                  value={liveColor}
+                  onChange={(e) => updateSilk({ color: e.target.value })}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  aria-label="Custom color"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Reset to defaults */}
+          <button
+            type="button"
+            onClick={() =>
+              onSilkSettingsChange({
+                speed: SILK_DEFAULTS.speed,
+                color: SILK_DEFAULTS.color,
+                noise: SILK_DEFAULTS.noise,
+              })
+            }
+            className="text-[10px] text-white/30 hover:text-white/60 transition-colors flex items-center gap-1"
+          >
+            <X className="w-3 h-3" />
+            Reset to defaults
+          </button>
+        </div>
+      )}
 
       {/* Clear button when a template is active */}
       {value && (

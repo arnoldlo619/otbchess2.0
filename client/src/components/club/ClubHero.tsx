@@ -18,7 +18,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Silk from "../Silk";
-import { SILK_BG_VALUE } from "../ClubBackgroundPicker";
+import { SILK_BG_VALUE, SILK_DEFAULTS } from "../ClubBackgroundPicker";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
   CheckCircle2, Camera, X, Instagram, Sparkles, QrCode,
@@ -84,6 +84,10 @@ export interface ClubHeroProps {
   onCreatePromo?: () => void;
   // Share Club QR projection
   onShareQR?: () => void;
+  // Silk animation settings (only used when backgroundImage === SILK_BG_VALUE)
+  silkSpeed?: number | null;
+  silkColor?: string | null;
+  silkNoise?: number | null;
 }
 
 export function ClubHero({
@@ -95,6 +99,7 @@ export function ClubHero({
   onJoin, onLeave, onFollow,
   bannerUploading, bannerDragOver, onBannerFile, onRemoveBanner, onBannerDragOver,
   avatarDropdown, isDark, onCreatePromo, onShareQR,
+  silkSpeed, silkColor, silkNoise,
 }: ClubHeroProps) {
   // bannerUrl (custom upload) takes priority; backgroundImage (template) is fallback
   // SILK_BG_VALUE is a special sentinel — render the Silk WebGL animation instead of an image
@@ -130,10 +135,10 @@ export function ClubHero({
       {isSilk && (
         <div className="absolute inset-0 pointer-events-none">
           <Silk
-            speed={5}
+            speed={silkSpeed ?? SILK_DEFAULTS.speed}
             scale={1}
-            color="#1a4d2e"
-            noiseIntensity={1.5}
+            color={silkColor ?? SILK_DEFAULTS.color}
+            noiseIntensity={silkNoise ?? SILK_DEFAULTS.noise}
             rotation={0}
             className="w-full h-full"
           />
