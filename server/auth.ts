@@ -830,5 +830,67 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── POST /api/auth/change-password ─────────────────────────────────────
+  // Authenticated user changes their own password.
+  // Requires: currentPassword (to verify identity), newPassword (min 8 chars).
+  // Guests (empty passwordHash) cannot use this endpoint.
+  router.post("/change-password", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+
+    const { currentPassword, newPassword } = req.body as {
+      currentPassword?: string;
+      newPassword?: string;
+    };
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "currentPassword and newPassword are required" });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters" });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: "New password must differ from the current password" });
+    }
+
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select({ id: users.id, passwordHash: users.passwordHash, isGuest: users.isGuest })
+        .from(users)
+        .where(eq(users.id, payload.sub))
+        .limit(1);
+
+      if (!rows.length) return res.status(404).json({ error: "User not found" });
+      const user = rows[0];
+
+      if (user.isGuest || !user.passwordHash) {
+        return res.status(400).json({ error: "Guest accounts cannot change passwords" });
+      }
+
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+
+      const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+      await db
+        .update(users)
+        .set({ passwordHash: newHash, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+      logger.info(`[change-password] Password updated for user ${user.id}`);
+      return res.json({ ok: true, message: "Password updated successfully" });
+    } catch (err) {
+      logger.error("[change-password] error:", err);
+      return res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
   return router;
 }
