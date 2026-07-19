@@ -3230,7 +3230,7 @@ export default function ClubDashboard() {
       style={{
         // When shader is active, use transparent background so the fixed canvas shows through.
         // When a custom/preset image is set, use it as the page background.
-        background: useShaderDefault ? "transparent" : "oklch(0.20 0.06 145)",
+        background: (useShaderDefault || isSilkBg) ? "transparent" : "oklch(0.20 0.06 145)",
         ...(!isSilkBg && clubBgImage ? {
           backgroundImage: `url(${clubBgImage})`,
           backgroundSize: "cover",
@@ -3252,9 +3252,10 @@ export default function ClubDashboard() {
               className="w-full h-full"
             />
           </div>
+          {/* Subtle scrim for text legibility — keep low so silk animation is visible */}
           <div
             className="absolute inset-0"
-            style={{ background: "oklch(0.10 0.05 145 / 0.40)" }}
+            style={{ background: "oklch(0.05 0.03 145 / 0.25)" }}
           />
         </div>
       )}
@@ -3271,8 +3272,8 @@ export default function ClubDashboard() {
           />
         </div>
       )}
-      {/* Dark overlay when a background template is active — ensures readability */}
-      {clubBgImage && (
+      {/* Dark overlay when a static background template is active — ensures readability */}
+      {clubBgImage && !isSilkBg && (
         <div
           className="fixed inset-0 pointer-events-none"
           style={{ background: "oklch(0.10 0.05 145 / 0.75)", zIndex: 0 }}
