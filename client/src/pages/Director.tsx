@@ -3613,26 +3613,6 @@ export default function Director() {
                       </div>
                     )}
 
-                    {/* Join link + QR row */}
-                    <div className={`px-4 sm:px-6 py-4 border-b ${isDark ? "border-white/06" : "border-[#ADBC9F]/70"}`}>
-                      <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${
-                        isDark ? "text-white/30" : "text-[#436850]"
-                      }`}>Share with players</p>
-                      <div className="flex items-center gap-2">
-                        <div className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border min-w-0 ${
-                          isDark ? "bg-white/04 border-white/08" : "bg-[#FBFADA]/70 border-[#ADBC9F]"
-                        }`}>
-                          <span className={`text-xs font-mono flex-1 truncate ${isDark ? "text-white/60" : "text-[#436850]"}`}>{joinUrl}</span>
-                          <button
-                            onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-                            className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F] text-[#436850] hover:text-[#436850]"}`}
-                            title="Copy join link"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Inline search bar */}
                     {state.players.length > 4 && (
