@@ -208,7 +208,7 @@ import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { ShaderBackground } from "@/components/ui/shader-r";
 import Silk from "@/components/Silk";
-import { SILK_DEFAULTS } from "@/components/ClubBackgroundPicker";
+import { SILK_DEFAULTS, CLUB_BACKGROUND_TEMPLATES } from "@/components/ClubBackgroundPicker";
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -3224,6 +3224,30 @@ export default function ClubDashboard() {
   // Use the animated shader as the default background when no custom/preset image is selected
   const useShaderDefault = !clubBgImage;
 
+  // ── Nav tint: dominant color extracted per background for cohesive chrome ──
+  // Maps each template path to its curated dominant color hex
+  const TEMPLATE_TINTS: Record<string, string> = {
+    [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "floating-board")?.path ?? ""]: "#1a2e1a", // dark forest green
+    [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "ink-splash")?.path ?? ""]:    "#0d1a2e", // deep navy
+    [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "crimson-arena")?.path ?? ""]: "#2e0a0a", // deep crimson
+    [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "levitation")?.path ?? ""]:    "#1a1a2e", // deep indigo
+    [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "time-kings")?.path ?? ""]:    "#1a1410", // warm dark sepia
+  };
+  // Silk uses its own color; templates use the curated tint; default is null (standard dark green)
+  const navTint: string | null = isSilkBg
+    ? (club.silkColor ?? SILK_DEFAULTS.color)
+    : (clubBgImage ? (TEMPLATE_TINTS[clubBgImage] ?? null) : null);
+  // Build CSS values for sidebar + header backgrounds and borders
+  const navBg = navTint
+    ? `${navTint}d4`  // ~83% opacity tinted glass
+    : (isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14");
+  const navBorder = navTint
+    ? `${navTint}55`
+    : (isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)");
+  const sidebarBg = navTint
+    ? `${navTint}cc`  // ~80% opacity for sidebar
+    : undefined; // falls back to repeating-conic pattern below
+
   return (
     <div
       className="min-h-screen"
@@ -3288,11 +3312,13 @@ export default function ClubDashboard() {
             position: "relative",
             width: "68px",
             transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
-            backgroundImage: isDark
+            background: sidebarBg ?? undefined,
+            backgroundImage: sidebarBg ? undefined : (isDark
               ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
-              : `repeating-conic-gradient(oklch(0.16 0.06 145) 0% 25%, oklch(0.12 0.04 145) 0% 50%)`,
-            backgroundSize: "12px 12px",
-            borderRight: `1px solid rgba(255,255,255,0.07)`,
+              : `repeating-conic-gradient(oklch(0.16 0.06 145) 0% 25%, oklch(0.12 0.04 145) 0% 50%)`),
+            backgroundSize: sidebarBg ? undefined : "12px 12px",
+            borderRight: `1px solid ${navBorder}`,
+            backdropFilter: sidebarBg ? "blur(16px)" : undefined,
             overflow: "hidden",
             zIndex: 40,
           }}
@@ -3374,9 +3400,9 @@ export default function ClubDashboard() {
           <div
             className="flex-shrink-0 flex items-center gap-2 px-2 lg:px-5 py-1 lg:py-2.5 otb-header-safe relative"
             style={{
-              background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
-              backdropFilter: "blur(12px)",
-              borderBottom: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)"}`,
+              background: navBg,
+              backdropFilter: "blur(16px)",
+              borderBottom: `1px solid ${navBorder}`,
               minHeight: "52px",
             }}
           >
@@ -7578,9 +7604,9 @@ export default function ClubDashboard() {
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around"
         style={{
-          background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(15,31,20,0.97)",
-          backdropFilter: "blur(12px)",
-          borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+          background: navBg,
+          backdropFilter: "blur(16px)",
+          borderTop: `1px solid ${navBorder}`,
           paddingTop: "4px",
           paddingBottom: "calc(4px + env(safe-area-inset-bottom, 0px))",
         }}
