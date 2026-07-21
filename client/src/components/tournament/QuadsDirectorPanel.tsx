@@ -339,7 +339,7 @@ function GameRow({
   return (
     <div
       className="rounded-xl px-3 py-2.5 transition-all"
-      style={{ background: T.rowBg, border: `1px solid ${isActive && isPending ? T.greenBorder : T.rowBorder}`, opacity: !isActive && isPending ? 0.55 : 1, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+      style={{ background: !isPending ? (isDark ? "oklch(0.12 0.015 145 / 0.6)" : "rgba(240,244,240,0.55)") : T.rowBg, border: `1px solid ${!isPending ? T.rowBorder : isActive ? T.greenBorder : T.rowBorder}`, opacity: !isActive && isPending ? 0.55 : 1, animation: "tcSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both" }}
     >
       <div
         className={`flex items-center gap-1.5 mb-2${canOpenPanel ? " cursor-pointer hover:opacity-80" : ""}`}
@@ -377,32 +377,57 @@ function GameRow({
           <span className="w-4 h-4 rounded-[4px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
         </div>
       </div>
-      {isPending && isActive && !isBye && (() => {
+      {isActive && !isBye && (() => {
         const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
         const blackName = getPlayerName(players, game.blackId).split(" ")[0];
         const whiteSelected = game.result === "1-0";
         const drawSelected = game.result === "½-½";
         const blackSelected = game.result === "0-1";
+        const hasResult = !isPending;
+        // Neutral base style (same as Draw button)
+        const neutralBg = isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6";
+        const neutralColor = T.textMuted;
+        const neutralBorder = isDark ? "oklch(0.25 0.02 145)" : "#e5e7eb";
+        // Winner highlight style
+        const winnerBg = isDark ? "oklch(0.25 0.12 145)" : "#dcfce7";
+        const winnerColor = T.green;
+        const winnerBorder = T.greenBorder;
         return (
-          <div className="flex items-stretch gap-2 mt-2.5 pt-2.5" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
-            <button type="button" aria-pressed={whiteSelected} aria-label={`${whiteName} wins${whiteSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("1-0")}
-              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{ minHeight: "48px", paddingTop: "12px", paddingBottom: "12px", background: whiteSelected ? T.green : T.greenBg, color: whiteSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${whiteSelected ? T.green : T.greenBorder}`, transform: whiteSelected ? "scale(1.03)" : undefined, boxShadow: whiteSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none", touchAction: "manipulation" }}>
-              <span className="text-xs font-extrabold truncate max-w-full px-1">{whiteName}</span>
-              <span className="text-[11px] opacity-70 font-semibold">{whiteSelected ? "click to undo" : "wins"}</span>
-            </button>
-            <button type="button" aria-pressed={drawSelected} aria-label={`Draw${drawSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("½-½")}
-              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{ minHeight: "48px", paddingTop: "12px", paddingBottom: "12px", background: drawSelected ? (isDark ? "oklch(0.30 0.03 145)" : "#e5e7eb") : (isDark ? "oklch(0.18 0.02 145)" : "#f3f4f6"), color: drawSelected ? T.text : T.textMuted, border: `1.5px solid ${drawSelected ? T.cardBorder : T.cardBorder}`, transform: drawSelected ? "scale(1.03)" : undefined, boxShadow: drawSelected ? `0 4px 10px rgba(0,0,0,0.15)` : "none", touchAction: "manipulation" }}>
-              <span className="text-xs font-extrabold">Draw</span>
-              <span className="text-[11px] opacity-70 font-semibold">{drawSelected ? "click to undo" : "½–½"}</span>
-            </button>
-            <button type="button" aria-pressed={blackSelected} aria-label={`${blackName} wins${blackSelected ? " — click to undo" : ""}`} onClick={() => handleResultClick("0-1")}
-              className="flex-1 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-0.5"
-              style={{ minHeight: "48px", paddingTop: "12px", paddingBottom: "12px", background: blackSelected ? T.green : T.greenBg, color: blackSelected ? (isDark ? "#0a1a0f" : "#fff") : T.green, border: `1.5px solid ${blackSelected ? T.green : T.greenBorder}`, transform: blackSelected ? "scale(1.03)" : undefined, boxShadow: blackSelected ? `0 4px 14px oklch(0.72 0.19 145 / 0.35)` : "none", touchAction: "manipulation" }}>
-              <span className="text-xs font-extrabold truncate max-w-full px-1">{blackName}</span>
-              <span className="text-[11px] opacity-70 font-semibold">{blackSelected ? "click to undo" : "wins"}</span>
-            </button>
+          <div className="mt-2.5 pt-2.5 space-y-2" style={{ borderTop: `1px solid ${T.rowBorder}` }}>
+            {/* 3 result buttons — always shown for active games */}
+            <div className="flex items-stretch gap-2">
+              <button type="button" aria-pressed={whiteSelected} aria-label={`${whiteName} wins`} onClick={() => handleResultClick("1-0")}
+                className="flex-1 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95 flex items-center justify-center"
+                style={{ minHeight: "44px", background: whiteSelected ? winnerBg : neutralBg, color: whiteSelected ? winnerColor : neutralColor, border: `1.5px solid ${whiteSelected ? winnerBorder : neutralBorder}`, boxShadow: whiteSelected ? `0 0 0 1px ${T.greenBorder}` : "none", touchAction: "manipulation" }}>
+                <span className="font-extrabold truncate max-w-full px-1">{whiteName}</span>
+              </button>
+              <button type="button" aria-pressed={drawSelected} aria-label="Draw" onClick={() => handleResultClick("½-½")}
+                className="flex-1 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95 flex items-center justify-center"
+                style={{ minHeight: "44px", background: drawSelected ? (isDark ? "oklch(0.28 0.04 60)" : "#fef9c3") : neutralBg, color: drawSelected ? (isDark ? "oklch(0.85 0.14 80)" : "oklch(0.55 0.14 80)") : neutralColor, border: `1.5px solid ${drawSelected ? (isDark ? "oklch(0.45 0.10 80)" : "oklch(0.75 0.12 80)") : neutralBorder}`, boxShadow: drawSelected ? `0 0 0 1px ${isDark ? "oklch(0.45 0.10 80)" : "oklch(0.75 0.12 80)"}` : "none", touchAction: "manipulation" }}>
+                <span className="font-extrabold">Draw</span>
+              </button>
+              <button type="button" aria-pressed={blackSelected} aria-label={`${blackName} wins`} onClick={() => handleResultClick("0-1")}
+                className="flex-1 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95 flex items-center justify-center"
+                style={{ minHeight: "44px", background: blackSelected ? winnerBg : neutralBg, color: blackSelected ? winnerColor : neutralColor, border: `1.5px solid ${blackSelected ? winnerBorder : neutralBorder}`, boxShadow: blackSelected ? `0 0 0 1px ${T.greenBorder}` : "none", touchAction: "manipulation" }}>
+                <span className="font-extrabold truncate max-w-full px-1">{blackName}</span>
+              </button>
+            </div>
+            {/* Undo / edit row — appears immediately after a result is submitted */}
+            {hasResult && (
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-semibold" style={{ color: T.green }}>
+                  {whiteSelected ? `${whiteName} wins` : blackSelected ? `${blackName} wins` : "Draw (½–½)"} recorded
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onEnterResult(game.id, "*" as Result)}
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors hover:opacity-80"
+                  style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textDim, border: `1px solid ${neutralBorder}`, touchAction: "manipulation" }}
+                >
+                  Undo
+                </button>
+              </div>
+            )}
           </div>
         );
       })()}
