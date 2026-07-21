@@ -1276,10 +1276,10 @@ function QuadsTabRail({
       className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 ${
         isDark ? "bg-white/05 border border-white/08" : "bg-[#FBFADA]/70 border border-[#ADBC9F]"
       }`}
-      style={{ minWidth: 56 }}
+      style={{ minWidth: 64 }}
     >
       <span
-        className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${
+        className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${
           isDark ? "text-white/30" : "text-[#436850]"
         }`}
       >
@@ -1296,7 +1296,7 @@ function QuadsTabRail({
             onClick={() => onSelect(section.id)}
             title={section.name}
             aria-label={`Go to ${section.name}`}
-            className={`relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 active:scale-95 ${
+            className={`relative flex items-center justify-center w-12 h-12 rounded-full text-base font-bold transition-all duration-200 active:scale-95 ${
               isActive
                 ? isDark
                   ? "bg-[#4CAF50]/20 text-[#4CAF50] border-2 border-[#4CAF50]"
@@ -3269,7 +3269,7 @@ export default function Director() {
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h1
-                    className={`text-xl sm:text-2xl font-black tracking-tight leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
+                    className={`text-2xl sm:text-3xl font-black tracking-tight leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
                     {state.tournamentName}
