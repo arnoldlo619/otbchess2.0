@@ -3239,8 +3239,8 @@ export default function ClubDashboard() {
     : (clubBgImage ? (TEMPLATE_TINTS[clubBgImage] ?? null) : null);
   // Build CSS values for sidebar + header backgrounds and borders
   const navBg = navTint
-    ? `${navTint}d4`  // ~83% opacity tinted glass
-    : (isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14");
+    ? `${navTint}99`  // ~60% opacity tinted glass — semi-transparent blend
+    : (isDark ? "oklch(0.15 0.04 145 / 0.78)" : "oklch(0.15 0.04 145 / 0.78)");
   const navBorder = navTint
     ? `${navTint}55`
     : (isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)");
