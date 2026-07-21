@@ -1187,11 +1187,6 @@ export default function QuadsDirectorPanel({
                   <ArrowRight size={16} />
                   Advance to Round {currentRound + 1}
                 </button>
-                {!currentRoundComplete && (
-                  <p className="text-xs text-right" style={{ color: T.textDim }}>
-                    {currentRoundTotal - currentRoundCompleted} game{currentRoundTotal - currentRoundCompleted !== 1 ? "s" : ""} remaining
-                  </p>
-                )}
               </>
             ) : (
               <>

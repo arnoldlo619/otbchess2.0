@@ -1304,8 +1304,8 @@ function QuadsTabRail({
                 : isComplete
                 ? "bg-[#436850] text-white shadow-md"
                 : isDark
-                ? "bg-white/06 text-white/40 border border-white/10 hover:bg-white/12 hover:text-white/70"
-                : "bg-white text-[#436850]/60 border border-[#ADBC9F] hover:bg-[#ADBC9F]/30"
+                ? "bg-white/06 text-white/70 border border-white/10 hover:bg-white/12 hover:text-white"
+                : "bg-white text-[#12372A]/80 border border-[#ADBC9F] hover:bg-[#ADBC9F]/30"
             }`}
           >
             {isActive && (
@@ -3313,7 +3313,7 @@ export default function Director() {
                 {/* Command Center — operational status strip */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                   {/* Format + Time */}
-                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
                     isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
                   }`}>
                     <Trophy className="w-3 h-3" />
@@ -3323,7 +3323,7 @@ export default function Director() {
                   </span>
                   {/* Round indicator */}
                   {!isRegistration && (
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
                       isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                     }`}>
                       <Circle className="w-2.5 h-2.5 fill-current" />
@@ -3356,7 +3356,7 @@ export default function Director() {
                     </span>
                   )}
                   {/* Players */}
-                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
                     isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
                   }`}>
                     <Users className="w-3 h-3" />
