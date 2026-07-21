@@ -1068,7 +1068,56 @@ export default function QuadsDirectorPanel({
         </div>
       </div>
 
-      {/* ── B. Active-Round Command Center ────────────────────────────────── */}
+      {/* ── B. Exception Tray (Pending Results) ─────────────────────────── */}
+      <div className="rounded-2xl border overflow-hidden" style={{ background: T.card, borderColor: exceptionCount > 0 ? T.amberBorder : T.cardBorder }}>
+        <button
+          type="button"
+          aria-expanded={exceptionTrayOpen}
+          aria-label={`Exception tray — ${exceptionCount} item${exceptionCount !== 1 ? "s" : ""}`}
+          onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:opacity-80"
+          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent", touchAction: "manipulation", minHeight: "44px" }}
+        >
+          <div className="flex items-center gap-2">
+            {exceptionCount > 0 ? <AlertTriangle size={14} style={{ color: T.amber }} /> : <Check size={14} style={{ color: T.green }} />}
+            <span className="text-xs font-semibold" style={{ color: exceptionCount > 0 ? T.amber : T.green }}>
+              {exceptionCount > 0 ? `${exceptionCount} pending result${exceptionCount !== 1 ? "s" : ""} in Round ${currentRound}` : "No exceptions — tournament running smoothly"}
+            </span>
+            {exceptionCount > 0 && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: T.amber, color: isDark ? "#0a1a0f" : "#fff" }}>{exceptionCount}</span>
+            )}
+          </div>
+          {exceptionTrayOpen ? <ChevronUp size={14} style={{ color: T.textDim }} /> : <ChevronDown size={14} style={{ color: T.textDim }} />}
+        </button>
+        {exceptionTrayOpen && exceptionCount > 0 && (
+          <div className="px-4 pb-4 pt-1 space-y-2 border-t" style={{ borderColor: T.amberBorder }}>
+            {missingResults.map((game) => {
+              const sectionName = sections.find((s) => s.playerIds.includes(game.whiteId))?.name ?? "Unknown";
+              return (
+                <div key={game.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl" style={{ background: T.amberBg, border: `1px solid ${T.amberBorder}` }}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <AlertTriangle size={11} style={{ color: T.amber, flexShrink: 0 }} />
+                    <span className="text-xs font-semibold truncate" style={{ color: T.text }}>
+                      {getPlayerName(players, game.whiteId)} vs {getPlayerName(players, game.blackId)}
+                    </span>
+                    <span className="text-xs flex-shrink-0" style={{ color: T.textDim }}>· {sectionName}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); setSelectedGameId(game.id); }}
+                    className="text-xs font-semibold px-3 py-2 rounded-lg flex-shrink-0 transition-colors"
+                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}`, touchAction: "manipulation", minHeight: "36px" }}
+                  >
+                    Go to section
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── C. Active-Round Command Center ────────────────────────────────── */}
       <div
         className="rounded-2xl border px-5 py-4"
         style={{ background: T.card, borderColor: currentRoundComplete ? T.greenBorder : T.cardBorder }}
@@ -1144,7 +1193,7 @@ export default function QuadsDirectorPanel({
         </div>
       </div>
 
-      {/* ── C. 2×2 Quad Overview Grid ─────────────────────────────────────── */}
+      {/* ── D. 2×2 Quad Overview Grid ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {sections.map((section) => {
           const status = sectionStatus.get(section.id)!;
@@ -1221,7 +1270,7 @@ export default function QuadsDirectorPanel({
         })}
       </div>
 
-      {/* ── D. Selected Quad Workspace ────────────────────────────────────── */}
+      {/* ── E. Selected Quad Workspace ────────────────────────────────────── */}
       {selectedSection && (
         <div
           ref={workspaceRef}
@@ -1369,55 +1418,7 @@ export default function QuadsDirectorPanel({
         </div>
       )}
 
-      {/* ── E. Exception Tray ─────────────────────────────────────────────── */}
-      <div className="rounded-2xl border overflow-hidden" style={{ background: T.card, borderColor: exceptionCount > 0 ? T.amberBorder : T.cardBorder }}>
-        <button
-          type="button"
-          aria-expanded={exceptionTrayOpen}
-          aria-label={`Exception tray — ${exceptionCount} item${exceptionCount !== 1 ? "s" : ""}`}
-          onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:opacity-80"
-          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent", touchAction: "manipulation", minHeight: "44px" }}
-        >
-          <div className="flex items-center gap-2">
-            {exceptionCount > 0 ? <AlertTriangle size={14} style={{ color: T.amber }} /> : <Check size={14} style={{ color: T.green }} />}
-            <span className="text-xs font-semibold" style={{ color: exceptionCount > 0 ? T.amber : T.green }}>
-              {exceptionCount > 0 ? `${exceptionCount} pending result${exceptionCount !== 1 ? "s" : ""} in Round ${currentRound}` : "No exceptions — tournament running smoothly"}
-            </span>
-            {exceptionCount > 0 && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: T.amber, color: isDark ? "#0a1a0f" : "#fff" }}>{exceptionCount}</span>
-            )}
-          </div>
-          {exceptionTrayOpen ? <ChevronUp size={14} style={{ color: T.textDim }} /> : <ChevronDown size={14} style={{ color: T.textDim }} />}
-        </button>
 
-        {exceptionTrayOpen && exceptionCount > 0 && (
-          <div className="px-4 pb-4 pt-1 space-y-2 border-t" style={{ borderColor: T.amberBorder }}>
-            {missingResults.map((game) => {
-              const sectionName = sections.find((s) => s.playerIds.includes(game.whiteId))?.name ?? "Unknown";
-              return (
-                <div key={game.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl" style={{ background: T.amberBg, border: `1px solid ${T.amberBorder}` }}>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <AlertTriangle size={11} style={{ color: T.amber, flexShrink: 0 }} />
-                    <span className="text-xs font-semibold truncate" style={{ color: T.text }}>
-                      {getPlayerName(players, game.whiteId)} vs {getPlayerName(players, game.blackId)}
-                    </span>
-                    <span className="text-xs flex-shrink-0" style={{ color: T.textDim }}>· {sectionName}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); setSelectedGameId(game.id); }}
-                    className="text-xs font-semibold px-3 py-2 rounded-lg flex-shrink-0 transition-colors"
-                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}`, touchAction: "manipulation", minHeight: "36px" }}
-                  >
-                    Go to section
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
       {/* Result Entry Panel */}
       {selectedGameId && (() => {
