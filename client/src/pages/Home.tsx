@@ -1471,21 +1471,20 @@ function BentoCard({
         </h3>
 
         {/* Description */}
-        <p className={`text-xs sm:text-sm leading-relaxed flex-1 ${descColor}`}>
+        <p className={`text-xs sm:text-sm leading-relaxed ${cardImage ? "" : "flex-1"} ${descColor}`}>
           {description}
         </p>
 
-        {/* Inline card image — shown below description when provided */}
+        {/* Inline card image — fills remaining space when provided */}
         {cardImage && (
-          <div className="relative overflow-hidden rounded-xl mt-1" style={{ maxHeight: "160px" }}>
+          <div className="relative overflow-hidden rounded-xl mt-2 flex-1" style={{ minHeight: "180px" }}>
             <img
               src={cardImage}
               alt=""
               aria-hidden="true"
-              className={`w-full h-full object-cover object-top transition-transform duration-700 ease-out ${
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out ${
                 prefersReducedMotion ? "" : "group-hover:scale-[1.03]"
               }`}
-              style={{ height: "160px" }}
               loading="lazy"
             />
             {/* Bottom fade so it blends into the card */}
@@ -1493,8 +1492,8 @@ function BentoCard({
               className="absolute inset-0 pointer-events-none"
               style={{
                 background: isDark
-                  ? "linear-gradient(to bottom, transparent 50%, oklch(0.22 0.07 145 / 0.80) 100%)"
-                  : "linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.85) 100%)",
+                  ? "linear-gradient(to bottom, transparent 60%, oklch(0.22 0.07 145 / 0.85) 100%)"
+                  : "linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.90) 100%)",
               }}
             />
           </div>
