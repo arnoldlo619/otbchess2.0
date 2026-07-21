@@ -1353,6 +1353,7 @@ interface BentoCardProps {
   icon: React.ReactNode;
   screenshot?: string;
   screenshotAlt?: string;
+  bgImage?: string; // full-card background image with overlay
   isDark: boolean;
   inView: boolean;
   delay?: number;
@@ -1361,7 +1362,7 @@ interface BentoCardProps {
 }
 
 function BentoCard({
-  tag, title, description, cta, href, icon, screenshot, screenshotAlt,
+  tag, title, description, cta, href, icon, screenshot, screenshotAlt, bgImage,
   isDark, inView, delay = 0, accent = false, className = "",
 }: BentoCardProps) {
   const prefersReducedMotion = typeof window !== "undefined"
@@ -1405,6 +1406,28 @@ function BentoCard({
       style={{ transitionDelay: `${delay}ms` }}
       aria-label={`${tag}: ${title}`}
     >
+      {/* Full-card background image — shown when provided */}
+      {bgImage && (
+        <>
+          <img
+            src={bgImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+            style={{ opacity: 0.20 }}
+            loading="lazy"
+          />
+          {/* Gradient vignette — keeps text readable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: isDark
+                ? "linear-gradient(145deg, oklch(0.22 0.07 145 / 0.80) 0%, oklch(0.22 0.07 145 / 0.50) 55%, transparent 100%)"
+                : "linear-gradient(145deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.55) 55%, transparent 100%)",
+            }}
+          />
+        </>
+      )}
       {/* Hover lift — respects reduced motion */}
       <div
         className={`absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300 ${
@@ -1539,6 +1562,7 @@ function Features() {
             cta="Explore Clubs"
             href="/clubs"
             icon={<Shield className="w-4 h-4" />}
+            bgImage="https://files.manuscdn.com/manus-storage/clubs-community-bg_c43d04a0.png"
             isDark={isDark}
             inView={inView}
             delay={160}
