@@ -3350,17 +3350,31 @@ export default function ClubDashboard() {
                 <button
                   key={ct.id}
                   onClick={() => setTab(ct.id)}
-                  className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] text-left"
+                  className="group/navbtn relative flex flex-row items-center gap-3 rounded-xl text-left"
                   style={{
                     height: "56px",
                     minWidth: "44px",
                     paddingLeft: "14px",
                     paddingRight: "10px",
-                    background: "transparent",
-                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.38)",
+                    background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
+                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.42)",
+                    transition: "background 220ms cubic-bezier(0.4,0,0.2,1), color 180ms ease, box-shadow 220ms ease",
+                    boxShadow: isActive ? "inset 0 0 0 1px rgba(124,245,98,0.18)" : "none",
                   }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; } }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.92)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      e.currentTarget.style.boxShadow = "inset 0 0 0 1px rgba(255,255,255,0.07)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.42)";
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.boxShadow = "none";
+                    }
+                  }}
                   aria-label={ct.label}
                   title={ct.label}
                 >
@@ -3378,8 +3392,8 @@ export default function ClubDashboard() {
                   </span>
                   {/* Label — slides in on hover */}
                   <span
-                    className="text-[15px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
-                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em" }}
+                    className="text-[17px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
+                    style={{ color: "inherit", fontFamily: "'Clash Display', 'Inter', sans-serif", letterSpacing: "-0.02em" }}
                   >
                     {ct.label}
                   </span>
