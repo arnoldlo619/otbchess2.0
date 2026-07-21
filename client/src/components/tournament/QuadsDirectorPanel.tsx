@@ -58,6 +58,10 @@ interface QuadsDirectorPanelProps {
   tournamentConfig?: TournamentConfig | null;
   /** Tournament lifecycle status — disables Finalize button once already completed */
   tournamentStatus?: "registration" | "in_progress" | "completed" | "paused";
+  /** Externally controlled selected section ID (for left-rail tab toggle) */
+  externalSelectedSectionId?: string | null;
+  /** Called whenever the internal selected section changes */
+  onSectionChange?: (sectionId: string) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -709,6 +713,8 @@ function RoundPairings({ section, games, players, roundNum, currentRound, onEnte
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function QuadsDirectorPanel({
+  externalSelectedSectionId,
+  onSectionChange,
   sections, players, games, currentRound, totalRounds,
   onEnterResult, onSwapPlayers, onRenameSection, onAdvanceRound, onCompleteTournament,
   isDark, tournamentId, tournamentConfig, tournamentStatus,
@@ -728,7 +734,12 @@ export default function QuadsDirectorPanel({
   });
 
   // Command-center specific state
-  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(() => sections[0]?.id ?? null);
+  const [_internalSelectedSectionId, _setInternalSelectedSectionId] = useState<string | null>(() => sections[0]?.id ?? null);
+  const selectedSectionId = externalSelectedSectionId !== undefined ? (externalSelectedSectionId ?? sections[0]?.id ?? null) : _internalSelectedSectionId;
+  const setSelectedSectionId = (id: string | null) => {
+    _setInternalSelectedSectionId(id);
+    if (id && onSectionChange) onSectionChange(id);
+  };
   const [exceptionTrayOpen, setExceptionTrayOpen] = useState(false);
   const [carouselSection, setCarouselSection] = useState<string | null>(null);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);

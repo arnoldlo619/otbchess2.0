@@ -1259,6 +1259,66 @@ function VerticalRoundTracker({
   );
 }
 
+// ─── Quads Tab Rail ─────────────────────────────────────────────────────────
+function QuadsTabRail({
+  sections,
+  activeId,
+  onSelect,
+  isDark,
+}: {
+  sections: QuadSection[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  isDark: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 ${
+        isDark ? "bg-white/05 border border-white/08" : "bg-[#FBFADA]/70 border border-[#ADBC9F]"
+      }`}
+      style={{ minWidth: 56 }}
+    >
+      <span
+        className={`text-[9px] font-bold uppercase tracking-widest mb-2 ${
+          isDark ? "text-white/30" : "text-[#436850]"
+        }`}
+      >
+        Quads
+      </span>
+      {sections.map((section, idx) => {
+        const isActive = section.id === activeId || (!activeId && idx === 0);
+        const isComplete = section.status === "completed";
+        const label = section.name.match(/Q\d+/)?.[0] ?? `Q${idx + 1}`;
+        return (
+          <button
+            key={section.id}
+            type="button"
+            onClick={() => onSelect(section.id)}
+            title={section.name}
+            aria-label={`Go to ${section.name}`}
+            className={`relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold transition-all duration-200 active:scale-95 ${
+              isActive
+                ? isDark
+                  ? "bg-[#4CAF50]/20 text-[#4CAF50] border-2 border-[#4CAF50]"
+                  : "bg-[#436850]/10 text-[#436850] border-2 border-[#436850]"
+                : isComplete
+                ? "bg-[#436850] text-white shadow-md"
+                : isDark
+                ? "bg-white/06 text-white/40 border border-white/10 hover:bg-white/12 hover:text-white/70"
+                : "bg-white text-[#436850]/60 border border-[#ADBC9F] hover:bg-[#ADBC9F]/30"
+            }`}
+          >
+            {isActive && (
+              <span className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: isDark ? "#4CAF50" : "#436850" }} />
+            )}
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Horizontal Round Tracker (mobile only) ─────────────────────────────────
 function _HorizontalRoundTracker({
   rounds,
@@ -2249,6 +2309,7 @@ export default function Director() {
 
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "players" | "standings" | "bracket" | "settings">("home");
+  const [activeQuadSectionId, setActiveQuadSectionId] = useState<string | null>(null);
   const [swipeFlash, setSwipeFlash] = useState<"left" | "right" | null>(null);
   const [showQR, setShowQR] = useState(false);
 
@@ -3101,20 +3162,29 @@ export default function Director() {
       >
         <div className="flex gap-6 items-start">
 
-          {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}
+          {/* ── Left Rail: Quads Tab Toggle (quads) or Vertical Round Tracker (other formats) ── */}
           {!isRegistration && (
             <div
               className="hidden md:flex flex-col items-center sticky top-[200px] self-start"
               style={{ minWidth: 64 }}
             >
-              <VerticalRoundTracker
-                rounds={state.rounds}
-                currentRound={state.currentRound}
-                totalRounds={state.totalRounds}
-                isDark={isDark}
-                swissRounds={state.format === "swiss_elim" ? (state.swissRounds ?? undefined) : undefined}
-                elimPhase={state.elimPhase}
-              />
+              {state.format === "quads" && state.quadSections && state.quadSections.length > 0 ? (
+                <QuadsTabRail
+                  sections={state.quadSections}
+                  activeId={activeQuadSectionId}
+                  onSelect={(id) => setActiveQuadSectionId(id)}
+                  isDark={isDark}
+                />
+              ) : (
+                <VerticalRoundTracker
+                  rounds={state.rounds}
+                  currentRound={state.currentRound}
+                  totalRounds={state.totalRounds}
+                  isDark={isDark}
+                  swissRounds={state.format === "swiss_elim" ? (state.swissRounds ?? undefined) : undefined}
+                  elimPhase={state.elimPhase}
+                />
+              )}
             </div>
           )}
 
@@ -4129,14 +4199,7 @@ export default function Director() {
               {!isRegistration && (
                 <>
                   {/* ── Dev-only: Mock Quads toolbar ─────────────────────────────────── */}
-                  {import.meta.env.DEV && state.format === "quads" && (
-                    <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                      <span className="text-xs font-bold text-amber-400 uppercase tracking-widest mr-1">Dev</span>
-                      <button type="button" onClick={() => loadMockQuadsState("mid")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">Mid-tournament</button>
-                      <button type="button" onClick={() => loadMockQuadsState("complete")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">All complete</button>
-                      <button type="button" onClick={() => loadMockQuadsState("cochampion")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">Co-champions</button>
-                    </div>
-                  )}
+
                   {/* ── Quads Section Panel ─────────────────────────────────────────────── */}
                   {state.format === "quads" && state.quadSections && (
                     <QuadsDirectorPanel
@@ -4154,6 +4217,8 @@ export default function Director() {
                       tournamentId={tournamentId}
                       tournamentConfig={tournamentConfig}
                       tournamentStatus={state.status}
+                      externalSelectedSectionId={activeQuadSectionId}
+                      onSectionChange={(id) => setActiveQuadSectionId(id)}
                     />
                   )}
                   {/* ── Round Pairings standalone header row ─────────────────────────────────────── */}
@@ -6221,6 +6286,15 @@ export default function Director() {
           {/* ── Settings Tab ─────────────────────────────────────────────────── */}
           {activeTab === "settings" && (
             <div className="space-y-4">
+              {/* u2500u2500 Dev-only: Quads Mock Data Loader u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500 */}
+              {import.meta.env.DEV && state.format === "quads" && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-widest mr-1">Dev</span>
+                  <button type="button" onClick={() => loadMockQuadsState("mid")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">Mid-tournament</button>
+                  <button type="button" onClick={() => loadMockQuadsState("complete")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">All complete</button>
+                  <button type="button" onClick={() => loadMockQuadsState("cochampion")} className="text-xs px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-medium transition-colors">Co-champions</button>
+                </div>
+              )}
               {/* ── Tournament State ─────────────────────────────────────────── */}
               {!isRegistration && (
                 <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"}`}>
