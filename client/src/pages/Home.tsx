@@ -1566,7 +1566,7 @@ function Features() {
             cta="Explore Clubs"
             href="/clubs"
             icon={<Shield className="w-4 h-4" />}
-            cardImage="https://files.manuscdn.com/manus-storage/clubs-community-bg_c43d04a0.png"
+            cardImage="/manus-storage/clubs-mobile-card_59196444.png"
             isDark={isDark}
             inView={inView}
             delay={160}
