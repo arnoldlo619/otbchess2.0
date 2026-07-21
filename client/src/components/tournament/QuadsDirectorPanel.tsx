@@ -350,7 +350,7 @@ function GameRow({
         onKeyDown={canOpenPanel ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onGameClick!(game.id); } } : undefined}
       >
         <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.textDim }}>Board {boardIndex}</span>
-        {canOpenPanel && <span className="ml-auto text-xs font-semibold px-2 py-1 rounded" style={{ background: T.greenBg, color: T.green, touchAction: "manipulation" }}>Enter result →</span>}
+
         {!isPending && !isBye && (
           <>
             <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg, color: isDraw ? T.textMuted : T.green }}>{resultLabel(game.result)}</span>
@@ -377,7 +377,7 @@ function GameRow({
           <span className="w-4 h-4 rounded-[4px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
         </div>
       </div>
-      {isPending && isActive && !isBye && !canOpenPanel && (() => {
+      {isPending && isActive && !isBye && (() => {
         const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
         const blackName = getPlayerName(players, game.blackId).split(" ")[0];
         const whiteSelected = game.result === "1-0";
