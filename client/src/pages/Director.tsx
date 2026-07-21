@@ -3652,16 +3652,16 @@ export default function Director() {
                           <div className="w-[30px] flex-shrink-0" />
                           <div className="flex-1 min-w-0" />
                           {/* Status: chip is ~62px wide, center-align header over it */}
-                          <span className={`text-[10px] font-semibold uppercase tracking-widest flex-shrink-0 w-[62px] text-center ${
-                            isDark ? "text-white/50" : "text-[#436850]"
+                          <span className={`text-xs font-bold uppercase tracking-widest flex-shrink-0 w-[80px] text-center ${
+                            isDark ? "text-white/70" : "text-[#12372A]"
                           }`}>Status</span>
                           {/* ELO: column is ~52px, right-aligned */}
-                          <span className={`text-[10px] font-semibold uppercase tracking-widest flex-shrink-0 w-[52px] text-right ${
-                            isDark ? "text-white/50" : "text-[#436850]"
+                          <span className={`text-xs font-bold uppercase tracking-widest flex-shrink-0 w-[60px] text-right ${
+                            isDark ? "text-white/70" : "text-[#12372A]"
                           }`}>ELO</span>
-                          {/* Payment: two stacked buttons ~52px wide */}
-                          <span className={`text-[10px] font-semibold uppercase tracking-widest flex-shrink-0 w-[52px] text-right ${
-                            isDark ? "text-white/50" : "text-[#436850]"
+                          {/* Payment: two stacked buttons ~60px wide */}
+                          <span className={`text-xs font-bold uppercase tracking-widest flex-shrink-0 w-[60px] text-right ${
+                            isDark ? "text-white/70" : "text-[#12372A]"
                           }`}>Payment</span>
                           {/* edit + remove buttons (hidden until hover, but reserve space) */}
                           <div className="w-[52px] flex-shrink-0" />
@@ -3820,10 +3820,10 @@ export default function Director() {
                                     )}
                                   </div>
                                   {/* Status chip */}
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 w-[80px] text-center ${
                                     isCheckedIn
-                                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-100 text-green-700"
-                                      : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
+                                      ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-green-100 text-green-700"
+                                      : isDark ? "bg-white/10 text-white/80" : "bg-[#436850]/15 text-[#12372A]"
                                   }`}>
                                     {isCheckedIn ? "Checked In" : "Registered"}
                                   </span>
@@ -3846,18 +3846,18 @@ export default function Director() {
                                       ) : null}
                                     </div>
                                   ) : p.elo != null ? (
-                                    <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg ${
-                                      isDark ? "bg-white/06 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
+                                    <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg w-[60px] text-right ${
+                                      isDark ? "bg-white/08 text-white/80" : "bg-[#ADBC9F]/40 text-[#12372A]"
                                     }`}>{p.elo}</span>
                                   ) : null}
                                   {/* Payment status */}
-                                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0 w-[60px]" onClick={(e) => e.stopPropagation()}>
                                     <button
                                       onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
-                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                                      className={`text-xs font-bold px-2 py-0.5 rounded transition-all w-full text-center ${
                                         p.paymentStatus === "cash"
-                                          ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
-                                          : isDark ? "bg-white/05 text-white/25 hover:text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]/70 hover:text-[#436850]"
+                                          ? isDark ? "bg-emerald-500/25 text-emerald-300" : "bg-emerald-100 text-emerald-700"
+                                          : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#ADBC9F]/40 text-[#12372A] hover:text-[#12372A]"
                                       }`}
                                       title="Toggle cash payment"
                                     >
@@ -3865,10 +3865,10 @@ export default function Director() {
                                     </button>
                                     <button
                                       onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
-                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                                      className={`text-xs font-bold px-2 py-0.5 rounded transition-all w-full text-center ${
                                         p.paymentStatus === "card"
-                                          ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
-                                          : isDark ? "bg-white/05 text-white/25 hover:text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]/70 hover:text-[#436850]"
+                                          ? isDark ? "bg-blue-500/25 text-blue-300" : "bg-blue-100 text-blue-700"
+                                          : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#ADBC9F]/40 text-[#12372A] hover:text-[#12372A]"
                                       }`}
                                       title="Toggle card payment"
                                     >
