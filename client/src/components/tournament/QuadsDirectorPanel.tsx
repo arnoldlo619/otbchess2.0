@@ -1042,54 +1042,21 @@ export default function QuadsDirectorPanel({
   return (
     <div className="space-y-4">
 
-      {/* ── A. Event Header Bar ────────────────────────────────────────────── */}
-      <div
-        className="rounded-2xl border px-5 py-3 flex items-center justify-between gap-3 flex-wrap"
-        style={{ background: T.headerBg, borderColor: T.cardBorder }}
-      >
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-black uppercase tracking-widest px-2 py-1 rounded-lg" style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}` }}>QUADS</span>
-          <div className="flex items-center gap-2 text-xs" style={{ color: T.textMuted }}>
-            <Users size={12} style={{ color: T.green }} />
-            <span>{sections.length} sections · {players.length} players</span>
-          </div>
-          {tournamentConfig?.ratingType && (
-            <div className="flex items-center gap-1.5 text-xs" style={{ color: T.textMuted }}>
-              <Activity size={12} />
-              <span className="capitalize">{tournamentConfig.ratingType} ratings</span>
-            </div>
-          )}
-          {tournamentConfig?.timePreset && (
-            <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: T.rowBg, color: T.textMuted }}>{tournamentConfig.timePreset}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: T.textDim }}>{completedGames} of {totalGames} games complete</span>
-          {canSwap && (
-            <button
-              type="button"
-              onClick={() => { setSwapMode(!swapMode); setSwapPlayerA(null); }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
-              style={{ background: swapMode ? T.swapHighlight : "transparent", color: swapMode ? T.swap : T.textMuted, border: `1px solid ${swapMode ? T.swapBorder : T.cardBorder}` }}
-            >
-              <ArrowLeftRight size={12} />
-              {swapMode ? "Cancel Swap" : "Swap Players"}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── B. Exception Tray (Pending Results) ─────────────────────────── */}
+            {/* ── B. Exception Tray (Pending Results) + Swap Players ─────────── */}
       <div className="rounded-2xl border overflow-hidden" style={{ background: T.card, borderColor: exceptionCount > 0 ? T.amberBorder : T.cardBorder }}>
-        <button
-          type="button"
-          aria-expanded={exceptionTrayOpen}
-          aria-label={`Exception tray — ${exceptionCount} item${exceptionCount !== 1 ? "s" : ""}`}
-          onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:opacity-80"
-          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent", touchAction: "manipulation", minHeight: "44px" }}
+        <div
+          className="w-full flex items-center justify-between px-4 py-3"
+          style={{ background: exceptionCount > 0 ? T.amberBg : "transparent", minHeight: "44px" }}
         >
-          <div className="flex items-center gap-2">
+          {/* Left: exception status — clickable to toggle tray */}
+          <button
+            type="button"
+            aria-expanded={exceptionTrayOpen}
+            aria-label={`Exception tray — ${exceptionCount} item${exceptionCount !== 1 ? "s" : ""}`}
+            onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
+            className="flex items-center gap-2 flex-1 text-left transition-opacity hover:opacity-80"
+            style={{ touchAction: "manipulation" }}
+          >
             {exceptionCount > 0 ? <AlertTriangle size={14} style={{ color: T.amber }} /> : <Check size={14} style={{ color: T.green }} />}
             <span className="text-xs font-semibold" style={{ color: exceptionCount > 0 ? T.amber : T.green }}>
               {exceptionCount > 0 ? `${exceptionCount} pending result${exceptionCount !== 1 ? "s" : ""} in Round ${currentRound}` : "No exceptions — tournament running smoothly"}
@@ -1097,9 +1064,30 @@ export default function QuadsDirectorPanel({
             {exceptionCount > 0 && (
               <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: T.amber, color: isDark ? "#0a1a0f" : "#fff" }}>{exceptionCount}</span>
             )}
+          </button>
+          {/* Right: Swap Players + chevron */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {canSwap && (
+              <button
+                type="button"
+                onClick={() => { setSwapMode(!swapMode); setSwapPlayerA(null); }}
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
+                style={{ background: swapMode ? T.swapHighlight : "transparent", color: swapMode ? T.swap : T.textMuted, border: `1px solid ${swapMode ? T.swapBorder : T.cardBorder}` }}
+              >
+                <ArrowLeftRight size={11} />
+                {swapMode ? "Cancel" : "Swap"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
+              className="p-1 rounded transition-opacity hover:opacity-70"
+              aria-label="Toggle exception tray"
+            >
+              {exceptionTrayOpen ? <ChevronUp size={14} style={{ color: T.textDim }} /> : <ChevronDown size={14} style={{ color: T.textDim }} />}
+            </button>
           </div>
-          {exceptionTrayOpen ? <ChevronUp size={14} style={{ color: T.textDim }} /> : <ChevronDown size={14} style={{ color: T.textDim }} />}
-        </button>
+        </div>
         {exceptionTrayOpen && exceptionCount > 0 && (
           <div className="px-4 pb-4 pt-1 space-y-2 border-t" style={{ borderColor: T.amberBorder }}>
             {missingResults.map((game) => {
