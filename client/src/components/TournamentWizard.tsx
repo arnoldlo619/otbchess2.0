@@ -1937,7 +1937,7 @@ function QuickstartForm({
       </div>{/* end space-y-3 */}
       </div>{/* end Tournament Settings outer div */}
 
-      {/* Rating Brackets Toggle */}
+      {data.format !== "quads" && (
       <div
         className="rounded-2xl transition-all duration-200"
         style={{
@@ -1974,6 +1974,7 @@ function QuickstartForm({
           </p>
         )}
       </div>
+      )}
 
       {/* Structure Preview — collapsible panel */}
       <div>
