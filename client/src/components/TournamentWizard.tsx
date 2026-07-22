@@ -1976,40 +1976,43 @@ function QuickstartForm({
       </div>
       )}
 
-      {/* Structure Preview — collapsible panel */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowPreview((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-          style={{ color: showPreview ? T.green : isDark ? T.dMuted : T.lMuted }}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          {showPreview ? "Hide structure preview" : "Preview tournament structure"}
-          <ChevronDown
-            className="w-3.5 h-3.5 transition-transform duration-200"
-            style={{ transform: showPreview ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-        </button>
-
-        {showPreview && (
-          <div
-            className="mt-3 rounded-2xl border overflow-hidden"
-            style={{
-              background: isDark ? "rgba(77,105,64,0.06)" : "#F4F8F3",
-              border: `1.5px solid ${isDark ? "rgba(77,105,64,0.20)" : "rgba(77,105,64,0.14)"}`,
-              padding: "16px 20px",
-            }}
+            {/* Structure Preview — collapsible panel */}
+      {data.format === "quads" ? (
+        <QuadsEloPreview maxPlayers={data.maxPlayers} isDark={isDark} T={T} />
+      ) : (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors"
+            style={{ color: showPreview ? T.green : isDark ? T.dMuted : T.lMuted }}
           >
-            <BracketPreview
-              format={data.format}
-              rounds={data.rounds}
-              maxPlayers={data.maxPlayers}
-              isDark={isDark}
+            <Eye className="w-3.5 h-3.5" />
+            {showPreview ? "Hide structure preview" : "Preview tournament structure"}
+            <ChevronDown
+              className="w-3.5 h-3.5 transition-transform duration-200"
+              style={{ transform: showPreview ? "rotate(180deg)" : "rotate(0deg)" }}
             />
-          </div>
-        )}
-      </div>
+          </button>
+          {showPreview && (
+            <div
+              className="mt-3 rounded-2xl border overflow-hidden"
+              style={{
+                background: isDark ? "rgba(77,105,64,0.06)" : "#F4F8F3",
+                border: `1.5px solid ${isDark ? "rgba(77,105,64,0.20)" : "rgba(77,105,64,0.14)"}`,
+                padding: "16px 20px",
+              }}
+            >
+              <BracketPreview
+                format={data.format}
+                rounds={data.rounds}
+                maxPlayers={data.maxPlayers}
+                isDark={isDark}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Real-time configuration summary ───────────────────────────── */}
       {data.name.trim().length > 0 && (() => {
@@ -2721,6 +2724,129 @@ function QuickstartForm({
         );
       })()}
 
+    </div>
+  );
+}
+
+
+// ─── Quads ELO Grouping Preview ───────────────────────────────────────────────
+function QuadsEloPreview({
+  maxPlayers,
+  isDark,
+  T,
+}: {
+  maxPlayers: number;
+  isDark: boolean;
+  T: Record<string, string>;
+}) {
+  const numSections = Math.ceil(maxPlayers / 4);
+  const eloTop = 2200;
+  const eloBot = 800;
+  const spread = eloTop - eloBot;
+  const sectionSpread = numSections > 1 ? Math.round(spread / numSections) : spread;
+
+  const sectionColors = [
+    { bg: "rgba(255,215,0,0.12)",   border: "rgba(255,215,0,0.30)",   label: "#FFD700", rank: "Q1" },
+    { bg: "rgba(192,192,192,0.10)", border: "rgba(192,192,192,0.28)", label: "#C0C0C0", rank: "Q2" },
+    { bg: "rgba(205,127,50,0.10)",  border: "rgba(205,127,50,0.28)",  label: "#CD7F32", rank: "Q3" },
+    { bg: "rgba(124,245,98,0.08)",  border: "rgba(124,245,98,0.20)",  label: "#7CF562", rank: "Q4" },
+  ];
+
+  const sections = Array.from({ length: numSections }, (_, i) => {
+    const hiElo = eloTop - i * sectionSpread;
+    const loElo = hiElo - sectionSpread + 1;
+    const color = sectionColors[Math.min(i, sectionColors.length - 1)];
+    const label = numSections <= 4 ? color.rank : `Q${i + 1}`;
+    return { label, hiElo, loElo, color };
+  });
+
+  return (
+    <div
+      className="rounded-2xl border overflow-hidden"
+      style={{
+        background: isDark ? "rgba(77,105,64,0.05)" : "#F4F8F3",
+        border: `1.5px solid ${isDark ? "rgba(77,105,64,0.18)" : "rgba(77,105,64,0.14)"}`,
+        padding: "16px 18px",
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4" style={{ color: T.green }} />
+          <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+            ELO Grouping Preview
+          </span>
+        </div>
+        <span
+          className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+          style={{ background: isDark ? "rgba(77,105,64,0.20)" : "#D1FAE5", color: T.green }}
+        >
+          {numSections} section{numSections !== 1 ? "s" : ""} &middot; {maxPlayers} players
+        </span>
+      </div>
+
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
+      >
+        {sections.map((sec) => (
+          <div
+            key={sec.label}
+            className="rounded-xl p-3"
+            style={{
+              background: sec.color.bg,
+              border: `1.5px solid ${sec.color.border}`,
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold" style={{ color: sec.color.label }}>
+                {sec.label}
+              </span>
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                  color: isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.45)",
+                }}
+              >
+                {sec.loElo}&ndash;{sec.hiElo}
+              </span>
+            </div>
+            <div className="space-y-1">
+              {Array.from({ length: 4 }, (_, pi) => (
+                <div
+                  key={pi}
+                  className="flex items-center gap-1.5 rounded-lg px-2 py-1"
+                  style={{
+                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                  }}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full flex-shrink-0"
+                    style={{ background: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)" }}
+                  />
+                  <div
+                    className="h-2 rounded-full"
+                    style={{
+                      background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)",
+                      width: `${55 + pi * 10}%`,
+                    }}
+                  />
+                  <span
+                    className="text-[10px] font-mono ml-auto"
+                    style={{ color: isDark ? "rgba(255,255,255,0.30)" : "rgba(0,0,0,0.30)" }}
+                  >
+                    ~{Math.round(sec.hiElo - (pi * sectionSpread) / 4)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[10px] mt-3" style={{ color: isDark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.38)" }}>
+        Illustrative grouping only. Actual sections are formed from registered players&apos; live ratings.
+      </p>
     </div>
   );
 }
