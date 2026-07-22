@@ -67,6 +67,10 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* Gradient animation for AnimatedGradientText pill badge */
+  --animate-gradient: gradient 8s linear infinite;
+  --bg-size: 300%;
+
   /* OTB Chess Custom Tokens */
   --color-chess-green: var(--chess-green);
   --color-chess-green-dark: var(--chess-green-dark);
@@ -946,6 +950,17 @@
   /* Status dot */
   .status-dot-online  { background: #34d399; box-shadow: 0 0 0 2px #34d39930; }
   .status-dot-offline { background: oklch(0.75 0 0); }
+}
+
+/* ── AnimatedGradientText pill badge ───────────────────────────────────────── */
+@keyframes gradient {
+  to {
+    background-position: var(--bg-size) 0;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 8s linear infinite;
 }
 
 /* ── AnimeNavBar shine sweep animation ─────────────────────────────────────── */
