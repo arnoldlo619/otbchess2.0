@@ -3630,6 +3630,25 @@ export default function Director() {
               ══════════════════════════════════════════════════════════════════ */}
               {isRegistration && (
                 <>
+                  {/* ── Rating Brackets Panel — top of Home for bracket-parent tournaments ── */}
+                  {isBracketParent && childBrackets.length === 0 && state.players.length >= 2 && (
+                    <div id="bracket-sort-panel">
+                      <BracketSortPanel
+                        players={state.players}
+                        tournamentId={tournamentId}
+                        bracketGroupId={tournamentConfig?.bracketGroupId ?? undefined}
+                        isDark={isDark}
+                        onSpawned={() => {
+                          if (tournamentConfig?.bracketGroupId) {
+                            fetch(`/api/brackets/${tournamentConfig.bracketGroupId}/brackets`)
+                              .then(r => r.json())
+                              .then(data => setChildBrackets(data.brackets || []));
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {/* ── Lobby Hero Card ──────────────────────────────────────── */}
                   <div className={`w-full rounded-2xl border overflow-hidden ${
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
@@ -4189,26 +4208,6 @@ export default function Director() {
                           Walk-in
                         </button>
                       </div>
-                      {/* ── Bracket Sort Panel — shown for bracket-parent tournaments before spawning ── */}
-                      {isBracketParent && childBrackets.length === 0 && state.players.length >= 2 && (
-                        <div id="bracket-sort-panel">
-                          <BracketSortPanel
-                            players={state.players}
-                            tournamentId={tournamentId}
-                            bracketGroupId={tournamentConfig?.bracketGroupId ?? undefined}
-                            isDark={isDark}
-                            onSpawned={() => {
-                              // Refresh child brackets
-                              if (tournamentConfig?.bracketGroupId) {
-                                fetch(`/api/brackets/${tournamentConfig.bracketGroupId}/brackets`)
-                                  .then(r => r.json())
-                                  .then(data => setChildBrackets(data.brackets || []));
-                              }
-                            }}
-                          />
-                        </div>
-                      )}
-
                       {/* Action buttons */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <button
