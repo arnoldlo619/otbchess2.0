@@ -252,7 +252,6 @@ export default function LeagueDemo() {
           <button
             onClick={() => navigate("/")}
             className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity"
-            style={{ background: accent }}
             title="Back to home"
           >
             <img
