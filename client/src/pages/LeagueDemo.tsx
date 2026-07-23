@@ -358,19 +358,15 @@ export default function LeagueDemo() {
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-            <div
-              className="absolute inset-y-0 left-0 w-1"
-              style={{ background: accent, boxShadow: `0 0 24px 4px ${accent}88` }}
-            />
             <div className="relative z-10 h-full flex items-center gap-6 px-6">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <h2
-                    className="text-xl font-black truncate leading-tight"
-                    style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+                  <h1
+                    className="text-3xl sm:text-4xl font-black truncate leading-tight"
+                    style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                   >
                     ChessOTB Club League
-                  </h2>
+                  </h1>
                   {/* Live Demo pill — merged from top bar */}
                   <div
                     className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
