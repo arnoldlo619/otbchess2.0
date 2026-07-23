@@ -506,6 +506,35 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 }
 
 /// ─── Stats Bar ───────────────────────────────────────────────────────────────
+// Slot machine scramble hook — randomises digits on hover then settles to the real value
+const SCRAMBLE_CHARS = "0123456789";
+function useScramble(value: string, running: boolean) {
+  const [scrambled, setScrambled] = useState(value);
+  const frameRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iterRef = useRef(0);
+  useEffect(() => {
+    if (frameRef.current) clearTimeout(frameRef.current);
+    if (!running) { setScrambled(value); return; }
+    iterRef.current = 0;
+    const totalFrames = 10;
+    const tick = () => {
+      iterRef.current += 1;
+      const progress = iterRef.current / totalFrames;
+      const chars = value.split("").map((ch, i) => {
+        if (!/[0-9]/.test(ch)) return ch;
+        if (progress > i / value.length + 0.3) return ch;
+        return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+      });
+      setScrambled(chars.join(""));
+      if (iterRef.current < totalFrames) { frameRef.current = setTimeout(tick, 35); }
+      else { setScrambled(value); }
+    };
+    tick();
+    return () => { if (frameRef.current) clearTimeout(frameRef.current); };
+  }, [running, value]);
+  return scrambled;
+}
+
 function StatItem({
   target, suffix, decimals, label, delay, active, large = false,
 }: {
@@ -513,15 +542,21 @@ function StatItem({
   label: string; delay: number; active: boolean; large?: boolean;
 }) {
   const display = useCountUp(target, active, { duration: 1600, suffix, decimals, delay });
+  const [hovered, setHovered] = useState(false);
+  const scrambled = useScramble(display, hovered);
   return (
-    <div>
+    <div
+      className="group cursor-default select-none"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <p
-        className={`font-bold text-white mb-1 tabular-nums ${large ? "text-3xl sm:text-4xl lg:text-5xl" : "text-3xl"}`}
-        style={{ fontFamily: "'Clash Display', sans-serif" }}
+        className={`font-bold text-white mb-1 tabular-nums transition-colors duration-200 group-hover:text-[#7cf562] ${large ? "text-3xl sm:text-4xl lg:text-5xl" : "text-3xl"}`}
+        style={{ fontFamily: "'Clash Display', sans-serif", letterSpacing: "-0.01em" }}
       >
-        {display}
+        {scrambled}
       </p>
-      <p className={`font-medium text-white/70 ${large ? "text-xs sm:text-sm" : "text-sm"}`}>{label}</p>
+      <p className={`font-medium transition-colors duration-200 group-hover:text-white/90 text-white/70 ${large ? "text-xs sm:text-sm" : "text-sm"}`}>{label}</p>
     </div>
   );
 }
