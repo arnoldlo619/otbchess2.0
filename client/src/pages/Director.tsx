@@ -2362,8 +2362,15 @@ export default function Director() {
   // Board assignment editing state
   const [editBoardsMode, setEditBoardsMode] = useState(false);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
-  // Look up real tournament config for invite code and extra metadata
-  const tournamentConfig = getTournamentConfig(tournamentId);
+  // Look up real tournament config for invite code and extra metadata.
+  // We use a version counter so components that write back to localStorage
+  // (e.g. the bracket-group auto-create effect) can trigger a re-read.
+  const [configVersion, setConfigVersion] = useState(0);
+  const tournamentConfig = useMemo(
+    () => getTournamentConfig(tournamentId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tournamentId, configVersion]
+  );
 
   // Fetch club avatar for PDF branding (best-effort, non-blocking)
   const { avatarUrl: clubAvatarUrl } = useClubAvatar(tournamentConfig?.clubId ?? null);
@@ -2486,8 +2493,11 @@ export default function Director() {
       .then((r) => r.ok ? r.json() : null)
       .then((data: { id?: string } | null) => {
         if (data?.id) {
-          // Persist the bracket group ID back into the local tournament config
+          // Persist the bracket group ID back into localStorage, then bump
+          // configVersion so tournamentConfig is re-read and bracketGroupId
+          // becomes non-null, which triggers the child-bracket loader effect.
           updateTournamentConfig(tournamentId, { bracketGroupId: data.id });
+          setConfigVersion((v) => v + 1);
         }
       })
       .catch(() => { /* non-critical — user can retry */ });

@@ -4429,6 +4429,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       clubName: data.clubName ?? null,
       customSlug: data.customSlug.trim() || null,
       coverImageUrl: data.coverImageUrl || null,
+      ...(data.isBracketParent ? { isBracketParent: true } : {}),
     });
     grantDirectorSession(slug);
     // If signed in, persist to server so My Tournaments history is cross-device
