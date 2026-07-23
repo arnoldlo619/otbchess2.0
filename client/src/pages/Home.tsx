@@ -475,7 +475,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               </SpinBorderButton>
             </div>
             <div
-              className="opacity-0-init animate-fade-in-up mt-4 sm:mt-3 pb-2 sm:pb-0"
+              className="opacity-0-init animate-fade-in-up mt-4 sm:mt-3 pb-2 sm:pb-0 flex flex-col sm:flex-row items-center gap-3"
               style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
             >
               <Link
@@ -486,6 +486,23 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               >
                 Host your first tournament →
               </Link>
+              <span className={`hidden sm:block text-xs ${ isDark ? "text-white/20" : "text-[#436850]/30" }`}>·</span>
+              <button
+                type="button"
+                onClick={() => window.location.href = "/tournament/otb-demo-2026/manage"}
+                className={`group flex items-center gap-1.5 text-sm font-bold transition-all duration-200 ${
+                  isDark
+                    ? "text-[#7cf562] hover:text-white"
+                    : "text-[#436850] hover:text-[#12372A]"
+                }`}
+              >
+                <span className="relative flex h-2 w-2 flex-shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7cf562] opacity-70" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7cf562]" />
+                </span>
+                View Live Demo Dashboard
+                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </button>
             </div>
           </div>
 
