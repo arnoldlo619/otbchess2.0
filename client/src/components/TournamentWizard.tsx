@@ -1108,7 +1108,7 @@ function QuickstartForm({
   const [smartDefaults, setSmartDefaults] = useState(false);
   // inline pickers inside the settings card
   type InlinePicker = "rounds" | "cap" | "time" | "format" | null;
-  const [inlinePicker, setInlinePicker] = useState<InlinePicker>(null);
+  const [inlinePicker, setInlinePicker] = useState<InlinePicker>("time");
   const toggleInline = (p: InlinePicker) =>
     setInlinePicker((prev) => (prev === p ? null : p));
   // two-level time control picker: first pick category, then pick preset within category
