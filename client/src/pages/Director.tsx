@@ -2127,15 +2127,29 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
                           }`}>
                             {p.name.charAt(0).toUpperCase()}
                           </div>
-                          {/* Name + ELO */}
+                          {/* Name + username */}
                           <div className="min-w-0 flex-1">
                             <p className={`text-[11px] font-semibold truncate leading-tight ${
                               isDark ? "text-white" : "text-[#12372A]"
                             }`}>{p.name}</p>
-                            <p className={`text-[9px] leading-tight ${
-                              isDark ? "text-white/30" : "text-[#436850]/55"
-                            }`}>{p.elo > 0 ? `${p.elo}` : 'Unrated'}</p>
+                            {p.username && (
+                              <p className={`text-[9px] leading-tight truncate ${
+                                isDark ? "text-white/30" : "text-[#436850]/50"
+                              }`}>@{p.username}</p>
+                            )}
                           </div>
+                          {/* ELO badge */}
+                          <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-md tabular-nums ${
+                            p.elo >= 2000
+                              ? isDark ? "bg-amber-400/20 text-amber-300" : "bg-amber-50 text-amber-700"
+                              : p.elo >= 1500
+                              ? isDark ? "bg-[#4CAF50]/18 text-[#6FCF7F]" : "bg-[#436850]/12 text-[#436850]"
+                              : p.elo > 0
+                              ? isDark ? "bg-white/08 text-white/55" : "bg-[#ADBC9F]/30 text-[#436850]/70"
+                              : isDark ? "bg-white/05 text-white/30" : "bg-[#ADBC9F]/20 text-[#436850]/40"
+                          }`}>
+                            {p.elo > 0 ? p.elo : '—'}
+                          </span>
                           {/* Moved indicator + reset */}
                           {isOverridden && (
                             <button
