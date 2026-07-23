@@ -208,6 +208,7 @@ import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { ShaderBackground } from "@/components/ui/shader-r";
 import Silk from "@/components/Silk";
+import { NeonNebula } from "@/components/ui/neon-nebula";
 import { SILK_DEFAULTS, CLUB_BACKGROUND_TEMPLATES } from "@/components/ClubBackgroundPicker";
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
@@ -3221,6 +3222,7 @@ export default function ClubDashboard() {
   // Club background image — set via ClubSettingsPanel > ClubBackgroundPicker
   const clubBgImage = club.backgroundImage ?? null;
   const isSilkBg = clubBgImage === "__silk__";
+  const isNeonNebulaBg = clubBgImage === "__neon_nebula__";
   // Use the animated shader as the default background when no custom/preset image is selected
   const useShaderDefault = !clubBgImage;
 
@@ -3233,9 +3235,11 @@ export default function ClubDashboard() {
     [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "levitation")?.path ?? ""]:    "#1a1a2e", // deep indigo
     [CLUB_BACKGROUND_TEMPLATES.find(t => t.id === "time-kings")?.path ?? ""]:    "#1a1410", // warm dark sepia
   };
-  // Silk uses its own color; templates use the curated tint; default is null (standard dark green)
+  // Silk uses its own color; Neon Nebula uses a deep purple tint; templates use curated tints
   const navTint: string | null = isSilkBg
     ? (club.silkColor ?? SILK_DEFAULTS.color)
+    : isNeonNebulaBg
+    ? "#1a0a2e"  // deep purple to match neon nebula palette
     : (clubBgImage ? (TEMPLATE_TINTS[clubBgImage] ?? null) : null);
   // Build CSS values for sidebar + header backgrounds and borders
   const navBg = navTint
@@ -3254,8 +3258,8 @@ export default function ClubDashboard() {
       style={{
         // When shader is active, use transparent background so the fixed canvas shows through.
         // When a custom/preset image is set, use it as the page background.
-        background: (useShaderDefault || isSilkBg) ? "transparent" : "oklch(0.20 0.06 145)",
-        ...(!isSilkBg && clubBgImage ? {
+        background: (useShaderDefault || isSilkBg || isNeonNebulaBg) ? "transparent" : "oklch(0.20 0.06 145)",
+        ...(!isSilkBg && !isNeonNebulaBg && clubBgImage ? {
           backgroundImage: `url(${clubBgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center top",
@@ -3263,6 +3267,19 @@ export default function ClubDashboard() {
         } : {}),
       }}
     >
+      {/* Neon Nebula animated background — shown when Neon Nebula is selected */}
+      {isNeonNebulaBg && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+          <div className="absolute inset-0" style={{ opacity: 0.90 }}>
+            <NeonNebula className="w-full h-full" />
+          </div>
+          {/* Subtle scrim for text legibility */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "oklch(0.05 0.03 300 / 0.30)" }}
+          />
+        </div>
+      )}
       {/* Silk animated background — shown when Silk is selected */}
       {isSilkBg && (
         <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
@@ -3297,7 +3314,7 @@ export default function ClubDashboard() {
         </div>
       )}
       {/* Dark overlay when a static background template is active — ensures readability */}
-      {clubBgImage && !isSilkBg && (
+      {clubBgImage && !isSilkBg && !isNeonNebulaBg && (
         <div
           className="fixed inset-0 pointer-events-none"
           style={{ background: "oklch(0.10 0.05 145 / 0.75)", zIndex: 0 }}

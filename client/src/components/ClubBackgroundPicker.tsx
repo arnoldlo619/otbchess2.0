@@ -9,9 +9,13 @@
 import React, { useCallback } from "react";
 import { Check, X, Sparkles } from "lucide-react";
 import Silk from "./Silk";
+import { NeonNebula } from "./ui/neon-nebula";
 
 /** Sentinel value stored in club.backgroundImage to indicate the Silk animated background */
 export const SILK_BG_VALUE = "__silk__";
+
+/** Sentinel value stored in club.backgroundImage to indicate the Neon Nebula animated background */
+export const NEON_NEBULA_BG_VALUE = "__neon_nebula__";
 
 /** Default Silk settings */
 export const SILK_DEFAULTS = {
@@ -283,6 +287,49 @@ export function ClubBackgroundPicker({
             </div>
           )}
         </button>
+
+        {/* ── Neon Nebula animated option ─────────────────────────────── */}
+        {(() => {
+          const neonSelected = value === NEON_NEBULA_BG_VALUE;
+          return (
+            <button
+              type="button"
+              onClick={() => onChange(NEON_NEBULA_BG_VALUE)}
+              className={`relative flex-shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                neonSelected
+                  ? "shadow-lg scale-[1.03]"
+                  : "border-white/10 hover:border-white/30"
+              }`}
+              style={{
+                width: 120,
+                height: 72,
+                borderColor: neonSelected ? accent : undefined,
+              }}
+              aria-label="Neon Nebula animated background"
+              aria-pressed={neonSelected}
+            >
+              {/* Live mini Neon Nebula preview */}
+              <div className="absolute inset-0 pointer-events-none">
+                <NeonNebula className="w-full h-full" />
+              </div>
+              {/* Label scrim */}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1 flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-purple-300" />
+                <span className="text-[9px] font-semibold text-white/90 tracking-wide">
+                  Neon Nebula
+                </span>
+              </div>
+              {neonSelected && (
+                <div
+                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ background: accent }}
+                >
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </div>
+              )}
+            </button>
+          );
+        })()}
 
         {/* Template cards */}
         {CLUB_BACKGROUND_TEMPLATES.map((tpl) => {
