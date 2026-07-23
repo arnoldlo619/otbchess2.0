@@ -3352,25 +3352,25 @@ export default function ClubDashboard() {
                   onClick={() => setTab(ct.id)}
                   className="group/navbtn relative flex flex-row items-center gap-3 rounded-xl text-left"
                   style={{
-                    height: "56px",
+                    height: "52px",
                     minWidth: "44px",
-                    paddingLeft: "14px",
+                    paddingLeft: "13px",
                     paddingRight: "10px",
-                    background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
-                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.42)",
-                    transition: "background 220ms cubic-bezier(0.4,0,0.2,1), color 180ms ease, box-shadow 220ms ease",
-                    boxShadow: isActive ? "inset 0 0 0 1px rgba(124,245,98,0.18)" : "none",
+                    background: isActive ? "rgba(124,245,98,0.12)" : "transparent",
+                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.45)",
+                    transition: "background 200ms cubic-bezier(0.4,0,0.2,1), color 160ms ease, box-shadow 200ms ease",
+                    boxShadow: isActive ? "inset 0 0 0 1px rgba(124,245,98,0.22), 0 1px 8px rgba(124,245,98,0.08)" : "none",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.92)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                      e.currentTarget.style.boxShadow = "inset 0 0 0 1px rgba(255,255,255,0.07)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.95)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                      e.currentTarget.style.boxShadow = "inset 0 0 0 1px rgba(255,255,255,0.09)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.42)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
                       e.currentTarget.style.background = "transparent";
                       e.currentTarget.style.boxShadow = "none";
                     }
@@ -3378,9 +3378,12 @@ export default function ClubDashboard() {
                   aria-label={ct.label}
                   title={ct.label}
                 >
-                  {/* Icon */}
-                  <span className={`relative flex-shrink-0 w-7 flex items-center justify-center otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                    <Icon size={20} />
+                  {/* Icon — scale on hover, green tint when active */}
+                  <span
+                    className={`relative flex-shrink-0 w-8 flex items-center justify-center transition-transform duration-[180ms] ease-out group-hover/navbtn:scale-110 otb-icon${isActive ? " otb-icon--active" : ""}`}
+                    style={{ color: isActive ? "#7cf562" : "inherit" }}
+                  >
+                    <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} />
                     {(ct.badge ?? 0) > 0 && (
                       <span
                         className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
@@ -3390,10 +3393,15 @@ export default function ClubDashboard() {
                       </span>
                     )}
                   </span>
-                  {/* Label — slides in on hover */}
+                  {/* Label — slides in on sidebar hover */}
                   <span
-                    className="text-[17px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
-                    style={{ color: "inherit", fontFamily: "'Clash Display', 'Inter', sans-serif", letterSpacing: "-0.02em" }}
+                    className="text-[14px] font-semibold whitespace-nowrap overflow-hidden transition-all duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
+                    style={{
+                      color: "inherit",
+                      fontFamily: "'Inter', 'Clash Display', sans-serif",
+                      letterSpacing: "0.005em",
+                      willChange: "max-width, opacity",
+                    }}
                   >
                     {ct.label}
                   </span>
