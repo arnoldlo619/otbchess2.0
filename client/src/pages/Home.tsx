@@ -478,15 +478,6 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               className="opacity-0-init animate-fade-in-up mt-4 sm:mt-3 pb-2 sm:pb-0 flex flex-col sm:flex-row items-center gap-3"
               style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
             >
-              <Link
-                href="/tournaments/new"
-                className={`text-sm font-medium underline underline-offset-4 ${
-                  isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#436850]"
-                }`}
-              >
-                Host your first tournament →
-              </Link>
-              <span className={`hidden sm:block text-xs ${ isDark ? "text-white/20" : "text-[#436850]/30" }`}>·</span>
               <button
                 type="button"
                 onClick={() => window.location.href = "/tournament/otb-demo-2026/manage"}
