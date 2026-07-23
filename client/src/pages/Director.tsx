@@ -2440,6 +2440,46 @@ export default function Director() {
   const [childBrackets, setChildBrackets] = useState<{ tournamentId: string; label: string; order: number; format: string; rounds: number; status: string; playerCount: number }[]>([]);
   const [bracketLoading, setBracketLoading] = useState(false);
 
+  // ── Auto-create bracket group when isBracketParent is true but no bracketGroupId yet ──
+  // This is the missing link: the wizard sets isBracketParent but never creates the server-side
+  // bracket group. We create it lazily on first Director open so the BracketSortPanel works.
+  useEffect(() => {
+    if (!isBracketParent || bracketGroupId || !tournamentConfig) return;
+    if (tournamentId === 'otb-demo-2026') return;
+    authFetch('/api/brackets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        name: tournamentConfig.name,
+        venue: tournamentConfig.venue ?? null,
+        date: tournamentConfig.date ?? null,
+        brackets: [
+          { label: 'Under 1000', minElo: 0, maxElo: 999, order: 0 },
+          { label: '1000–1499', minElo: 1000, maxElo: 1499, order: 1 },
+          { label: '1500+', minElo: 1500, maxElo: 9999, order: 2 },
+        ],
+        ratingPlatform: tournamentConfig.ratingSystem ?? 'chess.com',
+        ratingType: tournamentConfig.ratingType ?? 'rapid',
+        format: tournamentConfig.format ?? 'swiss',
+        rounds: tournamentConfig.rounds ?? 5,
+        timeBase: tournamentConfig.timeBase ?? 10,
+        timeIncrement: tournamentConfig.timeIncrement ?? 0,
+        parentTournamentId: tournamentId,
+        clubId: tournamentConfig.clubId ?? null,
+      }),
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { id?: string } | null) => {
+        if (data?.id) {
+          // Persist the bracket group ID back into the local tournament config
+          updateTournamentConfig(tournamentId, { bracketGroupId: data.id });
+        }
+      })
+      .catch(() => { /* non-critical — user can retry */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBracketParent, tournamentId]);
+
   useEffect(() => {
     if (!isBracketParent || !bracketGroupId) return;
     setBracketLoading(true);

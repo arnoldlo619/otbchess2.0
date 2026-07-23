@@ -272,25 +272,32 @@ router.post("/:id/suggest", authMiddleware, async (req: Request, res: Response) 
 
     if (!group) return res.status(404).json({ error: "Bracket group not found" });
 
-    const { targetBrackets = 3 } = req.body;
+    const { targetBrackets = 3, players: clientPlayers } = req.body;
 
-    // Get all registered players for the parent tournament
-    if (!group.parentTournamentId) {
-      return res.status(400).json({ error: "No parent tournament linked" });
-    }
-
-    const players = await db
-      .select()
-      .from(tournamentPlayers)
-      .where(eq(tournamentPlayers.tournamentId, group.parentTournamentId));
-
-    // Extract ELOs based on the group's rating config
+    // Extract ELOs — prefer client-supplied players (already have elo resolved),
+    // fall back to DB players if available.
     const ratingType = group.ratingType ?? "rapid";
     const elos: number[] = [];
-    for (const p of players) {
-      const data = p.playerJson ? JSON.parse(p.playerJson as string) : {};
-      const elo = ratingType === "blitz" ? (data.blitz ?? data.elo) : (data.rapid ?? data.elo);
-      if (typeof elo === "number" && elo > 0) elos.push(elo);
+
+    if (Array.isArray(clientPlayers) && clientPlayers.length > 0) {
+      // Client passed players directly (e.g. from localStorage state)
+      for (const p of clientPlayers) {
+        const elo = typeof p.elo === "number" && p.elo > 0 ? p.elo : null;
+        if (elo) elos.push(elo);
+      }
+    } else if (group.parentTournamentId) {
+      // Fall back to DB players
+      const players = await db
+        .select()
+        .from(tournamentPlayers)
+        .where(eq(tournamentPlayers.tournamentId, group.parentTournamentId));
+      for (const p of players) {
+        const data = p.playerJson ? JSON.parse(p.playerJson as string) : {};
+        const elo = ratingType === "blitz" ? (data.blitz ?? data.elo) : (data.rapid ?? data.elo);
+        if (typeof elo === "number" && elo > 0) elos.push(elo);
+      }
+    } else {
+      return res.status(400).json({ error: "No players or parent tournament available" });
     }
 
     const suggested = suggestBracketSplits(elos, targetBrackets);
@@ -301,7 +308,7 @@ router.post("/:id/suggest", authMiddleware, async (req: Request, res: Response) 
       playerCount: elos.filter((e) => e >= b.minElo && e <= b.maxElo).length,
     }));
 
-    res.json({ brackets: annotated, totalPlayers: players.length, ratedPlayers: elos.length });
+    res.json({ brackets: annotated, totalPlayers: elos.length, ratedPlayers: elos.length });
   } catch (err) {
     logger.error("[brackets] Suggest error:", err);
     res.status(500).json({ error: "Failed to suggest brackets" });
