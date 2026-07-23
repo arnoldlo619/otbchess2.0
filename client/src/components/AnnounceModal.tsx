@@ -14,7 +14,7 @@
 import { useEffect, useState } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { QRCodeSVG } from "qrcode.react";
-import { X, Copy, Check, Maximize2 } from "lucide-react";
+import { X, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface AnnounceModalProps {
@@ -81,14 +81,7 @@ export function AnnounceModal({
     <div className="fixed inset-0 z-[100] flex flex-col bg-[oklch(0.14_0.07_145)]">
 
       {/* ── Sticky top bar — always visible, never scrolls away ─────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
-        {/* Left: fullscreen hint */}
-        <div className="flex items-center gap-1.5 text-white/25 text-xs">
-          <Maximize2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:block">Press Escape to close</span>
-          <span className="sm:hidden">Tap × to close</span>
-        </div>
-
+      <div className="flex-shrink-0 flex items-center justify-end px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
         {/* Right: close button — large tap target (min 44×44 px) */}
         <button
           onClick={onClose}
