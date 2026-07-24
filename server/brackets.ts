@@ -109,7 +109,7 @@ function suggestBracketSplits(
 router.post("/", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const {
@@ -193,7 +193,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 router.patch("/:id", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -235,7 +235,7 @@ router.patch("/:id", authMiddleware, async (req: Request, res: Response) => {
 router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -319,7 +319,7 @@ router.post("/:id/suggest", authMiddleware, async (req: Request, res: Response) 
 router.post("/:id/auto-sort", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -391,7 +391,7 @@ router.post("/:id/auto-sort", authMiddleware, async (req: Request, res: Response
 router.post("/:id/reassign", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -452,7 +452,7 @@ router.post("/:id/reassign", authMiddleware, async (req: Request, res: Response)
 router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const userId = (req as any).user?.id;
+    const userId = (req as any).userId;
     const [group] = await db
       .select()
       .from(bracketGroups)

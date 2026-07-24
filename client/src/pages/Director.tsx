@@ -1818,32 +1818,67 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
   const handleSuggest = async () => {
     setStep('suggesting');
     setError('');
+
+    // ── Client-side ELO split (primary path) ─────────────────────────────────
+    // We compute the bracket suggestions entirely client-side to eliminate the
+    // race condition where bracketGroupId may not yet be available (the async
+    // POST /api/brackets hasn't resolved). The server /suggest endpoint is only
+    // used as a secondary path when bracketGroupId is already known.
+    const computeClientSuggest = () => {
+      const elos = sortedElos;
+      if (elos.length === 0) {
+        enterReview([{ label: 'Open', minElo: 0, maxElo: 9999, playerCount: players.length }]);
+        return;
+      }
+      const range = elos[elos.length - 1] - elos[0];
+      if (range < 200) {
+        enterReview([{ label: 'Open', minElo: 0, maxElo: 9999, playerCount: players.length }]);
+        return;
+      }
+      const targetBrackets = elos.length >= 12 ? 3 : 2;
+      const chunkSize = Math.ceil(elos.length / targetBrackets);
+      const brackets: Array<{ label: string; minElo: number; maxElo: number; playerCount: number }> = [];
+      for (let i = 0; i < targetBrackets; i++) {
+        const startIdx = i * chunkSize;
+        const endIdx = Math.min((i + 1) * chunkSize - 1, elos.length - 1);
+        if (startIdx >= elos.length) break;
+        const bracketMin = i === 0 ? 0 : elos[startIdx];
+        const bracketMax = i === targetBrackets - 1 ? 9999 : elos[endIdx];
+        const label = i === 0
+          ? `Under ${bracketMax + 1}`
+          : i === targetBrackets - 1
+          ? `${bracketMin}+`
+          : `${bracketMin}\u2013${bracketMax}`;
+        const count = players.filter(p => p.elo >= bracketMin && p.elo <= bracketMax).length;
+        brackets.push({ label, minElo: bracketMin, maxElo: bracketMax, playerCount: count });
+      }
+      enterReview(brackets);
+    };
+
+    if (!bracketGroupId) {
+      // bracketGroupId not yet available — use client-side split immediately
+      computeClientSuggest();
+      return;
+    }
+
+    // bracketGroupId is available — try server suggest for smarter splits
     try {
-      const res = await fetch(`/api/brackets/${bracketGroupId}/suggest`, {
+      const res = await authFetch(`/api/brackets/${bracketGroupId}/suggest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ players: players.map(p => ({ id: p.id, name: p.name, elo: p.elo, username: p.username })) }),
       });
-      const data = await res.json();
-      if (data.brackets) {
-        enterReview(data.brackets);
-      } else {
-        const median = sortedElos[Math.floor(sortedElos.length / 2)] || 1000;
-        const lower = players.filter(p => p.elo < median);
-        const upper = players.filter(p => p.elo >= median);
-        enterReview([
-          { label: `Under ${median}`, minElo: 0, maxElo: median - 1, playerCount: lower.length },
-          { label: `${median}+`, minElo: median, maxElo: 9999, playerCount: upper.length },
-        ]);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.brackets && data.brackets.length > 0) {
+          enterReview(data.brackets);
+          return;
+        }
       }
+      // Server returned error or empty — fall back to client-side
+      computeClientSuggest();
     } catch {
-      const median = sortedElos[Math.floor(sortedElos.length / 2)] || 1000;
-      const lower = players.filter(p => p.elo < median);
-      const upper = players.filter(p => p.elo >= median);
-      enterReview([
-        { label: `Under ${median}`, minElo: 0, maxElo: median - 1, playerCount: lower.length },
-        { label: `${median}+`, minElo: median, maxElo: 9999, playerCount: upper.length },
-      ]);
+      computeClientSuggest();
     }
   };
 
@@ -1876,7 +1911,12 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
         username: p.username,
         bracketIndex: getPlayerBracketIndex(p),
       }));
-      const res = await fetch(`/api/brackets/${bracketGroupId}/spawn`, {
+      if (!bracketGroupId) {
+        setError('Bracket group is still being created — please wait a moment and try again.');
+        setStep('review');
+        return;
+      }
+      const res = await authFetch(`/api/brackets/${bracketGroupId}/spawn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
