@@ -7110,6 +7110,11 @@ export default function Director() {
                   setShowStartConfirm(false);
                   syncStatusToServer("in_progress");
                   toast.success("Round 1 pairings generated! Tournament is live.");
+                  // For Quads: auto-navigate to Home tab so the director immediately
+                  // sees the board assignments without needing to manually switch tabs.
+                  if (state.format === "quads") {
+                    setActiveTab("home");
+                  }
                   // Broadcast tournament_started SSE event to all connected player lobby screens.
                   if (started) {
                     authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/start`, {
