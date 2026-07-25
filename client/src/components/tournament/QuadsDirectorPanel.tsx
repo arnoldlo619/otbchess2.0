@@ -997,7 +997,7 @@ export default function QuadsDirectorPanel({
                     <span className="text-sm font-black" style={{ color: T.gold, fontFamily: "'Clash Display', sans-serif" }}>{section.name}</span>
                     {isCo && <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{ background: T.goldBg, color: T.gold, border: `1px solid ${T.goldBorder}` }}>Co-Champs</span>}
                   </div>
-                  <span className="text-xs" style={{ color: T.textDim }}>{formatRatingRange(section)}</span>
+                  <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ color: T.textMuted, background: isDark ? "oklch(0.20 0.04 145 / 0.60)" : "oklch(0.93 0.03 145 / 0.70)" }}>{formatRatingRange(section)}</span>
                 </div>
 
                 {/* Podium */}
@@ -1230,7 +1230,11 @@ export default function QuadsDirectorPanel({
                     )}
                   </div>
                 )}
-                <p className="text-xs mt-0.5" style={{ color: T.textDim }}>{formatRatingRange(selectedSection)} · {selectedSection.playerIds.length} players</p>
+                <p className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <span className="font-semibold px-1.5 py-0.5 rounded-md" style={{ color: T.textMuted, background: isDark ? "oklch(0.20 0.04 145 / 0.60)" : "oklch(0.93 0.03 145 / 0.70)" }}>{formatRatingRange(selectedSection)}</span>
+                  <span style={{ color: T.textDim }}>·</span>
+                  <span className="font-medium" style={{ color: T.textMuted }}>{selectedSection.playerIds.length} players</span>
+                </p>
               </div>
             </div>
 
