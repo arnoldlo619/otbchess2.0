@@ -170,7 +170,7 @@ export default function LeagueDemo() {
   const themeCtx = useTheme();
   const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
   const [activeTab, setActiveTab] = useState<TabId>("overview");
-  const [standingsView, setStandingsView] = useState<"table" | "bracket">("table");
+  const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
   const { user } = useAuthContext();
   // Determine if the user already has a league and/or a club (to conditionally show CTAs)
   const [hasLeague, setHasLeague] = useState(false);
@@ -908,7 +908,7 @@ export default function LeagueDemo() {
                     <div className="px-4 pt-4 pb-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="text-base font-black" style={{ color: textMain }}>Playoff Bracket</h3>
+                          <h2 className="text-xl sm:text-2xl font-black" style={{ color: textMain, fontFamily: "'Clash Display', sans-serif" }}>Playoff Bracket</h2>
                           <p className="text-xs mt-0.5" style={{ color: textMuted }}>Top 8 players · Single elimination · Season 1</p>
                         </div>
                         <div className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full" style={{ background: `${accent}18`, color: accent }}>Season 1</div>
