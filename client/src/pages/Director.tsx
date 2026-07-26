@@ -3620,7 +3620,7 @@ export default function Director() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   style={{ touchAction: "manipulation", minHeight: "44px" }}
-                  className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                  className={`touch-target flex-1 min-w-[3.5rem] px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap ${
                     activeTab === tab.id
                       ? isDark
                         ? "bg-[oklch(0.32_0.09_145)] text-white shadow-[0_1px_4px_rgba(0,0,0,0.3)]"
@@ -5626,11 +5626,11 @@ export default function Director() {
                   </div>
 
                   {/* Filter + Add Player row */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => setShowFilters((f) => !f)}
                       style={{ minHeight: "44px", touchAction: "manipulation" }}
-                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-lg border transition-all ${
+                      className={`flex items-center gap-1 min-[480px]:gap-1.5 text-xs font-medium px-2.5 min-[480px]:px-3 py-2 min-[480px]:py-2.5 rounded-lg border transition-all ${
                         showFilters || activeFilterCount > 0
                           ? isDark
                             ? "bg-[#436850]/30 border-[#4CAF50]/40 text-[#4CAF50]"
@@ -5658,7 +5658,7 @@ export default function Director() {
                       <button
                         onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
                         style={{ minHeight: "44px", touchAction: "manipulation" }}
-                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-lg border transition-all ${
+                        className={`flex items-center gap-1 text-xs font-medium px-2.5 py-2 rounded-lg border transition-all ${
                           isDark
                             ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
                             : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F]"
@@ -5666,7 +5666,8 @@ export default function Director() {
                         title="Download player roster as CSV (includes check-in & payment status)"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        Download CSV
+                        <span className="hidden min-[480px]:inline">Download CSV</span>
+                        <span className="min-[480px]:hidden">CSV</span>
                       </button>
                     )}
                     {/* Refresh All ELO — re-fetches ratings for all players with usernames */}
@@ -5674,7 +5675,7 @@ export default function Director() {
                       <button
                         onClick={refreshAllElo}
                         disabled={isRefreshingElo}
-                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                        className={`flex items-center gap-1 text-xs font-medium px-2.5 py-2 rounded-lg border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
                           isDark
                             ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
                             : "border-[#436850]/30 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/50"
@@ -5684,7 +5685,7 @@ export default function Director() {
                         <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingElo ? "animate-spin" : ""}`} />
                         {isRefreshingElo && eloRefreshProgress
                           ? `${eloRefreshProgress.done}/${eloRefreshProgress.total}`
-                          : "Refresh ELO"}
+                          : <><span className="hidden min-[480px]:inline">Refresh ELO</span><span className="min-[480px]:hidden">ELO</span></>}
                       </button>
                     )}
                     {/* Add Player + Upload RSVPs buttons — registration phase */}
@@ -5692,22 +5693,26 @@ export default function Director() {
                       <>
                         <button
                           onClick={() => setShowUploadRSVP(true)}
-                          className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all ${
+                          className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-2 rounded-lg border transition-all ${
                             isDark
                               ? "border-[#4CAF50]/40 text-[#4CAF50] hover:bg-[#436850]/20"
                               : "border-[#436850]/40 text-[#436850] hover:bg-[#436850]/08"
                           }`}
+                          title="Upload RSVPs from spreadsheet"
                         >
                           <FileSpreadsheet className="w-3.5 h-3.5" />
-                          Upload RSVPs
+                          <span className="hidden min-[480px]:inline">Upload RSVPs</span>
+                          <span className="min-[480px]:hidden">RSVPs</span>
                         </button>
                         <button
                           onClick={() => setShowAddPlayer(true)}
-                          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all"
+                          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-2 rounded-lg transition-all"
                           style={{ background: "#436850", color: "#FFFFFF" }}
+                          title="Add a player manually"
                         >
                           <UserPlus className="w-3.5 h-3.5" />
-                          Add Player
+                          <span className="hidden min-[480px]:inline">Add Player</span>
+                          <span className="min-[480px]:hidden">Add</span>
                         </button>
                       </>
                     )}
@@ -7260,12 +7265,12 @@ export default function Director() {
       {/* Visible on mobile only when on a non-home tab, so the director can quickly jump back */}
       {activeTab !== "home" && (
         <div
-          className="sm:hidden fixed bottom-6 left-4 z-40"
+          className="sm:hidden fixed bottom-5 left-4 z-50"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <button
             onClick={() => setActiveTab("home")}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all active:scale-95 border ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-xl transition-all active:scale-95 border ${
               isDark
                 ? "bg-[oklch(0.22_0.06_145)]/95 backdrop-blur-md border-white/12 text-white/70 hover:text-white shadow-black/40"
                 : "bg-white/95 backdrop-blur-md border-[#ADBC9F] text-[#436850] hover:text-[#12372A] shadow-gray-200/80"
