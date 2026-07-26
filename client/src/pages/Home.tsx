@@ -66,6 +66,7 @@ import {
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { DESKTOP_NAV_ITEMS, MOBILE_NAV_ITEMS, NAV_CTA_PRIMARY, isNavItemActive } from "@/lib/navRegistry";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
+import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
@@ -2590,15 +2591,29 @@ export default function Home() {
     </Link>
   );
 
+  const isGuestUser = !user || user.isGuest;
+
   const rightSlotEl = (
     <div className="flex items-center gap-2">
       <ThemeToggle />
-      <AvatarNavDropdown
-        currentPage={activeNavTab}
-        onSignInClick={() => setAuthOpen(true)}
-        dashboardUrl={getDashboardUrl()}
-        leagueUrl={leagueNavUrl}
-      />
+      {/* Mobile: hamburger drawer for ALL users (hides the wide avatar pill that causes overflow) */}
+      <div className="flex md:hidden">
+        <MobileNavDrawer
+          currentPage={activeNavTab}
+          onSignInClick={() => setAuthOpen(true)}
+          isGuest={isGuestUser}
+          user={user}
+        />
+      </div>
+      {/* Desktop: full avatar dropdown (hidden on mobile to avoid overflow) */}
+      <div className="hidden md:flex">
+        <AvatarNavDropdown
+          currentPage={activeNavTab}
+          onSignInClick={() => setAuthOpen(true)}
+          dashboardUrl={getDashboardUrl()}
+          leagueUrl={leagueNavUrl}
+        />
+      </div>
     </div>
   );
 
