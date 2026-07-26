@@ -10,6 +10,7 @@ import {
 import type { ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
+import { ScoutAISummary } from "./ScoutAISummary";
 
 type Tokens = {
   card: string;
@@ -232,6 +233,9 @@ export function V3ScoutReportTab({ report, isDark, t }: Props) {
 
       {/* Data Quality Banner */}
       <DataQualityBanner dataQuality={report.dataQuality} isDark={isDark} />
+
+      {/* AI Scouting Summary */}
+      <ScoutAISummary report={report} isDark={isDark} t={t} />
 
       {/* Matchup Summary */}
       <SectionList
