@@ -69,6 +69,20 @@ const TOOLS = [
     accent: "#0f2a1a",
     size: "tall",
   },
+  {
+    id: "chess-clock",
+    title: "Chess Clock",
+    tagline: "A precision digital clock for OTB play.",
+    description:
+      "Full-screen two-player chess clock with configurable time controls — Bullet, Blitz, Rapid, Classical, and custom. Tap your half to pass the turn. Sound cues, increment support, and a clean distraction-free interface.",
+    cta: "Open Chess Clock",
+    href: "/clock",
+    external: false,
+    image: "/manus-storage/chess-clock-demo_9ce126e7.webp",
+    highlights: ["Bullet / Blitz / Rapid / Classical", "Increment support", "Sound cues"],
+    accent: "#12372A",
+    size: "medium",
+  },
 ] as const;
 
 const COMING_SOON = [
@@ -338,6 +352,11 @@ export default function Training() {
           {/* Openings Library */}
           <div className="sm:col-span-1">
             <ToolCard tool={TOOLS[2]} isDark={isDark} />
+          </div>
+
+          {/* Chess Clock */}
+          <div className="sm:col-span-1">
+            <ToolCard tool={TOOLS[4]} isDark={isDark} />
           </div>
         </div>
 
