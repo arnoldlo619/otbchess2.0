@@ -390,15 +390,15 @@ export default function LeagueDemo() {
                 </div>
               </div>
               <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
-              <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
                 {[
                   { label: "Players", value: "8/8" },
                   { label: "Matches", value: "42/56" },
                   { label: "Week", value: "14/16" },
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
-                    <div className="text-sm font-black" style={{ color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{value}</div>
-                    <div className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>{label}</div>
+                    <div className="text-xl font-black" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</div>
                   </div>
                 ))}
               </div>
@@ -434,25 +434,40 @@ export default function LeagueDemo() {
                     <div className="p-5">
                       <div className="flex items-center justify-between gap-4">
                         {/* White player */}
-                        <div className="flex flex-col items-center gap-2 flex-1">
+                        <div
+                          className="flex flex-col items-center gap-3 flex-1 rounded-2xl p-4 cursor-pointer"
+                          style={{ transition: "background 0.22s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease" }}
+                          onMouseEnter={(e) => {
+                            const el = e.currentTarget as HTMLDivElement;
+                            el.style.background = isDark ? "rgba(240,245,238,0.06)" : "rgba(67,104,80,0.06)";
+                            el.style.transform = "translateY(-4px) scale(1.04)";
+                            el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px ${accent}30`;
+                          }}
+                          onMouseLeave={(e) => {
+                            const el = e.currentTarget as HTMLDivElement;
+                            el.style.background = "transparent";
+                            el.style.transform = "";
+                            el.style.boxShadow = "";
+                          }}
+                        >
                           <div className="relative">
-                            <Avatar name={featuredMatchup.white.displayName} size={14} url={getAvatar(featuredMatchup.white.chesscomUsername)} />
+                            <Avatar name={featuredMatchup.white.displayName} size={18} url={getAvatar(featuredMatchup.white.chesscomUsername)} />
                             <span
-                              className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                              className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md"
                               style={{ background: "#f0f5ee", color: "#111827" }}
                             >
                               WHITE
                             </span>
                           </div>
                           <div className="text-center mt-2">
-                            <div className="font-bold text-base" style={{ color: textMain }}>{featuredMatchup.white.displayName}</div>
-                            <div className="text-sm" style={{ color: textMuted }}>{featuredMatchup.white.rating} ELO</div>
+                            <div className="font-black text-lg" style={{ color: textMain }}>{featuredMatchup.white.displayName}</div>
+                            <div className="text-sm font-semibold mt-0.5" style={{ color: accent }}>{featuredMatchup.white.rating} ELO</div>
                           </div>
                         </div>
 
                         {/* VS */}
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="text-2xl font-black" style={{ color: textMuted }}>VS</div>
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <div className="text-3xl font-black" style={{ color: textMuted }}>VS</div>
                           <div className="flex items-center gap-1 text-[11px]" style={{ color: textMuted }}>
                             <Clock size={10} />
                             <span>90m + 30s</span>
@@ -460,19 +475,34 @@ export default function LeagueDemo() {
                         </div>
 
                         {/* Black player */}
-                        <div className="flex flex-col items-center gap-2 flex-1">
+                        <div
+                          className="flex flex-col items-center gap-3 flex-1 rounded-2xl p-4 cursor-pointer"
+                          style={{ transition: "background 0.22s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease" }}
+                          onMouseEnter={(e) => {
+                            const el = e.currentTarget as HTMLDivElement;
+                            el.style.background = isDark ? "rgba(240,245,238,0.06)" : "rgba(67,104,80,0.06)";
+                            el.style.transform = "translateY(-4px) scale(1.04)";
+                            el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px ${accent}30`;
+                          }}
+                          onMouseLeave={(e) => {
+                            const el = e.currentTarget as HTMLDivElement;
+                            el.style.background = "transparent";
+                            el.style.transform = "";
+                            el.style.boxShadow = "";
+                          }}
+                        >
                           <div className="relative">
-                            <Avatar name={featuredMatchup.black.displayName} size={14} url={getAvatar(featuredMatchup.black.chesscomUsername)} />
+                            <Avatar name={featuredMatchup.black.displayName} size={18} url={getAvatar(featuredMatchup.black.chesscomUsername)} />
                             <span
-                              className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                              className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md"
                               style={{ background: "#111827", color: "#f0f5ee" }}
                             >
                               BLACK
                             </span>
                           </div>
                           <div className="text-center mt-2">
-                            <div className="font-bold text-base" style={{ color: textMain }}>{featuredMatchup.black.displayName}</div>
-                            <div className="text-sm" style={{ color: textMuted }}>{featuredMatchup.black.rating} ELO</div>
+                            <div className="font-black text-lg" style={{ color: textMain }}>{featuredMatchup.black.displayName}</div>
+                            <div className="text-sm font-semibold mt-0.5" style={{ color: accent }}>{featuredMatchup.black.rating} ELO</div>
                           </div>
                         </div>
                       </div>
