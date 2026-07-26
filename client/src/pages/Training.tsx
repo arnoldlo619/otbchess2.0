@@ -9,7 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { AppNavBar } from "@/components/AppNavBar";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { useLocation } from "wouter";
-import { ArrowRight, ExternalLink, Lock } from "lucide-react";
+import { ArrowRight, ExternalLink, Lock, FlaskConical } from "lucide-react";
 
 // ─── Tool Definitions ─────────────────────────────────────────────────────────
 const TOOLS = [
@@ -95,9 +95,13 @@ const COMING_SOON = [
 function ToolCard({
   tool,
   isDark,
+  isBeta = false,
+  compact = false,
 }: {
   tool: (typeof TOOLS)[number];
   isDark: boolean;
+  isBeta?: boolean;
+  compact?: boolean;
 }) {
   const [, navigate] = useLocation();
 
@@ -109,8 +113,8 @@ function ToolCard({
     }
   };
 
-  const isHero = tool.size === "hero";
-  const isTall = tool.size === "tall";
+  const isHero = tool.size === "hero" && !compact;
+  const isTall = tool.size === "tall" && !compact;
 
   return (
     <div
@@ -168,15 +172,21 @@ function ToolCard({
         />
       </div>
 
-      {/* External badge */}
-      {tool.external && (
-        <div className="absolute top-3 right-3 z-10">
+      {/* Top-right badges */}
+      <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
+        {isBeta && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 backdrop-blur-sm">
+            <FlaskConical className="w-2.5 h-2.5" />
+            In Beta
+          </span>
+        )}
+        {tool.external && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/50 text-white/70 border border-white/15 backdrop-blur-sm">
             <ExternalLink className="w-2.5 h-2.5" />
             External
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Content — lifts slightly on hover */}
       <div
@@ -200,24 +210,27 @@ function ToolCard({
           {tool.title}
         </h2>
 
-        {/* Description — only on hero and tall */}
-        {(isHero || isTall) && (
+        {/* Description — only on hero and tall, hidden on compact */}
+        {(isHero || isTall) && !compact && (
           <p className="text-sm text-white/65 leading-relaxed mb-3 line-clamp-2 transition-colors duration-200 group-hover:text-white/80">
             {tool.description}
           </p>
         )}
 
-        {/* Highlight pills — shift up slightly on hover */}
-        <div className="flex flex-wrap gap-1.5 mb-4 transition-transform duration-300 group-hover:-translate-y-0.5">
-          {tool.highlights.map((h) => (
-            <span
-              key={h}
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/10 backdrop-blur-sm transition-all duration-200 group-hover:bg-white/15 group-hover:border-white/20 group-hover:text-white/85"
-            >
-              {h}
-            </span>
-          ))}
-        </div>
+        {/* Highlight pills — hidden on compact cards */}
+        {!compact && (
+          <div className="flex flex-wrap gap-1.5 mb-4 transition-transform duration-300 group-hover:-translate-y-0.5">
+            {tool.highlights.map((h) => (
+              <span
+                key={h}
+                className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/10 backdrop-blur-sm transition-all duration-200 group-hover:bg-white/15 group-hover:border-white/20 group-hover:text-white/85"
+              >
+                {h}
+              </span>
+            ))}
+          </div>
+        )}
+        {compact && <div className="mb-3" />}
 
         {/* CTA — arrow slides on hover */}
         <div className="flex items-center gap-1.5">
@@ -333,31 +346,31 @@ export default function Training() {
         </div>
 
         {/* ── Bento Grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {/* Hero card — Matchup Prep (spans 2 cols on lg) */}
-          <div className="sm:col-span-2 lg:col-span-2">
-            <ToolCard tool={TOOLS[0]} isDark={isDark} />
-          </div>
+        {/* Row 1: Matchup Prep hero (full width) */}
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <ToolCard tool={TOOLS[0]} isDark={isDark} />
+        </div>
 
-          {/* Video Editor — tall card on lg (spans 2 rows) */}
-          <div className="sm:col-span-1 lg:row-span-2">
-            <ToolCard tool={TOOLS[3]} isDark={isDark} />
-          </div>
+        {/* Row 2: Video Editor + Chess Clock (secondary featured tools) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <ToolCard tool={TOOLS[3]} isDark={isDark} />
+          <ToolCard tool={TOOLS[4]} isDark={isDark} />
+        </div>
 
-          {/* Repertoire Builder */}
-          <div className="sm:col-span-1">
-            <ToolCard tool={TOOLS[1]} isDark={isDark} />
-          </div>
+        {/* Row 3: Sub-tools section header */}
+        <div className="flex items-center gap-3 mb-2.5">
+          <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
+            isDark ? "text-white/30" : "text-[#436850]/45"
+          }`}>Also Available</p>
+          <div className={`flex-1 h-px ${
+            isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"
+          }`} />
+        </div>
 
-          {/* Openings Library */}
-          <div className="sm:col-span-1">
-            <ToolCard tool={TOOLS[2]} isDark={isDark} />
-          </div>
-
-          {/* Chess Clock */}
-          <div className="sm:col-span-1">
-            <ToolCard tool={TOOLS[4]} isDark={isDark} />
-          </div>
+        {/* Row 3: Repertoire Builder + Openings Library (sub-tools, compact + In Beta) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <ToolCard tool={TOOLS[1]} isDark={isDark} isBeta compact />
+          <ToolCard tool={TOOLS[2]} isDark={isDark} isBeta compact />
         </div>
 
         {/* ── Coming Soon Row ── */}
