@@ -3149,7 +3149,8 @@ export default function Director() {
       />
 
       {/* Spacer to push content below the fixed minimal nav — pageTopRef anchor for scroll-to-top */}
-      <div ref={pageTopRef} style={{ height: 56 }} aria-hidden />
+      {/* Height = 56px nav + env(safe-area-inset-top) so content never bleeds under the nav on notched phones */}
+      <div ref={pageTopRef} style={{ height: "calc(56px + env(safe-area-inset-top, 0px))" }} aria-hidden />
 
       {/* QR sub-toolbar removed — Join QR moved to tournament header title row; Project QR moved to post-round action buttons */}      {/* ── Sticky "All Results In" Banner ────────────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
@@ -3262,7 +3263,7 @@ export default function Director() {
       )}
       <div
         ref={swipeContainerRef}
-        className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-6 animate-page-in"
+        className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-6 sm:pt-6 animate-page-in"
       >
         <div className="flex gap-6 items-start">
 
