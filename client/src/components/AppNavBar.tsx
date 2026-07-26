@@ -110,16 +110,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     (activeTournament.status === "in_progress" || activeTournament.status === "registration" || activeTournament.status === "unknown");
 
   const navItems = [
-    { name: "League",
-      url: leagueNavUrl,
-      icon: LeaguesIcon,
-      tooltip: "OTB Leagues — how it works",
-      dropdown: <LeagueDropdown />,
-      onClick: (e: React.MouseEvent) => {
-        e.preventDefault();
-        window.location.href = leagueNavUrl;
-      },
-    },
+    { name: "Clubs",    url: "/clubs",    icon: ClubsIcon },
     { name: "Tournaments",
       url: dashboardUrl,
       icon: TournamentsIcon,
@@ -136,8 +127,17 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
         window.location.href = getDashboardUrl();
       },
     },
-    { name: "Clubs",    url: "/clubs",    icon: ClubsIcon },
-    { name: "Tools", url: "/training", icon: AcademyIcon, dropdown: <TrainingDropdown /> },
+    { name: "League",
+      url: leagueNavUrl,
+      icon: LeaguesIcon,
+      tooltip: "OTB Leagues — how it works",
+      dropdown: <LeagueDropdown />,
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        window.location.href = leagueNavUrl;
+      },
+    },
+    { name: "Tools", url: "/training", icon: AcademyIcon },
   ];
 
   const logoEl = (

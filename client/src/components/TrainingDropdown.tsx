@@ -1,58 +1,9 @@
 /**
- * TrainingDropdown — Dropdown menu for the Training nav item.
- *
- * Provides two navigation options:
- *   1. "Openings"      — Navigate to the openings library and study feature
- *   2. "Matchup Prep"  — Navigate to matchup prep / scout report page
- *
- * Rendered below the "Training" tab on hover.
+ * TrainingDropdown — removed sub-items per product decision.
+ * Users navigate to individual tools via the /training page tool cards.
+ * This file is kept as a stub so existing imports don't break.
+ * The Tools nav item no longer passes a dropdown prop.
  */
-import { Link } from "wouter";
-import { BookOpen, Target } from "lucide-react";
-import { cn } from "@/lib/utils";
-
 export function TrainingDropdown() {
-  return (
-    <div
-      className={cn(
-        "absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-lg",
-        "bg-white dark:bg-[#1a2f1f] border border-[#ADBC9F] dark:border-[#2d4a35]",
-        "shadow-lg dark:shadow-2xl z-50",
-        "py-2 px-0"
-      )}
-    >
-      {/* Openings Library */}
-      <Link
-        href="/openings"
-        className={cn(
-          "flex items-center gap-3 px-4 py-2.5 text-sm font-medium",
-          "text-[#12372A]/85 dark:text-[#436850]/50",
-          "hover:bg-[#ADBC9F]/50 dark:hover:bg-[#2d4a35]",
-          "transition-colors duration-150",
-          "cursor-pointer"
-        )}
-      >
-        <BookOpen className="w-4 h-4 text-[#4CAF50]" />
-        <span>Openings</span>
-      </Link>
-
-      {/* Divider */}
-      <div className="my-1.5 mx-3 border-t border-[#ADBC9F] dark:border-[#2d4a35]" />
-
-      {/* Matchup Prep */}
-      <Link
-        href="/prep"
-        className={cn(
-          "flex items-center gap-3 px-4 py-2.5 text-sm font-medium",
-          "text-[#12372A]/85 dark:text-[#436850]/50",
-          "hover:bg-[#ADBC9F]/50 dark:hover:bg-[#2d4a35]",
-          "transition-colors duration-150",
-          "cursor-pointer"
-        )}
-      >
-        <Target className="w-4 h-4 text-[#4CAF50]" />
-        <span>Matchup Prep</span>
-      </Link>
-    </div>
-  );
+  return null;
 }
