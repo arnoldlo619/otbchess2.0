@@ -2581,11 +2581,10 @@ export default function ClubDashboard() {
       try {
         const serverClub = await apiGetClub(id!);
         if (serverClub) {
-          // Hydrate localStorage so subsequent offline loads are instant
+          // Always overwrite localStorage with fresh server data (fixes stale memberCount, backgroundImage, etc.)
           const clubs = (JSON.parse(localStorage.getItem("otb-clubs-v1") || "[]") as Club[]);
-          if (!clubs.find((c) => c.id === serverClub.id)) {
-            localStorage.setItem("otb-clubs-v1", JSON.stringify([...clubs, serverClub]));
-          }
+          const updatedClubs = clubs.filter((c) => c.id !== serverClub.id).concat(serverClub);
+          localStorage.setItem("otb-clubs-v1", JSON.stringify(updatedClubs));
           found = serverClub;
         }
       } catch { /* network error — fall back to localStorage */ }
@@ -2632,7 +2631,17 @@ export default function ClubDashboard() {
 
       // ── Step 3: Populate state ────────────────────────────────────────────
       setClub(found);
-      setMembers(getClubMembers(found.id));
+      // Always load members from server to ensure real-time accuracy (not stale localStorage)
+      try {
+        const serverMembers = await apiListClubMembers(found.id);
+        setMembers(serverMembers);
+        // Sync to localStorage for offline fallback
+        const allLocal = JSON.parse(localStorage.getItem("otb-club-members-v1") || "[]") as ClubMember[];
+        const otherClubMembers = allLocal.filter((m) => m.clubId !== found!.id);
+        localStorage.setItem("otb-club-members-v1", JSON.stringify([...otherClubMembers, ...serverMembers]));
+      } catch {
+        setMembers(getClubMembers(found.id));
+      }
       setEvents(listClubEvents(found.id, true));
       setFeedEvents(listFeedEvents(found.id, 50));
       setLoading(false);
@@ -2671,6 +2680,35 @@ export default function ClubDashboard() {
     window.addEventListener("otb:sync-error", handleSyncError);
     return () => window.removeEventListener("otb:sync-error", handleSyncError);
   }, []);
+
+  // ── Real-time SSE club sync ─────────────────────────────────────────────
+  // Subscribes to /api/clubs/:id/stream and refreshes members + club data
+  // when member_joined, member_left, or club_updated events arrive.
+  useEffect(() => {
+    if (!clubId) return;
+    const es = new EventSource(`/api/clubs/${clubId}/stream`);
+
+    es.addEventListener("member_joined", () => {
+      apiListClubMembers(clubId).then(setMembers).catch(() => {});
+      apiGetClub(clubId).then((c) => { if (c) setClub(c); }).catch(() => {});
+    });
+
+    es.addEventListener("member_left", () => {
+      apiListClubMembers(clubId).then(setMembers).catch(() => {});
+      apiGetClub(clubId).then((c) => { if (c) setClub(c); }).catch(() => {});
+    });
+
+    es.addEventListener("club_updated", (e) => {
+      try {
+        const updated = JSON.parse((e as MessageEvent).data);
+        setClub((prev) => prev ? { ...prev, ...updated } : prev);
+      } catch {
+        apiGetClub(clubId).then((c) => { if (c) setClub(c); }).catch(() => {});
+      }
+    });
+
+    return () => es.close();
+  }, [clubId]);
 
   useEffect(() => {
     if (!clubId) return;

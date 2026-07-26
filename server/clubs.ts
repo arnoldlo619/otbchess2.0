@@ -39,7 +39,7 @@ import {
   leagueJoinRequests,
   leagueInvites,
 } from "../shared/schema";
-import { eq, and, desc, or } from "drizzle-orm";
+import { eq, and, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
@@ -61,6 +61,24 @@ try {
 }
 
 export const clubsRouter = Router();
+
+// ── Club SSE broadcast infrastructure ────────────────────────────────────────
+// One Set<ServerResponse> per club ID — mirrors the tournament SSE pattern.
+const clubSseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
+
+/** Broadcast a named event to all SSE clients watching a club. */
+function broadcastClubEvent(
+  clubId: string,
+  eventName: string,
+  payload: Record<string, unknown>
+) {
+  const subs = clubSseSubscribers.get(clubId);
+  if (!subs || subs.size === 0) return;
+  const data = `event: ${eventName}\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const res of Array.from(subs)) {
+    try { res.write(data); } catch { /* client disconnected */ }
+  }
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -713,7 +731,10 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
     }
 
     const [updated] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
-    res.json(dbRowToClub(updated));
+    const clubData = dbRowToClub(updated);
+    // Broadcast club_updated so all open dashboards refresh their club data
+    broadcastClubEvent(id, "club_updated", clubData as unknown as Record<string, unknown>);
+    res.json(clubData);
   } catch (err) {
     logger.error("[clubs] PATCH /:id error:", err);
     res.status(500).json({ error: "Failed to update club" });
@@ -891,10 +912,17 @@ clubsRouter.post("/:id/members", requireFullAuth, async (req: Request, res: Resp
       avatarUrl: avatarUrl || null,
       role: "member",
     });
-    await db
-      .update(dbClubs)
-      .set({ memberCount: club.memberCount + 1 })
+    // Atomic increment — avoids race condition from read-then-write
+    await db.update(dbClubs)
+      .set({ memberCount: sql`member_count + 1` })
       .where(eq(dbClubs.id, id));
+    // Broadcast to all SSE clients watching this club
+    broadcastClubEvent(id, "member_joined", {
+      userId,
+      displayName,
+      chesscomUsername: chesscomUsername || null,
+      avatarUrl: avatarUrl || null,
+    });
 
     res.status(201).json({ success: true });
   } catch (err) {
@@ -990,12 +1018,12 @@ clubsRouter.delete(
           )
         );
 
-      if (club.memberCount > 0) {
-        await db
-          .update(dbClubs)
-          .set({ memberCount: club.memberCount - 1 })
-          .where(eq(dbClubs.id, id));
-      }
+      // Atomic decrement — avoids race condition from read-then-write
+      await db.update(dbClubs)
+        .set({ memberCount: sql`GREATEST(member_count - 1, 0)` })
+        .where(eq(dbClubs.id, id));
+      // Broadcast member_left to all SSE clients watching this club
+      broadcastClubEvent(id, "member_left", { userId: memberId });
       res.json({ success: true });
     } catch (err) {
       logger.error("[clubs] DELETE /:id/members/:memberId error:", err);
@@ -1859,4 +1887,34 @@ clubsRouter.post("/:id/events/:eventId/engagement-sync", requireFullAuth, async 
     logger.error("[clubs] POST /:id/events/:eventId/engagement-sync error:", err);
     res.status(500).json({ error: "Failed to sync engagement" });
   }
+});
+
+// ── GET /api/clubs/:id/stream — SSE stream for real-time club updates ─────────
+// Clients connect once; server pushes member_joined / member_left / club_updated
+// events so all open dashboards stay in sync without polling.
+clubsRouter.get("/:id/stream", (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) { res.status(400).end(); return; }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+
+  if (!clubSseSubscribers.has(id)) clubSseSubscribers.set(id, new Set());
+  const subs = clubSseSubscribers.get(id)!;
+  subs.add(res as unknown as import("http").ServerResponse);
+
+  res.write(`: connected\n\n`);
+
+  const keepalive = setInterval(() => {
+    try { res.write(`: keepalive\n\n`); } catch { clearInterval(keepalive); }
+  }, 25_000);
+
+  req.on("close", () => {
+    clearInterval(keepalive);
+    subs.delete(res as unknown as import("http").ServerResponse);
+    if (subs.size === 0) clubSseSubscribers.delete(id);
+  });
 });
