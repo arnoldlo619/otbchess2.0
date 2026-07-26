@@ -169,7 +169,7 @@ export default function LeagueDemo() {
   const [, navigate] = useLocation();
   const themeCtx = useTheme();
   const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [activeTab, setActiveTab] = useState<TabId>("standings");
   const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
   const { user } = useAuthContext();
   // Determine if the user already has a league and/or a club (to conditionally show CTAs)
