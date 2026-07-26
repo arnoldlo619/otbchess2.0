@@ -2490,7 +2490,7 @@ export default function Home() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { user } = useAuthContext();
+  const { user, logout } = useAuthContext();
   // League smart routing: fetch user's leagues to pick the best destination
   interface MyLeague { id: string; name: string; status: string; }
   const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
@@ -2601,6 +2601,7 @@ export default function Home() {
         <MobileNavDrawer
           currentPage={activeNavTab}
           onSignInClick={() => setAuthOpen(true)}
+          onSignOutClick={!isGuestUser ? logout : undefined}
           isGuest={isGuestUser}
           user={user}
         />

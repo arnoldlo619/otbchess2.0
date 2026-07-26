@@ -17,7 +17,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu, X, Trophy, LayoutDashboard, Building2,
-  GraduationCap, LogIn, Ghost,
+  GraduationCap, LogIn, Ghost, LogOut, User,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -91,6 +91,8 @@ interface MobileNavDrawerProps {
   isGuest?: boolean;
   /** Full user object for the identity header (null / undefined for guests) */
   user?: AuthUser | null;
+  /** Called when the user taps Sign Out (signed-in users only) */
+  onSignOutClick?: () => void;
   /** Extra class names for the outer wrapper */
   className?: string;
 }
@@ -99,6 +101,7 @@ interface MobileNavDrawerProps {
 export function MobileNavDrawer({
   currentPage,
   onSignInClick,
+  onSignOutClick,
   isGuest = true,
   user = null,
   className = "",
@@ -237,9 +240,13 @@ export function MobileNavDrawer({
             {/* ── User identity header (signed-in only) ── */}
             {!isGuest && user && (
               <>
-                <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+                <button
+                  onClick={() => { setOpen(false); navigate("/profile"); }}
+                  className="w-full flex items-center gap-3 px-4 pt-4 pb-3 text-left transition-colors hover:bg-white/05 active:bg-white/08"
+                  aria-label="Go to profile"
+                >
                   <DrawerAvatar user={user} />
-                  <div className="flex flex-col min-w-0">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span
                       className="text-sm font-bold truncate leading-tight"
                       style={{ color: textPrimary }}
@@ -263,7 +270,8 @@ export function MobileNavDrawer({
                       </span>
                     )}
                   </div>
-                </div>
+                  <User className="w-3.5 h-3.5 flex-shrink-0" style={{ color: textSecondary }} />
+                </button>
                 <div className="h-px mx-3" style={{ background: dividerColor }} />
               </>
             )}
@@ -366,6 +374,27 @@ export function MobileNavDrawer({
                   >
                     <LogIn className="w-4 h-4 flex-shrink-0" style={{ color: OTB_GREEN }} />
                     <span>Sign In</span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ── Sign Out — signed-in users only ── */}
+            {!isGuest && onSignOutClick && (
+              <>
+                <div className="h-px mx-3" style={{ background: dividerColor }} />
+                <div className="p-2">
+                  <button
+                    onClick={() => { setOpen(false); onSignOutClick(); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      background: isDark ? "rgba(239,68,68,0.08)" : "rgba(239,68,68,0.06)",
+                      border: "1px solid rgba(239,68,68,0.20)",
+                      color: isDark ? "rgba(252,165,165,0.90)" : "rgba(185,28,28,0.85)",
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 flex-shrink-0" style={{ color: isDark ? "rgba(252,165,165,0.80)" : "rgba(185,28,28,0.75)" }} />
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </>

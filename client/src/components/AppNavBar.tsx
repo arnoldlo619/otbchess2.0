@@ -82,7 +82,7 @@ function getDashboardTooltip(): string | undefined {
 export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, className }: AppNavBarProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { user } = useAuthContext();
+  const { user, logout } = useAuthContext();
   const [activeTab, setActiveTab] = useState(defaultActive);
   const activeTournament = useActiveTournament();
 
@@ -167,6 +167,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
         <MobileNavDrawer
           currentPage={activeTab}
           onSignInClick={onSignInClick}
+          onSignOutClick={!isGuest ? logout : undefined}
           isGuest={isGuest}
           user={user}
         />
