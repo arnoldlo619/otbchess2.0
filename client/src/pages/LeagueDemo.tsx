@@ -19,6 +19,7 @@ import {
   DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon,
 } from "@/components/OtbIcons";
 import { AsciiArt } from "@/components/ui/d60-hero";
+import { LeagueBracket } from "@/components/LeagueBracket";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ export default function LeagueDemo() {
   const themeCtx = useTheme();
   const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
   const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [standingsView, setStandingsView] = useState<"table" | "bracket">("table");
   const { user } = useAuthContext();
   // Determine if the user already has a league and/or a club (to conditionally show CTAs)
   const [hasLeague, setHasLeague] = useState(false);
@@ -218,8 +220,8 @@ export default function LeagueDemo() {
   // Fetch chess.com avatars for all demo players in parallel
   const allDemoUsernames = DEMO_PLAYERS.map(p => p.chesscomUsername);
   const { avatars: demoAvatars } = useChessAvatars(allDemoUsernames);
-  function getAvatar(chesscomUsername: string): string | null {
-    return demoAvatars.get(chesscomUsername.toLowerCase()) ?? null;
+  function getAvatar(chesscomUsername: string): string | undefined {
+    return demoAvatars.get(chesscomUsername.toLowerCase()) ?? undefined;
   }
 
   // H2H between Magnus and Hikaru (mock)
@@ -879,6 +881,54 @@ export default function LeagueDemo() {
             {/* ── STANDINGS TAB ─────────────────────────────────────────────── */}
             {activeTab === "standings" && (
               <div className="p-4 lg:p-6">
+                {/* Standings subtab toggle */}
+                <div className="flex items-center gap-2 mb-4">
+                  {(["table", "bracket"] as const).map((sub) => (
+                    <button
+                      key={sub}
+                      onClick={() => setStandingsView(sub)}
+                      className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200"
+                      style={standingsView === sub ? {
+                        background: accent,
+                        color: isDark ? "#0a1a0a" : "#fff",
+                        boxShadow: `0 0 10px ${accent}50`,
+                      } : {
+                        background: isDark ? "oklch(0.20 0.05 145 / 0.6)" : "oklch(0.92 0.04 145 / 0.6)",
+                        color: textMuted,
+                        border: `1px solid ${cardBorder}`,
+                      }}
+                    >
+                      {sub === "table" ? "Standings Table" : "Bracket Display"}
+                    </button>
+                  ))}
+                </div>
+
+                {standingsView === "bracket" && (
+                  <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                    <div className="px-4 pt-4 pb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-black" style={{ color: textMain }}>Playoff Bracket</h3>
+                          <p className="text-xs mt-0.5" style={{ color: textMuted }}>Top 8 players · Single elimination · Season 1</p>
+                        </div>
+                        <div className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full" style={{ background: `${accent}18`, color: accent }}>Season 1</div>
+                      </div>
+                    </div>
+                    <LeagueBracket
+                      players={DEMO_PLAYERS.map((p, i) => ({ ...p, seed: i + 1 }))}
+                      getAvatar={getAvatar}
+                      isDark={isDark}
+                      accent={accent}
+                      cardBg={cardBg}
+                      cardBorder={cardBorder}
+                      textMain={textMain}
+                      textMuted={textMuted}
+                      seasonLabel="Season 1"
+                    />
+                  </div>
+                )}
+
+                {standingsView === "table" && (
                 <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                   {/* Header */}
                   <div
@@ -1032,6 +1082,7 @@ export default function LeagueDemo() {
                     );
                   })}
                 </div>
+                )}
               </div>
             )}
 
