@@ -1654,78 +1654,96 @@ function Features() {
           />
         </div>
 
-        {/* Row 3: Live Results & Shareable Content — full-width horizontal card */}
+        {/* Row 3: Player Performance Reports — full-width horizontal card */}
         <div
-          className={`group relative rounded-2xl border overflow-hidden cursor-pointer flex flex-col sm:flex-row items-stretch transition-all duration-500 ${
+          className={`group relative rounded-2xl border cursor-pointer grid grid-cols-1 sm:grid-cols-[1fr_auto] transition-all duration-500 ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           } ${
             isDark
-              ? "bg-[oklch(0.22_0.07_145)] border-white/[0.07]"
-              : "bg-white border-[#ADBC9F]/50"
+              ? "bg-[oklch(0.22_0.07_145)] border-white/[0.07] hover:border-white/[0.13]"
+              : "bg-white border-[#ADBC9F]/50 hover:border-[#436850]/30"
           }`}
           style={{ transitionDelay: "480ms" }}
-          onClick={() => { const [, nav] = [null, (p: string) => { window.location.href = p; }]; nav("/tournaments"); }}
+          onClick={() => { window.location.href = "/tournaments"; }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.href = "/tournaments"; } }}
-          aria-label="Live Results & Shareable Content: view live standings"
+          aria-label="Player Performance Reports: view tournament results"
         >
           {/* Left: text content */}
-          <div className="flex flex-col gap-3 p-5 sm:p-6 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <span
-                className={`text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border ${
-                  isDark
-                    ? "text-[oklch(0.65_0.14_145)] bg-[oklch(0.18_0.06_145)] border-[oklch(0.38_0.10_145)/0.5]"
-                    : "text-[#436850] bg-[#EEF5EE] border-[#ADBC9F]/50"
-                }`}
-              >
-                Live Results & Sharing
-              </span>
-              <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  isDark ? "bg-[oklch(0.30_0.09_145)/0.7]" : "bg-[#436850]/10"
-                }`}
-                style={{ color: isDark ? "#7CF562" : "#436850" }}
-              >
-                <BarChart3 className="w-4 h-4" />
+          <div className="flex flex-col justify-between gap-4 p-6 sm:p-8">
+            <div className="flex flex-col gap-3">
+              {/* Tag + icon row */}
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border ${
+                    isDark
+                      ? "text-[oklch(0.65_0.14_145)] bg-[oklch(0.18_0.06_145)] border-[oklch(0.38_0.10_145)/0.5]"
+                      : "text-[#436850] bg-[#EEF5EE] border-[#ADBC9F]/50"
+                  }`}
+                >
+                  <BarChart3 className="w-3 h-3" />
+                  Player Reports
+                </span>
               </div>
+              {/* Headline */}
+              <h3
+                className={`text-xl sm:text-2xl font-bold leading-tight ${
+                  isDark ? "text-[oklch(0.95_0.05_145)]" : "text-[#12372A]"
+                }`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Post-Tournament Reports,
+                <br />
+                <span className={isDark ? "text-[oklch(0.72_0.18_145)]" : "text-[#436850]"}>
+                  Auto-Generated & Shareable
+                </span>
+              </h3>
+              {/* Feature bullets */}
+              <ul className={`flex flex-col gap-1.5 text-sm ${
+                isDark ? "text-[oklch(0.65_0.07_145)]" : "text-[#436850]/80"
+              }`}>
+                {[
+                  "Score, ELO performance & rating change",
+                  "Win streak, recent form & best win",
+                  "Ready to share — Instagram, WhatsApp, or print",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                      isDark ? "bg-[oklch(0.72_0.18_145)]" : "bg-[#436850]"
+                    }`} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
-            <h3
-              className={`text-base sm:text-lg font-semibold leading-snug ${
-                isDark ? "text-[oklch(0.93_0.05_145)]" : "text-[#12372A]"
-              }`}
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              Player Performance Reports & Shareable Cards
-            </h3>
-            <p className={`text-xs sm:text-sm leading-relaxed ${
-              isDark ? "text-[oklch(0.68_0.07_145)]" : "text-[#436850]"
-            }`}>
-              Every player gets a personalized post-tournament report: score, ELO performance, win streak, recent form, and best win — automatically generated and ready to share to Instagram or WhatsApp.
-            </p>
+            {/* CTA */}
             <button
-              className={`mt-1 w-full sm:w-auto rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 ${
+              className={`w-full sm:w-auto self-start rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 active:scale-95 ${
                 isDark
                   ? "bg-[oklch(0.27_0.08_145)] hover:bg-[oklch(0.32_0.10_145)] text-[oklch(0.88_0.08_145)] border-[oklch(0.38_0.10_145)/0.5]"
                   : "bg-[#EEF5EE] hover:bg-[#436850] hover:text-white text-[#12372A] border-[#ADBC9F]/50"
               }`}
               style={{ minHeight: "44px" }}
               onClick={(e) => { e.stopPropagation(); window.location.href = "/tournaments"; }}
-              aria-label="View live standings"
             >
-              View Live Standings
+              View Player Reports →
             </button>
           </div>
-          {/* Right: screenshot */}
-          <div
-            className="relative sm:w-[45%] flex-shrink-0 flex items-center justify-center p-3"
-          >
+
+          {/* Right: report card image — natural dimensions, no crop */}
+          <div className={`flex items-center justify-center p-4 sm:p-6 sm:border-l ${
+            isDark ? "border-white/[0.06]" : "border-[#ADBC9F]/30"
+          }`}>
             <img
               src="/manus-storage/player-report-card_3a4bdbf7.png"
-              alt="Player performance report card showing score, ELO, streak and recent form"
-              className="w-full h-auto rounded-xl"
-              style={{ maxHeight: "320px", objectFit: "contain", display: "block" }}
+              alt="Player performance report card — OTB!! Open 2026, Magnus Carlsen"
+              className="rounded-2xl shadow-lg"
+              style={{
+                width: "clamp(200px, 28vw, 340px)",
+                height: "auto",
+                display: "block",
+              }}
               loading="lazy"
             />
           </div>
