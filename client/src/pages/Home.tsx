@@ -1697,12 +1697,12 @@ function Features() {
               }`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
-              Real-Time Standings & Auto-Generated Recap Posts
+              Player Performance Reports & Shareable Cards
             </h3>
             <p className={`text-xs sm:text-sm leading-relaxed ${
               isDark ? "text-[oklch(0.68_0.07_145)]" : "text-[#436850]"
             }`}>
-              Leaderboards update the moment a result is entered. Share a public link with spectators, or auto-generate tournament recap posts, player cards, and standings graphics for Instagram or WhatsApp.
+              Every player gets a personalized post-tournament report: score, ELO performance, win streak, recent form, and best win — automatically generated and ready to share to Instagram or WhatsApp.
             </p>
             <button
               className={`mt-1 w-full sm:w-auto rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 ${
@@ -1719,21 +1719,22 @@ function Features() {
           </div>
           {/* Right: screenshot */}
           <div
-            className="relative overflow-hidden sm:w-[45%] flex-shrink-0"
-            style={{ minHeight: "180px" }}
+            className="relative overflow-hidden sm:w-[45%] flex-shrink-0 flex items-center justify-center"
+            style={{ minHeight: "220px" }}
           >
             <img
               src="/manus-storage/player-report-card_3a4bdbf7.png"
               alt="Player performance report card showing score, ELO, streak and recent form"
-              className="absolute inset-0 w-full h-full object-cover object-top"
+              className="w-full h-full object-contain"
+              style={{ padding: "12px" }}
               loading="lazy"
             />
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
                 background: isDark
-                  ? "linear-gradient(to right, oklch(0.22 0.07 145 / 0.6) 0%, transparent 40%)"
-                  : "linear-gradient(to right, rgba(255,255,255,0.6) 0%, transparent 40%)",
+                  ? "linear-gradient(to right, oklch(0.22 0.07 145 / 0.5) 0%, transparent 30%)"
+                  : "linear-gradient(to right, rgba(255,255,255,0.5) 0%, transparent 30%)",
               }}
             />
           </div>
