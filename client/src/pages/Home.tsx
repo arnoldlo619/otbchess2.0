@@ -1723,8 +1723,8 @@ function Features() {
             style={{ minHeight: "180px" }}
           >
             <img
-              src="/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png"
-              alt="Live pairings and standings board"
+              src="/manus-storage/player-report-card_3a4bdbf7.png"
+              alt="Player performance report card showing score, ELO, streak and recent form"
               className="absolute inset-0 w-full h-full object-cover object-top"
               loading="lazy"
             />
