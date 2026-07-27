@@ -1719,23 +1719,14 @@ function Features() {
           </div>
           {/* Right: screenshot */}
           <div
-            className="relative overflow-hidden sm:w-[45%] flex-shrink-0 flex items-center justify-center"
-            style={{ minHeight: "220px" }}
+            className="relative sm:w-[45%] flex-shrink-0 flex items-center justify-center p-3"
           >
             <img
               src="/manus-storage/player-report-card_3a4bdbf7.png"
               alt="Player performance report card showing score, ELO, streak and recent form"
-              className="w-full h-full object-contain"
-              style={{ padding: "12px" }}
+              className="w-full h-auto rounded-xl"
+              style={{ maxHeight: "320px", objectFit: "contain", display: "block" }}
               loading="lazy"
-            />
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: isDark
-                  ? "linear-gradient(to right, oklch(0.22 0.07 145 / 0.5) 0%, transparent 30%)"
-                  : "linear-gradient(to right, rgba(255,255,255,0.5) 0%, transparent 30%)",
-              }}
             />
           </div>
         </div>
