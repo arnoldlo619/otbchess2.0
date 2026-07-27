@@ -4715,10 +4715,10 @@ export default function Director() {
                           })}
                         </div>
                         )}
-                        {/* Action buttons — primary CTA + collapsed secondary actions */}
+                        {/* Action buttons — primary CTAs + collapsed secondary actions */}
                         <div className={`px-5 pb-4 pt-3 border-t ${ isDark ? "border-white/06" : "border-[#436850]/08"}`}>
-                          {/* Primary action row */}
-                          <div className="flex items-center gap-2">
+                          {/* Primary action row: View Results + Player Reports + Create Recap */}
+                          <div className="flex flex-wrap items-center gap-2">
                             <button
                               onClick={() => window.location.href = `/tournament/${tournamentId}/overview`}
                               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
@@ -4726,7 +4726,25 @@ export default function Director() {
                               }`}>
                               <BarChart3 className="w-4 h-4" /> View Results
                             </button>
-                            {/* More options toggle */}
+                            <button
+                              onClick={() => window.location.href = `/tournament/${tournamentId}/report`}
+                              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                                isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/80 hover:bg-[#FBFADA]"
+                              }`}>
+                              <Trophy className="w-4 h-4" /> Player Reports
+                            </button>
+                            <button
+                              onClick={() => setShowCarousel(true)}
+                              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                                isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/80 hover:bg-[#FBFADA]"
+                              }`}
+                            >
+                              <div className="w-4 h-4 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
+                                <svg viewBox="0 0 24 24" fill="white" className="w-2.5 h-2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
+                              </div>
+                              Create Recap
+                            </button>
+                            {/* More options toggle — Print/Export + Live Stream */}
                             <button
                               onClick={() => setShowSecondaryActions((v) => !v)}
                               aria-expanded={showSecondaryActions}
@@ -4742,33 +4760,15 @@ export default function Director() {
                             </button>
                           </div>
 
-                          {/* Secondary actions — collapsed by default */}
+                          {/* Secondary actions — Print/Export + Live Stream — collapsed by default */}
                           {showSecondaryActions && (
                             <div className="flex flex-wrap gap-2 mt-2">
-                              <button
-                                onClick={() => window.location.href = `/tournament/${tournamentId}/report`}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/75 hover:bg-[#FBFADA]"
-                                }`}>
-                                <Trophy className="w-3.5 h-3.5" /> Player Reports
-                              </button>
                               <button
                                 onClick={() => window.location.href = `/tournament/${tournamentId}/print`}
                                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
                                   isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/75 hover:bg-[#FBFADA]"
                                 }`}>
                                 <Download className="w-3.5 h-3.5" /> Print / Export
-                              </button>
-                              <button
-                                onClick={() => setShowCarousel(true)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/75 hover:bg-[#FBFADA]"
-                                }`}
-                              >
-                                <div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
-                                  <svg viewBox="0 0 24 24" fill="white" className="w-2 h-2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
-                                </div>
-                                Create Recap
                               </button>
                               <button
                                 onClick={() => setShowSpectatorQR(true)}
