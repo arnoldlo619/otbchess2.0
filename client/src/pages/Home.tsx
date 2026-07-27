@@ -1588,14 +1588,14 @@ function Features() {
         {/* Row 1: Tournament Operations (wide) + Clubs & Community (narrow) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <BentoCard
-            tag="Tournament Operations"
-            title="Swiss Pairings & Live Standings"
-            description="Create a tournament in under 3 minutes. Players register by scanning a QR code, we pull their chess.com ELO and generate optimal pairings automatically. Live standings update as results come in."
-            cta="Host a Tournament"
-            href="/?action=create"
+            tag="Club League"
+            title="Weekly Club League"
+            description="Season-long matchups, live leaderboards, and a playoff bracket. Give your members a reason to show up every week — and crown a champion at the end of the season."
+            cta="View Live Demo"
+            href="/league-demo"
             icon={<Trophy className="w-4 h-4" />}
-            screenshot="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png"
-            screenshotAlt="Swiss Tournament Director Dashboard showing live pairings and standings"
+            screenshot="/manus-storage/league-bracket-demo_5ed2beda.png"
+            screenshotAlt="ChessOTB Club League Playoff Bracket Display with player standings"
             isDark={isDark}
             inView={inView}
             delay={80}
