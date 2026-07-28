@@ -11,6 +11,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Plus,
   Trash2,
   GripVertical,
@@ -118,6 +135,12 @@ export default function RsvpFormBuilderPage() {
   const [copied, setCopied] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── DnD sensors ───────────────────────────────────────────────────────────
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   // ── Load form ──────────────────────────────────────────────────────────────
   const loadForm = useCallback(async () => {
     setLoading(true);
@@ -195,6 +218,16 @@ export default function RsvpFormBuilderPage() {
   }
 
   // ── Question operations ────────────────────────────────────────────────────
+  function reorderQuestions(activeId: string, overId: string) {
+    if (!form || activeId === overId) return;
+    const oldIdx = form.questions.findIndex((q) => q.id === activeId);
+    const newIdx = form.questions.findIndex((q) => q.id === overId);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const updated = { ...form, questions: arrayMove(form.questions, oldIdx, newIdx) };
+    setForm(updated);
+    scheduleSave(updated);
+  }
+
   function addQuestion(type: QuestionType = "radio") {
     if (!form) return;
     const q = makeQuestion(type);
@@ -487,24 +520,37 @@ export default function RsvpFormBuilderPage() {
               </div>
             </div>
 
-            {/* Question cards */}
-            <div className="space-y-3">
-              {form.questions.map((q, idx) => (
-                <QuestionCard
-                  key={q.id}
-                  question={q}
-                  index={idx}
-                  isActive={activeQuestionId === q.id}
-                  onActivate={() => setActiveQuestionId(q.id)}
-                  onUpdate={(patch) => updateQuestion(q.id, patch)}
-                  onRemove={() => removeQuestion(q.id)}
-                  onDuplicate={() => duplicateQuestion(q.id)}
-                  onAddOption={() => addOption(q.id)}
-                  onUpdateOption={(i, v) => updateOption(q.id, i, v)}
-                  onRemoveOption={(i) => removeOption(q.id, i)}
-                />
-              ))}
-            </div>
+            {/* Question cards — drag-and-drop sortable */}
+            <DndContext
+              sensors={dndSensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(event: DragEndEvent) => {
+                const { active, over } = event;
+                if (over && active.id !== over.id) {
+                  reorderQuestions(String(active.id), String(over.id));
+                }
+              }}
+            >
+              <SortableContext items={form.questions.map((q) => q.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-3">
+                  {form.questions.map((q, idx) => (
+                    <SortableQuestionCard
+                      key={q.id}
+                      question={q}
+                      index={idx}
+                      isActive={activeQuestionId === q.id}
+                      onActivate={() => setActiveQuestionId(q.id)}
+                      onUpdate={(patch) => updateQuestion(q.id, patch)}
+                      onRemove={() => removeQuestion(q.id)}
+                      onDuplicate={() => duplicateQuestion(q.id)}
+                      onAddOption={() => addOption(q.id)}
+                      onUpdateOption={(i, v) => updateOption(q.id, i, v)}
+                      onRemoveOption={(i) => removeOption(q.id, i)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
 
             {/* Add question button (bottom) */}
             <button
@@ -1015,6 +1061,46 @@ function QuestionCard({
             </label>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── SortableQuestionCard — wraps QuestionCard with @dnd-kit sortable ──────────
+function SortableQuestionCard(props: QuestionCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.question.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.45 : 1,
+    zIndex: isDragging ? 50 : undefined,
+    position: "relative",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {/* Drag handle — rendered as an overlay on the top-left of the card */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-0 top-0 bottom-0 w-7 flex items-center justify-center cursor-grab active:cursor-grabbing rounded-l-2xl z-10 opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-60"
+        style={{ background: "transparent" }}
+        title="Drag to reorder"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="w-4 h-4 text-white/40" />
+      </div>
+      {/* Wrap in a group div so the handle shows on card hover */}
+      <div className="group pl-1">
+        <QuestionCard {...props} />
       </div>
     </div>
   );
