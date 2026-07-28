@@ -3908,14 +3908,14 @@ export default function ClubDashboard() {
               const next = upcomingEvents[0];
               const dateStr = new Date(next.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
               return (
-                <div className="rounded-2xl border border-white/08 p-4" style={{ background: "oklch(0.16 0.05 145)" }}>
+                <div className="rounded-2xl border border-white/08 p-4 cursor-pointer transition-all hover:border-white/15 hover:bg-[oklch(0.18_0.06_145)]" style={{ background: "oklch(0.16 0.05 145)" }} onClick={() => setTab("events")}>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Next Event</h3>
                     {upcomingEvents.length > 1 && (
-                      <button onClick={() => setTab("events")} className="text-xs font-semibold" style={{ color: accent }}>+{upcomingEvents.length - 1} more</button>
+                      <button onClick={(e) => { e.stopPropagation(); setTab("events"); }} className="text-xs font-semibold" style={{ color: accent }}>+{upcomingEvents.length - 1} more</button>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}18` }}>
                       <Calendar className="w-5 h-5" style={{ color: accent }} />
                     </div>
