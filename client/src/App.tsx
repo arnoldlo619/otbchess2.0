@@ -71,6 +71,7 @@ const JoinClub = lazy(() => import("./pages/JoinClub"));
 const TournamentRecap = lazy(() => import("./pages/TournamentRecap"));
 const TournamentOverview = lazy(() => import("./pages/TournamentOverview"));
 const AuthPage = lazy(() => import("./pages/Auth"));
+const RsvpFormPage = lazy(() => import("./pages/RsvpFormPage"));
 
 // ── Thin top progress bar — replaces full-screen loader on route transitions ────────────
 function RouteProgressBar() {
@@ -179,6 +180,7 @@ function Router() {
         <Route path={"/clubs/:id/home"} component={ClubDashboard} />
         <Route path={"/clubs/:clubId/meetup/:eventId"} component={MeetupEventPage} />
         <Route path={"/checkin/:eventId"} component={CheckInPage} />
+        <Route path={"/rsvp/:slug"} component={RsvpFormPage} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/join-club/:clubId"} component={JoinClub} />
         <Route path={"/clubs/:id"} component={ClubProfile} />

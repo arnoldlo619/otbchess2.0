@@ -2498,3 +2498,59 @@ export const socialAssets = mysqlTable(
 );
 export type SocialAsset = typeof socialAssets.$inferSelect;
 export type NewSocialAsset = typeof socialAssets.$inferInsert;
+
+// ─── rsvp_forms ───────────────────────────────────────────────────────────────
+// Club owner-created RSVP survey forms attached to club events.
+// Each form has a unique public slug used for the shareable link.
+// Questions are stored as JSON: { id, type, label, required, options? }[]
+// Types: "text" | "textarea" | "radio" | "checkbox" | "select" | "number"
+export const rsvpForms = mysqlTable(
+  "rsvp_forms",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    eventId: varchar("event_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    createdByUserId: varchar("created_by_user_id", { length: 64 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull().default("RSVP Form"),
+    description: text("description"),
+    questions: json("questions").notNull().default([]),
+    slug: varchar("slug", { length: 64 }).notNull().unique(),
+    isPublished: tinyint("is_published").notNull().default(0),
+    closesAt: timestamp("closes_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    rfEventIdx: index("rf_event_idx").on(table.eventId),
+    rfClubIdx: index("rf_club_idx").on(table.clubId),
+    rfSlugIdx: uniqueIndex("rf_slug_idx").on(table.slug),
+  })
+);
+export type RsvpForm = typeof rsvpForms.$inferSelect;
+export type NewRsvpForm = typeof rsvpForms.$inferInsert;
+
+// ─── rsvp_form_responses ──────────────────────────────────────────────────────
+// Individual survey responses submitted via the public shareable link.
+// answers: { questionId, value: string | string[] }[]
+export const rsvpFormResponses = mysqlTable(
+  "rsvp_form_responses",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    formId: varchar("form_id", { length: 36 }).notNull(),
+    eventId: varchar("event_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    userId: varchar("user_id", { length: 64 }),
+    respondentName: varchar("respondent_name", { length: 100 }).notNull().default("Anonymous"),
+    respondentEmail: varchar("respondent_email", { length: 200 }),
+    answers: json("answers").notNull().default([]),
+    submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    rfrFormIdx: index("rfr_form_idx").on(table.formId),
+    rfrEventIdx: index("rfr_event_idx").on(table.eventId),
+    rfrClubIdx: index("rfr_club_idx").on(table.clubId),
+    rfrUserIdx: index("rfr_user_idx").on(table.userId),
+  })
+);
+export type RsvpFormResponse = typeof rsvpFormResponses.$inferSelect;
+export type NewRsvpFormResponse = typeof rsvpFormResponses.$inferInsert;

@@ -212,6 +212,7 @@ import { NeonNebula } from "@/components/ui/neon-nebula";
 import { SILK_DEFAULTS, CLUB_BACKGROUND_TEMPLATES } from "@/components/ClubBackgroundPicker";
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
+import RsvpFormAnalytics from "@/components/club/RsvpFormAnalytics";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -4353,6 +4354,27 @@ export default function ClubDashboard() {
                 </div>
               )}
             </div>
+              );
+            })()}
+            {/* u2500u2500 RSVP FORM RESPONSES (owner analytics) u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500 */}
+            {isOwnerOrDirector && (() => {
+              const meetupEventsWithForms = events.filter(e => e.eventType === "meetup");
+              if (meetupEventsWithForms.length === 0) return null;
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pt-2">
+                    <ClipboardList className="w-4 h-4 text-white/40" />
+                    <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest">RSVP Form Responses</h3>
+                  </div>
+                  {meetupEventsWithForms.map((ev) => (
+                    <RsvpFormAnalytics
+                      key={ev.id}
+                      clubId={club.id}
+                      eventId={ev.id}
+                      accentColor={accent}
+                    />
+                  ))}
+                </div>
               );
             })()}
 

@@ -38,6 +38,8 @@ import {
   leagueStandings,
   leagueJoinRequests,
   leagueInvites,
+  rsvpForms,
+  rsvpFormResponses,
 } from "../shared/schema";
 import { eq, and, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -1917,4 +1919,166 @@ clubsRouter.get("/:id/stream", (req: Request, res: Response) => {
     subs.delete(res as unknown as import("http").ServerResponse);
     if (subs.size === 0) clubSseSubscribers.delete(id);
   });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RSVP FORM SURVEY ROUTES
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** POST /api/clubs/:id/events/:eventId/rsvp-form — create or update the RSVP form for an event */
+clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  const { id: clubId, eventId } = req.params;
+  try {
+    const db = await getDb();
+    // Verify club ownership/director
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, clubId));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [member] = await db.select().from(dbClubMembers).where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)));
+    const isOwner = club.ownerId === userId;
+    const isDirector = member?.role === "director";
+    if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can manage RSVP forms" }); return; }
+
+    const { title, description, questions, isPublished, closesAt } = req.body as {
+      title?: string; description?: string; questions?: unknown[];
+      isPublished?: boolean; closesAt?: string;
+    };
+
+    // Check if form already exists for this event
+    const [existing] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
+
+    if (existing) {
+      // Update existing form
+      await db.update(rsvpForms).set({
+        title: title ?? existing.title,
+        description: description ?? existing.description,
+        questions: (questions ?? existing.questions) as unknown[],
+        isPublished: isPublished !== undefined ? (isPublished ? 1 : 0) : existing.isPublished,
+        closesAt: closesAt ? new Date(closesAt) : existing.closesAt,
+        updatedAt: new Date(),
+      }).where(eq(rsvpForms.id, existing.id));
+      const [updated] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, existing.id));
+      res.json({ form: updated });
+    } else {
+      // Create new form with unique slug
+      const slug = `${clubId.slice(0, 8)}-${eventId.slice(0, 8)}-${nanoid(8)}`;
+      const formId = nanoid(36);
+      await db.insert(rsvpForms).values({
+        id: formId,
+        eventId,
+        clubId,
+        createdByUserId: userId,
+        title: title ?? "RSVP Form",
+        description: description ?? null,
+        questions: (questions ?? []) as unknown[],
+        slug,
+        isPublished: isPublished ? 1 : 0,
+        closesAt: closesAt ? new Date(closesAt) : null,
+      });
+      const [created] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, formId));
+      res.status(201).json({ form: created });
+    }
+  } catch (err) {
+    logger.error("[clubs] POST /:id/events/:eventId/rsvp-form error:", err);
+    res.status(500).json({ error: "Failed to save RSVP form" });
+  }
+});
+
+/** GET /api/clubs/:id/events/:eventId/rsvp-form — get the RSVP form for an event */
+clubsRouter.get("/:id/events/:eventId/rsvp-form", async (req: Request, res: Response) => {
+  const { eventId } = req.params;
+  try {
+    const db = await getDb();
+    const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
+    if (!form) { res.status(404).json({ error: "No RSVP form found for this event" }); return; }
+    res.json({ form });
+  } catch (err) {
+    logger.error("[clubs] GET /:id/events/:eventId/rsvp-form error:", err);
+    res.status(500).json({ error: "Failed to fetch RSVP form" });
+  }
+});
+
+/** GET /api/rsvp/:slug — public endpoint to fetch a form by slug (no auth required) */
+clubsRouter.get("/rsvp-public/:slug", async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  try {
+    const db = await getDb();
+    const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.slug, slug));
+    if (!form) { res.status(404).json({ error: "Form not found" }); return; }
+    if (!form.isPublished) { res.status(403).json({ error: "This form is not yet published" }); return; }
+    if (form.closesAt && new Date(form.closesAt) < new Date()) {
+      res.status(410).json({ error: "This form has closed" }); return;
+    }
+    // Fetch event details
+    const [event] = await db.select().from(clubEvents).where(eq(clubEvents.id, form.eventId));
+    // Fetch club details
+    const [club] = await db.select({ name: dbClubs.name, avatarUrl: dbClubs.avatarUrl }).from(dbClubs).where(eq(dbClubs.id, form.clubId));
+    res.json({ form, event: event ?? null, club: club ?? null });
+  } catch (err) {
+    logger.error("[clubs] GET /rsvp-public/:slug error:", err);
+    res.status(500).json({ error: "Failed to fetch form" });
+  }
+});
+
+/** POST /api/clubs/rsvp-public/:slug/submit — submit a response (no auth required) */
+clubsRouter.post("/rsvp-public/:slug/submit", async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  try {
+    const db = await getDb();
+    const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.slug, slug));
+    if (!form) { res.status(404).json({ error: "Form not found" }); return; }
+    if (!form.isPublished) { res.status(403).json({ error: "This form is not accepting responses" }); return; }
+    if (form.closesAt && new Date(form.closesAt) < new Date()) {
+      res.status(410).json({ error: "This form has closed" }); return;
+    }
+
+    const { respondentName, respondentEmail, answers, userId } = req.body as {
+      respondentName?: string; respondentEmail?: string;
+      answers?: unknown[]; userId?: string;
+    };
+
+    const responseId = nanoid(36);
+    await db.insert(rsvpFormResponses).values({
+      id: responseId,
+      formId: form.id,
+      eventId: form.eventId,
+      clubId: form.clubId,
+      userId: userId ?? null,
+      respondentName: respondentName ?? "Anonymous",
+      respondentEmail: respondentEmail ?? null,
+      answers: (answers ?? []) as unknown[],
+    });
+    res.status(201).json({ success: true, responseId });
+  } catch (err) {
+    logger.error("[clubs] POST /rsvp-public/:slug/submit error:", err);
+    res.status(500).json({ error: "Failed to submit response" });
+  }
+});
+
+/** GET /api/clubs/:id/events/:eventId/rsvp-form/responses — get all responses (owner/director only) */
+clubsRouter.get("/:id/events/:eventId/rsvp-form/responses", authMiddleware, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  const { id: clubId, eventId } = req.params;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, clubId));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const isOwner = club.ownerId === userId;
+    const [member] = await db.select().from(dbClubMembers).where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)));
+    if (!isOwner && member?.role !== "director") { res.status(403).json({ error: "Access denied" }); return; }
+
+    const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
+    if (!form) { res.status(404).json({ error: "No RSVP form for this event" }); return; }
+
+    const responses = await db.select().from(rsvpFormResponses)
+      .where(eq(rsvpFormResponses.formId, form.id))
+      .orderBy(desc(rsvpFormResponses.submittedAt));
+
+    res.json({ form, responses, total: responses.length });
+  } catch (err) {
+    logger.error("[clubs] GET /:id/events/:eventId/rsvp-form/responses error:", err);
+    res.status(500).json({ error: "Failed to fetch responses" });
+  }
 });

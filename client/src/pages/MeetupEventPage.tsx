@@ -41,6 +41,7 @@ import {
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
 import { authFetch } from "@/lib/apiFetch";
+import RsvpFormBuilder from "@/components/club/RsvpFormBuilder";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   none: "One-time",
@@ -219,73 +220,135 @@ export default function MeetupEventPage() {
     <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
+        {/* ── LEFT SIDEBAR — expand-on-hover (matches ClubDashboard) ─────── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
-          style={{ borderRight: `1px solid oklch(0.22 0.06 145)` }}
+          className="hidden lg:flex flex-col flex-shrink-0 h-full overflow-hidden"
+          style={{
+            width: "68px",
+            transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
+            backgroundImage: `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`,
+            backgroundSize: "12px 12px",
+            borderRight: "1px solid oklch(0.22 0.06 145)",
+            zIndex: 40,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
         >
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: "oklch(0.15 0.04 145 / 0.80)" }}
-          />
-          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
-            {/* Club avatar / back button */}
+          {/* Top logo */}
+          <div className="pt-4 pb-3 px-2 flex-shrink-0">
             <button
               onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95 flex-shrink-0 overflow-hidden"
-              style={{ background: accentColor }}
+              className="flex items-center justify-start w-full"
+              style={{ height: "52px" }}
               title="Back to Club"
             >
               {club?.avatarUrl ? (
-                <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                <img src={club.avatarUrl} alt={club.name ?? "Club"} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
               ) : (
-                <img
-                  src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
-                  alt="OTB!!"
-                  className="w-8 h-8 object-contain"
-                />
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: accentColor }}
+                >
+                  <span className="text-white font-black text-xs">OTB</span>
+                </div>
               )}
             </button>
-            <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-            {/* Nav icons */}
-            <nav className="flex flex-col items-center gap-1 flex-1">
-              {sidebarTabs.map((ct) => {
-                const Icon = ct.icon;
-                const isActive = ct.id === "events";
-                return (
-                  <button
-                    key={ct.id}
-                    onClick={() => navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
-                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group hover:scale-105 active:scale-95"
+          </div>
+
+          {/* Nav items */}
+          <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
+            {sidebarTabs.map((ct) => {
+              const Icon = ct.icon;
+              const isActive = ct.id === "events";
+              return (
+                <button
+                  key={ct.id}
+                  onClick={() => navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
+                  className="group/navbtn flex flex-row items-center gap-3 rounded-xl text-left"
+                  style={{
+                    height: "48px",
+                    paddingLeft: "12px",
+                    paddingRight: "8px",
+                    background: isActive ? "rgba(124,245,98,0.12)" : "transparent",
+                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.45)",
+                    transition: "background 200ms ease, color 160ms ease, box-shadow 200ms ease",
+                    boxShadow: isActive ? "inset 0 0 0 1px rgba(124,245,98,0.22)" : "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.95)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                      e.currentTarget.style.background = "transparent";
+                    }
+                  }}
+                  title={ct.label}
+                >
+                  <span className="flex-shrink-0 w-7 flex items-center justify-center" style={{ color: isActive ? "#7cf562" : "inherit" }}>
+                    <Icon size={19} strokeWidth={isActive ? 2.2 : 1.8} />
+                  </span>
+                  <span
+                    className="text-[13px] font-semibold whitespace-nowrap overflow-hidden"
                     style={{
-                      background: isActive ? accentColor : "transparent",
-                      color: isActive ? "oklch(0.12 0.04 145)" : "oklch(0.55 0.08 145)",
+                      maxWidth: 0,
+                      opacity: 0,
+                      transition: "max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease",
                     }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLButtonElement).style.background = "oklch(0.22 0.06 145)";
-                        (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.75)";
-                      }
+                    ref={(el) => {
+                      if (!el) return;
+                      const aside = el.closest("aside");
+                      if (!aside) return;
+                      const obs = new ResizeObserver(() => {
+                        const w = aside.offsetWidth;
+                        el.style.maxWidth = w > 100 ? "140px" : "0px";
+                        el.style.opacity = w > 100 ? "1" : "0";
+                      });
+                      obs.observe(aside);
                     }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                        (e.currentTarget as HTMLButtonElement).style.color = "oklch(0.55 0.08 145)";
-                      }
-                    }}
-                    title={ct.label}
                   >
-                    <Icon size={17} />
-                    <span
-                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50"
-                      style={{ background: "oklch(0.25 0.06 145)", color: "#fff" }}
-                    >
-                      {ct.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
+                    {ct.label}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Bottom: back to club */}
+          <div className="pb-4 px-2">
+            <div className="h-px mb-2" style={{ background: "rgba(255,255,255,0.07)" }} />
+            <button
+              onClick={() => navigate(`/clubs/${clubId}/home`)}
+              className="flex flex-row items-center gap-3 rounded-xl w-full"
+              style={{ height: "44px", paddingLeft: "12px", color: "rgba(255,255,255,0.35)", transition: "color 160ms ease" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "transparent"; }}
+              title="Back to Club"
+            >
+              <span className="flex-shrink-0 w-7 flex items-center justify-center">
+                <ChevronLeft size={17} strokeWidth={1.8} />
+              </span>
+              <span
+                className="text-[13px] font-semibold whitespace-nowrap overflow-hidden"
+                style={{ maxWidth: 0, opacity: 0, transition: "max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease" }}
+                ref={(el) => {
+                  if (!el) return;
+                  const aside = el.closest("aside");
+                  if (!aside) return;
+                  const obs = new ResizeObserver(() => {
+                    const w = aside.offsetWidth;
+                    el.style.maxWidth = w > 100 ? "140px" : "0px";
+                    el.style.opacity = w > 100 ? "1" : "0";
+                  });
+                  obs.observe(aside);
+                }}
+              >
+                Back to Club
+              </span>
+            </button>
           </div>
         </aside>
 
@@ -572,6 +635,11 @@ export default function MeetupEventPage() {
                           })}
                         </div>
                       </div>
+                    )}
+
+                    {/* RSVP Form Builder — owner/director only */}
+                    {isOwnerOrDirector && clubId && eventId && (
+                      <RsvpFormBuilder clubId={clubId} eventId={eventId} />
                     )}
 
                     {/* Going attendees list */}
