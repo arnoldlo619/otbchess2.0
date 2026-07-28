@@ -1620,12 +1620,12 @@ function Features() {
         {/* Row 2: League + Matchup Prep + Openings */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <BentoCard
-            tag="League"
-            title="Weekly Club League"
-            description="Season-long matchups with a live leaderboard. Give members a reason to show up every week."
-            cta="View League Demo"
-            href="/league-demo"
-            icon={<Zap className="w-4 h-4" />}
+            tag="Tournament Director"
+            title="Intuitive Host Dashboard"
+            description="Run Swiss, Round Robin, or Elimination tournaments from one dashboard. Pairings, timers, results, and standings — all in real time."
+            cta="Host a Tournament"
+            href="/?action=create"
+            icon={<BarChart3 className="w-4 h-4" />}
             isDark={isDark}
             inView={inView}
             delay={240}
