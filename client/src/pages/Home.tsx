@@ -1594,8 +1594,8 @@ function Features() {
             cta="View Live Demo"
             href="/league-demo"
             icon={<Trophy className="w-4 h-4" />}
-            screenshot="/manus-storage/league-bracket-demo_5ed2beda.png"
-            screenshotAlt="ChessOTB Club League Playoff Bracket Display with player standings"
+            screenshot="/manus-storage/league-bracket-v2_e04e38ae.png"
+            screenshotAlt="ChessOTB Club League Playoff Bracket — Quarterfinals through Champion"
             isDark={isDark}
             inView={inView}
             delay={80}
