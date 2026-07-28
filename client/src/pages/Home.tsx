@@ -1656,7 +1656,7 @@ function Features() {
 
         {/* Row 3: Player Performance Reports — full-width horizontal card */}
         <div
-          className={`group relative rounded-2xl border cursor-pointer grid grid-cols-1 sm:grid-cols-[1fr_auto] transition-all duration-500 ${
+          className={`group relative rounded-2xl border cursor-pointer grid grid-cols-1 sm:grid-cols-[1fr_48%] transition-all duration-500 ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           } ${
             isDark
@@ -1731,20 +1731,24 @@ function Features() {
             </button>
           </div>
 
-          {/* Right: report card image — natural dimensions, no crop */}
-          <div className={`flex items-center justify-center p-4 sm:p-6 sm:border-l ${
+          {/* Right: player cards grid image — landscape, fills the column */}
+          <div className={`relative overflow-hidden sm:border-l ${
             isDark ? "border-white/[0.06]" : "border-[#ADBC9F]/30"
-          }`}>
+          }`} style={{ minWidth: 0 }}>
             <img
-              src="/manus-storage/player-report-card_3a4bdbf7.png"
-              alt="Player performance report card — OTB!! Open 2026, Magnus Carlsen"
-              className="rounded-2xl shadow-lg"
-              style={{
-                width: "clamp(200px, 28vw, 340px)",
-                height: "auto",
-                display: "block",
-              }}
+              src="/manus-storage/player-cards-grid_60400ab2.png"
+              alt="Player cards grid — Levy Rozman 1st and Magnus Carlsen 2nd, OTB!! Open 2026"
+              className="block w-full h-full object-cover object-top"
+              style={{ minHeight: "200px", maxHeight: "320px" }}
               loading="lazy"
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: isDark
+                  ? "linear-gradient(to right, oklch(0.22 0.07 145 / 0.55) 0%, transparent 35%)"
+                  : "linear-gradient(to right, rgba(255,255,255,0.55) 0%, transparent 35%)",
+              }}
             />
           </div>
         </div>
