@@ -1706,7 +1706,6 @@ function Features() {
                 {[
                   "Score, ELO performance & rating change",
                   "Win streak, recent form & best win",
-                  "Ready to share — Instagram, WhatsApp, or print",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <span className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
