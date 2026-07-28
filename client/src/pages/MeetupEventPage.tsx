@@ -41,7 +41,7 @@ import {
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
 import { authFetch } from "@/lib/apiFetch";
-import RsvpFormBuilder from "@/components/club/RsvpFormBuilder";
+import { ClipboardList } from "lucide-react";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   none: "One-time",
@@ -639,7 +639,25 @@ export default function MeetupEventPage() {
 
                     {/* RSVP Form Builder — owner/director only */}
                     {isOwnerOrDirector && clubId && eventId && (
-                      <RsvpFormBuilder clubId={clubId} eventId={eventId} />
+                      <a
+                        href={`/clubs/${clubId}/meetup/${eventId}/rsvp-form/builder`}
+                        className="flex items-center gap-3 px-5 py-4 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.99] group"
+                        style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "oklch(0.50 0.14 145)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.09)"; }}
+                      >
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: "oklch(0.50 0.14 145 / 0.15)" }}
+                        >
+                          <ClipboardList className="w-5 h-5" style={{ color: "oklch(0.65 0.18 145)" }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold text-sm">RSVP Form Survey</p>
+                          <p className="text-white/40 text-xs mt-0.5">Build a form &amp; get a shareable link for attendees</p>
+                        </div>
+                        <svg className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </a>
                     )}
 
                     {/* Going attendees list */}
