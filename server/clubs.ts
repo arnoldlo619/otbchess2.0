@@ -1940,9 +1940,13 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
     const isDirector = member?.role === "director";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can manage RSVP forms" }); return; }
 
-    const { title, description, questions, isPublished, closesAt } = req.body as {
+    const { title, description, questions, isPublished, closesAt, confirmationMessage, collectEmail, maxResponses, allowMultipleSubmissions } = req.body as {
       title?: string; description?: string; questions?: unknown[];
       isPublished?: boolean; closesAt?: string;
+      confirmationMessage?: string | null;
+      collectEmail?: boolean;
+      maxResponses?: number | null;
+      allowMultipleSubmissions?: boolean;
     };
 
     // Check if form already exists for this event
@@ -1955,7 +1959,11 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
         description: description ?? existing.description,
         questions: (questions ?? existing.questions) as unknown[],
         isPublished: isPublished !== undefined ? (isPublished ? 1 : 0) : existing.isPublished,
-        closesAt: closesAt ? new Date(closesAt) : existing.closesAt,
+        closesAt: closesAt !== undefined ? (closesAt ? new Date(closesAt) : null) : existing.closesAt,
+        confirmationMessage: confirmationMessage !== undefined ? confirmationMessage : existing.confirmationMessage,
+        collectEmail: collectEmail !== undefined ? (collectEmail ? 1 : 0) : existing.collectEmail,
+        maxResponses: maxResponses !== undefined ? maxResponses : existing.maxResponses,
+        allowMultipleSubmissions: allowMultipleSubmissions !== undefined ? (allowMultipleSubmissions ? 1 : 0) : existing.allowMultipleSubmissions,
         updatedAt: new Date(),
       }).where(eq(rsvpForms.id, existing.id));
       const [updated] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, existing.id));
@@ -1975,6 +1983,10 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
         slug,
         isPublished: isPublished ? 1 : 0,
         closesAt: closesAt ? new Date(closesAt) : null,
+        confirmationMessage: confirmationMessage ?? null,
+        collectEmail: collectEmail ? 1 : 0,
+        maxResponses: maxResponses ?? null,
+        allowMultipleSubmissions: allowMultipleSubmissions ? 1 : 0,
       });
       const [created] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, formId));
       res.status(201).json({ form: created });

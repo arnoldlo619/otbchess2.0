@@ -81,6 +81,8 @@ interface RsvpFormData {
   closesAt?: string | null;
   confirmationMessage?: string | null;
   collectEmail?: number;
+  maxResponses?: number | null;
+  allowMultipleSubmissions?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -795,6 +797,95 @@ export default function RsvpFormBuilderPage() {
               )}
             </div>
 
+                        {/* ── Responses section ─────────────────────────────────── */}
+            <p className="text-white/30 text-xs font-semibold uppercase tracking-widest px-1">Responses</p>
+
+            {/* Collect email toggle */}
+            <div
+              className="rounded-2xl p-5 flex items-center justify-between gap-4"
+              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              <div>
+                <h3 className="text-white font-semibold">Collect Email Addresses</h3>
+                <p className="text-white/40 text-sm mt-0.5">Ask respondents for their email when submitting.</p>
+              </div>
+              <button
+                onClick={() => updateForm({ collectEmail: form.collectEmail ? 0 : 1 })}
+                className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+                style={{ background: form.collectEmail ? ACCENT : "rgba(255,255,255,0.15)" }}
+              >
+                <span
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                  style={{ left: form.collectEmail ? "calc(100% - 1.375rem)" : "0.125rem" }}
+                />
+              </button>
+            </div>
+
+            {/* Limit responses */}
+            <div
+              className="rounded-2xl p-5 space-y-3"
+              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-white font-semibold">Limit Responses</h3>
+                  <p className="text-white/40 text-sm mt-0.5">Automatically close the form after a set number of submissions.</p>
+                </div>
+                <button
+                  onClick={() => updateForm({ maxResponses: form.maxResponses ? null : 50 })}
+                  className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+                  style={{ background: form.maxResponses ? ACCENT : "rgba(255,255,255,0.15)" }}
+                >
+                  <span
+                    className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                    style={{ left: form.maxResponses ? "calc(100% - 1.375rem)" : "0.125rem" }}
+                  />
+                </button>
+              </div>
+              {form.maxResponses != null && (
+                <div className="flex items-center gap-3">
+                  <label className="text-white/50 text-sm whitespace-nowrap">Max responses</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10000}
+                    value={form.maxResponses}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val) && val > 0) updateForm({ maxResponses: val });
+                    }}
+                    className="w-24 px-3 py-2 rounded-xl text-sm text-white/80 outline-none transition-all"
+                    style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  />
+                  <span className="text-white/30 text-xs">submissions</span>
+                </div>
+              )}
+            </div>
+
+            {/* Allow multiple submissions */}
+            <div
+              className="rounded-2xl p-5 flex items-center justify-between gap-4"
+              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              <div>
+                <h3 className="text-white font-semibold">Allow Multiple Submissions</h3>
+                <p className="text-white/40 text-sm mt-0.5">Let the same person submit the form more than once.</p>
+              </div>
+              <button
+                onClick={() => updateForm({ allowMultipleSubmissions: form.allowMultipleSubmissions ? 0 : 1 })}
+                className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+                style={{ background: form.allowMultipleSubmissions ? ACCENT : "rgba(255,255,255,0.15)" }}
+              >
+                <span
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                  style={{ left: form.allowMultipleSubmissions ? "calc(100% - 1.375rem)" : "0.125rem" }}
+                />
+              </button>
+            </div>
+
+            {/* ── Scheduling section ────────────────────────────────────── */}
+            <p className="text-white/30 text-xs font-semibold uppercase tracking-widest px-1 pt-2">Scheduling</p>
+
             {/* Closes at */}
             <div
               className="rounded-2xl p-5 space-y-3"
@@ -819,6 +910,9 @@ export default function RsvpFormBuilderPage() {
               )}
             </div>
 
+            {/* ── Confirmation section ──────────────────────────────────── */}
+            <p className="text-white/30 text-xs font-semibold uppercase tracking-widest px-1 pt-2">Confirmation</p>
+
             {/* Confirmation message */}
             <div
               className="rounded-2xl p-5 space-y-3"
@@ -836,33 +930,13 @@ export default function RsvpFormBuilderPage() {
               />
             </div>
 
-            {/* Collect email toggle */}
-            <div
-              className="rounded-2xl p-5 flex items-center justify-between gap-4"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
-            >
-              <div>
-                <h3 className="text-white font-semibold">Collect Email Addresses</h3>
-                <p className="text-white/40 text-sm mt-0.5">Ask respondents for their email when submitting.</p>
-              </div>
-              <button
-                onClick={() => updateForm({ collectEmail: form.collectEmail ? 0 : 1 })}
-                className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
-                style={{ background: form.collectEmail ? ACCENT : "rgba(255,255,255,0.15)" }}
-              >
-                <span
-                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
-                  style={{ left: form.collectEmail ? "calc(100% - 1.375rem)" : "0.125rem" }}
-                />
-              </button>
-            </div>
+            {/* ── Danger zone ───────────────────────────────────────────── */}
+            <p className="text-white/30 text-xs font-semibold uppercase tracking-widest px-1 pt-2">Danger Zone</p>
 
-            {/* Danger zone */}
             <div
               className="rounded-2xl p-5 space-y-3"
               style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(239,68,68,0.2)" }}
             >
-              <h3 className="text-red-400 font-semibold">Danger Zone</h3>
               <p className="text-white/40 text-sm">Unpublishing the form will stop new responses. Existing responses are preserved.</p>
               {form.isPublished ? (
                 <button
