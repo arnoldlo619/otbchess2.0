@@ -2521,6 +2521,8 @@ export const rsvpForms = mysqlTable(
     collectEmail: tinyint("collect_email").notNull().default(0),
     maxResponses: int("max_responses"),
     allowMultipleSubmissions: tinyint("allow_multiple_submissions").notNull().default(0),
+    theme_color: varchar("theme_color", { length: 7 }).default("#22c55e"),
+    header_image: text("header_image"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

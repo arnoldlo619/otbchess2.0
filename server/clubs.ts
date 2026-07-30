@@ -1940,13 +1940,15 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
     const isDirector = member?.role === "director";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can manage RSVP forms" }); return; }
 
-    const { title, description, questions, isPublished, closesAt, confirmationMessage, collectEmail, maxResponses, allowMultipleSubmissions } = req.body as {
+    const { title, description, questions, isPublished, closesAt, confirmationMessage, collectEmail, maxResponses, allowMultipleSubmissions, theme_color, header_image } = req.body as {
       title?: string; description?: string; questions?: unknown[];
       isPublished?: boolean; closesAt?: string;
       confirmationMessage?: string | null;
       collectEmail?: boolean;
       maxResponses?: number | null;
       allowMultipleSubmissions?: boolean;
+      theme_color?: string | null;
+      header_image?: string | null;
     };
 
     // Check if form already exists for this event
@@ -1964,6 +1966,8 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
         collectEmail: collectEmail !== undefined ? (collectEmail ? 1 : 0) : existing.collectEmail,
         maxResponses: maxResponses !== undefined ? maxResponses : existing.maxResponses,
         allowMultipleSubmissions: allowMultipleSubmissions !== undefined ? (allowMultipleSubmissions ? 1 : 0) : existing.allowMultipleSubmissions,
+        theme_color: theme_color !== undefined ? theme_color : existing.theme_color,
+        header_image: header_image !== undefined ? header_image : existing.header_image,
         updatedAt: new Date(),
       }).where(eq(rsvpForms.id, existing.id));
       const [updated] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, existing.id));
@@ -1987,6 +1991,8 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
         collectEmail: collectEmail ? 1 : 0,
         maxResponses: maxResponses ?? null,
         allowMultipleSubmissions: allowMultipleSubmissions ? 1 : 0,
+        theme_color: theme_color ?? "#22c55e",
+        header_image: header_image ?? null,
       });
       const [created] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, formId));
       res.status(201).json({ form: created });

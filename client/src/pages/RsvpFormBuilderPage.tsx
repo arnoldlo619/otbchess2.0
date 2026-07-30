@@ -83,6 +83,8 @@ interface RsvpFormData {
   collectEmail?: number;
   maxResponses?: number | null;
   allowMultipleSubmissions?: number;
+  theme_color?: string | null;
+  header_image?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -127,7 +129,7 @@ export default function RsvpFormBuilderPage() {
   const [, navigate] = useLocation();
   const { user } = useAuthContext();
 
-  const [tab, setTab] = useState<"questions" | "responses" | "settings">("questions");
+  const [tab, setTab] = useState<"questions" | "responses" | "settings" | "theme">("questions");
   const [form, setForm] = useState<RsvpFormData | null>(null);
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,6 +201,10 @@ export default function RsvpFormBuilderPage() {
             closesAt: updatedForm.closesAt,
             confirmationMessage: updatedForm.confirmationMessage,
             collectEmail: updatedForm.collectEmail,
+            maxResponses: updatedForm.maxResponses,
+            allowMultipleSubmissions: updatedForm.allowMultipleSubmissions,
+            theme_color: updatedForm.theme_color,
+            header_image: updatedForm.header_image,
           }),
         });
         if (res.ok) {
@@ -408,7 +414,7 @@ export default function RsvpFormBuilderPage() {
 
         {/* Tab nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {(["questions", "responses", "settings"] as const).map((t) => (
+          {(["questions", "responses", "settings", "theme"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -949,6 +955,113 @@ export default function RsvpFormBuilderPage() {
               ) : (
                 <p className="text-white/25 text-xs italic">Form is currently unpublished.</p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* THEME TAB */}
+        {tab === "theme" && form && (
+          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 max-w-2xl">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Customize Theme</h2>
+              <p className="text-white/40 text-sm">Personalize the form's appearance with your brand colors and header image.</p>
+            </div>
+
+            {/* Primary Color */}
+            <div
+              className="rounded-2xl p-5 space-y-3"
+              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              <h3 className="text-white font-semibold">Primary Color</h3>
+              <p className="text-white/40 text-sm">Used for buttons, accents, and interactive elements.</p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={form.theme_color ?? "#22c55e"}
+                  onChange={(e) => updateForm({ theme_color: e.target.value })}
+                  className="w-16 h-10 rounded-lg cursor-pointer border border-white/10"
+                />
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={form.theme_color ?? "#22c55e"}
+                    onChange={(e) => updateForm({ theme_color: e.target.value })}
+                    placeholder="#22c55e"
+                    className="w-full px-3 py-2 rounded-xl text-sm text-white/80 outline-none transition-all"
+                    style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Header Image */}
+            <div
+              className="rounded-2xl p-5 space-y-3"
+              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              <h3 className="text-white font-semibold">Header Image</h3>
+              <p className="text-white/40 text-sm">Upload a custom image to display at the top of the form.</p>
+              {form.header_image && (
+                <div className="relative rounded-xl overflow-hidden h-32 bg-black/20">
+                  <img src={form.header_image} alt="Header" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => updateForm({ header_image: null })}
+                    className="absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-semibold text-red-400 bg-black/60 hover:bg-black/80 transition"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+              <label className="block px-4 py-3 rounded-xl border-2 border-dashed border-white/20 hover:border-white/40 transition cursor-pointer text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      const dataUrl = evt.target?.result as string;
+                      updateForm({ header_image: dataUrl });
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="hidden"
+                />
+                <span className="text-white/60 text-sm font-medium">Click to upload or drag and drop</span>
+              </label>
+            </div>
+
+            {/* Preview */}
+            <div
+              className="rounded-2xl p-5 space-y-3"
+              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              <h3 className="text-white font-semibold">Preview</h3>
+              <div className="rounded-xl overflow-hidden" style={{ background: "oklch(0.14 0.04 145)" }}>
+                {form.header_image && (
+                  <div className="h-24 overflow-hidden">
+                    <img src={form.header_image} alt="Header" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-bold text-white">{form.title || "Form Title"}</h2>
+                    <p className="text-white/50 text-sm">{form.description || "Form description"}</p>
+                  </div>
+                  <div className="space-y-3 pt-2">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-white/80">Sample Question</label>
+                      <button
+                        className="w-full px-4 py-2 rounded-lg font-semibold text-white transition-all"
+                        style={{ background: form.theme_color ?? "#22c55e" }}
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
