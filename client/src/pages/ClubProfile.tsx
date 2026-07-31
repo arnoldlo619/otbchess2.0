@@ -549,12 +549,67 @@ function FeedEventCard({
           <div className="ml-[56px]">
             {/* Primary description — Threads uses regular weight 15px */}
             <p className={`text-[15px] font-normal ${textMain} leading-[1.55] mb-1`}>{event.description}</p>
-            {/* Secondary detail */}
-            {event.detail && (
+            {/* Secondary detail — rich preview card for event_created, plain text otherwise */}
+            {event.detail && event.type === "event_created" ? (
+              <a
+                href={event.linkHref ?? "#"}
+                className={`block mb-3 rounded-xl overflow-hidden border transition-all group/card ${
+                  isDark ? "border-white/10 hover:border-white/20" : "border-black/08 hover:border-black/15"
+                }`}
+                style={{ background: isDark ? "oklch(0.13 0.04 145)" : "oklch(0.96 0.02 145)" }}
+              >
+                {event.meetupCoverImageUrl && (
+                  <div className="w-full h-28 overflow-hidden">
+                    <img src={event.meetupCoverImageUrl} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                  </div>
+                )}
+                <div className="p-3 flex items-start gap-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex-shrink-0 flex flex-col items-center justify-center text-center"
+                    style={{ background: isDark ? "rgba(74,222,128,0.12)" : "rgba(67,104,80,0.12)", border: isDark ? "1px solid rgba(74,222,128,0.25)" : "1px solid rgba(67,104,80,0.25)" }}
+                  >
+                    {event.meetupStartAt ? (
+                      <>
+                        <span className={`text-[8px] font-bold uppercase tracking-wide ${isDark ? "text-green-400" : "text-[#436850]"}`}>
+                          {new Date(event.meetupStartAt).toLocaleString("en-US", { month: "short" })}
+                        </span>
+                        <span className={`text-sm font-black leading-none ${isDark ? "text-white" : "text-[#1a2e1f]"}`}>
+                          {new Date(event.meetupStartAt).getDate()}
+                        </span>
+                      </>
+                    ) : (
+                      <Calendar className={`w-4 h-4 ${isDark ? "text-green-400" : "text-[#436850]"}`} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#1a2e1f]"}`}>{event.detail}</p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                      {event.meetupStartAt && (
+                        <span className={`text-xs ${isDark ? "text-white/45" : "text-[#436850]/60"}`}>
+                          {new Date(event.meetupStartAt).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}
+                        </span>
+                      )}
+                      {event.meetupVenue && (
+                        <span className={`text-xs truncate ${isDark ? "text-white/30" : "text-[#436850]/45"}`}>· {event.meetupVenue}</span>
+                      )}
+                    </div>
+                    {event.meetupRecurrence && event.meetupRecurrence !== "popup" && (
+                      <span
+                        className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: isDark ? "rgba(74,222,128,0.12)" : "rgba(67,104,80,0.1)", color: isDark ? "#4ade80" : "#436850" }}
+                      >
+                        {event.meetupRecurrence === "weekly" ? "Weekly" : event.meetupRecurrence === "biweekly" ? "Bi-weekly" : event.meetupRecurrence === "monthly" ? "Monthly" : event.meetupRecurrence}
+                      </span>
+                    )}
+                  </div>
+                  <ArrowRight className={`w-3.5 h-3.5 flex-shrink-0 mt-1 transition-colors group-hover/card:opacity-80 ${isDark ? "text-white/20" : "text-[#436850]/30"}`} />
+                </div>
+              </a>
+            ) : event.detail ? (
               <p className={`text-[14px] leading-[1.55] mb-2 ${
                 event.type === "announcement" ? (isDark ? "text-white/75" : "text-[#436850]") : textMuted
               }`}>{event.detail}</p>
-            )}
+            ) : null}
             {/* Image attachment */}
             {event.imageUrl && (
               <div className="mt-2 mb-3 rounded-2xl overflow-hidden border" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
