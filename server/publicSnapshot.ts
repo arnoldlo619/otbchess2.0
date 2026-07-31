@@ -4,7 +4,8 @@
  * Provides an in-memory, precomputed read model for the public tournament dashboard.
  * Key design decisions:
  *   - One snapshot per tournament, invalidated when the director saves state
- *   - Standings (Buchholz, SB) computed once at publish time, not per-viewer
+ *   - Standings (Buchholz for Swiss, Sonneborn-Berger for Quads) computed once at publish time
+ *   - For Quads: standings are computed globally (all players) but SB is section-scoped
  *   - Player data stripped of sensitive fields (colorHistory, phone, email)
  *   - ETag generated from content hash for HTTP 304 responses
  *   - TTL-based expiry as a safety net (5 minutes)
@@ -48,6 +49,7 @@ export interface StandingRow {
   rank: number;
   points: number;
   buchholz: number;
+  sonnebornBerger: number;
   wins: number;
   draws: number;
   losses: number;
@@ -121,7 +123,21 @@ interface RawRound {
   [key: string]: unknown;
 }
 
-function computeStandingsServer(players: RawPlayer[], rounds: RawRound[]): StandingRow[] {
+/**
+ * Compute standings for a set of players across rounds.
+ *
+ * For Quads format, pass `sectionPlayerIds` to scope SB computation to
+ * within-section opponents only. Points are always computed from the full
+ * rounds array (which already contains only section games for Quads sections).
+ */
+function computeStandingsServer(
+  players: RawPlayer[],
+  rounds: RawRound[],
+  options?: { format?: string; sectionPlayerIds?: Set<string> }
+): StandingRow[] {
+  const isQuads = options?.format === "quads";
+  const sectionScope = options?.sectionPlayerIds;
+
   const pointsMap = new Map<string, number>();
   const winsMap = new Map<string, number>();
   const drawsMap = new Map<string, number>();
@@ -172,12 +188,37 @@ function computeStandingsServer(players: RawPlayer[], rounds: RawRound[]): Stand
     }
   }
 
-  // Compute Buchholz and Sonneborn-Berger
+  // Compute Buchholz (Swiss) and Sonneborn-Berger (Quads)
+  // SB = sum of defeated opponents' scores + half of drawn opponents' scores
+  // For Quads: only count opponents within the same section (sectionScope)
   const rows: StandingRow[] = players.map((p) => {
     const pts = pointsMap.get(p.id) ?? 0;
     const opponents = opponentsMap.get(p.id) ?? [];
     const oppScores = opponents.map((oId) => pointsMap.get(oId) ?? 0).sort((a, b) => a - b);
     const buchholz = oppScores.reduce((sum, s) => sum + s, 0);
+
+    let sonnebornBerger = 0;
+    for (const round of rounds) {
+      for (const game of round.games) {
+        if (game.result === "*") continue;
+        if (game.whiteId === "BYE" || game.blackId === "BYE") continue;
+        const isWhite = game.whiteId === p.id;
+        const isBlack = game.blackId === p.id;
+        if (!isWhite && !isBlack) continue;
+        const opponentId = isWhite ? game.blackId : game.whiteId;
+        // For Quads: skip opponents outside the section
+        if (isQuads && sectionScope && !sectionScope.has(opponentId)) continue;
+        const oppScore = pointsMap.get(opponentId) ?? 0;
+        if (isWhite) {
+          if (game.result === "1-0") sonnebornBerger += oppScore;
+          else if (game.result === "½-½") sonnebornBerger += oppScore * 0.5;
+        } else {
+          if (game.result === "0-1") sonnebornBerger += oppScore;
+          else if (game.result === "½-½") sonnebornBerger += oppScore * 0.5;
+        }
+      }
+    }
+    sonnebornBerger = Math.round(sonnebornBerger * 100) / 100;
 
     return {
       playerId: p.id,
@@ -189,18 +230,27 @@ function computeStandingsServer(players: RawPlayer[], rounds: RawRound[]): Stand
       rank: 0,
       points: pts,
       buchholz,
+      sonnebornBerger,
       wins: winsMap.get(p.id) ?? 0,
       draws: drawsMap.get(p.id) ?? 0,
       losses: lossesMap.get(p.id) ?? 0,
     };
   });
 
-  // Sort: points → buchholz → ELO
-  rows.sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
-    return b.elo - a.elo;
-  });
+  // Sort: for Quads use SB tiebreak; for Swiss/other use Buchholz
+  if (isQuads) {
+    rows.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
+      return b.elo - a.elo;
+    });
+  } else {
+    rows.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
+      return b.elo - a.elo;
+    });
+  }
 
   rows.forEach((r, i) => { r.rank = i + 1; });
   return rows;
@@ -252,7 +302,55 @@ export interface BuildSnapshotInput {
   quadSections?: { id: string; name: string; type: string; playerIds: string[] }[];
   updatedAt: string;
 }
+
 export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
+  const isQuads = input.format === "quads";
+
+  // For Quads: compute standings globally but pass section scope for SB computation.
+  // Since all games in rounds are already section-scoped (each section has its own games),
+  // we compute standings per-section and then merge with global rank based on points.
+  // The global standings array contains all players; section filtering happens client-side.
+  // However, SB must be section-scoped: each player's SB only counts opponents in their section.
+  let standings: StandingRow[];
+  if (isQuads && input.quadSections && input.quadSections.length > 0) {
+    // Build a map of playerId → sectionPlayerIds for SB scoping
+    const playerSectionMap = new Map<string, Set<string>>();
+    for (const section of input.quadSections) {
+      const sectionSet = new Set(section.playerIds);
+      for (const pid of section.playerIds) {
+        playerSectionMap.set(pid, sectionSet);
+      }
+    }
+    // Compute standings per section, then merge into a single sorted array
+    const allRows: StandingRow[] = [];
+    for (const section of input.quadSections) {
+      const sectionPlayers = input.players.filter(p => section.playerIds.includes(p.id));
+      // Filter rounds to only include games involving this section's players
+      const sectionPlayerSet = new Set(section.playerIds);
+      const sectionRounds: RawRound[] = input.rounds.map(r => ({
+        ...r,
+        games: r.games.filter(g =>
+          sectionPlayerSet.has(g.whiteId) || sectionPlayerSet.has(g.blackId)
+        ),
+      }));
+      const sectionRows = computeStandingsServer(sectionPlayers, sectionRounds, {
+        format: "quads",
+        sectionPlayerIds: sectionPlayerSet,
+      });
+      allRows.push(...sectionRows);
+    }
+    // Re-sort globally by points → SB → ELO and assign global ranks
+    allRows.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
+      return b.elo - a.elo;
+    });
+    allRows.forEach((r, i) => { r.rank = i + 1; });
+    standings = allRows;
+  } else {
+    standings = computeStandingsServer(input.players, input.rounds, { format: input.format });
+  }
+
   return {
     tournamentId: input.tournamentId,
     status: input.status,
@@ -264,7 +362,7 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
     date: input.date,
     players: input.players.map(stripPlayer),
     rounds: input.rounds.map(stripRound),
-    standings: computeStandingsServer(input.players, input.rounds),
+    standings,
     ...(input.quadSections && input.quadSections.length > 0 ? {
       quadSections: input.quadSections.map(s => ({
         id: s.id,

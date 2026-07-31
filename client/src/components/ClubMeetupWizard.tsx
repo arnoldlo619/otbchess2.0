@@ -11,6 +11,7 @@ import {
   createRecurringEvents,
   type ClubEvent,
 } from "../lib/clubEventRegistry";
+import { addFeedEvent } from "../lib/clubFeedRegistry";
 
 interface Props {
   clubId: string;

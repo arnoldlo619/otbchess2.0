@@ -5930,21 +5930,23 @@ export default function Director() {
                           <p className={isDark ? "text-white/30" : "text-[#436850]"}>record</p>
                         </div>
                         <div className={`hidden md:block ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>|</div>
-                        <div className="hidden md:block">
-                          <p className={`font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>{p.buchholz}</p>
-                          <p className={isDark ? "text-white/30" : "text-[#436850]"}>Buch.</p>
-                        </div>
+                        {state.format !== "quads" && (
+                          <div className="hidden md:block">
+                            <p className={`font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>{p.buchholz}</p>
+                            <p className={isDark ? "text-white/30" : "text-[#436850]"}>Buch.</p>
+                          </div>
+                        )}
                         <div className="flex gap-1 ml-1">
                           {p.colorHistory.map((c, ci) => (
                             <div key={ci} className={`w-3.5 h-3.5 rounded border ${
                               c === "W"
                                 ? isDark ? "bg-white/80 border-white/30" : "bg-white border-[#ADBC9F]"
                                 : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-[#12372A] border-[#436850]/40"
-                            }`} title={c === "W" ? "White" : "Black"} />
-                          ))}
+                            }`} title={c === "W" ? "White" : "Black"} />)
+                          )}
                         </div>
-                        {/* Bye button — only during active round */}
-                        {!isRegistration && currentRoundData && (
+                        {/* Bye button — only during active round, not for Quads (Quads has no byes) */}
+                        {!isRegistration && currentRoundData && state.format !== "quads" && (
                           byePlayerIds.has(p.id) ? (
                             <button
                               onClick={() => {

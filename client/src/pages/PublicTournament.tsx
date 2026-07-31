@@ -43,6 +43,7 @@ interface PublicStandingRow {
   rank: number;
   points: number;
   buchholz: number;
+  sonnebornBerger: number;
   wins: number;
   draws: number;
   losses: number;
@@ -510,6 +511,7 @@ function PairingsSection({
   players,
   followedPlayerId,
   isDark,
+  sectionPlayerIds,
 }: {
   rounds: Round[];
   currentRound: number;
@@ -517,6 +519,8 @@ function PairingsSection({
   players: Player[];
   followedPlayerId: string | null;
   isDark: boolean;
+  /** When set, only show games where at least one player is in this section */
+  sectionPlayerIds?: Set<string>;
 }) {
   const [activeRound, setActiveRound] = useState(currentRound);
   const [boardSearch, setBoardSearch] = useState("");
@@ -530,12 +534,19 @@ function PairingsSection({
     return m;
   }, [players]);
 
-  // Filter games by player name/username search
+  // Filter games by section (for Quads) and by player name/username search
   const filteredGames = useMemo(() => {
     if (!round) return [];
-    if (!boardSearch.trim()) return round.games;
+    let games = round.games;
+    // Section filter: only show games where both players are in this section
+    if (sectionPlayerIds && sectionPlayerIds.size > 0) {
+      games = games.filter((game) =>
+        sectionPlayerIds.has(game.whiteId) || sectionPlayerIds.has(game.blackId)
+      );
+    }
+    if (!boardSearch.trim()) return games;
     const q = boardSearch.toLowerCase().trim();
-    return round.games.filter((game) => {
+    return games.filter((game) => {
       const white = playerMap.get(game.whiteId);
       const black = playerMap.get(game.blackId);
       return (
@@ -546,7 +557,7 @@ function PairingsSection({
         String(game.board) === q
       );
     });
-  }, [round, boardSearch, playerMap]);
+  }, [round, boardSearch, playerMap, sectionPlayerIds]);
 
   return (
     <div>
@@ -808,7 +819,11 @@ function StandingsSection({
                   </span>
                 </div>
                 <div className="w-14 text-right">
-                  <span className="text-sm font-mono text-muted-foreground">{row.buchholz.toFixed(1)}</span>
+                  <span className="text-sm font-mono text-muted-foreground">
+                    {isQuadsFormat
+                      ? (row.sonnebornBerger ?? 0).toFixed(2)
+                      : row.buchholz.toFixed(1)}
+                  </span>
                 </div>
               </button>
             );
@@ -833,14 +848,14 @@ function CompletedHero({
   quadSections?: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
 }) {
   const isQuadsFormat = data.format === "quads" && quadSections && quadSections.length > 0;
-  // For Quads: compute per-section champions
+  // For Quads: compute per-section champions using SB tiebreak (server already sorted by SB)
   const sectionChampions = isQuadsFormat
     ? quadSections.map(s => {
         const sectionStandings = standings
           .filter(r => new Set(s.playerIds).has(r.playerId))
           .sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
-            if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
+            if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
             return b.elo - a.elo;
           });
         return { section: s, champion: sectionStandings[0] ?? null };
@@ -1704,7 +1719,16 @@ export default function PublicTournament() {
             {isCompleted ? (
               <PersonalRecap
                 player={followedPlayer}
-                standings={standings}
+                standings={(() => {
+                  // For Quads: scope standings to the player's section for accurate rank/totalPlayers
+                  if (!isQuads) return standings;
+                  const playerSection = quadSections.find(s => s.playerIds.includes(followedPlayer.id));
+                  if (!playerSection) return standings;
+                  const sectionSet = new Set(playerSection.playerIds);
+                  return standings
+                    .filter(r => sectionSet.has(r.playerId))
+                    .map((r, i) => ({ ...r, rank: i + 1 }));
+                })()}
                 rounds={data.rounds}
                 players={data.players}
                 data={data}
@@ -1753,6 +1777,11 @@ export default function PublicTournament() {
             players={data.players}
             followedPlayerId={followedPlayerId}
             isDark={isDark}
+            sectionPlayerIds={
+              isQuads && activeQuadSection !== "all"
+                ? new Set(quadSections.find(s => s.id === activeQuadSection)?.playerIds ?? [])
+                : undefined
+            }
           />
         </section>
 

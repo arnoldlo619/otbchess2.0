@@ -802,7 +802,21 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
 
   // Mark tournament as complete after final round results are in
   const completeTournament = useCallback(() => {
-    setState((prev) => ({ ...prev, status: "completed" }));
+    setState((prev) => ({
+      ...prev,
+      status: "completed",
+      // Mark all rounds as completed so the public snapshot reflects the final state
+      rounds: prev.rounds.map((r) => ({ ...r, status: "completed" as const })),
+      // For Quads: mark all sections as completed
+      ...(prev.quadSections
+        ? {
+            quadSections: prev.quadSections.map((s) => ({
+              ...s,
+              status: "completed" as const,
+            })),
+          }
+        : {}),
+    }));
   }, []);
 
   // Pause / resume tournament

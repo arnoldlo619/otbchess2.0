@@ -7475,3 +7475,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Auto-navigate to /overview after Quads tournament completes (View Results + auto-nav)
 - [x] Move Podium section to top of Report page cards tab
 - [x] Increase font sizes in Report page podium/section champions block
+
+## Quads P0 Audit Fixes (2026-07-31)
+
+- [x] P0-1: PairingsSection — add sectionPlayerIds prop to filter games by active Quads section tab
+- [x] P0-1: PersonalRecap — pass section-scoped standings (not global) for Quads so rank/totalPlayers are section-accurate
+- [x] P0-2: publicSnapshot.ts — add sonnebornBerger field to StandingRow type; compute SB correctly (section-scoped for Quads)
+- [x] P0-2: publicSnapshot.ts — Quads standings sorted by SB tiebreak; Swiss standings sorted by Buchholz
+- [x] P0-2: buildSnapshot — per-section SB computation with cross-section opponent exclusion
+- [x] P0-2: PublicStandingRow type — add sonnebornBerger field
+- [x] P0-2: StandingsSection — display SB (not Buchholz) when isQuadsFormat=true
+- [x] P0-2: CompletedHero — sort section champions by SB tiebreak (not Buchholz)
+- [x] P0-4/P0-8: Director.tsx Players tab — hide Buchholz stat and Bye buttons for Quads format
+- [x] P0-5: directorState.ts completeTournament() — atomically marks all rounds and quadSections as "completed"
+- [x] P0-7: Join.tsx — add "Quads", "Double Swiss", "Swiss+Elim" to format label mapping
+- [x] P0-7: Join.tsx EmbeddedTournamentMeta — extend format union to include "quads" and "doubleswiss"
+- [x] Tests: 15 new vitest tests in server/quadsP0Fixes.test.ts (SB computation, section scoping, buildSnapshot)
+- [x] All 172 existing Quads tests still passing (quadsPhase6, quads.test, quads-integration, quadsCompletion)
+- [x] TypeScript: 0 errors after all changes

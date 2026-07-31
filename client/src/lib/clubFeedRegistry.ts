@@ -166,16 +166,6 @@ export interface FeedEvent {
     totalRounds: number;
   }>;
 
-  // ── Event Created (meetup preview) fields ─────────────────────────────────
-  /** ISO start datetime of the meetup (type === "event_created") */
-  meetupStartAt?: string;
-  /** Venue / location text */
-  meetupVenue?: string;
-  /** Cover image URL for the meetup */
-  meetupCoverImageUrl?: string | null;
-  /** Recurrence label: "none" | "weekly" | "biweekly" | "monthly" */
-  meetupRecurrence?: string;
-
   // ── Player of the Month fields ───────────────────────────────────────────
   /** "YYYY-MM" deduplication key, e.g. "2026-03" (type === "potm_announcement") */
   potmMonth?: string;
@@ -273,7 +263,7 @@ function _persistFeedToServer(clubId: string, event: FeedEvent): void {
         linkHref: event.linkHref ?? null,
         linkLabel: event.linkLabel ?? null,
         isPinned: event.isPinned ?? false,
-        payload: (event.pollOptions || event.rsvpEntries || event.actorChesscomUsername || event.type === "event_created") ? JSON.stringify(event) : null,
+        payload: (event.pollOptions || event.rsvpEntries || event.actorChesscomUsername) ? JSON.stringify(event) : null,
       }),
     }).then((res) => {
       if (!res.ok) {
@@ -1112,12 +1102,7 @@ export function recordMeetupCreated(
   creatorName: string,
   meetupTitle: string,
   eventId: string,
-  recurrence: string,
-  opts?: {
-    startAt?: string;
-    venue?: string;
-    coverImageUrl?: string | null;
-  }
+  recurrence: string
 ): FeedEvent {
   const recurrenceLabel =
     recurrence === "popup" ? "one-time" :
@@ -1133,9 +1118,5 @@ export function recordMeetupCreated(
     detail: meetupTitle,
     linkHref: `/clubs/${clubId}/meetup/${eventId}`,
     linkLabel: "View Meetup",
-    meetupStartAt: opts?.startAt,
-    meetupVenue: opts?.venue,
-    meetupCoverImageUrl: opts?.coverImageUrl ?? null,
-    meetupRecurrence: recurrence,
   });
 }

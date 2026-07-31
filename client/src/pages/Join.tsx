@@ -298,7 +298,7 @@ interface EmbeddedTournamentMeta {
   id: string;
   name: string;
   venue?: string;
-  format: "swiss" | "roundrobin" | "elimination" | "swiss_elim";
+  format: "swiss" | "roundrobin" | "elimination" | "swiss_elim" | "quads" | "doubleswiss";
   rounds: number;
   maxPlayers: number;
   timePreset: string;
@@ -560,9 +560,19 @@ export default function JoinPage() {
     name: resolvedConfig?.name ?? embeddedMeta?.name ?? (isDemoCode ? DEMO_TOURNAMENT.name : ""),
     venue: resolvedConfig?.venue ?? embeddedMeta?.venue ?? (isDemoCode ? DEMO_TOURNAMENT.venue : ""),
     format: resolvedConfig
-      ? (resolvedConfig.format === "swiss" ? "Swiss" : resolvedConfig.format === "roundrobin" ? "Round Robin" : "Elimination")
+      ? (resolvedConfig.format === "swiss" ? "Swiss"
+        : resolvedConfig.format === "roundrobin" ? "Round Robin"
+        : resolvedConfig.format === "quads" ? "Quads"
+        : resolvedConfig.format === "doubleswiss" ? "Double Swiss"
+        : resolvedConfig.format === "swiss_elim" ? "Swiss+Elim"
+        : "Elimination")
       : embeddedMeta
-      ? (embeddedMeta.format === "swiss" ? "Swiss" : embeddedMeta.format === "roundrobin" ? "Round Robin" : "Elimination")
+      ? (embeddedMeta.format === "swiss" ? "Swiss"
+        : embeddedMeta.format === "roundrobin" ? "Round Robin"
+        : embeddedMeta.format === "quads" ? "Quads"
+        : embeddedMeta.format === "doubleswiss" ? "Double Swiss"
+        : embeddedMeta.format === "swiss_elim" ? "Swiss+Elim"
+        : "Elimination")
       : (isDemoCode ? DEMO_TOURNAMENT.format : ""),
     timeControl: resolvedConfig?.timePreset ?? embeddedMeta?.timePreset ?? (isDemoCode ? DEMO_TOURNAMENT.timeControl : ""),
     playerCount: DEMO_TOURNAMENT.players.length,

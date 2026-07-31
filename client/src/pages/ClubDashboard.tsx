@@ -1559,63 +1559,7 @@ function FeedCard({
           </div>
         </div>
       )}
-      {!isPoll && !isRsvp && event.type !== "tournament_completed" && event.type === "event_created" && event.detail && (
-        <a
-          href={event.linkHref ?? "#"}
-          className="block mx-4 mb-4 rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all group/card"
-          style={{ background: "oklch(0.13 0.04 145)" }}
-        >
-          {/* Cover image */}
-          {event.meetupCoverImageUrl && (
-            <div className="w-full h-32 overflow-hidden">
-              <img src={event.meetupCoverImageUrl} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
-            </div>
-          )}
-          {/* Summary row */}
-          <div className="p-3 flex items-start gap-3">
-            <div
-              className="w-10 h-10 rounded-lg flex-shrink-0 flex flex-col items-center justify-center text-center"
-              style={{ background: `${accent}22`, border: `1px solid ${accent}44` }}
-            >
-              {event.meetupStartAt ? (
-                <>
-                  <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: accent }}>
-                    {new Date(event.meetupStartAt).toLocaleString("en-US", { month: "short" })}
-                  </span>
-                  <span className="text-sm font-black text-white leading-none">
-                    {new Date(event.meetupStartAt).getDate()}
-                  </span>
-                </>
-              ) : (
-                <Calendar className="w-4 h-4" style={{ color: accent }} />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-semibold truncate">{event.detail}</p>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                {event.meetupStartAt && (
-                  <span className="text-white/45 text-xs">
-                    {new Date(event.meetupStartAt).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}
-                  </span>
-                )}
-                {event.meetupVenue && (
-                  <span className="text-white/35 text-xs truncate">· {event.meetupVenue}</span>
-                )}
-              </div>
-              {event.meetupRecurrence && event.meetupRecurrence !== "popup" && (
-                <span
-                  className="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                  style={{ background: `${accent}22`, color: accent }}
-                >
-                  {event.meetupRecurrence === "weekly" ? "Weekly" : event.meetupRecurrence === "biweekly" ? "Bi-weekly" : event.meetupRecurrence === "monthly" ? "Monthly" : event.meetupRecurrence}
-                </span>
-              )}
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-white/25 group-hover/card:text-white/60 transition-colors flex-shrink-0 mt-1" />
-          </div>
-        </a>
-      )}
-      {!isPoll && !isRsvp && event.type !== "tournament_completed" && event.type !== "event_created" && event.detail && (
+      {!isPoll && !isRsvp && event.type !== "tournament_completed" && event.detail && (
         <div className="px-4 pb-4">
           <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
           {event.linkHref && (
@@ -7347,11 +7291,7 @@ export default function ClubDashboard() {
             setShowMeetupWizard(false);
             refreshEvents();
             refreshFeed();
-            recordMeetupCreated(club.id, user.displayName, event.title, event.id, event.recurrence ?? "popup", {
-              startAt: event.startAt,
-              venue: event.venue ?? undefined,
-              coverImageUrl: event.coverImageUrl ?? null,
-            });
+            recordMeetupCreated(club.id, user.displayName, event.title, event.id, event.recurrence ?? "popup");
             navigate(`/clubs/${club.id}/meetup/${event.id}`);
           }}
           onClose={() => setShowMeetupWizard(false)}
