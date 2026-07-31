@@ -11,7 +11,6 @@ import {
   createRecurringEvents,
   type ClubEvent,
 } from "../lib/clubEventRegistry";
-import { addFeedEvent } from "../lib/clubFeedRegistry";
 
 interface Props {
   clubId: string;
@@ -134,17 +133,8 @@ export default function ClubMeetupWizard({
       createRecurringEvents(seed, frequency);
     }
 
-    // Post to club feed
-    addFeedEvent({
-      clubId,
-      type: "event_created",
-      createdAt: new Date().toISOString(),
-      actorName: displayName,
-      description: `${displayName} scheduled a ${frequency === "popup" ? "one-time" : frequency} club meetup`,
-      detail: seed.title,
-    });
-
     setSubmitting(false);
+    // Feed post will be created by ClubDashboard's onCreated callback via recordMeetupCreated()
     onCreated(seed);
   }
 
