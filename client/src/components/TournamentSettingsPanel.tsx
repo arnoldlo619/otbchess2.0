@@ -683,12 +683,21 @@ export function TournamentSettingsPanel({
           <SectionHeader title="Pairing Algorithm" isDark={isDark} />
         </div>
         <div className="divide-y" style={{ borderColor: isDark ? T.dBorder : "#F5F5F5" }}>
-          {[
-            ["Algorithm",            "Swiss (FIDE)"],
-            ["Color Balance",        "Automatic"],
-            ["Rematch Prevention",   "Enabled"],
-            ["Bye Assignment",       "Lowest score"],
-          ].map(([label, value]) => (
+          {(form.format === "quads"
+            ? [
+                ["Format",             "Quads (Round Robin)"],
+                ["Section Size",       "4 players per section"],
+                ["Color Balance",      "Automatic"],
+                ["Rematch Prevention", "Enabled"],
+                ["Tiebreak",           "Sonneborn-Berger (SB)"],
+              ]
+            : [
+                ["Algorithm",            "Swiss (FIDE)"],
+                ["Color Balance",        "Automatic"],
+                ["Rematch Prevention",   "Enabled"],
+                ["Bye Assignment",       "Lowest score"],
+              ]
+          ).map(([label, value]) => (
             <div key={label} className="flex items-center justify-between px-5 py-3">
               <span className="text-sm" style={{ color: isDark ? T.dMuted : T.lSub }}>{label}</span>
               <span className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.70)" : "#374151" }}>{value}</span>

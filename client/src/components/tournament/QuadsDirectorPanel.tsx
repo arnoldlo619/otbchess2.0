@@ -291,6 +291,13 @@ function GameRow({
   };
 
   if (collapsed && !isPending) {
+    // Collapsed row always shows White–Black order with the raw result label.
+    // This is the only orientation that makes the score unambiguous:
+    //   White 1–0 Black  →  White won
+    //   White 0–1 Black  →  Black won
+    // Showing winner–score–loser would invert the score label for black wins.
+    const whiteName = getPlayerName(players, game.whiteId).split(" ")[0];
+    const blackName = getPlayerName(players, game.blackId).split(" ")[0];
     return (
       <button
         type="button" aria-expanded={false} aria-label="Expand game details"
@@ -300,33 +307,31 @@ function GameRow({
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-bold uppercase tracking-widest flex-shrink-0 w-6" style={{ color: T.textDim }}>B{boardIndex}</span>
-          {(() => {
-            const winnerId = whiteWon ? game.whiteId : blackWon ? game.blackId : null;
-            const loserId = whiteWon ? game.blackId : blackWon ? game.whiteId : null;
-            const winnerPlayer = players.find(p => p.id === winnerId);
-            const loserPlayer = players.find(p => p.id === loserId);
-            const winnerName = winnerPlayer?.name ?? winnerId ?? "";
-            const loserName = loserPlayer?.name ?? loserId ?? "";
-            if (isDraw) {
-              return (
-                <>
-                  <span className="text-sm font-semibold truncate max-w-[80px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.whiteId).split(" ")[0]}</span>
-                  <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6", color: T.textMuted }}>Draw</span>
-                  <span className="text-sm font-semibold truncate max-w-[80px]" style={{ color: T.textMuted }}>{getPlayerName(players, game.blackId).split(" ")[0]}</span>
-                </>
-              );
-            }
-            return (
-              <>
-                <div className="flex-shrink-0">
-                  <PlayerAvatar username={winnerPlayer?.username ?? ""} name={winnerName} platform={(winnerPlayer?.platform as "chesscom" | "lichess") ?? "chesscom"} avatarUrl={winnerPlayer?.avatarUrl} size={22} />
-                </div>
-                <span className="text-sm font-semibold truncate max-w-[88px]" style={{ color: T.green }}>{winnerName.split(" ")[0]}</span>
-                <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: T.greenBg, color: T.green }}>{resultLabel(game.result)}</span>
-                <span className="text-sm truncate max-w-[80px]" style={{ color: T.textDim }}>{loserName.split(" ")[0]}</span>
-              </>
-            );
-          })()}
+          {/* White piece indicator */}
+          <span className="w-3.5 h-3.5 rounded-[3px] flex-shrink-0 border" style={{ background: "#f8f8f8", borderColor: isDark ? "oklch(0.40 0.02 145)" : "#d1d5db" }} />
+          <span
+            className="text-sm font-semibold truncate max-w-[72px]"
+            style={{ color: whiteWon ? T.green : isDraw ? T.textMuted : T.textDim }}
+          >
+            {whiteName}
+          </span>
+          <span
+            className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+            style={{
+              background: isDraw ? (isDark ? "oklch(0.20 0.02 145)" : "#f3f4f6") : T.greenBg,
+              color: isDraw ? T.textMuted : T.green,
+            }}
+          >
+            {resultLabel(game.result)}
+          </span>
+          <span
+            className="text-sm truncate max-w-[72px]"
+            style={{ color: blackWon ? T.green : isDraw ? T.textMuted : T.textDim }}
+          >
+            {blackName}
+          </span>
+          {/* Black piece indicator */}
+          <span className="w-3.5 h-3.5 rounded-[3px] flex-shrink-0" style={{ background: isDark ? "oklch(0.20 0.02 145)" : "#1f2937" }} />
         </div>
         <span className="text-xs flex-shrink-0" aria-hidden="true" style={{ color: T.textDim }}>▼</span>
       </button>

@@ -1916,6 +1916,23 @@ export function createApp() {
     const registrationPlayer = { ...player, username };
     try {
       const db = await getDb();
+      // Lifecycle guard: reject registrations when the tournament has started or completed.
+      // This prevents late registrations from corrupting pairings.
+      const stateRows = await db
+        .select({ stateJson: tournamentState.stateJson })
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id));
+      if (stateRows.length > 0) {
+        try {
+          const ts = JSON.parse(stateRows[0].stateJson) as { status?: string };
+          const status = ts?.status ?? "";
+          if (status === "completed" || status === "in_progress" || status === "paused") {
+            return res.status(409).json({ error: "registration_closed", message: "Tournament registration is closed" });
+          }
+        } catch {
+          // If stateJson is malformed, allow the registration to proceed
+        }
+      }
       await db
         .insert(tournamentPlayers)
         .values({

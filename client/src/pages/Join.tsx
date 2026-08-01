@@ -601,6 +601,22 @@ export default function JoinPage() {
     }
   })();
 
+  // Block registration when the tournament has already been completed or is no longer
+  // accepting players. Reads from the same localStorage key as isTournamentFull.
+  const isTournamentClosed = (() => {
+    if (!resolvedConfig || isDemoCode) return false;
+    try {
+      const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      const status: string = parsed?.state?.status ?? "";
+      // Closed when tournament has started (not in registration phase) or is completed
+      return status === "completed" || status === "in_progress" || status === "paused";
+    } catch {
+      return false;
+    }
+  })();
+
 
   const [codeLoading, setCodeLoading] = useState(false);
 
@@ -1896,7 +1912,15 @@ export default function JoinPage() {
 
         {step === "confirm" && profile && (
           <div className="space-y-2">
-            {isTournamentFull && (
+            {isTournamentClosed && (
+              <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-medium ${
+                isDark ? "bg-red-500/12 border border-red-500/25 text-red-300" : "bg-red-50 border border-red-300 text-red-800"
+              }`}>
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>Registration is closed — this tournament has already started or finished.</span>
+              </div>
+            )}
+            {!isTournamentClosed && isTournamentFull && (
               <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-medium ${
                 isDark ? "bg-amber-500/12 border border-amber-500/25 text-amber-300" : "bg-amber-50 border border-amber-300 text-amber-800"
               }`}>
@@ -1906,11 +1930,13 @@ export default function JoinPage() {
             )}
             <button
               onClick={handleConfirm}
-              disabled={loading || isTournamentFull}
+              disabled={loading || isTournamentFull || isTournamentClosed}
               className="mobile-cta disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {confirming ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Registering…</>
+              ) : isTournamentClosed ? (
+                <><AlertCircle className="w-4 h-4" /> Registration Closed</>
               ) : isTournamentFull ? (
                 <><AlertCircle className="w-4 h-4" /> Tournament Full</>
               ) : (

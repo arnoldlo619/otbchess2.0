@@ -60,6 +60,7 @@ export interface PublicQuadSection {
   name: string;
   type: "quad" | "bottom_swiss";
   playerIds: string[];
+  standings: StandingRow[];
 }
 
 export interface PublicSnapshot {
@@ -364,12 +365,41 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
     rounds: input.rounds.map(stripRound),
     standings,
     ...(input.quadSections && input.quadSections.length > 0 ? {
-      quadSections: input.quadSections.map(s => ({
-        id: s.id,
-        name: s.name,
-        type: s.type as "quad" | "bottom_swiss",
-        playerIds: s.playerIds,
-      })),
+      quadSections: (() => {
+        // Build a per-section standings lookup from the already-computed allRows
+        // (or recompute if not Quads). This ensures each section has its own
+        // section-scoped standings array for the public snapshot.
+        if (isQuads) {
+          const standingsBySection = new Map<string, StandingRow[]>();
+          for (const section of input.quadSections!) {
+            const sectionSet = new Set(section.playerIds);
+            const sectionRows = standings.filter(r => sectionSet.has(r.playerId));
+            // Re-rank within section — clone each row to avoid mutating the global standings array
+            const ranked = [...sectionRows]
+              .sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
+                return b.elo - a.elo;
+              })
+              .map((r, i) => ({ ...r, rank: i + 1 }));
+            standingsBySection.set(section.id, ranked);
+          }
+          return input.quadSections!.map(s => ({
+            id: s.id,
+            name: s.name,
+            type: (s.type ?? "quad") as "quad" | "bottom_swiss",
+            playerIds: s.playerIds,
+            standings: standingsBySection.get(s.id) ?? [],
+          }));
+        }
+        return input.quadSections!.map(s => ({
+          id: s.id,
+          name: s.name,
+          type: (s.type ?? "quad") as "quad" | "bottom_swiss",
+          playerIds: s.playerIds,
+          standings: [],
+        }));
+      })(),
     } : {}),
     updatedAt: input.updatedAt,
   };

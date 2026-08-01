@@ -7493,3 +7493,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tests: 15 new vitest tests in server/quadsP0Fixes.test.ts (SB computation, section scoping, buildSnapshot)
 - [x] All 172 existing Quads tests still passing (quadsPhase6, quads.test, quads-integration, quadsCompletion)
 - [x] TypeScript: 0 errors after all changes
+
+## Quads P0 Second-Pass Audit Fixes (2026-08-01)
+
+- [x] P0-1: Collapsed game row shows White–Black order (not winner–loser) — QuadsDirectorPanel.tsx
+- [x] P0-2: Live public page section selector controls both pairings and standings tabs — PublicTournament.tsx
+- [x] P0-3: Final report hides global champion/runner-up banner for Quads all-sections view — Report.tsx
+- [x] P0-4: Final report uses section-scoped performances for card grid (correct scores and ranks) — Report.tsx
+- [x] P0-5: Director Settings tab shows Completed state correctly for completed tournaments — Director.tsx
+- [x] P0-6: Join page blocks registration UI when tournament is closed (started/completed) — Join.tsx
+- [x] P0-6: Server POST /api/tournament/:id/players rejects registrations when not in registration phase — server/index.ts
+- [x] P0-7: Settings Pairing Algorithm section shows Quads-specific config (Round Robin, SB tiebreak) — TournamentSettingsPanel.tsx
+- [x] P0-8: Players tab desktop list groups players by section with section headers for Quads — Director.tsx
+- [x] P0-8: Players tab mobile cards hide Buchholz and Bye button for Quads — Director.tsx
+- [x] P0-9: Pairing Rating section hidden for Quads format (irrelevant for round-robin) — Director.tsx
+- [x] P0-10: Root cause confirmed — ninth player joined after sections formed via server endpoint; P0-6 guard prevents recurrence
+- [x] publicSnapshot.ts: Added per-section standings field to PublicQuadSection type
+- [x] publicSnapshot.ts: Fixed reference mutation bug in per-section rank assignment (clone rows before re-ranking)
+- [x] 17 new vitest tests in server/quadsP0SecondPass.test.ts (4/8/12 player fixtures, SB, lifecycle, registration, regression)

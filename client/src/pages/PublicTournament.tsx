@@ -1768,6 +1768,48 @@ export default function PublicTournament() {
           ))}
         </div>
 
+        {/* Quads section selector — shared between pairings and standings tabs */}
+        {isQuads && (
+          <div className="mb-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+              <button
+                onClick={() => setActiveQuadSection("all")}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                  activeQuadSection === "all"
+                    ? isDark
+                      ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                      : "bg-[#436850]/10 border-[#436850] text-[#436850]"
+                    : isDark
+                      ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/08"
+                      : "bg-white border-[#ADBC9F] text-[#12372A]/70 hover:bg-[#f0f9f1]"
+                }`}
+              >
+                All Sections
+              </button>
+              {quadSections.map((s) => {
+                const isActive = activeQuadSection === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setActiveQuadSection(s.id)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                      isActive
+                        ? isDark
+                          ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                          : "bg-[#436850]/10 border-[#436850] text-[#436850]"
+                        : isDark
+                          ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/08"
+                          : "bg-white border-[#ADBC9F] text-[#12372A]/70 hover:bg-[#f0f9f1]"
+                    }`}
+                  >
+                    {s.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Pairings — visible on mobile only when tab active, always on desktop */}
         <section className={`${activeTab !== "pairings" ? "hidden sm:block" : ""}`}>
           <PairingsSection
@@ -1787,47 +1829,6 @@ export default function PublicTournament() {
 
         {/* Standings — visible on mobile only when tab active, always on desktop */}
         <section className={`${activeTab !== "standings" ? "hidden sm:block" : ""}`}>
-          {/* Quads section tabs */}
-          {isQuads && (
-            <div className="mb-4">
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
-                <button
-                  onClick={() => setActiveQuadSection("all")}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
-                    activeQuadSection === "all"
-                      ? isDark
-                        ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
-                        : "bg-[#436850]/10 border-[#436850] text-[#436850]"
-                      : isDark
-                        ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/08"
-                        : "bg-white border-[#ADBC9F] text-[#12372A]/70 hover:bg-[#f0f9f1]"
-                  }`}
-                >
-                  All
-                </button>
-                {quadSections.map((s) => {
-                  const isActive = activeQuadSection === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => setActiveQuadSection(s.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
-                        isActive
-                          ? isDark
-                            ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
-                            : "bg-[#436850]/10 border-[#436850] text-[#436850]"
-                          : isDark
-                            ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/08"
-                            : "bg-white border-[#ADBC9F] text-[#12372A]/70 hover:bg-[#f0f9f1]"
-                      }`}
-                    >
-                      {s.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
           <StandingsSection
             standings={displayStandings}
             followedPlayerId={followedPlayerId}

@@ -157,10 +157,15 @@ function SummaryBanner({
   performances,
   tournamentName,
   isDark,
+  isQuadsAllSections,
+  numSections,
 }: {
   performances: PlayerPerformance[];
   tournamentName: string;
   isDark: boolean;
+  /** When true (Quads all-sections view), suppress global champion and show section count instead. */
+  isQuadsAllSections?: boolean;
+  numSections?: number;
 }) {
   const champion = performances[0];
   const avgPerf = Math.round(
@@ -194,18 +199,23 @@ function SummaryBanner({
             {tournamentName}
           </h2>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Crown className="w-4 h-4 text-amber-500" />
-          <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
-            {champion?.player.name}
-          </span>
-        </div>
+        {/* For Quads all-sections view, there is no single global champion — each section has its own. */}
+        {!isQuadsAllSections && (
+          <div className="flex items-center gap-1.5">
+            <Crown className="w-4 h-4 text-amber-500" />
+            <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
+              {champion?.player.name}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Players", value: performances.length, icon: Users },
-          { label: "Champion Score", value: `${champion?.points ?? 0}pts`, icon: Trophy },
+          isQuadsAllSections
+            ? { label: "Sections", value: numSections ?? "", icon: Trophy }
+            : { label: "Champion Score", value: `${champion?.points ?? 0}pts`, icon: Trophy },
           { label: "Avg Performance", value: avgPerf, icon: BarChart3 },
           { label: "Draw Rate", value: `${drawRate}%`, icon: BarChart3 },
         ].map(({ label, value, icon: Icon }) => (
@@ -720,9 +730,13 @@ export default function ReportPage() {
 
   const [activeSection, setActiveSection] = useState<string>(sectionParam ?? "all");
 
-  // Performances scoped to the active section (or all)
-  const displayPerformances = isQuads && activeSection !== "all"
-    ? (quadSectionPerfs.find(s => s.sectionId === activeSection)?.performances ?? performances)
+  // Performances scoped to the active section (or all).
+  // For Quads all-sections view, use the flattened section-scoped performances so that
+  // each player's rank and points reflect their section, not a global ranking.
+  const displayPerformances = isQuads
+    ? (activeSection !== "all"
+        ? (quadSectionPerfs.find(s => s.sectionId === activeSection)?.performances ?? performances)
+        : quadSectionPerfs.flatMap(s => s.performances))
     : performances;
 
   // Fetch club avatar for PDF branding
@@ -1206,6 +1220,8 @@ export default function ReportPage() {
               : tournamentName
           }
           isDark={isDark}
+          isQuadsAllSections={isQuads && activeSection === "all"}
+          numSections={quadSectionPerfs.length}
         />
 
         {/* Club CTA — prompt player to join the hosting club */}
@@ -1365,6 +1381,11 @@ export default function ReportPage() {
                 const exportRef = getExportRef(perf.player.id);
                 const accent = getAccent(perf);
                 const form = chesscomForm.get(perf.player.username.toLowerCase());
+                // For Quads, use the section name the player belongs to as the card tournament name.
+                // This ensures the share text and card header say "Quad 1" not the global tournament name.
+                const cardTournamentName = isQuads
+                  ? ((perf as PlayerPerformance & { sectionName?: string }).sectionName ?? tournamentName)
+                  : tournamentName;
                 return (
                   <div key={perf.player.id}>
                     {/* Hidden export-quality card — positioned off-screen but with real dimensions */}
@@ -1381,7 +1402,7 @@ export default function ReportPage() {
                           }
                         }}
                         perf={perf}
-                        tournamentName={tournamentName}
+                        tournamentName={cardTournamentName}
                         tournamentDate={tournamentDate}
                         avatarUrl={toProxiedAvatarUrl(avatarById.get(perf.player.id))}
                         avatarStatus="loaded"
@@ -1396,7 +1417,7 @@ export default function ReportPage() {
                     {/* Visible responsive card */}
                     <ExportableCard
                       perf={perf}
-                      tournamentName={tournamentName}
+                      tournamentName={cardTournamentName}
                       tournamentDate={tournamentDate}
                       isDark={isDark}
                       avatarUrl={toProxiedAvatarUrl(avatarById.get(perf.player.id))}

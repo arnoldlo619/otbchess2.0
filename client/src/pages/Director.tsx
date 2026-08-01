@@ -5875,7 +5875,58 @@ export default function Director() {
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
               }`}>
                 <div className="divide-y divide-gray-100">
-                  {filteredPlayers.map((p, i) => (
+                  {/* For Quads, group players under their section header */}
+                  {state.format === "quads" && state.quadSections && state.quadSections.length > 0
+                    ? state.quadSections.map((section) => {
+                        const sectionPlayers = filteredPlayers.filter(p => section.playerIds.includes(p.id));
+                        if (sectionPlayers.length === 0) return null;
+                        return (
+                          <div key={section.id}>
+                            <div className={`px-5 py-2 text-[10px] font-bold uppercase tracking-widest ${
+                              isDark ? "bg-white/03 text-white/35" : "bg-[#FBFADA]/70 text-[#436850]"
+                            }`}>
+                              {section.name}
+                            </div>
+                            {sectionPlayers.map((p, i) => (
+                              <div
+                                key={p.id}
+                                className={`flex items-center gap-4 px-5 py-4 transition-colors group ${
+                                  isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]"
+                                }`}
+                              >
+                                <span className={`w-6 text-center text-sm font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>
+                                  {i + 1}
+                                </span>
+                                <PlayerAvatar username={p.username} name={p.name} size={36} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <PlayerHoverCard player={p} isDark={isDark}>
+                                      <span className={`text-base font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
+                                    </PlayerHoverCard>
+                                    {p.title && (
+                                      <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                                    )}
+                                    <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
+                                  </div>
+                                  <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>@{p.username} · {p.elo} ELO</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-center">
+                                  <div>
+                                    <p className={`font-bold text-lg ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.points}</p>
+                                    <p className={isDark ? "text-white/30" : "text-[#436850]"}>pts</p>
+                                  </div>
+                                  <div className={`${isDark ? "text-white/30" : "text-[#436850]/70"}`}>|</div>
+                                  <div>
+                                    <p className={`font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
+                                    <p className={isDark ? "text-white/30" : "text-[#436850]"}>record</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })
+                    : filteredPlayers.map((p, i) => (
                     <div
                       key={p.id}
                       className={`flex items-center gap-4 px-5 py-4 transition-colors ${
@@ -6056,10 +6107,12 @@ export default function Director() {
                         <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
                         <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>record</p>
                       </div>
-                      <div className="text-center">
-                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.buchholz.toFixed(1)}</p>
-                        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>Buchholz</p>
-                      </div>
+                      {state.format !== "quads" && (
+                        <div className="text-center">
+                          <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.buchholz.toFixed(1)}</p>
+                          <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>Buchholz</p>
+                        </div>
+                      )}
                       <div className="text-center">
                         <div className="flex gap-0.5 justify-center">
                           {p.colorHistory.map((c, ci) => (
@@ -6072,8 +6125,8 @@ export default function Director() {
                         </div>
                         <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>colors</p>
                       </div>
-                      {/* Bye button — mobile */}
-                      {!isRegistration && currentRoundData && (
+                      {/* Bye button — mobile (not for Quads, which has no byes) */}
+                      {!isRegistration && currentRoundData && state.format !== "quads" && (
                         byePlayerIds.has(p.id) ? (
                           <button
                             onClick={() => { revokeBye(p.id); toast.info(`${p.name}'s bye revoked`); }}
@@ -6415,44 +6468,57 @@ export default function Director() {
                   <div className="px-5 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        state.status === "paused"
+                        state.status === "completed"
+                          ? isDark ? "bg-blue-500/15" : "bg-blue-50"
+                          : state.status === "paused"
                           ? isDark ? "bg-amber-500/15" : "bg-amber-50"
                           : isDark ? "bg-[#4CAF50]/15" : "bg-green-50"
                       }`}>
-                        {state.status === "paused"
+                        {state.status === "completed"
+                          ? <Trophy className={`w-4 h-4 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+                          : state.status === "paused"
                           ? <Pause className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                           : <Play className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />}
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>
-                          {state.status === "paused" ? "Tournament Paused" : "Tournament Live"}
+                          {state.status === "completed"
+                            ? "Tournament Completed"
+                            : state.status === "paused"
+                            ? "Tournament Paused"
+                            : "Tournament Live"}
                         </p>
                         <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                          {state.status === "paused"
+                          {state.status === "completed"
+                            ? `All ${state.totalRounds} rounds finished — results are final`
+                            : state.status === "paused"
                             ? "Players are waiting — resume when ready"
                             : `Round ${state.currentRound} of ${state.totalRounds} in progress`}
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        togglePause();
-                        toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused");
-                      }}
-                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                        state.status === "paused"
-                          ? isDark
-                            ? "bg-[#4CAF50]/15 hover:bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/20"
-                            : "bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
-                          : isDark
-                          ? "bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/20"
-                          : "bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200"
-                      }`}
-                    >
-                      {state.status === "paused"
-                        ? <><Play className="w-4 h-4" /><span>Resume</span></>
-                        : <><Pause className="w-4 h-4" /><span>Pause</span></>}
-                    </button>
+                    {/* Only show Pause/Resume for live/paused tournaments, not completed ones */}
+                    {state.status !== "completed" && (
+                      <button
+                        onClick={() => {
+                          togglePause();
+                          toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused");
+                        }}
+                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                          state.status === "paused"
+                            ? isDark
+                              ? "bg-[#4CAF50]/15 hover:bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/20"
+                              : "bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
+                            : isDark
+                            ? "bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/20"
+                            : "bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200"
+                        }`}
+                      >
+                        {state.status === "paused"
+                          ? <><Play className="w-4 h-4" /><span>Resume</span></>
+                          : <><Pause className="w-4 h-4" /><span>Pause</span></>}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -6533,7 +6599,8 @@ export default function Director() {
                 </div>
               </div>
               {/* ── Rating Type Selector ─────────────────────────────────── */}
-              {tournamentConfig && tournamentConfig.ratingSystem === "chess.com" && (
+              {/* Quads uses round-robin seeding, not Swiss pairings, so this section is irrelevant. */}
+              {tournamentConfig && tournamentConfig.ratingSystem === "chess.com" && state.format !== "quads" && (
                 <div className={`rounded-2xl border overflow-hidden ${
                   isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
                 }`}>
