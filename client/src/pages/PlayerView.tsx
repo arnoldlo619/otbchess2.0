@@ -306,7 +306,7 @@ function LiveStandingsPanel({
 function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
   const textMuted = isDark ? "text-white/65" : "text-[#436850]";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   async function handleCopy() {
     try {
@@ -439,7 +439,7 @@ function LobbyScreen({
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-[#12372A]";
   const textMuted = isDark ? "text-white/65" : "text-[#436850]";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
 
@@ -572,7 +572,7 @@ function WaitingRoundScreen({
       </div>
       <PushPromptCard tournamentId={tournamentId} isDark={isDark} chessUsername={username} />
       {rank > 0 && (
-        <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70"} px-5 py-4`}>
+        <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]"} px-5 py-4`}>
           <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-2`}>Your Standing</p>
           <div className="flex items-center gap-3">
             <span className="text-3xl">{rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`}</span>
@@ -583,7 +583,7 @@ function WaitingRoundScreen({
           </div>
         </div>
       )}
-      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70"} px-4 py-4 flex-1 overflow-y-auto pb-safe`}>
+      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]"} px-4 py-4 flex-1 overflow-y-auto pb-safe`}>
         <LiveStandingsPanel
           players={players}
           username={username}
@@ -827,7 +827,7 @@ function MyBoardScreen({
 
   const textMain = isDark ? "text-white" : "text-[#12372A]";
   const textMuted = isDark ? "text-white/65" : "text-[#436850]";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]/70";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#FBFADA]";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#436850]";
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
   const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
@@ -885,10 +885,7 @@ function MyBoardScreen({
             ? "linear-gradient(180deg, oklch(0.16 0.08 145) 0%, oklch(0.13 0.06 145) 100%)"
             : "linear-gradient(180deg, oklch(0.94 0.04 145) 0%, oklch(0.92 0.04 145) 100%)",
           borderBottom: `1px solid ${isDark ? "oklch(0.28 0.08 145)" : "oklch(0.80 0.07 145)"}`,
-          backgroundImage: isDark
-            ? "linear-gradient(180deg, oklch(0.16 0.08 145) 0%, oklch(0.13 0.06 145) 100%), repeating-conic-gradient(oklch(1 0 0 / 0.04) 0% 25%, transparent 0% 50%)"
-            : "linear-gradient(180deg, oklch(0.94 0.04 145) 0%, oklch(0.92 0.04 145) 100%), repeating-conic-gradient(oklch(0.30 0.10 145 / 0.06) 0% 25%, transparent 0% 50%)",
-          backgroundSize: "auto, 14px 14px",
+          boxShadow: isDark ? "0 1px 0 oklch(0.30 0.09 145 / 0.60)" : "0 1px 0 oklch(0.78 0.07 145 / 0.50)",
         }}
       >
         {/* Top row: name + round badge + connection */}
@@ -968,24 +965,18 @@ function MyBoardScreen({
           <div className="flex flex-col overflow-y-auto" style={{ width: `${100 / TABS.length}%` }}>
             {/* ── Board assignment hero card ── */}
             <div
-              className="mx-4 mt-4 rounded-2xl overflow-hidden"
+              className="mx-4 mt-4 rounded-2xl"
               style={{
                 background: isDark
-                  ? "linear-gradient(135deg, oklch(0.22 0.10 145) 0%, oklch(0.18 0.08 145) 100%)"
-                  : "linear-gradient(135deg, oklch(0.34 0.11 145) 0%, oklch(0.28 0.10 145) 100%)",
-                border: `1px solid ${isDark ? "oklch(0.35 0.11 145)" : "oklch(0.42 0.11 145)"}`,
-                boxShadow: isDark ? "0 4px 24px oklch(0.12 0.06 145 / 0.70)" : "0 4px 24px oklch(0.28 0.10 145 / 0.45)",
+                  ? "linear-gradient(145deg, oklch(0.26 0.12 145) 0%, oklch(0.20 0.09 145) 60%, oklch(0.17 0.07 145) 100%)"
+                  : "linear-gradient(145deg, oklch(0.38 0.13 145) 0%, oklch(0.30 0.11 145) 60%, oklch(0.26 0.10 145) 100%)",
+                border: `1px solid ${isDark ? "oklch(0.38 0.13 145 / 0.70)" : "oklch(0.44 0.12 145 / 0.80)"}`,
+                boxShadow: isDark
+                  ? "0 8px 32px oklch(0.10 0.05 145 / 0.60), 0 1px 0 oklch(0.40 0.14 145 / 0.30) inset"
+                  : "0 8px 32px oklch(0.22 0.09 145 / 0.35), 0 1px 0 oklch(0.55 0.14 145 / 0.25) inset",
               }}
             >
-              {/* Subtle chess pattern overlay */}
-              <div
-                className="absolute inset-0 pointer-events-none opacity-[0.09]"
-                style={{
-                  backgroundImage: "repeating-conic-gradient(oklch(1 0 0) 0% 25%, transparent 0% 50%)",
-                  backgroundSize: "16px 16px",
-                }}
-              />
-              <div className="relative flex items-center justify-between px-5 py-5">
+              <div className="flex items-center justify-between px-5 py-5">
                 <div>
                   {/* OTB!! logo + label */}
                   <div className="flex items-center gap-1.5 mb-1">
