@@ -7057,8 +7057,12 @@ export default function Director() {
               toast.error("Late registration is only available during Round 1");
             } else if ('paired' in outcome) {
               toast.success(`${player.name} paired with ${outcome.opponentName} on Board ${outcome.board}`);
+              // Scroll to top so all boards are visible after pairings regenerate
+              setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
             } else {
               toast.success(`${player.name} added — pairings regenerated with bye (+1pt)`);
+              // Scroll to top so all boards are visible after pairings regenerate
+              setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
             }
           } else {
             addPlayer(player);
