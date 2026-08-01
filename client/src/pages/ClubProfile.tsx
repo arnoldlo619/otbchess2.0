@@ -136,6 +136,7 @@ import {
   Sparkles,
   ArrowRight,
   Info,
+  Menu,
 } from "lucide-react";
 import {
   FeedIcon as OtbFeed,
@@ -144,6 +145,9 @@ import {
   TournamentsIcon as OtbTournaments,
   LeaguesIcon as OtbLeagues,
   HomeIcon as OtbHome,
+  ClubsIcon as OtbClubs,
+  AcademyIcon as OtbAcademy,
+  ProfileIcon as OtbProfile,
 } from "@/components/OtbIcons";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -957,6 +961,7 @@ export default function ClubProfile() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [showClubQR, setShowClubQR] = useState(false);
+  const [showNavMenu, setShowNavMenu] = useState(false);
   const [isLeavingClub, setIsLeavingClub] = useState(false);
   const [showWizard, setShowWizard] = useState(() => {
     const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
@@ -1654,21 +1659,7 @@ export default function ClubProfile() {
                   onShareQR={(isOwner || isDirector) ? () => setShowClubQR(true) : undefined}
                 />
 
-                {/* ── Horizontal Tab Bar ───────────────────────────────── */}
-                <div className="mt-4 mb-0 lg:hidden">
-                  <ClubTabs
-                    activeTab={activeTab}
-                    onChange={handleTabChange}
-                    seenTabs={seenTabs as Set<import("@/components/club/ClubTabs").ClubTab>}
-                    badges={{
-                      feed: feedEvents.length,
-                      events: clubEvents.length + tournaments.length + liveTournaments.length,
-                      leagues: clubLeagues.length,
-                    }}
-                    accent={accent}
-                    isDark={isDark}
-                  />
-                </div>
+                {/* Horizontal tab bar removed — mobile uses the fixed bottom nav only */}
               </div>
             </div>
 
@@ -4408,7 +4399,7 @@ export default function ClubProfile() {
       {/* Mobile sticky Join CTA — shown to non-members/guests only */}
       {!isOwner && !isDirector && !joined && (
         <div
-          className="lg:hidden fixed bottom-[62px] left-0 right-0 z-30 px-4 py-2"
+          className="lg:hidden fixed bottom-[60px] left-0 right-0 z-30 px-4 py-2"
           style={{ background: "transparent" }}
         >
           <button
@@ -4421,10 +4412,11 @@ export default function ClubProfile() {
         </div>
       )}
 
+      {/* ── Club bottom nav bar (mobile only) ── */}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-1"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
         style={{
-          background: isDark ? "oklch(0.13 0.04 145 / 0.97)" : "oklch(0.12 0.04 145 / 0.97)",
+          background: isDark ? "oklch(0.12 0.04 145 / 0.97)" : "oklch(0.10 0.04 145 / 0.97)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
           borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145 / 0.6)" : "oklch(0.25 0.08 145 / 0.6)"}`,
@@ -4432,48 +4424,151 @@ export default function ClubProfile() {
           paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {(["home", "feed", "events", "members", "leagues"] as const).map((t) => {
-          const isActive = activeTab === t;
-          const iconMap: Record<string, React.ReactNode> = {
-            home: <OtbHome size={20} accentColor={isActive ? accent : undefined} />,
-            feed: <OtbFeed size={20} accentColor={isActive ? accent : undefined} />,
-            events: <OtbEvents size={20} accentColor={isActive ? accent : undefined} />,
-            members: <OtbMembers size={20} accentColor={isActive ? accent : undefined} />,
-            leagues: <OtbLeagues size={20} accentColor={isActive ? accent : undefined} />,
-            about: <Info size={20} color={isActive ? accent : "oklch(0.45 0.06 145)"} />,
-          };
-          return (
-            <button
-              key={t}
-              onClick={() => handleTabChange(t)}
-              className="flex flex-col items-center gap-1 flex-1 relative transition-all duration-200 active:scale-95"
-              style={{ minHeight: "48px", paddingTop: "4px", paddingBottom: "4px" }}
-            >
-              {/* Active indicator pill */}
-              {isActive && (
+        <div className="flex items-center px-1">
+          {/* Club section tabs — 5 tabs */}
+          {(["home", "feed", "events", "members", "leagues"] as const).map((t) => {
+            const isTabActive = activeTab === t;
+            const iconMap: Record<string, React.ReactNode> = {
+              home: <OtbHome size={18} accentColor={isTabActive ? accent : undefined} />,
+              feed: <OtbFeed size={18} accentColor={isTabActive ? accent : undefined} />,
+              events: <OtbEvents size={18} accentColor={isTabActive ? accent : undefined} />,
+              members: <OtbMembers size={18} accentColor={isTabActive ? accent : undefined} />,
+              leagues: <OtbLeagues size={18} accentColor={isTabActive ? accent : undefined} />,
+            };
+            return (
+              <button
+                key={t}
+                onClick={() => handleTabChange(t)}
+                className="flex flex-col items-center gap-0.5 flex-1 relative transition-all duration-200 active:scale-95"
+                style={{ minHeight: "44px", paddingTop: "2px", paddingBottom: "2px" }}
+              >
+                {isTabActive && (
+                  <span
+                    className="absolute inset-x-1 inset-y-0 rounded-xl"
+                    style={{ background: `${accent}1a` }}
+                  />
+                )}
                 <span
-                  className="absolute inset-x-1 inset-y-0 rounded-xl"
-                  style={{ background: `${accent}22` }}
-                />
-              )}
-              <span
-                className={`relative z-10 otb-nav-tap otb-icon${isActive ? " otb-icon--active" : ""}`}
-                style={{
-                  color: isActive ? accent : "oklch(0.45 0.06 145)",
-                }}
-              >
-                {iconMap[t]}
-              </span>
-              <span
-                className="relative z-10 text-[10px] font-semibold tracking-wide transition-all duration-200"
-                style={{ color: isActive ? accent : "oklch(0.40 0.05 145)" }}
-              >
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </span>
-            </button>
-          );
-        })}
+                  className={`relative z-10 otb-nav-tap otb-icon${isTabActive ? " otb-icon--active" : ""}`}
+                  style={{ color: isTabActive ? accent : "oklch(0.42 0.05 145)" }}
+                >
+                  {iconMap[t]}
+                </span>
+                <span
+                  className="relative z-10 text-[9px] font-semibold tracking-wide transition-all duration-200"
+                  style={{ color: isTabActive ? accent : "oklch(0.38 0.05 145)" }}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </span>
+              </button>
+            );
+          })}
+          {/* Divider */}
+          <div
+            className="w-px self-stretch mx-0.5"
+            style={{ background: isDark ? "oklch(0.25 0.06 145 / 0.5)" : "oklch(0.30 0.06 145 / 0.4)" }}
+          />
+          {/* Hamburger — navigate out */}
+          <button
+            onClick={() => setShowNavMenu(true)}
+            className="flex flex-col items-center gap-0.5 w-12 relative transition-all duration-200 active:scale-95"
+            style={{ minHeight: "44px", paddingTop: "2px", paddingBottom: "2px" }}
+            aria-label="Main navigation"
+          >
+            <span style={{ color: "oklch(0.42 0.05 145)" }}>
+              <Menu size={18} />
+            </span>
+            <span
+              className="text-[9px] font-semibold tracking-wide"
+              style={{ color: "oklch(0.38 0.05 145)" }}
+            >
+              More
+            </span>
+          </button>
+        </div>
       </div>
+
+      {/* ── Slide-up navigation menu ── */}
+      {showNavMenu && (
+        <div
+          className="lg:hidden fixed inset-0 z-50"
+          onClick={() => setShowNavMenu(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0" style={{ background: "oklch(0.05 0.02 145 / 0.75)", backdropFilter: "blur(4px)" }} />
+          {/* Sheet */}
+          <div
+            className="absolute bottom-0 left-0 right-0 rounded-t-3xl px-4 pt-3 pb-safe"
+            style={{
+              background: isDark ? "oklch(0.14 0.05 145)" : "oklch(0.97 0.02 145)",
+              border: `1px solid ${isDark ? "oklch(0.24 0.07 145 / 0.7)" : "oklch(0.80 0.06 145 / 0.5)"}`,
+              borderBottom: "none",
+              paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center mb-4">
+              <div
+                className="w-10 h-1 rounded-full"
+                style={{ background: isDark ? "oklch(0.30 0.06 145)" : "oklch(0.75 0.05 145)" }}
+              />
+            </div>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 px-1">
+              <p
+                className="text-xs font-black uppercase tracking-[0.15em]"
+                style={{ color: isDark ? "oklch(0.45 0.08 145)" : "oklch(0.44 0.08 145)" }}
+              >
+                Navigate to
+              </p>
+              <button
+                onClick={() => setShowNavMenu(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "oklch(0.88 0.04 145)" }}
+              >
+                <X size={14} style={{ color: isDark ? "oklch(0.55 0.06 145)" : "oklch(0.44 0.06 145)" }} />
+              </button>
+            </div>
+            {/* Nav links */}
+            <div className="space-y-1">
+              {([
+                { href: "/", label: "Home", icon: <OtbHome size={20} /> },
+                { href: "/tournaments", label: "Tournaments", icon: <OtbTournaments size={20} /> },
+                { href: "/clubs", label: "Clubs", icon: <OtbClubs size={20} /> },
+                { href: "/training", label: "Tools", icon: <OtbAcademy size={20} /> },
+                { href: "/profile", label: "Profile", icon: <OtbProfile size={20} /> },
+              ] as const).map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <button
+                    onClick={() => setShowNavMenu(false)}
+                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                    style={{
+                      background: isDark ? "oklch(0.18 0.06 145)" : "oklch(0.92 0.03 145)",
+                      border: `1px solid ${isDark ? "oklch(0.26 0.07 145 / 0.6)" : "oklch(0.82 0.05 145 / 0.6)"}`,
+                    }}
+                  >
+                    <span style={{ color: isDark ? accent : "oklch(0.32 0.10 145)" }}>
+                      {item.icon}
+                    </span>
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: isDark ? "oklch(0.88 0.04 145)" : "oklch(0.18 0.06 145)" }}
+                    >
+                      {item.label}
+                    </span>
+                    <ArrowRight
+                      size={14}
+                      className="ml-auto"
+                      style={{ color: isDark ? "oklch(0.40 0.06 145)" : "oklch(0.60 0.06 145)" }}
+                    />
+                  </button>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
