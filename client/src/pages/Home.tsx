@@ -1507,12 +1507,12 @@ function BentoCard({
         </div>
 
         {/* Title */}
-        <h3
-          className={`text-base sm:text-lg font-semibold leading-snug ${titleColor}`}
+        <h2
+          className={`text-lg sm:text-xl font-semibold leading-snug ${titleColor}`}
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           {title}
-        </h3>
+        </h2>
 
         {/* Description */}
         <p className={`text-xs sm:text-sm leading-relaxed ${cardImage ? "" : "flex-1"} ${descColor}`}>
