@@ -3446,26 +3446,7 @@ export default function ClubDashboard() {
                 )}
               </button>
 
-              {/* Club name + member count — fade out when collapsed */}
-              <div
-                className="flex-1 min-w-0 text-left"
-                style={{
-                  opacity: sidebarCollapsed ? 0 : 1,
-                  width: sidebarCollapsed ? 0 : "auto",
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  transition: "opacity 180ms cubic-bezier(0.4,0,0.2,1), width 220ms cubic-bezier(0.4,0,0.2,1)",
-                  pointerEvents: sidebarCollapsed ? "none" : "auto",
-                }}
-              >
-                <p
-                  className="text-[14px] font-semibold leading-tight truncate"
-                  style={{ color: "rgba(255,255,255,0.9)", fontFamily: "'Inter', sans-serif" }}
-                >
-                  {club.name}
-                </p>
 
-              </div>
             </div>
 
 
@@ -3949,33 +3930,7 @@ export default function ClubDashboard() {
                       />
                       {/* Content */}
                       <div className="relative z-10 flex items-end gap-4 p-4 sm:p-6 pt-10 sm:pt-12">
-                        {/* Club avatar — clickable for owners to open Settings, 44px min touch target */}
-                        <div
-                          className={`relative w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-xl${isOwnerOrDirector ? " cursor-pointer group/avatar" : ""}`}
-                          style={{
-                            background: accent,
-                            border: `2.5px solid ${accent}88`,
-                            boxShadow: `0 4px 20px ${accent}44`,
-                            touchAction: "manipulation",
-                          }}
-                          onClick={isOwnerOrDirector ? () => { setTab("settings"); setSettingsSubTab("profile"); } : undefined}
-                          title={isOwnerOrDirector ? "Edit club profile" : undefined}
-                          role={isOwnerOrDirector ? "button" : undefined}
-                          aria-label={isOwnerOrDirector ? "Edit club profile" : undefined}
-                        >
-                          {club.avatarUrl ? (
-                            <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-3xl">{flag}</span>
-                          )}
-                          {/* Camera overlay for owners */}
-                          {isOwnerOrDirector && (
-                            <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
-                              <Camera className="w-5 h-5 text-white" />
-                              <span className="text-[9px] font-bold text-white leading-tight">Edit</span>
-                            </div>
-                          )}
-                        </div>
+
                         {/* Club identity */}
                         <div className="flex-1 min-w-0 pb-0.5">
                           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
