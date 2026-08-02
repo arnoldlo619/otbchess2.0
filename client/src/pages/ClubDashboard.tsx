@@ -2385,12 +2385,7 @@ export default function ClubDashboard() {
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
   // ── Sidebar collapse state (persisted per club) ─────────────────────────────
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem(`club-sidebar-collapsed`);
-      return stored === null ? true : stored === "1";
-    } catch { return true; }
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(true);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const toggleSidebar = () => setSidebarCollapsed(prev => {
     const next = !prev;
