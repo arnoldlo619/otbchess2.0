@@ -7538,3 +7538,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add opening name labels to forecast branches from ECO book classification
 - [x] Remove V2 loading state (always use V3 skeleton)
 - [x] Add vitest tests for section ID resolution, color filter, forecast labels, deterministic fallback, game-count semantics (8 tests passing)
+
+## Club Dashboard Sidebar Collapse Toggle
+
+- [x] Add sidebarCollapsed state with localStorage persistence
+- [x] CSS width transition 220ms cubic-bezier(0.4,0,0.2,1) on aside element (240px ↔ 64px)
+- [x] PanelLeftClose/PanelLeftOpen toggle button at bottom of header section
+- [x] Nav labels fade out (opacity + width: 0) when collapsed, tooltips via title attribute
+- [x] Section labels ("Manage", "Club") collapse to height: 0 when collapsed
+- [x] Badge dots shown in collapsed state, full badge counts shown in expanded state
+- [x] Club identity: avatar stays centered, name/member count fades out
+- [x] User profile bottom: avatar stays, name/role fades out

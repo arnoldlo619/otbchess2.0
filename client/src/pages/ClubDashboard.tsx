@@ -192,6 +192,8 @@ import {
   Lightbulb,
   MoreHorizontal,
   ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -2382,6 +2384,15 @@ export default function ClubDashboard() {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
+  // ── Sidebar collapse state (persisted per club) ─────────────────────────────
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem(`club-sidebar-collapsed`) === "1"; } catch { return false; }
+  });
+  const toggleSidebar = () => setSidebarCollapsed(prev => {
+    const next = !prev;
+    try { localStorage.setItem(`club-sidebar-collapsed`, next ? "1" : "0"); } catch { /* ignore */ }
+    return next;
+  });
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("profile");
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
   const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
@@ -3362,46 +3373,93 @@ export default function ClubDashboard() {
       )}
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] overflow-hidden">
-        {/* ── LEFT SIDEBAR (desktop) — Linear-inspired fixed-width premium nav ── */}
+        {/* ── LEFT SIDEBAR (desktop) — collapsible premium nav ── */}
         <aside
           className="hidden lg:flex flex-col flex-shrink-0 h-full"
           style={{
             position: "relative",
-            width: "240px",
+            width: sidebarCollapsed ? "64px" : "240px",
+            minWidth: sidebarCollapsed ? "64px" : "240px",
             background: sidebarBg ?? "oklch(0.12 0.02 145)",
             borderRight: `1px solid ${navBorder}`,
             backdropFilter: sidebarBg ? "blur(16px)" : undefined,
             overflow: "hidden",
             zIndex: 40,
+            transition: "width 220ms cubic-bezier(0.4,0,0.2,1), min-width 220ms cubic-bezier(0.4,0,0.2,1)",
           }}
         >
-          {/* ── Top: Club identity ── */}
-          <div className="px-4 pt-5 pb-4 flex-shrink-0">
-            <button
-              onClick={() => navigate("/clubs")}
-              className="flex items-center gap-3 w-full bg-transparent border-none p-0 cursor-pointer group/clubhead"
-              title="Back to Clubs"
-            >
-              {club.avatarUrl ? (
-                <img
-                  src={club.avatarUrl}
-                  alt={club.name}
-                  className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
-                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                />
-              ) : (
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${accent}22`, border: `1px solid ${accent}44` }}
-                >
-                  <span className="text-sm font-bold" style={{ color: accent }}>
-                    {club.name?.charAt(0)?.toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0 text-left">
+          {/* ── Top: Club identity + collapse toggle ── */}
+          <div
+            className="flex-shrink-0"
+            style={{
+              padding: sidebarCollapsed ? "16px 0 12px" : "20px 16px 14px",
+              transition: "padding 220ms cubic-bezier(0.4,0,0.2,1)",
+            }}
+          >
+            {/* Club identity row */}
+            <div className="flex items-center" style={{ gap: sidebarCollapsed ? 0 : 12 }}>
+              {/* Avatar — always visible, centered when collapsed */}
+              <button
+                onClick={() => navigate("/clubs")}
+                title="Back to Clubs"
+                className="flex-shrink-0 group/avatar"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  maxWidth: sidebarCollapsed ? "64px" : "36px",
+                  background: "transparent",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  transition: "max-width 220ms cubic-bezier(0.4,0,0.2,1)",
+                }}
+              >
+                {club.avatarUrl ? (
+                  <img
+                    src={club.avatarUrl}
+                    alt={club.name}
+                    className="rounded-lg object-cover"
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : (
+                  <div
+                    className="rounded-lg flex items-center justify-center"
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      background: `${accent}22`,
+                      border: `1px solid ${accent}44`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span className="text-sm font-bold" style={{ color: accent }}>
+                      {club.name?.charAt(0)?.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </button>
+
+              {/* Club name + member count — fade out when collapsed */}
+              <div
+                className="flex-1 min-w-0 text-left"
+                style={{
+                  opacity: sidebarCollapsed ? 0 : 1,
+                  width: sidebarCollapsed ? 0 : "auto",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  transition: "opacity 180ms cubic-bezier(0.4,0,0.2,1), width 220ms cubic-bezier(0.4,0,0.2,1)",
+                  pointerEvents: sidebarCollapsed ? "none" : "auto",
+                }}
+              >
                 <p
-                  className="text-[14px] font-semibold leading-tight truncate transition-colors duration-150 group-hover/clubhead:text-white"
+                  className="text-[14px] font-semibold leading-tight truncate"
                   style={{ color: "rgba(255,255,255,0.9)", fontFamily: "'Inter', sans-serif" }}
                 >
                   {club.name}
@@ -3410,22 +3468,69 @@ export default function ClubDashboard() {
                   {members.length} member{members.length !== 1 ? "s" : ""}
                 </p>
               </div>
-              <ChevronLeft
-                size={14}
-                className="flex-shrink-0 opacity-0 group-hover/clubhead:opacity-60 transition-opacity duration-150"
-                style={{ color: "rgba(255,255,255,0.6)" }}
-              />
-            </button>
+            </div>
+
+            {/* Collapse toggle button — sits below club identity */}
+            <div
+              className="flex"
+              style={{
+                marginTop: "12px",
+                justifyContent: sidebarCollapsed ? "center" : "flex-end",
+                paddingRight: sidebarCollapsed ? 0 : "2px",
+                transition: "justify-content 220ms ease",
+              }}
+            >
+              <button
+                onClick={toggleSidebar}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="flex items-center justify-center rounded-md"
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.35)",
+                  cursor: "pointer",
+                  transition: "background 150ms ease, color 150ms ease, border-color 150ms ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.75)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.35)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                }}
+              >
+                {sidebarCollapsed
+                  ? <PanelLeftOpen size={14} strokeWidth={1.8} />
+                  : <PanelLeftClose size={14} strokeWidth={1.8} />
+                }
+              </button>
+            </div>
           </div>
 
           {/* ── Divider ── */}
-          <div className="mx-4 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+          <div className="h-px" style={{ background: "rgba(255,255,255,0.06)", margin: "0 12px" }} />
 
           {/* ── Main navigation ── */}
-          <nav className="flex flex-col gap-0.5 flex-1 px-3 pt-4">
+          <nav className="flex flex-col gap-0.5 flex-1 pt-3" style={{ padding: sidebarCollapsed ? "12px 8px 0" : "12px 10px 0" }}>
             {/* Section label for owner-only items */}
             {isOwnerOrDirector && (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <p
+                className="text-[10px] font-semibold uppercase tracking-[0.08em] mb-1"
+                style={{
+                  color: "rgba(255,255,255,0.3)",
+                  paddingLeft: sidebarCollapsed ? 0 : "8px",
+                  opacity: sidebarCollapsed ? 0 : 1,
+                  height: sidebarCollapsed ? 0 : "auto",
+                  overflow: "hidden",
+                  transition: "opacity 180ms ease, height 220ms ease",
+                }}
+              >
                 Manage
               </p>
             )}
@@ -3436,14 +3541,17 @@ export default function ClubDashboard() {
                 <button
                   key={ct.id}
                   onClick={() => setTab(ct.id)}
-                  className="group/navbtn relative flex items-center gap-3 rounded-lg text-left w-full"
+                  className="group/navbtn relative flex items-center rounded-lg text-left w-full"
+                  title={sidebarCollapsed ? ct.label : undefined}
                   style={{
                     height: "36px",
-                    paddingLeft: "10px",
-                    paddingRight: "10px",
+                    gap: sidebarCollapsed ? 0 : "10px",
+                    paddingLeft: sidebarCollapsed ? 0 : "10px",
+                    paddingRight: sidebarCollapsed ? 0 : "10px",
+                    justifyContent: sidebarCollapsed ? "center" : "flex-start",
                     background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
                     color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
-                    transition: "background 150ms ease, color 150ms ease",
+                    transition: "background 150ms ease, color 150ms ease, padding 220ms cubic-bezier(0.4,0,0.2,1), gap 220ms cubic-bezier(0.4,0,0.2,1)",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -3472,13 +3580,24 @@ export default function ClubDashboard() {
                   >
                     <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
                   </span>
+                  {/* Label — fades out when collapsed */}
                   <span
                     className="text-[13px] font-medium"
-                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif" }}
+                    style={{
+                      color: "inherit",
+                      fontFamily: "'Inter', sans-serif",
+                      opacity: sidebarCollapsed ? 0 : 1,
+                      width: sidebarCollapsed ? 0 : "auto",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
+                      pointerEvents: "none",
+                    }}
                   >
                     {ct.label}
                   </span>
-                  {(ct.badge ?? 0) > 0 && (
+                  {/* Badge — hide when collapsed */}
+                  {(ct.badge ?? 0) > 0 && !sidebarCollapsed && (
                     <span
                       className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                       style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
@@ -3486,12 +3605,29 @@ export default function ClubDashboard() {
                       {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
                     </span>
                   )}
+                  {/* Collapsed badge dot */}
+                  {(ct.badge ?? 0) > 0 && sidebarCollapsed && (
+                    <span
+                      className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                      style={{ background: "#f87171" }}
+                    />
+                  )}
                 </button>
               );
             })}
 
             {/* Section label for main nav */}
-            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 mb-1 mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.08em] mt-4 mb-1"
+              style={{
+                color: "rgba(255,255,255,0.3)",
+                paddingLeft: sidebarCollapsed ? 0 : "8px",
+                opacity: sidebarCollapsed ? 0 : 1,
+                height: sidebarCollapsed ? 0 : "auto",
+                overflow: "hidden",
+                transition: "opacity 180ms ease, height 220ms ease",
+              }}
+            >
               Club
             </p>
             {clubTabs.filter(ct => !ct.ownerOnly).map((ct) => {
@@ -3501,14 +3637,17 @@ export default function ClubDashboard() {
                 <button
                   key={ct.id}
                   onClick={() => setTab(ct.id)}
-                  className="group/navbtn relative flex items-center gap-3 rounded-lg text-left w-full"
+                  className="group/navbtn relative flex items-center rounded-lg text-left w-full"
+                  title={sidebarCollapsed ? ct.label : undefined}
                   style={{
                     height: "36px",
-                    paddingLeft: "10px",
-                    paddingRight: "10px",
+                    gap: sidebarCollapsed ? 0 : "10px",
+                    paddingLeft: sidebarCollapsed ? 0 : "10px",
+                    paddingRight: sidebarCollapsed ? 0 : "10px",
+                    justifyContent: sidebarCollapsed ? "center" : "flex-start",
                     background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
                     color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
-                    transition: "background 150ms ease, color 150ms ease",
+                    transition: "background 150ms ease, color 150ms ease, padding 220ms cubic-bezier(0.4,0,0.2,1), gap 220ms cubic-bezier(0.4,0,0.2,1)",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -3537,13 +3676,24 @@ export default function ClubDashboard() {
                   >
                     <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
                   </span>
+                  {/* Label — fades out when collapsed */}
                   <span
                     className="text-[13px] font-medium"
-                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif" }}
+                    style={{
+                      color: "inherit",
+                      fontFamily: "'Inter', sans-serif",
+                      opacity: sidebarCollapsed ? 0 : 1,
+                      width: sidebarCollapsed ? 0 : "auto",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
+                      pointerEvents: "none",
+                    }}
                   >
                     {ct.label}
                   </span>
-                  {(ct.badge ?? 0) > 0 && (
+                  {/* Badge — hide when collapsed */}
+                  {(ct.badge ?? 0) > 0 && !sidebarCollapsed && (
                     <span
                       className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                       style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
@@ -3551,32 +3701,67 @@ export default function ClubDashboard() {
                       {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
                     </span>
                   )}
+                  {/* Collapsed badge dot */}
+                  {(ct.badge ?? 0) > 0 && sidebarCollapsed && (
+                    <span
+                      className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                      style={{ background: "#f87171" }}
+                    />
+                  )}
                 </button>
               );
             })}
           </nav>
 
           {/* ── Bottom: User profile mini card ── */}
-          <div className="px-3 pb-4 flex-shrink-0">
-            <div className="h-px mb-3 mx-1" style={{ background: "rgba(255,255,255,0.06)" }} />
-            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div
+            className="flex-shrink-0"
+            style={{
+              padding: sidebarCollapsed ? "0 8px 16px" : "0 12px 16px",
+              transition: "padding 220ms cubic-bezier(0.4,0,0.2,1)",
+            }}
+          >
+            <div className="h-px mb-3" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <div
+              className="flex items-center rounded-lg"
+              style={{
+                gap: sidebarCollapsed ? 0 : "10px",
+                padding: sidebarCollapsed ? "8px 0" : "8px 8px",
+                background: "rgba(255,255,255,0.03)",
+                justifyContent: sidebarCollapsed ? "center" : "flex-start",
+                transition: "gap 220ms cubic-bezier(0.4,0,0.2,1), padding 220ms cubic-bezier(0.4,0,0.2,1)",
+              }}
+              title={sidebarCollapsed ? (user?.displayName ?? "Guest") : undefined}
+            >
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
                   alt={user.displayName}
-                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                  className="rounded-full object-cover flex-shrink-0"
+                  style={{ width: "28px", height: "28px" }}
                 />
               ) : (
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  className="rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ width: "28px", height: "28px", background: "rgba(255,255,255,0.08)" }}
                 >
                   <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.6)" }}>
                     {user?.displayName?.charAt(0)?.toUpperCase() ?? "?"}
                   </span>
                 </div>
               )}
-              <div className="flex-1 min-w-0">
+              {/* Name + role — fade out when collapsed */}
+              <div
+                className="flex-1 min-w-0"
+                style={{
+                  opacity: sidebarCollapsed ? 0 : 1,
+                  width: sidebarCollapsed ? 0 : "auto",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
+                  pointerEvents: "none",
+                }}
+              >
                 <p className="text-[12px] font-medium truncate" style={{ color: "rgba(255,255,255,0.75)" }}>
                   {user?.displayName ?? "Guest"}
                 </p>
