@@ -3380,20 +3380,25 @@ export default function ClubDashboard() {
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] overflow-hidden">
         {/* ── LEFT SIDEBAR (desktop) — collapsible premium nav ── */}
+        {/* Spacer: always 64px wide to reserve space in the flex row */}
+        <div className="hidden lg:block flex-shrink-0" style={{ width: "64px", minWidth: "64px" }} />
         <aside
           className="hidden lg:flex flex-col flex-shrink-0 h-full"
-          onMouseEnter={() => sidebarCollapsed && setSidebarHovered(true)}
+          onMouseEnter={() => setSidebarHovered(true)}
           onMouseLeave={() => setSidebarHovered(false)}
           style={{
-            position: "relative",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            bottom: 0,
             width: sidebarEffectivelyCollapsed ? "64px" : "240px",
-            minWidth: sidebarEffectivelyCollapsed ? "64px" : "240px",
             background: sidebarBg ?? "oklch(0.12 0.02 145)",
             borderRight: `1px solid ${navBorder}`,
             backdropFilter: sidebarBg ? "blur(16px)" : undefined,
             overflow: "hidden",
-            zIndex: 40,
-            transition: "width 220ms cubic-bezier(0.4,0,0.2,1), min-width 220ms cubic-bezier(0.4,0,0.2,1)",
+            zIndex: 50,
+            transition: "width 220ms cubic-bezier(0.4,0,0.2,1), box-shadow 220ms ease",
+            boxShadow: sidebarHovered ? "4px 0 24px rgba(0,0,0,0.35)" : "none",
           }}
         >
           {/* ── Top: Club identity + collapse toggle ── */}
