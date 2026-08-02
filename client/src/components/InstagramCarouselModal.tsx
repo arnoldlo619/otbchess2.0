@@ -2321,6 +2321,31 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     }
   }, []);
 
+  // Pre-fetch font CSS via server proxy to avoid CORS cssRules SecurityError in html-to-image.
+  // html-to-image tries to read document.styleSheets[].cssRules which throws for cross-origin
+  // <link> tags. By passing fontEmbedCSS directly we bypass that path entirely.
+  const [fontEmbedCSS, setFontEmbedCSS] = useState<string>("");
+  useEffect(() => {
+    if (!open) return;
+    const fontUrls = [
+      headingFont.googleUrl,
+      // Always include Anton as fallback (used in body text)
+      "https://fonts.googleapis.com/css2?family=Anton&display=swap",
+      // Inter for body/caption text
+      "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
+    ];
+    const uniqueUrls = Array.from(new Set(fontUrls));
+    Promise.all(
+      uniqueUrls.map((url) =>
+        fetch(`/api/font-proxy?url=${encodeURIComponent(url)}`)
+          .then((r) => (r.ok ? r.text() : ""))
+          .catch(() => "")
+      )
+    ).then((cssChunks) => {
+      setFontEmbedCSS(cssChunks.filter(Boolean).join("\n"));
+    });
+  }, [open, headingFont]);
+
   const slideProps: SlideProps = {
     rows,
     config,
@@ -2378,14 +2403,17 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
         width: SLIDE_W,
         height: slideH,
         style: { transform: "none" },
-        fetchRequestInit: { mode: "cors" },
+        // Pass pre-fetched font CSS to bypass CORS cssRules SecurityError.
+        // html-to-image skips its own font-reading when fontEmbedCSS is provided.
+        // Falls back gracefully to empty string (fonts still render from browser cache).
+        fontEmbedCSS: fontEmbedCSS || "",
       });
       return blob ?? null;
     } catch (err) {
       logger.error("[carousel] Export error", err);
       return null;
     }
-  }, [slideH]);
+  }, [slideH, fontEmbedCSS]);
 
   // ── Download single slide (with mobile Web Share API fallback) ───────────────
   const downloadSingle = useCallback(async () => {

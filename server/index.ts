@@ -1249,6 +1249,40 @@ export function createApp() {
     }
   });
 
+  // ── Proxy: GET /api/font-proxy?url=... ─────────────────────────────────────
+  // Fetches Google Fonts / Fontshare CSS server-side to bypass browser CORS
+  // restrictions that prevent html-to-image from reading cross-origin cssRules.
+  app.get("/api/font-proxy", async (req, res) => {
+    const raw = req.query.url as string | undefined;
+    if (!raw) { res.status(400).json({ error: "Missing url parameter" }); return; }
+    let targetUrl: string;
+    try {
+      const parsed = new URL(raw);
+      const allowed = ["fonts.googleapis.com", "fonts.gstatic.com", "api.fontshare.com"];
+      if (!allowed.some((h) => parsed.hostname === h || parsed.hostname.endsWith("." + h))) {
+        res.status(403).json({ error: "Domain not allowed" }); return;
+      }
+      targetUrl = parsed.toString();
+    } catch {
+      res.status(400).json({ error: "Invalid url" }); return;
+    }
+    try {
+      const upstream = await fetch(targetUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; OTBChess/1.0; font-proxy)" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!upstream.ok) { res.status(upstream.status).end(); return; }
+      const css = await upstream.text();
+      res.setHeader("Content-Type", "text/css; charset=utf-8");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.send(css);
+    } catch (err) {
+      logger.error("[font-proxy]", err);
+      res.status(502).end();
+    }
+  });
+
   // ── Proxy: GET /api/lichess/player/:username ────────────────────────────────
   app.get("/api/lichess/player/:username", chessProxyLimiter, async (req, res) => {
     try {
