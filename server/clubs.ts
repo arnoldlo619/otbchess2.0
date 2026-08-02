@@ -2032,7 +2032,8 @@ clubsRouter.get("/:id/events/:eventId/rsvp-form", async (req: Request, res: Resp
     const db = await getDb();
     const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
     if (!form) { res.status(404).json({ error: "No RSVP form found for this event" }); return; }
-    res.json({ form });
+    const responses = await db.select().from(rsvpFormResponses).where(eq(rsvpFormResponses.formId, form.id));
+    res.json({ form, responses });
   } catch (err) {
     logger.error("[clubs] GET /:id/events/:eventId/rsvp-form error:", err);
     res.status(500).json({ error: "Failed to fetch RSVP form" });

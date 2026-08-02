@@ -60,9 +60,9 @@ export default function RsvpFormAnalytics({ clubId, eventId, accentColor = "#4CA
     try {
       const res = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvp-form`, { credentials: "include" });
       if (res.ok) {
-        const data = await res.json() as { form: RsvpFormData; responses: FormResponse[] };
+        const data = await res.json() as { form: RsvpFormData; responses?: FormResponse[] };
         setForm(data.form);
-        setResponses(data.responses);
+        setResponses(data.responses ?? []);
       } else {
         setForm(null);
       }
