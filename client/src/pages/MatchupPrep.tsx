@@ -718,7 +718,7 @@ export default function MatchupPrep() {
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
-                {gc} games
+                {gc === "50" ? "Standard" : "Deep"}
               </button>
             ))}
           </div>
@@ -726,8 +726,8 @@ export default function MatchupPrep() {
           {/* Separator */}
           <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
 
-          {/* Color Focus */}
-          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Color</span>
+          {/* Color Focus — filters insights by your assigned color */}
+          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`} title="Filter insights by your assigned color">My Color</span>
           <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
             {(["both", "white", "black"] as const).map((c) => (
               <button
@@ -764,8 +764,7 @@ export default function MatchupPrep() {
         )}
 
         {/* ── Loading State ── */}
-        {loading && useV3 && <V3ScoutReportSkeleton isDark={isDark} />}
-        {loading && !useV3 && <PrepLoadingState username={searchInput} isDark={isDark} t={t} />}
+        {loading && <V3ScoutReportSkeleton isDark={isDark} />}
 
         {/* ── Error State (detailed, requirement 11) ── */}
         {error && !loading && (
@@ -828,16 +827,8 @@ export default function MatchupPrep() {
               </span>
             </div>
 
-            {/* V3 Scout Report — no tab bar, single-page layout */}
-            <V3ScoutReportTab report={reportV3} isDark={isDark} t={t} />
-
-            {/* V2 fallback link */}
-            <button
-              onClick={() => { setUseV3(false); setReportV3(null); fetchReport(reportV3.opponent.username); }}
-              className={`w-full text-center text-xs py-2 ${t.textTertiary} hover:underline`}
-            >
-              Switch to V2 legacy report
-            </button>
+            {/* V3 Scout Report — progressive-disclosure layout */}
+            <V3ScoutReportTab report={reportV3} isDark={isDark} t={t} colorFilter={colorFilter} />
           </div>
         )}
 

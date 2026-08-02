@@ -82,11 +82,11 @@ export function buildFacts(parsed: ParsedGame[]): Facts {
   return { byColor, fam, responses, firstMoves };
 }
 
-/** Forecast tree: move branches from scouted player's perspective, depth 4 */
+/** Forecast tree: move branches from scouted player's perspective, depth 6 */
 export function forecast(
   games: ParsedGame[],
   color: Color,
-  maxDepth = 4
+  maxDepth = 6
 ): import("../../shared/prepTypes.js").ForecastBranch[] {
   const build = (
     gs: ParsedGame[],
@@ -107,13 +107,29 @@ export function forecast(
       .filter(([, v]) => v.length >= 2)
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 3)
-      .map(([san, v]) => ({
-        moveSan: san,
-        count: v.length,
-        pct: v.length / gs.length,
-        score: v.reduce((s: number, g: ParsedGame) => s + g.scoutedScore, 0) / v.length,
-        children: build(v, ply + 1, depth + 1),
-      }));
+      .map(([san, v]) => {
+        // Find the most common opening name in this bucket for the label
+        const nameCounts = new Map<string, number>();
+        for (const g of v) {
+          if (g.opening.bookExitPly >= 2) {
+            const n = g.opening.name.split(":")[0].trim();
+            nameCounts.set(n, (nameCounts.get(n) ?? 0) + 1);
+          }
+        }
+        let label: string | undefined;
+        let maxCount = 0;
+        for (const [n, c] of Array.from(nameCounts.entries())) {
+          if (c > maxCount) { label = n; maxCount = c; }
+        }
+        return {
+          moveSan: san,
+          count: v.length,
+          pct: v.length / gs.length,
+          score: v.reduce((s: number, g: ParsedGame) => s + g.scoutedScore, 0) / v.length,
+          label: maxCount >= 2 ? label : undefined,
+          children: build(v, ply + 1, depth + 1),
+        };
+      });
   };
   // Start at ply 0 for White (their moves), ply 1 for Black (their moves)
   return build(games, color === "white" ? 0 : 1, 0);

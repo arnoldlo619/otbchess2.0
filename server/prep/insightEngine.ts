@@ -147,9 +147,15 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
         games: sample(gs),
         window: windowMeta,
       },
-      interpretation: `Your Black preparation can be narrowed to 1.${mv} systems with ${pct(g.n / byColor.white.length)} coverage of their White games.`,
+      interpretation: g.n / byColor.white.length >= 0.7
+        ? `Their primary opening as White — prepare your main defense to 1.${mv} thoroughly.`
+        : g.n / byColor.white.length >= 0.5
+        ? `Their most common choice as White (${pct(g.n / byColor.white.length)}). Prioritize preparation against 1.${mv} but expect alternatives.`
+        : `A plurality of their White games begin 1.${mv}. Prepare for it but budget time for their other openings too.`,
       recommendation: {
-        action: `Prepare one reliable defense to 1.${mv} and rehearse it to move 8–10; skim their secondary tries only briefly.`,
+        action: g.n / byColor.white.length >= 0.7
+          ? `Prepare one reliable defense to 1.${mv} and rehearse it to move 8–10.`
+          : `Prepare your main defense to 1.${mv} (their most frequent choice) and have a secondary plan for their alternatives.`,
       },
       confidence: confidence(gs, w.width),
       sampleSize: g.n,
@@ -185,7 +191,9 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
         ? `This is their default reply to 1.${first} and it underperforms their overall Black score (${pct(base)}) by ${Math.round(-delta * 100)} points — a preparable target.`
         : isStrong
         ? `They are comfortable here — ${Math.round(delta * 100)} points above their Black baseline (${pct(base)}). Avoid their main strength unless you have something concrete.`
-        : `Predictable first branch: with 1.${first} you will reach 1...${reply} positions most of the time.`,
+        : g.n / total >= 0.7
+        ? `Their go-to response to 1.${first}. Expect 1...${reply} in the majority of games.`
+        : `Their most frequent reply to 1.${first} (${pct(g.n / total)} of games). Prepare for 1...${reply} but be ready for alternatives.`,
       recommendation: {
         action: isWeak
           ? `Open 1.${first} and prepare your main line against 1...${reply} to move 10; their record says the pressure point is real.`

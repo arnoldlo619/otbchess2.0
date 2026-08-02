@@ -101,11 +101,52 @@ function parseBullets(text: string): string[] {
     .slice(0, 5);
 }
 
+// Build a deterministic fallback summary from the structured report data
+function buildDeterministicSummary(report: ScoutReportV3): string[] {
+  const bullets: string[] = [];
+  const opp = report.opponent;
+  const s = report.sections;
+
+  // Top weakness
+  const weaknessInsight = report.insights.find(i => s.weaknesses.includes(i.id));
+  if (weaknessInsight) {
+    bullets.push(`**Exploit:** ${weaknessInsight.recommendation.action}`);
+  }
+
+  // Opening tendency
+  const tendencyInsight = report.insights.find(i => i.kind === "opening_tendency");
+  if (tendencyInsight) {
+    bullets.push(`**Opening:** ${tendencyInsight.claim}`);
+  }
+
+  // Strength to avoid
+  const strengthInsight = report.insights.find(i => s.strengths.includes(i.id));
+  if (strengthInsight) {
+    bullets.push(`**Avoid:** ${strengthInsight.interpretation}`);
+  }
+
+  // Behavior pattern
+  const behaviorInsight = report.insights.find(i => i.kind === "behavior");
+  if (behaviorInsight) {
+    bullets.push(`**Pattern:** ${behaviorInsight.interpretation}`);
+  }
+
+  // Fallback if not enough insights
+  if (bullets.length === 0) {
+    const totalW = (opp.record.white?.w ?? 0) + (opp.record.black?.w ?? 0);
+    const totalGames = totalW + (opp.record.white?.d ?? 0) + (opp.record.black?.d ?? 0) + (opp.record.white?.l ?? 0) + (opp.record.black?.l ?? 0);
+    bullets.push(`**Overview:** ${opp.username} has ${totalGames} games analyzed with ${report.dataQuality.parsed} usable for insights.`);
+  }
+
+  return bullets.slice(0, 4);
+}
+
 export function ScoutAISummary({ report, isDark, t }: Props) {
   const [bullets, setBullets] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [isAI, setIsAI] = useState(true);
   const fetchedFor = useRef<string | null>(null);
 
   const fetchSummary = async () => {
@@ -113,19 +154,28 @@ export function ScoutAISummary({ report, isDark, t }: Props) {
     setError(null);
     try {
       const prompt = buildSummaryPrompt(report);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000); // 12s timeout
       const res = await authFetch("/api/prep/coach-insight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ promptJson: JSON.stringify(prompt) }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       if (!res.ok) throw new Error("Failed to generate summary");
       const data = await res.json() as { insight?: string; error?: string };
       if (data.error) throw new Error(data.error);
       const parsed = parseBullets(data.insight ?? "");
       if (parsed.length === 0) throw new Error("No insights returned");
       setBullets(parsed);
+      setIsAI(true);
     } catch {
-      setError("Could not generate AI summary. Try refreshing.");
+      // Fallback to deterministic summary
+      const fallback = buildDeterministicSummary(report);
+      setBullets(fallback);
+      setIsAI(false);
+      setError(null); // Don't show error — we have a fallback
     } finally {
       setLoading(false);
     }
@@ -154,7 +204,7 @@ export function ScoutAISummary({ report, isDark, t }: Props) {
         <Sparkles className="w-4 h-4 shrink-0" style={{ color: accentColor }} />
         <h3 className={`font-bold text-sm flex-1 ${t.textPrimary}`}>AI Scouting Summary</h3>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${pillBg}`}>
-          AI
+          {isAI ? "AI" : "Auto"}
         </span>
         {!loading && bullets.length > 0 && (
           <button

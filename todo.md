@@ -7524,3 +7524,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Club Dashboard Sidebar Redesign
 
 - [x] Redesign ClubDashboard sidebar: fixed 240px width, Linear-inspired premium dark theme, no expand-on-hover gimmick, club identity at top, always-visible labels, clean active states
+
+## Matchup Prep V3 Refactor (Launch-Readiness)
+
+- [x] Fix critical bug: V3ScoutReportTab rendering section IDs as raw text instead of resolved insight claims
+- [x] Rebuild V3ScoutReportTab with premium progressive-disclosure layout (Prep Snapshot, Opening Forecast, Game Plan, All Insights, Prep Checklist, Evidence & Methodology)
+- [x] Fix color filter: pass colorFilter prop from MatchupPrep.tsx to V3ScoutReportTab and apply it to insight filtering
+- [x] Rename game-count labels from "50 games"/"100 games" to "Standard"/"Deep" for clarity
+- [x] Rename "Color" filter label to "My Color" with tooltip explaining semantics
+- [x] Improve AI summary: add 12s timeout, deterministic fallback from structured data, "Auto" badge when using fallback
+- [x] Fix statistical language in insightEngine.ts: conditional phrasing based on frequency thresholds (no "most of the time" for pluralities)
+- [x] Increase opening forecast depth from 4 to 6 plies for deeper move trees
+- [x] Add opening name labels to forecast branches from ECO book classification
+- [x] Remove V2 loading state (always use V3 skeleton)
+- [x] Add vitest tests for section ID resolution, color filter, forecast labels, deterministic fallback, game-count semantics (8 tests passing)
