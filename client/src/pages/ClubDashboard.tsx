@@ -3468,30 +3468,7 @@ export default function ClubDashboard() {
               </div>
             </div>
 
-            {/* Collapse toggle — subtle ghost icon, flush with divider */}
-            <button
-              onClick={toggleSidebar}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="flex items-center justify-center"
-              style={{
-                marginTop: "10px",
-                width: "100%",
-                height: "22px",
-                background: "transparent",
-                border: "none",
-                color: "rgba(255,255,255,0.20)",
-                cursor: "pointer",
-                transition: "color 150ms ease",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.20)"; }}
-            >
-              {sidebarCollapsed
-                ? <PanelLeftOpen size={13} strokeWidth={1.5} />
-                : <PanelLeftClose size={13} strokeWidth={1.5} />
-              }
-            </button>
+
           </div>
 
           {/* ── Divider ── */}
@@ -3694,8 +3671,31 @@ export default function ClubDashboard() {
             })}
           </nav>
 
-          {/* Bottom spacer — profile is in the header nav bar */}
-          <div className="flex-shrink-0 pb-4" />
+          {/* ── Bottom: Collapse toggle ── */}
+          <div className="flex-shrink-0">
+            <div className="h-px mx-3" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <button
+              onClick={toggleSidebar}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="flex items-center justify-center w-full"
+              style={{
+                height: "44px",
+                background: "transparent",
+                border: "none",
+                color: "rgba(255,255,255,0.20)",
+                cursor: "pointer",
+                transition: "color 150ms ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.20)"; }}
+            >
+              {sidebarCollapsed
+                ? <PanelLeftOpen size={14} strokeWidth={1.5} />
+                : <PanelLeftClose size={14} strokeWidth={1.5} />
+              }
+            </button>
+          </div>
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
