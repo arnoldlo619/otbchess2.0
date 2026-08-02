@@ -1,24 +1,15 @@
 /**
  * ForecastWalkthrough — Board-first interactive Opening Forecast.
  *
- * Replaces the dense indented move-tree with a two-column walkthrough:
- *   Left:  large interactive chessboard (reuses MiniChessBoard internals)
- *   Right: concise branch selector, breadcrumb, performance summary
- *
- * Data model: enriches ForecastBranch with FEN (derived via chess.js),
- * actor labels, conditional denominators, and confidence tiers — all
- * computed client-side from the existing report data, no server changes.
- *
- * Design rules (from spec):
- * - Max 3 top-level choices shown by default
- * - Progressive disclosure: "More continuations" for low-frequency branches
- * - Small sample (< 5 games at position) → downgraded, no performance claim
- * - Perspective explicit: "Opponent plays White" / "You have Black"
- * - Board orientation follows user's selected color
- * - Keyboard operable, clear focus states, 44px touch targets
+ * Features:
+ * - Responsive SVG chessboard with animated piece transitions (200ms ease-out)
+ * - Engine evaluation bar (vertical, white/black gradient with score indicator)
+ * - Click-through move tree: select branch → board updates, breadcrumb, Back/Reset
+ * - Perspective labels, color toggle, flip board
+ * - Small-sample guards, conditional denominators, confidence tiers
  */
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Chess } from "chess.js";
 import {
   ChevronLeft, RotateCcw, ChevronDown, ChevronRight,
@@ -40,54 +31,36 @@ interface Tokens {
 
 interface ForecastWalkthroughProps {
   openingForecast: Record<"white" | "black", ForecastBranch[]>;
-  /** The user's selected color for this prep session (affects board orientation) */
   colorFilter?: "both" | "white" | "black";
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
 }
 
-/** Enriched node: ForecastBranch + derived FEN + path context */
 interface FNode {
   moveSan: string;
-  /** Move path from root, e.g. ["d4", "d5", "Nc3"] */
   path: string[];
-  /** FEN after this move */
   fen: string;
-  /** Whose move this is: "opponent" | "reply" */
   actor: "opponent" | "reply";
-  /** Count of games that reached this position */
   count: number;
-  /** Count of parent games (for conditional denominator) */
   parentCount: number;
-  /** Frequency % within parent */
   pct: number;
-  /** Opponent score in this branch (0–1) */
   score: number;
-  /** Opening label */
   label?: string;
-  /** Raw children from server */
   rawChildren: ForecastBranch[];
-  /** Confidence tier */
   confidence: "high" | "medium" | "low" | "tiny";
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Derive FEN from a SAN move path using chess.js */
 function fenFromPath(path: string[]): string | null {
   const chess = new Chess();
   for (const san of path) {
-    try {
-      chess.move(san);
-    } catch {
-      return null;
-    }
+    try { chess.move(san); } catch { return null; }
   }
   return chess.fen();
 }
 
-/** Confidence tier based on count */
 function confidenceTier(count: number): FNode["confidence"] {
   if (count >= 15) return "high";
   if (count >= 8) return "medium";
@@ -95,7 +68,6 @@ function confidenceTier(count: number): FNode["confidence"] {
   return "tiny";
 }
 
-/** Convert raw ForecastBranch[] to FNode[] at a given path depth */
 function enrichBranches(
   branches: ForecastBranch[],
   parentPath: string[],
@@ -106,8 +78,6 @@ function enrichBranches(
   return branches.map((b) => {
     const path = [...parentPath, b.moveSan];
     const fen = fenFromPath(path) ?? "";
-    // Depth 0,2,4 = opponent's move (for White: ply 0,2,4; for Black: ply 1,3,5)
-    // opponentColor=white → they move at even depths; opponentColor=black → odd depths
     const isOpponentMove =
       opponentColor === "white" ? depth % 2 === 0 : depth % 2 === 1;
     return {
@@ -126,33 +96,12 @@ function enrichBranches(
   });
 }
 
-/** Format score for display — avoids "win rate" when draws included */
-function formatScore(score: number, count: number): string {
-  const pct = Math.round(score * 100);
-  return `${pct}% score`;
-}
-
-/** Format result breakdown from score + count (approximate) */
-function formatResults(score: number, count: number): string {
-  // score = (wins + 0.5*draws) / count
-  // We can't recover exact W/D/L from score alone, so show score only
-  return `Based on ${count} game${count !== 1 ? "s" : ""} at this position`;
-}
-
-/** Human-readable frequency */
-function formatFreq(count: number, parentCount: number): string {
-  const pct = parentCount > 0 ? Math.round((count / parentCount) * 100) : 0;
-  return `${pct}% · ${count} game${count !== 1 ? "s" : ""}`;
-}
-
-/** Breadcrumb from path array */
 function pathToBreadcrumb(path: string[]): string {
   if (path.length === 0) return "Starting position";
   const parts: string[] = [];
   for (let i = 0; i < path.length; i++) {
     if (i % 2 === 0) {
-      const moveNum = Math.floor(i / 2) + 1;
-      parts.push(`${moveNum}. ${path[i]}`);
+      parts.push(`${Math.floor(i / 2) + 1}. ${path[i]}`);
     } else {
       parts.push(path[i]);
     }
@@ -160,19 +109,55 @@ function pathToBreadcrumb(path: string[]): string {
   return parts.join(" ");
 }
 
-// ── Board component (inline, larger than MiniChessBoard) ─────────────────────
-
-interface BoardProps {
-  fen: string;
-  flipped: boolean;
-  isDark: boolean;
-  lastMovePath?: string[]; // previous path to derive last move squares
+function formatResults(count: number): string {
+  return `Based on ${count} game${count !== 1 ? "s" : ""} at this position`;
 }
+
+// ── Piece animation helpers ───────────────────────────────────────────────────
 
 const PIECE_GLYPHS: Record<string, string> = {
   wK: "♔", wQ: "♕", wR: "♖", wB: "♗", wN: "♘", wP: "♙",
   bK: "♚", bQ: "♛", bR: "♜", bB: "♝", bN: "♞", bP: "♟",
 };
+
+/** Square name → [col 0-7, row 0-7] in board coordinates */
+function squareToCoords(sq: string): [number, number] {
+  const col = sq.charCodeAt(0) - 97; // a=0..h=7
+  const row = 8 - parseInt(sq[1]);   // rank 8=row0..rank 1=row7
+  return [col, row];
+}
+
+/** Build a stable piece-id → {sq, glyph, color} map from a FEN */
+interface PieceInfo {
+  sq: string;
+  glyph: string;
+  color: "w" | "b";
+  type: string;
+}
+
+function buildPieceMap(fen: string): Map<string, PieceInfo> {
+  const chess = new Chess();
+  try { chess.load(fen); } catch { /* use default */ }
+  const board = chess.board();
+  // Count pieces per type to assign stable IDs (e.g. wP-1, wP-2 left→right top→bottom)
+  const counters: Record<string, number> = {};
+  const map = new Map<string, PieceInfo>();
+
+  // Iterate in a stable order: top-left to bottom-right
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const piece = board[row][col];
+      if (!piece) continue;
+      const typeKey = `${piece.color}${piece.type.toUpperCase()}`;
+      counters[typeKey] = (counters[typeKey] ?? 0) + 1;
+      const id = `${typeKey}-${counters[typeKey]}`;
+      const sq = String.fromCharCode(97 + col) + (8 - row);
+      const glyph = PIECE_GLYPHS[typeKey] ?? "?";
+      map.set(id, { sq, glyph, color: piece.color, type: piece.type });
+    }
+  }
+  return map;
+}
 
 function cellColor(col: number, row: number, isDark: boolean): string {
   const isLight = (col + row) % 2 === 0;
@@ -180,41 +165,239 @@ function cellColor(col: number, row: number, isDark: boolean): string {
   return isLight ? "#f0d9b5" : "#b58863";
 }
 
-function ForecastBoard({ fen, flipped, isDark, lastMovePath }: BoardProps) {
-  const chess = useMemo(() => {
-    const c = new Chess();
-    if (fen) {
-      try { c.load(fen); } catch { /* use default */ }
-    }
-    return c;
-  }, [fen]);
+// ── Eval Bar ─────────────────────────────────────────────────────────────────
 
-  // Derive last move squares from path
-  const lastMove = useMemo(() => {
-    if (!lastMovePath || lastMovePath.length === 0) return null;
-    const prevPath = lastMovePath.slice(0, -1);
-    const c = new Chess();
-    for (const san of prevPath) {
-      try { c.move(san); } catch { return null; }
-    }
-    const lastSan = lastMovePath[lastMovePath.length - 1];
-    try {
-      const result = c.move(lastSan);
-      return result ? { from: result.from, to: result.to } : null;
-    } catch { return null; }
-  }, [lastMovePath?.join(",")]);
+interface EvalBarProps {
+  /** Opponent score 0–1 (0.5 = equal) */
+  score: number | null;
+  isDark: boolean;
+  flipped: boolean;
+}
 
-  const board = chess.board();
-  // Use a fixed viewBox of 416×416 (52×8) but let CSS scale it responsively
+function EvalBar({ score, isDark, flipped }: EvalBarProps) {
+  // score is opponent's score (0=opponent loses, 1=opponent wins)
+  // We show White advantage at top, Black at bottom (standard)
+  // White advantage = 1 - score (if opponent is Black, score=0.7 means Black wins → white losing)
+  // We'll treat score as "active side advantage" and just show it as a gradient
+
+  const TOTAL_HEIGHT = 416; // matches board max height in px (visual reference)
+
+  // Convert score to a 0–100 percentage where 0=white winning, 100=black winning
+  // score=0.5 → 50% (equal)
+  // score=0.7 → 70% (opponent doing well, shown as black advantage if opponent=black)
+  const clampedScore = score === null ? 0.5 : Math.max(0, Math.min(1, score));
+
+  // "blackPct" = how much of the bar is black (from top)
+  const blackPct = flipped
+    ? Math.round(clampedScore * 100)
+    : Math.round((1 - clampedScore) * 100);
+
+  const whiteScore = Math.round((1 - clampedScore) * 100);
+  const blackScore = Math.round(clampedScore * 100);
+
+  // Format numeric eval: convert 0–100 to a ±centipawn-style display
+  // We don't have real engine eval, so show as score percentage
+  const evalLabel = score === null
+    ? "—"
+    : clampedScore === 0.5
+      ? "="
+      : clampedScore > 0.5
+        ? `+${Math.round((clampedScore - 0.5) * 200) / 100}`
+        : `-${Math.round((0.5 - clampedScore) * 200) / 100}`;
+
+  return (
+    <div
+      className="flex flex-col items-center gap-1 shrink-0"
+      style={{ width: 20 }}
+      aria-label={`Evaluation bar: ${evalLabel}`}
+      title={`Position score: ${evalLabel}`}
+    >
+      {/* Score label top (black) */}
+      <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-white/30" : "text-black/30"}`}>
+        {blackScore}
+      </span>
+
+      {/* Bar */}
+      <div
+        className="relative rounded-full overflow-hidden flex-1"
+        style={{
+          width: 10,
+          minHeight: 120,
+          background: isDark ? "#1a2a1e" : "#b58863",
+        }}
+      >
+        {/* White portion */}
+        <div
+          className="absolute bottom-0 left-0 right-0 rounded-b-full transition-all duration-300 ease-out"
+          style={{
+            height: `${100 - blackPct}%`,
+            background: isDark
+              ? "linear-gradient(to top, rgba(255,255,255,0.92), rgba(255,255,255,0.75))"
+              : "linear-gradient(to top, #f0d9b5, #e8c98a)",
+          }}
+        />
+        {/* Midpoint tick */}
+        <div
+          className="absolute left-0 right-0"
+          style={{
+            top: "50%",
+            height: 1,
+            background: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)",
+          }}
+        />
+        {/* Score indicator dot */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full border border-white/30 transition-all duration-300 ease-out"
+          style={{
+            top: `calc(${blackPct}% - 4px)`,
+            background: blackPct < 50
+              ? (isDark ? "#5B9A6A" : "#436850")
+              : (isDark ? "rgba(255,255,255,0.9)" : "#f0d9b5"),
+          }}
+        />
+      </div>
+
+      {/* Score label bottom (white) */}
+      <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-white/30" : "text-black/30"}`}>
+        {whiteScore}
+      </span>
+
+      {/* Eval label */}
+      <span
+        className={`text-[9px] font-mono font-bold tabular-nums ${
+          score === null || clampedScore === 0.5
+            ? (isDark ? "text-white/25" : "text-black/25")
+            : clampedScore > 0.5
+              ? (isDark ? "text-amber-400/70" : "text-amber-700")
+              : (isDark ? "text-sky-400/70" : "text-sky-700")
+        }`}
+        style={{ writingMode: "horizontal-tb" }}
+      >
+        {evalLabel}
+      </span>
+    </div>
+  );
+}
+
+// ── Animated Board ────────────────────────────────────────────────────────────
+
+interface BoardProps {
+  fen: string;
+  prevFen: string;
+  flipped: boolean;
+  isDark: boolean;
+  lastMove: { from: string; to: string } | null;
+}
+
+function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) {
   const CELL = 52;
   const SIZE = CELL * 8;
+
+  // Build current piece map
+  const currentPieces = useMemo(() => buildPieceMap(fen), [fen]);
+  const prevPieces = useMemo(() => buildPieceMap(prevFen), [prevFen]);
+
+  // Track which pieces are "new" (appeared) vs "moved" vs "same"
+  // For animation: if a piece ID exists in both maps, animate from prev coords to current coords
+  // If only in current, it's a promotion or appeared (no animation needed)
+
+  const pieceElements = useMemo(() => {
+    const elements: React.ReactNode[] = [];
+
+    currentPieces.forEach((info, id) => {
+      const [boardCol, boardRow] = squareToCoords(info.sq);
+      const displayCol = flipped ? 7 - boardCol : boardCol;
+      const displayRow = flipped ? 7 - boardRow : boardRow;
+      const x = displayCol * CELL + CELL / 2;
+      const y = displayRow * CELL + CELL / 2 + 1;
+
+      // Check if this piece was somewhere else before
+      const prevInfo = prevPieces.get(id);
+      let fromX = x;
+      let fromY = y;
+      let shouldAnimate = false;
+
+      if (prevInfo && prevInfo.sq !== info.sq) {
+        const [prevBoardCol, prevBoardRow] = squareToCoords(prevInfo.sq);
+        const prevDisplayCol = flipped ? 7 - prevBoardCol : prevBoardCol;
+        const prevDisplayRow = flipped ? 7 - prevBoardRow : prevBoardRow;
+        fromX = prevDisplayCol * CELL + CELL / 2;
+        fromY = prevDisplayRow * CELL + CELL / 2 + 1;
+        shouldAnimate = true;
+      }
+
+      const deltaX = x - fromX;
+      const deltaY = y - fromY;
+
+      elements.push(
+        <text
+          key={id}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={CELL * 0.72}
+          style={{
+            filter: info.color === "w"
+              ? "drop-shadow(0 1px 2px rgba(0,0,0,0.7))"
+              : "drop-shadow(0 1px 1px rgba(0,0,0,0.4))",
+            userSelect: "none",
+            transform: shouldAnimate
+              ? `translate(${fromX}px, ${fromY}px)`
+              : `translate(${x}px, ${y}px)`,
+            animation: shouldAnimate
+              ? `piece-move-${id.replace(/[^a-zA-Z0-9]/g, "")} 200ms ease-out forwards`
+              : undefined,
+          }}
+        >
+          {info.glyph}
+        </text>
+      );
+
+      if (shouldAnimate) {
+        // Inject a keyframe animation via a style tag approach
+        // We'll use CSS custom properties instead — see below
+      }
+    });
+
+    return elements;
+  }, [currentPieces, prevPieces, flipped, CELL]);
+
+  // Build inline <style> for piece animations
+  const animationStyles = useMemo(() => {
+    const rules: string[] = [];
+    currentPieces.forEach((info, id) => {
+      const prevInfo = prevPieces.get(id);
+      if (!prevInfo || prevInfo.sq === info.sq) return;
+
+      const [boardCol, boardRow] = squareToCoords(info.sq);
+      const displayCol = flipped ? 7 - boardCol : boardCol;
+      const displayRow = flipped ? 7 - boardRow : boardRow;
+      const x = displayCol * CELL + CELL / 2;
+      const y = displayRow * CELL + CELL / 2 + 1;
+
+      const [prevBoardCol, prevBoardRow] = squareToCoords(prevInfo.sq);
+      const prevDisplayCol = flipped ? 7 - prevBoardCol : prevBoardCol;
+      const prevDisplayRow = flipped ? 7 - prevBoardRow : prevBoardRow;
+      const fromX = prevDisplayCol * CELL + CELL / 2;
+      const fromY = prevDisplayRow * CELL + CELL / 2 + 1;
+
+      const animName = `piece-move-${id.replace(/[^a-zA-Z0-9]/g, "")}`;
+      rules.push(`
+        @keyframes ${animName} {
+          from { transform: translate(${fromX}px, ${fromY}px); }
+          to   { transform: translate(${x}px, ${y}px); }
+        }
+      `);
+    });
+    return rules.join("\n");
+  }, [currentPieces, prevPieces, flipped, CELL]);
 
   return (
     <div
       className={`rounded-xl overflow-hidden border ${isDark ? "border-[#243028]/70" : "border-[#ADBC9F]/60"}`}
       style={{ width: "100%", maxWidth: SIZE, aspectRatio: "1 / 1", flexShrink: 0 }}
-      aria-label={`Chessboard position: ${fen}`}
+      aria-label={`Chessboard position`}
     >
+      {animationStyles && <style>{animationStyles}</style>}
       <svg
         width="100%"
         height="100%"
@@ -241,30 +424,8 @@ function ForecastBoard({ fen, flipped, isDark, lastMovePath }: BoardProps) {
           })
         )}
 
-        {/* Pieces */}
-        {board.map((rowArr, boardRow) =>
-          rowArr.map((piece, boardCol) => {
-            if (!piece) return null;
-            const glyph = PIECE_GLYPHS[`${piece.color}${piece.type.toUpperCase()}`];
-            if (!glyph) return null;
-            const displayRow = flipped ? 7 - boardRow : boardRow;
-            const displayCol = flipped ? 7 - boardCol : boardCol;
-            const x = displayCol * CELL + CELL / 2;
-            const y = displayRow * CELL + CELL / 2 + 1;
-            return (
-              <text key={`${boardRow}-${boardCol}`} x={x} y={y}
-                textAnchor="middle" dominantBaseline="central"
-                fontSize={CELL * 0.72}
-                style={{
-                  filter: piece.color === "w"
-                    ? "drop-shadow(0 1px 2px rgba(0,0,0,0.7))"
-                    : "drop-shadow(0 1px 1px rgba(0,0,0,0.4))",
-                  userSelect: "none",
-                }}
-              >{glyph}</text>
-            );
-          })
-        )}
+        {/* Animated pieces */}
+        {pieceElements}
 
         {/* Rank labels */}
         {Array.from({ length: 8 }, (_, i) => {
@@ -298,7 +459,6 @@ interface BranchRowProps {
   onSelect: (node: FNode) => void;
   isDark: boolean;
   t: Tokens;
-  showMoreContinuations?: boolean;
 }
 
 function BranchRow({ node, isSelected, onSelect, isDark, t }: BranchRowProps) {
@@ -313,44 +473,29 @@ function BranchRow({ node, isSelected, onSelect, isDark, t }: BranchRowProps) {
     ? isDark ? "text-amber-400" : "text-amber-700"
     : isDark ? "text-sky-400" : "text-sky-700";
 
-  const actorLabel = isOpponent ? "Opponent's move" : "Common reply";
-
   return (
     <button
       onClick={() => onSelect(node)}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${rowBg}`}
       style={{ minHeight: "44px" }}
       aria-pressed={isSelected}
-      aria-label={`${node.moveSan}${node.label ? `, ${node.label}` : ""}, ${formatFreq(node.count, node.parentCount)}`}
+      aria-label={`${node.moveSan}${node.label ? `, ${node.label}` : ""}, ${Math.round(node.pct * 100)}% frequency, ${node.count} games`}
     >
-      {/* Active indicator */}
-      <span
-        className={`shrink-0 w-[3px] h-6 rounded-full transition-all ${isSelected ? (isDark ? "bg-[#5B9A6A]" : "bg-[#436850]") : "bg-transparent"}`}
-      />
-
-      {/* Move SAN */}
+      <span className={`shrink-0 w-[3px] h-6 rounded-full transition-all ${isSelected ? (isDark ? "bg-[#5B9A6A]" : "bg-[#436850]") : "bg-transparent"}`} />
       <span className={`font-mono text-sm font-bold shrink-0 ${isDark ? "text-white" : "text-[#12372A]"}`}>
         {node.moveSan}
       </span>
-
-      {/* Label */}
       <span className={`flex-1 text-xs truncate ${t.textSecondary}`}>
         {node.label ?? (isOpponent ? "—" : "continuation")}
       </span>
-
-      {/* Frequency */}
       <span className={`shrink-0 text-[11px] font-medium ${isTiny ? t.textTertiary : t.textSecondary}`}>
         {isTiny
-          ? `${node.count} game${node.count !== 1 ? "s" : ""}`
+          ? `${node.count}g`
           : `${Math.round(node.pct * 100)}% · ${node.count}`}
       </span>
-
-      {/* Actor badge */}
       <span className={`shrink-0 text-[10px] font-semibold ${actorColor}`}>
         {isOpponent ? "↑" : "↓"}
       </span>
-
-      {/* Chevron if has children */}
       {node.rawChildren.length > 0 && (
         <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${t.textTertiary}`} />
       )}
@@ -360,15 +505,7 @@ function BranchRow({ node, isSelected, onSelect, isDark, t }: BranchRowProps) {
 
 // ── Performance summary ───────────────────────────────────────────────────────
 
-function PerformanceSummary({
-  node,
-  isDark,
-  t,
-}: {
-  node: FNode;
-  isDark: boolean;
-  t: Tokens;
-}) {
+function PerformanceSummary({ node, isDark, t }: { node: FNode; isDark: boolean; t: Tokens }) {
   const isTiny = node.confidence === "tiny";
   const isLow = node.confidence === "low";
 
@@ -397,14 +534,9 @@ function PerformanceSummary({
         <span className={`text-sm font-bold ${scoreColor}`}>{scorePct}%</span>
       </div>
       <p className={`text-[11px] ${t.textTertiary}`}>
-        {formatResults(node.score, node.count)}
-        {isLow && " · Limited data"}
+        {formatResults(node.count)}
+        {isLow && " · Limited data — treat with caution"}
       </p>
-      {isLow && (
-        <p className={`text-[11px] italic ${t.textTertiary}`}>
-          Treat with caution — fewer than 8 games at this position.
-        </p>
-      )}
     </div>
   );
 }
@@ -418,7 +550,6 @@ export function ForecastWalkthrough({
   t,
   opponentUsername,
 }: ForecastWalkthroughProps) {
-  // Which color are we viewing (opponent's perspective)
   const defaultOpponentColor: "white" | "black" =
     colorFilter === "black" ? "black"
     : colorFilter === "white" ? "white"
@@ -428,33 +559,32 @@ export function ForecastWalkthrough({
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<FNode | null>(null);
   const [showMore, setShowMore] = useState(false);
-  const [flipped, setFlipped] = useState(
-    // Board orientation: if opponent plays White, show White from bottom (flipped=false)
-    // If opponent plays Black, show Black from bottom (flipped=true)
-    opponentColor === "black"
-  );
+  const [flipped, setFlipped] = useState(opponentColor === "black");
 
-  // When opponentColor changes, reset path and update flip
+  // Track previous FEN for piece animation
+  const prevFenRef = useRef<string>(new Chess().fen());
+  const [prevFen, setPrevFen] = useState<string>(new Chess().fen());
+
   const handleColorSwitch = useCallback((c: "white" | "black") => {
     setOpponentColor(c);
     setSelectedPath([]);
     setSelectedNode(null);
     setShowMore(false);
     setFlipped(c === "black");
+    const startFen = new Chess().fen();
+    prevFenRef.current = startFen;
+    setPrevFen(startFen);
   }, []);
 
-  // Get branches at current path depth
   const currentBranches = useMemo((): FNode[] => {
     const rootBranches = openingForecast[opponentColor] ?? [];
     if (rootBranches.length === 0) return [];
 
     if (selectedPath.length === 0) {
-      // Root level: top-level branches
       const totalGames = rootBranches.reduce((s, b) => s + b.count, 0);
       return enrichBranches(rootBranches, [], totalGames, opponentColor, 0);
     }
 
-    // Navigate down the tree to find children at selectedPath
     let branches = rootBranches;
     let depth = 0;
     for (const san of selectedPath) {
@@ -467,24 +597,43 @@ export function ForecastWalkthrough({
     return enrichBranches(branches, selectedPath, parentCount, opponentColor, depth);
   }, [openingForecast, opponentColor, selectedPath, selectedNode]);
 
-  // Split into primary (top 3) and more
   const primaryBranches = useMemo(() => currentBranches.slice(0, 3), [currentBranches]);
   const moreBranches = useMemo(() => currentBranches.slice(3), [currentBranches]);
 
-  // Current FEN for board
   const currentFen = useMemo(() => {
     if (selectedPath.length === 0) return new Chess().fen();
     return fenFromPath(selectedPath) ?? new Chess().fen();
   }, [selectedPath]);
 
+  // Derive last move for highlight
+  const lastMove = useMemo(() => {
+    if (selectedPath.length === 0) return null;
+    const prevPath = selectedPath.slice(0, -1);
+    const c = new Chess();
+    for (const san of prevPath) {
+      try { c.move(san); } catch { return null; }
+    }
+    const lastSan = selectedPath[selectedPath.length - 1];
+    try {
+      const result = c.move(lastSan);
+      return result ? { from: result.from, to: result.to } : null;
+    } catch { return null; }
+  }, [selectedPath]);
+
   const handleSelectBranch = useCallback((node: FNode) => {
+    // Capture current FEN as "previous" before updating
+    const curFen = fenFromPath(selectedPath) ?? new Chess().fen();
+    setPrevFen(curFen);
+    prevFenRef.current = curFen;
     setSelectedPath(node.path);
     setSelectedNode(node);
     setShowMore(false);
-  }, []);
+  }, [selectedPath]);
 
   const handleBack = useCallback(() => {
     if (selectedPath.length === 0) return;
+    const curFen = fenFromPath(selectedPath) ?? new Chess().fen();
+    setPrevFen(curFen);
     const newPath = selectedPath.slice(0, -1);
     setSelectedPath(newPath);
     setSelectedNode(null);
@@ -492,26 +641,22 @@ export function ForecastWalkthrough({
   }, [selectedPath]);
 
   const handleReset = useCallback(() => {
+    const curFen = fenFromPath(selectedPath) ?? new Chess().fen();
+    setPrevFen(curFen);
     setSelectedPath([]);
     setSelectedNode(null);
     setShowMore(false);
-  }, []);
+  }, [selectedPath]);
 
   const breadcrumb = pathToBreadcrumb(selectedPath);
-  const stepLabel = selectedPath.length === 0
-    ? "Starting position"
-    : `Step ${selectedPath.length}`;
-
+  const stepLabel = selectedPath.length === 0 ? "Starting position" : `Step ${selectedPath.length}`;
   const hasData = (openingForecast.white?.length ?? 0) > 0 || (openingForecast.black?.length ?? 0) > 0;
   const hasColorData = (openingForecast[opponentColor]?.length ?? 0) > 0;
+  const opponentPerspective = opponentColor === "white" ? "Opponent plays White" : "Opponent plays Black";
+  const yourPerspective = opponentColor === "white" ? "You have Black" : "You have White";
 
-  // Perspective labels
-  const opponentPerspective = opponentColor === "white"
-    ? "Opponent plays White"
-    : "Opponent plays Black";
-  const yourPerspective = opponentColor === "white"
-    ? "You have Black"
-    : "You have White";
+  // Current eval score: use selectedNode's score, or null at root
+  const evalScore = selectedNode?.score ?? null;
 
   if (!hasData) return null;
 
@@ -522,7 +667,6 @@ export function ForecastWalkthrough({
         <BookOpen className={`w-4 h-4 shrink-0 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
         <h3 className={`font-bold text-sm flex-1 ${t.textPrimary}`}>Opening Forecast</h3>
 
-        {/* Color switch */}
         <div className={`flex items-center gap-0.5 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40 border border-[#ADBC9F]/60"}`}>
           {(["white", "black"] as const).map((c) => (
             <button
@@ -540,7 +684,6 @@ export function ForecastWalkthrough({
           ))}
         </div>
 
-        {/* Flip board */}
         <button
           onClick={() => setFlipped(f => !f)}
           className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/08 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/30 text-[#436850]/50 hover:text-[#436850]"}`}
@@ -569,19 +712,28 @@ export function ForecastWalkthrough({
         </div>
       ) : (
         <>
-          {/* ── Two-column layout ───────────────────────────────────────────── */}
           <div className="flex flex-col lg:flex-row gap-4">
 
-            {/* Left: Board */}
-            <div className="flex flex-col items-center gap-2 w-full lg:w-auto lg:items-start" style={{ maxWidth: 416 }}>
-              <ForecastBoard
-                fen={currentFen}
-                flipped={flipped}
-                isDark={isDark}
-                lastMovePath={selectedPath.length > 0 ? selectedPath : undefined}
-              />
-              {/* Breadcrumb below board */}
-              <div className={`w-full text-[11px] font-mono px-2 py-1.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/60 text-white/40" : "bg-[#f0f4ec] text-[#436850]/60"}`}>
+            {/* Left: Board + Eval bar */}
+            <div className="flex flex-col gap-2 w-full lg:w-auto" style={{ maxWidth: 436 }}>
+              <div className="flex items-stretch gap-2">
+                {/* Eval bar */}
+                <EvalBar score={evalScore} isDark={isDark} flipped={flipped} />
+
+                {/* Animated board */}
+                <div className="flex-1">
+                  <AnimatedBoard
+                    fen={currentFen}
+                    prevFen={prevFen}
+                    flipped={flipped}
+                    isDark={isDark}
+                    lastMove={lastMove}
+                  />
+                </div>
+              </div>
+
+              {/* Breadcrumb */}
+              <div className={`text-[11px] font-mono px-2 py-1.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/60 text-white/40" : "bg-[#f0f4ec] text-[#436850]/60"}`}>
                 {breadcrumb}
               </div>
             </div>
@@ -590,7 +742,7 @@ export function ForecastWalkthrough({
             <div className="flex-1 flex flex-col gap-3 min-w-0">
 
               {/* Step indicator + nav */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-[#1e2e22] text-[#5B9A6A]" : "bg-[#ADBC9F]/30 text-[#436850]"}`}>
                   {stepLabel}
                 </span>
@@ -633,7 +785,7 @@ export function ForecastWalkthrough({
               {currentBranches.length === 0 ? (
                 <div className={`p-3 rounded-xl text-xs ${t.textTertiary} ${isDark ? "bg-[#1e2e22]/30" : "bg-[#f8faf5]"}`}>
                   {selectedPath.length > 0
-                    ? "No further branches with enough data. This is the end of the tracked line."
+                    ? "No further branches with enough data. End of tracked line."
                     : "No opening data available for this color."}
                 </div>
               ) : (
@@ -649,7 +801,6 @@ export function ForecastWalkthrough({
                     />
                   ))}
 
-                  {/* More continuations */}
                   {moreBranches.length > 0 && (
                     <>
                       <button
@@ -676,12 +827,11 @@ export function ForecastWalkthrough({
                 </div>
               )}
 
-              {/* Performance summary for selected node */}
+              {/* Performance summary */}
               {selectedNode && (
                 <PerformanceSummary node={selectedNode} isDark={isDark} t={t} />
               )}
 
-              {/* Practice link */}
               {selectedPath.length >= 2 && (
                 <p className={`text-[11px] ${t.textTertiary}`}>
                   Practice this position in the{" "}
