@@ -3262,12 +3262,12 @@ export default function ClubDashboard() {
 
     const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
     { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true },
+    { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true },
     { id: "feed", label: "Feed", icon: OtbFeedIcon },
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
     { id: "members", label: "Members", icon: MembersIcon },
     // battles tab removed - now a sub-tab of Feed
     // leagues consolidated into Events sub-tab filter
-    { id: "settings", label: "Settings", icon: OtbSettingsIcon },
   ];
 
   // Club background image — set via ClubSettingsPanel > ClubBackgroundPicker
