@@ -19,6 +19,7 @@ import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
 import { ScoutAISummary } from "./ScoutAISummary";
+import { ForecastWalkthrough } from "./ForecastWalkthrough";
 
 type Tokens = {
   card: string;
@@ -105,99 +106,7 @@ function PrepSnapshot({
   );
 }
 
-// ── Opening Forecast (nested tree) ────────────────────────────────────────────
-
-function OpeningForecastSection({
-  openingForecast,
-  isDark,
-  t,
-}: {
-  openingForecast: ScoutReportV3["openingForecast"];
-  isDark: boolean;
-  t: Tokens;
-}) {
-  const [color, setColor] = useState<"white" | "black">("white");
-  const branches = openingForecast[color] ?? [];
-
-  if (branches.length === 0 && (openingForecast.black ?? []).length === 0) return null;
-
-  const renderBranch = (branch: ScoutReportV3["openingForecast"]["white"][0], depth: number, parentCount: number) => {
-    const pctOfParent = parentCount > 0 ? Math.round((branch.count / parentCount) * 100) : Math.round(branch.pct * 100);
-    const scoreColor = branch.score >= 0.55 ? "text-emerald-400" : branch.score <= 0.45 ? "text-red-400" : t.textTertiary;
-
-    return (
-      <div key={`${depth}-${branch.moveSan}`} style={{ marginLeft: depth * 16 }}>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-1 ${isDark ? "bg-[#1e2e22]/40" : "bg-[#ADBC9F]/15"}`}>
-          <span className={`font-mono text-xs font-bold ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`}>
-            {branch.moveSan}
-          </span>
-          <div className="flex-1 h-1 rounded-full overflow-hidden bg-white/10">
-            <div
-              className="h-full rounded-full bg-[#436850]"
-              style={{ width: `${pctOfParent}%` }}
-            />
-          </div>
-          <span className={`text-[11px] font-semibold shrink-0 ${t.textTertiary}`}>
-            {pctOfParent}%
-          </span>
-          <span className={`text-[10px] shrink-0 ${t.textTertiary}`}>
-            ({branch.count})
-          </span>
-          <span className={`text-[10px] font-semibold shrink-0 ${scoreColor}`}>
-            {Math.round(branch.score * 100)}%
-          </span>
-          {branch.label && (
-            <span className={`text-[10px] truncate max-w-[100px] ${t.textTertiary}`}>
-              {branch.label}
-            </span>
-          )}
-        </div>
-        {/* Render children (nested branches) */}
-        {branch.children && branch.children.length > 0 && (
-          <div className="ml-2">
-            {branch.children.slice(0, 3).map(child => renderBranch(child, depth + 1, branch.count))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const activeBranches = openingForecast[color] ?? [];
-  const totalGames = activeBranches.reduce((s, b) => s + b.count, 0);
-
-  return (
-    <div className={`${t.card} p-4 sm:p-5`}>
-      <div className="flex items-center gap-2 mb-3">
-        <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>Opening Forecast</h3>
-        {/* Color toggle */}
-        <div className={`flex items-center gap-0.5 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40 border border-[#ADBC9F]/60"}`}>
-          {(["white", "black"] as const).map((c) => (
-            <button
-              key={c}
-              onClick={() => setColor(c)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                color === c
-                  ? "bg-[#436850] text-white"
-                  : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-              }`}
-            >
-              {c === "white" ? "♔ As White" : "♚ As Black"}
-            </button>
-          ))}
-        </div>
-      </div>
-      {totalGames > 0 && (
-        <p className={`text-[11px] mb-3 ${t.textTertiary}`}>
-          Based on {totalGames} games as {color}. Percentages show frequency within each branch.
-        </p>
-      )}
-      <div className="space-y-0.5">
-        {activeBranches.slice(0, 5).map(branch => renderBranch(branch, 0, totalGames))}
-      </div>
-    </div>
-  );
-}
+// OpeningForecastSection is replaced by ForecastWalkthrough (board-first interactive redesign)
 
 // ── Game Plan Section ─────────────────────────────────────────────────────────
 
@@ -428,8 +337,14 @@ export function V3ScoutReportTab({ report, isDark, t, colorFilter = "both" }: Pr
       {/* 2. Prep Snapshot — top 3 above the fold */}
       <PrepSnapshot insights={filteredInsights} isDark={isDark} t={t} />
 
-      {/* 3. Opening Forecast — nested move trees */}
-      <OpeningForecastSection openingForecast={report.openingForecast} isDark={isDark} t={t} />
+      {/* 3. Opening Forecast — board-first interactive walkthrough */}
+      <ForecastWalkthrough
+        openingForecast={report.openingForecast}
+        colorFilter={colorFilter}
+        isDark={isDark}
+        t={t}
+        opponentUsername={report.opponent.username}
+      />
 
       {/* 4. Game Plan — If You Have White / Black */}
       {colorFilter !== "black" && ifWhiteInsights.length > 0 && (
