@@ -3408,7 +3408,7 @@ export default function ClubDashboard() {
                   alignItems: "center",
                   justifyContent: "center",
                   width: "100%",
-                  maxWidth: sidebarCollapsed ? "64px" : "36px",
+                  maxWidth: sidebarCollapsed ? "64px" : "44px",
                   background: "transparent",
                   border: "none",
                   padding: 0,
@@ -3420,26 +3420,28 @@ export default function ClubDashboard() {
                   <img
                     src={club.avatarUrl}
                     alt={club.name}
-                    className="rounded-lg object-cover"
+                    className="rounded-xl object-cover"
                     style={{
-                      width: "34px",
-                      height: "34px",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      width: "44px",
+                      height: "44px",
+                      border: "1.5px solid rgba(255,255,255,0.12)",
+                      boxShadow: `0 2px 12px ${accent}33`,
                       flexShrink: 0,
                     }}
                   />
                 ) : (
                   <div
-                    className="rounded-lg flex items-center justify-center"
+                    className="rounded-xl flex items-center justify-center"
                     style={{
-                      width: "34px",
-                      height: "34px",
+                      width: "44px",
+                      height: "44px",
                       background: `${accent}22`,
-                      border: `1px solid ${accent}44`,
+                      border: `1.5px solid ${accent}55`,
+                      boxShadow: `0 2px 12px ${accent}33`,
                       flexShrink: 0,
                     }}
                   >
-                    <span className="text-sm font-bold" style={{ color: accent }}>
+                    <span className="text-base font-bold" style={{ color: accent }}>
                       {club.name?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
