@@ -562,6 +562,31 @@ export default function MeetupEventPage() {
                       </div>
                     )}
 
+                    {/* ── Tournament Banner (shown when event is linked to a tournament) */}
+                    {event.tournamentId && (
+                      <div
+                        className="rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-lg hover:shadow-black/20"
+                        style={{ background: "oklch(0.15 0.05 145)", border: `1px solid ${accentColor}33` }}
+                      >
+                        <div className="px-5 py-4 border-b border-white/08 flex items-center gap-2">
+                          <ClipboardList className="w-4 h-4" style={{ color: accentColor }} />
+                          <h2 className="text-white/60 text-xs font-bold uppercase tracking-wider">Tournament</h2>
+                        </div>
+                        <div className="px-5 py-4 space-y-3">
+                          <p className="text-white/55 text-sm leading-relaxed">
+                            This event includes a live OTB chess tournament. Join to compete, track results, and view standings in real time.
+                          </p>
+                          <Link
+                            href={`/tournament/${event.tournamentId}`}
+                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+                            style={{ background: accentColor + "22", color: accentColor, border: `1px solid ${accentColor}44` }}
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            View Tournament
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                     {/* Check-in action */}
                     {!isOwnerOrDirector && (
                       <Link

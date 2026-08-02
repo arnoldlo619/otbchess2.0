@@ -39,7 +39,7 @@ import { useClubPresence } from "@/hooks/useClubPresence";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { TournamentWizard } from "@/components/TournamentWizard";
-import { listTournamentsByClub, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { listTournamentsByClub, getTournamentConfig, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
 import {
@@ -3649,8 +3649,26 @@ export default function ClubProfile() {
             syncClubTournamentCount(club.id);
             const refreshed = getClub(club.id);
             if (refreshed) setClub(refreshed);
-            // Post a feed event if a new tournament was actually created
+            // Post a feed event and auto-create club event if a new tournament was created
             if (createdTournamentId && createdTournamentName) {
+              // Auto-create a club event linked to this tournament
+              const tCfg = getTournamentConfig(createdTournamentId);
+              const tournamentStartAt = tCfg?.date
+                ? new Date(tCfg.date + "T00:00:00").toISOString()
+                : new Date().toISOString();
+              createClubEvent({
+                clubId: club.id,
+                title: createdTournamentName,
+                description: `Club tournament hosted by ${club.name}. Join and track results live.`,
+                startAt: tournamentStartAt,
+                venue: tCfg?.venue ?? undefined,
+                creatorId: user?.id ?? "",
+                creatorName: user?.displayName ?? club.ownerName,
+                accentColor: club.accentColor,
+                isPublished: true,
+                eventType: "standard",
+                tournamentId: createdTournamentId,
+              });
               recordTournamentCreated(
                 club.id,
                 user?.displayName ?? club.ownerName,

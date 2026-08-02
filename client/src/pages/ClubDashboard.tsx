@@ -109,6 +109,7 @@ import {
   makeSlug,
   generateDirectorCode,
   grantDirectorSession,
+  getTournamentConfig,
   type TournamentConfig,
 } from "@/lib/tournamentRegistry";
 import { nanoid } from "nanoid";
@@ -7254,11 +7255,17 @@ export default function ClubDashboard() {
           onClose={(createdTournamentId, createdTournamentName) => {
             setShowTournamentWizard(false);
             if (createdTournamentId && createdTournamentName) {
+              // Use the tournament's scheduled date (not now) for the event startAt
+              const tCfg = getTournamentConfig(createdTournamentId);
+              const tournamentStartAt = tCfg?.date
+                ? new Date(tCfg.date + "T00:00:00").toISOString()
+                : new Date().toISOString();
               createClubEvent({
                 clubId: club.id,
                 title: createdTournamentName,
                 description: `Club tournament hosted by ${club.name}. Join and track results live.`,
-                startAt: new Date().toISOString(),
+                startAt: tournamentStartAt,
+                venue: tCfg?.venue ?? undefined,
                 creatorId: user.id,
                 creatorName: user.displayName,
                 accentColor: club.accentColor,

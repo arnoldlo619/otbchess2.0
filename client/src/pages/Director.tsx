@@ -106,6 +106,8 @@ import {
   Radio,
   Plug,
   AlertTriangle,
+  CalendarDays,
+  ClipboardList,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -2362,6 +2364,8 @@ export default function Director() {
   }, [user?.id, tournamentId, state.tournamentName]);
 
   const [resetConfirm, setResetConfirm] = useState(false);
+  // Club event lookup — fetched when tournament has a clubId
+  const [clubEventInfo, setClubEventInfo] = useState<{ eventId: string; clubId: string } | null>(null);
   const [activeTab, setActiveTab] = useState<"home" | "players" | "standings" | "bracket" | "settings">("home");
   const [activeQuadSectionId, setActiveQuadSectionId] = useState<string | null>(null);
   const [swipeFlash, setSwipeFlash] = useState<"left" | "right" | null>(null);
@@ -2414,6 +2418,19 @@ export default function Director() {
 
   // Fetch club avatar for PDF branding (best-effort, non-blocking)
   const { avatarUrl: clubAvatarUrl } = useClubAvatar(tournamentConfig?.clubId ?? null);
+
+  // ── Club event lookup ─────────────────────────────────────────────────────
+  // When this tournament is linked to a club, look up the associated club event
+  // so the Settings tab can show a direct link to the event page.
+  useEffect(() => {
+    if (!tournamentConfig?.clubId || tournamentId === "otb-demo-2026") return;
+    authFetch(`/api/clubs/by-tournament/${encodeURIComponent(tournamentId)}`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { eventId: string; clubId: string } | null) => {
+        if (data?.eventId) setClubEventInfo(data);
+      })
+      .catch(() => { /* non-critical */ });
+  }, [tournamentId, tournamentConfig?.clubId]);
 
   // ── Server-side customSlug hydration ────────────────────────────────────────
   // On mount, fetch the tournament meta from the server and sync the customSlug
@@ -6792,6 +6809,55 @@ export default function Director() {
                 isDark={isDark}
               />
 
+              {/* ── Club Event Page ─────────────────────────────────────────────────────────── */}
+              {tournamentConfig?.clubId && clubEventInfo && (
+                <div
+                  className={`rounded-xl border overflow-hidden ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
+                  }`}
+                >
+                  <div className={`px-5 py-3 border-b ${
+                    isDark ? "border-white/06" : "border-[#ADBC9F]/70"
+                  }`}>
+                    <h2 className={`text-xs font-bold uppercase tracking-widest ${
+                      isDark ? "text-white/35" : "text-[#436850]"
+                    }`}>Club Event Page</h2>
+                  </div>
+                  <div className="px-5 py-4 space-y-3">
+                    <p className={`text-xs ${
+                      isDark ? "text-white/45" : "text-[#436850]"
+                    }`}>
+                      This tournament has an associated club event page with RSVP and survey form capabilities.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <a
+                        href={`/clubs/${clubEventInfo.clubId}/meetup/${clubEventInfo.eventId}`}
+                        className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                          isDark
+                            ? "bg-[#4CAF50]/15 hover:bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/20"
+                            : "bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
+                        }`}
+                      >
+                        <CalendarDays className="w-4 h-4" />
+                        <span>View Event Page</span>
+                        <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                      </a>
+                      <a
+                        href={`/clubs/${clubEventInfo.clubId}/meetup/${clubEventInfo.eventId}/rsvp-form/builder`}
+                        className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                          isDark
+                            ? "bg-white/06 hover:bg-white/10 text-white/70 border border-white/10"
+                            : "bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200"
+                        }`}
+                      >
+                        <ClipboardList className="w-4 h-4" />
+                        <span>Survey Form</span>
+                        <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* ── Public Tournament Mode ─────────────────────────────────────── */}
               <PublicTournamentCard
                 tournamentId={tournamentId}

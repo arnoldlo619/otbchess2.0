@@ -1037,6 +1037,28 @@ clubsRouter.delete(
 // ─── Club Events API ──────────────────────────────────────────────────────────
 
 /**
+ * GET /api/clubs/by-tournament/:tournamentId — look up the club event linked to a tournament.
+ * Returns { eventId, clubId } so the Director page can link to /clubs/:clubId/meetup/:eventId.
+ * IMPORTANT: Must be registered before GET /:id/events to avoid Express routing conflicts.
+ */
+clubsRouter.get("/by-tournament/:tournamentId", async (req: Request, res: Response) => {
+  const { tournamentId } = req.params;
+  try {
+    const db = await getDb();
+    const [row] = await db
+      .select({ id: clubEvents.id, clubId: clubEvents.clubId })
+      .from(clubEvents)
+      .where(eq(clubEvents.tournamentId, tournamentId))
+      .limit(1);
+    if (!row) { res.status(404).json({ error: "No club event found for this tournament" }); return; }
+    res.json({ eventId: row.id, clubId: row.clubId });
+  } catch (err) {
+    logger.error("[clubs] GET /by-tournament/:tournamentId error:", err);
+    res.status(500).json({ error: "Failed to look up club event" });
+  }
+});
+
+/**
  * GET /api/clubs/event/:eventId — fetch a single event by ID (no clubId required, used by QR check-in flow)
  * IMPORTANT: This MUST be registered before GET /:id/events to prevent Express from matching
  * "event" as the :id parameter and routing to the wrong handler.

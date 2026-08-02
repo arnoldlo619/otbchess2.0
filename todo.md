@@ -7511,3 +7511,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] publicSnapshot.ts: Added per-section standings field to PublicQuadSection type
 - [x] publicSnapshot.ts: Fixed reference mutation bug in per-section rank assignment (clone rows before re-ranking)
 - [x] 17 new vitest tests in server/quadsP0SecondPass.test.ts (4/8/12 player fixtures, SB, lifecycle, registration, regression)
+
+## Tournament-as-Club-Event
+
+- [x] Auto-create club event when tournament is created from ClubDashboard (with tournament date and venue)
+- [x] Auto-create club event when tournament is created from ClubProfile TournamentWizard onClose
+- [x] Server: GET /api/clubs/by-tournament/:tournamentId endpoint returns { eventId, clubId }
+- [x] Director Settings tab: Club Event Page card with "View Event Page" and "Survey Form" links (shown when tournament has clubId and linked event)
+- [x] MeetupEventPage: Tournament section shown when event.tournamentId is set (links to /tournament/:id)
+- [x] 5 vitest tests for club-tournament-event integration (all passing)
