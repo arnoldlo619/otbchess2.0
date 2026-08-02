@@ -7520,3 +7520,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director Settings tab: Club Event Page card with "View Event Page" and "Survey Form" links (shown when tournament has clubId and linked event)
 - [x] MeetupEventPage: Tournament section shown when event.tournamentId is set (links to /tournament/:id)
 - [x] 5 vitest tests for club-tournament-event integration (all passing)
+
+## Club Dashboard Sidebar Redesign
+
+- [x] Redesign ClubDashboard sidebar: fixed 240px width, Linear-inspired premium dark theme, no expand-on-hover gimmick, club identity at top, always-visible labels, clean active states

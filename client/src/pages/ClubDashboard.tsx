@@ -3362,114 +3362,229 @@ export default function ClubDashboard() {
       )}
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] overflow-hidden">
-        {/* ── LEFT SIDEBAR (desktop) — matches ClubProfile expand-on-hover design ── */}
+        {/* ── LEFT SIDEBAR (desktop) — Linear-inspired fixed-width premium nav ── */}
         <aside
-          className="hidden lg:flex flex-col flex-shrink-0 h-full group/sidebar"
+          className="hidden lg:flex flex-col flex-shrink-0 h-full"
           style={{
             position: "relative",
-            width: "68px",
-            transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
-            background: sidebarBg ?? undefined,
-            backgroundImage: sidebarBg ? undefined : (isDark
-              ? `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`
-              : `repeating-conic-gradient(oklch(0.16 0.06 145) 0% 25%, oklch(0.12 0.04 145) 0% 50%)`),
-            backgroundSize: sidebarBg ? undefined : "12px 12px",
+            width: "240px",
+            background: sidebarBg ?? "oklch(0.12 0.02 145)",
             borderRight: `1px solid ${navBorder}`,
             backdropFilter: sidebarBg ? "blur(16px)" : undefined,
             overflow: "hidden",
             zIndex: 40,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
         >
-          {/* Top: OTB!! logo */}
-          <div className="pt-5 pb-3 px-2 flex-shrink-0">
+          {/* ── Top: Club identity ── */}
+          <div className="px-4 pt-5 pb-4 flex-shrink-0">
             <button
               onClick={() => navigate("/clubs")}
-              className="relative flex items-center justify-start w-full bg-transparent border-none p-0 cursor-pointer"
-              style={{ height: "60px" }}
-              title="ChessOTB.Club — Back to Clubs"
+              className="flex items-center gap-3 w-full bg-transparent border-none p-0 cursor-pointer group/clubhead"
+              title="Back to Clubs"
             >
-              <img
-                src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
-                alt="OTB!!"
-                className="w-14 h-14 object-contain flex-shrink-0"
+              {club.avatarUrl ? (
+                <img
+                  src={club.avatarUrl}
+                  alt={club.name}
+                  className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                />
+              ) : (
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${accent}22`, border: `1px solid ${accent}44` }}
+                >
+                  <span className="text-sm font-bold" style={{ color: accent }}>
+                    {club.name?.charAt(0)?.toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0 text-left">
+                <p
+                  className="text-[14px] font-semibold leading-tight truncate transition-colors duration-150 group-hover/clubhead:text-white"
+                  style={{ color: "rgba(255,255,255,0.9)", fontFamily: "'Inter', sans-serif" }}
+                >
+                  {club.name}
+                </p>
+                <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  {members.length} member{members.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <ChevronLeft
+                size={14}
+                className="flex-shrink-0 opacity-0 group-hover/clubhead:opacity-60 transition-opacity duration-150"
+                style={{ color: "rgba(255,255,255,0.6)" }}
               />
             </button>
           </div>
 
-          {/* Nav items — vertically centered */}
-          <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
-            {clubTabs.map((ct) => {
+          {/* ── Divider ── */}
+          <div className="mx-4 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+
+          {/* ── Main navigation ── */}
+          <nav className="flex flex-col gap-0.5 flex-1 px-3 pt-4">
+            {/* Section label for owner-only items */}
+            {isOwnerOrDirector && (
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                Manage
+              </p>
+            )}
+            {clubTabs.filter(ct => ct.ownerOnly && isOwnerOrDirector).map((ct) => {
               const Icon = ct.icon;
               const isActive = tab === ct.id;
               return (
                 <button
                   key={ct.id}
                   onClick={() => setTab(ct.id)}
-                  className="group/navbtn relative flex flex-row items-center gap-3 rounded-xl text-left"
+                  className="group/navbtn relative flex items-center gap-3 rounded-lg text-left w-full"
                   style={{
-                    height: "52px",
-                    minWidth: "44px",
-                    paddingLeft: "13px",
+                    height: "36px",
+                    paddingLeft: "10px",
                     paddingRight: "10px",
-                    background: isActive ? "rgba(124,245,98,0.12)" : "transparent",
-                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.45)",
-                    transition: "background 200ms cubic-bezier(0.4,0,0.2,1), color 160ms ease, box-shadow 200ms ease",
-                    boxShadow: isActive ? "inset 0 0 0 1px rgba(124,245,98,0.22), 0 1px 8px rgba(124,245,98,0.08)" : "none",
+                    background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
+                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
+                    transition: "background 150ms ease, color 150ms ease",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.95)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                      e.currentTarget.style.boxShadow = "inset 0 0 0 1px rgba(255,255,255,0.09)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.85)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
                       e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.55)";
                     }
                   }}
                   aria-label={ct.label}
-                  title={ct.label}
                 >
-                  {/* Icon — scale on hover, green tint when active */}
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
+                      style={{ height: "18px", background: "#7cf562" }}
+                    />
+                  )}
                   <span
-                    className={`relative flex-shrink-0 w-8 flex items-center justify-center transition-transform duration-[180ms] ease-out group-hover/navbtn:scale-110 otb-icon${isActive ? " otb-icon--active" : ""}`}
-                    style={{ color: isActive ? "#7cf562" : "inherit" }}
+                    className="relative flex-shrink-0 flex items-center justify-center"
+                    style={{ width: "20px", color: isActive ? "#7cf562" : "inherit" }}
                   >
-                    <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} />
-                    {(ct.badge ?? 0) > 0 && (
-                      <span
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: "#ef4444", color: "#fff" }}
-                      >
-                        {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
-                      </span>
-                    )}
+                    <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
                   </span>
-                  {/* Label — slides in on sidebar hover */}
                   <span
-                    className="text-[14px] font-semibold whitespace-nowrap overflow-hidden transition-all duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
-                    style={{
-                      color: "inherit",
-                      fontFamily: "'Inter', 'Clash Display', sans-serif",
-                      letterSpacing: "0.005em",
-                      willChange: "max-width, opacity",
-                    }}
+                    className="text-[13px] font-medium"
+                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif" }}
                   >
                     {ct.label}
                   </span>
+                  {(ct.badge ?? 0) > 0 && (
+                    <span
+                      className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
+                    >
+                      {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Section label for main nav */}
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 mb-1 mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>
+              Club
+            </p>
+            {clubTabs.filter(ct => !ct.ownerOnly).map((ct) => {
+              const Icon = ct.icon;
+              const isActive = tab === ct.id;
+              return (
+                <button
+                  key={ct.id}
+                  onClick={() => setTab(ct.id)}
+                  className="group/navbtn relative flex items-center gap-3 rounded-lg text-left w-full"
+                  style={{
+                    height: "36px",
+                    paddingLeft: "10px",
+                    paddingRight: "10px",
+                    background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
+                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
+                    transition: "background 150ms ease, color 150ms ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.85)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+                    }
+                  }}
+                  aria-label={ct.label}
+                >
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
+                      style={{ height: "18px", background: "#7cf562" }}
+                    />
+                  )}
+                  <span
+                    className="relative flex-shrink-0 flex items-center justify-center"
+                    style={{ width: "20px", color: isActive ? "#7cf562" : "inherit" }}
+                  >
+                    <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
+                  </span>
+                  <span
+                    className="text-[13px] font-medium"
+                    style={{ color: "inherit", fontFamily: "'Inter', sans-serif" }}
+                  >
+                    {ct.label}
+                  </span>
+                  {(ct.badge ?? 0) > 0 && (
+                    <span
+                      className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
+                    >
+                      {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </nav>
 
-          {/* Bottom: settings only — avatar is in the top-right header */}
-          <div className="pb-5 flex flex-col gap-0.5 px-2">
-            <div className="h-px mb-2 mx-1" style={{ background: "rgba(255,255,255,0.08)" }} />
+          {/* ── Bottom: User profile mini card ── */}
+          <div className="px-3 pb-4 flex-shrink-0">
+            <div className="h-px mb-3 mx-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.displayName}
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    {user?.displayName?.charAt(0)?.toUpperCase() ?? "?"}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium truncate" style={{ color: "rgba(255,255,255,0.75)" }}>
+                  {user?.displayName ?? "Guest"}
+                </p>
+                <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  {isClubOwner ? "Owner" : isOwnerOrDirector ? "Director" : "Member"}
+                </p>
+              </div>
+            </div>
           </div>
         </aside>
 
