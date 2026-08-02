@@ -578,17 +578,18 @@ function OTBBrand({
         <div style={{ width: 1, height: 28 * s, background: "rgba(255,255,255,0.18)" }} />
       )}
 
-      <div
+      <img
+        src="/manus-storage/chessotb-logo_edcecdb1.png"
+        alt="ChessOTB.Club"
+        crossOrigin="anonymous"
         style={{
-          fontWeight: 900,
-          fontStyle: "italic",
-          fontSize: 26 * s,
-          color: theme.accentLight,
-          letterSpacing: "0.02em",
+          height: 36 * s,
+          maxWidth: 160 * s,
+          objectFit: "contain",
+          filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
+          opacity: 0.90,
         }}
-      >
-        OTB!!
-      </div>
+      />
 
       {/* Logo on the right side */}
       {hostLogoUrl && logoRight && (
@@ -639,11 +640,8 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
   const hasAvatar = !!championAvatarUrl;
   const isAntonLike = headingFont.italic !== false;
 
-  // Dynamic font size for tournament name — fills width
-  const nameFontSize = Math.min(
-    headingSize * s,
-    (SLIDE_W * s * 0.88) / Math.max(1, tournamentName.length * 0.52)
-  );
+  // Dynamic font size for tournament name — same base as champion name, clamped for long names
+  const nameFontSize = clampFont(isStory ? 130 * s : 110 * s, tournamentName, 18);
 
   return (
     <SlideWrapper scale={scale} theme={theme} format={format} headingFont={headingFont} bgType={bgType} bgValue={bgValue}>
