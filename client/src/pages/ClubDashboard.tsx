@@ -3463,7 +3463,7 @@ export default function ClubDashboard() {
           </div>
 
           {/* ── Main navigation ── */}
-          <nav className="flex flex-col gap-0.5 flex-1 pt-3" style={{ padding: sidebarEffectivelyCollapsed ? "12px 8px 0" : "12px 10px 0" }}>
+          <nav className="flex flex-col gap-0.5 flex-1 justify-center" style={{ padding: sidebarEffectivelyCollapsed ? "0 8px" : "0 10px" }}>
             {clubTabs.filter(ct => !ct.ownerOnly || isOwnerOrDirector).map((ct) => {
               const Icon = ct.icon;
               const isActive = tab === ct.id;
@@ -3548,31 +3548,7 @@ export default function ClubDashboard() {
 
           </nav>
 
-          {/* ── Bottom: Collapse toggle ── */}
-          <div className="flex-shrink-0">
-            <div className="h-px mx-3" style={{ background: "rgba(255,255,255,0.06)" }} />
-            <button
-              onClick={toggleSidebar}
-              title={sidebarEffectivelyCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={sidebarEffectivelyCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="flex items-center justify-center w-full"
-              style={{
-                height: "44px",
-                background: "transparent",
-                border: "none",
-                color: "rgba(255,255,255,0.20)",
-                cursor: "pointer",
-                transition: "color 150ms ease",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.20)"; }}
-            >
-              {sidebarEffectivelyCollapsed
-                ? <PanelLeftOpen size={14} strokeWidth={1.5} />
-                : <PanelLeftClose size={14} strokeWidth={1.5} />
-              }
-            </button>
-          </div>
+
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
