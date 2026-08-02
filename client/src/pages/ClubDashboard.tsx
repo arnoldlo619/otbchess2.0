@@ -3464,53 +3464,34 @@ export default function ClubDashboard() {
                 >
                   {club.name}
                 </p>
-                <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  {members.length} member{members.length !== 1 ? "s" : ""}
-                </p>
+
               </div>
             </div>
 
-            {/* Collapse toggle button — sits below club identity */}
-            <div
-              className="flex"
+            {/* Collapse toggle — subtle ghost icon, flush with divider */}
+            <button
+              onClick={toggleSidebar}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="flex items-center justify-center"
               style={{
-                marginTop: "12px",
-                justifyContent: sidebarCollapsed ? "center" : "flex-end",
-                paddingRight: sidebarCollapsed ? 0 : "2px",
-                transition: "justify-content 220ms ease",
+                marginTop: "10px",
+                width: "100%",
+                height: "22px",
+                background: "transparent",
+                border: "none",
+                color: "rgba(255,255,255,0.20)",
+                cursor: "pointer",
+                transition: "color 150ms ease",
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.20)"; }}
             >
-              <button
-                onClick={toggleSidebar}
-                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                className="flex items-center justify-center rounded-md"
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.35)",
-                  cursor: "pointer",
-                  transition: "background 150ms ease, color 150ms ease, border-color 150ms ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                  e.currentTarget.style.color = "rgba(255,255,255,0.75)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "rgba(255,255,255,0.35)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                }}
-              >
-                {sidebarCollapsed
-                  ? <PanelLeftOpen size={14} strokeWidth={1.8} />
-                  : <PanelLeftClose size={14} strokeWidth={1.8} />
-                }
-              </button>
-            </div>
+              {sidebarCollapsed
+                ? <PanelLeftOpen size={13} strokeWidth={1.5} />
+                : <PanelLeftClose size={13} strokeWidth={1.5} />
+              }
+            </button>
           </div>
 
           {/* ── Divider ── */}
@@ -3713,64 +3694,8 @@ export default function ClubDashboard() {
             })}
           </nav>
 
-          {/* ── Bottom: User profile mini card ── */}
-          <div
-            className="flex-shrink-0"
-            style={{
-              padding: sidebarCollapsed ? "0 8px 16px" : "0 12px 16px",
-              transition: "padding 220ms cubic-bezier(0.4,0,0.2,1)",
-            }}
-          >
-            <div className="h-px mb-3" style={{ background: "rgba(255,255,255,0.06)" }} />
-            <div
-              className="flex items-center rounded-lg"
-              style={{
-                gap: sidebarCollapsed ? 0 : "10px",
-                padding: sidebarCollapsed ? "8px 0" : "8px 8px",
-                background: "rgba(255,255,255,0.03)",
-                justifyContent: sidebarCollapsed ? "center" : "flex-start",
-                transition: "gap 220ms cubic-bezier(0.4,0,0.2,1), padding 220ms cubic-bezier(0.4,0,0.2,1)",
-              }}
-              title={sidebarCollapsed ? (user?.displayName ?? "Guest") : undefined}
-            >
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  className="rounded-full object-cover flex-shrink-0"
-                  style={{ width: "28px", height: "28px" }}
-                />
-              ) : (
-                <div
-                  className="rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ width: "28px", height: "28px", background: "rgba(255,255,255,0.08)" }}
-                >
-                  <span className="text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.6)" }}>
-                    {user?.displayName?.charAt(0)?.toUpperCase() ?? "?"}
-                  </span>
-                </div>
-              )}
-              {/* Name + role — fade out when collapsed */}
-              <div
-                className="flex-1 min-w-0"
-                style={{
-                  opacity: sidebarCollapsed ? 0 : 1,
-                  width: sidebarCollapsed ? 0 : "auto",
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
-                  pointerEvents: "none",
-                }}
-              >
-                <p className="text-[12px] font-medium truncate" style={{ color: "rgba(255,255,255,0.75)" }}>
-                  {user?.displayName ?? "Guest"}
-                </p>
-                <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  {isClubOwner ? "Owner" : isOwnerOrDirector ? "Director" : "Member"}
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Bottom spacer — profile is in the header nav bar */}
+          <div className="flex-shrink-0 pb-4" />
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
@@ -4291,29 +4216,7 @@ export default function ClubDashboard() {
               </div>
             )}
 
-            {/* ── 6. Member Growth — compact avatar strip ── */}
-            {members.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Members ({members.length})</h3>
-                  <button onClick={() => setTab("members")} className="text-xs font-semibold" style={{ color: accent }}>Manage</button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {[...members].sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()).slice(0, 8).map(m => (
-                    <div key={m.userId} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/06" style={{ background: "oklch(0.14 0.04 145)" }}>
-                      <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={24} className="rounded-full" />
-                      <span className="text-white text-xs font-medium">{m.displayName}</span>
-                      <RoleBadge role={m.role} />
-                    </div>
-                  ))}
-                  {members.length > 8 && (
-                    <button onClick={() => setTab("members")} className="flex items-center justify-center px-3 py-2 rounded-xl border border-white/06 text-white/40 text-xs font-medium hover:text-white/70 transition-colors" style={{ background: "oklch(0.14 0.04 145)" }}>
-                      +{members.length - 8} more
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+
 
             {/* Empty state for new clubs */}
             {members.length <= 1 && upcomingEvents.length === 0 && feedEvents.length === 0 && (
