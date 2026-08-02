@@ -2386,13 +2386,19 @@ export default function ClubDashboard() {
   const [tab, setTab] = useState<Tab>("feed");
   // ── Sidebar collapse state (persisted per club) ─────────────────────────────
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    try { return localStorage.getItem(`club-sidebar-collapsed`) === "1"; } catch { return false; }
+    try {
+      const stored = localStorage.getItem(`club-sidebar-collapsed`);
+      return stored === null ? true : stored === "1";
+    } catch { return true; }
   });
+  const [sidebarHovered, setSidebarHovered] = useState(false);
   const toggleSidebar = () => setSidebarCollapsed(prev => {
     const next = !prev;
     try { localStorage.setItem(`club-sidebar-collapsed`, next ? "1" : "0"); } catch { /* ignore */ }
     return next;
   });
+  // Effective collapsed state: collapsed only if collapsed AND not hovered
+  const sidebarEffectivelyCollapsed = sidebarCollapsed && !sidebarHovered;
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("profile");
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
   const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
@@ -3376,10 +3382,12 @@ export default function ClubDashboard() {
         {/* ── LEFT SIDEBAR (desktop) — collapsible premium nav ── */}
         <aside
           className="hidden lg:flex flex-col flex-shrink-0 h-full"
+          onMouseEnter={() => sidebarCollapsed && setSidebarHovered(true)}
+          onMouseLeave={() => setSidebarHovered(false)}
           style={{
             position: "relative",
-            width: sidebarCollapsed ? "64px" : "240px",
-            minWidth: sidebarCollapsed ? "64px" : "240px",
+            width: sidebarEffectivelyCollapsed ? "64px" : "240px",
+            minWidth: sidebarEffectivelyCollapsed ? "64px" : "240px",
             background: sidebarBg ?? "oklch(0.12 0.02 145)",
             borderRight: `1px solid ${navBorder}`,
             backdropFilter: sidebarBg ? "blur(16px)" : undefined,
@@ -3392,12 +3400,12 @@ export default function ClubDashboard() {
           <div
             className="flex-shrink-0"
             style={{
-              padding: sidebarCollapsed ? "16px 0 12px" : "20px 16px 14px",
+              padding: sidebarEffectivelyCollapsed ? "16px 0 12px" : "20px 16px 14px",
               transition: "padding 220ms cubic-bezier(0.4,0,0.2,1)",
             }}
           >
             {/* Club identity row */}
-            <div className="flex items-center" style={{ gap: sidebarCollapsed ? 0 : 12 }}>
+            <div className="flex items-center" style={{ gap: sidebarEffectivelyCollapsed ? 0 : 12 }}>
               {/* Avatar — always visible, centered when collapsed */}
               <button
                 onClick={() => navigate("/clubs")}
@@ -3408,7 +3416,7 @@ export default function ClubDashboard() {
                   alignItems: "center",
                   justifyContent: "center",
                   width: "100%",
-                  maxWidth: sidebarCollapsed ? "64px" : "44px",
+                  maxWidth: sidebarEffectivelyCollapsed ? "64px" : "44px",
                   background: "transparent",
                   border: "none",
                   padding: 0,
@@ -3454,28 +3462,9 @@ export default function ClubDashboard() {
 
           </div>
 
-          {/* ── Divider ── */}
-          <div className="h-px" style={{ background: "rgba(255,255,255,0.06)", margin: "0 12px" }} />
-
           {/* ── Main navigation ── */}
-          <nav className="flex flex-col gap-0.5 flex-1 pt-3" style={{ padding: sidebarCollapsed ? "12px 8px 0" : "12px 10px 0" }}>
-            {/* Section label for owner-only items */}
-            {isOwnerOrDirector && (
-              <p
-                className="text-[10px] font-semibold uppercase tracking-[0.08em] mb-1"
-                style={{
-                  color: "rgba(255,255,255,0.3)",
-                  paddingLeft: sidebarCollapsed ? 0 : "8px",
-                  opacity: sidebarCollapsed ? 0 : 1,
-                  height: sidebarCollapsed ? 0 : "auto",
-                  overflow: "hidden",
-                  transition: "opacity 180ms ease, height 220ms ease",
-                }}
-              >
-                Manage
-              </p>
-            )}
-            {clubTabs.filter(ct => ct.ownerOnly && isOwnerOrDirector).map((ct) => {
+          <nav className="flex flex-col gap-0.5 flex-1 pt-3" style={{ padding: sidebarEffectivelyCollapsed ? "12px 8px 0" : "12px 10px 0" }}>
+            {clubTabs.filter(ct => !ct.ownerOnly || isOwnerOrDirector).map((ct) => {
               const Icon = ct.icon;
               const isActive = tab === ct.id;
               return (
@@ -3483,13 +3472,13 @@ export default function ClubDashboard() {
                   key={ct.id}
                   onClick={() => setTab(ct.id)}
                   className="group/navbtn relative flex items-center rounded-lg text-left w-full"
-                  title={sidebarCollapsed ? ct.label : undefined}
+                  title={sidebarEffectivelyCollapsed ? ct.label : undefined}
                   style={{
                     height: "36px",
-                    gap: sidebarCollapsed ? 0 : "10px",
-                    paddingLeft: sidebarCollapsed ? 0 : "10px",
-                    paddingRight: sidebarCollapsed ? 0 : "10px",
-                    justifyContent: sidebarCollapsed ? "center" : "flex-start",
+                    gap: sidebarEffectivelyCollapsed ? 0 : "10px",
+                    paddingLeft: sidebarEffectivelyCollapsed ? 0 : "10px",
+                    paddingRight: sidebarEffectivelyCollapsed ? 0 : "10px",
+                    justifyContent: sidebarEffectivelyCollapsed ? "center" : "flex-start",
                     background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
                     color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
                     transition: "background 150ms ease, color 150ms ease, padding 220ms cubic-bezier(0.4,0,0.2,1), gap 220ms cubic-bezier(0.4,0,0.2,1)",
@@ -3527,8 +3516,8 @@ export default function ClubDashboard() {
                     style={{
                       color: "inherit",
                       fontFamily: "'Inter', sans-serif",
-                      opacity: sidebarCollapsed ? 0 : 1,
-                      width: sidebarCollapsed ? 0 : "auto",
+                      opacity: sidebarEffectivelyCollapsed ? 0 : 1,
+                      width: sidebarEffectivelyCollapsed ? 0 : "auto",
                       overflow: "hidden",
                       whiteSpace: "nowrap",
                       transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
@@ -3538,7 +3527,7 @@ export default function ClubDashboard() {
                     {ct.label}
                   </span>
                   {/* Badge — hide when collapsed */}
-                  {(ct.badge ?? 0) > 0 && !sidebarCollapsed && (
+                  {(ct.badge ?? 0) > 0 && !sidebarEffectivelyCollapsed && (
                     <span
                       className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                       style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
@@ -3547,7 +3536,7 @@ export default function ClubDashboard() {
                     </span>
                   )}
                   {/* Collapsed badge dot */}
-                  {(ct.badge ?? 0) > 0 && sidebarCollapsed && (
+                  {(ct.badge ?? 0) > 0 && sidebarEffectivelyCollapsed && (
                     <span
                       className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
                       style={{ background: "#f87171" }}
@@ -3557,101 +3546,6 @@ export default function ClubDashboard() {
               );
             })}
 
-            {/* Section label for main nav */}
-            <p
-              className="text-[10px] font-semibold uppercase tracking-[0.08em] mt-4 mb-1"
-              style={{
-                color: "rgba(255,255,255,0.3)",
-                paddingLeft: sidebarCollapsed ? 0 : "8px",
-                opacity: sidebarCollapsed ? 0 : 1,
-                height: sidebarCollapsed ? 0 : "auto",
-                overflow: "hidden",
-                transition: "opacity 180ms ease, height 220ms ease",
-              }}
-            >
-              Club
-            </p>
-            {clubTabs.filter(ct => !ct.ownerOnly).map((ct) => {
-              const Icon = ct.icon;
-              const isActive = tab === ct.id;
-              return (
-                <button
-                  key={ct.id}
-                  onClick={() => setTab(ct.id)}
-                  className="group/navbtn relative flex items-center rounded-lg text-left w-full"
-                  title={sidebarCollapsed ? ct.label : undefined}
-                  style={{
-                    height: "36px",
-                    gap: sidebarCollapsed ? 0 : "10px",
-                    paddingLeft: sidebarCollapsed ? 0 : "10px",
-                    paddingRight: sidebarCollapsed ? 0 : "10px",
-                    justifyContent: sidebarCollapsed ? "center" : "flex-start",
-                    background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
-                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
-                    transition: "background 150ms ease, color 150ms ease, padding 220ms cubic-bezier(0.4,0,0.2,1), gap 220ms cubic-bezier(0.4,0,0.2,1)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                      e.currentTarget.style.color = "rgba(255,255,255,0.85)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "rgba(255,255,255,0.55)";
-                    }
-                  }}
-                  aria-label={ct.label}
-                >
-                  {/* Active indicator bar */}
-                  {isActive && (
-                    <span
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
-                      style={{ height: "18px", background: "#7cf562" }}
-                    />
-                  )}
-                  <span
-                    className="relative flex-shrink-0 flex items-center justify-center"
-                    style={{ width: "20px", color: isActive ? "#7cf562" : "inherit" }}
-                  >
-                    <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
-                  </span>
-                  {/* Label — fades out when collapsed */}
-                  <span
-                    className="text-[13px] font-medium"
-                    style={{
-                      color: "inherit",
-                      fontFamily: "'Inter', sans-serif",
-                      opacity: sidebarCollapsed ? 0 : 1,
-                      width: sidebarCollapsed ? 0 : "auto",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    {ct.label}
-                  </span>
-                  {/* Badge — hide when collapsed */}
-                  {(ct.badge ?? 0) > 0 && !sidebarCollapsed && (
-                    <span
-                      className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
-                    >
-                      {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
-                    </span>
-                  )}
-                  {/* Collapsed badge dot */}
-                  {(ct.badge ?? 0) > 0 && sidebarCollapsed && (
-                    <span
-                      className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                      style={{ background: "#f87171" }}
-                    />
-                  )}
-                </button>
-              );
-            })}
           </nav>
 
           {/* ── Bottom: Collapse toggle ── */}
@@ -3659,8 +3553,8 @@ export default function ClubDashboard() {
             <div className="h-px mx-3" style={{ background: "rgba(255,255,255,0.06)" }} />
             <button
               onClick={toggleSidebar}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={sidebarEffectivelyCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={sidebarEffectivelyCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               className="flex items-center justify-center w-full"
               style={{
                 height: "44px",
@@ -3673,7 +3567,7 @@ export default function ClubDashboard() {
               onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.20)"; }}
             >
-              {sidebarCollapsed
+              {sidebarEffectivelyCollapsed
                 ? <PanelLeftOpen size={14} strokeWidth={1.5} />
                 : <PanelLeftClose size={14} strokeWidth={1.5} />
               }
