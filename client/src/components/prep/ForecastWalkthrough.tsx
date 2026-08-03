@@ -335,10 +335,12 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) 
           textAnchor="middle"
           dominantBaseline="central"
           fontSize={CELL * 0.72}
+          fill={info.color === "w" ? "#ffffff" : "#1a1a1a"}
+          stroke={info.color === "w" ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.25)"}
+          strokeWidth={info.color === "w" ? "6" : "3"}
+          strokeLinejoin="round"
+          paintOrder="stroke"
           style={{
-            filter: info.color === "w"
-              ? "drop-shadow(0 1px 2px rgba(0,0,0,0.7))"
-              : "drop-shadow(0 1px 1px rgba(0,0,0,0.4))",
             userSelect: "none",
             transform: shouldAnimate
               ? `translate(${fromX}px, ${fromY}px)`
