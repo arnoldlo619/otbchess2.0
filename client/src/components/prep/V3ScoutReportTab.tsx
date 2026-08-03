@@ -331,10 +331,7 @@ export function V3ScoutReportTab({ report, isDark, t, colorFilter = "both" }: Pr
   return (
     <div className="space-y-4">
 
-      {/* 1. AI Scouting Summary */}
-      <ScoutAISummary report={report} isDark={isDark} t={t} />
-
-      {/* 2. Prep Snapshot — top 3 above the fold */}
+      {/* Prep Snapshot — top 3 above the fold */}
       <PrepSnapshot insights={filteredInsights} isDark={isDark} t={t} />
 
       {/* 3. Opening Forecast — board-first interactive walkthrough */}

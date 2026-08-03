@@ -571,14 +571,6 @@ export default function MatchupPrep() {
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
           <NavLogo />
           <div className="flex items-center gap-2">
-            <span
-              className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"
-              }`}
-            >
-              <Crosshair className="w-3 h-3" />
-              Matchup Prep
-            </span>
             <AvatarNavDropdown />
           </div>
         </div>
