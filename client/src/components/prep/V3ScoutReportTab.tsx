@@ -13,7 +13,7 @@ import { useState, useMemo } from "react";
 import {
   BookOpen, TrendingDown, TrendingUp, Zap, Target,
   ChevronDown, ChevronRight, GitBranch, CheckSquare, AlertCircle,
-  Shield, Crosshair, Activity, Eye,
+  Shield, Crosshair, Activity, Eye, Telescope,
 } from "lucide-react";
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
@@ -81,7 +81,7 @@ function PrepSnapshot({
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-4">
-        <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
+        <Telescope className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
         <h3 className={`font-bold text-sm ${t.textPrimary}`}>Prep Snapshot</h3>
         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>
           Top findings
