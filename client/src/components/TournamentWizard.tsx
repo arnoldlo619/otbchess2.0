@@ -1566,9 +1566,11 @@ function QuickstartForm({
               style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
-                {capOptions.map((cap) => {
+                {(data.format === "quads" ? [8, 12, 16, 20, 24, 32, 40, 48, 100] : capOptions).map((cap) => {
                   const active = data.maxPlayers === cap;
+                  const isQuadsFormat = data.format === "quads";
                   const optRounds = recommendedRounds(cap);
+                  const numSections = isQuadsFormat ? Math.floor(cap / 4) : null;
                   return (
                     <button
                       key={cap}
@@ -1576,12 +1578,13 @@ function QuickstartForm({
                       onClick={() => {
                         onChange({ maxPlayers: cap });
                         setInlinePicker(null);
-                        // suggest new rounds if the optimal count differs from current selection
-                        const suggested = recommendedRounds(cap);
-                        if (suggested !== data.rounds) {
-                          setRoundsSuggestion(suggested);
-                        } else {
-                          setRoundsSuggestion(null);
+                        if (!isQuadsFormat) {
+                          const suggested = recommendedRounds(cap);
+                          if (suggested !== data.rounds) {
+                            setRoundsSuggestion(suggested);
+                          } else {
+                            setRoundsSuggestion(null);
+                          }
                         }
                       }}
                       className="flex flex-col items-center rounded-xl border transition-all duration-150"
@@ -1603,14 +1606,17 @@ function QuickstartForm({
                         className="text-[10px] mt-0.5 font-medium"
                         style={{ color: active ? T.green : isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
                       >
-                        {optRounds}R opt.
+                        {isQuadsFormat ? `${numSections} quad${numSections === 1 ? "" : "s"}` : `${optRounds}R opt.`}
                       </span>
                     </button>
                   );
                 })}
               </div>
               <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
-                Cap limits how many players can join via the invite link. Recommended rounds updates automatically.
+                {data.format === "quads"
+                  ? "Capacity must be a multiple of 4. Each group of 4 players forms one quad (3-round round robin)."
+                  : "Cap limits how many players can join via the invite link. Recommended rounds updates automatically."
+                }
               </p>
             </div>
           )}

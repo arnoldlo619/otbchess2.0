@@ -575,7 +575,16 @@ export default function JoinPage() {
         : "Elimination")
       : (isDemoCode ? DEMO_TOURNAMENT.format : ""),
     timeControl: resolvedConfig?.timePreset ?? embeddedMeta?.timePreset ?? (isDemoCode ? DEMO_TOURNAMENT.timeControl : ""),
-    playerCount: DEMO_TOURNAMENT.players.length,
+    playerCount: (() => {
+      if (isDemoCode) return DEMO_TOURNAMENT.players.length;
+      if (!resolvedConfig) return 0;
+      try {
+        const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
+        if (!raw) return 0;
+        const parsed = JSON.parse(raw);
+        return parsed?.state?.players?.length ?? 0;
+      } catch { return 0; }
+    })(),
   };
   // Keep tournament as DEMO_TOURNAMENT for ShareSheet type compatibility
   const tournament = DEMO_TOURNAMENT;

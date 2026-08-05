@@ -1390,7 +1390,8 @@ export default function ReportPage() {
                   <div key={perf.player.id}>
                     {/* Hidden export-quality card — positioned off-screen but with real dimensions */}
                     {/* sr-only would collapse dimensions to 0; instead use fixed position far off-screen */}
-                    <div style={{ position: "fixed", left: "-9999px", top: 0, pointerEvents: "none", zIndex: -1 }}>
+                    {/* aria-hidden + inert: excluded from a11y tree and keyboard nav */}
+                    <div aria-hidden="true" inert style={{ position: "fixed", left: "-9999px", top: 0, pointerEvents: "none", zIndex: -1 }}>
                       <PlayerStatsCard
                         ref={(el) => {
                           if (el) {

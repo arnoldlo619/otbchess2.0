@@ -1829,13 +1829,73 @@ export default function PublicTournament() {
 
         {/* Standings — visible on mobile only when tab active, always on desktop */}
         <section className={`${activeTab !== "standings" ? "hidden sm:block" : ""}`}>
-          <StandingsSection
-            standings={displayStandings}
-            followedPlayerId={followedPlayerId}
-            onFollowPlayer={handleFollow}
-            isDark={isDark}
-            isQuadsFormat={isQuads}
-          />
+          {isQuads && activeQuadSection === "all" ? (
+            // All Sections view: show independent section summaries, never a global ranking
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>All Sections</h3>
+              <p className="text-sm text-muted-foreground">Each quad is an independent competition. Click a section tab to see its full standings.</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {quadSections.map((s) => {
+                  const sectionRows = standings
+                    .filter(r => new Set(s.playerIds).has(r.playerId))
+                    .sort((a, b) => {
+                      if (b.points !== a.points) return b.points - a.points;
+                      if ((b.sonnebornBerger ?? 0) !== (a.sonnebornBerger ?? 0)) return (b.sonnebornBerger ?? 0) - (a.sonnebornBerger ?? 0);
+                      return b.elo - a.elo;
+                    })
+                    .map((r, i) => ({ ...r, rank: i + 1 }));
+                  const champion = sectionRows[0];
+                  return (
+                    <div
+                      key={s.id}
+                      className={`rounded-2xl border overflow-hidden ${
+                        isDark ? "border-white/08 bg-[oklch(0.22_0.06_145)]" : "border-[#ADBC9F]/50 bg-white"
+                      }`}
+                    >
+                      <div className={`px-4 py-3 flex items-center justify-between border-b ${
+                        isDark ? "border-white/06 bg-[#436850]/12" : "border-[#EEEED2] bg-[#F0F8F2]"
+                      }`}>
+                        <span className="text-sm font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>{s.name}</span>
+                        <button
+                          onClick={() => setActiveQuadSection(s.id)}
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                            isDark ? "text-[#4CAF50] hover:bg-[#436850]/20" : "text-[#436850] hover:bg-[#436850]/08"
+                          }`}
+                        >
+                          View →
+                        </button>
+                      </div>
+                      <div className="px-4 py-3 space-y-2">
+                        {sectionRows.map((row) => (
+                          <div key={row.playerId} className="flex items-center gap-2">
+                            <span className="text-xs font-bold w-5 text-muted-foreground">{row.rank === 1 ? "🏆" : `${row.rank}.`}</span>
+                            <span className="flex-1 text-sm font-medium text-foreground truncate">{row.name}</span>
+                            <span className="font-mono text-sm font-bold text-foreground">{row.points % 1 === 0 ? row.points : `${Math.floor(row.points)}½`}</span>
+                            <span className="text-xs text-muted-foreground w-10 text-right">{(row.sonnebornBerger ?? 0).toFixed(1)} SB</span>
+                          </div>
+                        ))}
+                      </div>
+                      {champion && (
+                        <div className={`px-4 py-2.5 border-t text-xs text-muted-foreground ${
+                          isDark ? "border-white/06" : "border-[#EEEED2]"
+                        }`}>
+                          🏆 Champion: <span className="font-semibold text-foreground">{champion.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <StandingsSection
+              standings={displayStandings}
+              followedPlayerId={followedPlayerId}
+              onFollowPlayer={handleFollow}
+              isDark={isDark}
+              isQuadsFormat={isQuads}
+            />
+          )}
         </section>
 
         {/* Post-Event CTAs */}

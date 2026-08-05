@@ -1496,8 +1496,9 @@ export default function TournamentPage() {
   const displayFormat = config?.format
     ? config.format === "doubleswiss" ? "Double Swiss"
     : config.format === "roundrobin" ? "Round Robin"
+    : config.format === "quads" ? "Quads"
     : config.format.charAt(0).toUpperCase() + config.format.slice(1)
-    : (isDemo ? DEMO_TOURNAMENT.format : "Swiss");
+    : (isDemo ? DEMO_TOURNAMENT.format : "");
 
   // Simulate live clock
   const [elapsed, setElapsed] = useState(0);

@@ -9,7 +9,7 @@
  * Print media: @media print hides all screen chrome, shows only the document
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { NavLogo } from "@/components/NavLogo";
@@ -23,7 +23,7 @@ import {
 } from "@/lib/tournamentData";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
-import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { getTournamentConfig, registerTournament } from "@/lib/tournamentRegistry";
 import {
   Crown,
   Printer,
@@ -652,6 +652,42 @@ export default function PrintPage() {
   const isDark = theme === "dark";
   const params = useParams<{ id: string }>();
   const tournamentId = params?.id ?? "otb-demo-2026";
+  const isDemo = tournamentId === "otb-demo-2026";
+
+  // Server-fetched state for tournaments not in localStorage
+  const [serverState, setServerState] = useState<{ players: Player[]; rounds: Round[]; currentRound: number; totalRounds: number; format: string; name: string; venue: string; date: string; status: string } | null>(null);
+  const [serverLoading, setServerLoading] = useState(false);
+  const [serverNotFound, setServerNotFound] = useState(false);
+
+  // Load real tournament state; fall back to DEMO_TOURNAMENT for the demo route
+  const realState = useMemo(() => loadTournamentState(tournamentId), [tournamentId]);
+  const realConfig = useMemo(() => getTournamentConfig(tournamentId), [tournamentId]);
+
+  // If not in localStorage and not demo, fetch from server
+  useEffect(() => {
+    if (isDemo || realState) return;
+    setServerLoading(true);
+    fetch(`/api/public/tournament/${encodeURIComponent(tournamentId)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { players?: Player[]; rounds?: Round[]; currentRound?: number; totalRounds?: number; format?: string; tournamentName?: string; venue?: string; date?: string; status?: string } | null) => {
+        if (!data) { setServerNotFound(true); setServerLoading(false); return; }
+        setServerState({
+          players: (data.players ?? []) as Player[],
+          rounds: (data.rounds ?? []) as Round[],
+          currentRound: data.currentRound ?? 0,
+          totalRounds: data.totalRounds ?? 0,
+          format: data.format ?? "swiss",
+          name: data.tournamentName ?? "Tournament",
+          venue: data.venue ?? "",
+          date: data.date ?? "",
+          status: data.status ?? "completed",
+        });
+        setServerLoading(false);
+      })
+      .catch(() => { setServerNotFound(true); setServerLoading(false); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournamentId]);
+
   // Detect elimination/swiss_elim format early so we can default to bracket tab
   const earlyConfig = useMemo(() => getTournamentConfig(tournamentId), [tournamentId]);
   const isElimFormatEarly = earlyConfig?.format === "elimination" || earlyConfig?.format === "swiss_elim";
@@ -659,26 +695,23 @@ export default function PrintPage() {
     isElimFormatEarly ? "bracket" : "slips"
   );
 
-  // Load real tournament state; fall back to DEMO_TOURNAMENT for the demo route
-  const realState = useMemo(() => loadTournamentState(tournamentId), [tournamentId]);
-  const realConfig = useMemo(() => getTournamentConfig(tournamentId), [tournamentId]);
-
   const ratingType: "rapid" | "blitz" = realConfig?.ratingType === "blitz" ? "blitz" : "rapid";
 
-  const isDemo = tournamentId === "otb-demo-2026" || !realState;
-  const tournament = isDemo ? DEMO_TOURNAMENT : {
-    name: realConfig?.name ?? "Tournament",
-    venue: realConfig?.venue ?? "",
-    date: realConfig?.date ?? new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+  // Determine the effective state: localStorage > server fetch > demo (demo only)
+  const effectiveState = realState ?? serverState;
+  const tournament = isDemo ? DEMO_TOURNAMENT : effectiveState ? {
+    name: realConfig?.name ?? (effectiveState as { name?: string }).name ?? "Tournament",
+    venue: realConfig?.venue ?? (effectiveState as { venue?: string }).venue ?? "",
+    date: realConfig?.date ?? (effectiveState as { date?: string }).date ?? new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
     timeControl: realConfig?.timePreset ?? "Standard",
-    format: realConfig?.format ?? "Swiss",
-    rounds: realConfig?.rounds ?? realState!.totalRounds,
-    currentRound: realState!.currentRound,
-    players: realState!.players,
-    roundData: realState!.rounds,
-  };
-  const currentRound = (tournament.roundData as typeof DEMO_TOURNAMENT.roundData).find((r) => r.number === tournament.currentRound);
-  const players = tournament.players;
+    format: realConfig?.format ?? effectiveState.format ?? "swiss",
+    rounds: realConfig?.rounds ?? effectiveState.totalRounds,
+    currentRound: effectiveState.currentRound,
+    players: effectiveState.players,
+    roundData: effectiveState.rounds,
+  } : null;
+  const currentRound = tournament ? (tournament.roundData as typeof DEMO_TOURNAMENT.roundData).find((r) => r.number === tournament.currentRound) : null;
+  const players = tournament?.players ?? [];
 
   // Detect elimination/swiss_elim format
   const isElimFormat = realConfig?.format === "elimination" || realConfig?.format === "swiss_elim";
@@ -694,6 +727,37 @@ export default function PrintPage() {
     { id: "crosstable-guide" as const, label: "Cross-Table Guide", icon: "🔢" },
   ];
 
+  // Show loading skeleton while fetching from server
+  if (!isDemo && !effectiveState && serverLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"}`}>
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-[#4CAF50] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-[#436850]"}`}>Loading tournament data…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show not-found state if server returned 404
+  if (!isDemo && !effectiveState && serverNotFound) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"}`}>
+        <div className="text-center max-w-md px-6">
+          <div className="text-5xl mb-4">⛔</div>
+          <h1 className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-[#12372A]"}`}>Tournament Not Found</h1>
+          <p className={`text-sm mb-6 ${isDark ? "text-white/50" : "text-[#436850]"}`}>This tournament could not be loaded. It may not be publicly visible, or the link may be incorrect.</p>
+          <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 bg-[#436850] text-white text-sm font-semibold rounded-lg hover:bg-[#2A4A32] transition-colors">
+            ← Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // At this point tournament is guaranteed non-null (either demo or effectiveState)
+  const safeTournament = tournament!;
+
   return (
     <>
       <style>{PRINT_CSS}</style>
@@ -703,7 +767,7 @@ export default function PrintPage() {
           isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
         }`}
       >
-        {/* ── Top Bar (no-print) ─────────────────────────────────────────── */}
+        {/* ── Top Bar (no-print) ────────────────────────────────────────────────────── */}
         <header
           className={`no-print sticky top-0 z-40 border-b otb-header-safe transition-colors duration-300 ${
             isDark
@@ -717,7 +781,7 @@ export default function PrintPage() {
               <NavLogo />
               <span className={`text-sm ${isDark ? "text-white/20" : "text-[#436850]/70"}`}>/</span>
               <Link
-                href="/tournament/otb-demo-2026"
+                href={isDemo ? "/tournament/otb-demo-2026" : `/tournament/${tournamentId}`}
                 className={`flex items-center gap-1 text-sm transition-colors ${
                   isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#12372A]"
                 }`}
@@ -740,7 +804,7 @@ export default function PrintPage() {
             {/* Right: Director + Print + Theme */}
             <div className="flex items-center gap-2">
               <Link
-                href="/tournament/otb-demo-2026/manage"
+                href={isDemo ? "/tournament/otb-demo-2026/manage" : `/tournament/${tournamentId}/manage`}
                 className={`hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
                   isDark
                     ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#436850]/20"
@@ -793,14 +857,14 @@ export default function PrintPage() {
                     className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
-                    {tournament.name}
+                    {safeTournament.name}
                   </h1>
                   <div className="flex flex-wrap gap-4 mt-3">
                     {[
-                      { icon: MapPin, text: tournament.venue },
-                      { icon: Calendar, text: tournament.date },
-                      { icon: Clock, text: `Time Control: ${tournament.timeControl}` },
-                      { icon: Trophy, text: `${tournament.format} · ${tournament.rounds} Rounds` },
+                      { icon: MapPin, text: safeTournament.venue },
+                      { icon: Calendar, text: safeTournament.date },
+                      { icon: Clock, text: `Time Control: ${safeTournament.timeControl}` },
+                      { icon: Trophy, text: `${safeTournament.format} · ${safeTournament.rounds} Rounds` },
                       { icon: Users, text: `${players.length} Players` },
                       { icon: Trophy, text: `${ratingType === "blitz" ? "\u{1F525} Blitz" : "\u26A1 Rapid"} ELO` },
                     ].map(({ icon: Icon, text }) => (
@@ -819,7 +883,7 @@ export default function PrintPage() {
                   >
                     <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
                     <span className="text-sm font-bold" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                      Round {tournament.currentRound} of {tournament.rounds}
+                      Round {safeTournament.currentRound} of {safeTournament.rounds}
                     </span>
                   </div>
                   <p className={`text-xs mt-1.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
@@ -861,7 +925,7 @@ export default function PrintPage() {
                     className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
-                    Round {tournament.currentRound} — Pairing Slips
+                    Round {safeTournament.currentRound} — Pairing Slips
                   </h2>
                   <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                     Cut along the dashed lines and place one slip on each board before the round begins.
@@ -892,9 +956,9 @@ export default function PrintPage() {
                     key={game.id}
                     game={game}
                     players={players}
-                    tournamentName={tournament.name}
-                    round={tournament.currentRound}
-                    timeControl={tournament.timeControl}
+                    tournamentName={safeTournament.name}
+                    round={safeTournament.currentRound}
+                    timeControl={safeTournament.timeControl}
                     ratingType={ratingType}
                     isDark={isDark}
                   />
@@ -910,8 +974,8 @@ export default function PrintPage() {
                   Previous Rounds
                 </h3>
                 <div className="space-y-3">
-                  {tournament.roundData
-                    .filter((r) => r.number < tournament.currentRound)
+                  {safeTournament.roundData
+                    .filter((r) => r.number < safeTournament.currentRound)
                     .reverse()
                     .map((round) => (
                       <div
@@ -980,7 +1044,7 @@ export default function PrintPage() {
                   Highlighted column = current round.
                 </p>
               </div>
-              <WallChart players={players} rounds={tournament.roundData as Round[]} isDark={isDark} totalRounds={tournament.rounds} currentRound={tournament.currentRound} />
+              <WallChart players={players} rounds={safeTournament.roundData as Round[]} isDark={isDark} totalRounds={safeTournament.rounds} currentRound={safeTournament.currentRound} />
               <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
                 W = White pieces · B = Black pieces · 1 = Win · ½ = Draw · 0 = Loss · · = In progress
               </p>
@@ -999,12 +1063,12 @@ export default function PrintPage() {
                 </h2>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                   {realConfig?.format === "quads"
-                    ? `Sorted by points, then Head-to-Head, then Sonneborn-Berger. Updated after Round ${tournament.currentRound - 1}.`
-                    : `Sorted by points, then Buchholz tiebreak, then ${ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round ${tournament.currentRound - 1}.`
+                    ? `Sorted by points, then Head-to-Head, then Sonneborn-Berger. Updated after Round ${safeTournament.currentRound - 1}.`
+                    : `Sorted by points, then Buchholz tiebreak, then ${ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round ${safeTournament.currentRound - 1}.`
                   }
                 </p>
               </div>
-              <StandingsTable players={players} rounds={tournament.roundData as Round[]} isDark={isDark} />
+              <StandingsTable players={players} rounds={safeTournament.roundData as Round[]} isDark={isDark} />
               <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
                 {realConfig?.format === "quads"
                   ? "Tiebreak: Head-to-Head · Sonneborn-Berger (opponent scores weighted by result) · Wins · W = Wins · D = Draws · L = Losses"
@@ -1017,23 +1081,23 @@ export default function PrintPage() {
           {/* ── Elimination Bracket ──────────────────────────────────────────── */}
           {activeSection === "bracket" && isElimFormat && (
             <BracketPrintSection
-              rounds={tournament.roundData as Round[]}
+              rounds={safeTournament.roundData as Round[]}
               players={players}
               isDark={isDark}
               elimStartRound={elimStartRound}
-              tournamentName={tournament.name}
+              tournamentName={safeTournament.name}
             />
           )}
 
           {/* ── Tiebreakers Guide ────────────────────────────────────────────────── */}
           {activeSection === "tiebreakers" && (() => {
-            const liveStandings = computeStandings(players, tournament.roundData as Round[]);
+            const liveStandings = computeStandings(players, safeTournament.roundData as Round[]);
             return (
               <div className="print-section">
                 <TiebreakersGuide
                   isDark={isDark}
                   standings={liveStandings}
-                  rounds={tournament.roundData as Round[]}
+                  rounds={safeTournament.roundData as Round[]}
                 />
               </div>
             );
@@ -1052,7 +1116,7 @@ export default function PrintPage() {
           >
             <span>Generated by OTB Chess · otbchess.club</span>
             <span>
-              {tournament.name} · Round {tournament.currentRound}/{tournament.rounds}
+              {safeTournament.name} · Round {safeTournament.currentRound}/{safeTournament.rounds}
             </span>
           </div>
         </div>
