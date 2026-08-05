@@ -400,6 +400,19 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) 
       aria-label={`Chessboard position`}
     >
       {animationStyles && <style>{animationStyles}</style>}
+      <style>{`
+        @keyframes sq-flash-to {
+          0%   { opacity: 0.85; }
+          40%  { opacity: 0.65; }
+          100% { opacity: 0; }
+        }
+        @keyframes sq-flash-from {
+          0%   { opacity: 0.45; }
+          100% { opacity: 0; }
+        }
+        .sq-flash-to  { animation: sq-flash-to  600ms ease-out forwards; }
+        .sq-flash-from { animation: sq-flash-from 400ms ease-out forwards; }
+      `}</style>
       <svg
         width="100%"
         height="100%"
@@ -420,8 +433,31 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) 
             if (isLastTo) fill = isDark ? "#436850" : "#cdd26a";
             else if (isLastFrom) fill = isDark ? "#2e5038" : "#aaa23a";
             return (
-              <rect key={`${row}-${col}`} x={col * CELL} y={row * CELL}
-                width={CELL} height={CELL} fill={fill} />
+              <g key={`${row}-${col}`}>
+                <rect x={col * CELL} y={row * CELL} width={CELL} height={CELL} fill={fill} />
+                {/* Flash overlay on destination square */}
+                {isLastTo && (
+                  <rect
+                    key={`flash-to-${lastMove?.to}`}
+                    x={col * CELL} y={row * CELL}
+                    width={CELL} height={CELL}
+                    fill={isDark ? "#7eca8f" : "#f6f669"}
+                    className="sq-flash-to"
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+                {/* Subtle fade on source square */}
+                {isLastFrom && (
+                  <rect
+                    key={`flash-from-${lastMove?.from}`}
+                    x={col * CELL} y={row * CELL}
+                    width={CELL} height={CELL}
+                    fill={isDark ? "#5B9A6A" : "#e8e84a"}
+                    className="sq-flash-from"
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+              </g>
             );
           })
         )}
