@@ -287,9 +287,12 @@ interface BoardProps {
   flipped: boolean;
   isDark: boolean;
   lastMove: { from: string; to: string } | null;
+  selectedSquare?: string | null;
+  legalSquares?: string[];
+  onSquareClick?: (sq: string) => void;
 }
 
-function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) {
+function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove, selectedSquare, legalSquares, onSquareClick }: BoardProps) {
   const CELL = 52;
   const SIZE = CELL * 8;
 
@@ -429,14 +432,47 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) 
             const sq = String.fromCharCode(97 + boardCol) + (8 - boardRow);
             const isLastFrom = lastMove?.from === sq;
             const isLastTo = lastMove?.to === sq;
+            const isSelected = selectedSquare === sq;
+            const isLegal = legalSquares?.includes(sq) ?? false;
             let fill = cellColor(col, row, isDark);
-            if (isLastTo) fill = isDark ? "#436850" : "#cdd26a";
+            if (isSelected) fill = isDark ? "#5B9A6A" : "#7fc97f";
+            else if (isLegal) fill = isDark ? "#2e5038" : "#cde6a0";
+            else if (isLastTo) fill = isDark ? "#436850" : "#cdd26a";
             else if (isLastFrom) fill = isDark ? "#2e5038" : "#aaa23a";
+            const isClickable = !!onSquareClick;
             return (
-              <g key={`${row}-${col}`}>
+              <g
+                key={`${row}-${col}`}
+                onClick={isClickable ? () => onSquareClick!(sq) : undefined}
+                style={{ cursor: isClickable ? "pointer" : "default" }}
+                role={isClickable ? "button" : undefined}
+                aria-label={isClickable ? `Square ${sq}${isSelected ? " (selected)" : ""}${isLegal ? " (legal move)" : ""}` : undefined}
+              >
                 <rect x={col * CELL} y={row * CELL} width={CELL} height={CELL} fill={fill} />
+                {/* Selected piece ring */}
+                {isSelected && (
+                  <rect
+                    x={col * CELL + 2} y={row * CELL + 2}
+                    width={CELL - 4} height={CELL - 4}
+                    fill="none"
+                    stroke={isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)"}
+                    strokeWidth={2}
+                    rx={3}
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+                {/* Legal move dot */}
+                {isLegal && (
+                  <circle
+                    cx={col * CELL + CELL / 2}
+                    cy={row * CELL + CELL / 2}
+                    r={CELL * 0.15}
+                    fill={isDark ? "rgba(91,154,106,0.7)" : "rgba(67,104,80,0.5)"}
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
                 {/* Flash overlay on destination square */}
-                {isLastTo && (
+                {isLastTo && !isSelected && (
                   <rect
                     key={`flash-to-${lastMove?.to}`}
                     x={col * CELL} y={row * CELL}
@@ -447,7 +483,7 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove }: BoardProps) 
                   />
                 )}
                 {/* Subtle fade on source square */}
-                {isLastFrom && (
+                {isLastFrom && !isSelected && (
                   <rect
                     key={`flash-from-${lastMove?.from}`}
                     x={col * CELL} y={row * CELL}
@@ -603,6 +639,109 @@ export function ForecastWalkthrough({
   const prevFenRef = useRef<string>(new Chess().fen());
   const [prevFen, setPrevFen] = useState<string>(new Chess().fen());
 
+  // Interactive board state
+  const [boardSelectedSq, setBoardSelectedSq] = useState<string | null>(null);
+  const [legalSquares, setLegalSquares] = useState<string[]>([]);
+  // Free-play mode: user played a move not in the forecast tree
+  const [freePlayPath, setFreePlayPath] = useState<string[] | null>(null);
+  const isOffBook = freePlayPath !== null;
+
+  // The effective path shown on the board (free-play overrides forecast path)
+  const effectivePath = freePlayPath ?? selectedPath;
+  const effectiveFen = useMemo(() => {
+    if (effectivePath.length === 0) return new Chess().fen();
+    return fenFromPath(effectivePath) ?? new Chess().fen();
+  }, [effectivePath]);
+
+  // Compute legal moves for a selected square given the current position
+  // Use a ref for currentBranches to avoid forward-reference issues in handleSquareClick
+  const currentBranchesRef = useRef<FNode[]>([]);
+
+  const computeLegalSquares = useCallback((sq: string, fen: string): string[] => {
+    const chess = new Chess();
+    try { chess.load(fen); } catch { return []; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const piece = (chess as any).get(sq);
+    if (!piece) return [];
+    if (piece.color !== chess.turn()) return [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const moves: Array<{ to: string }> = (chess as any).moves({ square: sq, verbose: true });
+    return moves.map((m) => m.to);
+  }, []);
+
+  // Handle square click: select piece or execute move
+  const handleSquareClick = useCallback((sq: string) => {
+    const curEffectivePath = freePlayPath ?? selectedPath;
+    const fen = curEffectivePath.length === 0 ? new Chess().fen() : (fenFromPath(curEffectivePath) ?? new Chess().fen());
+    const chess = new Chess();
+    try { chess.load(fen); } catch { return; }
+
+    if (boardSelectedSq === null) {
+      // First click: select a piece
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const piece = (chess as any).get(sq);
+      if (!piece || piece.color !== chess.turn()) {
+        setBoardSelectedSq(null);
+        setLegalSquares([]);
+        return;
+      }
+      setBoardSelectedSq(sq);
+      setLegalSquares(computeLegalSquares(sq, fen));
+    } else {
+      // Second click: attempt move
+      if (sq === boardSelectedSq) {
+        setBoardSelectedSq(null);
+        setLegalSquares([]);
+        return;
+      }
+
+      // Re-select a different piece of the same color
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const piece = (chess as any).get(sq);
+      if (piece && piece.color === chess.turn()) {
+        setBoardSelectedSq(sq);
+        setLegalSquares(computeLegalSquares(sq, fen));
+        return;
+      }
+
+      // Attempt the move
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = (chess as any).move({ from: boardSelectedSq, to: sq, promotion: "q" });
+        if (!result) {
+          setBoardSelectedSq(null);
+          setLegalSquares([]);
+          return;
+        }
+        const newPath = [...curEffectivePath, result.san];
+        setPrevFen(fen);
+        prevFenRef.current = fen;
+        setBoardSelectedSq(null);
+        setLegalSquares([]);
+
+        const curIsOffBook = freePlayPath !== null;
+        if (!curIsOffBook) {
+          const matchingBranch = currentBranchesRef.current.find(n => n.moveSan === result.san);
+          if (matchingBranch) {
+            setSelectedPath(matchingBranch.path);
+            setSelectedNode(matchingBranch);
+            setFreePlayPath(null);
+            setShowMore(false);
+          } else {
+            setFreePlayPath(newPath);
+          }
+        } else {
+          setFreePlayPath(newPath);
+        }
+      } catch {
+        setBoardSelectedSq(null);
+        setLegalSquares([]);
+      }
+    }
+  }, [boardSelectedSq, freePlayPath, selectedPath, computeLegalSquares]);
+
+
+
   const handleColorSwitch = useCallback((c: "white" | "black") => {
     setOpponentColor(c);
     setSelectedPath([]);
@@ -638,25 +777,28 @@ export function ForecastWalkthrough({
   const primaryBranches = useMemo(() => currentBranches.slice(0, 3), [currentBranches]);
   const moreBranches = useMemo(() => currentBranches.slice(3), [currentBranches]);
 
-  const currentFen = useMemo(() => {
-    if (selectedPath.length === 0) return new Chess().fen();
-    return fenFromPath(selectedPath) ?? new Chess().fen();
-  }, [selectedPath]);
+  // Keep ref in sync so handleSquareClick can access latest branches without stale closure
+  useEffect(() => {
+    currentBranchesRef.current = currentBranches;
+  }, [currentBranches]);
 
-  // Derive last move for highlight
+  // currentFen and lastMove use effectivePath so the board reflects free-play too
+  const currentFen = effectiveFen;
+
+  // Derive last move for highlight (uses effectivePath)
   const lastMove = useMemo(() => {
-    if (selectedPath.length === 0) return null;
-    const prevPath = selectedPath.slice(0, -1);
+    if (effectivePath.length === 0) return null;
+    const prevPath = effectivePath.slice(0, -1);
     const c = new Chess();
     for (const san of prevPath) {
       try { c.move(san); } catch { return null; }
     }
-    const lastSan = selectedPath[selectedPath.length - 1];
+    const lastSan = effectivePath[effectivePath.length - 1];
     try {
       const result = c.move(lastSan);
       return result ? { from: result.from, to: result.to } : null;
     } catch { return null; }
-  }, [selectedPath]);
+  }, [effectivePath]);
 
   const handleSelectBranch = useCallback((node: FNode) => {
     // Capture current FEN as "previous" before updating
@@ -686,8 +828,34 @@ export function ForecastWalkthrough({
     setShowMore(false);
   }, [selectedPath]);
 
-  const breadcrumb = pathToBreadcrumb(selectedPath);
-  const stepLabel = selectedPath.length === 0 ? "Starting position" : `Step ${selectedPath.length}`;
+  // Extended back/reset that also handle free-play mode
+  const handleBackExtended = useCallback(() => {
+    setBoardSelectedSq(null);
+    setLegalSquares([]);
+    if (freePlayPath !== null && freePlayPath.length > 0) {
+      const curFen = fenFromPath(freePlayPath) ?? new Chess().fen();
+      setPrevFen(curFen);
+      const newFreePlay = freePlayPath.slice(0, -1);
+      // If we've backed up to or before the forecast path, exit free-play
+      if (newFreePlay.length <= selectedPath.length) {
+        setFreePlayPath(null);
+      } else {
+        setFreePlayPath(newFreePlay);
+      }
+    } else {
+      handleBack();
+    }
+  }, [freePlayPath, selectedPath, handleBack]);
+
+  const handleResetExtended = useCallback(() => {
+    handleReset();
+    setFreePlayPath(null);
+    setBoardSelectedSq(null);
+    setLegalSquares([]);
+  }, [handleReset]);
+
+  const breadcrumb = pathToBreadcrumb(effectivePath);
+  const stepLabel = effectivePath.length === 0 ? "Starting position" : `Step ${effectivePath.length}`;
   const hasData = (openingForecast.white?.length ?? 0) > 0 || (openingForecast.black?.length ?? 0) > 0;
   const hasColorData = (openingForecast[opponentColor]?.length ?? 0) > 0;
   const opponentPerspective = opponentColor === "white" ? "Opponent plays White" : "Opponent plays Black";
@@ -766,9 +934,26 @@ export function ForecastWalkthrough({
                     flipped={flipped}
                     isDark={isDark}
                     lastMove={lastMove}
+                    selectedSquare={boardSelectedSq}
+                    legalSquares={legalSquares}
+                    onSquareClick={handleSquareClick}
                   />
                 </div>
               </div>
+
+              {/* Off-book indicator */}
+              {isOffBook && (
+                <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium ${isDark ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "bg-amber-50 border border-amber-200 text-amber-700"}`}>
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  <span>Off-book — exploring freely</span>
+                  <button
+                    onClick={handleResetExtended}
+                    className={`ml-auto text-[10px] font-semibold underline underline-offset-2 ${isDark ? "text-amber-400/70 hover:text-amber-400" : "text-amber-700/70 hover:text-amber-700"}`}
+                  >
+                    Return to forecast
+                  </button>
+                </div>
+              )}
 
               {/* Breadcrumb */}
               <div className={`text-[11px] font-mono px-2 py-1.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/60 text-white/40" : "bg-[#f0f4ec] text-[#436850]/60"}`}>
@@ -784,10 +969,10 @@ export function ForecastWalkthrough({
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-[#1e2e22] text-[#5B9A6A]" : "bg-[#ADBC9F]/30 text-[#436850]"}`}>
                   {stepLabel}
                 </span>
-                {selectedPath.length > 0 && (
+                {effectivePath.length > 0 && (
                   <>
                     <button
-                      onClick={handleBack}
+                      onClick={handleBackExtended}
                       className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg transition-colors ${isDark ? "hover:bg-white/08 text-white/50 hover:text-white/80" : "hover:bg-[#ADBC9F]/30 text-[#436850]/60 hover:text-[#436850]"}`}
                       aria-label="Go back one move"
                       style={{ minHeight: "28px" }}
@@ -796,7 +981,7 @@ export function ForecastWalkthrough({
                       Back
                     </button>
                     <button
-                      onClick={handleReset}
+                      onClick={handleResetExtended}
                       className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg transition-colors ${isDark ? "hover:bg-white/08 text-white/50 hover:text-white/80" : "hover:bg-[#ADBC9F]/30 text-[#436850]/60 hover:text-[#436850]"}`}
                       aria-label="Reset to starting position"
                       style={{ minHeight: "28px" }}
