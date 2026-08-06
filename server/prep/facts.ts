@@ -121,11 +121,17 @@ export function forecast(
         for (const [n, c] of Array.from(nameCounts.entries())) {
           if (c > maxCount) { label = n; maxCount = c; }
         }
+        const wins = v.filter((g: ParsedGame) => g.scoutedScore === 1).length;
+        const draws = v.filter((g: ParsedGame) => g.scoutedScore === 0.5).length;
+        const losses = v.filter((g: ParsedGame) => g.scoutedScore === 0).length;
         return {
           moveSan: san,
           count: v.length,
           pct: v.length / gs.length,
           score: v.reduce((s: number, g: ParsedGame) => s + g.scoutedScore, 0) / v.length,
+          wins,
+          draws,
+          losses,
           label: maxCount >= 2 ? label : undefined,
           children: build(v, ply + 1, depth + 1),
         };

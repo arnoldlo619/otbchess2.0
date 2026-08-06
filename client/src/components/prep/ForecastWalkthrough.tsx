@@ -46,6 +46,9 @@ interface FNode {
   parentCount: number;
   pct: number;
   score: number;
+  wins: number;
+  draws: number;
+  losses: number;
   label?: string;
   rawChildren: ForecastBranch[];
   confidence: "high" | "medium" | "low" | "tiny";
@@ -89,6 +92,9 @@ function enrichBranches(
       parentCount,
       pct: parentCount > 0 ? b.count / parentCount : b.pct,
       score: b.score,
+      wins: b.wins ?? 0,
+      draws: b.draws ?? 0,
+      losses: b.losses ?? 0,
       label: b.label,
       rawChildren: b.children ?? [],
       confidence: confidenceTier(b.count),
@@ -547,31 +553,53 @@ function BranchRow({ node, isSelected, onSelect, isDark, t }: BranchRowProps) {
     ? isDark ? "text-amber-400" : "text-amber-700"
     : isDark ? "text-sky-400" : "text-sky-700";
 
+  const total = node.wins + node.draws + node.losses;
+  const wPct = total > 0 ? (node.wins / total) * 100 : 0;
+  const dPct = total > 0 ? (node.draws / total) * 100 : 0;
+  const lPct = total > 0 ? (node.losses / total) * 100 : 0;
+
   return (
     <button
       onClick={() => onSelect(node)}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${rowBg}`}
-      style={{ minHeight: "44px" }}
+      className={`w-full flex flex-col gap-1.5 px-3 py-2.5 rounded-xl border text-left transition-all ${rowBg}`}
+      style={{ minHeight: "52px" }}
       aria-pressed={isSelected}
-      aria-label={`${node.moveSan}${node.label ? `, ${node.label}` : ""}, ${Math.round(node.pct * 100)}% frequency, ${node.count} games`}
+      aria-label={`${node.moveSan}${node.label ? `, ${node.label}` : ""}, ${Math.round(node.pct * 100)}% frequency, ${node.count} games, ${node.wins}W ${node.draws}D ${node.losses}L`}
     >
-      <span className={`shrink-0 w-[3px] h-6 rounded-full transition-all ${isSelected ? (isDark ? "bg-[#5B9A6A]" : "bg-[#436850]") : "bg-transparent"}`} />
-      <span className={`font-mono text-sm font-bold shrink-0 ${isDark ? "text-white" : "text-[#12372A]"}`}>
-        {node.moveSan}
-      </span>
-      <span className={`flex-1 text-xs truncate ${t.textSecondary}`}>
-        {node.label ?? (isOpponent ? "—" : "continuation")}
-      </span>
-      <span className={`shrink-0 text-[11px] font-medium ${isTiny ? t.textTertiary : t.textSecondary}`}>
-        {isTiny
-          ? `${node.count}g`
-          : `${Math.round(node.pct * 100)}% · ${node.count}`}
-      </span>
-      <span className={`shrink-0 text-[10px] font-semibold ${actorColor}`}>
-        {isOpponent ? "↑" : "↓"}
-      </span>
-      {node.rawChildren.length > 0 && (
-        <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${t.textTertiary}`} />
+      {/* Top row: move + label + frequency + actor arrow */}
+      <div className="flex items-center gap-3">
+        <span className={`shrink-0 w-[3px] h-5 rounded-full transition-all ${isSelected ? (isDark ? "bg-[#5B9A6A]" : "bg-[#436850]") : "bg-transparent"}`} />
+        <span className={`font-mono text-sm font-bold shrink-0 ${isDark ? "text-white" : "text-[#12372A]"}`}>
+          {node.moveSan}
+        </span>
+        <span className={`flex-1 text-xs truncate ${t.textSecondary}`}>
+          {node.label ?? (isOpponent ? "—" : "continuation")}
+        </span>
+        <span className={`shrink-0 text-[11px] font-medium ${isTiny ? t.textTertiary : t.textSecondary}`}>
+          {isTiny ? `${node.count}g` : `${Math.round(node.pct * 100)}% · ${node.count}`}
+        </span>
+        <span className={`shrink-0 text-[10px] font-semibold ${actorColor}`}>
+          {isOpponent ? "↑" : "↓"}
+        </span>
+        {node.rawChildren.length > 0 && (
+          <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${t.textTertiary}`} />
+        )}
+      </div>
+
+      {/* W/D/L row — only when we have data */}
+      {!isTiny && total > 0 && (
+        <div className="flex items-center gap-2 pl-4">
+          {/* Stacked bar */}
+          <div className="flex-1 flex h-1.5 rounded-full overflow-hidden" style={{ maxWidth: 80 }}>
+            {wPct > 0 && <div style={{ width: `${wPct}%`, background: isDark ? "#4ade80" : "#16a34a" }} />}
+            {dPct > 0 && <div style={{ width: `${dPct}%`, background: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)" }} />}
+            {lPct > 0 && <div style={{ width: `${lPct}%`, background: isDark ? "#f87171" : "#dc2626" }} />}
+          </div>
+          {/* Numeric counts */}
+          <span className={`text-[10px] font-semibold ${isDark ? "text-emerald-400" : "text-emerald-700"}`}>{node.wins}W</span>
+          <span className={`text-[10px] ${t.textTertiary}`}>{node.draws}D</span>
+          <span className={`text-[10px] font-semibold ${isDark ? "text-red-400" : "text-red-600"}`}>{node.losses}L</span>
+        </div>
       )}
     </button>
   );

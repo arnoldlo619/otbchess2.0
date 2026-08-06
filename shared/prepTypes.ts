@@ -59,6 +59,12 @@ export interface ForecastBranch {
   count: number;
   pct: number;
   score: number;
+  /** Opponent's wins in this line (from their perspective) */
+  wins: number;
+  /** Draws in this line */
+  draws: number;
+  /** Opponent's losses in this line */
+  losses: number;
   label?: string;
   children: ForecastBranch[];
 }
