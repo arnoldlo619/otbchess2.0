@@ -11,6 +11,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Chess } from "chess.js";
+import { Chessboard } from "react-chessboard";
 import {
   ChevronLeft, RotateCcw, ChevronDown, ChevronRight,
   BookOpen, FlipVertical2, AlertCircle,
@@ -537,11 +538,12 @@ interface BranchRowProps {
   node: FNode;
   isSelected: boolean;
   onSelect: (node: FNode) => void;
+  onHoverNode?: (node: FNode | null) => void;
   isDark: boolean;
   t: Tokens;
 }
 
-function BranchRow({ node, isSelected, onSelect, isDark, t }: BranchRowProps) {
+function BranchRow({ node, isSelected, onSelect, onHoverNode, isDark, t }: BranchRowProps) {
   const isOpponent = node.actor === "opponent";
   const isTiny = node.confidence === "tiny";
 
@@ -561,6 +563,8 @@ function BranchRow({ node, isSelected, onSelect, isDark, t }: BranchRowProps) {
   return (
     <button
       onClick={() => onSelect(node)}
+      onMouseEnter={() => onHoverNode?.(node)}
+      onMouseLeave={() => onHoverNode?.(null)}
       className={`w-full flex flex-col gap-1.5 px-3 py-2.5 rounded-xl border text-left transition-all ${rowBg}`}
       style={{ minHeight: "52px" }}
       aria-pressed={isSelected}
@@ -673,6 +677,9 @@ export function ForecastWalkthrough({
   // Free-play mode: user played a move not in the forecast tree
   const [freePlayPath, setFreePlayPath] = useState<string[] | null>(null);
   const isOffBook = freePlayPath !== null;
+
+  // Hover preview: hovering a branch row previews its position on the board
+  const [hoveredNode, setHoveredNode] = useState<FNode | null>(null);
 
   // The effective path shown on the board (free-play overrides forecast path)
   const effectivePath = freePlayPath ?? selectedPath;
@@ -813,6 +820,28 @@ export function ForecastWalkthrough({
   // currentFen and lastMove use effectivePath so the board reflects free-play too
   const currentFen = effectiveFen;
 
+  // When hovering a branch row, preview that position on the board
+  // Only preview if we're not in free-play mode and not mid-interaction
+  const displayFen = hoveredNode && !isOffBook && boardSelectedSq === null
+    ? (hoveredNode.fen || currentFen)
+    : currentFen;
+
+  // Last move highlight for hover preview
+  const hoverLastMove = useMemo(() => {
+    if (!hoveredNode || isOffBook || boardSelectedSq !== null) return null;
+    if (hoveredNode.path.length === 0) return null;
+    const prevPath = hoveredNode.path.slice(0, -1);
+    const c = new Chess();
+    for (const san of prevPath) {
+      try { c.move(san); } catch { return null; }
+    }
+    const lastSan = hoveredNode.path[hoveredNode.path.length - 1];
+    try {
+      const result = c.move(lastSan);
+      return result ? { from: result.from, to: result.to } : null;
+    } catch { return null; }
+  }, [hoveredNode, isOffBook, boardSelectedSq]);
+
   // Derive last move for highlight (uses effectivePath)
   const lastMove = useMemo(() => {
     if (effectivePath.length === 0) return null;
@@ -827,6 +856,10 @@ export function ForecastWalkthrough({
       return result ? { from: result.from, to: result.to } : null;
     } catch { return null; }
   }, [effectivePath]);
+
+  const displayLastMove = hoveredNode && !isOffBook && boardSelectedSq === null
+    ? hoverLastMove
+    : lastMove;
 
   const handleSelectBranch = useCallback((node: FNode) => {
     // Capture current FEN as "previous" before updating
@@ -954,17 +987,66 @@ export function ForecastWalkthrough({
                 {/* Eval bar */}
                 <EvalBar score={evalScore} isDark={isDark} flipped={flipped} />
 
-                {/* Animated board */}
-                <div className="flex-1">
-                  <AnimatedBoard
-                    fen={currentFen}
-                    prevFen={prevFen}
-                    flipped={flipped}
-                    isDark={isDark}
-                    lastMove={lastMove}
-                    selectedSquare={boardSelectedSq}
-                    legalSquares={legalSquares}
-                    onSquareClick={handleSquareClick}
+                {/* react-chessboard — premium CBurnett piece set */}
+                <div className="flex-1 rounded-xl overflow-hidden" style={{ maxWidth: 416 }}>
+                  <Chessboard
+                    options={{
+                      position: displayFen,
+                      boardOrientation: flipped ? "black" : "white",
+                      allowDragging: !hoveredNode,
+                      animationDurationInMs: hoveredNode ? 0 : 200,
+                      darkSquareStyle: {
+                        backgroundColor: isDark ? "#2d4a32" : "#769656",
+                      },
+                      lightSquareStyle: {
+                        backgroundColor: isDark ? "#1a2e1e" : "#eeeed2",
+                      },
+                      boardStyle: {
+                        borderRadius: "12px",
+                        boxShadow: isDark
+                          ? "0 4px 24px rgba(0,0,0,0.5)"
+                          : "0 4px 16px rgba(0,0,0,0.12)",
+                      },
+                      squareStyles: {
+                        ...(displayLastMove?.from ? {
+                          [displayLastMove.from]: {
+                            backgroundColor: isDark ? "rgba(46,80,56,0.8)" : "rgba(170,162,58,0.6)",
+                          }
+                        } : {}),
+                        ...(displayLastMove?.to ? {
+                          [displayLastMove.to]: {
+                            backgroundColor: isDark ? "rgba(67,104,80,0.9)" : "rgba(205,210,106,0.8)",
+                          }
+                        } : {}),
+                        ...(boardSelectedSq ? {
+                          [boardSelectedSq]: {
+                            backgroundColor: isDark ? "rgba(91,154,106,0.85)" : "rgba(127,201,127,0.85)",
+                            outline: isDark ? "2px solid rgba(255,255,255,0.5)" : "2px solid rgba(0,0,0,0.3)",
+                            outlineOffset: "-2px",
+                            borderRadius: "3px",
+                          }
+                        } : {}),
+                        ...Object.fromEntries(
+                          legalSquares.map(sq => [sq, {
+                            background: isDark
+                              ? "radial-gradient(circle, rgba(91,154,106,0.7) 28%, transparent 28%)"
+                              : "radial-gradient(circle, rgba(67,104,80,0.5) 28%, transparent 28%)",
+                          }])
+                        ),
+                        ...(hoveredNode && !isOffBook ? {
+                          // Subtle tint on the entire board during hover preview
+                        } : {}),
+                      },
+                      onSquareClick: ({ square }: { piece: unknown; square: string }) => {
+                        if (!hoveredNode) handleSquareClick(square);
+                      },
+                      onPieceDrop: ({ sourceSquare, targetSquare }: { sourceSquare: string; targetSquare: string | null; piece: unknown }) => {
+                        if (hoveredNode || !targetSquare) return false;
+                        handleSquareClick(sourceSquare);
+                        handleSquareClick(targetSquare);
+                        return true;
+                      },
+                    }}
                   />
                 </div>
               </div>
@@ -1047,6 +1129,7 @@ export function ForecastWalkthrough({
                       node={node}
                       isSelected={selectedPath[selectedPath.length - 1] === node.moveSan && selectedPath.length === node.path.length}
                       onSelect={handleSelectBranch}
+                      onHoverNode={setHoveredNode}
                       isDark={isDark}
                       t={t}
                     />
@@ -1069,6 +1152,7 @@ export function ForecastWalkthrough({
                           node={node}
                           isSelected={selectedPath[selectedPath.length - 1] === node.moveSan && selectedPath.length === node.path.length}
                           onSelect={handleSelectBranch}
+                          onHoverNode={setHoveredNode}
                           isDark={isDark}
                           t={t}
                         />
