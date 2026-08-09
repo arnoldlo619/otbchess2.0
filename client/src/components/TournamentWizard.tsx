@@ -1566,7 +1566,7 @@ function QuickstartForm({
               style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
-                {(data.format === "quads" ? [8, 12, 16, 20, 24, 32, 40, 48, 100] : capOptions).map((cap) => {
+                {(data.format === "quads" ? [4, 8, 12, 16, 20, 24, 32, 40, 48, 100] : capOptions).map((cap) => {
                   const active = data.maxPlayers === cap;
                   const isQuadsFormat = data.format === "quads";
                   const optRounds = recommendedRounds(cap);
@@ -1600,13 +1600,13 @@ function QuickstartForm({
                         {cap}
                       </span>
                       <span className="text-[10px] mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                        {cap === 1 ? "player" : "players"}
+                        {cap === 1 ? "player" : cap === 4 && isQuadsFormat ? "players · 1 quad" : "players"}
                       </span>
                       <span
                         className="text-[10px] mt-0.5 font-medium"
                         style={{ color: active ? T.green : isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
                       >
-                        {isQuadsFormat ? `${numSections} quad${numSections === 1 ? "" : "s"}` : `${optRounds}R opt.`}
+                        {isQuadsFormat ? (cap === 4 ? "" : `${numSections} quads`) : `${optRounds}R opt.`}
                       </span>
                     </button>
                   );
@@ -4402,8 +4402,12 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       ? step === 0
         ? data.name.trim().length > 0
         : true
+      // schedule / quads / large_event modes: step-specific validation
       : step === 0
       ? data.name.trim().length > 0
+      : step === 1
+      // Format step: for Quads, must have rounds=3 (auto-set); for all, time control required
+      ? data.timePreset.trim().length > 0
       : true;
 
   // registerTournamentNow: persists the tournament config to localStorage immediately.

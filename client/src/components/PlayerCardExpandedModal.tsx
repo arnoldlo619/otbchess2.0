@@ -126,7 +126,7 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
 
   const { player, rank, totalPlayers, points, wins, draws, losses,
     performanceRating, ratingChange, longestStreak, whiteGames, blackGames,
-    buchholz, badge: _badge, badgeLabel, roundHistory, bestWin } = perf;
+    buchholz, sonnebornBerger, isQuads, badge: _badge, badgeLabel, roundHistory, bestWin } = perf;
 
   const flag = player.country ? FLAG_EMOJI[player.country] ?? "" : "";
 
@@ -237,7 +237,9 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
             { label: "Perf. Rating", value: performanceRating || "—", sub: ratingChange !== 0 ? `${ratingChange > 0 ? "+" : ""}${ratingChange}` : "±0" },
             { label: "W / D / L", value: `${wins}/${draws}/${losses}`, sub: `${roundHistory.length} games` },
             { label: "Best Streak", value: `${longestStreak}W`, sub: "consecutive wins" },
-            { label: "Buchholz", value: buchholz.toFixed(1), sub: "tiebreak" },
+            isQuads
+              ? { label: "Sonneborn-Berger", value: (sonnebornBerger ?? 0).toFixed(2), sub: "tiebreak" }
+              : { label: "Buchholz", value: buchholz.toFixed(1), sub: "tiebreak" },
           ].map(({ label, value, sub }) => (
             <div key={label} className="flex flex-col items-center py-4 px-2" style={{ background: "oklch(0.18 0.06 145)" }}>
               <span className="text-white font-bold text-lg leading-tight">{value}</span>

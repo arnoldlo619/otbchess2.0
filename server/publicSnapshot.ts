@@ -340,14 +340,10 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
       });
       allRows.push(...sectionRows);
     }
-    // Re-sort globally by points → SB → ELO and assign global ranks
-    allRows.sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
-      if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
-      return b.elo - a.elo;
-    });
-    allRows.forEach((r, i) => { r.rank = i + 1; });
-    standings = allRows;
+    // For Quads: do NOT assign global ranks — sections are independent competitions.
+    // The top-level standings array is intentionally empty for Quads; consumers must
+    // use quadSections[].standings for section-scoped rankings.
+    standings = [];
   } else {
     standings = computeStandingsServer(input.players, input.rounds, { format: input.format });
   }

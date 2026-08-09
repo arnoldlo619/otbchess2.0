@@ -44,6 +44,8 @@ export interface PlayerPerformance {
   whiteGames: number;
   blackGames: number;
   buchholz: number;
+  sonnebornBerger?: number;
+  isQuads?: boolean;
   badge: AchievementBadge;
   badgeLabel: string;
   roundHistory: RoundHistoryEntry[];
@@ -321,6 +323,7 @@ export function computeAllPerformances(
       whiteGames,
       blackGames,
       buchholz: row.buchholz,
+      sonnebornBerger: row.sonnebornBerger,
       badge,
       badgeLabel,
       roundHistory,
@@ -401,6 +404,8 @@ export function computeQuadSectionPerformances(
         // Add section context for downstream use
         sectionName: section.name,
         sectionId: section.id,
+      isQuads: true,
+      sonnebornBerger: perf.sonnebornBerger,
       } as PlayerPerformance & { sectionName: string; sectionId: string };
     });
 

@@ -554,7 +554,14 @@ export default function JoinPage() {
     : null;
   const isDemoCode = tournamentCode.toUpperCase() === "OTB2026";
 
-  // Display name/venue/format/timeControl — prefer resolvedConfig, then embeddedMeta,
+  // Server-side tournament status for completed/closed events (used when localStorage is empty)
+  const [serverTournamentStatus, setServerTournamentStatus] = useState<{
+    status: string;
+    playerCount: number;
+    tournamentId: string;
+  } | null>(null);
+
+// Display name/venue/format/timeControl — prefer resolvedConfig, then embeddedMeta,
   // and only fall back to DEMO_TOURNAMENT for the explicit demo code.
   const tournamentDisplay = {
     name: resolvedConfig?.name ?? embeddedMeta?.name ?? (isDemoCode ? DEMO_TOURNAMENT.name : ""),
@@ -580,10 +587,9 @@ export default function JoinPage() {
       if (!resolvedConfig) return 0;
       try {
         const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
-        if (!raw) return 0;
-        const parsed = JSON.parse(raw);
-        return parsed?.state?.players?.length ?? 0;
-      } catch { return 0; }
+        if (raw) return JSON.parse(raw)?.state?.players?.length ?? 0;
+      } catch { /* fall through */ }
+      return serverTournamentStatus?.playerCount ?? 0;
     })(),
   };
   // Keep tournament as DEMO_TOURNAMENT for ShareSheet type compatibility
@@ -616,18 +622,68 @@ export default function JoinPage() {
     if (!resolvedConfig || isDemoCode) return false;
     try {
       const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      const status: string = parsed?.state?.status ?? "";
-      // Closed when tournament has started (not in registration phase) or is completed
-      return status === "completed" || status === "in_progress" || status === "paused";
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const status: string = parsed?.state?.status ?? "";
+        return status === "completed" || status === "in_progress" || status === "paused";
+      }
+      // Fall back to server-fetched status when localStorage is empty (fresh device)
+      if (serverTournamentStatus) {
+        const s = serverTournamentStatus.status;
+        return s === "completed" || s === "in_progress" || s === "paused";
+      }
+      return false;
     } catch {
       return false;
     }
   })();
 
+  // Whether the tournament is specifically completed (not just closed)
+  const isTournamentCompleted = (() => {
+    if (!resolvedConfig || isDemoCode) return false;
+    try {
+      const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return (parsed?.state?.status ?? "") === "completed";
+      }
+      return serverTournamentStatus?.status === "completed";
+    } catch { return false; }
+  })();
 
-  const [codeLoading, setCodeLoading] = useState(false);
+  // Real player count: prefer localStorage, fall back to server
+  const realPlayerCount = (() => {
+    if (isDemoCode) return DEMO_TOURNAMENT.players.length;
+    if (!resolvedConfig) return 0;
+    try {
+      const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
+      if (raw) return JSON.parse(raw)?.state?.players?.length ?? 0;
+    } catch { /* fall through */ }
+    return serverTournamentStatus?.playerCount ?? 0;
+  })();
+
+
+  // Fetch server status when resolvedConfig is available — needed for fresh devices
+  // where localStorage is empty and we can't read status from director state
+  useEffect(() => {
+    if (!resolvedConfig) return;
+    const localRaw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
+    if (localRaw) return; // localStorage has data, no need to fetch
+    authFetch(`/api/public/tournament/${encodeURIComponent(resolvedConfig.id)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { status?: string; players?: unknown[] } | null) => {
+        if (!d) return;
+        setServerTournamentStatus({
+          status: d.status ?? "",
+          playerCount: Array.isArray(d.players) ? d.players.length : 0,
+          tournamentId: resolvedConfig.id,
+        });
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedConfig?.id]);
+
+ const [codeLoading, setCodeLoading] = useState(false);
 
   async function handleCodeSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1922,11 +1978,28 @@ export default function JoinPage() {
         {step === "confirm" && profile && (
           <div className="space-y-2">
             {isTournamentClosed && (
-              <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-medium ${
-                isDark ? "bg-red-500/12 border border-red-500/25 text-red-300" : "bg-red-50 border border-red-300 text-red-800"
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? "border-white/08 bg-[oklch(0.22_0.06_145)]" : "border-[#ADBC9F]/50 bg-white"
               }`}>
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>Registration is closed — this tournament has already started or finished.</span>
+                <div className={`flex items-center gap-2.5 px-4 py-3 text-sm font-medium ${
+                  isDark ? "bg-red-500/08 border-b border-red-500/20 text-red-300" : "bg-red-50 border-b border-red-200 text-red-800"
+                }`}>
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{isTournamentCompleted ? "This tournament has concluded." : "Registration is closed — this tournament has already started."}</span>
+                </div>
+                {isTournamentCompleted && resolvedConfig && (
+                  <div className="px-4 py-3">
+                    <a
+                      href={`/tournament/${resolvedConfig.id}/results`}
+                      className={`flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-bold transition-colors ${
+                        isDark ? "bg-[#436850]/20 text-[#4CAF50] hover:bg-[#436850]/30" : "bg-[#436850]/08 text-[#436850] hover:bg-[#436850]/15"
+                      }`}
+                    >
+                      <Trophy className="w-4 h-4" />
+                      View Results
+                    </a>
+                  </div>
+                )}
               </div>
             )}
             {!isTournamentClosed && isTournamentFull && (

@@ -565,7 +565,7 @@ function WallChart({
 }
 
 // ─── Standings Table ──────────────────────────────────────────────────────────
-function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds: Round[]; isDark: boolean }) {
+function StandingsTable({ players, rounds, isDark, isQuads = false }: { players: Player[]; rounds: Round[]; isDark: boolean; isQuads?: boolean }) {
   const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
   const medals = ["🥇", "🥈", "🥉"];
   const borderColor = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
@@ -579,7 +579,7 @@ function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className={isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#FBFADA]"}>
-            {["#", "Player", "ELO", "W", "D", "L", "Pts", "Buchholz"].map((h) => (
+            {["#", "Player", "ELO", "W", "D", "L", "Pts", isQuads ? "SB" : "Buchholz"].map((h) => (
               <th
                 key={h}
                 className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} ${
@@ -633,10 +633,10 @@ function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds
                 </td>
               ))}
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
-                <span className={`text-base font-bold tabular-nums ${textMain}`}>{row.points}</span>
+                <span className={`text-base font-bold tabular-nums ${textMain}`}>{row.points % 1 === 0 ? row.points : `${Math.floor(row.points)}½`}</span>
               </td>
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
-                <span className={`text-xs font-mono ${textMuted}`}>{row.buchholz.toFixed(1)}</span>
+                <span className={`text-xs font-mono ${textMuted}`}>{isQuads ? (row.sonnebornBerger ?? 0).toFixed(2) : row.buchholz.toFixed(1)}</span>
               </td>
             </tr>
           ))}
@@ -1068,13 +1068,43 @@ export default function PrintPage() {
                   }
                 </p>
               </div>
-              <StandingsTable players={players} rounds={safeTournament.roundData as Round[]} isDark={isDark} />
-              <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
-                {realConfig?.format === "quads"
-                  ? "Tiebreak: Head-to-Head · Sonneborn-Berger (opponent scores weighted by result) · Wins · W = Wins · D = Draws · L = Losses"
-                  : "Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses"
-                }
-              </p>
+              {realConfig?.format === "quads" && realState?.quadSections && realState.quadSections.length > 0 ? (
+                // Quads: render independent per-section standings tables
+                <div className="space-y-6">
+                  {realState.quadSections.map((section) => {
+                    const sectionPlayerIds = new Set(section.playerIds);
+                    const sectionPlayers = players.filter(p => sectionPlayerIds.has(p.id));
+                    const sectionRounds = (safeTournament.roundData as Round[]).map(r => ({
+                      ...r,
+                      games: r.games.filter((g) =>
+                        sectionPlayerIds.has(g.whiteId) && sectionPlayerIds.has(g.blackId)
+                      ),
+                    }));
+                    return (
+                      <div key={section.id}>
+                        <h3 className={`text-base font-bold mb-2 ${isDark ? "text-white/80" : "text-[#12372A]"}`}
+                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                          {section.name}
+                        </h3>
+                        <StandingsTable players={sectionPlayers} rounds={sectionRounds} isDark={isDark} isQuads />
+                      </div>
+                    );
+                  })}
+                  <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
+                    Tiebreak: Sonneborn-Berger (opponent scores weighted by result) · W = Wins · D = Draws · L = Losses
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <StandingsTable players={players} rounds={safeTournament.roundData as Round[]} isDark={isDark} isQuads={realConfig?.format === "quads"} />
+                  <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
+                    {realConfig?.format === "quads"
+                      ? "Tiebreak: Sonneborn-Berger (opponent scores weighted by result) · W = Wins · D = Draws · L = Losses"
+                      : "Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses"
+                    }
+                  </p>
+                </>
+              )}
             </div>
           )}
 

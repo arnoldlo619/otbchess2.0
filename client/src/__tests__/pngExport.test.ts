@@ -124,9 +124,12 @@ describe("Fix: hidden export card has real dimensions", () => {
 
     // Skip past the comment lines to find the actual div element
     // The comment itself mentions "sr-only" as explanation, so we check the div
-    const divIdx = src.indexOf('<div style={{ position:', hiddenCardIdx);
-    expect(divIdx).toBeGreaterThan(0);
-    const divSnippet = src.slice(divIdx, divIdx + 150);
+    // Find the div — may have aria-hidden/inert before style
+    const divIdx = src.indexOf('<div aria-hidden="true" inert style={{ position:', hiddenCardIdx);
+    const divIdx2 = src.indexOf('<div style={{ position:', hiddenCardIdx);
+    const actualIdx = divIdx > 0 ? divIdx : divIdx2;
+    expect(actualIdx).toBeGreaterThan(0);
+    const divSnippet = src.slice(actualIdx, actualIdx + 200);
     // Must use real CSS positioning, not sr-only class
     expect(divSnippet).not.toContain('className="sr-only');
     expect(divSnippet).toContain('position:');

@@ -80,17 +80,34 @@ function TabBar({
     { id: "rounds",     label: "Rounds",        icon: ListOrdered },
   ];
   return (
-    <div className={`flex border-b ${ isDark ? "border-white/08" : "border-[#ADBC9F]/70" }`}>
+    <div
+      role="tablist"
+      aria-label="Report sections"
+      className={`flex border-b ${ isDark ? "border-white/08" : "border-[#ADBC9F]/70" }`}
+      onKeyDown={(e) => {
+        const ids = tabs.map(t => t.id);
+        const idx = ids.indexOf(activeTab);
+        if (e.key === "ArrowRight") { e.preventDefault(); onTabChange(ids[(idx + 1) % ids.length]); }
+        if (e.key === "ArrowLeft")  { e.preventDefault(); onTabChange(ids[(idx - 1 + ids.length) % ids.length]); }
+        if (e.key === "Home") { e.preventDefault(); onTabChange(ids[0]); }
+        if (e.key === "End")  { e.preventDefault(); onTabChange(ids[ids.length - 1]); }
+      }}
+    >
       {tabs.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
         return (
           <button
             key={id}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={`tabpanel-${id}`}
+            id={`tab-${id}`}
+            tabIndex={isActive ? 0 : -1}
             onClick={() => onTabChange(id)}
             className={`relative flex items-center gap-1.5 px-5 py-3 text-xs font-semibold transition-all ${
               isActive
                 ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
-                : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"
+                : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850]/70 hover:text-[#436850]"
             }`}
           >
             <Icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -1002,14 +1019,14 @@ export default function ReportPage() {
 
           {/* Title + tournament badge + bracket label */}
           <div className="flex items-center gap-2 min-w-0">
-            <span
+            <h1
               className={`text-sm font-bold leading-none flex-shrink-0 ${
                 isDark ? "text-white/90" : "text-[#12372A]"
               }`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               Performance Report
-            </span>
+            </h1>
             <span
               className={`text-[11px] font-medium truncate ${
                 isDark ? "text-white/35" : "text-[#436850]"
@@ -1252,7 +1269,7 @@ export default function ReportPage() {
 
         {/* ── Tab: Player Cards ── */}
         {activeTab === "cards" && (
-          <div>
+          <div role="tabpanel" id="tabpanel-cards" aria-labelledby="tab-cards">
             {/* Search */}
             <div className="mb-5">
               <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
@@ -1442,6 +1459,7 @@ export default function ReportPage() {
 
         {/* ── Tab: Cross-Table ── */}
         {activeTab === "crosstable" && (
+          <div role="tabpanel" id="tabpanel-crosstable" aria-labelledby="tab-crosstable">
           <CrossTable
             players={isQuads && activeSection !== "all"
               ? players.filter(p => quadSections.find(s => s.id === activeSection)?.playerIds.includes(p.id))
@@ -1463,10 +1481,12 @@ export default function ReportPage() {
             }
             isDark={isDark}
           />
+          </div>
         )}
 
         {/* ── Tab: Rounds ── */}
         {activeTab === "rounds" && (
+          <div role="tabpanel" id="tabpanel-rounds" aria-labelledby="tab-rounds">
           <RoundTimeline
             players={isQuads && activeSection !== "all"
               ? players.filter(p => quadSections.find(s => s.id === activeSection)?.playerIds.includes(p.id))
@@ -1488,6 +1508,7 @@ export default function ReportPage() {
             }
             isDark={isDark}
           />
+          </div>
         )}
 
         {/* Bottom padding */}
