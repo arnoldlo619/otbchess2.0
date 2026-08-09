@@ -41,8 +41,7 @@ export function confidence(
   width: number
 ): Insight["confidence"] {
   const en = effectiveN(games);
-  if (en >= 15 && width <= 0.30) return "high";
-  if (en >= 10) return "medium_high";
+  if (en >= 12 && width <= 0.30) return "high";
   if (en >= 6) return "medium";
   return "low";
 }

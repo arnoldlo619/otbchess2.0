@@ -59,8 +59,14 @@ export function buildReport(
   for (const k of Object.keys(tcs)) tcs[k].score = tcs[k].score / tcs[k].games;
 
   const usable = parsed.length;
+  // Grade considers both volume and recency: recent games (last 90 days) count more
+  const nowS = Math.floor(Date.now() / 1000);
+  const NINETY_DAYS_S = 90 * 24 * 3600;
+  const recentCount = parsed.filter(g => (nowS - g.endTime) <= NINETY_DAYS_S).length;
   const grade: ScoutReportV3["dataQuality"]["grade"] =
-    usable >= 60 ? "A" : usable >= 30 ? "B" : usable >= 15 ? "C" : "D";
+    (usable >= 40 && recentCount >= 10) ? "A" :
+    (usable >= 20 && recentCount >= 5) ? "B" :
+    usable >= 10 ? "C" : "D";
 
   const notes: string[] = Object.entries(excluded).map(
     ([k, v]) => `${v} game(s) excluded: ${k.replace(/_/g, " ")}`

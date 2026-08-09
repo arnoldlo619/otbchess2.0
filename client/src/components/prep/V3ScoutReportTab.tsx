@@ -36,7 +36,7 @@ interface Props {
   report: ScoutReportV3;
   isDark: boolean;
   t: Tokens;
-  colorFilter?: "both" | "white" | "black";
+  myColor?: "white" | "black" | "not_sure";
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -294,17 +294,19 @@ function EvidenceSection({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function V3ScoutReportTab({ report, isDark, t, colorFilter = "both" }: Props) {
+export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure" }: Props) {
   const s = report.sections;
 
   // Resolve section IDs to actual insight objects
   const allInsights = report.insights;
 
-  // Apply color filter
+  // Apply color filter based on myColor (opponent's color is opposite of user's color)
   const filteredInsights = useMemo(() => {
-    if (colorFilter === "both") return allInsights;
-    return allInsights.filter(ins => ins.color === colorFilter);
-  }, [allInsights, colorFilter]);
+    if (myColor === "not_sure") return allInsights;
+    // When user plays White, opponent plays Black — show insights about opponent's Black games
+    const opponentColor = myColor === "white" ? "black" : "white";
+    return allInsights.filter(ins => ins.color === opponentColor);
+  }, [allInsights, myColor]);
 
   // Resolve game plan sections
   const ifWhiteInsights = useMemo(() => resolveInsights(s.ifYouHaveWhite, allInsights), [s.ifYouHaveWhite, allInsights]);
@@ -337,14 +339,14 @@ export function V3ScoutReportTab({ report, isDark, t, colorFilter = "both" }: Pr
       {/* 3. Opening Forecast — board-first interactive walkthrough */}
       <ForecastWalkthrough
         openingForecast={report.openingForecast}
-        colorFilter={colorFilter}
+        myColor={myColor}
         isDark={isDark}
         t={t}
         opponentUsername={report.opponent.username}
       />
 
       {/* 4. Game Plan — If You Have White / Black */}
-      {colorFilter !== "black" && ifWhiteInsights.length > 0 && (
+      {myColor !== "black" && ifWhiteInsights.length > 0 && (
         <GamePlanSection
           title="If You Have White"
           icon={<Crosshair className="w-4 h-4" />}
@@ -353,7 +355,7 @@ export function V3ScoutReportTab({ report, isDark, t, colorFilter = "both" }: Pr
           t={t}
         />
       )}
-      {colorFilter !== "white" && ifBlackInsights.length > 0 && (
+      {myColor !== "white" && ifBlackInsights.length > 0 && (
         <GamePlanSection
           title="If You Have Black"
           icon={<Shield className="w-4 h-4" />}

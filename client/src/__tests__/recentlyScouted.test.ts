@@ -1,11 +1,10 @@
 /**
- * Tests for recentlyScouted.ts utility
+ * Tests for recentlyScouted.ts utility (v2 composite record API)
  *
  * Covers:
  *  - getRecentlyScouted: returns empty array when nothing stored
- *  - addRecentlyScouted: prepends username, deduplicates, trims to MAX_ENTRIES
- *  - addRecentlyScouted: case-insensitive deduplication preserves new casing
- *  - removeRecentlyScouted: removes a single entry by username (case-insensitive)
+ *  - addRecentlyScouted: prepends entry, deduplicates by username+provider, trims to MAX_ENTRIES
+ *  - removeRecentlyScouted: removes by username+provider
  *  - clearRecentlyScouted: wipes all entries
  *  - MAX_ENTRIES cap: never exceeds 5 entries
  */
@@ -16,6 +15,7 @@ import {
   removeRecentlyScouted,
   clearRecentlyScouted,
   MAX_ENTRIES,
+  type RecentScoutEntry,
 } from "../lib/recentlyScouted";
 
 // ── Mock localStorage ─────────────────────────────────────────────────────────
@@ -38,6 +38,14 @@ beforeEach(() => {
   localStorageMock.clear();
 });
 
+const makeEntry = (username: string, provider: "chesscom" | "lichess" = "chesscom"): Omit<RecentScoutEntry, "scoutedAt"> => ({
+  username,
+  provider,
+  myColor: "not_sure",
+  tcFilter: "all",
+  gameCount: "50",
+});
+
 // ── getRecentlyScouted ────────────────────────────────────────────────────────
 
 describe("getRecentlyScouted", () => {
@@ -46,64 +54,69 @@ describe("getRecentlyScouted", () => {
   });
 
   it("returns an empty array when stored value is invalid JSON", () => {
-    localStorage.setItem("otb_recently_scouted", "not-json");
+    localStorage.setItem("otb_recently_scouted_v2", "not-json");
     expect(getRecentlyScouted()).toEqual([]);
   });
 
   it("returns an empty array when stored value is not an array", () => {
-    localStorage.setItem("otb_recently_scouted", JSON.stringify({ user: "hikaru" }));
+    localStorage.setItem("otb_recently_scouted_v2", JSON.stringify({ user: "hikaru" }));
     expect(getRecentlyScouted()).toEqual([]);
   });
 
-  it("returns the stored array when valid", () => {
-    localStorage.setItem("otb_recently_scouted", JSON.stringify(["hikaru", "magnuscarlsen"]));
-    expect(getRecentlyScouted()).toEqual(["hikaru", "magnuscarlsen"]);
+  it("returns the stored entries when valid", () => {
+    addRecentlyScouted(makeEntry("hikaru"));
+    const result = getRecentlyScouted();
+    expect(result.length).toBe(1);
+    expect(result[0].username).toBe("hikaru");
+    expect(result[0].provider).toBe("chesscom");
   });
 });
 
 // ── addRecentlyScouted ────────────────────────────────────────────────────────
 
 describe("addRecentlyScouted", () => {
-  it("adds the first username and returns it as a single-element array", () => {
-    const result = addRecentlyScouted("hikaru");
-    expect(result).toEqual(["hikaru"]);
-    expect(getRecentlyScouted()).toEqual(["hikaru"]);
+  it("adds the first entry and returns it as a single-element array", () => {
+    const result = addRecentlyScouted(makeEntry("hikaru"));
+    expect(result.length).toBe(1);
+    expect(result[0].username).toBe("hikaru");
   });
 
   it("prepends new entries so newest is first", () => {
-    addRecentlyScouted("hikaru");
-    const result = addRecentlyScouted("magnuscarlsen");
-    expect(result[0]).toBe("magnuscarlsen");
-    expect(result[1]).toBe("hikaru");
+    addRecentlyScouted(makeEntry("hikaru"));
+    const result = addRecentlyScouted(makeEntry("magnuscarlsen"));
+    expect(result[0].username).toBe("magnuscarlsen");
+    expect(result[1].username).toBe("hikaru");
   });
 
-  it("deduplicates case-insensitively and moves existing entry to front", () => {
-    addRecentlyScouted("Hikaru");
-    addRecentlyScouted("magnuscarlsen");
-    const result = addRecentlyScouted("hikaru"); // same as first, different case
-    expect(result[0]).toBe("hikaru");
-    expect(result.filter((u) => u.toLowerCase() === "hikaru").length).toBe(1);
+  it("deduplicates case-insensitively by username+provider and moves to front", () => {
+    addRecentlyScouted(makeEntry("Hikaru"));
+    addRecentlyScouted(makeEntry("magnuscarlsen"));
+    const result = addRecentlyScouted(makeEntry("hikaru")); // same username+provider
+    expect(result[0].username).toBe("hikaru");
+    expect(result.filter(e => e.username.toLowerCase() === "hikaru").length).toBe(1);
   });
 
-  it("preserves the casing of the newly added entry after dedup", () => {
-    addRecentlyScouted("HIKARU");
-    const result = addRecentlyScouted("Hikaru");
-    expect(result[0]).toBe("Hikaru");
+  it("does NOT deduplicate same username on different providers", () => {
+    addRecentlyScouted(makeEntry("hikaru", "chesscom"));
+    const result = addRecentlyScouted(makeEntry("hikaru", "lichess"));
+    expect(result.length).toBe(2);
+    expect(result[0].provider).toBe("lichess");
+    expect(result[1].provider).toBe("chesscom");
   });
 
   it("trims whitespace from username before storing", () => {
-    const result = addRecentlyScouted("  hikaru  ");
-    expect(result[0]).toBe("hikaru");
+    const result = addRecentlyScouted(makeEntry("  hikaru  "));
+    expect(result[0].username).toBe("hikaru");
   });
 
   it("does not add an empty string", () => {
-    const result = addRecentlyScouted("   ");
+    const result = addRecentlyScouted(makeEntry("   "));
     expect(result).toEqual([]);
   });
 
   it("caps the list at MAX_ENTRIES", () => {
     for (let i = 0; i < MAX_ENTRIES + 3; i++) {
-      addRecentlyScouted(`player${i}`);
+      addRecentlyScouted(makeEntry(`player${i}`));
     }
     const result = getRecentlyScouted();
     expect(result.length).toBe(MAX_ENTRIES);
@@ -111,10 +124,10 @@ describe("addRecentlyScouted", () => {
 
   it("newest entry is always at index 0 after cap", () => {
     for (let i = 0; i < MAX_ENTRIES + 3; i++) {
-      addRecentlyScouted(`player${i}`);
+      addRecentlyScouted(makeEntry(`player${i}`));
     }
     const result = getRecentlyScouted();
-    expect(result[0]).toBe(`player${MAX_ENTRIES + 2}`);
+    expect(result[0].username).toBe(`player${MAX_ENTRIES + 2}`);
   });
 });
 
@@ -122,27 +135,28 @@ describe("addRecentlyScouted", () => {
 
 describe("removeRecentlyScouted", () => {
   it("removes the specified username", () => {
-    addRecentlyScouted("hikaru");
-    addRecentlyScouted("magnuscarlsen");
+    addRecentlyScouted(makeEntry("hikaru"));
+    addRecentlyScouted(makeEntry("magnuscarlsen"));
     const result = removeRecentlyScouted("hikaru");
-    expect(result).not.toContain("hikaru");
-    expect(result).toContain("magnuscarlsen");
+    expect(result.map(e => e.username)).not.toContain("hikaru");
+    expect(result.map(e => e.username)).toContain("magnuscarlsen");
   });
 
   it("is case-insensitive when removing", () => {
-    addRecentlyScouted("Hikaru");
+    addRecentlyScouted(makeEntry("Hikaru"));
     const result = removeRecentlyScouted("hikaru");
-    expect(result.map((u) => u.toLowerCase())).not.toContain("hikaru");
+    expect(result.map(e => e.username.toLowerCase())).not.toContain("hikaru");
   });
 
   it("returns the unchanged list when username is not found", () => {
-    addRecentlyScouted("hikaru");
+    addRecentlyScouted(makeEntry("hikaru"));
     const result = removeRecentlyScouted("unknownplayer");
-    expect(result).toEqual(["hikaru"]);
+    expect(result.length).toBe(1);
+    expect(result[0].username).toBe("hikaru");
   });
 
   it("returns an empty array when the only entry is removed", () => {
-    addRecentlyScouted("hikaru");
+    addRecentlyScouted(makeEntry("hikaru"));
     const result = removeRecentlyScouted("hikaru");
     expect(result).toEqual([]);
   });
@@ -152,8 +166,8 @@ describe("removeRecentlyScouted", () => {
 
 describe("clearRecentlyScouted", () => {
   it("wipes all entries", () => {
-    addRecentlyScouted("hikaru");
-    addRecentlyScouted("magnuscarlsen");
+    addRecentlyScouted(makeEntry("hikaru"));
+    addRecentlyScouted(makeEntry("magnuscarlsen"));
     clearRecentlyScouted();
     expect(getRecentlyScouted()).toEqual([]);
   });

@@ -35,10 +35,17 @@ const CONFIDENCE_BAR: Record<string, number> = {
   high: 3, medium_high: 2.5, medium: 2, low: 1,
 };
 
+const CONFIDENCE_LABEL: Record<string, string> = {
+  high: "High confidence",
+  medium_high: "Medium confidence",
+  medium: "Medium confidence",
+  low: "Low confidence",
+};
+
 function ConfidenceIndicator({ level, isDark }: { level: string; isDark: boolean }) {
   const filled = CONFIDENCE_BAR[level] ?? 1;
   return (
-    <div className="flex items-center gap-0.5" title={`Confidence: ${level}`}>
+    <div className="flex items-center gap-0.5" title={CONFIDENCE_LABEL[level] ?? `Confidence: ${level}`}>
       {[1, 2, 3].map((i) => (
         <div
           key={i}

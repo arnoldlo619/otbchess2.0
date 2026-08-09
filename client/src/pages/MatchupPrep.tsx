@@ -34,6 +34,7 @@ import {
   getRecentlyScouted,
   addRecentlyScouted,
   removeRecentlyScouted,
+  type RecentScoutEntry,
 } from "../lib/recentlyScouted";
 import {
   useOpponentProfile,
@@ -279,16 +280,16 @@ export default function MatchupPrep() {
   const [reportV3, setReportV3] = useState<ScoutReportV3 | null>(null);
 
   // Time-control filter for prep report
-  type TcFilter = "all" | "rapid" | "blitz";
+  type TcFilter = "all" | "rapid" | "blitz" | "bullet";
   const [tcFilter, setTcFilter] = useState<TcFilter>("all");
 
   // Game count filter (server-side param)
   type GameCountFilter = "50" | "100";
   const [gameCountFilter, setGameCountFilter] = useState<GameCountFilter>("50");
 
-  // Color focus filter (client-side)
-  type ColorFilter = "both" | "white" | "black";
-  const [colorFilter, setColorFilter] = useState<ColorFilter>("both");
+  // My color — canonical color perspective (which side the user is playing)
+  type MyColor = "white" | "black" | "not_sure";
+  const [myColor, setMyColor] = useState<MyColor>("not_sure");
 
   // Enriched prep lines with collision scores
   const enrichedLines = useMemo<EnrichedPrepLine[]>(() => {
@@ -320,7 +321,7 @@ export default function MatchupPrep() {
   );
 
   // Recently scouted chips
-  const [recentlyScouted, setRecentlyScouted] = useState<string[]>(() => getRecentlyScouted());
+  const [recentlyScouted, setRecentlyScouted] = useState<RecentScoutEntry[]>(() => getRecentlyScouted());
 
   // "Practice this line" — jump from Study Lines to Practice tab
   const [practiceLineIndex, setPracticeLineIndex] = useState<number | undefined>(undefined);
@@ -365,7 +366,7 @@ export default function MatchupPrep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.username]);
 
-  async function fetchReport(username: string, refresh = false, tc?: "all" | "rapid" | "blitz", games?: string) {
+  async function fetchReport(username: string, refresh = false, tc?: TcFilter, games?: string) {
     if (refresh) {
       setRefreshing(true);
     } else {
@@ -401,7 +402,7 @@ export default function MatchupPrep() {
         }
         const data: ScoutReportV3 = await res.json();
         setReportV3(data);
-        const updated = addRecentlyScouted(username.trim());
+        const updated = addRecentlyScouted({ username: username.trim(), provider, myColor, tcFilter, gameCount: gameCountFilter });
         setRecentlyScouted(updated);
       } else {
         // ── V2 legacy path ──
@@ -421,7 +422,7 @@ export default function MatchupPrep() {
             setTcFilter(dominant);
           }
         }
-        const updated = addRecentlyScouted(username.trim());
+        const updated = addRecentlyScouted({ username: username.trim(), provider, myColor, tcFilter, gameCount: gameCountFilter });
         setRecentlyScouted(updated);
       }
     } catch (err: unknown) {
@@ -583,7 +584,7 @@ export default function MatchupPrep() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="chess.com username"
+                placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
                 className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
                 autoComplete="off"
                 autoCapitalize="none"
@@ -600,6 +601,7 @@ export default function MatchupPrep() {
                   : isDark ? "bg-white/05 text-white/20 cursor-not-allowed" : "bg-[#ADBC9F]/40 text-[#436850] cursor-not-allowed"
               }`}
             >
+              aria-label="Scout opponent"
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             </button>
           </form>
@@ -668,7 +670,7 @@ export default function MatchupPrep() {
             {/* Time Control */}
             <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
             <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-              {(["all", "rapid", "blitz"] as const).map((tc) => (
+              {(["all", "rapid", "blitz", "bullet"] as const).map((tc) => (
                 <button
                   key={tc}
                   data-testid={`tc-filter-${tc}`}
@@ -684,7 +686,7 @@ export default function MatchupPrep() {
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
-                {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : "Blitz"}
+                {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : tc === "blitz" ? "Blitz" : "Bullet"}
               </button>
             ))}
           </div>
@@ -718,20 +720,26 @@ export default function MatchupPrep() {
           {/* Separator */}
           <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
 
-          {/* Color Focus — filters insights by your assigned color */}
-          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`} title="Filter insights by your assigned color">My Color</span>
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-            {(["both", "white", "black"] as const).map((c) => (
+          {/* I'm playing — canonical color perspective */}
+          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>I'm playing</span>
+          <div
+            role="radiogroup"
+            aria-label="Your color"
+            className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}
+          >
+            {(["white", "black", "not_sure"] as const).map((c) => (
               <button
                 key={c}
-                onClick={() => setColorFilter(c)}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all capitalize ${
-                  colorFilter === c
+                role="radio"
+                aria-checked={myColor === c}
+                onClick={() => setMyColor(c)}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                  myColor === c
                     ? "bg-[#436850] text-white shadow-sm"
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
-                {c === "both" ? "Both" : c === "white" ? "♔ White" : "♚ Black"}
+                {c === "white" ? "♔ White" : c === "black" ? "♚ Black" : "Not sure"}
               </button>
             ))}
           </div>
@@ -764,8 +772,8 @@ export default function MatchupPrep() {
             error={error}
             username={searchInput}
             onRetry={() => fetchReport(searchInput)}
-            onUseAllFormats={() => { setTcFilter("all"); fetchReport(searchInput); }}
-            onAnalyze100={() => { setGameCountFilter("100"); fetchReport(searchInput); }}
+            onUseAllFormats={() => { setTcFilter("all"); fetchReport(searchInput, false, "all"); }}
+            onAnalyze100={() => { setGameCountFilter("100"); fetchReport(searchInput, false, undefined, "100"); }}
             isDark={isDark}
             t={t}
           />
@@ -813,14 +821,16 @@ export default function MatchupPrep() {
                   {reportV3.opponent.timeControlSplit.blitz && ` · ${reportV3.opponent.timeControlSplit.blitz.games} blitz`}
                 </p>
               </div>
-              {/* V3 badge */}
-              <span className={`shrink-0 text-xs font-black px-2 py-1 rounded-lg ${isDark ? "bg-[#436850]/20 text-[#5B9A6A] border border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border border-[#436850]/20"}`}>
-                V3
-              </span>
+              {/* Color context badge */}
+              {myColor !== "not_sure" && (
+                <span className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-lg ${isDark ? "bg-[#1e2e22] text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
+                  You {myColor === "white" ? "♔ White" : "♚ Black"} · Opp {myColor === "white" ? "♚ Black" : "♔ White"}
+                </span>
+              )}
             </div>
 
             {/* V3 Scout Report — progressive-disclosure layout */}
-            <V3ScoutReportTab report={reportV3} isDark={isDark} t={t} colorFilter={colorFilter} />
+            <V3ScoutReportTab report={reportV3} isDark={isDark} t={t} myColor={myColor} />
           </div>
         )}
 
@@ -897,18 +907,26 @@ export default function MatchupPrep() {
         )}
 
         {/* ── Recently Scouted Chips ── */}
-        {!report && !loading && !error && recentlyScouted.length > 0 && (
+        {!reportV3 && !report && !loading && !error && recentlyScouted.length > 0 && (
           <RecentlyScoutedChips
-            usernames={recentlyScouted}
-            onSelect={(u) => { setSearchInput(u); navigate(`/prep/${encodeURIComponent(u)}`); fetchReport(u); }}
-            onRemove={(u) => { const updated = removeRecentlyScouted(u); setRecentlyScouted(updated); }}
+            entries={recentlyScouted}
+            onSelect={(entry) => {
+              setSearchInput(entry.username);
+              setProvider(entry.provider);
+              setMyColor(entry.myColor);
+              setTcFilter(entry.tcFilter);
+              setGameCountFilter(entry.gameCount);
+              navigate(`/prep/${encodeURIComponent(entry.username)}`);
+              fetchReport(entry.username);
+            }}
+            onRemove={(entry) => { const updated = removeRecentlyScouted(entry.username, entry.provider); setRecentlyScouted(updated); }}
             isDark={isDark}
             t={t}
           />
         )}
 
         {/* ── Welcome / Empty State ── */}
-        {!report && !loading && !error && (
+        {!reportV3 && !report && !loading && !error && (
           <div className={`${t.card} py-12 px-6 sm:py-16 flex flex-col items-center gap-5 text-center`}>
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#436850]/06"}`}>
               <img
@@ -2482,36 +2500,37 @@ function SavedReportsPanel({
 }
 
 function RecentlyScoutedChips({
-  usernames, onSelect, onRemove, isDark, t
+  entries, onSelect, onRemove, isDark, t
 }: {
-  usernames: string[];
-  onSelect: (username: string) => void;
-  onRemove: (username: string) => void;
+  entries: RecentScoutEntry[];
+  onSelect: (entry: RecentScoutEntry) => void;
+  onRemove: (entry: RecentScoutEntry) => void;
   isDark: boolean;
   t: Tokens;
 }) {
-  if (usernames.length === 0) return null;
+  if (entries.length === 0) return null;
   return (
     <div className={`${t.card} p-4`}>
       <p className={`text-xs font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>Recently Scouted</p>
       <div className="flex flex-wrap gap-2">
-        {usernames.map((username) => (
+        {entries.map((entry) => (
           <div
-            key={username}
+            key={`${entry.username}-${entry.provider}`}
             className={`group flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border text-sm font-medium transition-all ${
               isDark
                 ? "bg-[#0d1a0f]/60 border-[#1e2e22]/60 text-white/70 hover:border-[#436850]/40 hover:text-white"
                 : "bg-[#FBFADA]/70/80 border-[#ADBC9F]/60 text-[#436850] hover:border-[#436850]/30 hover:text-[#12372A]"
             }`}
           >
-            <button onClick={() => onSelect(username)} className="flex items-center gap-1.5 min-w-0">
+            <button onClick={() => onSelect(entry)} className="flex items-center gap-1.5 min-w-0">
               <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold shrink-0 ${
                 isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"
-              }`}>{username.charAt(0).toUpperCase()}</span>
-              <span className="truncate max-w-[120px]">{username}</span>
+              }`}>{entry.username.charAt(0).toUpperCase()}</span>
+              <span className="truncate max-w-[120px]">{entry.username}</span>
+              <span className={`text-[10px] opacity-50`}>{entry.provider === "lichess" ? "L" : "C"}</span>
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); onRemove(username); }}
+              onClick={(e) => { e.stopPropagation(); onRemove(entry); }}
               className={`ml-0.5 w-4 h-4 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
                 isDark ? "hover:bg-white/10 text-white/30 hover:text-white/60" : "hover:bg-[#ADBC9F] text-[#436850]/70 hover:text-[#436850]"
               }`}

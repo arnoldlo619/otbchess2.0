@@ -33,6 +33,7 @@ interface Tokens {
 interface ForecastWalkthroughProps {
   openingForecast: Record<"white" | "black", ForecastBranch[]>;
   colorFilter?: "both" | "white" | "black";
+  myColor?: "white" | "black" | "not_sure";
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
@@ -652,12 +653,16 @@ function PerformanceSummary({ node, isDark, t }: { node: FNode; isDark: boolean;
 export function ForecastWalkthrough({
   openingForecast,
   colorFilter = "both",
+  myColor,
   isDark,
   t,
   opponentUsername,
 }: ForecastWalkthroughProps) {
   const defaultOpponentColor: "white" | "black" =
-    colorFilter === "black" ? "black"
+    // myColor is canonical: when user plays White, opponent is Black
+    myColor === "white" ? "black"
+    : myColor === "black" ? "white"
+    : colorFilter === "black" ? "black"
     : colorFilter === "white" ? "white"
     : "white";
 

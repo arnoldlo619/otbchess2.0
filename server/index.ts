@@ -657,13 +657,14 @@ export function createApp() {
         const timeClasses: string[] =
           tcParam === "rapid" ? ["rapid"] :
           tcParam === "blitz" ? ["blitz"] :
-          ["rapid", "blitz"];
+          tcParam === "bullet" ? ["bullet"] :
+          ["rapid", "blitz", "bullet"];
         const provider = (req.query.provider as string) === "lichess" ? "lichess" : "chesscom";
         const forceRefresh = req.query.refresh === "true";
 
         // Cache key includes schema version so V3 never collides with V2
         const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
-        const cacheKey = `v3:${provider}:${normalised}:${tcKey}`;
+        const cacheKey = `v3:${provider}:${normalised}:${tcKey}:g${maxGames}`;
 
         if (!forceRefresh) {
           try {

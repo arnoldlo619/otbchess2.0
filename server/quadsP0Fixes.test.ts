@@ -223,39 +223,51 @@ describe("buildSnapshot — Quads section-scoped standings", () => {
     updatedAt: new Date().toISOString(),
   });
 
-  it("includes sonnebornBerger in every standing row", () => {
-    snapshot.standings.forEach((r) => {
-      expect(r).toHaveProperty("sonnebornBerger");
-      expect(typeof r.sonnebornBerger).toBe("number");
-    });
+  // New contract: Quads use per-section standings, not global standings
+  it("global standings is empty for Quads (per-section only)", () => {
+    expect(snapshot.standings).toHaveLength(0);
   });
 
-  it("has 8 standing rows (all players)", () => {
-    expect(snapshot.standings).toHaveLength(8);
+  it("section 1 has 4 standings rows", () => {
+    const sec1 = snapshot.quadSections?.find(s => s.id === "sec1");
+    expect(sec1?.standings).toHaveLength(4);
   });
 
-  it("section 1 champion (A) is ranked #1 globally", () => {
-    const a = snapshot.standings.find((r) => r.playerId === "A");
+  it("section 1 champion (A) is ranked #1 in section 1", () => {
+    const sec1 = snapshot.quadSections?.find(s => s.id === "sec1");
+    const a = sec1?.standings?.find((r) => r.playerId === "A");
     expect(a?.rank).toBe(1);
     expect(a?.points).toBe(3);
   });
 
-  it("section 2 champion (E) is ranked #2 globally (same points as A, lower ELO)", () => {
-    const e = snapshot.standings.find((r) => r.playerId === "E");
-    expect(e?.rank).toBe(2);
+  it("section 2 champion (E) is ranked #1 in section 2", () => {
+    const sec2 = snapshot.quadSections?.find(s => s.id === "sec2");
+    const e = sec2?.standings?.find((r) => r.playerId === "E");
+    expect(e?.rank).toBe(1);
     expect(e?.points).toBe(3);
   });
 
   it("SB for A is section-scoped (only counts B, C, D opponents)", () => {
-    const a = snapshot.standings.find((r) => r.playerId === "A");
+    const sec1 = snapshot.quadSections?.find(s => s.id === "sec1");
+    const a = sec1?.standings?.find((r) => r.playerId === "A");
     // A defeated B(2), C(1), D(0) → SB = 3
     expect(a?.sonnebornBerger).toBe(3);
   });
 
   it("SB for A does NOT include E/F/G/H (cross-section opponents)", () => {
-    const a = snapshot.standings.find((r) => r.playerId === "A");
+    const sec1 = snapshot.quadSections?.find(s => s.id === "sec1");
+    const a = sec1?.standings?.find((r) => r.playerId === "A");
     // A never played E/F/G/H, so SB = 3 (not inflated by cross-section)
     expect(a?.sonnebornBerger).toBe(3);
+  });
+
+  it("section standings include sonnebornBerger", () => {
+    snapshot.quadSections?.forEach(sec => {
+      sec.standings?.forEach((r) => {
+        expect(r).toHaveProperty("sonnebornBerger");
+        expect(typeof r.sonnebornBerger).toBe("number");
+      });
+    });
   });
 
   it("quadSections are included in snapshot", () => {

@@ -312,6 +312,7 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
   // we compute standings per-section and then merge with global rank based on points.
   // The global standings array contains all players; section filtering happens client-side.
   // However, SB must be section-scoped: each player's SB only counts opponents in their section.
+  let allRows: StandingRow[] = [];
   let standings: StandingRow[];
   if (isQuads && input.quadSections && input.quadSections.length > 0) {
     // Build a map of playerId → sectionPlayerIds for SB scoping
@@ -323,7 +324,6 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
       }
     }
     // Compute standings per section, then merge into a single sorted array
-    const allRows: StandingRow[] = [];
     for (const section of input.quadSections) {
       const sectionPlayers = input.players.filter(p => section.playerIds.includes(p.id));
       // Filter rounds to only include games involving this section's players
@@ -365,12 +365,12 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
         // Build a per-section standings lookup from the already-computed allRows
         // (or recompute if not Quads). This ensures each section has its own
         // section-scoped standings array for the public snapshot.
-        if (isQuads) {
-          const standingsBySection = new Map<string, StandingRow[]>();
-          for (const section of input.quadSections!) {
-            const sectionSet = new Set(section.playerIds);
-            const sectionRows = standings.filter(r => sectionSet.has(r.playerId));
-            // Re-rank within section — clone each row to avoid mutating the global standings array
+          if (isQuads) {
+          // Use allRows (computed per-section above) to populate per-section standings
+          // standings[] is intentionally empty for Quads; allRows has the correct data
+          return input.quadSections!.map(s => {
+            const sectionSet = new Set(s.playerIds);
+            const sectionRows = allRows.filter(r => sectionSet.has(r.playerId));
             const ranked = [...sectionRows]
               .sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
@@ -378,15 +378,14 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
                 return b.elo - a.elo;
               })
               .map((r, i) => ({ ...r, rank: i + 1 }));
-            standingsBySection.set(section.id, ranked);
-          }
-          return input.quadSections!.map(s => ({
-            id: s.id,
-            name: s.name,
-            type: (s.type ?? "quad") as "quad" | "bottom_swiss",
-            playerIds: s.playerIds,
-            standings: standingsBySection.get(s.id) ?? [],
-          }));
+            return {
+              id: s.id,
+              name: s.name,
+              type: (s.type ?? "quad") as "quad" | "bottom_swiss",
+              playerIds: s.playerIds,
+              standings: ranked,
+            };
+          });
         }
         return input.quadSections!.map(s => ({
           id: s.id,
