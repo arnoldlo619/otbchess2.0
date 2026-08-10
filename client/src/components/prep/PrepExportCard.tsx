@@ -16,6 +16,7 @@ import React from "react";
 import type { ScoutReportV3, Insight } from "../../../../shared/prepTypes";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
+const CHESSOTB_LOGO = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
 
 const DARK_BG = "#0a1a0c";
 const CARD_BG = "#0d1a0f";
@@ -127,8 +128,30 @@ export function PrepExportCard({ report, myColor, cardRef }: PrepExportCardProps
         color: TEXT_PRIMARY,
         padding: 48,
         boxSizing: "border-box",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* ── Subtle center watermark ── */}
+      <div style={{
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        pointerEvents: "none",
+        userSelect: "none",
+        opacity: 0.03,
+        zIndex: 0,
+      }}>
+        <img
+          src={CHESSOTB_LOGO}
+          alt=""
+          style={{ width: 320, height: 320, borderRadius: 48 }}
+        />
+      </div>
+
+      {/* ── All content sits above watermark ── */}
+      <div style={{ position: "relative", zIndex: 1 }}>
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -273,9 +296,40 @@ export function PrepExportCard({ report, myColor, cardRef }: PrepExportCardProps
       {/* ── Footer ── */}
       <div style={{ height: 1, background: BORDER, margin: "32px 0 20px" }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: TEXT_TERTIARY }}>Generated {generatedAt} · ChessOTB.Club</span>
-        <span style={{ fontSize: 11, color: TEXT_TERTIARY }}>Matchup Prep by ChessOTB.Club</span>
+        {/* Logo + wordmark */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img
+            src={CHESSOTB_LOGO}
+            alt="ChessOTB.Club"
+            style={{ width: 28, height: 28, borderRadius: 6, flexShrink: 0 }}
+          />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "0.02em" }}>
+              ChessOTB.Club
+            </div>
+            <div style={{ fontSize: 10, color: TEXT_TERTIARY, marginTop: 1 }}>
+              Matchup Prep Report
+            </div>
+          </div>
+        </div>
+        {/* Right: timestamp + URL */}
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, color: TEXT_TERTIARY }}>Generated {generatedAt}</div>
+          <div style={{ fontSize: 10, color: TEXT_TERTIARY, marginTop: 2, letterSpacing: "0.04em" }}>
+            chessotb.club/prep
+          </div>
+        </div>
       </div>
+
+      {/* ── Bottom accent bar ── */}
+      <div style={{
+        height: 3,
+        background: `linear-gradient(90deg, ${GREEN} 0%, #22c55e 50%, transparent 100%)`,
+        borderRadius: "0 0 4px 4px",
+        marginTop: 20,
+        opacity: 0.7,
+      }} />
+      </div>{/* close content z-index wrapper */}
     </div>
   );
 }
