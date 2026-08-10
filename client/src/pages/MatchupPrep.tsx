@@ -6,7 +6,7 @@
  * - Study Lines: ranked prep lines with inline ChessLineViewer (interactive board)
  * - Practice Board: ChessPracticeBoard (SRS quiz with real chessboard)
  */
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -18,7 +18,10 @@ import {
   Activity, Bookmark, BookmarkCheck,
   Trash2, AlertCircle, Crosshair, Flame, Dumbbell, AlertTriangle, ArrowRight, PlayCircle,
   Zap, GitBranch, BarChart3, ChevronDown,
+  Download, FileImage, FileText,
 } from "lucide-react";
+import { toBlob } from "html-to-image";
+import { PrepExportCard } from "../components/prep/PrepExportCard";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
 import { Chess } from "chess.js";
@@ -290,6 +293,54 @@ export default function MatchupPrep() {
   // My color — canonical color perspective (which side the user is playing)
   type MyColor = "white" | "black" | "not_sure";
   const [myColor, setMyColor] = useState<MyColor>("not_sure");
+
+  // Export state
+  const [exportLoading, setExportLoading] = useState<"png" | "pdf" | null>(null);
+  const exportCardRef = useRef<HTMLDivElement>(null);
+
+  const handleExportPng = useCallback(async () => {
+    if (!exportCardRef.current || !reportV3) return;
+    setExportLoading("png");
+    try {
+      const blob = await toBlob(exportCardRef.current, {
+        quality: 1,
+        pixelRatio: 2,
+        backgroundColor: "#0a1a0c",
+      });
+      if (!blob) throw new Error("Failed to generate image");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `prep-${reportV3.opponent.username}-${new Date().toISOString().slice(0, 10)}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("PNG export failed:", err);
+    } finally {
+      setExportLoading(null);
+    }
+  }, [reportV3]);
+
+  const handleExportPdf = useCallback(() => {
+    if (!reportV3) return;
+    setExportLoading("pdf");
+    // Use browser print with print-specific CSS
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) { setExportLoading(null); return; }
+    const cardHtml = exportCardRef.current?.outerHTML ?? "";
+    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Prep Report — ${reportV3.opponent.username}</title><style>
+      @page { margin: 0; size: A4 landscape; }
+      body { margin: 0; padding: 0; background: #0a1a0c; }
+      * { box-sizing: border-box; }
+    </style></head><body>${cardHtml}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+      setExportLoading(null);
+    }, 500);
+  }, [reportV3]);
 
   // Enriched prep lines with collision scores
   const enrichedLines = useMemo<EnrichedPrepLine[]>(() => {
@@ -633,6 +684,45 @@ export default function MatchupPrep() {
                   {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedId ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
                 </button>
               )}
+              {/* Export dropdown */}
+              {reportV3 && (
+                <div className="relative group">
+                  <button
+                    className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                      isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]"
+                    }`}
+                    title="Export report"
+                    disabled={exportLoading !== null}
+                  >
+                    {exportLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  </button>
+                  {/* Dropdown on hover */}
+                  <div className={`absolute right-0 top-full mt-1 w-44 rounded-xl border shadow-xl z-50 overflow-hidden opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity ${
+                    isDark ? "bg-[#0d1a0f] border-[#1e2e22]" : "bg-white border-[#ADBC9F]/60"
+                  }`}>
+                    <button
+                      onClick={handleExportPng}
+                      disabled={exportLoading !== null}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${
+                        isDark ? "text-white/70 hover:bg-white/05 hover:text-white" : "text-[#436850] hover:bg-[#ADBC9F]/20"
+                      }`}
+                    >
+                      <FileImage className="w-3.5 h-3.5 shrink-0" />
+                      Save as Image
+                    </button>
+                    <button
+                      onClick={handleExportPdf}
+                      disabled={exportLoading !== null}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${
+                        isDark ? "text-white/70 hover:bg-white/05 hover:text-white" : "text-[#436850] hover:bg-[#ADBC9F]/20"
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5 shrink-0" />
+                      Print / Save PDF
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -951,6 +1041,20 @@ export default function MatchupPrep() {
           </div>
         )}
       </div>
+
+      {/* ── Off-screen export card — captured by html-to-image ── */}
+      {reportV3 && (
+        <div
+          aria-hidden="true"
+          style={{ position: "fixed", left: "-9999px", top: 0, pointerEvents: "none" }}
+        >
+          <PrepExportCard
+            report={reportV3}
+            myColor={myColor}
+            cardRef={exportCardRef}
+          />
+        </div>
+      )}
     </div>
   );
 }
