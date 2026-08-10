@@ -137,6 +137,8 @@ export function forecast(
         };
       });
   };
-  // Start at ply 0 for White (their moves), ply 1 for Black (their moves)
-  return build(games, color === "white" ? 0 : 1, 0);
+  // Always start at ply 0 — the tree shows the full game from the initial position.
+  // When opponent is White: ply 0 = opponent's moves, ply 1 = user's responses
+  // When opponent is Black: ply 0 = user's moves, ply 1 = opponent's responses
+  return build(games, 0, 0);
 }

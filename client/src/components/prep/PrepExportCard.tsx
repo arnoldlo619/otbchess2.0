@@ -88,7 +88,7 @@ function InsightRow({ ins }: { ins: Insight }) {
 
 interface PrepExportCardProps {
   report: ScoutReportV3;
-  myColor?: "white" | "black" | "not_sure";
+  myColor?: "white" | "black";
   /** Ref to attach to the root div for html-to-image capture */
   cardRef?: React.RefObject<HTMLDivElement | null>;
 }

@@ -11,14 +11,13 @@
  */
 import { useState, useMemo } from "react";
 import {
-  BookOpen, TrendingDown, TrendingUp, Zap, Target,
+  BookOpen, TrendingDown, TrendingUp, Zap,
   ChevronDown, ChevronRight, GitBranch, CheckSquare, AlertCircle,
   Shield, Crosshair, Activity, Eye, Telescope,
 } from "lucide-react";
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
-import { ScoutAISummary } from "./ScoutAISummary";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 
 type Tokens = {
@@ -36,7 +35,7 @@ interface Props {
   report: ScoutReportV3;
   isDark: boolean;
   t: Tokens;
-  myColor?: "white" | "black" | "not_sure";
+  myColor?: "white" | "black";
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -294,7 +293,7 @@ function EvidenceSection({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure" }: Props) {
+export function V3ScoutReportTab({ report, isDark, t, myColor = "white" }: Props) {
   const s = report.sections;
 
   // Resolve section IDs to actual insight objects
@@ -302,7 +301,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure" }: Pr
 
   // Apply color filter based on myColor (opponent's color is opposite of user's color)
   const filteredInsights = useMemo(() => {
-    if (myColor === "not_sure") return allInsights;
+    // Show all insights when no color filter
     // When user plays White, opponent plays Black — show insights about opponent's Black games
     const opponentColor = myColor === "white" ? "black" : "white";
     return allInsights.filter(ins => ins.color === opponentColor);
