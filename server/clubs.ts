@@ -49,6 +49,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { logger } from "./logger.js";
+import { fromZonedTime } from "date-fns-tz";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1120,11 +1121,26 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can create events" }); return; }
     const body = req.body as any;
     const eventId = body.id ?? nanoid(16);
+    // Timezone-safe date parsing: if client sends localDate+localTime+timezone, interpret in that tz
+    const tz = body.timezone ?? "America/Los_Angeles";
+    let startAtUtc: Date;
+    let endAtUtc: Date | null = null;
+    if (body.localDate && body.localStartTime) {
+      startAtUtc = fromZonedTime(`${body.localDate}T${body.localStartTime}`, tz);
+    } else {
+      startAtUtc = new Date(body.startAt);
+    }
+    if (body.localDate && body.localEndTime) {
+      endAtUtc = fromZonedTime(`${body.localDate}T${body.localEndTime}`, tz);
+    } else if (body.endAt) {
+      endAtUtc = new Date(body.endAt);
+    }
     await db.insert(clubEvents).values({
       id: eventId, clubId: id, title: body.title,
       description: body.description ?? null,
-      startAt: new Date(body.startAt),
-      endAt: body.endAt ? new Date(body.endAt) : null,
+      startAt: startAtUtc,
+      endAt: endAtUtc,
+      timezone: tz,
       venue: body.venue ?? null, address: body.address ?? null,
       admissionNote: body.admissionNote ?? null,
       coverImageUrl: body.coverImageUrl ?? null,
@@ -2025,6 +2041,44 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
   }
 });
 
+/** PUT /api/clubs/:id/events/:eventId/rsvp-form — auto-save update (same as POST but requires existing form) */
+clubsRouter.put("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  const { id: clubId, eventId } = req.params;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, clubId));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [member] = await db.select().from(dbClubMembers).where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)));
+    const isOwner = club.ownerId === userId;
+    const isDirector = member?.role === "director";
+    if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can manage RSVP forms" }); return; }
+    const [existing] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
+    if (!existing) { res.status(404).json({ error: "Form not found — use POST to create it first" }); return; }
+    const body = req.body as Record<string, unknown>;
+    await db.update(rsvpForms).set({
+      title: (body.title as string) ?? existing.title,
+      description: body.description !== undefined ? (body.description as string | null) : existing.description,
+      questions: (body.questions as unknown[]) ?? existing.questions,
+      isPublished: body.isPublished !== undefined ? ((body.isPublished as boolean) ? 1 : 0) : existing.isPublished,
+      closesAt: body.closesAt !== undefined ? (body.closesAt ? new Date(body.closesAt as string) : null) : existing.closesAt,
+      confirmationMessage: body.confirmationMessage !== undefined ? (body.confirmationMessage as string | null) : existing.confirmationMessage,
+      collectEmail: body.collectEmail !== undefined ? ((body.collectEmail as boolean) ? 1 : 0) : existing.collectEmail,
+      maxResponses: body.maxResponses !== undefined ? (body.maxResponses as number | null) : existing.maxResponses,
+      allowMultipleSubmissions: body.allowMultipleSubmissions !== undefined ? ((body.allowMultipleSubmissions as boolean) ? 1 : 0) : existing.allowMultipleSubmissions,
+      theme_color: body.theme_color !== undefined ? (body.theme_color as string | null) : existing.theme_color,
+      header_image: body.header_image !== undefined ? (body.header_image as string | null) : existing.header_image,
+      updatedAt: new Date(),
+    }).where(eq(rsvpForms.id, existing.id));
+    const [updated] = await db.select().from(rsvpForms).where(eq(rsvpForms.id, existing.id));
+    res.json({ form: updated });
+  } catch (err) {
+    logger.error("[clubs] PUT /:id/events/:eventId/rsvp-form error:", err);
+    res.status(500).json({ error: "Failed to save RSVP form" });
+  }
+});
+
 /** GET /api/clubs/:id/events/:eventId/rsvp-form — get the RSVP form for an event */
 clubsRouter.get("/:id/events/:eventId/rsvp-form", async (req: Request, res: Response) => {
   const { eventId } = req.params;
@@ -2079,18 +2133,52 @@ clubsRouter.post("/rsvp-public/:slug/submit", async (req: Request, res: Response
       answers?: unknown[]; userId?: string;
     };
 
-    const responseId = nanoid(36);
-    await db.insert(rsvpFormResponses).values({
-      id: responseId,
-      formId: form.id,
-      eventId: form.eventId,
-      clubId: form.clubId,
-      userId: userId ?? null,
-      respondentName: respondentName ?? "Anonymous",
-      respondentEmail: respondentEmail ?? null,
-      answers: (answers ?? []) as unknown[],
-    });
-    res.status(201).json({ success: true, responseId });
+    // Check maxResponses cap
+    if (form.maxResponses) {
+      const [{ cnt }] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(rsvpFormResponses).where(eq(rsvpFormResponses.formId, form.id));
+      if (Number(cnt) >= form.maxResponses) {
+        res.status(409).json({ error: "This form has reached its response limit" }); return;
+      }
+    }
+
+    // Upsert: find existing response by userId (authenticated) or normalized email (guest)
+    const normalizedEmail = respondentEmail?.trim().toLowerCase() ?? null;
+    let existing: typeof rsvpFormResponses.$inferSelect | undefined;
+    if (userId) {
+      const rows = await db.select().from(rsvpFormResponses)
+        .where(and(eq(rsvpFormResponses.formId, form.id), eq(rsvpFormResponses.userId, userId)));
+      existing = rows[0];
+    } else if (normalizedEmail) {
+      const rows = await db.select().from(rsvpFormResponses)
+        .where(and(eq(rsvpFormResponses.formId, form.id), eq(rsvpFormResponses.respondentEmail, normalizedEmail)));
+      existing = rows[0];
+    }
+
+    let responseId: string;
+    if (existing && !form.allowMultipleSubmissions) {
+      // Update existing response
+      await db.update(rsvpFormResponses).set({
+        respondentName: respondentName ?? existing.respondentName,
+        respondentEmail: normalizedEmail ?? existing.respondentEmail,
+        answers: (answers ?? existing.answers) as unknown[],
+        submittedAt: new Date(),
+      }).where(eq(rsvpFormResponses.id, existing.id));
+      responseId = existing.id;
+      res.json({ success: true, responseId, updated: true });
+    } else {
+      responseId = nanoid(36);
+      await db.insert(rsvpFormResponses).values({
+        id: responseId,
+        formId: form.id,
+        eventId: form.eventId,
+        clubId: form.clubId,
+        userId: userId ?? null,
+        respondentName: respondentName ?? "Anonymous",
+        respondentEmail: normalizedEmail ?? null,
+        answers: (answers ?? []) as unknown[],
+      });
+      res.status(201).json({ success: true, responseId, updated: false });
+    }
   } catch (err) {
     logger.error("[clubs] POST /rsvp-public/:slug/submit error:", err);
     res.status(500).json({ error: "Failed to submit response" });

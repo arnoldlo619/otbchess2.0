@@ -136,46 +136,6 @@ export default function MeetupEventPage() {
     }
   }, [refresh, clubId]);
 
-  // Auto-check-in club owners/directors when they open the event page
-  useEffect(() => {
-    if (!user || !event || !isOwnerOrDirector) return;
-    const alreadyIn = [
-      ...(event.checkedInUserIds ?? []),
-      ...dbCheckinIds,
-    ].includes(user.id);
-    if (alreadyIn) return;
-    authFetch(`/api/clubs/${event.clubId}/events/${event.id}/checkin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clubId: event.clubId,
-        displayName: user.displayName ?? user.email ?? user.id,
-        avatarUrl: user.avatarUrl ?? null,
-        chesscomUsername: user.chesscomUsername ?? null,
-      }),
-    })
-      .then(() => refresh())
-      .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, event?.id, isOwnerOrDirector]);
-
-  // Auto-RSVP owner/director as "going" when they open the event page
-  useEffect(() => {
-    if (!user || !event || !isOwnerOrDirector) return;
-    const existing = getUserRSVP(event.id, user.id);
-    if (existing?.status === "going") return;
-    upsertRSVP(
-      event.id,
-      event.clubId,
-      user.id,
-      user.displayName ?? user.email ?? user.id,
-      "going",
-      user.avatarUrl ?? null
-    );
-    setRsvps(getEventRSVPs(event.id));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, event?.id, isOwnerOrDirector]);
-
   // 30-second polling so owner sees new check-ins from members in real-time
   useEffect(() => {
     const interval = setInterval(() => { refresh(); }, 30_000);

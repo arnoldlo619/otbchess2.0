@@ -109,8 +109,10 @@ export default function ClubMeetupWizard({
     if (!title.trim() || !date) return;
     setSubmitting(true);
 
-    const startAt = new Date(`${date}T${startTime}`).toISOString();
-    const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
+    // Send raw local date/time + browser timezone so server interprets correctly
+    const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const startAt = `${date}T${startTime}:00`;
+    const endAt = endTime ? `${date}T${endTime}:00` : undefined;
 
     const seed = createClubEvent({
       clubId,
@@ -118,6 +120,10 @@ export default function ClubMeetupWizard({
       description: description.trim() || undefined,
       startAt,
       endAt,
+      localDate: date,
+      localStartTime: `${startTime}:00`,
+      localEndTime: endTime ? `${endTime}:00` : undefined,
+      timezone: detectedTz,
       venue: location.trim() || undefined,
       address: address.trim() || undefined,
       creatorId: userId,
