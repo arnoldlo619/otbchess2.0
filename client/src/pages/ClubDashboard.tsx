@@ -7290,7 +7290,7 @@ export default function ClubDashboard() {
               const tournamentStartAt = tCfg?.date
                 ? new Date(tCfg.date + "T00:00:00").toISOString()
                 : new Date().toISOString();
-              createClubEvent({
+              const newEvent = createClubEvent({
                 clubId: club.id,
                 title: createdTournamentName,
                 description: `Club tournament hosted by ${club.name}. Join and track results live.`,
@@ -7301,7 +7301,7 @@ export default function ClubDashboard() {
                 accentColor: club.accentColor,
                 isPublished: true,
                 eventType: "standard",
-                tournamentId: createdTournamentId,
+              tournamentId: createdTournamentId,
               });
               recordTournamentCreated(
                 club.id,
@@ -7311,7 +7311,8 @@ export default function ClubDashboard() {
               );
               refreshEvents();
               refreshFeed();
-              setTab("events");
+              // Navigate to the event page so the owner can set up RSVP form
+              navigate(`/clubs/${club.id}/meetup/${newEvent.id}`);
             }
           }}
         />
