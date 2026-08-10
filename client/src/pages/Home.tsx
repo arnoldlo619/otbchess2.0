@@ -444,8 +444,8 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
               style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
             >
-              <span className="sm:hidden">Sign up with chess.com username — pairings generated automatically.</span>
-              <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
+              <span className="sm:hidden">Sign up with chess.com username, pairings auto-generated.</span>
+              <span className="hidden sm:inline">Sign up with your chess.com username. Pairings generated automatically.</span>
             </h2>
           </div>
 

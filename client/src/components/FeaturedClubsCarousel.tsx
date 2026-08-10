@@ -90,7 +90,7 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
         {club.bannerUrl ? (
           <img
             src={club.bannerUrl}
-            alt=""
+            alt={`${club.name} club banner`}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
           />
