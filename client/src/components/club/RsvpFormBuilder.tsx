@@ -42,6 +42,12 @@ export interface RsvpFormData {
   slug: string;
   isPublished: number; // 0 | 1
   closesAt?: string | null;
+  confirmationMessage?: string | null;
+  collectEmail?: number | null;
+  maxResponses?: number | null;
+  allowMultipleSubmissions?: number | null;
+  theme_color?: string | null;
+  header_image?: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -4,7 +4,7 @@
  * Public shareable RSVP form page. No auth required.
  * Attendees fill out the form and submit their response.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import {
   Calendar,
@@ -14,6 +14,177 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
+import { Sparkles } from "lucide-react";
+
+// ── Confetti particle ─────────────────────────────────────────────────────────
+interface Particle { id: number; x: number; y: number; vx: number; vy: number; color: string; size: number; rotation: number; opacity: number; }
+
+function RsvpSuccessScreen({ event, club, accent, confirmationMessage }: {
+  event: EventInfo | null;
+  club: ClubInfo | null;
+  accent: string;
+  confirmationMessage?: string | null;
+}) {
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [showContent, setShowContent] = useState(false);
+  const [checkAnimated, setCheckAnimated] = useState(false);
+  const rafRef = useRef<number>(0);
+
+  // Build Google Calendar URL
+  const calendarUrl = event ? (() => {
+    const start = new Date(event.startAt).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const end = new Date(new Date(event.startAt).getTime() + 2 * 3600000).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&location=${encodeURIComponent(event.venue ?? "")}`;
+  })() : null;
+
+  useEffect(() => {
+    // Stagger: checkmark first, then content, then confetti
+    const t1 = setTimeout(() => setCheckAnimated(true), 100);
+    const t2 = setTimeout(() => setShowContent(true), 500);
+    const t3 = setTimeout(() => {
+      const colors = [accent, "#4ade80", "#facc15", "#f472b6", "#60a5fa", "#fb923c"];
+      const newParticles: Particle[] = Array.from({ length: 60 }, (_, i) => ({
+        id: i,
+        x: 50 + (Math.random() - 0.5) * 20,
+        y: 30,
+        vx: (Math.random() - 0.5) * 8,
+        vy: -(Math.random() * 6 + 2),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 8 + 4,
+        rotation: Math.random() * 360,
+        opacity: 1,
+      }));
+      setParticles(newParticles);
+    }, 400);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [accent]);
+
+  // Animate particles
+  useEffect(() => {
+    if (particles.length === 0) return;
+    let frame = 0;
+    function animate() {
+      frame++;
+      setParticles(prev => prev
+        .map(p => ({
+          ...p,
+          x: p.x + p.vx * 0.6,
+          y: p.y + p.vy * 0.6 + frame * 0.08,
+          vy: p.vy + 0.15,
+          rotation: p.rotation + p.vx * 3,
+          opacity: Math.max(0, p.opacity - 0.012),
+        }))
+        .filter(p => p.opacity > 0)
+      );
+      if (frame < 120) rafRef.current = requestAnimationFrame(animate);
+    }
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [particles.length > 0]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: "oklch(0.10 0.04 145)" }}>
+      {/* Micro-grid */}
+      <div className="fixed inset-0 pointer-events-none" style={{
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+      }} />
+
+      {/* Confetti canvas */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {particles.map(p => (
+          <div key={p.id} style={{
+            position: "absolute",
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size * 0.6,
+            background: p.color,
+            borderRadius: 2,
+            opacity: p.opacity,
+            transform: `rotate(${p.rotation}deg)`,
+            willChange: "transform, opacity",
+          }} />
+        ))}
+      </div>
+
+      <div className="relative z-10 text-center max-w-sm w-full">
+        {/* Club avatar */}
+        {club?.avatarUrl && (
+          <img src={club.avatarUrl} alt={club.name} className="w-12 h-12 rounded-xl object-cover mx-auto mb-4 opacity-60" />
+        )}
+
+        {/* Animated checkmark ring */}
+        <div className="relative mx-auto mb-6" style={{ width: 88, height: 88 }}>
+          {/* Pulse ring */}
+          <div style={{
+            position: "absolute", inset: -8,
+            borderRadius: "50%",
+            border: `2px solid ${accent}`,
+            opacity: checkAnimated ? 0 : 0.6,
+            transform: checkAnimated ? "scale(1.6)" : "scale(1)",
+            transition: "transform 800ms cubic-bezier(0.4,0,0.2,1), opacity 800ms ease",
+          }} />
+          {/* Main circle */}
+          <div style={{
+            width: 88, height: 88, borderRadius: "50%",
+            background: `${accent}18`,
+            border: `2.5px solid ${accent}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transform: checkAnimated ? "scale(1)" : "scale(0.5)",
+            opacity: checkAnimated ? 1 : 0,
+            transition: "transform 500ms cubic-bezier(0.34,1.56,0.64,1), opacity 400ms ease",
+          }}>
+            <CheckCircle style={{ width: 40, height: 40, color: accent }} />
+          </div>
+        </div>
+
+        {/* Text content */}
+        <div style={{
+          opacity: showContent ? 1 : 0,
+          transform: showContent ? "translateY(0)" : "translateY(12px)",
+          transition: "opacity 500ms ease, transform 500ms ease",
+        }}>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4" style={{ color: accent }} />
+            <h1 className="text-white font-black text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              You&apos;re in!
+            </h1>
+            <Sparkles className="w-4 h-4" style={{ color: accent }} />
+          </div>
+
+          <p className="text-white/70 text-sm mb-1">
+            {confirmationMessage || (event ? `See you at ${event.title}` : "Your response has been recorded.")}
+          </p>
+
+          {event && (
+            <div className="mt-3 rounded-2xl px-4 py-3 mb-5" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <p className="text-white font-semibold text-sm mb-1">{event.title}</p>
+              <p className="text-white/50 text-xs">{formatDate(event.startAt)} · {formatTime(event.startAt)}</p>
+              {event.venue && <p className="text-white/40 text-xs mt-0.5">{event.venue}</p>}
+            </div>
+          )}
+
+          {/* Add to Calendar */}
+          {calendarUrl && (
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] mb-4"
+              style={{ background: accent, color: "#0a1a0f" }}
+            >
+              <Calendar className="w-4 h-4" />
+              Add to Google Calendar
+            </a>
+          )}
+
+          <div className="text-white/20 text-xs mt-2">Powered by ChessOTB.club</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 import type { FormQuestion, RsvpFormData } from "@/components/club/RsvpFormBuilder";
 
 interface EventInfo {
@@ -173,30 +344,7 @@ export default function RsvpFormPage() {
 
   // ── Success ──────────────────────────────────────────────────────────────
   if (submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "oklch(0.10 0.04 145)" }}>
-        <div className="text-center max-w-sm">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ background: `${accent}22`, border: `2px solid ${accent}` }}
-          >
-            <CheckCircle className="w-8 h-8" style={{ color: accent }} />
-          </div>
-          <h1 className="text-white font-black text-2xl mb-2" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            You're registered!
-          </h1>
-          <p className="text-white/60 text-sm mb-1">
-            {event ? `See you at ${event.title}` : "Your response has been recorded."}
-          </p>
-          {event && (
-            <p className="text-white/40 text-xs">
-              {formatDate(event.startAt)} · {formatTime(event.startAt)}
-            </p>
-          )}
-          <div className="mt-6 text-white/30 text-xs">Powered by ChessOTB.club</div>
-        </div>
-      </div>
-    );
+    return <RsvpSuccessScreen event={event} club={club} accent={accent} confirmationMessage={form?.confirmationMessage ?? null} />;
   }
 
   const questions = form.questions as FormQuestion[];
