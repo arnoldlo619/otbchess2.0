@@ -50,6 +50,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
 import { V3ScoutReportSkeleton } from "@/components/prep/V3ScoutReportSkeleton";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
+import { OTBLoader } from "@/components/OTBLoader";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -277,7 +278,7 @@ export default function MatchupPrep() {
 
   // V3 schema toggle + provider
   type Provider = "chesscom" | "lichess";
-  const [useV3, _setUseV3] = useState(true); // V3 on by default
+  const [useV3, setUseV3] = useState(true); // V3 on by default
   const [provider, setProvider] = useState<Provider>("chesscom");
   const [reportV3, setReportV3] = useState<ScoutReportV3 | null>(null);
 
@@ -290,8 +291,8 @@ export default function MatchupPrep() {
   const [gameCountFilter, setGameCountFilter] = useState<GameCountFilter>("50");
 
   // My color — canonical color perspective (which side the user is playing)
-  type MyColor = "white" | "black";
-  const [myColor, setMyColor] = useState<MyColor>("white");
+  type MyColor = "white" | "black" | "not_sure";
+  const [myColor, setMyColor] = useState<MyColor>("not_sure");
 
   // Export state
   const [exportLoading, setExportLoading] = useState<"png" | "pdf" | null>(null);
@@ -650,9 +651,9 @@ export default function MatchupPrep() {
                     : "bg-[#436850] text-white hover:bg-[#2d5237] active:scale-95"
                   : isDark ? "bg-white/05 text-white/20 cursor-not-allowed" : "bg-[#ADBC9F]/40 text-[#436850] cursor-not-allowed"
               }`}
-              aria-label="Scout opponent"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Scout opponent"}
+              aria-label="Scout opponent"
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             </button>
           </form>
 
@@ -785,6 +786,30 @@ export default function MatchupPrep() {
 
           {/* Game Count */}
           <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Depth</span>
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
+            {(["50", "100"] as const).map((gc) => (
+              <button
+                key={gc}
+                onClick={() => {
+                  if (gc === gameCountFilter) return;
+                  setGameCountFilter(gc);
+                  const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                  if (activeUser) fetchReport(activeUser, false, undefined, gc);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                  gameCountFilter === gc
+                    ? "bg-[#436850] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+                }`}
+              >
+                {gc === "50" ? "Standard" : "Deep"}
+              </button>
+            ))}
+          </div>
+
+          {/* Separator */}
+          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
+
           {/* I'm playing — canonical color perspective */}
           <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>I'm playing</span>
           <div
@@ -792,7 +817,7 @@ export default function MatchupPrep() {
             aria-label="Your color"
             className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}
           >
-            {(["white", "black"] as const).map((c) => (
+            {(["white", "black", "not_sure"] as const).map((c) => (
               <button
                 key={c}
                 role="radio"
@@ -804,7 +829,7 @@ export default function MatchupPrep() {
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
-                {c === "white" ? "♔ White" : "♚ Black"}
+                {c === "white" ? "♔ White" : c === "black" ? "♚ Black" : "Not sure"}
               </button>
             ))}
           </div>
@@ -871,25 +896,23 @@ export default function MatchupPrep() {
                   </span>
                 </div>
                 <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
-                  {reportV3.dataQuality.parsed} games analyzed · {reportV3.dataQuality.window.from} to {reportV3.dataQuality.window.to}
-                  {reportV3.opponent.avgRating !== null && ` · ~${reportV3.opponent.avgRating}`}
-                  {" · "}
-                  {Object.keys(reportV3.opponent.timeControlSplit).join(" + ")}
-                  {" · "}
-                  <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                    (reportV3.dataQuality.freshness === "strong") ? "bg-green-500/10 text-green-500 border border-green-500/20" :
-                    (reportV3.dataQuality.freshness === "usable") ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
-                    (reportV3.dataQuality.freshness === "stale") ? "bg-red-500/10 text-red-500 border border-red-500/20" :
-                    "bg-orange-500/10 text-orange-500 border border-orange-500/20"
-                  }`}>
-                    {reportV3.dataQuality.freshness === "strong" ? "Strong" :
-                     reportV3.dataQuality.freshness === "usable" ? "Usable" :
-                     reportV3.dataQuality.freshness === "stale" ? "Stale" : "Limited"}
-                  </span>
+                  {reportV3.dataQuality.parsed} games analyzed
+                  {reportV3.dataQuality.grade !== "A" && (
+                    <span className={`ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                      reportV3.dataQuality.grade === "B" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                      reportV3.dataQuality.grade === "C" ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
+                      "bg-red-500/10 text-red-500 border border-red-500/20"
+                    }`}>
+                      {reportV3.dataQuality.grade === "B" ? "Fair data" : reportV3.dataQuality.grade === "C" ? "Limited data" : "Sparse data"}
+                    </span>
+                  )}
+                  {reportV3.opponent.avgRating !== null && ` · ~${reportV3.opponent.avgRating} avg rating`}
+                  {reportV3.opponent.timeControlSplit.rapid && ` · ${reportV3.opponent.timeControlSplit.rapid.games} rapid`}
+                  {reportV3.opponent.timeControlSplit.blitz && ` · ${reportV3.opponent.timeControlSplit.blitz.games} blitz`}
                 </p>
               </div>
               {/* Color context badge */}
-              {myColor && (
+              {myColor !== "not_sure" && (
                 <span className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-lg ${isDark ? "bg-[#1e2e22] text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
                   You {myColor === "white" ? "♔ White" : "♚ Black"} · Opp {myColor === "white" ? "♚ Black" : "♔ White"}
                 </span>
@@ -2017,7 +2040,6 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function OpeningRow({ name, winRate, count, isDark, t }: { name: string; winRate: number; count: number; isDark: boolean; t: Tokens }) {
   const wr = Math.round(winRate * 100);
   return (
@@ -2394,7 +2416,6 @@ function PracticeBoardTab({
 // ── Shared Components ─────────────────────────────────────────────────────────
 
 // ── Premium Loading State (requirement 11) ───────────────────────────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PrepLoadingState({ username, isDark, t }: { username: string; isDark: boolean; t: Tokens }) {
   const [step, setStep] = useState(0);
   const steps = [

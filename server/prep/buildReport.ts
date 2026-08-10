@@ -18,11 +18,6 @@ export function buildReport(
   o: FetchOpts
 ): ScoutReportV3 {
   const { parsed, excluded, quarantined } = parseGames(raw, username, o);
-  // Enforce maxGames cap: sort newest first, take at most maxGames
-  parsed.sort((a, b) => b.endTime - a.endTime);
-  if (parsed.length > o.maxGames) {
-    parsed.length = o.maxGames;
-  }
 
   if (!parsed.length) {
     throw new Error(
@@ -33,21 +28,7 @@ export function buildReport(
   const insightsAll = synthesize(parsed, o);
   const { kept, reasons } = runGuards(insightsAll);
 
-  const nowS = Math.floor(Date.now() / 1000);
-  // Freshness classification per spec
-  const newestGameEpoch2 = Math.max(...parsed.map(g => g.endTime));
-  const newestGameAgeDays2 = (nowS - newestGameEpoch2) / 86400;
-  const oneYearGames2 = parsed.filter(g => (nowS - g.endTime) <= 365 * 86400).length;
-  const halfYearGames2 = parsed.filter(g => (nowS - g.endTime) <= 180 * 86400).length;
-  const freshness: "stale" | "strong" | "usable" | "limited" =
-    newestGameAgeDays2 > 365 ? "stale" :
-    (parsed.length >= 20 && newestGameAgeDays2 <= 90 && halfYearGames2 / parsed.length >= 0.60) ? "strong" :
-    (parsed.length >= 8 && newestGameAgeDays2 <= 365 && oneYearGames2 / parsed.length >= 0.40) ? "usable" :
-    "limited";
-
-  // Headline eligibility: sampleSize >= 8, not low confidence, and data is NOT stale
-  const isStale = freshness === "stale";
-  const headlineOK = (i: Insight) => i.sampleSize >= 8 && i.confidence !== "low" && !isStale;
+  const headlineOK = (i: Insight) => i.sampleSize >= 8 && i.confidence !== "low";
   const byKind = (k: Insight["kind"]) => kept.filter(i => i.kind === k);
   const ids = (a: Insight[]) => a.map(i => i.id);
 
@@ -79,6 +60,7 @@ export function buildReport(
 
   const usable = parsed.length;
   // Grade considers both volume and recency: recent games (last 90 days) count more
+  const nowS = Math.floor(Date.now() / 1000);
   const NINETY_DAYS_S = 90 * 24 * 3600;
   const recentCount = parsed.filter(g => (nowS - g.endTime) <= NINETY_DAYS_S).length;
   const grade: ScoutReportV3["dataQuality"]["grade"] =
@@ -149,7 +131,6 @@ export function buildReport(
       },
       grade,
       notes,
-      freshness,
     },
     openingForecast: forecasts,
     insights: kept,

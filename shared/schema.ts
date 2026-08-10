@@ -1067,7 +1067,6 @@ export const clubEvents = mysqlTable(
     description: text("description"),
     startAt: timestamp("start_at").notNull(),
     endAt: timestamp("end_at"),
-    timezone: varchar("timezone", { length: 64 }).notNull().default("America/Los_Angeles"),
     venue: varchar("venue", { length: 200 }),
     address: varchar("address", { length: 300 }),
     admissionNote: varchar("admission_note", { length: 200 }),
@@ -1146,7 +1145,6 @@ export const clubEventRsvps = mysqlTable(
     cerEventIdx: index("idx_cer_event").on(table.eventId),
     cerClubIdx: index("idx_cer_club").on(table.clubId),
     cerUserIdx: index("idx_cer_user").on(table.userId),
-    cerEventUserUnique: uniqueIndex("cer_event_user_unique").on(table.eventId, table.userId),
   })
 );
 export type ClubEventRsvpRow = typeof clubEventRsvps.$inferSelect;

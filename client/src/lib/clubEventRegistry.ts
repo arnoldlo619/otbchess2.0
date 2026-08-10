@@ -73,14 +73,6 @@ export interface ClubEvent {
   recurrenceEndDate?: string;
   createdAt: string;
   updatedAt: string;
-  /** IANA timezone for the event, e.g. "America/Los_Angeles" */
-  timezone?: string;
-  /** Raw local date string YYYY-MM-DD (for round-trip editing without timezone drift) */
-  localDate?: string;
-  /** Raw local start time HH:MM:SS */
-  localStartTime?: string;
-  /** Raw local end time HH:MM:SS */
-  localEndTime?: string;
 }
 
 export interface ClubEventRSVP {
@@ -191,10 +183,6 @@ function _persistEventToServer(event: ClubEvent): void {
         recurrence: event.recurrence ?? "none",
         recurrenceSeriesId: event.recurrenceSeriesId ?? null,
         recurrenceEndDate: event.recurrenceEndDate ?? null,
-        timezone: event.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-        localDate: event.localDate ?? null,
-        localStartTime: event.localStartTime ?? null,
-        localEndTime: event.localEndTime ?? null,
       }),
     }).then((res) => {
       if (!res.ok) {

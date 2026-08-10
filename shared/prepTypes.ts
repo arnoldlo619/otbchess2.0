@@ -88,7 +88,6 @@ export interface ScoutReportV3 {
     ratedShare: number;
     window: { from: string; to: string };
     grade: "A" | "B" | "C" | "D";
-    freshness?: "stale" | "strong" | "usable" | "limited";
     notes: string[];
   };
   openingForecast: Record<Color, ForecastBranch[]>;

@@ -13,7 +13,7 @@ export const MAX_ENTRIES = 5;
  export interface RecentScoutEntry {
    username: string;
    provider: "chesscom" | "lichess";
-   myColor: "white" | "black";
+   myColor: "white" | "black" | "not_sure";
    tcFilter: "all" | "rapid" | "blitz" | "bullet";
    gameCount: "50" | "100";
    /** ISO timestamp of when this entry was added */

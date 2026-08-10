@@ -136,6 +136,46 @@ export default function MeetupEventPage() {
     }
   }, [refresh, clubId]);
 
+  // Auto-check-in club owners/directors when they open the event page
+  useEffect(() => {
+    if (!user || !event || !isOwnerOrDirector) return;
+    const alreadyIn = [
+      ...(event.checkedInUserIds ?? []),
+      ...dbCheckinIds,
+    ].includes(user.id);
+    if (alreadyIn) return;
+    authFetch(`/api/clubs/${event.clubId}/events/${event.id}/checkin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clubId: event.clubId,
+        displayName: user.displayName ?? user.email ?? user.id,
+        avatarUrl: user.avatarUrl ?? null,
+        chesscomUsername: user.chesscomUsername ?? null,
+      }),
+    })
+      .then(() => refresh())
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, event?.id, isOwnerOrDirector]);
+
+  // Auto-RSVP owner/director as "going" when they open the event page
+  useEffect(() => {
+    if (!user || !event || !isOwnerOrDirector) return;
+    const existing = getUserRSVP(event.id, user.id);
+    if (existing?.status === "going") return;
+    upsertRSVP(
+      event.id,
+      event.clubId,
+      user.id,
+      user.displayName ?? user.email ?? user.id,
+      "going",
+      user.avatarUrl ?? null
+    );
+    setRsvps(getEventRSVPs(event.id));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, event?.id, isOwnerOrDirector]);
+
   // 30-second polling so owner sees new check-ins from members in real-time
   useEffect(() => {
     const interval = setInterval(() => { refresh(); }, 30_000);
@@ -546,28 +586,6 @@ export default function MeetupEventPage() {
                             View Tournament
                           </Link>
                         </div>
-                        {/* Owner/Director: Director Dashboard + RSVP Form prompt */}
-                        {isOwnerOrDirector && (
-                          <div className="px-5 pb-4 space-y-2 border-t border-white/08 pt-4">
-                            <Link
-                              href={`/tournament/${event.tournamentId}/manage`}
-                              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
-                              style={{ background: accentColor, color: '#ffffff' }}
-                            >
-                              <ClipboardList className="w-4 h-4" />
-                              Go to Director Dashboard →
-                            </Link>
-                            {true && (
-                              <Link
-                                href={`/clubs/${event.clubId}/meetup/${event.id}/rsvp-form/builder`}
-                                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-                                style={{ background: accentColor + "15", color: accentColor, border: `1px solid ${accentColor}33` }}
-                              >
-                                <span>+ Create RSVP Form</span>
-                              </Link>
-                            )}
-                          </div>
-                        )}
                       </div>
                     )}
                     {/* Check-in action */}

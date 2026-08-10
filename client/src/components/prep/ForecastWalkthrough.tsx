@@ -33,7 +33,7 @@ interface Tokens {
 interface ForecastWalkthroughProps {
   openingForecast: Record<"white" | "black", ForecastBranch[]>;
   colorFilter?: "both" | "white" | "black";
-  myColor?: "white" | "black";
+  myColor?: "white" | "black" | "not_sure";
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
@@ -188,7 +188,7 @@ function EvalBar({ score, isDark, flipped }: EvalBarProps) {
   // White advantage = 1 - score (if opponent is Black, score=0.7 means Black wins → white losing)
   // We'll treat score as "active side advantage" and just show it as a gradient
 
-  const _TOTAL_HEIGHT = 416; // matches board max height in px (visual reference)
+  const TOTAL_HEIGHT = 416; // matches board max height in px (visual reference)
 
   // Convert score to a 0–100 percentage where 0=white winning, 100=black winning
   // score=0.5 → 50% (equal)
@@ -300,7 +300,6 @@ interface BoardProps {
   onSquareClick?: (sq: string) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove, selectedSquare, legalSquares, onSquareClick }: BoardProps) {
   const CELL = 52;
   const SIZE = CELL * 8;
@@ -338,8 +337,8 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove, selectedSquare
         shouldAnimate = true;
       }
 
-      const _deltaX = x - fromX;
-      const _deltaY = y - fromY;
+      const deltaX = x - fromX;
+      const deltaY = y - fromY;
 
       elements.push(
         <text
@@ -783,7 +782,7 @@ export function ForecastWalkthrough({
 
 
 
-  const _handleColorSwitch = useCallback((c: "white" | "black") => {
+  const handleColorSwitch = useCallback((c: "white" | "black") => {
     setOpponentColor(c);
     setSelectedPath([]);
     setSelectedNode(null);
@@ -940,9 +939,22 @@ export function ForecastWalkthrough({
         <BookOpen className={`w-4 h-4 shrink-0 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
         <h3 className={`font-bold text-sm flex-1 ${t.textPrimary}`}>Opening Forecast</h3>
 
-        <span className={`text-[11px] font-semibold ${isDark ? "text-white/50" : "text-[#436850]/70"}`}>
-          {opponentColor === "white" ? "Opponent plays White" : "Opponent plays Black"}
-        </span>
+        <div className={`flex items-center gap-0.5 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40 border border-[#ADBC9F]/60"}`}>
+          {(["white", "black"] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => handleColorSwitch(c)}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                opponentColor === c
+                  ? "bg-[#436850] text-white"
+                  : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+              }`}
+              aria-pressed={opponentColor === c}
+            >
+              {c === "white" ? "Opp. White" : "Opp. Black"}
+            </button>
+          ))}
+        </div>
 
         <button
           onClick={() => setFlipped(f => !f)}

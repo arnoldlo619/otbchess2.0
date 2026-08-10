@@ -1108,14 +1108,13 @@ export function recordMeetupCreated(
     recurrence === "popup" ? "one-time" :
     recurrence === "weekly" ? "weekly" :
     recurrence === "biweekly" ? "bi-weekly" :
-    recurrence === "monthly" ? "monthly" :
-    recurrence === "none" || !recurrence ? "" : recurrence;
+    recurrence === "monthly" ? "monthly" : recurrence;
   return addFeedEvent({
     clubId,
     type: "event_created",
     createdAt: new Date().toISOString(),
     actorName: creatorName,
-    description: `${creatorName} scheduled a${recurrenceLabel ? ` ${recurrenceLabel}` : ""} club meetup`,
+    description: `${creatorName} scheduled a ${recurrenceLabel} club meetup`,
     detail: meetupTitle,
     linkHref: `/clubs/${clubId}/meetup/${eventId}`,
     linkLabel: "View Meetup",

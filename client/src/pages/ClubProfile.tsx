@@ -3656,7 +3656,7 @@ export default function ClubProfile() {
               const tournamentStartAt = tCfg?.date
                 ? new Date(tCfg.date + "T00:00:00").toISOString()
                 : new Date().toISOString();
-              const newEvent = createClubEvent({
+              createClubEvent({
                 clubId: club.id,
                 title: createdTournamentName,
                 description: `Club tournament hosted by ${club.name}. Join and track results live.`,
@@ -3676,8 +3676,6 @@ export default function ClubProfile() {
                 createdTournamentId
               );
               setFeedEvents(listFeedEvents(club.id));
-              // Navigate to event page so owner can set up RSVP form
-              navigate(`/clubs/${club.id}/meetup/${newEvent.id}`);
             }
           }
         }}
