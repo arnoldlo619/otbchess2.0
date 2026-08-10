@@ -92,9 +92,9 @@ function deviationInsight(
         kind: "deviation_point",
         color,
         role: "plays",
-        claim: `In the ${opening} as ${color}, their move ${moveNo} splits results: ${l.move} appears in ${l.n} of their losses, while ${w.move} appears in ${w.n} of their wins.`,
+        claim: `In the ${opening} as ${color}, move ${moveNo} is a decision point — ${l.move} leads to most of their losses, while ${w.move} is their winning choice.`,
         evidence: {
-          stat: `${gs.length} games in this line (${wins.length}W/${losses.length}L among decisive); branch at move ${moveNo} after ${prefix || "the start position"}`,
+          stat: `${gs.length} games · ${wins.length}W/${losses.length}L · branch at move ${moveNo}`,
           games: sample([...losses, ...wins]),
           window: windowMeta,
         },
@@ -140,9 +140,13 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
       kind: "opening_tendency",
       color: "white",
       role: "plays",
-      claim: `As White they open 1.${mv} in ${g.n} of ${byColor.white.length} games (${pct(g.n / byColor.white.length)}), scoring ${pct(g.score / g.n)}.`,
+      claim: g.n / byColor.white.length >= 0.7
+        ? `As White, they almost always open 1.${mv}${g.n / byColor.white.length >= 0.9 ? " — expect it every game" : ""}.`
+        : g.n / byColor.white.length >= 0.5
+        ? `As White, their go-to first move is 1.${mv} — seen in over half their games.`
+        : `As White, they most often open with 1.${mv}, though they mix in other moves.`,
       evidence: {
-        stat: `${g.n}/${byColor.white.length} White games begin 1.${mv}`,
+        stat: `${g.n} of ${byColor.white.length} White games · ${pct(g.n / byColor.white.length)} frequency`,
         games: sample(gs),
         window: windowMeta,
       },
@@ -180,9 +184,15 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
       kind: isWeak ? "weakness" : isStrong ? "strength" : "response_pattern",
       color: "black",
       role: "plays",
-      claim: `Against 1.${first} they choose 1...${reply} in ${g.n} of ${total} games (${pct(g.n / total)}), scoring ${pct(g.score / g.n)}.`,
+      claim: isWeak
+        ? `Against 1.${first} they play 1...${reply} — and it's their weakest line.`
+        : isStrong
+        ? `Against 1.${first} they play 1...${reply} — a line they're comfortable in.`
+        : g.n / total >= 0.7
+        ? `Against 1.${first}, expect 1...${reply} almost every game.`
+        : `Against 1.${first}, they most often reply 1...${reply}.`,
       evidence: {
-        stat: `${g.n}/${total} games vs 1.${first}; score ${g.score}/${g.n} (95% CI ${pct(w.lo)}–${pct(w.hi)})`,
+        stat: `${g.n} of ${total} games vs 1.${first} · ${pct(g.n / total)} frequency`,
         games: sample(gs),
         window: windowMeta,
       },
@@ -221,9 +231,9 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
           kind: "weakness",
           color: c,
           role: "plays",
-          claim: `They score ${pct(p)} in ${name} positions as ${c} (${g.n} games) versus ${pct(base)} overall as ${c}.`,
+          claim: `As ${c}, ${name} is a weak spot — their results drop noticeably in this structure.`,
           evidence: {
-            stat: `score ${g.score}/${g.n}; 95% CI ${pct(w.lo)}–${pct(w.hi)}; baseline delta −${Math.round(-delta * 100)}pts`,
+            stat: `${g.n} games · ${pct(p)} score vs ${pct(base)} baseline (−${Math.round(-delta * 100)}pp)`,
             games: sample(gs.filter((x: ParsedGame) => x.scoutedScore === 0).concat(gs)),
             window: windowMeta,
           },
@@ -241,9 +251,9 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
           kind: "strength",
           color: c,
           role: "plays",
-          claim: `They score ${pct(p)} in ${name} positions as ${c} (${g.n} games), ${Math.round(delta * 100)} points above their ${c} baseline.`,
+          claim: `As ${c}, ${name} is their comfort zone — they score well above their usual level here.`,
           evidence: {
-            stat: `score ${g.score}/${g.n}; 95% CI ${pct(w.lo)}–${pct(w.hi)}`,
+            stat: `${g.n} games · ${pct(p)} score vs ${pct(base)} baseline (+${Math.round(delta * 100)}pp)`,
             games: sample(gs),
             window: windowMeta,
           },
@@ -288,9 +298,13 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
       kind: "behavior",
       color: "white",
       role: "plays",
-      claim: `Their games average ${avgMoves.toFixed(0)} moves; ${top[1]} of ${losses.length} losses (${pct(top[1] / losses.length)}) end in the ${top[0]} (by game length), ${timeouts} on time.`,
+      claim: top[0] === "endgame"
+        ? `Most of their losses are decided in the endgame — they survive the opening but struggle to convert.`
+        : top[0] === "opening"
+        ? `A notable share of their losses end early — solid preparation carries extra weight here.`
+        : `Most losses are decided in the middlegame — this is where the game is typically won or lost against them.`,
       evidence: {
-        stat: `losses by phase — opening ${phase.opening}, middlegame ${phase.middlegame}, endgame ${phase.endgame}; timeouts ${timeouts}`,
+        stat: `opening ${phase.opening}L · middlegame ${phase.middlegame}L · endgame ${phase.endgame}L · ${timeouts} timeouts`,
         games: sample(losses),
         window: windowMeta,
       },

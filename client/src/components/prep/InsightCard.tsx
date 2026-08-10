@@ -121,8 +121,6 @@ export function InsightCard({ insight, index, isDark }: Props) {
           {/* Claim */}
           <p className={`text-sm font-semibold leading-snug ${textPrimary}`}>{insight.claim}</p>
 
-          {/* Stat pill */}
-          <p className={`text-xs ${textSecondary}`}>{insight.evidence.stat}</p>
         </div>
 
         {/* Right: confidence + board badge + expand chevron */}
@@ -156,7 +154,6 @@ export function InsightCard({ insight, index, isDark }: Props) {
 
           {/* Interpretation */}
           <div className="pt-3">
-            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${textTertiary}`}>Interpretation</p>
             <p className={`text-xs leading-relaxed ${textSecondary}`}>{insight.interpretation}</p>
           </div>
 
@@ -176,7 +173,7 @@ export function InsightCard({ insight, index, isDark }: Props) {
           {/* Recommendation */}
           <div className={`rounded-xl border p-3 space-y-2 ${isDark ? "bg-[#162018]/60 border-[#2e4a34]/40" : "bg-[#f0fdf4] border-[#436850]/15"}`}>
             <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`}>
-              Recommendation
+              Your move
             </p>
             <p className={`text-xs leading-relaxed font-medium ${textPrimary}`}>
               {insight.recommendation.action}
@@ -229,8 +226,8 @@ export function InsightCard({ insight, index, isDark }: Props) {
           {/* Sample games (up to 3) */}
           {insight.evidence.games && insight.evidence.games.length > 0 && (
             <div>
-              <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${textTertiary}`}>
-                Sample games ({insight.evidence.games.length})
+              <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${textTertiary}`} title={insight.evidence.stat}>
+                Evidence · {insight.evidence.stat}
               </p>
               <div className="space-y-1">
                 {insight.evidence.games.slice(0, 3).map((g, i) => (
