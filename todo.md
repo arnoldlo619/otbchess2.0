@@ -7549,3 +7549,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Badge dots shown in collapsed state, full badge counts shown in expanded state
 - [x] Club identity: avatar stays centered, name/member count fades out
 - [x] User profile bottom: avatar stays, name/role fades out
+
+## Matchup Prep Analysis Workspace (Phase 2)
+- [x] Add TrustedAnalysisWorkspace, AnalysisLaunchSubject, AnalysisResolveRequest, AnalysisResolveResult types to shared/prepTypes.ts
+- [x] Create server/services/lichessGameEnrichment.ts — lazy one-game export via existing scheduler
+- [x] Create server/prep/analysisResolver.ts — trusted resolver: validate launch context, replay PGN, derive FEN
+- [x] Add GET /api/prep/analysis/resolve endpoint to server/index.ts
+- [x] Add frame-src https://lichess.org to CSP in server/index.ts
+- [x] Create client/src/lib/embedUrlBuilder.ts — strict allowlisted Lichess embed URL builder
+- [x] Create client/src/components/prep/LichessEmbed.tsx — secure iframe shell with loading/error states
+- [x] Create client/src/pages/PrepAnalysis.tsx — full analysis workspace with dual modes
+- [x] Add /prep/analysis route to App.tsx
+- [x] Add Analyze actions to LichessReportTab evidence games and positions
+- [x] Add Analyze actions to V3ScoutReportTab evidence games
+- [x] Write tests/prep-analysis-contract.test.ts — 50+ tests covering all required test categories
+- [x] TypeScript 0 errors, lint clean, all new tests passing

@@ -920,7 +920,13 @@ export default function MatchupPrep() {
             </div>
 
             {/* V3 Scout Report — progressive-disclosure layout */}
-            <V3ScoutReportTab report={reportV3} isDark={isDark} t={t} myColor={myColor} />
+            <V3ScoutReportTab
+              report={reportV3}
+              isDark={isDark}
+              t={t}
+              myColor={myColor}
+              reportCacheKey={`v3:${provider}:${(reportV3.opponent?.username ?? "").toLowerCase()}:${tcFilter !== "all" ? tcFilter : "all"}:g${gameCountFilter}`}
+            />
           </div>
         )}
 

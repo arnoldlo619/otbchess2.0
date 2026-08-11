@@ -37,6 +37,7 @@ interface Props {
   isDark: boolean;
   t: Tokens;
   myColor?: "white" | "black" | "not_sure";
+  reportCacheKey?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -294,7 +295,7 @@ function EvidenceSection({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure" }: Props) {
+export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", reportCacheKey }: Props) {
   const s = report.sections;
 
   // Resolve section IDs to actual insight objects
@@ -403,7 +404,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure" }: Pr
           {/* Insight cards */}
           <div className="space-y-3">
             {displayedInsights.map((insight, i) => (
-              <InsightCard key={insight.id} insight={insight} index={i} isDark={isDark} />
+              <InsightCard key={insight.id} insight={insight} index={i} isDark={isDark} reportCacheKey={reportCacheKey} myColor={myColor !== "not_sure" ? myColor : undefined} />
             ))}
           </div>
         </div>

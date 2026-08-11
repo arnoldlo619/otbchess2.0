@@ -134,3 +134,112 @@ export interface PrepErrorPayload {
   error: PrepErrorCode;
   message: string;
 }
+
+// ── Analysis Workspace Types ──────────────────────────────────────────────────
+// Phase 2: Matchup Prep Analysis Workspace
+
+/** Stable launch context — browser submits only IDs and bounded path/ply */
+export type AnalysisLaunchSubject =
+  | {
+      kind: "source-game";
+      /** Stable report cache key (e.g. v3:lichess:username:all:g100) */
+      reportCacheKey: string;
+      /** Provider-correct source game key (e.g. "lichess:MPJcy1JW") */
+      sourceGameKey: string;
+      /** 0-indexed ply, bounded to [0, legalPlyCount] */
+      initialPly?: number;
+      /** Insight ID that launched this analysis */
+      evidenceClaimId?: string;
+    }
+  | {
+      kind: "report-position";
+      reportCacheKey: string;
+      /** Canonical UCI path from the report's legal tree (e.g. ["e2e4","c7c5"]) */
+      canonicalUciPath: string[];
+      evidenceClaimId?: string;
+      sourceGameKey?: string;
+    };
+
+/** Trusted resolved position — server-derived, never client-supplied */
+export interface TrustedAnalysisPosition {
+  ply: number;
+  fen: string;
+  sideToMove: Color;
+  sanBreadcrumb: string[];
+  uciPath: string[];
+  orientation: Color;
+}
+
+/** Verified source game record — server-validated */
+export interface TrustedSourceGame {
+  sourceGameKey: string;
+  provider: "lichess" | "chesscom" | "chessotb";
+  providerGameId?: string;
+  white: string;
+  black: string;
+  result: "1-0" | "0-1" | "1/2-1/2";
+  playedAt: string;           // ISO date string
+  timeControl?: string;
+  opening?: { eco?: string; name: string };
+  canonicalPgn: string;
+  pgnHash: string;
+  finished: true;
+  providerUrl: string;
+}
+
+/** Optional Lichess enrichment — fetched lazily, separate from base PGN */
+export interface LichessGameEnrichment {
+  gameId: string;
+  fetchedAt: string;
+  opening?: { eco?: string; name?: string };
+  division?: { middle?: number; end?: number };
+  accuracy?: { white?: number; black?: number };
+  clocks?: number[];
+  status: "complete" | "unavailable" | "error";
+}
+
+/** Full trusted analysis workspace — server-resolved */
+export interface TrustedAnalysisWorkspace {
+  reportCacheKey: string;
+  reportSnapshotVersion: string;
+  launchKind: "source-game" | "report-position";
+  evidenceClaimId?: string;
+  evidenceContext?: {
+    claim: string;
+    count: number;
+    denominator: number;
+    dateFrom: string;
+    dateTo: string;
+  };
+  game?: TrustedSourceGame;
+  position: TrustedAnalysisPosition;
+  sourceProvenance: {
+    provider: string;
+    fetchedAt?: string;
+    reportCreatedAt: string;
+  };
+}
+
+/** Request body for /api/prep/analysis/resolve */
+export interface AnalysisResolveRequest {
+  subject: AnalysisLaunchSubject;
+}
+
+/** Response from /api/prep/analysis/resolve */
+export type AnalysisResolveResult =
+  | { ok: true; workspace: TrustedAnalysisWorkspace }
+  | { ok: false; error: AnalysisResolveError; message: string };
+
+export type AnalysisResolveError =
+  | "report_not_found"
+  | "game_not_found"
+  | "game_not_in_report"
+  | "game_unfinished"
+  | "game_malformed"
+  | "position_illegal"
+  | "position_not_in_report"
+  | "ply_out_of_range"
+  | "cross_report_substitution"
+  | "access_denied"
+  | "unsupported_variant"
+  | "invalid_request";

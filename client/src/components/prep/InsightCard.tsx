@@ -9,7 +9,7 @@
 import { useState } from "react";
 import {
   ChevronDown, ChevronRight, GitBranch, TrendingDown, TrendingUp,
-  Zap, AlertTriangle, Target, LayoutGrid,
+  Zap, AlertTriangle, Target, LayoutGrid, Microscope,
 } from "lucide-react";
 import type { Insight } from "../../../../shared/prepTypes";
 import { MiniChessBoard } from "./MiniChessBoard";
@@ -18,6 +18,8 @@ interface Props {
   insight: Insight;
   index: number;
   isDark: boolean;
+  reportCacheKey?: string;
+  myColor?: "white" | "black";
 }
 
 const KIND_CONFIG: Record<string, { icon: React.ReactNode; label: string; accent: string; accentLight: string }> = {
@@ -60,7 +62,7 @@ function ConfidenceIndicator({ level, isDark }: { level: string; isDark: boolean
   );
 }
 
-export function InsightCard({ insight, index, isDark }: Props) {
+export function InsightCard({ insight, index, isDark, reportCacheKey, myColor }: Props) {
   const [expanded, setExpanded] = useState(index < 3);
   const [showBoard, setShowBoard] = useState(false);
 
@@ -234,28 +236,63 @@ export function InsightCard({ insight, index, isDark }: Props) {
               </p>
               <div className="space-y-1">
                 {insight.evidence.games.slice(0, 3).map((g, i) => (
-                  <a
+                  <div
                     key={i}
-                    href={g.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center justify-between text-[11px] px-2.5 py-1.5 rounded-lg transition-opacity hover:opacity-80 ${
+                    className={`flex items-center justify-between text-[11px] px-2.5 py-1.5 rounded-lg ${
                       isDark
                         ? "bg-[#0a1409] border border-[#1e2e22]/40"
                         : "bg-[#FBFADA]/70 border border-[#ADBC9F]/40"
                     }`}
                   >
-                    <span className={`font-mono truncate max-w-[180px] ${textSecondary}`}>
+                    <a
+                      href={g.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`font-mono truncate max-w-[160px] hover:underline ${textSecondary}`}
+                    >
                       {new Date(g.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                    <span className={`font-semibold shrink-0 ml-2 ${
-                      g.result === "W" ? "text-emerald-400" :
-                      g.result === "L" ? "text-red-400" :
-                      textTertiary
-                    }`}>
-                      {g.result === "W" ? "Win" : g.result === "L" ? "Loss" : "Draw"}
-                    </span>
-                  </a>
+                    </a>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className={`font-semibold ${
+                        g.result === "W" ? "text-emerald-400" :
+                        g.result === "L" ? "text-red-400" :
+                        textTertiary
+                      }`}>
+                        {g.result === "W" ? "Win" : g.result === "L" ? "Loss" : "Draw"}
+                      </span>
+                      {reportCacheKey && myColor && g.url && (() => {
+                        const provider = g.url.includes("lichess.org") ? "lichess" : g.url.includes("chess.com") ? "chesscom" : "chessotb";
+                        const gameIdMatch = provider === "lichess"
+                          ? g.url.match(/lichess\.org\/([A-Za-z0-9]{8})/)
+                          : g.url.match(/chess\.com\/game\/(?:live|daily)\/(\d+)/);
+                        if (!gameIdMatch) return null;
+                        const subject = JSON.stringify({
+                          kind: "source-game",
+                          reportCacheKey,
+                          sourceGameKey: `${provider}:${gameIdMatch[1]}`,
+                          initialPly: 0,
+                          evidenceClaimId: insight.id,
+                        });
+                        const params = new URLSearchParams();
+                        params.set("subject", encodeURIComponent(subject));
+                        params.set("color", myColor);
+                        params.set("return", window.location.pathname);
+                        return (
+                          <a
+                            href={`/prep/analysis?${params.toString()}`}
+                            className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                              isDark ? "text-[#7ed957]/70 hover:text-[#7ed957] hover:bg-[#7ed957]/10" : "text-[#436850]/70 hover:text-[#436850] hover:bg-[#436850]/10"
+                            }`}
+                            aria-label="Analyze this game"
+                            title="Analyze this game"
+                          >
+                            <Microscope className="w-3 h-3" />
+                            Analyze
+                          </a>
+                        );
+                      })()}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

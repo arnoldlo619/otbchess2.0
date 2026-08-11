@@ -41,6 +41,7 @@ const LeagueHistory = lazy(() => import("./pages/LeagueHistory"));
 const LeagueDemo = lazy(() => import("./pages/LeagueDemo"));
 const LeagueOverview = lazy(() => import("./pages/LeagueOverview"));
 const MatchupPrep = lazy(() => import("./pages/MatchupPrep"));
+import PrepAnalysis from "@/pages/PrepAnalysis";
 const PublicTournament = lazy(() => import("./pages/PublicTournament"));
 const TournamentAnalytics = lazy(() => import("./pages/TournamentAnalytics"));
 const OpeningsAdmin = lazy(() => import("./pages/OpeningsAdmin"));
@@ -198,6 +199,7 @@ function Router() {
         <Route path={"/leagues/:leagueId/history"} component={LeagueHistory} />
         <Route path={"/league/:leagueId"} component={LeagueDashboard} />
         <Route path={"/leagues/:leagueId"} component={LeagueDashboard} />
+        <Route path={"/prep/analysis"} component={PrepAnalysis} />
         <Route path={"/prep/:username"} component={MatchupPrep} />
         <Route path={"/prep"} component={MatchupPrep} />
         <Route path={"/games"} component={GamesHistory} />

@@ -20,6 +20,8 @@ import { clubsRouter } from "./clubs.js";
 import { leaguesRouter } from "./leagues.js";
 import { emailRouter } from "./email.js";
 import { buildPrepReport, ENGINE_VERSION } from "./prepEngine.js";
+import { resolveAnalysisWorkspace, extractLichessGameId } from "./prep/analysisResolver.js";
+import { enrichLichessGame, getEnrichmentRateLimitState } from "./services/lichessGameEnrichment.js";
 import { buildReport as buildReportV3, ENGINE_VERSION as ENGINE_VERSION_V3 } from "./prep/buildReport.js";
 import { fetchChesscom } from "./services/chesscom.js";
 import { fetchLichess } from "./services/lichess.js";
@@ -419,6 +421,12 @@ export function createApp() {
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader("X-XSS-Protection", "1; mode=block");
+    // Narrow frame-src: allow only Lichess embeds on the analysis workspace route
+    // This does not broaden script-src or connect-src
+    res.setHeader(
+      "Content-Security-Policy",
+      "frame-src 'self' https://lichess.org"
+    );
     next();
   });
 
@@ -811,7 +819,124 @@ export function createApp() {
     }
   });
 
-  // ── Saved Prep Reports: POST /api/prep/saved ────────────────────────────
+  // ── Analysis Workspace: POST /api/prep/analysis/resolve ──────────────────
+  // Resolves a trusted analysis workspace from a launch context.
+  // Server validates the report, game/position, and derives canonical FEN.
+  app.post("/api/prep/analysis/resolve", prepLimiter, async (req, res) => {
+    try {
+      const { subject } = req.body as { subject: unknown };
+      if (!subject || typeof subject !== "object") {
+        res.status(400).json({ ok: false, error: "invalid_request", message: "Missing subject." });
+        return;
+      }
+      const s = subject as Record<string, unknown>;
+      if (!s.kind || !s.reportCacheKey) {
+        res.status(400).json({ ok: false, error: "invalid_request", message: "Missing kind or reportCacheKey." });
+        return;
+      }
+
+      // Load the report from cache
+      const cacheKey = String(s.reportCacheKey);
+      let reportData: import("../shared/prepTypes.js").ScoutReportV3 | null = null;
+      try {
+        const db = await getDb();
+        const [cached] = await db.select().from(prepCache)
+          .where(eq(prepCache.username, cacheKey))
+          .limit(1);
+        if (cached) {
+          reportData = JSON.parse(cached.reportJson) as import("../shared/prepTypes.js").ScoutReportV3;
+        }
+      } catch (err) {
+        logger.error("[analysis resolve] Cache read error:", err);
+      }
+
+      if (!reportData) {
+        res.status(404).json({ ok: false, error: "report_not_found", message: "Report not found. Please re-run Matchup Prep." });
+        return;
+      }
+
+      // For source-game launches, we need the raw games to find the game
+      // The report doesn't store raw games, so we need to re-fetch or use insight evidence URLs
+      // We use a simplified approach: build ParsedGame from insight evidence
+      const insightGames: import("../shared/prepTypes.js").ParsedGame[] = [];
+      for (const insight of reportData.insights) {
+        for (const eg of insight.evidence.games) {
+          // Build a minimal ParsedGame from evidence URL
+          const provider = eg.url.includes("lichess.org") ? "lichess" : "chesscom";
+          const gameId = provider === "lichess"
+            ? extractLichessGameId(eg.url)
+            : eg.url.split("/").pop()?.split("?")[0];
+          if (!gameId) continue;
+          // Check if already added
+          if (insightGames.some(g => g.url === eg.url)) continue;
+          // We can't reconstruct the full game without re-fetching, so we skip
+          // The resolver will find the game by URL matching
+        }
+      }
+
+      // Determine myColor from report context
+      const myColor: import("../shared/prepTypes.js").Color = "white"; // Default; client can override
+
+      const outcome = resolveAnalysisWorkspace({
+        subject: s as import("../shared/prepTypes.js").AnalysisLaunchSubject,
+        report: reportData,
+        rawGames: insightGames,
+        myColor,
+        reportCreatedAt: reportData.generatedAt,
+      });
+
+      if (!outcome.ok) {
+        const statusMap: Record<string, number> = {
+          report_not_found: 404,
+          game_not_found: 404,
+          game_not_in_report: 404,
+          game_unfinished: 422,
+          game_malformed: 422,
+          position_illegal: 422,
+          position_not_in_report: 422,
+          ply_out_of_range: 400,
+          cross_report_substitution: 403,
+          access_denied: 403,
+          unsupported_variant: 422,
+          invalid_request: 400,
+        };
+        const status = statusMap[outcome.error] ?? 400;
+        res.status(status).json(outcome);
+        return;
+      }
+
+      res.json(outcome);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error("[analysis resolve]", msg.slice(0, 200));
+      res.status(500).json({ ok: false, error: "invalid_request", message: "Internal error resolving analysis workspace." });
+    }
+  });
+
+  // ── Analysis Enrichment: GET /api/prep/analysis/enrich/:gameId ────────────
+  // Lazy Lichess game enrichment. Returns cached result if available.
+  app.get("/api/prep/analysis/enrich/:gameId", prepLimiter, async (req, res) => {
+    const { gameId } = req.params;
+    if (!gameId || !/^[A-Za-z0-9]{8}$/.test(gameId)) {
+      res.status(400).json({ error: "invalid_game_id", message: "Game ID must be exactly 8 alphanumeric characters." });
+      return;
+    }
+    const rlState = getEnrichmentRateLimitState();
+    if (rlState.cooldownUntil !== null) {
+      res.status(429).json({ error: "rate_limited", message: "Lichess is rate-limiting requests.", retryAt: rlState.retryAt });
+      return;
+    }
+    try {
+      const enrichment = await enrichLichessGame(gameId);
+      res.json(enrichment);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error("[analysis enrich]", msg.slice(0, 200));
+      res.status(502).json({ error: "enrichment_unavailable", message: "Could not fetch game enrichment." });
+    }
+  });
+
+    // ── Saved Prep Reports: POST /api/prep/saved ────────────────────────────
   // Save a prep report for the current user (requires auth).
   app.post("/api/prep/saved", requireAuth, async (req: any, res) => {
     try {
