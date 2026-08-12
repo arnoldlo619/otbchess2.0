@@ -59,6 +59,26 @@ type PushSub = webpush.PushSubscription;
 // director tabs watching that tournament.
 const sseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
 
+// A just-built V3 report must remain resolvable by its Analyze actions even if a
+// transient database write is delayed. The database remains the durable cache;
+// this is only a bounded same-process bridge for the current report lifecycle.
+const PREP_ANALYSIS_MEMORY_TTL_MS = 24 * 60 * 60 * 1000;
+const prepAnalysisMemory = new Map<string, { value: CachedPrepAnalysisReport; cachedAt: number }>();
+
+function rememberPrepAnalysisReport(cacheKey: string, value: CachedPrepAnalysisReport): void {
+  prepAnalysisMemory.set(cacheKey, { value, cachedAt: Date.now() });
+}
+
+function readRememberedPrepAnalysisReport(cacheKey: string): CachedPrepAnalysisReport | null {
+  const entry = prepAnalysisMemory.get(cacheKey);
+  if (!entry) return null;
+  if (Date.now() - entry.cachedAt > PREP_ANALYSIS_MEMORY_TTL_MS) {
+    prepAnalysisMemory.delete(cacheKey);
+    return null;
+  }
+  return entry.value;
+}
+
 // ─── SSE IP Rate-Limit Registry ───────────────────────────────────────────────
 // Tracks how many active SSE connections each IP address currently holds.
 // Prevents a single device from accidentally opening dozens of tabs and
@@ -711,6 +731,7 @@ export function createApp() {
           submittedMyColor,
         );
         const report = cachedReport.report;
+        rememberPrepAnalysisReport(cacheKey, cachedReport);
 
         // Cache fire-and-forget
         try {
@@ -871,16 +892,19 @@ export function createApp() {
       }
 
       const cacheKey = String(s.reportCacheKey);
-      let cachedReport: CachedPrepAnalysisReport | null = null;
+      let cachedReport: CachedPrepAnalysisReport | null = readRememberedPrepAnalysisReport(cacheKey);
       try {
-        const db = await getDb();
-        const [cached] = await db.select().from(prepCache)
-          .where(eq(prepCache.username, cacheKey))
-          .limit(1);
-        if (cached) {
-          const parsed = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport;
-          if (parsed.schemaVersion === 1 && parsed.analysisSnapshot?.reportCacheKey === cacheKey && parsed.report?.reportSnapshot?.id === cacheKey) {
-            cachedReport = parsed;
+        if (!cachedReport) {
+          const db = await getDb();
+          const [cached] = await db.select().from(prepCache)
+            .where(eq(prepCache.username, cacheKey))
+            .limit(1);
+          if (cached) {
+            const parsed = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport;
+            if (parsed.schemaVersion === 1 && parsed.analysisSnapshot?.reportCacheKey === cacheKey && parsed.report?.reportSnapshot?.id === cacheKey) {
+              cachedReport = parsed;
+              rememberPrepAnalysisReport(cacheKey, parsed);
+            }
           }
         }
       } catch (err) {

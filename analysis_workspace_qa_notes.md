@@ -11,3 +11,9 @@
 - 2026-08-12: With the 30-second bounded export deadline, the live request progressed through fetching, opening classification, and weakness scoring; report construction remained in progress at the final observation.
 - 2026-08-12: The live Lichess report completed successfully with 108 games and Lichess-only evidence URLs. The first Analyze action resolves to a trusted `lichess:hQh8KffH` source-game subject under the provider-scoped report cache key.
 - 2026-08-12: The unauthenticated analysis route correctly blocks resolution and now presents the explicit message that sign-in is required, with a safe return to Matchup Prep rather than exposing a raw 401.
+- 2026-08-12: An authenticated retry exposed a missing persistent cache row after the server restart. A bounded same-process trusted snapshot fallback was added; the user is signed in and a fresh Lichess report is being rebuilt for the final protected-workspace validation.
+- 2026-08-12: The authenticated fresh Lichess report request is in the expected provider-specific loading state following the cache-resilience update.
+- 2026-08-12: Authenticated report construction completed game fetch, opening classification, and weakness scoring; the final report assembly remains in progress before its Analyze link can be exercised.
+- 2026-08-12: The authenticated report completed with Lichess-only evidence and a fresh trusted `lichess:hQh8KffH` analysis action, ready for protected workspace validation in the same server process.
+- 2026-08-12: Authenticated source-game analysis resolved successfully from the fresh immutable report snapshot. The official Lichess replay iframe loaded with verified game metadata, controls, and the expected fair-play notice.
+- 2026-08-12: Position analysis opened from the same immutable source-game workspace. Selecting `1.e4` updated the native move state and exact Lichess analysis position without issuing another Matchup Prep report request.

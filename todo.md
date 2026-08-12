@@ -7581,3 +7581,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tune bounded Lichess game-export timeout and provider-specific error messaging for live reports
 - [x] Replace raw 401 analysis-workspace errors with a clear sign-in requirement and safe return path
 - [x] Prevent Chess.com profile decoration requests from attaching cross-provider data to Lichess reports
+- [x] Fix authenticated analysis resolution when a trusted Lichess report cache row is unavailable after sign-in
