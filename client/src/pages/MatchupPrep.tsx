@@ -291,8 +291,8 @@ export default function MatchupPrep() {
   const [gameCountFilter, setGameCountFilter] = useState<GameCountFilter>("50");
 
   // My color — canonical color perspective (which side the user is playing)
-  type MyColor = "white" | "black" | "not_sure";
-  const [myColor, setMyColor] = useState<MyColor>("not_sure");
+  type MyColor = "white" | "black";
+  const [myColor, setMyColor] = useState<MyColor>("white");
 
   // Export state
   const [exportLoading, setExportLoading] = useState<"png" | "pdf" | null>(null);
@@ -368,7 +368,8 @@ export default function MatchupPrep() {
 
   // Opponent profile (avatar, title, country)
   const { profile: opponentProfile } = useOpponentProfile(
-    reportV3 ? reportV3.opponent.username : report ? report.opponent.username : null
+    reportV3 ? reportV3.opponent.username : report ? report.opponent.username : null,
+    reportV3?.provider === "lichess" ? "lichess" : "chesscom",
   );
 
   // Recently scouted chips
@@ -417,7 +418,7 @@ export default function MatchupPrep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.username]);
 
-  async function fetchReport(username: string, refresh = false, tc?: TcFilter, games?: string) {
+  async function fetchReport(username: string, refresh = false, tc?: TcFilter, games?: string, providerOverride?: Provider) {
     if (refresh) {
       setRefreshing(true);
     } else {
@@ -430,21 +431,23 @@ export default function MatchupPrep() {
     try {
       const activeTc = tc ?? tcFilter;
       const activeGames = games ?? gameCountFilter;
+      const activeProvider = providerOverride ?? provider;
       const tcQuery = activeTc !== "all" ? `tc=${activeTc}` : "";
       const refreshQuery = refresh ? "refresh=true" : "";
       const gamesQuery = activeGames !== "50" ? `games=${activeGames}` : "";
 
       if (useV3) {
         // ── V3 path ──
-        const providerQuery = `provider=${provider}`;
-        const queryStr = ["schema=3", providerQuery, tcQuery, refreshQuery, gamesQuery].filter(Boolean).join("&");
+        const providerQuery = `provider=${activeProvider}`;
+        const colorQuery = `myColor=${myColor}`;
+        const queryStr = ["schema=3", providerQuery, colorQuery, tcQuery, refreshQuery, gamesQuery].filter(Boolean).join("&");
         const url = `/api/prep/${encodeURIComponent(username.trim())}?${queryStr}`;
         const res = await authFetch(url);
         if (!res.ok) {
           const data: PrepErrorPayload = await res.json().catch(() => ({ error: "all_filtered", message: "Unknown error" }));
           const friendlyMsg: Record<string, string> = {
             invalid_username: "Username must be 2–50 characters.",
-            not_found: `Player "${username}" was not found on ${provider === "lichess" ? "Lichess" : "chess.com"}.`,
+            not_found: `Player "${username}" was not found on ${activeProvider === "lichess" ? "Lichess" : "chess.com"}.`,
             no_recent_games: `No rated rapid/blitz games found for "${username}" in the last 6 months.`,
             all_filtered: `All games for "${username}" were filtered out. Try switching to All formats or increasing game depth.`,
             upstream_rate_limited: "The chess provider is rate-limiting requests. Please try again in a minute.",
@@ -453,7 +456,7 @@ export default function MatchupPrep() {
         }
         const data: ScoutReportV3 = await res.json();
         setReportV3(data);
-        const updated = addRecentlyScouted({ username: username.trim(), provider, myColor, tcFilter, gameCount: gameCountFilter });
+        const updated = addRecentlyScouted({ username: username.trim(), provider: activeProvider, myColor, tcFilter, gameCount: gameCountFilter });
         setRecentlyScouted(updated);
       } else {
         // ── V2 legacy path ──
@@ -741,7 +744,7 @@ export default function MatchupPrep() {
                         if (p === provider) return;
                         setProvider(p);
                         const activeUser = reportV3?.opponent.username ?? searchInput.trim();
-                        if (activeUser) fetchReport(activeUser, false);
+                        if (activeUser) fetchReport(activeUser, false, undefined, undefined, p);
                       }}
                       className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                         provider === p
@@ -817,7 +820,7 @@ export default function MatchupPrep() {
             aria-label="Your color"
             className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}
           >
-            {(["white", "black", "not_sure"] as const).map((c) => (
+            {(["white", "black"] as const).map((c) => (
               <button
                 key={c}
                 role="radio"
@@ -829,7 +832,7 @@ export default function MatchupPrep() {
                     : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
                 }`}
               >
-                {c === "white" ? "♔ White" : c === "black" ? "♚ Black" : "Not sure"}
+                {c === "white" ? "♔ White" : "♚ Black"}
               </button>
             ))}
           </div>
@@ -861,6 +864,7 @@ export default function MatchupPrep() {
           <PrepErrorState
             error={error}
             username={searchInput}
+            provider={provider}
             onRetry={() => fetchReport(searchInput)}
             onUseAllFormats={() => { setTcFilter("all"); fetchReport(searchInput, false, "all"); }}
             onAnalyze100={() => { setGameCountFilter("100"); fetchReport(searchInput, false, undefined, "100"); }}
@@ -912,11 +916,9 @@ export default function MatchupPrep() {
                 </p>
               </div>
               {/* Color context badge */}
-              {myColor !== "not_sure" && (
-                <span className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-lg ${isDark ? "bg-[#1e2e22] text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
-                  You {myColor === "white" ? "♔ White" : "♚ Black"} · Opp {myColor === "white" ? "♚ Black" : "♔ White"}
-                </span>
-              )}
+              <span className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-lg ${isDark ? "bg-[#1e2e22] text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
+                You {(reportV3?.reportSnapshot?.myColor ?? myColor) === "white" ? "♔ White" : "♚ Black"} · Opp {(reportV3?.reportSnapshot?.myColor ?? myColor) === "white" ? "♚ Black" : "♔ White"}
+              </span>
             </div>
 
             {/* V3 Scout Report — progressive-disclosure layout */}
@@ -924,8 +926,8 @@ export default function MatchupPrep() {
               report={reportV3}
               isDark={isDark}
               t={t}
-              myColor={myColor}
-              reportCacheKey={`v3:${provider}:${(reportV3.opponent?.username ?? "").toLowerCase()}:${tcFilter !== "all" ? tcFilter : "all"}:g${gameCountFilter}`}
+              myColor={reportV3.reportSnapshot?.myColor ?? myColor}
+              reportCacheKey={reportV3.reportSnapshot?.id}
             />
           </div>
         )}
@@ -1009,7 +1011,7 @@ export default function MatchupPrep() {
             onSelect={(entry) => {
               setSearchInput(entry.username);
               setProvider(entry.provider);
-              setMyColor(entry.myColor);
+              setMyColor(entry.myColor === "black" ? "black" : "white");
               setTcFilter(entry.tcFilter);
               setGameCountFilter(entry.gameCount);
               navigate(`/prep/${encodeURIComponent(entry.username)}`);
@@ -2470,10 +2472,11 @@ function PrepLoadingState({ username, isDark, t }: { username: string; isDark: b
 
 // ── Detailed Error State (requirement 11) ───────────────────────────────────────────────────────────────────────────
 function PrepErrorState({
-  error, username, onRetry, onUseAllFormats, onAnalyze100, isDark, t
+  error, username, provider, onRetry, onUseAllFormats, onAnalyze100, isDark, t
 }: {
   error: string;
   username: string;
+  provider: "chesscom" | "lichess";
   onRetry: () => void;
   onUseAllFormats: () => void;
   onAnalyze100: () => void;
@@ -2494,9 +2497,9 @@ function PrepErrorState({
       }`}>
         <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>Possible reasons:</p>
         <ul className={`space-y-1 text-xs ${t.textTertiary}`}>
-          <li>• The Chess.com username may not exist — check spelling and try again</li>
+          <li>• The {provider === "lichess" ? "Lichess" : "Chess.com"} username may not exist — check spelling and try again</li>
           <li>• There may not be enough recent games in this format (try switching to All)</li>
-          <li>• Chess.com game data may be temporarily unavailable</li>
+          <li>• {provider === "lichess" ? "Lichess" : "Chess.com"} game data may be temporarily unavailable</li>
           <li>• Try increasing depth to 100 games for players with sparse recent activity</li>
         </ul>
       </div>

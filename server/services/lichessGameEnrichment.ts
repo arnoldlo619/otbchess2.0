@@ -13,19 +13,12 @@
  * - Identity-validates returned game before accepting enrichment
  */
 import type { LichessGameEnrichment } from "../../shared/prepTypes.js";
-import { LICHESS_GAME_ID_RE } from "../prep/analysisResolver.js";
+import { LICHESS_GAME_ID_RE, replayPgn } from "../prep/analysisResolver.js";
+import { getLichessRateLimitState, scheduleLichessRequest } from "./lichess.js";
 import { logger } from "../logger.js";
 
-const UA = "ChessOTB.club analysis v1 (contact: admin@chessotb.club)";
 const LICHESS_ORIGIN = "https://lichess.org";
 
-// ── Rate-limit state (shared with main Lichess scheduler) ─────────────────────
-// We use a simple in-memory scheduler here. In production, this should share
-// state with the main lichess.ts scheduler. For now, we use a separate semaphore
-// since the main scheduler is not exported.
-
-let _cooldownUntil: number | null = null;
-let _inFlight: Promise<unknown> | null = null;
 const _inFlightMap = new Map<string, Promise<LichessGameEnrichment>>();
 
 // ── In-memory enrichment cache ────────────────────────────────────────────────
@@ -58,43 +51,6 @@ function getCached(gameId: string): LichessGameEnrichment | null {
 
 function setCached(gameId: string, enrichment: LichessGameEnrichment): void {
   _enrichmentCache.set(buildCacheKey(gameId), { enrichment, cachedAt: Date.now() });
-}
-
-// ── Serial scheduler ──────────────────────────────────────────────────────────
-
-async function serialFetch(url: string): Promise<Response> {
-  // Check cooldown
-  if (_cooldownUntil !== null && Date.now() < _cooldownUntil) {
-    throw new Error(`LichessRateLimited: cooldown until ${new Date(_cooldownUntil).toISOString()}`);
-  }
-
-  // Wait for any in-flight request to complete (concurrency=1)
-  if (_inFlight) {
-    try { await _inFlight; } catch { /* ignore errors from other requests */ }
-  }
-
-  const fetchPromise = fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": UA,
-    },
-    signal: AbortSignal.timeout(12_000),
-  });
-
-  _inFlight = fetchPromise;
-  try {
-    const res = await fetchPromise;
-    if (res.status === 429) {
-      const retryAfter = parseInt(res.headers.get("Retry-After") ?? "60", 10);
-      const cooldownMs = Math.max(retryAfter * 1000, 60_000);
-      _cooldownUntil = Date.now() + cooldownMs;
-      throw new Error(`LichessRateLimited: 429 from ${url}`);
-    }
-    _cooldownUntil = null; // Clear cooldown on success
-    return res;
-  } finally {
-    if (_inFlight === fetchPromise) _inFlight = null;
-  }
 }
 
 // ── Main enrichment function ──────────────────────────────────────────────────
@@ -160,7 +116,7 @@ async function _doEnrich(
 
   let res: Response;
   try {
-    res = await serialFetch(url.toString());
+    res = await scheduleLichessRequest(url.toString(), { headers: { Accept: "application/json" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.startsWith("LichessRateLimited:")) {
@@ -222,6 +178,14 @@ async function _doEnrich(
     return { gameId, fetchedAt: new Date().toISOString(), status: "unavailable" };
   }
 
+  const sans = typeof data.moves === "string" ? data.moves.split(/\s+/).filter(Boolean) : [];
+  const result = data.winner === "white" ? "1-0" : data.winner === "black" ? "0-1" : "1/2-1/2";
+  const replay = replayPgn(sans, result);
+  if (!sans.length || !replay.ok || !replay.finished) {
+    logger.warn(`[lichess enrichment] Rejected malformed or unfinished PGN for ${gameId}`);
+    return { gameId, fetchedAt: new Date().toISOString(), status: "error" };
+  }
+
   // Extract optional enrichment fields
   const opening = data.opening as { eco?: string; name?: string } | undefined;
   const division = data.division as { middle?: number; end?: number } | undefined;
@@ -241,8 +205,5 @@ async function _doEnrich(
 
 /** Get current rate-limit state (for endpoint to check before attempting) */
 export function getEnrichmentRateLimitState(): { cooldownUntil: number | null; retryAt: string | null } {
-  return {
-    cooldownUntil: _cooldownUntil,
-    retryAt: _cooldownUntil ? new Date(_cooldownUntil).toISOString() : null,
-  };
+  return getLichessRateLimitState();
 }

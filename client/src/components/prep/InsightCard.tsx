@@ -13,13 +13,13 @@ import {
 } from "lucide-react";
 import type { Insight } from "../../../../shared/prepTypes";
 import { MiniChessBoard } from "./MiniChessBoard";
+import { buildSourceGameAnalysisUrl } from "../../lib/analyzeAction";
 
 interface Props {
   insight: Insight;
   index: number;
   isDark: boolean;
   reportCacheKey?: string;
-  myColor?: "white" | "black";
 }
 
 const KIND_CONFIG: Record<string, { icon: React.ReactNode; label: string; accent: string; accentLight: string }> = {
@@ -62,7 +62,7 @@ function ConfidenceIndicator({ level, isDark }: { level: string; isDark: boolean
   );
 }
 
-export function InsightCard({ insight, index, isDark, reportCacheKey, myColor }: Props) {
+export function InsightCard({ insight, index, isDark, reportCacheKey }: Props) {
   const [expanded, setExpanded] = useState(index < 3);
   const [showBoard, setShowBoard] = useState(false);
 
@@ -93,7 +93,7 @@ export function InsightCard({ insight, index, isDark, reportCacheKey, myColor }:
       : "bg-[#ADBC9F]/20 text-[#436850]/60 border border-[#ADBC9F]/40 hover:bg-[#ADBC9F]/30 hover:text-[#436850]";
 
   return (
-    <div className={cardBase}>
+    <div id={`insight-${insight.id}`} className={cardBase}>
       {/* ── Header row — always visible ─────────────────────────────────── */}
       <button
         onClick={() => setExpanded(e => !e)}
@@ -260,26 +260,19 @@ export function InsightCard({ insight, index, isDark, reportCacheKey, myColor }:
                       }`}>
                         {g.result === "W" ? "Win" : g.result === "L" ? "Loss" : "Draw"}
                       </span>
-                      {reportCacheKey && myColor && g.url && (() => {
+                      {reportCacheKey && g.url && (() => {
                         const provider = g.url.includes("lichess.org") ? "lichess" : g.url.includes("chess.com") ? "chesscom" : "chessotb";
-                        const gameIdMatch = provider === "lichess"
-                          ? g.url.match(/lichess\.org\/([A-Za-z0-9]{8})/)
-                          : g.url.match(/chess\.com\/game\/(?:live|daily)\/(\d+)/);
-                        if (!gameIdMatch) return null;
-                        const subject = JSON.stringify({
-                          kind: "source-game",
+                        const href = buildSourceGameAnalysisUrl({
                           reportCacheKey,
-                          sourceGameKey: `${provider}:${gameIdMatch[1]}`,
-                          initialPly: 0,
+                          sourceGameUrl: g.url,
+                          provider,
                           evidenceClaimId: insight.id,
+                          returnPath: `${window.location.pathname}${window.location.search}#insight-${insight.id}`,
                         });
-                        const params = new URLSearchParams();
-                        params.set("subject", encodeURIComponent(subject));
-                        params.set("color", myColor);
-                        params.set("return", window.location.pathname);
+                        if (!href) return null;
                         return (
                           <a
-                            href={`/prep/analysis?${params.toString()}`}
+                            href={href}
                             className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded transition-colors ${
                               isDark ? "text-[#7ed957]/70 hover:text-[#7ed957] hover:bg-[#7ed957]/10" : "text-[#436850]/70 hover:text-[#436850] hover:bg-[#436850]/10"
                             }`}

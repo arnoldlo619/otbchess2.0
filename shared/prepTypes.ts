@@ -105,6 +105,8 @@ export interface ScoutReportV3 {
   };
   guardLog: { droppedInsights: number; reasons: Record<string, number> };
   generatedAt: string;
+  /** Public identifier and submitted perspective for an immutable cached report. */
+  reportSnapshot?: { id: string; myColor: Color; createdAt: string };
 }
 
 /** Options for fetching and filtering games */
@@ -241,5 +243,45 @@ export type AnalysisResolveError =
   | "ply_out_of_range"
   | "cross_report_substitution"
   | "access_denied"
+  | "active_game"
   | "unsupported_variant"
   | "invalid_request";
+
+/** Private, server-only source game retained with a cached report for analysis. */
+export interface AnalysisSnapshotGame {
+  sourceGameKey: string;
+  provider: Provider;
+  providerGameId?: string;
+  providerUrl: string;
+  white: string;
+  black: string;
+  result: RawGame["result"];
+  playedAt: string;
+  timeControl: string;
+  opening: { eco?: string; name: string };
+  rules: string;
+  sans: string[];
+}
+
+/**
+ * Server-only immutable data retained alongside the public V3 report. It is
+ * never returned by /api/prep/:username and is resolved only after access
+ * checks in /api/prep/analysis/resolve.
+ */
+export interface PrepAnalysisSnapshot {
+  schemaVersion: 1;
+  reportCacheKey: string;
+  submittedMyColor: Color;
+  createdAt: string;
+  evidenceGameKeys: string[];
+  sourceGames: AnalysisSnapshotGame[];
+  /** Canonical UCI paths reached by the legally replayed recent-game sample. */
+  legalUciPaths: string[][];
+}
+
+/** Private envelope stored in prep_cache.report_json for V3 reports. */
+export interface CachedPrepAnalysisReport {
+  schemaVersion: 1;
+  report: ScoutReportV3;
+  analysisSnapshot: PrepAnalysisSnapshot;
+}

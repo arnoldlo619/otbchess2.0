@@ -7564,3 +7564,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Analyze actions to V3ScoutReportTab evidence games
 - [x] Write tests/prep-analysis-contract.test.ts — 50+ tests covering all required test categories
 - [x] TypeScript 0 errors, lint clean, all new tests passing
+
+## Matchup Prep Analysis Workspace — Release Remediation
+- [x] Audit each completed analysis-workspace requirement against real report persistence, routing, access, cache, and active-play flows
+- [x] Persist or resolve authoritative completed source-game PGN so source-game analysis can verify report membership and replay without trusting browser data
+- [x] Enforce report-cache identity, report-position legal-tree membership, and explicit report-access checks in the analysis resolver
+- [x] Derive report orientation from the immutable submitted Matchup Prep color rather than a client/default color
+- [x] Block known active ChessOTB play contexts from mounting either analysis embed
+- [ ] Add Analyze this position for trusted Player Explorer positions and Analyze line for legal Game Plan rehearsal paths
+- [x] Preserve report snapshot and section/scroll return context on every analysis launch and Back action
+- [x] Share Lichess scheduler/cooldown state between game exports and existing Lichess provider requests
+- [x] Harden enrichment validation with returned PGN replay and provider/game/player identity checks
+- [ ] Extend regression tests for report membership, access, active-play, legal-tree, cache, scheduler, and no-request-on-ply-change contracts
+- [ ] Run production build and live browser matrix for real Lichess embeds, provider variants, failure states, responsive widths, and both themes
+- [x] Fix provider-switch race so a Lichess request cannot reuse stale Chess.com state
+- [x] Tune bounded Lichess game-export timeout and provider-specific error messaging for live reports
+- [x] Replace raw 401 analysis-workspace errors with a clear sign-in requirement and safe return path
+- [x] Prevent Chess.com profile decoration requests from attaching cross-provider data to Lichess reports

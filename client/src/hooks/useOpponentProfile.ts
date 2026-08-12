@@ -58,7 +58,7 @@ export function countryCodeToFlag(code: string): string {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useOpponentProfile(username: string | null | undefined): {
+export function useOpponentProfile(username: string | null | undefined, provider: "chesscom" | "lichess" = "chesscom"): {
   profile: OpponentProfile | null;
   loading: boolean;
   error: string | null;
@@ -72,7 +72,7 @@ export function useOpponentProfile(username: string | null | undefined): {
 
   useEffect(() => {
     const u = username?.trim().toLowerCase() ?? "";
-    if (!u) {
+    if (!u || provider !== "chesscom") {
       setProfile(null);
       setLoading(false);
       setError(null);
@@ -127,7 +127,7 @@ export function useOpponentProfile(username: string | null | undefined): {
         setError(null);
         setLoading(false);
       });
-  }, [username]);
+  }, [username, provider]);
 
   return { profile, loading, error };
 }

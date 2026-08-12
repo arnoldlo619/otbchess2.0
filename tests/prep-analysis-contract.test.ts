@@ -21,7 +21,7 @@ import {
   hashPgn,
   sansToPgn,
   LICHESS_GAME_ID_RE,
-  resolveAnalysisWorkspace,
+  resolveAnalysisWorkspace as resolveAnalysisWorkspaceOriginal,
   buildTrustedSourceGame,
 } from "../server/prep/analysisResolver";
 import {
@@ -30,7 +30,7 @@ import {
   buildGameFallbackUrl,
   buildAnalysisFallbackUrl,
 } from "../client/src/lib/embedUrlBuilder";
-import type { ParsedGame, ScoutReportV3 } from "../shared/prepTypes";
+import type { AnalysisSnapshotGame, ParsedGame, PrepAnalysisSnapshot, ScoutReportV3 } from "../shared/prepTypes";
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -104,6 +104,61 @@ function makeReport(games: ParsedGame[] = [], overrides: Partial<ScoutReportV3> 
   } as ScoutReportV3;
 }
 
+function makeSnapshot(cacheKey: string, games: ParsedGame[], myColor: "white" | "black" = "white"): PrepAnalysisSnapshot {
+  const sourceGames: AnalysisSnapshotGame[] = games.map(game => ({
+    sourceGameKey: `lichess:${game.url.match(/lichess\.org\/([A-Za-z0-9]{8})/)?.[1] ?? "UNKNOWN0"}`,
+    provider: game.provider,
+    providerGameId: game.url.match(/lichess\.org\/([A-Za-z0-9]{8})/)?.[1],
+    providerUrl: game.url,
+    white: game.white.name,
+    black: game.black.name,
+    result: game.result,
+    playedAt: "2024-01-01",
+    timeControl: game.timeClass,
+    opening: { eco: game.opening.eco, name: game.opening.name },
+    rules: game.rules,
+    sans: game.sans,
+  }));
+  const legalUciPaths: string[][] = [[]];
+  for (const game of games) {
+    const replay = replayPgn(game.sans, game.result);
+    if (!replay.ok) continue;
+    for (let ply = 1; ply <= replay.plies.length; ply++) legalUciPaths.push(replay.plies.slice(0, ply).map(move => move.uci));
+  }
+  return {
+    schemaVersion: 1,
+    reportCacheKey: cacheKey,
+    submittedMyColor: myColor,
+    createdAt: "2024-06-01T00:00:00Z",
+    evidenceGameKeys: sourceGames.map(game => game.sourceGameKey),
+    sourceGames,
+    legalUciPaths,
+  };
+}
+
+function resolveForTest(options: {
+  subject: Parameters<typeof resolveAnalysisWorkspaceOriginal>[0]["subject"];
+  report: ScoutReportV3;
+  rawGames: ParsedGame[];
+  myColor: "white" | "black";
+  reportCreatedAt: string;
+}) {
+  const snapshot = makeSnapshot(options.subject.reportCacheKey, options.rawGames, options.myColor);
+  const report = { ...options.report, reportSnapshot: { id: snapshot.reportCacheKey, myColor: options.myColor, createdAt: snapshot.createdAt } };
+  return resolveAnalysisWorkspaceOriginal({ subject: options.subject, report, snapshot, reportCreatedAt: options.reportCreatedAt });
+}
+
+/** Compatibility wrapper keeps individual contract cases focused on behavior. */
+function resolveAnalysisWorkspace(options: {
+  subject: Parameters<typeof resolveAnalysisWorkspaceOriginal>[0]["subject"];
+  report: ScoutReportV3;
+  rawGames: ParsedGame[];
+  myColor: "white" | "black";
+  reportCreatedAt: string;
+}) {
+  return resolveForTest(options);
+}
+
 // ── Legal replay tests ────────────────────────────────────────────────────────
 
 describe("replayPgn — legal replay", () => {
@@ -115,8 +170,9 @@ describe("replayPgn — legal replay", () => {
     expect(result.plies).toHaveLength(5);
     expect(result.plies[0].san).toBe("e4");
     expect(result.plies[0].ply).toBe(1);
-    expect(result.plies[0].sideToMove).toBe("white");
-    expect(result.plies[1].sideToMove).toBe("black");
+    expect(result.plies[0].actor).toBe("white");
+    expect(result.plies[0].sideToMove).toBe("black");
+    expect(result.plies[1].sideToMove).toBe("white");
   });
 
   it("Phase 1 line: 1.d4 g6 2.c4 Bg7 3.Nc3 d6", () => {

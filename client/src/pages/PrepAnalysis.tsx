@@ -45,21 +45,20 @@ type AnalysisMode = "game-replay" | "position-analysis";
 function parseLaunchParams(): {
   subject: AnalysisLaunchSubject | null;
   returnUrl: string;
-  myColor: "white" | "black";
 } {
   const params = new URLSearchParams(window.location.search);
-  const returnUrl = params.get("return") ?? "/prep";
-  const myColor = params.get("color") === "black" ? "black" : "white";
+  const candidateReturn = params.get("return") ?? "/prep";
+  const returnUrl = candidateReturn.startsWith("/prep") ? candidateReturn : "/prep";
 
   try {
     const subjectStr = params.get("subject");
-    if (!subjectStr) return { subject: null, returnUrl, myColor };
-    const subject = JSON.parse(decodeURIComponent(subjectStr)) as AnalysisLaunchSubject;
+    if (!subjectStr) return { subject: null, returnUrl };
+    const subject = JSON.parse(subjectStr) as AnalysisLaunchSubject;
     // Basic validation
-    if (!subject.kind || !subject.reportCacheKey) return { subject: null, returnUrl, myColor };
-    return { subject, returnUrl, myColor };
+    if (!subject.kind || !subject.reportCacheKey) return { subject: null, returnUrl };
+    return { subject, returnUrl };
   } catch {
-    return { subject: null, returnUrl, myColor };
+    return { subject: null, returnUrl };
   }
 }
 
@@ -202,7 +201,7 @@ export default function PrepAnalysis() {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   // Parse launch params from URL
-  const { subject, returnUrl, myColor: initialMyColor } = useMemo(() => parseLaunchParams(), []);
+  const { subject, returnUrl } = useMemo(() => parseLaunchParams(), []);
 
   // State
   const [workspace, setWorkspace] = useState<TrustedAnalysisWorkspace | null>(null);
@@ -210,8 +209,7 @@ export default function PrepAnalysis() {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<AnalysisMode>("game-replay");
   const [currentPly, setCurrentPly] = useState(0);
-  const [orientation, setOrientation] = useState<"white" | "black">(initialMyColor);
-  const [iframeKey, setIframeKey] = useState(0); // Force remount on ply/orientation change
+  const [orientation, setOrientation] = useState<"white" | "black">("white");
 
   // Resolve workspace on mount
   useEffect(() => {
@@ -229,6 +227,12 @@ export default function PrepAnalysis() {
       .then(async res => {
         const data = await res.json();
         if (!res.ok || !data.ok) {
+          if (res.status === 401) {
+            throw new Error("Sign in is required to open a trusted Matchup Prep analysis workspace.");
+          }
+          if (res.status === 403) {
+            throw new Error("You do not have access to this Matchup Prep analysis workspace.");
+          }
           throw new Error(data.message ?? `Error ${res.status}`);
         }
         return data.workspace as TrustedAnalysisWorkspace;
@@ -295,22 +299,17 @@ export default function PrepAnalysis() {
     return buildAnalysisFallbackUrl(currentFen, orientation);
   }, [currentFen, orientation]);
 
-  // Remount iframe when ply or orientation changes in position analysis mode
   const handlePlyChange = useCallback((ply: number) => {
     setCurrentPly(ply);
-    if (mode === "position-analysis") {
-      setIframeKey(k => k + 1);
-    }
-  }, [mode]);
+  }, []);
 
   const handleOrientationFlip = useCallback(() => {
     setOrientation(o => o === "white" ? "black" : "white");
-    setIframeKey(k => k + 1);
   }, []);
 
   const handleResetToSelected = useCallback(() => {
-    setIframeKey(k => k + 1);
-  }, []);
+    setCurrentPly(workspace?.position.ply ?? 0);
+  }, [workspace]);
 
   // Theme tokens
   const t = {
@@ -584,7 +583,6 @@ export default function PrepAnalysis() {
                   Lichess analysis board — Stockfish engine and tablebase provided by Lichess.
                 </p>
                 <LichessEmbed
-                  key={iframeKey}
                   embedUrl={analysisEmbedResult.url}
                   title={`Lichess analysis board for position after ${currentPly === 0 ? "starting position" : sanBreadcrumb[currentPly - 1] ?? "move " + currentPly}`}
                   fallbackUrl={analysisFallbackResult.url}

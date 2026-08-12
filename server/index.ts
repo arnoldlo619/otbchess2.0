@@ -10,7 +10,7 @@ import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache, tournamentBroadcastSettings, dbClubs } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache, tournamentBroadcastSettings, dbClubs, gameSessions } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -22,10 +22,10 @@ import { emailRouter } from "./email.js";
 import { buildPrepReport, ENGINE_VERSION } from "./prepEngine.js";
 import { resolveAnalysisWorkspace, extractLichessGameId } from "./prep/analysisResolver.js";
 import { enrichLichessGame, getEnrichmentRateLimitState } from "./services/lichessGameEnrichment.js";
-import { buildReport as buildReportV3, ENGINE_VERSION as ENGINE_VERSION_V3 } from "./prep/buildReport.js";
+import { buildCachedPrepAnalysisReport, ENGINE_VERSION as ENGINE_VERSION_V3 } from "./prep/buildReport.js";
 import { fetchChesscom } from "./services/chesscom.js";
 import { fetchLichess } from "./services/lichess.js";
-import type { PrepErrorPayload, FetchOpts } from "../shared/prepTypes.js";
+import type { AnalysisLaunchSubject, CachedPrepAnalysisReport, Color, FetchOpts, PrepErrorPayload } from "../shared/prepTypes.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
 import { createOpeningsAdminRouter } from "./openingsAdmin.js";
@@ -669,10 +669,11 @@ export function createApp() {
           ["rapid", "blitz", "bullet"];
         const provider = (req.query.provider as string) === "lichess" ? "lichess" : "chesscom";
         const forceRefresh = req.query.refresh === "true";
+        const submittedMyColor: Color = req.query.myColor === "black" ? "black" : "white";
 
         // Cache key includes schema version so V3 never collides with V2
         const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
-        const cacheKey = `v3:${provider}:${normalised}:${tcKey}:g${maxGames}`;
+        const cacheKey = `v3:${provider}:${normalised}:${tcKey}:g${maxGames}:c${submittedMyColor}`;
 
         if (!forceRefresh) {
           try {
@@ -684,8 +685,13 @@ export function createApp() {
               const age = Date.now() - new Date(cached.cachedAt).getTime();
               const versionMatch = cached.engineVersion === ENGINE_VERSION_V3;
               if (age < PREP_CACHE_TTL_MS && versionMatch) {
-                res.json({ ...JSON.parse(cached.reportJson), _cached: true });
-                return;
+                const payload = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport | import("../shared/prepTypes.js").ScoutReportV3;
+                // Legacy V3 entries do not have a server-only legal snapshot.
+                // Rebuild rather than exposing an untrusted partial workspace.
+                if ("schemaVersion" in payload && payload.schemaVersion === 1 && "analysisSnapshot" in payload) {
+                  res.json({ ...payload.report, _cached: true });
+                  return;
+                }
               }
             }
           } catch { /* non-fatal — fall through to live fetch */ }
@@ -696,12 +702,20 @@ export function createApp() {
           ? await fetchLichess(normalised, fetchOpts)
           : await fetchChesscom(normalised, fetchOpts);
 
-        const report = buildReportV3(provider, normalised, raw, fetchOpts);
+        const cachedReport = buildCachedPrepAnalysisReport(
+          provider,
+          normalised,
+          raw,
+          fetchOpts,
+          cacheKey,
+          submittedMyColor,
+        );
+        const report = cachedReport.report;
 
         // Cache fire-and-forget
         try {
           const db = await getDb();
-          const reportStr = JSON.stringify(report);
+          const reportStr = JSON.stringify(cachedReport);
           await db.insert(prepCache).values({
             username: cacheKey,
             reportJson: reportStr,
@@ -822,7 +836,7 @@ export function createApp() {
   // ── Analysis Workspace: POST /api/prep/analysis/resolve ──────────────────
   // Resolves a trusted analysis workspace from a launch context.
   // Server validates the report, game/position, and derives canonical FEN.
-  app.post("/api/prep/analysis/resolve", prepLimiter, async (req, res) => {
+  app.post("/api/prep/analysis/resolve", requireAuth, prepLimiter, async (req, res) => {
     try {
       const { subject } = req.body as { subject: unknown };
       if (!subject || typeof subject !== "object") {
@@ -835,54 +849,66 @@ export function createApp() {
         return;
       }
 
-      // Load the report from cache
+      if (s.kind !== "source-game" && s.kind !== "report-position") {
+        res.status(400).json({ ok: false, error: "invalid_request", message: "Unsupported analysis launch kind." });
+        return;
+      }
+      if (s.kind === "source-game" && (typeof s.sourceGameKey !== "string" || (s.initialPly !== undefined && (!Number.isInteger(s.initialPly) || Number(s.initialPly) < 0)))) {
+        res.status(400).json({ ok: false, error: "invalid_request", message: "Invalid source-game launch context." });
+        return;
+      }
+      if (s.kind === "report-position" && (!Array.isArray(s.canonicalUciPath) || !s.canonicalUciPath.every(move => typeof move === "string"))) {
+        res.status(400).json({ ok: false, error: "invalid_request", message: "Invalid report-position launch context." });
+        return;
+      }
+
+      // The analysis workspace uses the existing authenticated Matchup Prep
+      // access boundary. It additionally blocks a known active OTB clock.
+      const userId = (req as import("express").Request & { userId?: string }).userId;
+      if (!userId) {
+        res.status(401).json({ ok: false, error: "access_denied", message: "Sign in to use analysis." });
+        return;
+      }
+
       const cacheKey = String(s.reportCacheKey);
-      let reportData: import("../shared/prepTypes.js").ScoutReportV3 | null = null;
+      let cachedReport: CachedPrepAnalysisReport | null = null;
       try {
         const db = await getDb();
         const [cached] = await db.select().from(prepCache)
           .where(eq(prepCache.username, cacheKey))
           .limit(1);
         if (cached) {
-          reportData = JSON.parse(cached.reportJson) as import("../shared/prepTypes.js").ScoutReportV3;
+          const parsed = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport;
+          if (parsed.schemaVersion === 1 && parsed.analysisSnapshot?.reportCacheKey === cacheKey && parsed.report?.reportSnapshot?.id === cacheKey) {
+            cachedReport = parsed;
+          }
         }
       } catch (err) {
         logger.error("[analysis resolve] Cache read error:", err);
       }
 
-      if (!reportData) {
+      if (!cachedReport) {
         res.status(404).json({ ok: false, error: "report_not_found", message: "Report not found. Please re-run Matchup Prep." });
         return;
       }
 
-      // For source-game launches, we need the raw games to find the game
-      // The report doesn't store raw games, so we need to re-fetch or use insight evidence URLs
-      // We use a simplified approach: build ParsedGame from insight evidence
-      const insightGames: import("../shared/prepTypes.js").ParsedGame[] = [];
-      for (const insight of reportData.insights) {
-        for (const eg of insight.evidence.games) {
-          // Build a minimal ParsedGame from evidence URL
-          const provider = eg.url.includes("lichess.org") ? "lichess" : "chesscom";
-          const gameId = provider === "lichess"
-            ? extractLichessGameId(eg.url)
-            : eg.url.split("/").pop()?.split("?")[0];
-          if (!gameId) continue;
-          // Check if already added
-          if (insightGames.some(g => g.url === eg.url)) continue;
-          // We can't reconstruct the full game without re-fetching, so we skip
-          // The resolver will find the game by URL matching
-        }
+      const db = await getDb();
+      const activeSessions = await db.select({ id: gameSessions.id }).from(gameSessions)
+        .where(and(
+          or(eq(gameSessions.hostUserId, userId), eq(gameSessions.opponentUserId, userId)),
+          eq(gameSessions.status, "clock_started"),
+        ))
+        .limit(1);
+      if (activeSessions.length > 0) {
+        res.status(409).json({ ok: false, error: "active_game", message: "Analysis is unavailable while your ChessOTB clock is running." });
+        return;
       }
 
-      // Determine myColor from report context
-      const myColor: import("../shared/prepTypes.js").Color = "white"; // Default; client can override
-
       const outcome = resolveAnalysisWorkspace({
-        subject: s as import("../shared/prepTypes.js").AnalysisLaunchSubject,
-        report: reportData,
-        rawGames: insightGames,
-        myColor,
-        reportCreatedAt: reportData.generatedAt,
+        subject: s as AnalysisLaunchSubject,
+        report: cachedReport.report,
+        snapshot: cachedReport.analysisSnapshot,
+        reportCreatedAt: cachedReport.analysisSnapshot.createdAt,
       });
 
       if (!outcome.ok) {
@@ -897,6 +923,7 @@ export function createApp() {
           ply_out_of_range: 400,
           cross_report_substitution: 403,
           access_denied: 403,
+          active_game: 409,
           unsupported_variant: 422,
           invalid_request: 400,
         };
@@ -915,24 +942,53 @@ export function createApp() {
 
   // ── Analysis Enrichment: GET /api/prep/analysis/enrich/:gameId ────────────
   // Lazy Lichess game enrichment. Returns cached result if available.
-  app.get("/api/prep/analysis/enrich/:gameId", prepLimiter, async (req, res) => {
+  app.get("/api/prep/analysis/enrich/:gameId", requireAuth, prepLimiter, async (req, res) => {
     const { gameId } = req.params;
     if (!gameId || !/^[A-Za-z0-9]{8}$/.test(gameId)) {
       res.status(400).json({ error: "invalid_game_id", message: "Game ID must be exactly 8 alphanumeric characters." });
       return;
     }
-    const rlState = getEnrichmentRateLimitState();
-    if (rlState.cooldownUntil !== null) {
-      res.status(429).json({ error: "rate_limited", message: "Lichess is rate-limiting requests.", retryAt: rlState.retryAt });
+    const reportCacheKey = typeof req.query.reportCacheKey === "string" ? req.query.reportCacheKey : "";
+    const sourceGameKey = typeof req.query.sourceGameKey === "string" ? req.query.sourceGameKey : "";
+    if (!reportCacheKey || sourceGameKey !== `lichess:${gameId}`) {
+      res.status(400).json({ error: "invalid_request", message: "Trusted report and source-game identifiers are required." });
       return;
     }
     try {
-      const enrichment = await enrichLichessGame(gameId);
+      const db = await getDb();
+      const [cached] = await db.select().from(prepCache).where(eq(prepCache.username, reportCacheKey)).limit(1);
+      const parsed = cached ? JSON.parse(cached.reportJson) as CachedPrepAnalysisReport : null;
+      const source = parsed?.schemaVersion === 1 && parsed.analysisSnapshot?.reportCacheKey === reportCacheKey
+        ? parsed.analysisSnapshot.sourceGames.find(game => game.sourceGameKey === sourceGameKey)
+        : undefined;
+      if (!source || source.provider !== "lichess" || source.providerGameId !== gameId || source.result === "*" || source.rules !== "chess") {
+        res.status(404).json({ error: "game_not_in_report", message: "This completed Lichess evidence game is not available for enrichment." });
+        return;
+      }
+      const userId = (req as import("express").Request & { userId?: string }).userId;
+      if (userId) {
+        const active = await db.select({ id: gameSessions.id }).from(gameSessions).where(and(
+          or(eq(gameSessions.hostUserId, userId), eq(gameSessions.opponentUserId, userId)),
+          eq(gameSessions.status, "clock_started"),
+        )).limit(1);
+        if (active.length > 0) {
+          res.status(409).json({ error: "active_game", message: "Analysis enrichment is unavailable while your ChessOTB clock is running." });
+          return;
+        }
+      }
+      const rlState = getEnrichmentRateLimitState();
+      if (rlState.cooldownUntil !== null && Date.now() < rlState.cooldownUntil) {
+        res.status(429).json({ error: "rate_limited", message: "Lichess is rate-limiting requests.", retryAt: rlState.retryAt });
+        return;
+      }
+      const enrichment = await enrichLichessGame(gameId, source.white, source.black);
       res.json(enrichment);
+      return;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       logger.error("[analysis enrich]", msg.slice(0, 200));
       res.status(502).json({ error: "enrichment_unavailable", message: "Could not fetch game enrichment." });
+      return;
     }
   });
 

@@ -37,6 +37,7 @@ interface ForecastWalkthroughProps {
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
+  analysisHrefForUciPath?: (uciPath: string[]) => string | null;
 }
 
 interface FNode {
@@ -64,6 +65,20 @@ function fenFromPath(path: string[]): string | null {
     try { chess.move(san); } catch { return null; }
   }
   return chess.fen();
+}
+
+function uciFromSanPath(path: string[]): string[] | null {
+  const chess = new Chess();
+  const uciPath: string[] = [];
+  for (const san of path) {
+    try {
+      const move = chess.move(san);
+      uciPath.push(move.from + move.to + (move.promotion ?? ""));
+    } catch {
+      return null;
+    }
+  }
+  return uciPath;
 }
 
 function confidenceTier(count: number): FNode["confidence"] {
@@ -657,6 +672,7 @@ export function ForecastWalkthrough({
   isDark,
   t,
   opponentUsername,
+  analysisHrefForUciPath,
 }: ForecastWalkthroughProps) {
   const defaultOpponentColor: "white" | "black" =
     // myColor is canonical: when user plays White, opponent is Black
@@ -929,11 +945,16 @@ export function ForecastWalkthrough({
 
   // Current eval score: use selectedNode's score, or null at root
   const evalScore = selectedNode?.score ?? null;
+  const analysisHref = useMemo(() => {
+    if (isOffBook || effectivePath.length === 0 || !analysisHrefForUciPath) return null;
+    const uciPath = uciFromSanPath(effectivePath);
+    return uciPath ? analysisHrefForUciPath(uciPath) : null;
+  }, [analysisHrefForUciPath, effectivePath, isOffBook]);
 
   if (!hasData) return null;
 
   return (
-    <div className={`${t.card} p-4 sm:p-5`}>
+    <div id="opening-forecast" className={`${t.card} p-4 sm:p-5`}>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 mb-4">
         <BookOpen className={`w-4 h-4 shrink-0 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
@@ -1104,6 +1125,15 @@ export function ForecastWalkthrough({
                       <RotateCcw className="w-3 h-3" />
                       Reset
                     </button>
+                    {analysisHref && (
+                      <a
+                        href={analysisHref}
+                        className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg transition-colors ${isDark ? "bg-[#436850]/20 text-[#8dcc9b] hover:bg-[#436850]/35" : "bg-[#436850]/10 text-[#315640] hover:bg-[#436850]/20"}`}
+                        aria-label="Analyze this forecast position"
+                      >
+                        Analyze position
+                      </a>
+                    )}
                   </>
                 )}
               </div>

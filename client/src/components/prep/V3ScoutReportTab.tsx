@@ -10,6 +10,7 @@
  * 6. Evidence & Methodology — collapsed data quality + guard log
  */
 import { useState, useMemo } from "react";
+import { Chess } from "chess.js";
 import {
   BookOpen, TrendingDown, TrendingUp, Zap, Target,
   ChevronDown, ChevronRight, GitBranch, CheckSquare, AlertCircle,
@@ -20,6 +21,7 @@ import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
 import { ScoutAISummary } from "./ScoutAISummary";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
+import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
 
 type Tokens = {
   card: string;
@@ -31,6 +33,22 @@ type Tokens = {
   monoBlock: string;
   [key: string]: string;
 };
+
+function canonicalUciPathFromSanLine(line: string): string[] | null {
+  const chess = new Chess();
+  const path: string[] = [];
+  const tokens = line.trim().split(/\s+/).map(token => token.replace(/^\d+\.(?:\.\.)?/, "")).filter(Boolean);
+  for (const token of tokens) {
+    if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(token)) continue;
+    try {
+      const move = chess.move(token);
+      path.push(move.from + move.to + (move.promotion ?? ""));
+    } catch {
+      return null;
+    }
+  }
+  return path.length > 0 ? path : null;
+}
 
 interface Props {
   report: ScoutReportV3;
@@ -117,12 +135,14 @@ function GamePlanSection({
   insights,
   isDark,
   t,
+  analysisHrefForInsight,
 }: {
   title: string;
   icon: React.ReactNode;
   insights: Insight[];
   isDark: boolean;
   t: Tokens;
+  analysisHrefForInsight?: (insight: Insight) => string | null;
 }) {
   const [expanded, setExpanded] = useState(true);
   if (insights.length === 0) return null;
@@ -149,6 +169,7 @@ function GamePlanSection({
           {insights.map((ins) => (
             <div
               key={ins.id}
+              id={`game-plan-${ins.id}`}
               className={`flex items-start gap-2.5 p-2.5 rounded-xl ${isDark ? "bg-[#0d1a0f]/40 border border-[#1e2e22]/30" : "bg-[#f8faf5]/80 border border-[#ADBC9F]/25"}`}
             >
               <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${
@@ -163,6 +184,14 @@ function GamePlanSection({
                 <p className={`text-[11px] mt-0.5 ${t.textTertiary}`}>
                   {ins.kind === "weakness" ? "Exploit" : ins.kind === "strength" ? "Avoid" : "Prepare"} · n={ins.sampleSize} · {ins.confidence}
                 </p>
+                {analysisHrefForInsight?.(ins) && (
+                  <a
+                    href={analysisHrefForInsight(ins) ?? undefined}
+                    className={`inline-flex mt-2 items-center rounded-md px-2 py-1 text-[10px] font-semibold transition-colors ${isDark ? "bg-[#436850]/20 text-[#8dcc9b] hover:bg-[#436850]/35" : "bg-[#436850]/10 text-[#315640] hover:bg-[#436850]/20"}`}
+                  >
+                    Analyze line
+                  </a>
+                )}
               </div>
             </div>
           ))}
@@ -312,6 +341,16 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
   // Resolve game plan sections
   const ifWhiteInsights = useMemo(() => resolveInsights(s.ifYouHaveWhite, allInsights), [s.ifYouHaveWhite, allInsights]);
   const ifBlackInsights = useMemo(() => resolveInsights(s.ifYouHaveBlack, allInsights), [s.ifYouHaveBlack, allInsights]);
+  const analysisHrefForInsight = (insight: Insight): string | null => {
+    if (!reportCacheKey || !insight.recommendation.line?.san) return null;
+    const canonicalUciPath = canonicalUciPathFromSanLine(insight.recommendation.line.san);
+    return canonicalUciPath ? buildPositionAnalysisUrl({
+      reportCacheKey,
+      canonicalUciPath,
+      evidenceClaimId: insight.id,
+      returnPath: `${window.location.pathname}${window.location.search}#game-plan-${insight.id}`,
+    }) : null;
+  };
 
   // Insight filter for the "All Insights" section
   const [insightFilter, setInsightFilter] = useState<"all" | "weakness" | "strength" | "deviation_point" | "behavior" | "opening_tendency" | "response_pattern">("all");
@@ -344,6 +383,11 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
         isDark={isDark}
         t={t}
         opponentUsername={report.opponent.username}
+        analysisHrefForUciPath={reportCacheKey ? (canonicalUciPath) => buildPositionAnalysisUrl({
+          reportCacheKey,
+          canonicalUciPath,
+          returnPath: `${window.location.pathname}${window.location.search}#opening-forecast`,
+        }) : undefined}
       />
 
       {/* 4. Game Plan — If You Have White / Black */}
@@ -354,6 +398,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
           insights={ifWhiteInsights}
           isDark={isDark}
           t={t}
+          analysisHrefForInsight={analysisHrefForInsight}
         />
       )}
       {myColor !== "white" && ifBlackInsights.length > 0 && (
@@ -363,6 +408,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
           insights={ifBlackInsights}
           isDark={isDark}
           t={t}
+          analysisHrefForInsight={analysisHrefForInsight}
         />
       )}
 
@@ -404,7 +450,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
           {/* Insight cards */}
           <div className="space-y-3">
             {displayedInsights.map((insight, i) => (
-              <InsightCard key={insight.id} insight={insight} index={i} isDark={isDark} reportCacheKey={reportCacheKey} myColor={myColor !== "not_sure" ? myColor : undefined} />
+              <InsightCard key={insight.id} insight={insight} index={i} isDark={isDark} reportCacheKey={reportCacheKey} />
             ))}
           </div>
         </div>

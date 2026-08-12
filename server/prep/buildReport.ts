@@ -2,7 +2,18 @@
 // Ported from reference/src/engine.ts (buildReport section).
 // This is the single entry point called by the API route.
 
-import type { Color, FetchOpts, Insight, Provider, RawGame, ScoutReportV3 } from "../../shared/prepTypes.js";
+import { Chess } from "chess.js";
+import type {
+  AnalysisSnapshotGame,
+  CachedPrepAnalysisReport,
+  Color,
+  FetchOpts,
+  Insight,
+  PrepAnalysisSnapshot,
+  Provider,
+  RawGame,
+  ScoutReportV3,
+} from "../../shared/prepTypes.js";
 import { parseGames } from "./parseGames.js";
 import { synthesize, buildForecasts } from "./insightEngine.js";
 import { runGuards } from "./guards.js";
@@ -151,4 +162,84 @@ export function buildReport(
     },
     generatedAt: new Date().toISOString(),
   };
+}
+
+function providerGameId(provider: Provider, url: string): string | undefined {
+  if (provider === "lichess") {
+    return url.match(/lichess\.org\/([A-Za-z0-9]{8})(?:\/|$|\?)/)?.[1];
+  }
+  return url.match(/chess\.com\/game\/(?:live|daily)\/(\d+)/)?.[1];
+}
+
+function uciPrefixes(sans: string[]): string[][] {
+  const chess = new Chess();
+  const paths: string[][] = [[]];
+  const path: string[] = [];
+  for (const san of sans) {
+    try {
+      const move = chess.move(san);
+      path.push(move.from + move.to + (move.promotion ?? ""));
+      paths.push([...path]);
+    } catch {
+      return [];
+    }
+  }
+  return paths;
+}
+
+/**
+ * Builds the private counterpart of a public V3 report. The parser is reused
+ * verbatim, so the stored source games and legal paths follow the same
+ * quarantine/filter policy as the visible report.
+ */
+export function buildCachedPrepAnalysisReport(
+  provider: Provider,
+  username: string,
+  raw: RawGame[],
+  options: FetchOpts,
+  reportCacheKey: string,
+  submittedMyColor: Color,
+): CachedPrepAnalysisReport {
+  const report = buildReport(provider, username, raw, options);
+  const { parsed } = parseGames(raw, username, options);
+  const evidenceUrls = new Set(report.insights.flatMap(insight => insight.evidence.games.map(game => game.url)));
+  const legalPathMap = new Map<string, string[]>();
+
+  const sourceGames: AnalysisSnapshotGame[] = parsed.map(game => {
+    const id = providerGameId(game.provider, game.url);
+    const sourceGameKey = id ? `${game.provider}:${id}` : `${game.provider}:${game.url}`;
+    for (const path of uciPrefixes(game.sans)) legalPathMap.set(path.join(","), path);
+    return {
+      sourceGameKey,
+      provider: game.provider,
+      providerGameId: id,
+      providerUrl: game.url,
+      white: game.white.name,
+      black: game.black.name,
+      result: game.result,
+      playedAt: dateOf(game.endTime),
+      timeControl: game.timeClass,
+      opening: { eco: game.opening.eco, name: game.opening.name },
+      rules: game.rules,
+      sans: game.sans,
+    };
+  });
+
+  const evidenceGameKeys = sourceGames
+    .filter(game => evidenceUrls.has(game.providerUrl))
+    .map(game => game.sourceGameKey);
+
+  const createdAt = report.generatedAt;
+  report.reportSnapshot = { id: reportCacheKey, myColor: submittedMyColor, createdAt };
+  const analysisSnapshot: PrepAnalysisSnapshot = {
+    schemaVersion: 1,
+    reportCacheKey,
+    submittedMyColor,
+    createdAt,
+    evidenceGameKeys,
+    sourceGames,
+    legalUciPaths: Array.from(legalPathMap.values()),
+  };
+
+  return { schemaVersion: 1, report, analysisSnapshot };
 }
