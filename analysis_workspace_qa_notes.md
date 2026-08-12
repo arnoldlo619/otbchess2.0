@@ -17,3 +17,7 @@
 - 2026-08-12: The authenticated report completed with Lichess-only evidence and a fresh trusted `lichess:hQh8KffH` analysis action, ready for protected workspace validation in the same server process.
 - 2026-08-12: Authenticated source-game analysis resolved successfully from the fresh immutable report snapshot. The official Lichess replay iframe loaded with verified game metadata, controls, and the expected fair-play notice.
 - 2026-08-12: Position analysis opened from the same immutable source-game workspace. Selecting `1.e4` updated the native move state and exact Lichess analysis position without issuing another Matchup Prep report request.
+- 2026-08-12: Authenticated analysis navigation was re-opened successfully after the runtime cache-resilience update; dark-theme replay and position-analysis validation remain stable.
+- 2026-08-12: The authenticated workspace context was retained while switching the persisted UI preference to light theme for its final visual check.
+- 2026-08-12: Light-theme authenticated replay rendered cleanly with readable metadata, tabs, game board, move list, and the external Lichess action.
+- 2026-08-12: Authenticated replay at a 375×812 mobile viewport had no horizontal overflow (`scrollWidth=375`, `clientWidth=375`). The back action, metadata, tabs, fair-play copy, and embedded board remained readable and within the viewport.
