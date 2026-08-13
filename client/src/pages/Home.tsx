@@ -937,6 +937,15 @@ const stepAccentVariants = {
   },
 };
 
+function StepBadge({ number, icon, isDark }: { number: string; icon: React.ReactNode; isDark: boolean }) {
+  return (
+    <div className={`otb-step-badge ${isDark ? "otb-step-badge--dark" : ""}`}>
+      <span className="otb-step-badge__icon" aria-hidden="true">{icon}</span>
+      <span>Step {number}</span>
+    </div>
+  );
+}
+
 function ParallaxStep({
   number,
   icon,
@@ -1009,16 +1018,8 @@ function ParallaxStep({
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <motion.div
-            variants={stepItemVariants}
-            whileHover={{ scale: 1.06, y: -2 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 cursor-default select-none ${accentBg} ${accentColor}`}
-          >
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
-              {icon}
-            </span>
-            Step {number}
+          <motion.div variants={stepItemVariants} className="mb-6 inline-flex select-none">
+            <StepBadge number={number} icon={icon} isDark={isDark} />
           </motion.div>
           <div className="relative">
             <span
@@ -1123,14 +1124,8 @@ function ParallaxStep({
         animate={isInView ? "visible" : "hidden"}
       >
         {/* Step badge */}
-        <motion.div
-          variants={stepItemVariants}
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}
-        >
-          <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
-            {icon}
-          </span>
-          Step {number}
+        <motion.div variants={stepItemVariants} className="mb-6 inline-flex select-none">
+          <StepBadge number={number} icon={icon} isDark={isDark} />
         </motion.div>
 
         {/* Step number watermark + heading */}

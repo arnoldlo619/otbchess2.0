@@ -7607,3 +7607,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Verify builds, migrations, live official source checks, responsive QA, and safe local-dataset publication status
 - [x] Prevent an uncached official population lookup from delaying Matchup Prep report delivery
 - [x] Preserve the explicitly selected Lichess provider through the Matchup Prep report route and refresh cycle
+
+## Landing Page Step Badge Enhancement
+- [x] Inspect the Step 01–03 badge markup and current light/dark design tokens
+- [x] Apply a premium brand-aligned animated gradient badge treatment with reduced-motion support
+- [x] Verify responsive appearance, TypeScript, lint, and production build
