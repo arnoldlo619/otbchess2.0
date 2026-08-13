@@ -15,4 +15,9 @@ describe("Opening Forecast hover preview", () => {
     expect(source).toContain("const displayFen = hoveredNode && !isOffBook && boardSelectedSq === null");
     expect(source).toContain("onHoverNode={setHoveredNode}");
   });
+
+  it("eases hover FEN updates while respecting reduced-motion preferences", () => {
+    expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(source).toContain("animationDurationInMs: prefersReducedMotion ? 0 : (hoveredNode ? 260 : 200)");
+  });
 });

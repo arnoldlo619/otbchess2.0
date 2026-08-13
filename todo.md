@@ -7658,3 +7658,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect opening-line row hover handlers, preview state, and board binding
 - [x] Confirm or refine hover animation and associated move preview behavior
 - [x] Add or validate regression coverage and save a verification checkpoint
+
+## Opening Forecast Hover Piece Transition
+- [x] Inspect hover-preview board animation configuration and piece rendering behavior
+- [x] Add a smooth reduced-motion-safe piece transition for hover FEN changes
+- [x] Verify preview accuracy, motion behavior, TypeScript, and focused tests

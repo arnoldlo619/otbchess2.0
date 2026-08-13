@@ -739,6 +739,7 @@ export function ForecastWalkthrough({
   const [showMore, setShowMore] = useState(false);
   const [flipped, setFlipped] = useState(opponentColor === "black");
   const [selectedWeaknessId, setSelectedWeaknessId] = useState<string | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Track previous FEN for piece animation
   const prevFenRef = useRef<string>(new Chess().fen());
@@ -753,6 +754,14 @@ export function ForecastWalkthrough({
 
   // Hover preview: hovering a branch row previews its position on the board
   const [hoveredNode, setHoveredNode] = useState<FNode | null>(null);
+
+  useEffect(() => {
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncMotionPreference = () => setPrefersReducedMotion(motionQuery.matches);
+    syncMotionPreference();
+    motionQuery.addEventListener("change", syncMotionPreference);
+    return () => motionQuery.removeEventListener("change", syncMotionPreference);
+  }, []);
 
   // The effective path shown on the board (free-play overrides forecast path)
   const effectivePath = freePlayPath ?? selectedPath;
@@ -1107,7 +1116,8 @@ export function ForecastWalkthrough({
                       position: displayFen,
                       boardOrientation: flipped ? "black" : "white",
                       allowDragging: !hoveredNode,
-                      animationDurationInMs: hoveredNode ? 0 : 200,
+                      // Ease pieces into hover-preview positions; reduced-motion users retain an immediate update.
+                      animationDurationInMs: prefersReducedMotion ? 0 : (hoveredNode ? 260 : 200),
                       darkSquareStyle: {
                         backgroundColor: isDark ? "#2d4a32" : "#769656",
                       },
