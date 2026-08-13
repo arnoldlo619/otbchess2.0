@@ -7595,3 +7595,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Make evidence-backed summary weaknesses clickable with an accessible active state
 - [x] Show only source games associated with the selected weakness and provide a clear-filter action
 - [x] Add regression coverage and verify TypeScript, tests, and the live interaction
+
+## Lichess Population Intelligence
+- [ ] Audit prior Lichess report, analysis, scheduler, cache, database, and operations architecture against the three-layer contract
+- [ ] Add immutable population-reference contracts, local aggregate manifests, tracked-position registry, and safe schema migrations
+- [ ] Implement strict official Lichess population Explorer fallback with trusted legality, caching, coalescing, and cooldown controls
+- [ ] Implement safe archive catalog/checksum discovery, staging, ingestion, validation, atomic publication, and rollback operations
+- [ ] Attach turn-aware eligible population context to immutable Matchup Prep reports with methodology disclosure
+- [ ] Add protected population dataset health and diagnostics visibility for operators
+- [ ] Add deterministic archive, resolver, privacy, eligibility, and UI contracts
+- [ ] Verify builds, migrations, live official source checks, responsive QA, and safe local-dataset publication status
