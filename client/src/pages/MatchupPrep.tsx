@@ -656,9 +656,13 @@ export default function MatchupPrep() {
                     : "bg-[#436850] text-white hover:bg-[#2d5237] active:scale-95"
                   : isDark ? "bg-white/05 text-white/20 cursor-not-allowed" : "bg-[#ADBC9F]/40 text-[#436850] cursor-not-allowed"
               }`}
-            >
               aria-label="Scout opponent"
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+            >
+              {loading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Building report</>
+              ) : (
+                <>Scout opponent <ChevronRight className="w-4 h-4" /></>
+              )}
             </button>
           </form>
 

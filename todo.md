@@ -7618,3 +7618,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build an accessible ChessOTB animated loader with inline, panel, and full-screen variants
 - [x] Replace global route suspense fallback and high-visibility Matchup Prep loading UI
 - [x] Add loader regression coverage and verify TypeScript, lint, build, reduced motion, and live rendering
+
+## Matchup Prep Submit and Fetch Repair
+- [x] Reproduce the malformed Scout opponent button label and inspect its markup
+- [x] Trace the 503 report-generation failure through provider selection, cache, and upstream calls
+- [x] Repair the submit label and report request path without weakening error handling
+- [x] Add regression coverage and verify the live Matchup Prep flow
