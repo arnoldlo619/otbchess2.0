@@ -3,6 +3,7 @@ import type { Insight } from "../shared/prepTypes";
 import {
   buildOpeningWeaknessFallback,
   buildOpeningWeaknessPrompt,
+  gamesForSelectedWeakness,
   normalizeOpeningWeaknessSummary,
 } from "../client/src/lib/openingWeaknessSummary";
 
@@ -61,5 +62,11 @@ describe("Opening Forecast weakness summary", () => {
   it("normalizes concise model output and rejects unbounded output", () => {
     expect(normalizeOpeningWeaknessSummary("• **Weakness:** Claim the center early.")).toBe("Weakness: Claim the center early.");
     expect(normalizeOpeningWeaknessSummary("x".repeat(421))).toBeNull();
+  });
+
+  it("returns only the source games for the selected evidence-backed weakness", () => {
+    expect(gamesForSelectedWeakness([weakness], weakness.id)).toEqual(weakness.evidence.games);
+    expect(gamesForSelectedWeakness([weakness], "missing")).toEqual([]);
+    expect(gamesForSelectedWeakness([weakness], null)).toEqual([]);
   });
 });

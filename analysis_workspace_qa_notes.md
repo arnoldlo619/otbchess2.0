@@ -24,3 +24,5 @@
 - 2026-08-13: Began authenticated live validation of the new Opening Forecast weakness summary with a public Lichess report for DrNykterstein.
 - 2026-08-13: The live Lichess report completed game retrieval, opening classification, and weakness scoring; report assembly is in progress before inspecting the embedded summary.
 - 2026-08-13: The completed report displayed the safe no-reliable-weakness fallback because no qualifying weakness insight existed for DrNykterstein as Black. A protected live coach request returned a grounded gpt-5-mini summary successfully (HTTP 200).
+- 2026-08-13: Began live validation of the clickable weakness-to-source-game filter with the public Lichess account jobavabot.
+- 2026-08-13: The attempted public Lichess QA account was unavailable, so live selected-weakness rendering could not be exercised with that account. The filter logic remains covered by deterministic evidence-game regression tests.

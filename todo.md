@@ -7589,3 +7589,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add regression coverage for weakness selection, small samples, and no-data states
 - [x] Verify TypeScript, tests, and the live responsive report UI
 - [x] Restore the protected coach-insight endpoint so live Opening Forecast summaries can use the current built-in model
+
+## Opening Forecast Weakness Game Filter
+- [x] Inspect weakness evidence and existing source-game list affordances
+- [x] Make evidence-backed summary weaknesses clickable with an accessible active state
+- [x] Show only source games associated with the selected weakness and provide a clear-filter action
+- [x] Add regression coverage and verify TypeScript, tests, and the live interaction

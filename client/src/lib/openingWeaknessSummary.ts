@@ -58,3 +58,8 @@ export function normalizeOpeningWeaknessSummary(value: string): string | null {
   if (!text || text.length > 420) return null;
   return text;
 }
+
+export function gamesForSelectedWeakness(weaknesses: Insight[], selectedWeaknessId: string | null): Insight["evidence"]["games"] {
+  if (!selectedWeaknessId) return [];
+  return weaknesses.find((insight) => insight.id === selectedWeaknessId)?.evidence.games ?? [];
+}

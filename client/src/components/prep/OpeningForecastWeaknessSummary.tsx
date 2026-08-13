@@ -19,6 +19,8 @@ interface Props {
   opponentUsername: string;
   opponentColor: "white" | "black";
   weaknesses: Insight[];
+  selectedWeaknessId: string | null;
+  onSelectWeakness: (insightId: string) => void;
   isDark: boolean;
   t: Tokens;
 }
@@ -27,6 +29,8 @@ export function OpeningForecastWeaknessSummary({
   opponentUsername,
   opponentColor,
   weaknesses,
+  selectedWeaknessId,
+  onSelectWeakness,
   isDark,
   t,
 }: Props) {
@@ -97,6 +101,32 @@ export function OpeningForecastWeaknessSummary({
         <div className={`mt-2 h-3.5 w-11/12 animate-pulse rounded ${isDark ? "bg-white/10" : "bg-[#ADBC9F]/35"}`} />
       ) : (
         <p className={`mt-2 text-xs leading-relaxed ${t.textSecondary}`}>{summary}</p>
+      )}
+      {weaknesses.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter source games by weakness">
+          {weaknesses.slice(0, 2).map((weakness) => {
+            const selected = selectedWeaknessId === weakness.id;
+            return (
+              <button
+                key={weakness.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onSelectWeakness(weakness.id)}
+                className={`max-w-full rounded-lg border px-2 py-1 text-left text-[10px] font-semibold leading-snug transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7cf562]/70 ${
+                  selected
+                    ? isDark ? "border-[#7cf562]/45 bg-[#7cf562]/12 text-[#b9ffad]" : "border-[#436850]/35 bg-[#436850]/10 text-[#12372A]"
+                    : isDark ? "border-white/10 text-white/60 hover:border-[#7cf562]/30 hover:text-white/90" : "border-[#436850]/15 text-[#436850] hover:border-[#436850]/30 hover:text-[#12372A]"
+                }`}
+                title={`Show the ${weakness.evidence.games.length} sampled games for this weakness`}
+              >
+                <span className="line-clamp-1">{weakness.claim}</span>
+                <span className={`mt-0.5 block text-[9px] font-medium ${selected ? "opacity-80" : "opacity-60"}`}>
+                  {weakness.evidence.games.length} matching {weakness.evidence.games.length === 1 ? "game" : "games"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       )}
       <p className={`mt-1.5 text-[10px] ${t.textTertiary}`}>Grounded in the verified forecast evidence shown below.</p>
     </aside>
