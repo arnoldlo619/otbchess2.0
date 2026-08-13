@@ -7653,3 +7653,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Repair service-worker handling so transient or stale API fetches cannot synthesize Offline responses for Matchup Prep
 - [x] Bypass the four-second service-worker API timeout and API cache for Matchup Prep report requests
 - [x] Register the corrected service worker with a versioned script URL so stale production workers cannot retain the Offline fallback
+
+## Opening Forecast Opening-Line Hover Verification
+- [x] Inspect opening-line row hover handlers, preview state, and board binding
+- [x] Confirm or refine hover animation and associated move preview behavior
+- [x] Add or validate regression coverage and save a verification checkpoint
