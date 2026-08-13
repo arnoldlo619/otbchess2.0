@@ -7642,3 +7642,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect move-row hover handlers and board-preview state in ForecastWalkthrough
 - [x] Ensure hovering a forecast move previews its associated position and clear preview on pointer exit
 - [x] Verify behavior with regression coverage and save a checkpoint
+
+## Chess.com Matchup Prep Full Reliability Audit
+- [x] Capture exact valid-account failures from deployed and local Matchup Prep services with upstream and cache diagnostics
+- [x] Audit all client report launches, active-request cancellation, route effects, and provider-specific state transitions
+- [x] Audit Chess.com fetching, caching, retry/backoff, and Lichess population integration boundaries
+- [ ] Repair the root cause and make valid Chess.com report delivery resilient to stale or transient requests
+- [ ] Add exact-account, provider-isolation, and stale-response regression coverage
+- [ ] Verify local and deployed Chess.com reports end to end in the browser before checkpointing
+- [x] Repair service-worker handling so transient or stale API fetches cannot synthesize Offline responses for Matchup Prep
+- [x] Bypass the four-second service-worker API timeout and API cache for Matchup Prep report requests

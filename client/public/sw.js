@@ -4,13 +4,17 @@
  * Strategy:
  *  - Static assets (JS, CSS, fonts, images): Cache-First with a version-keyed cache.
  *    On install, pre-cache the app shell. On activate, purge old caches.
- *  - API requests (/api/*): Network-First with a 4-second timeout, falling back to
- *    a cached response if the network is unavailable.
+ *  - Matchup Prep requests (/api/prep/*): Network-only. Generating a report can
+ *    legitimately exceed four seconds, so they must never be aborted or cached here.
+ *  - Other API requests (/api/*): Network-First with a 4-second timeout, falling
+ *    back to a cached response if the network is unavailable.
  *  - Navigation requests (HTML): Network-First, falling back to the cached index.html
  *    so the SPA still loads offline.
  */
 
-const CACHE_VERSION = "otb-chess-v4";
+/* global self, caches, fetch, Response, AbortController, setTimeout, clearTimeout, URL */
+
+const CACHE_VERSION = "otb-chess-v5";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -66,7 +70,15 @@ self.addEventListener("fetch", (event) => {
     url.pathname.includes("node_modules/.vite")
   ) return;
 
-  // API requests: Network-First with timeout fallback
+  // Matchup Prep reports are dynamic, provider-backed work. A four-second service
+  // worker timeout was converting slow but valid Chess.com reports into synthetic
+  // { error: "Offline" } responses. Always let the application own this request.
+  if (url.pathname.startsWith("/api/prep/")) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Other API requests: Network-First with timeout fallback
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirstWithTimeout(request, API_CACHE, 4000));
     return;
