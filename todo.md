@@ -7652,3 +7652,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Verify local and deployed Chess.com reports end to end in the browser before checkpointing
 - [x] Repair service-worker handling so transient or stale API fetches cannot synthesize Offline responses for Matchup Prep
 - [x] Bypass the four-second service-worker API timeout and API cache for Matchup Prep report requests
+- [ ] Register the corrected service worker with a versioned script URL so stale production workers cannot retain the Offline fallback

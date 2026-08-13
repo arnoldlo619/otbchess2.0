@@ -12,7 +12,9 @@ createRoot(document.getElementById("root")!).render(<App />);
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/sw.js", { scope: "/" })
+      // Keep the registration URL versioned. Static CDNs can otherwise serve an
+      // older worker long after the application bundle has updated its policy.
+      .register("/sw.js?v=otb-chess-v5", { scope: "/" })
       .then((registration) => {
         // Check for updates every time the page loads
         registration.update();
