@@ -50,6 +50,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 import { OTBLoader } from "@/components/OTBLoader";
+import { derivePrepErrorCode, describePrepError } from "@/lib/prepErrorPresentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -2493,36 +2494,39 @@ function PrepErrorState({
   isDark: boolean;
   t: Tokens;
 }) {
+  const presentation = describePrepError({
+    code: derivePrepErrorCode(error),
+    username,
+    provider,
+  });
+
   return (
     <div className={`${t.card} p-5 sm:p-6`}>
       <div className="flex items-start gap-3 mb-4">
         <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
         <div>
-          <p className={`text-sm font-semibold ${t.textPrimary}`}>We couldn’t generate a prep report for this username.</p>
-          {error && <p className={`text-xs mt-1 ${t.textTertiary}`}>{error}</p>}
+          <p className={`text-sm font-semibold ${t.textPrimary}`}>{presentation.title}</p>
+          <p className={`text-xs mt-1 leading-relaxed ${t.textTertiary}`}>{presentation.detail}</p>
         </div>
       </div>
       <div className={`p-3 rounded-xl mb-4 ${
         isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-[#FBFADA]/70/70 border border-[#ADBC9F]/60"
       }`}>
-        <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>Possible reasons:</p>
+        <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>What to check:</p>
         <ul className={`space-y-1 text-xs ${t.textTertiary}`}>
-          <li>• The {provider === "lichess" ? "Lichess" : "Chess.com"} username may not exist — check spelling and try again</li>
-          <li>• There may not be enough recent games in this format (try switching to All)</li>
-          <li>• {provider === "lichess" ? "Lichess" : "Chess.com"} game data may be temporarily unavailable</li>
-          <li>• Try increasing depth to 100 games for players with sparse recent activity</li>
+          {presentation.reasons.map((reason) => <li key={reason}>• {reason}</li>)}
         </ul>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={onRetry}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-            isDark ? "bg-[#436850] text-white hover:bg-[#4a7a56]" : "bg-[#436850] text-white hover:bg-[#2e5236]"
-          }`}
-        >
-          <RefreshCw className="w-3 h-3" /> Try again
-        </button>
-        {username && (
+        {presentation.supportsRetry && <button
+            onClick={onRetry}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              isDark ? "bg-[#436850] text-white hover:bg-[#4a7a56]" : "bg-[#436850] text-white hover:bg-[#2e5236]"
+            }`}
+          >
+            <RefreshCw className="w-3 h-3" /> Try again
+          </button>}
+        {username && presentation.supportsFilterControls && (
           <button
             onClick={onUseAllFormats}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
@@ -2532,7 +2536,7 @@ function PrepErrorState({
             Use All formats
           </button>
         )}
-        {username && (
+        {username && presentation.supportsFilterControls && (
           <button
             onClick={onAnalyze100}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${

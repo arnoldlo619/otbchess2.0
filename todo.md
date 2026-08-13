@@ -7624,3 +7624,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Trace the 503 report-generation failure through provider selection, cache, and upstream calls
 - [x] Repair the submit label and report request path without weakening error handling
 - [x] Add regression coverage and verify the live Matchup Prep flow
+
+## Matchup Prep Exact 503 Root-Cause Repair
+- [x] Reproduce the exact Pircunset chess.com V3 request with all screenshot-selected filters
+- [x] Capture the structured server exception, upstream status, cache state, and report pipeline stage
+- [x] Repair the root cause and preserve actionable provider-specific error handling
+- [x] Add a regression contract and verify the exact request, TypeScript, tests, and production build
