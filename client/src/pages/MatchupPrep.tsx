@@ -48,7 +48,6 @@ import { authFetch } from "@/lib/apiFetch";
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
-import { V3ScoutReportSkeleton } from "@/components/prep/V3ScoutReportSkeleton";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 import { OTBLoader } from "@/components/OTBLoader";
 
@@ -860,7 +859,11 @@ export default function MatchupPrep() {
         )}
 
         {/* ── Loading State ── */}
-        {loading && <V3ScoutReportSkeleton isDark={isDark} />}
+        {loading && (
+          <div className={`min-h-[360px] rounded-3xl border flex items-center justify-center ${isDark ? "border-white/10 bg-white/[0.025]" : "border-[#436850]/15 bg-white/70"}`}>
+            <OTBLoader size={112} label="Building your opponent report" isDark={isDark} />
+          </div>
+        )}
 
         {/* ── Error State (detailed, requirement 11) ── */}
         {error && !loading && (

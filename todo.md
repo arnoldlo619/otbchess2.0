@@ -7612,3 +7612,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect the Step 01–03 badge markup and current light/dark design tokens
 - [x] Apply a premium brand-aligned animated gradient badge treatment with reduced-motion support
 - [x] Verify responsive appearance, TypeScript, lint, and production build
+
+## Shared Platform Loader
+- [x] Audit global route fallbacks and existing loading states across the client
+- [x] Build an accessible ChessOTB animated loader with inline, panel, and full-screen variants
+- [x] Replace global route suspense fallback and high-visibility Matchup Prep loading UI
+- [x] Add loader regression coverage and verify TypeScript, lint, build, reduced motion, and live rendering

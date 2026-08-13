@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { OTBLoader } from "@/components/OTBLoader";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch } from "wouter";
@@ -75,56 +76,8 @@ const AuthPage = lazy(() => import("./pages/Auth"));
 const RsvpFormPage = lazy(() => import("./pages/RsvpFormPage"));
 const RsvpFormBuilderPage = lazy(() => import("./pages/RsvpFormBuilderPage"));
 
-// ── Thin top progress bar — replaces full-screen loader on route transitions ────────────
-function RouteProgressBar() {
-  const [visible, setVisible] = useState(false);
-  const [width, setWidth] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    setVisible(true);
-    setWidth(0);
-    // Animate to 85% quickly, then stall — completes when component unmounts
-    let w = 0;
-    const step = () => {
-      w = w < 40 ? w + 8 : w < 70 ? w + 3 : w < 85 ? w + 0.5 : w;
-      setWidth(Math.min(w, 85));
-      if (w < 85) rafRef.current = requestAnimationFrame(step);
-    };
-    rafRef.current = requestAnimationFrame(step);
-    return () => {
-      // Complete the bar on unmount (page loaded)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      setWidth(100);
-      timerRef.current = setTimeout(() => setVisible(false), 300);
-    };
-  }, []);
-
-  if (!visible) return null;
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        zIndex: 9999,
-        height: 3,
-        width: `${width}%`,
-        background: "linear-gradient(90deg, oklch(0.65 0.18 145), oklch(0.75 0.20 145))",
-        transition: width === 100 ? "width 0.2s ease-out, opacity 0.3s ease 0.2s" : "width 0.4s ease-out",
-        opacity: width === 100 ? 0 : 1,
-        borderRadius: "0 2px 2px 0",
-        boxShadow: "0 0 8px oklch(0.65 0.18 145 / 0.6)",
-        pointerEvents: "none",
-      }}
-    />
-  );
-}
-
 function PageLoader() {
-  return <RouteProgressBar />;
+  return <OTBLoader fullPage label="Preparing the board" />;
 }
 
 function Router() {

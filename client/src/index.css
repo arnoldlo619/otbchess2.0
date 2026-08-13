@@ -151,6 +151,82 @@
   .otb-step-badge { animation: none; }
 }
 
+@keyframes otb-loader-square-path {
+  0%, 10.5% { left: 0; top: 0; }
+  12.5%, 23% { left: 33.333%; top: 0; }
+  25%, 35.5% { left: 66.666%; top: 0; }
+  37.5%, 48% { left: 66.666%; top: 33.333%; }
+  50%, 60.5% { left: 33.333%; top: 33.333%; }
+  62.5%, 73% { left: 33.333%; top: 66.666%; }
+  75%, 85.5% { left: 0; top: 66.666%; }
+  87.5%, 98% { left: 0; top: 33.333%; }
+  100% { left: 0; top: 0; }
+}
+
+@keyframes otb-loader-fade-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.otb-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #254b32;
+  animation: otb-loader-fade-in 260ms ease-out both;
+}
+
+.otb-loader--dark { color: oklch(0.92 0.02 145); }
+
+.otb-loader__stage {
+  position: relative;
+  transform: rotate(45deg);
+}
+
+.otb-loader__square {
+  position: absolute;
+  width: 29.166%;
+  height: 29.166%;
+  margin: 2.08%;
+  border-radius: 1px;
+  background: currentColor;
+  box-shadow: 0 0 0 1px currentColor, 0 10px 24px color-mix(in oklab, currentColor 24%, transparent);
+  animation: otb-loader-square-path 10s cubic-bezier(0.65, 0, 0.35, 1) infinite both;
+}
+
+.otb-loader__label {
+  margin: 0;
+  color: color-mix(in oklab, currentColor 68%, transparent);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.otb-loader-page {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  background: #fbfada;
+  background-image: linear-gradient(color-mix(in oklab, #436850 10%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, #436850 10%, transparent) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.otb-loader-page--dark {
+  background-color: #0a1409;
+  background-image: linear-gradient(oklch(0.95 0.02 145 / 0.08) 1px, transparent 1px), linear-gradient(90deg, oklch(0.95 0.02 145 / 0.08) 1px, transparent 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otb-loader, .otb-loader__square { animation: none; }
+  .otb-loader__square { left: 33.333%; top: 33.333%; }
+}
+
 :root {
   /* OTB Chess Brand Colors — Light Mode: Nature Palette */
   --chess-green: oklch(0.41 0.09 152);        /* #436850 forest green */
