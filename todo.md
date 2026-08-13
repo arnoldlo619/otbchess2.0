@@ -7637,3 +7637,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add an exact-account regression contract for cached and uncached Chess.com report generation
 - [x] Verify local and deployed behavior, TypeScript, tests, and production build
 - [x] Eliminate duplicate route-submit report requests and prevent stale request responses from overriding the active Chess.com report
+
+## Opening Forecast Hover Preview Verification
+- [x] Inspect move-row hover handlers and board-preview state in ForecastWalkthrough
+- [x] Ensure hovering a forecast move previews its associated position and clear preview on pointer exit
+- [x] Verify behavior with regression coverage and save a checkpoint

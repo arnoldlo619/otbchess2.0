@@ -1,0 +1,18 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const source = readFileSync(
+  resolve(process.cwd(), "client/src/components/prep/ForecastWalkthrough.tsx"),
+  "utf8",
+);
+
+describe("Opening Forecast hover preview", () => {
+  it("previews the hovered branch on the board and clears it when the pointer leaves", () => {
+    expect(source).toContain("onMouseEnter={() => onHoverNode?.(node)}");
+    expect(source).toContain("onMouseLeave={() => onHoverNode?.(null)}");
+    expect(source).toContain("const [hoveredNode, setHoveredNode] = useState<FNode | null>(null)");
+    expect(source).toContain("const displayFen = hoveredNode && !isOffBook && boardSelectedSq === null");
+    expect(source).toContain("onHoverNode={setHoveredNode}");
+  });
+});
