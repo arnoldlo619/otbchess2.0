@@ -7630,3 +7630,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Capture the structured server exception, upstream status, cache state, and report pipeline stage
 - [x] Repair the root cause and preserve actionable provider-specific error handling
 - [x] Add a regression contract and verify the exact request, TypeScript, tests, and production build
+
+## Matchup Prep Chess.com Availability Repair
+- [x] Capture the exact humblelowkey production and local requests, provider selection, upstream response, and cache state
+- [x] Repair Chess.com fetch resilience without routing Matchup Prep through Lichess services
+- [x] Add an exact-account regression contract for cached and uncached Chess.com report generation
+- [x] Verify local and deployed behavior, TypeScript, tests, and production build
+- [x] Eliminate duplicate route-submit report requests and prevent stale request responses from overriding the active Chess.com report

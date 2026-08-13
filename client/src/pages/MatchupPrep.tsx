@@ -263,6 +263,7 @@ export default function MatchupPrep() {
   const [report, setReport] = useState<PrepReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportRequestIdRef = useRef(0);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("scout");
 
@@ -422,6 +423,7 @@ export default function MatchupPrep() {
   }, [params.username]);
 
   async function fetchReport(username: string, refresh = false, tc?: TcFilter, games?: string, providerOverride?: Provider) {
+    const requestId = ++reportRequestIdRef.current;
     if (refresh) {
       setRefreshing(true);
     } else {
@@ -458,6 +460,7 @@ export default function MatchupPrep() {
           throw new Error(friendlyMsg[data.error] ?? data.message ?? `Error ${res.status}`);
         }
         const data: ScoutReportV3 = await res.json();
+        if (requestId !== reportRequestIdRef.current) return;
         setReportV3(data);
         const updated = addRecentlyScouted({ username: username.trim(), provider: activeProvider, myColor, tcFilter, gameCount: gameCountFilter });
         setRecentlyScouted(updated);
@@ -471,6 +474,7 @@ export default function MatchupPrep() {
           throw new Error(data.error || `Error ${res.status}`);
         }
         const data: PrepReport = await res.json();
+        if (requestId !== reportRequestIdRef.current) return;
         setReport(data);
         // Auto-select TC filter based on opponent's dominant time control
         if (!tc && !refresh && data.opponent.dominantTimeControl && data.opponent.dominantTimeControl !== "mixed") {
@@ -483,10 +487,13 @@ export default function MatchupPrep() {
         setRecentlyScouted(updated);
       }
     } catch (err: unknown) {
+      if (requestId !== reportRequestIdRef.current) return;
       setError(err instanceof Error ? err.message : "Failed to fetch prep report");
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestId === reportRequestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }
 
@@ -557,8 +564,13 @@ export default function MatchupPrep() {
     e.preventDefault();
     const u = searchInput.trim();
     if (!u) return;
+    const routeProvider = new URLSearchParams(window.location.search).get("provider");
+    const sameRoute = params.username?.toLowerCase() === u.toLowerCase() && routeProvider === provider;
+    if (sameRoute) {
+      fetchReport(u, false, undefined, undefined, provider);
+      return;
+    }
     navigate(`/prep/${encodeURIComponent(u)}?provider=${provider}`);
-    fetchReport(u, false, undefined, undefined, provider);
   }
 
   // ── Derive top weaknesses from opponent data ──

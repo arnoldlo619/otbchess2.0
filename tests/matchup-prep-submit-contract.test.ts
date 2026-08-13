@@ -14,4 +14,11 @@ describe("Matchup Prep submit action", () => {
     expect(source).toContain("const providerQuery = `provider=${activeProvider}`");
     expect(source).toContain("providerOverride ?? provider");
   });
+
+  it("does not let duplicate route-submit requests overwrite the active Chess.com response", () => {
+    expect(source).toContain("const reportRequestIdRef = useRef(0)");
+    expect(source).toContain("const requestId = ++reportRequestIdRef.current");
+    expect(source).toContain("if (requestId !== reportRequestIdRef.current) return;");
+    expect(source).toContain("const sameRoute = params.username?.toLowerCase() === u.toLowerCase() && routeProvider === provider");
+  });
 });
