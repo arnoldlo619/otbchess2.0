@@ -107,6 +107,45 @@ export interface ScoutReportV3 {
   generatedAt: string;
   /** Public identifier and submitted perspective for an immutable cached report. */
   reportSnapshot?: { id: string; myColor: Color; createdAt: string };
+  /** Third independent evidence layer. Never changes recentEvidence denominators. */
+  populationReferences?: PopulationReference[];
+}
+
+export type PopulationSource = "lichess-open-database-local" | "lichess-opening-explorer" | "unavailable";
+export type PopulationAvailability = "complete" | "limited" | "stale" | "pending" | "unavailable";
+export type PopulationSpeed = "bullet" | "blitz" | "rapid";
+
+export interface PopulationFilters {
+  speeds: PopulationSpeed[];
+  ratingBand: number;
+  months: { from: string; to: string };
+}
+
+export interface PopulationMove {
+  uci: string;
+  san: string;
+  count: string;
+}
+
+/** Immutable, anonymous population benchmark separate from both player evidence layers. */
+export interface PopulationReference {
+  schemaVersion: 1;
+  source: PopulationSource;
+  availability: PopulationAvailability;
+  positionKey: string;
+  uciPath: string[];
+  opponentColor: Color;
+  opponentMoveUci: string;
+  opponentMoveSan: string;
+  opponentCount: number;
+  opponentDenominator: number;
+  populationMoveCount?: string;
+  populationDenominator?: string;
+  filters: PopulationFilters;
+  datasetVersion?: string;
+  completeMonths?: string[];
+  cacheObservedAt?: string;
+  limitedReason?: "population_below_threshold" | "incomplete_coverage" | "rating_unavailable" | "position_untracked" | "upstream_unavailable";
 }
 
 /** Options for fetching and filtering games */

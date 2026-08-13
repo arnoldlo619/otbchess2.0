@@ -23,6 +23,7 @@ import {
   tinyint,
   boolean,
   json,
+  bigint,
 } from "drizzle-orm/mysql-core";
 
 // ─── users ────────────────────────────────────────────────────────────────────
@@ -964,6 +965,106 @@ export const prepCache = mysqlTable('prep_cache', {
 }));
 export type PrepCacheRow = typeof prepCache.$inferSelect;
 export type NewPrepCacheRow = typeof prepCache.$inferInsert;
+
+// ─── anonymous Lichess population aggregates ──────────────────────────────────
+// These tables intentionally retain only anonymous per-position aggregates.
+// No usernames, game identifiers, PGNs, clocks, or archive storage locations are stored.
+export const populationDatasetVersions = mysqlTable("population_dataset_versions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  status: varchar("status", { length: 20 }).notNull(), // staging | published | failed | rolled_back
+  schemaVersion: int("schema_version").notNull(),
+  trackedSetVersion: int("tracked_set_version").notNull(),
+  trackedPositionCount: int("tracked_position_count").notNull().default(0),
+  completeMonthsJson: text("complete_months_json").notNull(),
+  sourceLicense: varchar("source_license", { length: 32 }).notNull().default("CC0-1.0"),
+  importCodeVersion: varchar("import_code_version", { length: 64 }).notNull(),
+  previousPublishedId: varchar("previous_published_id", { length: 64 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  publishedAt: timestamp("published_at"),
+  rolledBackAt: timestamp("rolled_back_at"),
+}, (table) => ({
+  statusIdx: index("population_dataset_status_idx").on(table.status),
+  publishedIdx: index("population_dataset_published_idx").on(table.publishedAt),
+}));
+
+export const populationDatasetMonths = mysqlTable("population_dataset_months", {
+  id: int("id").primaryKey().autoincrement(),
+  datasetId: varchar("dataset_id", { length: 64 }).notNull(),
+  sourceMonth: varchar("source_month", { length: 7 }).notNull(),
+  sourceFilename: varchar("source_filename", { length: 96 }).notNull(),
+  expectedSha256: varchar("expected_sha256", { length: 64 }).notNull(),
+  observedSha256: varchar("observed_sha256", { length: 64 }),
+  verificationStatus: varchar("verification_status", { length: 20 }).notNull(),
+  compressedBytes: bigint("compressed_bytes", { mode: "bigint" }).notNull(),
+  gamesParsed: bigint("games_parsed", { mode: "bigint" }).notNull(),
+  gamesAccepted: bigint("games_accepted", { mode: "bigint" }).notNull(),
+  excludedJson: text("excluded_json").notNull().default("{}"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  datasetMonthUnique: uniqueIndex("population_dataset_month_unique").on(table.datasetId, table.sourceMonth),
+  datasetIdx: index("population_dataset_month_dataset_idx").on(table.datasetId),
+}));
+
+export const populationTrackedPositions = mysqlTable("population_tracked_positions", {
+  positionKey: varchar("position_key", { length: 64 }).primaryKey(),
+  canonicalEpd: varchar("canonical_epd", { length: 160 }).notNull(),
+  uciPathJson: text("uci_path_json").notNull(),
+  ply: int("ply").notNull(),
+  sideToMove: varchar("side_to_move", { length: 5 }).notNull(),
+  active: boolean("active").notNull().default(true),
+  trackedSetVersion: int("tracked_set_version").notNull(),
+  demandCount: int("demand_count").notNull().default(0),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+  lastRequestedAt: timestamp("last_requested_at"),
+}, (table) => ({
+  activeIdx: index("population_tracked_active_idx").on(table.active, table.trackedSetVersion),
+}));
+
+export const populationAggregates = mysqlTable("population_aggregates", {
+  id: int("id").primaryKey().autoincrement(),
+  datasetId: varchar("dataset_id", { length: 64 }).notNull(),
+  positionKey: varchar("position_key", { length: 64 }).notNull(),
+  speed: varchar("speed", { length: 8 }).notNull(),
+  ratingBand: int("rating_band").notNull(),
+  moveUci: varchar("move_uci", { length: 5 }).notNull(),
+  moveSan: varchar("move_san", { length: 16 }).notNull(),
+  parentTotal: bigint("parent_total", { mode: "bigint" }).notNull(),
+  moveTotal: bigint("move_total", { mode: "bigint" }).notNull(),
+  whiteWins: bigint("white_wins", { mode: "bigint" }).notNull(),
+  draws: bigint("draws", { mode: "bigint" }).notNull(),
+  blackWins: bigint("black_wins", { mode: "bigint" }).notNull(),
+}, (table) => ({
+  aggregateUnique: uniqueIndex("population_aggregate_unique").on(table.datasetId, table.positionKey, table.speed, table.ratingBand, table.moveUci),
+  lookupIdx: index("population_aggregate_lookup_idx").on(table.datasetId, table.positionKey, table.speed, table.ratingBand),
+}));
+
+export const populationExplorerCache = mysqlTable("population_explorer_cache", {
+  requestKey: varchar("request_key", { length: 128 }).primaryKey(),
+  responseJson: text("response_json").notNull(),
+  fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  staleUntil: timestamp("stale_until").notNull(),
+  sourceMonthFrom: varchar("source_month_from", { length: 7 }).notNull(),
+  sourceMonthTo: varchar("source_month_to", { length: 7 }).notNull(),
+}, (table) => ({ expiresIdx: index("population_explorer_expires_idx").on(table.expiresAt) }));
+
+export const populationJobs = mysqlTable("population_jobs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  datasetId: varchar("dataset_id", { length: 64 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull(),
+  sourceFilename: varchar("source_filename", { length: 96 }),
+  compressedBytes: bigint("compressed_bytes", { mode: "bigint" }).notNull(),
+  gamesParsed: bigint("games_parsed", { mode: "bigint" }).notNull(),
+  gamesAccepted: bigint("games_accepted", { mode: "bigint" }).notNull(),
+  aggregateRows: bigint("aggregate_rows", { mode: "bigint" }).notNull(),
+  exclusionsJson: text("exclusions_json").notNull().default("{}"),
+  failureCode: varchar("failure_code", { length: 64 }),
+  failureDetailRedacted: varchar("failure_detail_redacted", { length: 500 }),
+  startedAt: timestamp("started_at"),
+  heartbeatAt: timestamp("heartbeat_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({ datasetJobIdx: index("population_jobs_dataset_idx").on(table.datasetId, table.createdAt) }));
 
 // ─── director_smtp_config ─────────────────────────────────────────────────────
 // Stores per-user SMTP configuration for sending tournament results emails

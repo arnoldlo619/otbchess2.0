@@ -413,7 +413,10 @@ export default function MatchupPrep() {
   useEffect(() => {
     if (params.username) {
       setSearchInput(params.username);
-      fetchReport(params.username);
+      const routeProvider = new URLSearchParams(window.location.search).get("provider");
+      const requestedProvider: Provider = routeProvider === "lichess" || routeProvider === "chesscom" ? routeProvider : provider;
+      setProvider(requestedProvider);
+      fetchReport(params.username, false, undefined, undefined, requestedProvider);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.username]);
@@ -554,8 +557,8 @@ export default function MatchupPrep() {
     e.preventDefault();
     const u = searchInput.trim();
     if (!u) return;
-    navigate(`/prep/${encodeURIComponent(u)}`);
-    fetchReport(u);
+    navigate(`/prep/${encodeURIComponent(u)}?provider=${provider}`);
+    fetchReport(u, false, undefined, undefined, provider);
   }
 
   // ── Derive top weaknesses from opponent data ──
@@ -664,7 +667,7 @@ export default function MatchupPrep() {
           {(report || reportV3) && (
             <div className="flex items-center gap-1 shrink-0">
               <button
-                onClick={() => fetchReport((reportV3?.opponent.username ?? report?.opponent.username)!, true)}
+                    onClick={() => fetchReport((reportV3?.opponent.username ?? report?.opponent.username)!, true, undefined, undefined, provider)}
                 disabled={refreshing}
                 className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
                   isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]"
@@ -1014,8 +1017,8 @@ export default function MatchupPrep() {
               setMyColor(entry.myColor === "black" ? "black" : "white");
               setTcFilter(entry.tcFilter);
               setGameCountFilter(entry.gameCount);
-              navigate(`/prep/${encodeURIComponent(entry.username)}`);
-              fetchReport(entry.username);
+                navigate(`/prep/${encodeURIComponent(entry.username)}?provider=${entry.provider}`);
+                fetchReport(entry.username, false, undefined, undefined, entry.provider);
             }}
             onRemove={(entry) => { const updated = removeRecentlyScouted(entry.username, entry.provider); setRecentlyScouted(updated); }}
             isDark={isDark}

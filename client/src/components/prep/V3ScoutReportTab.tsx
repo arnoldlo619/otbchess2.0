@@ -21,6 +21,7 @@ import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
 import { ScoutAISummary } from "./ScoutAISummary";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
+import { PopulationContextCard } from "./PopulationContextCard";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
 
 type Tokens = {
@@ -379,6 +380,8 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
 
       {/* Prep Snapshot — top 3 above the fold */}
       <PrepSnapshot insights={filteredInsights} isDark={isDark} t={t} />
+
+      <PopulationContextCard references={report.populationReferences} isDark={isDark} />
 
       {/* 3. Opening Forecast — board-first interactive walkthrough */}
       <ForecastWalkthrough

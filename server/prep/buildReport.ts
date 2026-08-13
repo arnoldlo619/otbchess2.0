@@ -18,7 +18,7 @@ import { parseGames } from "./parseGames.js";
 import { synthesize, buildForecasts } from "./insightEngine.js";
 import { runGuards } from "./guards.js";
 
-export const ENGINE_VERSION = "3.0.0";
+export const ENGINE_VERSION = "3.1.0";
 
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
 

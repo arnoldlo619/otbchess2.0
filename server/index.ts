@@ -25,6 +25,9 @@ import { enrichLichessGame, getEnrichmentRateLimitState } from "./services/liche
 import { buildCachedPrepAnalysisReport, ENGINE_VERSION as ENGINE_VERSION_V3 } from "./prep/buildReport.js";
 import { fetchChesscom } from "./services/chesscom.js";
 import { fetchLichess } from "./services/lichess.js";
+import { derivePopulationCandidates } from "./population/candidates.js";
+import { resolvePopulationReference } from "./population/resolver.js";
+import { registerTrackedPopulationPosition } from "./population/tracked.js";
 import type { AnalysisLaunchSubject, CachedPrepAnalysisReport, Color, FetchOpts, PrepErrorPayload } from "../shared/prepTypes.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
@@ -32,6 +35,7 @@ import { createOpeningsAdminRouter } from "./openingsAdmin.js";
 import { registerOpeningsPublicRoutes } from "./openingsPublic.js";
 import { createBillingRouter } from "./billing.js";
 import { createAdminStaffRouter } from "./adminStaff.js";
+import { createPopulationAdminRouter } from "./population/admin.js";
 import { createRepertoireBuilderRouter } from "./repertoireBuilder.js";
 import broadcastsRouter from "./broadcasts.js";
 import otbGamesRouter from "./otbGames.js";
@@ -731,6 +735,17 @@ export function createApp() {
           submittedMyColor,
         );
         const report = cachedReport.report;
+        // Population intelligence is a third, independent layer. It is added
+        // only after the player-specific report is complete and only for an
+        // already-qualified Lichess evidence node; it never changes insights,
+        // denominators, confidence, or recommendations.
+        if (provider === "lichess") {
+          const [candidate] = derivePopulationCandidates(raw, normalised, fetchOpts);
+          if (candidate) {
+            await registerTrackedPopulationPosition(candidate);
+            report.populationReferences = [await resolvePopulationReference(candidate, { allowNetwork: false })];
+          }
+        }
         rememberPrepAnalysisReport(cacheKey, cachedReport);
 
         // Cache fire-and-forget
@@ -1567,6 +1582,7 @@ export function createApp() {
   app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
   app.use("/api/billing", createBillingRouter());
   app.use("/api/admin/staff", createAdminStaffRouter());
+  app.use("/api/admin/population", createPopulationAdminRouter());
   app.use("/api/repertoire-builder", createRepertoireBuilderRouter());
   app.use("/api/broadcasts", broadcastsRouter);
   app.use("/api/otb-games", otbGamesRouter);
