@@ -7582,3 +7582,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace raw 401 analysis-workspace errors with a clear sign-in requirement and safe return path
 - [x] Prevent Chess.com profile decoration requests from attaching cross-provider data to Lichess reports
 - [x] Fix authenticated analysis resolution when a trusted Lichess report cache row is unavailable after sign-in
+
+## Opening Forecast Weakness Summary
+- [x] Inspect forecast evidence and existing summary surfaces for safe natural-language weakness synthesis
+- [x] Add an evidence-grounded opponent weakness summary to the Opening Forecast UI
+- [x] Add regression coverage for weakness selection, small samples, and no-data states
+- [x] Verify TypeScript, tests, and the live responsive report UI
+- [x] Restore the protected coach-insight endpoint so live Opening Forecast summaries can use the current built-in model

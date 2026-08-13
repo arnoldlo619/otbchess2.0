@@ -329,6 +329,10 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
 
   // Resolve section IDs to actual insight objects
   const allInsights = report.insights;
+  const weaknessInsights = useMemo(
+    () => resolveInsights(s.weaknesses, allInsights),
+    [s.weaknesses, allInsights],
+  );
 
   // Apply color filter based on myColor (opponent's color is opposite of user's color)
   const filteredInsights = useMemo(() => {
@@ -383,6 +387,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
         isDark={isDark}
         t={t}
         opponentUsername={report.opponent.username}
+        weaknessInsights={weaknessInsights}
         analysisHrefForUciPath={reportCacheKey ? (canonicalUciPath) => buildPositionAnalysisUrl({
           reportCacheKey,
           canonicalUciPath,

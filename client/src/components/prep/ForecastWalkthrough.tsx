@@ -17,6 +17,8 @@ import {
   BookOpen, FlipVertical2, AlertCircle,
 } from "lucide-react";
 import type { ForecastBranch } from "../../../../shared/prepTypes";
+import type { Insight } from "../../../../shared/prepTypes";
+import { OpeningForecastWeaknessSummary } from "./OpeningForecastWeaknessSummary";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +39,7 @@ interface ForecastWalkthroughProps {
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
+  weaknessInsights?: Insight[];
   analysisHrefForUciPath?: (uciPath: string[]) => string | null;
 }
 
@@ -672,6 +675,7 @@ export function ForecastWalkthrough({
   isDark,
   t,
   opponentUsername,
+  weaknessInsights = [],
   analysisHrefForUciPath,
 }: ForecastWalkthroughProps) {
   const defaultOpponentColor: "white" | "black" =
@@ -942,6 +946,10 @@ export function ForecastWalkthrough({
   const hasColorData = (openingForecast[opponentColor]?.length ?? 0) > 0;
   const opponentPerspective = opponentColor === "white" ? "Opponent plays White" : "Opponent plays Black";
   const yourPerspective = opponentColor === "white" ? "You have Black" : "You have White";
+  const openingWeaknesses = useMemo(
+    () => weaknessInsights.filter((insight) => insight.color === opponentColor),
+    [opponentColor, weaknessInsights],
+  );
 
   // Current eval score: use selectedNode's score, or null at root
   const evalScore = selectedNode?.score ?? null;
@@ -995,6 +1003,14 @@ export function ForecastWalkthrough({
         <span>·</span>
         <span>{yourPerspective}</span>
       </div>
+
+      <OpeningForecastWeaknessSummary
+        opponentUsername={opponentUsername}
+        opponentColor={opponentColor}
+        weaknesses={openingWeaknesses}
+        isDark={isDark}
+        t={t}
+      />
 
       {!hasColorData ? (
         <div className={`flex items-center gap-2 p-4 rounded-xl ${isDark ? "bg-[#1e2e22]/30" : "bg-[#f8faf5]"}`}>

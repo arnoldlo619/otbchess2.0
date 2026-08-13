@@ -1183,19 +1183,19 @@ export function createApp() {
       }
 
       // Call the Forge/OpenAI-compatible chat completions endpoint
-      const llmRes = await fetch(`${forgeApiUrl}/chat/completions`, {
+      const llmRes = await fetch(`${forgeApiUrl}/v1/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${forgeApiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: "gpt-5-mini",
           messages: [
             { role: "system", content: parsed.system },
             { role: "user", content: parsed.user },
           ],
-          max_tokens: 600,
+          max_completion_tokens: 220,
           temperature: 0.7,
         }),
       });

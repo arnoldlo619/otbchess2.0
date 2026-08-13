@@ -21,3 +21,6 @@
 - 2026-08-12: The authenticated workspace context was retained while switching the persisted UI preference to light theme for its final visual check.
 - 2026-08-12: Light-theme authenticated replay rendered cleanly with readable metadata, tabs, game board, move list, and the external Lichess action.
 - 2026-08-12: Authenticated replay at a 375×812 mobile viewport had no horizontal overflow (`scrollWidth=375`, `clientWidth=375`). The back action, metadata, tabs, fair-play copy, and embedded board remained readable and within the viewport.
+- 2026-08-13: Began authenticated live validation of the new Opening Forecast weakness summary with a public Lichess report for DrNykterstein.
+- 2026-08-13: The live Lichess report completed game retrieval, opening classification, and weakness scoring; report assembly is in progress before inspecting the embedded summary.
+- 2026-08-13: The completed report displayed the safe no-reliable-weakness fallback because no qualifying weakness insight existed for DrNykterstein as Black. A protected live coach request returned a grounded gpt-5-mini summary successfully (HTTP 200).
