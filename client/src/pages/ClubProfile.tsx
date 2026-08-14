@@ -65,6 +65,7 @@ import {
   getUserRSVP,
   upsertRSVP,
   syncRSVPsFromServer,
+  syncEventsFromServer,
   createClubEvent,
   updateClubEvent,
   deleteClubEvent,
@@ -1058,6 +1059,11 @@ export default function ClubProfile() {
       );
       setFeedEvents(listFeedEvents(found.id));
       setClubEvents(listClubEvents(found.id).filter((e) => e.isPublished));
+      // Members and owners both receive the canonical server event set; local
+      // storage remains only as an offline fallback.
+      syncEventsFromServer(found.id)
+        .then((events) => setClubEvents(events.filter((event) => event.isPublished)))
+        .catch(() => {});
     };
 
     // Always fetch from server first — localStorage seed data can be stale
@@ -1115,24 +1121,32 @@ export default function ClubProfile() {
     return () => clearInterval(timer);
   }, [clubId]);
 
-  // Sync RSVPs from server when the Events tab is opened
+  // Sync canonical events and their RSVPs whenever the Events tab is opened.
   useEffect(() => {
     if (activeTab !== "events" || !clubId) return;
-    // Sync all upcoming events' RSVPs from server in parallel
-    const upcomingEvents = listClubEvents(clubId).filter((e) => e.isPublished && new Date(e.startAt) >= new Date());
-    if (!upcomingEvents.length) return;
-    Promise.all(
-      upcomingEvents.map((ev) =>
-        syncRSVPsFromServer(clubId, ev.id).then((rsvps) => ({ eventId: ev.id, rsvps }))
-      )
-    ).then((results) => {
-      setRsvpOverrideMap((prev) => {
-        const next = { ...prev };
-        results.forEach(({ eventId, rsvps }) => { next[eventId] = rsvps; });
-        return next;
-      });
-      setRsvpTick((t) => t + 1);
-    }).catch(() => { /* server unavailable — local data still shown */ });
+    let cancelled = false;
+    syncEventsFromServer(clubId)
+      .then((events) => {
+        if (cancelled) return [];
+        const published = events.filter((event) => event.isPublished);
+        setClubEvents(published);
+        return Promise.all(
+          published
+            .filter((event) => new Date(event.startAt) >= new Date())
+            .map((event) => syncRSVPsFromServer(clubId, event.id).then((rsvps) => ({ eventId: event.id, rsvps })))
+        );
+      })
+      .then((results) => {
+        if (cancelled || !results.length) return;
+        setRsvpOverrideMap((prev) => {
+          const next = { ...prev };
+          results.forEach(({ eventId, rsvps }) => { next[eventId] = rsvps; });
+          return next;
+        });
+        setRsvpTick((tick) => tick + 1);
+      })
+      .catch(() => { /* server unavailable — local data still shown */ });
+    return () => { cancelled = true; };
   }, [activeTab, clubId]);
 
   // Fetch leagues when the leagues tab is opened
@@ -2309,9 +2323,12 @@ export default function ClubProfile() {
           );
           const now = new Date();
           // Merge clubEvents and live tournaments into a unified list
+          const eventTournamentIds = new Set(clubEvents.flatMap((event) => event.tournamentId ? [event.tournamentId] : []));
           const allItems = [
             ...clubEvents.map((e) => ({ type: "event" as const, data: e, startAt: e.startAt })),
-            ...liveTournaments.map((t) => ({ type: "tournament" as const, data: t, startAt: t.date || now.toISOString() })),
+            ...liveTournaments
+              .filter((t) => !eventTournamentIds.has(t.id))
+              .map((t) => ({ type: "tournament" as const, data: t, startAt: t.date || now.toISOString() })),
           ].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
           // Apply filter

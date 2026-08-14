@@ -213,12 +213,11 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
       recurrenceEndDate?: string | null;
       createdAt: string; updatedAt: string;
     }>;
-    const local = loadEvents();
-    const localIds = new Set(local.map((e) => e.id));
-    const merged = [...local];
+    const eventById = new Map(loadEvents().map((event) => [event.id, event]));
     for (const row of serverRows) {
-      if (localIds.has(row.id)) continue;
-      merged.push({
+      // Server rows are authoritative. This refreshes stale local records
+      // while retaining local-only entries for offline fallback.
+      eventById.set(row.id, {
         id: row.id, clubId: row.clubId, title: row.title,
         description: row.description ?? undefined,
         startAt: row.startAt, endAt: row.endAt ?? undefined,
@@ -236,6 +235,7 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
         createdAt: row.createdAt, updatedAt: row.updatedAt,
       });
     }
+    const merged = Array.from(eventById.values());
     saveEvents(merged);
     return merged
       .filter((e) => e.clubId === clubId)

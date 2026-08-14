@@ -2744,8 +2744,14 @@ export default function ClubDashboard() {
 
   function refreshEvents() {
     if (!club) return;
-    setEvents(listClubEvents(club.id, true));
+    syncEventsFromServer(club.id).then(setEvents).catch(() => setEvents(listClubEvents(club.id, true)));
   }
+
+  // Reconcile the canonical event set each time the owner opens Events.
+  useEffect(() => {
+    if (tab !== "events" || !clubId) return;
+    syncEventsFromServer(clubId).then(setEvents).catch(() => {});
+  }, [tab, clubId]);
 
   async function refreshBattles() {
     if (!club) return;

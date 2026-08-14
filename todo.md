@@ -7679,3 +7679,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect Opp. White and Opp. Black path/FEN generation and hover-node state
 - [x] Repair any black-side preview or move-highlight color-path mismatch
 - [x] Add dual-tab hover-preview regression coverage and verify the interaction
+
+## Club Events Dashboard Synchronization
+- [x] Audit Feed, Club Events, event registry, and API queries for owner and member access parity
+- [x] Synchronize linked tournaments and meetups into the Events dashboard data source
+- [x] Ensure both club owners and members can view eligible events and navigate to their event pages
+- [x] Add regression coverage and verify Events parity against Feed before checkpointing
+- [x] Backfill any safely identifiable linked tournament feed entries that are missing a Club Events record
