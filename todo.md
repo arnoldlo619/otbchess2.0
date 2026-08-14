@@ -7669,3 +7669,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Route club owners to the linked tournament event page immediately after successful creation
 - [x] Ensure Club Events exposes the linked event with RSVP form and response-management access
 - [x] Add regression coverage and verify the complete owner journey
+
+## Matchup Prep Button Refinement
+- [x] Inspect the target Matchup Prep button and surrounding control hierarchy
+- [x] Refine visual states, spacing, accessibility, and responsive behavior to match the prep design system
+- [x] Verify TypeScript, focused tests, responsive rendering, and production build
