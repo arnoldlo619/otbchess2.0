@@ -56,6 +56,8 @@ export interface Insight {
 
 export interface ForecastBranch {
   moveSan: string;
+  /** Canonical game path through this move, retained solely for legal board/analysis previews. */
+  previewPath?: string[];
   count: number;
   pct: number;
   score: number;

@@ -7674,3 +7674,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect the target Matchup Prep button and surrounding control hierarchy
 - [x] Refine visual states, spacing, accessibility, and responsive behavior to match the prep design system
 - [x] Verify TypeScript, focused tests, responsive rendering, and production build
+
+## Opening Forecast Opponent-Color Hover Preview
+- [x] Inspect Opp. White and Opp. Black path/FEN generation and hover-node state
+- [x] Repair any black-side preview or move-highlight color-path mismatch
+- [x] Add dual-tab hover-preview regression coverage and verify the interaction

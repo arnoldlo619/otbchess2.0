@@ -108,6 +108,11 @@ export function forecast(
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 3)
       .map(([san, v]) => {
+        // Black-side root moves begin at ply 1, so moveSan alone is not a legal
+        // board path. Preserve one canonical game prefix for UI hover previews.
+        const previewPath = v[0]?.plies
+          .slice(0, ply + 1)
+          .map((move) => move.san) ?? [];
         // Find the most common opening name in this bucket for the label
         const nameCounts = new Map<string, number>();
         for (const g of v) {
@@ -126,6 +131,7 @@ export function forecast(
         const losses = v.filter((g: ParsedGame) => g.scoutedScore === 0).length;
         return {
           moveSan: san,
+          previewPath,
           count: v.length,
           pct: v.length / gs.length,
           score: v.reduce((s: number, g: ParsedGame) => s + g.scoutedScore, 0) / v.length,

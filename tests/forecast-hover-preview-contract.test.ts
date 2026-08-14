@@ -20,4 +20,10 @@ describe("Opening Forecast hover preview", () => {
     expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
     expect(source).toContain("animationDurationInMs: prefersReducedMotion ? 0 : (hoveredNode ? 260 : 200)");
   });
+
+  it("uses canonical preview paths so both opponent-color tabs produce legal board positions", () => {
+    expect(source).toContain("previewPath: string[]");
+    expect(source).toContain("const previewPath = b.previewPath ?? path");
+    expect(source).toContain("const prevPath = hoveredNode.previewPath.slice(0, -1)");
+  });
 });

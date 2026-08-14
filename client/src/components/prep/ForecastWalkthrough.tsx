@@ -47,6 +47,7 @@ interface ForecastWalkthroughProps {
 interface FNode {
   moveSan: string;
   path: string[];
+  previewPath: string[];
   fen: string;
   actor: "opponent" | "reply";
   count: number;
@@ -147,12 +148,16 @@ function enrichBranches(
 ): FNode[] {
   return branches.map((b) => {
     const path = [...parentPath, b.moveSan];
-    const fen = fenFromPath(path) ?? "";
+    // `path` selects nodes within the forecast tree. `previewPath` retains
+    // the canonical legal game prefix needed when the opponent is Black.
+    const previewPath = b.previewPath ?? path;
+    const fen = fenFromPath(previewPath) ?? "";
     const isOpponentMove =
       opponentColor === "white" ? depth % 2 === 0 : depth % 2 === 1;
     return {
       moveSan: b.moveSan,
       path,
+      previewPath,
       fen,
       actor: isOpponentMove ? "opponent" : "reply",
       count: b.count,
@@ -912,12 +917,12 @@ export function ForecastWalkthrough({
   const hoverLastMove = useMemo(() => {
     if (!hoveredNode || isOffBook || boardSelectedSq !== null) return null;
     if (hoveredNode.path.length === 0) return null;
-    const prevPath = hoveredNode.path.slice(0, -1);
+    const prevPath = hoveredNode.previewPath.slice(0, -1);
     const c = new Chess();
     for (const san of prevPath) {
       try { c.move(san); } catch { return null; }
     }
-    const lastSan = hoveredNode.path[hoveredNode.path.length - 1];
+    const lastSan = hoveredNode.previewPath[hoveredNode.previewPath.length - 1];
     try {
       const result = c.move(lastSan);
       return result ? { from: result.from, to: result.to } : null;
