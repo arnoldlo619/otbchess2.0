@@ -171,7 +171,7 @@ const POSTS: BlogPostData[] = [
       "We built ChessOTB.club to solve the biggest pain point in OTB chess: running tournaments and clubs without the paperwork. Here's the story behind the platform.",
     category: "Company",
     date: "June 20, 2026",
-    image: "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=1200&q=80",
+    image: "/manus-storage/blog-editorial-company_8b38091a.jpg",
     readTime: "4 min read",
     author: "ChessOTB Team",
     authorRole: "Platform Builders",
@@ -242,7 +242,7 @@ const POSTS: BlogPostData[] = [
       "Swiss-system tournaments let every player compete in every round regardless of wins or losses. We break down the algorithm and why it's the gold standard for OTB events.",
     category: "Chess",
     date: "June 15, 2026",
-    image: "https://images.unsplash.com/photo-1580541832626-2a7131ee809f?w=1200&q=80",
+    image: "/manus-storage/blog-editorial-swiss_2d6651d4.jpg",
     readTime: "6 min read",
     author: "ChessOTB Team",
     authorRole: "Platform Builders",
@@ -333,7 +333,7 @@ const POSTS: BlogPostData[] = [
       "From recurring meetups to social media teasers, here are the strategies that top OTB clubs are using to double their attendance in 90 days.",
     category: "Clubs",
     date: "June 10, 2026",
-    image: "https://images.unsplash.com/photo-1560472355-536de3962603?w=1200&q=80",
+    image: "/manus-storage/blog-editorial-community_5ef7449c.jpg",
     readTime: "5 min read",
     author: "ChessOTB Team",
     authorRole: "Platform Builders",
@@ -424,7 +424,7 @@ const POSTS: BlogPostData[] = [
       "Online ratings and OTB ratings often diverge. We explain the Elo system, how ChessOTB.club uses chess.com ratings for fair pairings, and what to expect at your first tournament.",
     category: "Chess",
     date: "June 5, 2026",
-    image: "https://images.unsplash.com/photo-1611195974226-a6a9be9dd763?w=1200&q=80",
+    image: "/manus-storage/blog-editorial-prep_aea0c539.jpg",
     readTime: "7 min read",
     author: "ChessOTB Team",
     authorRole: "Platform Builders",
@@ -515,7 +515,7 @@ const POSTS: BlogPostData[] = [
       "From venue setup to final standings, this step-by-step guide walks you through everything you need to run a smooth, professional chess tournament using ChessOTB.club.",
     category: "Tournaments",
     date: "May 28, 2026",
-    image: "https://images.unsplash.com/photo-1586165368502-1bad197a6461?w=1200&q=80",
+    image: "/manus-storage/blog-editorial-club_a65812bf.jpg",
     readTime: "10 min read",
     author: "ChessOTB Team",
     authorRole: "Platform Builders",
@@ -611,7 +611,7 @@ const POSTS: BlogPostData[] = [
       "Paper sign-up sheets are slow, error-prone, and hard to manage. Here's how ChessOTB.club's QR code check-in system cuts registration time by 80%.",
     category: "Product",
     date: "May 20, 2026",
-    image: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=1200&q=80",
+    image: "/manus-storage/blog-editorial-live_70b1cebd.jpg",
     readTime: "3 min read",
     author: "ChessOTB Team",
     authorRole: "Platform Builders",
@@ -1148,18 +1148,25 @@ export default function BlogPost() {
                             ? "border-white/[0.07] bg-white/[0.03] hover:border-white/15"
                             : "border-[#ADBC9F]/40 bg-white hover:border-[#436850]/30 hover:shadow-sm"
                         }`}>
-                          <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                          <div className="relative overflow-hidden bg-[#12372A]" style={{ aspectRatio: "16/9" }}>
                             <img
                               src={rel.image}
                               alt={rel.title}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.07] group-hover:brightness-110"
                               loading="lazy"
                             />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#082217]/65 via-[#082217]/10 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-55" />
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between px-3 pb-2.5">
+                              <span className="rounded-full border border-white/20 bg-[#0c261a]/65 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm">
+                                {rel.category}
+                              </span>
+                              <span className="h-1.5 w-1.5 rounded-full bg-[#7FD48F] shadow-[0_0_10px_rgba(127,212,143,0.8)]" />
+                            </div>
                           </div>
                           <div className="px-3.5 pb-3.5 pt-1 flex flex-col gap-1">
                             <span className={`text-[10px] font-bold uppercase tracking-widest ${
                               isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
-                            }`}>{rel.category}</span>
+                            }`}>Journal · {rel.category}</span>
                             <p className={`text-sm font-semibold leading-snug line-clamp-2 ${
                               isDark ? "text-white/85" : "text-[#12372A]"
                             }`}>{rel.title}</p>

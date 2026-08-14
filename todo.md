@@ -7694,3 +7694,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect the QR code and join-link action area shown with the empty player state
 - [x] Add a subtle reduced-motion-safe pulse animation to guide player onboarding
 - [x] Verify TypeScript, focused behavior, and production build before checkpointing
+
+## BlogPost Premium Editorial Imagery
+- [x] Audit BlogPost card imagery, source references, and reusable blog visual patterns
+- [x] Replace stock-feeling image treatment with premium editorial chess visual direction
+- [x] Verify responsive image composition, accessibility alt text, and production build
