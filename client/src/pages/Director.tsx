@@ -3126,7 +3126,7 @@ export default function Director() {
             {(isRegistration || state.currentRound === 1) && (
               <button
                 onClick={() => setShowAnnounce(true)}
-                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 active:scale-95 ${
+                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 active:scale-95 ${state.players.length === 0 ? "director-empty-join-pulse" : ""} ${
                   isDark
                     ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-[#7FD48F] hover:bg-[#4CAF50]/30 hover:border-[#4CAF50]/60"
                     : "bg-[#436850] border-[#436850] text-white hover:bg-[#3a5230] hover:border-[#3a5230] shadow-sm"
@@ -6599,11 +6599,13 @@ export default function Director() {
                         clubLogoUrl: clubAvatarUrl ?? undefined,
                       }); },
                     },
-                  ].map(({ icon: Icon, label, onClick }) => (
+                  ].map(({ icon: Icon, label, onClick }) => {
+                    const isEmptyStateJoinAction = state.players.length === 0 && (label === "Show QR Code" || label === "Copy Join Link");
+                    return (
                     <button
                       key={label}
                       onClick={onClick}
-                      className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors ${isEmptyStateJoinAction ? "director-empty-join-pulse" : ""} ${
                         isDark ? "hover:bg-white/04 text-white/70 hover:text-white" : "hover:bg-[#FBFADA] text-[#12372A]/85 hover:text-[#12372A]"
                       }`}
                     >
@@ -6612,7 +6614,8 @@ export default function Director() {
                       }`} />
                       <span className="text-sm font-medium">{label}</span>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               {/* ── Rating Type Selector ─────────────────────────────────── */}

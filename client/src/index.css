@@ -227,6 +227,25 @@
   .otb-loader__square { left: 33.333%; top: 33.333%; }
 }
 
+@keyframes director-empty-join-attention {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgb(76 175 80 / 0), 0 0 0 0 rgb(76 175 80 / 0);
+  }
+  45% {
+    box-shadow: 0 0 0 3px rgb(76 175 80 / 0.10), 0 0 18px 2px rgb(76 175 80 / 0.18);
+  }
+}
+
+.director-empty-join-pulse {
+  animation: director-empty-join-attention 2.8s cubic-bezier(0.33, 1, 0.68, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .director-empty-join-pulse {
+    animation: none;
+  }
+}
+
 :root {
   /* OTB Chess Brand Colors — Light Mode: Nature Palette */
   --chess-green: oklch(0.41 0.09 152);        /* #436850 forest green */

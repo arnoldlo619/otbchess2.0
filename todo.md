@@ -7689,3 +7689,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Director Empty-State Copy Verification
 - [x] Verify the updated Director player empty-state copy and run focused validation
+
+## Director Empty-State Attention Pulse
+- [x] Inspect the QR code and join-link action area shown with the empty player state
+- [x] Add a subtle reduced-motion-safe pulse animation to guide player onboarding
+- [x] Verify TypeScript, focused behavior, and production build before checkpointing
