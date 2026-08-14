@@ -7686,3 +7686,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Ensure both club owners and members can view eligible events and navigate to their event pages
 - [x] Add regression coverage and verify Events parity against Feed before checkpointing
 - [x] Backfill any safely identifiable linked tournament feed entries that are missing a Club Events record
+
+## Director Empty-State Copy Verification
+- [x] Verify the updated Director player empty-state copy and run focused validation

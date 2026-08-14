@@ -3883,7 +3883,7 @@ export default function Director() {
                           isDark ? "text-white/20" : "text-[#436850]/70"
                         }`}>
                           <Users className="w-8 h-8" />
-                          <p className="text-sm">No players yet — share the QR code or join link</p>
+                          <p className="text-sm">No players yet, share the QR code or join link</p>
                         </div>
                       ) : (
                         <div className="space-y-1">
