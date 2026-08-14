@@ -7663,3 +7663,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect hover-preview board animation configuration and piece rendering behavior
 - [x] Add a smooth reduced-motion-safe piece transition for hover FEN changes
 - [x] Verify preview accuracy, motion behavior, TypeScript, and focused tests
+
+## Club-Linked Tournament Event Routing
+- [x] Audit every club-linked tournament creation path and its event-registration outcome
+- [x] Route club owners to the linked tournament event page immediately after successful creation
+- [x] Ensure Club Events exposes the linked event with RSVP form and response-management access
+- [x] Add regression coverage and verify the complete owner journey
