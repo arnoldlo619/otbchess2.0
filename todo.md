@@ -7699,3 +7699,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit BlogPost card imagery, source references, and reusable blog visual patterns
 - [x] Replace stock-feeling image treatment with premium editorial chess visual direction
 - [x] Verify responsive image composition, accessibility alt text, and production build
+
+## Create Tournament Card Redesign
+- [x] Locate and audit the four Create a Tournament format cards and their creation actions
+- [x] Apply a premium, tactile, accessible card system that differentiates each format without adding dependencies
+- [x] Verify responsive behavior, keyboard interaction, TypeScript, tests, and production build

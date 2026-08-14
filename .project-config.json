@@ -11,13 +11,15 @@
     "DRIZZLE_DATABASE_URL": "mysql://D4MrfaGZHkmWBvH.0a8993041759:0uiHhKPL27FnYzU649iq@gateway02.us-east-1.prod.aws.tidbcloud.com:4000/J6FsDoRMH9x5xbUvpyzxyf?ssl={\"rejectUnauthorized\":true}",
     "MANUS_WEBDEV_PROJECT_ID": "J6FsDoRMH9x5xbUvpyzxyf"
   },
-  "experiments": null,
+  "experiments": [
+    "no_db_push"
+  ],
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/117675823/J6FsDoRMH9x5xbUvpyzxyf",
-    "access_key_id": "ASIAZV3A2ECZN4JYCSOH",
-    "secret_access_key": "5Ron7llbs41IZw1PcK0eT6DkKMeHD3dEk53oDjwi",
-    "session_token": "IQoJb3JpZ2luX2VjEBUaCXVzLWVhc3QtMSJIMEYCIQCWwdr1fO/wv3UDBn/n4hpu1EULXlJSyViE2AfzqizwQQIhAJzsEPVcqJ6VX4pQW3eAxTDCw9IJ79GGzcchX7AEPOvAKu0DCN3//////////wEQBBoMNjY1Mzg2MDk4ODY2IgxA7j7BGkRiSwq4MgEqwQPYGug6BTUeOgw/vdwYJrH3OdEfRBuOBNurJnYiyz4X7UC70CGKRfRjoGK/rk+O0vwWtgrjlKwDVFXHBZeI7SzEnT3mJ4qXluJ5cTboekACcSDsk5Ez8vwstsHYb8H1e+826W79bf/1QoFUUuflM/l8k2siYlbkEA4ClsLzjdSvlB9yuy9wYqg7vFOojdkUF3czhaeP4hMp3k8jozkLXzEddvZBMoPElvRZIsOV4xbHUbHia2sevgAFf6Fcjf2wautUaanVwSWvU6oCKNygQUHLuWoElEfKp1fX7BsZctLndB35zUqLEOynpuDm6yckAh+7K6mahwiJx6bcbrZpC/+w/1EQPjDI9+pXi2mqqPmiziQyj94fW4MI6icr0EKBi2zUssKguhCU1/zrCw4JYv9k4Yg68+JoshcN75Iw7BbkuIoMELQDhSneA4Dv+fQOoTJ8YOColatEyR4Y2gNoY8RljrhdmL7MXBkwihQ6GPJ01Tkm/18tmhsUpupLvwxfu0J1IqDc4Rjr1iK5CX9lX8Jww1B1BYz/o1/p3iKqnGC4ZlJIpqH2RVZH/EneYQz+pJLvF8sSLFD9H13YCd7m+FFiIDDnifXTBjqcAWFN1KjeCSGjLAzaGJlvQ6kQ/DN/3hH912EWLZqDnt8+n+ASNFTX+d2+SWuomzxYRcOdGFEXhm9DWnAxdO00HE0LXvD1SHOgsshipbyfsdyCLX90dq+eDEs5+DTGEc+6uIHpkO9JF6DMG44LnFJx+R3uZC7Uj12SvDjK4f5gRimgiVANw3S1FUXc1fw7KvYg+EjOMyAtwOFu8ure5Q==",
-    "expiration": "2026-08-13T16:15:35.000Z",
+    "access_key_id": "ASIAZV3A2ECZAYTGYKXE",
+    "secret_access_key": "jZIfTkexSu2OElAyCAwRa0gmkH19+QJSMlkkvkgG",
+    "session_token": "IQoJb3JpZ2luX2VjECkaCXVzLWVhc3QtMSJHMEUCID7BJtZNd5MZkxoNJrKE9SSDmutaHTUjgveXqPMzMs2fAiEA8585xIFBYxQfot7kPuSVr9YZ7maWBQGTiB1klSZZe98q7QMI8f//////////ARAEGgw2NjUzODYwOTg4NjYiDJfRt7wICV3ntBk0VirBA5rIYCUUo9OF73wNhnaAxdgn/ZH3pxnBoTvOPwkP8la2SjZnlysXz4pe3D0gNEx4PPnh2FGofDf0gFyakLp2GKuF3DqFuVRzquuY4cpEAHAJ0Alm0OuIT93GtWQ2oebfL0wGsf0cvph3sAWjGa1RB5ng6ybne9+CBE1IXO1NQu7JUpFnn3PEqquHhEgDNkQJPAsRmyXJ7pI/EHqTcl7G8Pay7Nx8LbqEg8S2aP2bEYkdmb8tUvXA8Y17cdNl7J53HAtfSGFeYNPVHFU5c0l6AtHm22rqpnjLyXTIQr45pshuUNSjB8qjSVVvyQBOzS0OZI7LDXAZG1cKjX/EKg2Ur8V8Orx8lw1jw+7HAqmlIPzAeiypih3k8k1Kz8g9yc3QsQhoQAwxn7tvx7itWJ1vuk0Ohqr4gr4eJe+/CGrPbkPqnwo6iNteaIi1iR9xEI89mr+VAKni+8qvx+5Iq4c78qSXhISp3Gk+ItslaaXXM0vbw+0qDZsoPH8aKlT9kIttle6MOHmpBocCvMeERn9layQQ1GHuHWpUCGG2pXid0Ci61rwzKV40gH8gMck2uEsIWW9eOiqGUJ5H/7CRwX4a6rzPMNq9+dMGOp0BZixCF2sdfyiapA9aHVjTpSbN6rRzHW1MWS8HjGe4H2gFOjN5wqDo68igZwwHd3oqxXo6a9FH3D1+gFcvbMhpghmA51+5eIeVUdA62HGUcuCdsOe8UNu/mt4HUkP/k6BgTFAlRiu6DHKI76nCFNSLi0VOYECdnfaeIlZC6kTEwckP2DWy0Y3Jbwv4fFMEr1Kkcm/72FQN8y6IWsUmGA==",
+    "expiration": "2026-08-14T12:18:34.000Z",
     "backend": "GIT_BACKEND_S3"
   },
   "name": "otb-chess",
