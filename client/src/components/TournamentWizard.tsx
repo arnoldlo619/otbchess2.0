@@ -778,11 +778,26 @@ function ModeSelect({
             type="button"
             onClick={() => onSelect("quickstart")}
             aria-label="Quickstart — set up a tournament in under 30 seconds"
-            className="tournament-mode-card tournament-mode-card--quickstart group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7FD48F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D2418]"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
+              background: "rgba(77,105,64,0.22)",
+              border: "2px solid rgba(77,105,64,0.50)",
+              backdropFilter: "blur(12px)",
               minHeight: "200px",
               touchAction: "manipulation",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.38)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "#436850";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(77,105,64,0.30), 0 0 0 1px rgba(77,105,64,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.22)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(77,105,64,0.50)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
             {/* Top row: badge + number */}
@@ -798,7 +813,8 @@ function ModeSelect({
 
             {/* Icon */}
             <div
-              className="tournament-mode-card__icon flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              style={{ background: "rgba(255,255,255,0.12)" }}
             >
               <Bolt className="w-5 h-5 sm:w-7 sm:h-7 text-white" strokeWidth={1.8} />
             </div>
@@ -840,11 +856,26 @@ function ModeSelect({
             type="button"
             onClick={() => onSelect("schedule")}
             aria-label="Schedule — full wizard with format, rounds, time control and ratings"
-            className="tournament-mode-card tournament-mode-card--schedule group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7FD48F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D2418]"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
+              background: "rgba(255,255,255,0.05)",
+              border: "2px solid rgba(255,255,255,0.10)",
+              backdropFilter: "blur(12px)",
               minHeight: "200px",
               touchAction: "manipulation",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
             {/* Top row: number */}
@@ -855,7 +886,8 @@ function ModeSelect({
 
             {/* Icon */}
             <div
-              className="tournament-mode-card__icon flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              style={{ background: "rgba(255,255,255,0.08)" }}
             >
               <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-white" strokeWidth={1.8} />
             </div>
@@ -897,11 +929,26 @@ function ModeSelect({
             type="button"
             onClick={() => onSelect("large_event")}
             aria-label="Large Event — Swiss qualification rounds into elimination bracket, 30 to 100 players"
-            className="tournament-mode-card tournament-mode-card--large group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7FD48F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D2418]"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
+              background: "rgba(255,255,255,0.05)",
+              border: "2px solid rgba(255,255,255,0.10)",
+              backdropFilter: "blur(12px)",
               minHeight: "200px",
               touchAction: "manipulation",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
             {/* Top row: badge + number */}
@@ -917,7 +964,8 @@ function ModeSelect({
 
             {/* Icon */}
             <div
-              className="tournament-mode-card__icon flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              style={{ background: "rgba(255,255,255,0.08)" }}
             >
               <img src={OTB_LOGO_URL} alt="OTB" className="w-5 h-5 sm:w-7 sm:h-7 object-contain drop-shadow-sm" />
             </div>
@@ -959,11 +1007,26 @@ function ModeSelect({
             type="button"
             onClick={() => onSelect("quads")}
             aria-label="Quads — 4-player rating-grouped sections, 3-round round robin, no Swiss pairings"
-            className="tournament-mode-card tournament-mode-card--quads group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7FD48F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D2418]"
+            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
             style={{
               padding: "20px 18px 24px",
+              background: "rgba(76,175,80,0.06)",
+              border: "2px solid rgba(76,175,80,0.25)",
+              backdropFilter: "blur(12px)",
               minHeight: "200px",
               touchAction: "manipulation",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(76,175,80,0.14)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(76,175,80,0.45)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(76,175,80,0.15), 0 0 0 1px rgba(76,175,80,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(76,175,80,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(76,175,80,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
             }}
           >
             {/* Top row: badge + number */}
@@ -979,7 +1042,8 @@ function ModeSelect({
 
             {/* Icon — 2×2 grid representing 4-player sections */}
             <div
-              className="tournament-mode-card__icon flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
+              style={{ background: "rgba(76,175,80,0.12)" }}
             >
               <Users2 className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: "#4CAF50" }} strokeWidth={1.8} />
             </div>

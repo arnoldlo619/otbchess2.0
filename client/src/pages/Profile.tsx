@@ -37,14 +37,12 @@ import { OtbRatingCard } from "@/components/OtbRatingCard";
 import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
-import { useMyAnalysedGames } from "../hooks/useMyAnalysedGames";
-import AnalysedGameCard from "../components/AnalysedGameCard";
 import type { Club } from "../lib/clubRegistry";
 import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
 import { Users, Settings as _Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
-import { TournamentsIcon, BattleIcon, MembersIcon, RatingIcon, ProfileIcon } from "@/components/OtbIcons";
+import { TournamentsIcon, BattleIcon, MembersIcon, ProfileIcon } from "@/components/OtbIcons";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { AchievementBadgeGrid } from "@/components/tournament/AchievementBadge";
 import { OTBLoader } from "@/components/OTBLoader";
@@ -310,7 +308,6 @@ export default function ProfilePage() {
   }
 
   // Fetch analysed games from LNM pipeline
-  const analysedGames = useMyAnalysedGames();
 
   // ── My Clubs ────────────────────────────────────────────────────────────────
   const [myClubs, setMyClubs] = useState<Club[] | null>(null);
@@ -1446,78 +1443,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* My Analysed Games section */}
-        <div className={`rounded-3xl border p-6 ${card}`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                isDark ? "bg-[#4ade80]/15" : "bg-emerald-50"
-              }`}>
-                <span className="otb-icon"><RatingIcon size={16} /></span>
-              </div>
-              <div>
-                <h2 className={`text-base font-bold ${text}`}>My Analysed Games</h2>
-                {analysedGames.status === "success" && analysedGames.games.length > 0 && (
-                  <p className={`text-xs ${muted}`}>
-                    {analysedGames.games.length} game{analysedGames.games.length !== 1 ? "s" : ""} reviewed
-                  </p>
-                )}
-              </div>
-            </div>
-            {analysedGames.games.length > 0 && (
-              <a href="/games" className={`text-xs font-medium transition ${
-                isDark ? "text-[#4ade80]/70 hover:text-[#4ade80]" : "text-emerald-600/70 hover:text-emerald-700"
-              }`}>View all</a>
-            )}
-          </div>
-
-          {analysedGames.status === "loading" && (
-            <div className="space-y-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className={`h-20 rounded-2xl animate-pulse ${
-                  isDark ? "bg-white/5" : "bg-[#ADBC9F]/40"
-                }`} />
-              ))}
-            </div>
-          )}
-
-          {analysedGames.status === "error" && (
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl ${
-              isDark ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"
-            }`}>
-              <p className="text-sm text-red-400">{analysedGames.error ?? "Failed to load games"}</p>
-              <button onClick={analysedGames.refresh} className="ml-auto text-xs text-red-400 hover:text-red-300 underline">Retry</button>
-            </div>
-          )}
-
-          {analysedGames.status === "success" && analysedGames.games.length === 0 && (
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                isDark ? "bg-white/5" : "bg-[#ADBC9F]/40"
-              }`}>
-                <span className="otb-icon"><RatingIcon size={24} /></span>
-              </div>
-              <div>
-                <p className={`text-sm font-medium ${text}`}>No analysed games yet</p>
-                <p className={`text-xs ${muted} mt-0.5`}>Use Live Notation Mode in a Battle to record and analyse your OTB games</p>
-              </div>
-              <a href="/battle" className={`mt-1 text-xs px-4 py-2 rounded-xl font-medium transition ${
-                isDark ? "bg-[#4ade80]/15 text-[#4ade80] hover:bg-[#4ade80]/25" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-              }`}>Start a Battle</a>
-            </div>
-          )}
-
-          {analysedGames.status === "success" && analysedGames.games.length > 0 && (
-            <div className="space-y-3">
-              {analysedGames.games.slice(0, 5).map((game) => (
-                <AnalysedGameCard key={game.id} game={game} isDark={isDark} />
-              ))}
-              {analysedGames.games.length > 5 && (
-                <p className={`text-center text-xs pt-1 ${muted}`}>+{analysedGames.games.length - 5} more games</p>
-              )}
-            </div>
-          )}
-        </div>
         {/* Pro Membership card — shown only to Pro users (not staff) */}
         {!user.isStaff && user.isPro && (
           <div className={`rounded-3xl border p-6 ${card}`}>

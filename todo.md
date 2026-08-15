@@ -7700,7 +7700,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace stock-feeling image treatment with premium editorial chess visual direction
 - [x] Verify responsive image composition, accessibility alt text, and production build
 
-## Create Tournament Card Redesign
-- [x] Locate and audit the four Create a Tournament format cards and their creation actions
-- [x] Apply a premium, tactile, accessible card system that differentiates each format without adding dependencies
-- [x] Verify responsive behavior, keyboard interaction, TypeScript, tests, and production build
+## Development Server Recovery
+- [x] Restart the development server and verify the preview is reachable
+
+## Profile Analyzed Games Cleanup
+- [x] Locate and remove the unused My Analyzed Games section and dependent Profile state
+- [x] Verify TypeScript, focused Profile behavior, and production build before checkpointing
