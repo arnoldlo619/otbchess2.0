@@ -7717,3 +7717,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit the Matchup Prep header controls against established platform header spacing
 - [x] Expand the header navigation container and apply responsive spacing hierarchy
 - [x] Verify responsive layout, TypeScript, focused regression coverage, and production build
+
+## Matchup Prep Report Readability Cleanup
+- [x] Inspect targeted section headings, opening cards, and AI Weakness Read integration
+- [x] Increase report section-title hierarchy and add restrained opening-card hover depth
+- [x] Remove AI Weakness Read components and their unused report wiring
+- [x] Add regression coverage and verify TypeScript, responsive rendering, and production build

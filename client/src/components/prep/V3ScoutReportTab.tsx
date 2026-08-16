@@ -19,7 +19,6 @@ import {
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
-import { ScoutAISummary } from "./ScoutAISummary";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 import { PopulationContextCard } from "./PopulationContextCard";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
@@ -83,12 +82,12 @@ function PrepSnapshot({
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-4">
         <Telescope className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-bold text-sm ${t.textPrimary}`}>Prep Snapshot</h3>
+        <h3 className={`font-bold text-base sm:text-lg tracking-[-0.01em] ${t.textPrimary}`}>Prep Snapshot</h3>
         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>Most played</span>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {openings.map((opening) => (
-          <div key={`${opening.color}-${opening.name}`} className={`rounded-xl border px-3 py-3 ${isDark ? "bg-[#0d1a0f]/60 border-[#1e2e22]/50" : "bg-[#f8faf5] border-[#ADBC9F]/40"}`}>
+          <div key={`${opening.color}-${opening.name}`} className={`rounded-xl border px-3 py-3 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg ${isDark ? "bg-[#0d1a0f]/60 border-[#1e2e22]/50 hover:border-[#5B9A6A]/45 hover:shadow-black/20" : "bg-[#f8faf5] border-[#ADBC9F]/40 hover:border-[#436850]/35 hover:shadow-[#436850]/10"}`}>
             <p className={`text-sm font-semibold ${t.textPrimary}`}>{opening.name}</p>
             <p className={`mt-0.5 text-[11px] ${t.textTertiary}`}>{opening.color === "white" ? "As White" : "As Black"} · {opening.count} games</p>
           </div>
@@ -128,7 +127,7 @@ function GamePlanSection({
         aria-expanded={expanded}
       >
         <span className={isDark ? "text-[#5B9A6A]" : "text-[#436850]"}>{icon}</span>
-        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>{title}</h3>
+        <h3 className={`font-semibold text-base sm:text-lg tracking-[-0.01em] flex-1 ${t.textPrimary}`}>{title}</h3>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
           {insights.length}
         </span>
@@ -203,7 +202,7 @@ function PrepChecklist({
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-3">
         <CheckSquare className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>Prep Checklist</h3>
+        <h3 className={`font-semibold text-base sm:text-lg tracking-[-0.01em] flex-1 ${t.textPrimary}`}>Prep Checklist</h3>
         <span className={`text-[10px] font-bold ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           {doneCount}/{items.length}
         </span>
@@ -302,10 +301,6 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
 
   // Resolve section IDs to actual insight objects
   const allInsights = report.insights;
-  const weaknessInsights = useMemo(
-    () => resolveInsights(s.weaknesses, allInsights),
-    [s.weaknesses, allInsights],
-  );
 
   // Apply color filter based on myColor (opponent's color is opposite of user's color)
   const filteredInsights = useMemo(() => {
@@ -361,7 +356,6 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
         isDark={isDark}
         t={t}
         opponentUsername={report.opponent.username}
-        weaknessInsights={weaknessInsights}
         analysisHrefForUciPath={reportCacheKey ? (canonicalUciPath) => buildPositionAnalysisUrl({
           reportCacheKey,
           canonicalUciPath,
@@ -385,7 +379,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
       {filteredInsights.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Detailed Insights</h3>
+            <h3 className={`font-semibold text-base sm:text-lg tracking-[-0.01em] ${t.textPrimary}`}>Detailed Insights</h3>
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
               {filteredInsights.length}
             </span>
