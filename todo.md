@@ -7723,3 +7723,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Increase report section-title hierarchy and add restrained opening-card hover depth
 - [x] Remove AI Weakness Read components and their unused report wiring
 - [x] Add regression coverage and verify TypeScript, responsive rendering, and production build
+
+## Matchup Prep Opening and Action Refinement
+- [x] Inspect the two opening cards and Scout opponent action against the updated report/header hierarchy
+- [x] Elevate opening-card prominence and simplify the Scout opponent action treatment
+- [x] Verify focused tests, TypeScript, responsive rendering, and production build

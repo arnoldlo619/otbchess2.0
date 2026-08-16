@@ -85,11 +85,18 @@ function PrepSnapshot({
         <h3 className={`font-bold text-base sm:text-lg tracking-[-0.01em] ${t.textPrimary}`}>Prep Snapshot</h3>
         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>Most played</span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {openings.map((opening) => (
-          <div key={`${opening.color}-${opening.name}`} className={`rounded-xl border px-3 py-3 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg ${isDark ? "bg-[#0d1a0f]/60 border-[#1e2e22]/50 hover:border-[#5B9A6A]/45 hover:shadow-black/20" : "bg-[#f8faf5] border-[#ADBC9F]/40 hover:border-[#436850]/35 hover:shadow-[#436850]/10"}`}>
-            <p className={`text-sm font-semibold ${t.textPrimary}`}>{opening.name}</p>
-            <p className={`mt-0.5 text-[11px] ${t.textTertiary}`}>{opening.color === "white" ? "As White" : "As Black"} · {opening.count} games</p>
+          <div key={`${opening.color}-${opening.name}`} className={`group relative overflow-hidden rounded-2xl border p-4 sm:p-5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-xl ${isDark ? "border-[#2c4c34]/65 bg-[linear-gradient(135deg,rgba(24,47,30,0.92),rgba(10,23,13,0.85))] hover:border-[#78b884]/65 hover:shadow-black/30" : "border-[#436850]/18 bg-[linear-gradient(135deg,#fbfdf8,#f0f6ec)] hover:border-[#436850]/42 hover:shadow-[#436850]/15"}`}>
+            <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 ${opening.color === "white" ? "bg-amber-400/80" : "bg-[#5B9A6A]"}`} />
+            <div className="flex items-start justify-between gap-3 pl-1">
+              <div className="min-w-0">
+                <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDark ? "text-[#9ec9a7]" : "text-[#436850]/70"}`}>{opening.color === "white" ? "White repertoire" : "Black repertoire"}</p>
+                <p className={`mt-1.5 text-base font-bold tracking-[-0.015em] sm:text-lg ${t.textPrimary}`}>{opening.name}</p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold tabular-nums ${isDark ? "bg-[#5B9A6A]/15 text-[#b9e8c0]" : "bg-[#436850]/10 text-[#315640]"}`}>{opening.count} games</span>
+            </div>
+            <p className={`mt-2 pl-1 text-xs ${t.textTertiary}`}>Most played as {opening.color}</p>
           </div>
         ))}
       </div>
