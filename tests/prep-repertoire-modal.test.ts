@@ -18,6 +18,13 @@ describe("Matchup Prep repertoire statistics modal", () => {
     expect(reportTab).toContain('{ label: "Losses", count: selectedOpening.losses');
   });
 
+  it("adds an accessible pie chart for at-a-glance outcome proportions", () => {
+    expect(reportTab).toContain("conic-gradient(");
+    expect(reportTab).toContain('role="img"');
+    expect(reportTab).toContain("Win, draw, and loss pie chart:");
+    expect(reportTab).toContain("Outcome distribution");
+  });
+
   it("builds outcome counts from the scouted player perspective", () => {
     expect(buildReport).toContain("if (game.scoutedScore === 1) current.wins++");
     expect(buildReport).toContain("else if (game.scoutedScore === 0.5) current.draws++");

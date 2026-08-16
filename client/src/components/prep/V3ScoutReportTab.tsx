@@ -83,11 +83,23 @@ function PrepSnapshot({
   const openingTotal = selectedOpening ? selectedOpening.wins + selectedOpening.draws + selectedOpening.losses : 0;
   const openingStats = selectedOpening && openingTotal > 0
     ? [
-      { label: "Wins", count: selectedOpening.wins, tone: "bg-emerald-500", text: "text-emerald-500" },
-      { label: "Draws", count: selectedOpening.draws, tone: "bg-slate-400", text: "text-slate-500" },
-      { label: "Losses", count: selectedOpening.losses, tone: "bg-rose-500", text: "text-rose-500" },
+      { label: "Wins", count: selectedOpening.wins, tone: "bg-emerald-500", text: "text-emerald-500", color: "#10b981" },
+      { label: "Draws", count: selectedOpening.draws, tone: "bg-slate-400", text: "text-slate-500", color: "#94a3b8" },
+      { label: "Losses", count: selectedOpening.losses, tone: "bg-rose-500", text: "text-rose-500", color: "#f43f5e" },
     ]
     : [];
+  const pieChartGradient = openingTotal > 0
+    ? `conic-gradient(${openingStats.reduce<{ stops: string[]; offset: number }>((chart, stat) => {
+      const start = (chart.offset / openingTotal) * 360;
+      chart.offset += stat.count;
+      const end = (chart.offset / openingTotal) * 360;
+      chart.stops.push(`${stat.color} ${start}deg ${end}deg`);
+      return chart;
+    }, { stops: [], offset: 0 }).stops.join(", ")})`
+    : "none";
+  const outcomeSummary = selectedOpening
+    ? `Win, draw, and loss pie chart: ${selectedOpening.wins} wins, ${selectedOpening.draws} draws, ${selectedOpening.losses} losses.`
+    : "";
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
@@ -126,9 +138,26 @@ function PrepSnapshot({
                 <DialogTitle className={`mt-1 text-xl tracking-[-0.02em] ${t.textPrimary}`}>{selectedOpening.name}</DialogTitle>
                 <DialogDescription className={t.textTertiary}>{selectedOpening.count} games in this report</DialogDescription>
               </DialogHeader>
-              <div className={`mt-5 h-2 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#436850]/10"}`} aria-label="Win draw loss distribution">
-                <div className="flex h-full w-full">
-                  {openingStats.map((stat) => <span key={stat.label} className={stat.tone} style={{ width: `${(stat.count / openingTotal) * 100}%` }} />)}
+              <div className={`mt-5 flex items-center gap-4 rounded-2xl border p-3 ${isDark ? "border-white/10 bg-white/[0.025]" : "border-[#436850]/10 bg-[#f7faf4]"}`}>
+                <div
+                  role="img"
+                  aria-label={outcomeSummary}
+                  className={`relative grid size-24 shrink-0 place-items-center rounded-full ${isDark ? "shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_12px_28px_rgba(0,0,0,0.26)]" : "shadow-[0_8px_22px_rgba(67,104,80,0.15)]"}`}
+                  style={{ background: pieChartGradient }}
+                >
+                  <span aria-hidden="true" className={`grid size-14 place-items-center rounded-full text-center ${isDark ? "bg-[#0c1710]" : "bg-white"}`}>
+                    <span className={`text-lg font-bold leading-none tabular-nums ${t.textPrimary}`}>{openingTotal}</span>
+                    <span className={`mt-0.5 text-[8px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>games</span>
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Outcome distribution</p>
+                  <p className={`mt-1 text-xs leading-relaxed ${t.textSecondary}`}>A color-coded view of this opening’s results from your opponent’s perspective.</p>
+                  <div className={`mt-3 h-1.5 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#436850]/10"}`} aria-hidden="true">
+                    <div className="flex h-full w-full">
+                      {openingStats.map((stat) => <span key={stat.label} className={stat.tone} style={{ width: `${(stat.count / openingTotal) * 100}%` }} />)}
+                    </div>
+                  </div>
                 </div>
               </div>
               <dl className="mt-4 grid grid-cols-3 gap-2">

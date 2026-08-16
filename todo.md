@@ -7734,3 +7734,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Make repertoire cards accessible interactive controls with an opening-statistics modal
 - [ ] Add regression coverage and verify TypeScript, responsive behavior, and production build
 - [x] Invalidate existing V3 cache entries so repertoire modals always receive opening win/draw/loss fields
+- [x] Add an accessible visual pie chart to the repertoire win/draw/loss statistics modal
