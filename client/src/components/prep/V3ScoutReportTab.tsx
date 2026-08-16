@@ -4,7 +4,7 @@
  * Structure:
  * 1. Prep Snapshot — top 3 highest-value insights above the fold
  * 2. Opening Forecast — nested move trees with conditional denominators
- * 3. Game Plan — "If You Have White" / "If You Have Black" with resolved insights
+ * 3. Game Plan — concise Black-side guidance with resolved insights
  * 4. All Insights — filterable cards with full detail
  * 5. Prep Checklist — actionable items with progress tracking
  * 6. Evidence & Methodology — collapsed data quality + guard log
@@ -69,56 +69,28 @@ function resolveInsights(ids: string[], allInsights: Insight[]): Insight[] {
 // ── Prep Snapshot ─────────────────────────────────────────────────────────────
 
 function PrepSnapshot({
-  insights,
+  openings,
   isDark,
   t,
 }: {
-  insights: Insight[];
+  openings: ScoutReportV3["topOpenings"];
   isDark: boolean;
   t: Tokens;
 }) {
-  if (insights.length === 0) return null;
-
-  // Pick top 3: prioritize weaknesses, then deviation points, then tendencies
-  const priority: Insight["kind"][] = ["weakness", "deviation_point", "opening_tendency", "response_pattern", "strength", "behavior"];
-  const sorted = [...insights].sort((a, b) => {
-    const ai = priority.indexOf(a.kind);
-    const bi = priority.indexOf(b.kind);
-    if (ai !== bi) return ai - bi;
-    return b.sampleSize - a.sampleSize;
-  });
-  const top3 = sorted.slice(0, 3);
-
-  const kindIcon: Record<string, React.ReactNode> = {
-    weakness: <TrendingDown className="w-3.5 h-3.5 text-red-400" />,
-    strength: <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />,
-    deviation_point: <GitBranch className="w-3.5 h-3.5 text-purple-400" />,
-    opening_tendency: <Crosshair className="w-3.5 h-3.5 text-blue-400" />,
-    response_pattern: <Zap className="w-3.5 h-3.5 text-amber-400" />,
-    behavior: <Activity className="w-3.5 h-3.5 text-orange-400" />,
-  };
+  if (!openings?.length) return null;
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-4">
         <Telescope className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
         <h3 className={`font-bold text-sm ${t.textPrimary}`}>Prep Snapshot</h3>
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>
-          Top findings
-        </span>
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>Most played</span>
       </div>
-      <div className="space-y-3">
-        {top3.map((ins) => (
-          <div
-            key={ins.id}
-            className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50" : "bg-[#f8faf5] border border-[#ADBC9F]/40"}`}
-          >
-            <span className="mt-0.5 shrink-0">{kindIcon[ins.kind] ?? <AlertCircle className="w-3.5 h-3.5" />}</span>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-semibold leading-snug mb-1 ${t.textPrimary}`}>{ins.claim}</p>
-              <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{ins.recommendation.action}</p>
-            </div>
-            <span className={`shrink-0 text-[10px] font-medium ${t.textTertiary}`}>n={ins.sampleSize}</span>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {openings.map((opening) => (
+          <div key={`${opening.color}-${opening.name}`} className={`rounded-xl border px-3 py-3 ${isDark ? "bg-[#0d1a0f]/60 border-[#1e2e22]/50" : "bg-[#f8faf5] border-[#ADBC9F]/40"}`}>
+            <p className={`text-sm font-semibold ${t.textPrimary}`}>{opening.name}</p>
+            <p className={`mt-0.5 text-[11px] ${t.textTertiary}`}>{opening.color === "white" ? "As White" : "As Black"} · {opening.count} games</p>
           </div>
         ))}
       </div>
@@ -344,7 +316,6 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
   }, [allInsights, myColor]);
 
   // Resolve game plan sections
-  const ifWhiteInsights = useMemo(() => resolveInsights(s.ifYouHaveWhite, allInsights), [s.ifYouHaveWhite, allInsights]);
   const ifBlackInsights = useMemo(() => resolveInsights(s.ifYouHaveBlack, allInsights), [s.ifYouHaveBlack, allInsights]);
   const analysisHrefForInsight = (insight: Insight): string | null => {
     if (!reportCacheKey || !insight.recommendation.line?.san) return null;
@@ -379,7 +350,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
     <div className="space-y-4">
 
       {/* Prep Snapshot — top 3 above the fold */}
-      <PrepSnapshot insights={filteredInsights} isDark={isDark} t={t} />
+      <PrepSnapshot openings={report.topOpenings} isDark={isDark} t={t} />
 
       <PopulationContextCard references={report.populationReferences} isDark={isDark} />
 
@@ -398,17 +369,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
         }) : undefined}
       />
 
-      {/* 4. Game Plan — If You Have White / Black */}
-      {myColor !== "black" && ifWhiteInsights.length > 0 && (
-        <GamePlanSection
-          title="If You Have White"
-          icon={<Crosshair className="w-4 h-4" />}
-          insights={ifWhiteInsights}
-          isDark={isDark}
-          t={t}
-          analysisHrefForInsight={analysisHrefForInsight}
-        />
-      )}
+      {/* 4. Game Plan — White-side guidance is already covered by Forecast and insights. */}
       {myColor !== "white" && ifBlackInsights.length > 0 && (
         <GamePlanSection
           title="If You Have Black"

@@ -7706,3 +7706,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Profile Analyzed Games Cleanup
 - [x] Locate and remove the unused My Analyzed Games section and dependent Profile state
 - [x] Verify TypeScript, focused Profile behavior, and production build before checkpointing
+
+## Matchup Prep Snapshot Cleanup
+- [x] Inspect Snapshot opening data and redundant If You Have White content
+- [x] Show only two familiar top opening names in Prep Snapshot
+- [x] Remove the redundant If You Have White report block
+- [x] Add regression coverage and verify TypeScript, report UI, and production build
