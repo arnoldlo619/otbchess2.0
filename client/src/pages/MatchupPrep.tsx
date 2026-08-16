@@ -638,14 +638,14 @@ export default function MatchupPrep() {
       {/* ── Sticky Header ── */}
       <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
         {/* Nav bar row */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-2 sm:pb-3 flex items-center justify-between">
           <NavLogo />
           <div className="flex items-center gap-2">
             <AvatarNavDropdown />
           </div>
         </div>
         {/* Search row */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-2.5 sm:pb-3 flex items-center gap-2 sm:gap-3">
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
             <div className="relative flex-1">
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
@@ -751,7 +751,7 @@ export default function MatchupPrep() {
         </div>
 
           {/* ── Smart Filters Row ── */}
-          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 sm:pb-4 flex items-center gap-2 flex-wrap">
             {/* Provider selector (V3 only) */}
             {useV3 && (
               <>

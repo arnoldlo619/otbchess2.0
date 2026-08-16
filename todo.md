@@ -7712,3 +7712,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show only two familiar top opening names in Prep Snapshot
 - [x] Remove the redundant If You Have White report block
 - [x] Add regression coverage and verify TypeScript, report UI, and production build
+
+## Matchup Prep Header Navigation Spacing
+- [x] Audit the Matchup Prep header controls against established platform header spacing
+- [x] Expand the header navigation container and apply responsive spacing hierarchy
+- [x] Verify responsive layout, TypeScript, focused regression coverage, and production build
