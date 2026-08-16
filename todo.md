@@ -7738,3 +7738,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Completed Tournament Results Routing
 - [x] Route the director’s completed-tournament View Results action directly to the Full Report page
+
+## Instagram Carousel Podium Slide
+- [x] Prevent exported podium-slide player names and usernames from overlapping

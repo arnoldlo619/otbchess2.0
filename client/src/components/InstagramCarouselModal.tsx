@@ -967,6 +967,8 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
           const isFirst = ranks[idx] === 1;
           const blockH = availH * podiumHeightFrac[idx];
           const nameSize = clampFont(isFirst ? (isStory ? 44 * s : 38 * s) : (isStory ? 32 * s : 28 * s), row.player.name, 14);
+          const usernameSize = isFirst ? (isStory ? 30 * s : 24 * s) : (isStory ? 24 * s : 20 * s);
+          const nameBlockHeight = nameSize * 2.08;
 
           return (
             <div
@@ -979,14 +981,14 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds: _totalRounds,
               }}
             >
               {/* Player info above block */}
-              <div style={{ textAlign: "center", marginBottom: 16 * s, padding: `0 ${8 * s}px` }}>
+              <div style={{ width: "100%", minWidth: 0, textAlign: "center", marginBottom: 16 * s, padding: `0 ${8 * s}px` }}>
                 <div style={{ fontSize: isFirst ? (isStory ? 64 * s : 52 * s) : (isStory ? 44 * s : 36 * s), lineHeight: 1, marginBottom: 10 * s }}>
                   {medals[idx]}
                 </div>
-                <div style={{ fontSize: nameSize, fontWeight: 900, color: BRAND.white, lineHeight: 1.1, marginBottom: 8 * s }}>
+                <div style={{ minHeight: nameBlockHeight, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", overflowWrap: "anywhere", fontSize: nameSize, fontWeight: 900, color: BRAND.white, lineHeight: 1.04, marginBottom: 8 * s }}>
                   {row.player.name}
                 </div>
-                <div style={{ fontSize: isFirst ? (isStory ? 30 * s : 24 * s) : (isStory ? 24 * s : 20 * s), color: theme.accentLight, fontWeight: 700, marginBottom: 10 * s }}>
+                <div style={{ minHeight: usernameSize * 1.2, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: usernameSize, color: theme.accentLight, fontWeight: 700, marginBottom: 10 * s }}>
                   @{row.player.username}
                 </div>
                 {/* Score */}
