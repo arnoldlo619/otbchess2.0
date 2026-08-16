@@ -695,9 +695,10 @@ export function createApp() {
         const forceRefresh = req.query.refresh === "true";
         const submittedMyColor: Color = req.query.myColor === "black" ? "black" : "white";
 
-        // Cache key includes schema version so V3 never collides with V2
+        // Cache key includes the public report contract revision so modal statistics
+        // never read legacy top-opening entries without W/D/L fields.
         const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
-        const cacheKey = `v3:${provider}:${normalised}:${tcKey}:g${maxGames}:c${submittedMyColor}`;
+        const cacheKey = `v3.2:${provider}:${normalised}:${tcKey}:g${maxGames}:c${submittedMyColor}`;
 
         if (!forceRefresh) {
           try {

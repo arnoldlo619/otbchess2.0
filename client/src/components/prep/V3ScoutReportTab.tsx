@@ -22,6 +22,7 @@ import { DataQualityBanner } from "./DataQualityBanner";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 import { PopulationContextCard } from "./PopulationContextCard";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Tokens = {
   card: string;
@@ -76,7 +77,17 @@ function PrepSnapshot({
   isDark: boolean;
   t: Tokens;
 }) {
+  const [selectedOpening, setSelectedOpening] = useState<NonNullable<ScoutReportV3["topOpenings"]>[number] | null>(null);
   if (!openings?.length) return null;
+
+  const openingTotal = selectedOpening ? selectedOpening.wins + selectedOpening.draws + selectedOpening.losses : 0;
+  const openingStats = selectedOpening && openingTotal > 0
+    ? [
+      { label: "Wins", count: selectedOpening.wins, tone: "bg-emerald-500", text: "text-emerald-500" },
+      { label: "Draws", count: selectedOpening.draws, tone: "bg-slate-400", text: "text-slate-500" },
+      { label: "Losses", count: selectedOpening.losses, tone: "bg-rose-500", text: "text-rose-500" },
+    ]
+    : [];
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
@@ -87,7 +98,13 @@ function PrepSnapshot({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {openings.map((opening) => (
-          <div key={`${opening.color}-${opening.name}`} className={`group relative overflow-hidden rounded-2xl border p-4 sm:p-5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-xl ${isDark ? "border-[#2c4c34]/65 bg-[linear-gradient(135deg,rgba(24,47,30,0.92),rgba(10,23,13,0.85))] hover:border-[#78b884]/65 hover:shadow-black/30" : "border-[#436850]/18 bg-[linear-gradient(135deg,#fbfdf8,#f0f6ec)] hover:border-[#436850]/42 hover:shadow-[#436850]/15"}`}>
+          <button
+            key={`${opening.color}-${opening.name}`}
+            type="button"
+            onClick={() => setSelectedOpening(opening)}
+            className={`group relative overflow-hidden rounded-2xl border p-4 text-left sm:p-5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] focus-visible:ring-offset-2 ${isDark ? "border-[#2c4c34]/65 bg-[linear-gradient(135deg,rgba(24,47,30,0.92),rgba(10,23,13,0.85))] hover:border-[#78b884]/65 hover:shadow-black/30 focus-visible:ring-offset-[#0d1a0f]" : "border-[#436850]/18 bg-[linear-gradient(135deg,#fbfdf8,#f0f6ec)] hover:border-[#436850]/42 hover:shadow-[#436850]/15 focus-visible:ring-offset-white"}`}
+            aria-label={`View ${opening.name} win, draw, and loss statistics`}
+          >
             <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 ${opening.color === "white" ? "bg-amber-400/80" : "bg-[#5B9A6A]"}`} />
             <div className="flex items-start justify-between gap-3 pl-1">
               <div className="min-w-0">
@@ -97,9 +114,36 @@ function PrepSnapshot({
               <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold tabular-nums ${isDark ? "bg-[#5B9A6A]/15 text-[#b9e8c0]" : "bg-[#436850]/10 text-[#315640]"}`}>{opening.count} games</span>
             </div>
             <p className={`mt-2 pl-1 text-xs ${t.textTertiary}`}>Most played as {opening.color}</p>
-          </div>
+          </button>
         ))}
       </div>
+      <Dialog open={selectedOpening !== null} onOpenChange={(open) => { if (!open) setSelectedOpening(null); }}>
+        <DialogContent className={`max-w-sm border p-0 ${isDark ? "border-[#315640] bg-[#0c1710] text-white" : "border-[#436850]/20 bg-white"}`}>
+          {selectedOpening && (
+            <div className="p-5 sm:p-6">
+              <DialogHeader className="text-left">
+                <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDark ? "text-[#9ec9a7]" : "text-[#436850]/70"}`}>{selectedOpening.color === "white" ? "White repertoire" : "Black repertoire"}</p>
+                <DialogTitle className={`mt-1 text-xl tracking-[-0.02em] ${t.textPrimary}`}>{selectedOpening.name}</DialogTitle>
+                <DialogDescription className={t.textTertiary}>{selectedOpening.count} games in this report</DialogDescription>
+              </DialogHeader>
+              <div className={`mt-5 h-2 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#436850]/10"}`} aria-label="Win draw loss distribution">
+                <div className="flex h-full w-full">
+                  {openingStats.map((stat) => <span key={stat.label} className={stat.tone} style={{ width: `${(stat.count / openingTotal) * 100}%` }} />)}
+                </div>
+              </div>
+              <dl className="mt-4 grid grid-cols-3 gap-2">
+                {openingStats.map((stat) => (
+                  <div key={stat.label} className={`rounded-xl p-3 ${isDark ? "bg-white/[0.045]" : "bg-[#f5f8f2]"}`}>
+                    <dt className={`text-[10px] font-bold uppercase tracking-[0.1em] ${t.textTertiary}`}>{stat.label}</dt>
+                    <dd className={`mt-1 text-lg font-bold tabular-nums ${stat.text}`}>{stat.count}</dd>
+                    <dd className={`text-[11px] ${t.textTertiary}`}>{Math.round((stat.count / openingTotal) * 100)}%</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

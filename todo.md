@@ -7728,3 +7728,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inspect the two opening cards and Scout opponent action against the updated report/header hierarchy
 - [x] Elevate opening-card prominence and simplify the Scout opponent action treatment
 - [x] Verify focused tests, TypeScript, responsive rendering, and production build
+
+## Matchup Prep Repertoire Detail Modal
+- [x] Inspect opening-level win/draw/loss data and existing modal patterns
+- [x] Make repertoire cards accessible interactive controls with an opening-statistics modal
+- [ ] Add regression coverage and verify TypeScript, responsive behavior, and production build
+- [x] Invalidate existing V3 cache entries so repertoire modals always receive opening win/draw/loss fields

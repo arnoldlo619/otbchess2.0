@@ -144,12 +144,15 @@ export function buildReport(
   ];
 
   const forecasts = buildForecasts(parsed);
-  const openingCounts = new Map<string, { name: string; color: Color; count: number; total: number }>();
+  const openingCounts = new Map<string, { name: string; color: Color; count: number; total: number; wins: number; draws: number; losses: number }>();
   for (const game of parsed) {
     const name = toFamiliarOpeningName(game.opening.name);
     const key = `${game.scoutedColor}:${name}`;
-    const current = openingCounts.get(key) ?? { name, color: game.scoutedColor, count: 0, total: 0 };
+    const current = openingCounts.get(key) ?? { name, color: game.scoutedColor, count: 0, total: 0, wins: 0, draws: 0, losses: 0 };
     current.count++;
+    if (game.scoutedScore === 1) current.wins++;
+    else if (game.scoutedScore === 0.5) current.draws++;
+    else current.losses++;
     current.total = parsed.filter(candidate => candidate.scoutedColor === game.scoutedColor).length;
     openingCounts.set(key, current);
   }

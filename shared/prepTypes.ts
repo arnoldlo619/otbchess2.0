@@ -94,7 +94,7 @@ export interface ScoutReportV3 {
   };
   openingForecast: Record<Color, ForecastBranch[]>;
   /** Two most-played familiar opening labels, deliberately stripped of niche variation names. */
-  topOpenings?: { name: string; color: Color; count: number; total: number }[];
+  topOpenings?: { name: string; color: Color; count: number; total: number; wins: number; draws: number; losses: number }[];
   insights: Insight[];
   sections: {
     matchupSummary: string[];
