@@ -7709,3 +7709,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Matchup Prep Analysis Workspace
 - [x] Redesign the Analyze replay workspace around a full-display, board-first chessboard layout
+- [x] Convert Analyze into a full-screen chess workspace with a persistent analysis panel across both tabs

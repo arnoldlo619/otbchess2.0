@@ -370,14 +370,14 @@ export default function PrepAnalysis() {
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0c]" : "bg-[#f5f9f5]"}`}>
       {/* Nav */}
       <header className={`sticky top-0 z-40 border-b ${isDark ? "bg-[#0a1a0c]/95 border-[#1e2e22]" : "bg-white/95 border-[#ADBC9F]/40"} backdrop-blur-sm`}>
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="w-full px-4 sm:px-5 xl:px-6 h-14 flex items-center gap-3">
           <NavLogo />
           <div className="flex-1" />
           <AvatarNavDropdown />
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-5">
+      <main className="w-full px-3 sm:px-5 xl:px-6 py-3 sm:py-4 space-y-3">
         {/* Back + title */}
         <div className="flex items-start gap-3">
           <button
@@ -482,17 +482,17 @@ export default function PrepAnalysis() {
             <div className="space-y-4">
               {/* Lichess game embed */}
               {hasLichessGameEmbed && gameEmbedResult?.ok && gameFallbackResult?.ok && (
-                <div className={t.card + " p-3 sm:p-5"}>
-                  <div className="mb-4">
+                <div className={t.card + " p-3 sm:p-4 min-h-[min(820px,calc(100dvh-13rem))]"}>
+                  <div className="mb-3">
                     <p className={`text-sm font-semibold ${t.textPrimary}`}>Interactive game replay</p>
-                    <p className={`text-xs mt-1 ${t.textTertiary}`}>Full-size Lichess board with move list, result, and attached analysis.</p>
+                    <p className={`text-xs mt-1 ${t.textTertiary}`}>Full-workspace Lichess replay with board, notation, and attached analysis.</p>
                   </div>
                   <LichessEmbed
                     embedUrl={gameEmbedResult.url}
                     title={`Lichess game: ${game?.white ?? "?"} vs ${game?.black ?? "?"}`}
                     fallbackUrl={gameFallbackResult.url}
                     fallbackLabel="Open game on Lichess"
-                    minHeight={680}
+                    minHeight={820}
                     isDark={isDark}
                   />
                 </div>
@@ -500,18 +500,19 @@ export default function PrepAnalysis() {
 
               {/* Native PGN replay (non-Lichess or fallback) */}
               {!hasLichessGameEmbed && hasNativeGame && game && (
-                <div className={t.card + " p-3 sm:p-5"}>
-                  <div className="flex items-start justify-between gap-4 mb-5">
-                    <div>
-                      <p className={`text-sm font-semibold ${t.textPrimary}`}>Interactive game replay</p>
-                      <p className={`text-xs mt-1 ${t.textTertiary}`}>Study the complete game on the board, then step through the notation at your pace.</p>
+                <div className={t.card + " overflow-hidden"}>
+                  <div className={`flex items-center justify-between gap-4 px-4 sm:px-5 py-3 border-b ${isDark ? "border-white/[0.07] bg-white/[0.025]" : "border-[#ADBC9F]/35 bg-[#f0f7f0]/45"}`}>
+                    <div className="min-w-0">
+                      <p className={`text-sm font-semibold ${t.textPrimary}`}>Game replay</p>
+                      <p className={`text-xs mt-0.5 truncate ${t.textTertiary}`}>{game.white} vs {game.black} · {game.opening?.name ?? "Full game"}</p>
                     </div>
                     <span className={`hidden sm:inline-flex shrink-0 items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? "bg-[#7ed957]/10 text-[#8dcc9b]" : "bg-[#436850]/10 text-[#315640]"}`}>
-                      Board replay
+                      Replay workspace
                     </span>
                   </div>
-                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.7fr)] xl:items-start">
-                    <div className="w-full max-w-[740px] mx-auto xl:mx-0">
+                  <div className="grid lg:grid-cols-[minmax(0,1fr)_23rem] 2xl:grid-cols-[minmax(0,1fr)_28rem] lg:min-h-[min(780px,calc(100dvh-12rem))]">
+                    <div className={`flex min-h-0 items-center justify-center p-3 sm:p-5 lg:p-6 ${isDark ? "bg-[#09140b]" : "bg-[#edf5ed]/60"}`}>
+                      <div className="w-full max-w-[min(78dvh,calc(100vw-25rem))] lg:max-w-[min(78dvh,calc(100vw-28rem))] 2xl:max-w-[min(78dvh,calc(100vw-34rem))]">
                       <Chessboard
                         options={{
                           position: currentFen ?? "start",
@@ -525,18 +526,34 @@ export default function PrepAnalysis() {
                         }}
                       />
                     </div>
-                    <div className={`min-w-0 rounded-2xl p-3 sm:p-4 xl:sticky xl:top-20 ${isDark ? "bg-white/[0.035] border border-white/[0.06]" : "bg-[#f0f7f0]/70 border border-[#ADBC9F]/35"}`}>
-                      <div className="flex items-center justify-between gap-3 mb-3">
-                        <p className={`text-xs font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Move navigator</p>
-                        <span className={`text-xs tabular-nums ${t.textTertiary}`}>{sanBreadcrumb.length} plies</span>
-                      </div>
-                      <MoveNav
-                        sanBreadcrumb={sanBreadcrumb}
-                        currentPly={currentPly}
-                        onPly={handlePlyChange}
-                        isDark={isDark}
-                      />
                     </div>
+                    <aside className={`flex min-h-0 flex-col p-3 sm:p-4 lg:p-5 border-t lg:border-t-0 lg:border-l ${isDark ? "bg-[#0d1a0f] border-white/[0.07]" : "bg-white border-[#ADBC9F]/35"}`}>
+                      <div className={`flex items-center justify-between gap-3 pb-3 mb-3 border-b ${isDark ? "border-white/[0.07]" : "border-[#ADBC9F]/30"}`}>
+                        <div>
+                          <p className={`text-sm font-semibold ${t.textPrimary}`}>Replay controls</p>
+                          <p className={`text-xs mt-0.5 ${t.textTertiary}`}>Navigate the complete game</p>
+                        </div>
+                        <span className={`text-xs tabular-nums px-2 py-1 rounded-md ${isDark ? "bg-white/[0.06] text-white/55" : "bg-[#436850]/8 text-[#436850]"}`}>{sanBreadcrumb.length} plies</span>
+                      </div>
+                      <div className="flex-1 min-h-0">
+                        <MoveNav
+                          sanBreadcrumb={sanBreadcrumb}
+                          currentPly={currentPly}
+                          onPly={handlePlyChange}
+                          isDark={isDark}
+                        />
+                      </div>
+                      <div className={`flex items-center justify-between gap-3 pt-3 mt-3 border-t ${isDark ? "border-white/[0.07]" : "border-[#ADBC9F]/30"}`}>
+                        <button
+                          onClick={handleOrientationFlip}
+                          className={`inline-flex min-h-[40px] items-center gap-1.5 px-3 text-xs font-medium rounded-lg transition-colors ${isDark ? "bg-white/[0.07] text-white/70 hover:bg-white/[0.12]" : "bg-[#436850]/10 text-[#315640] hover:bg-[#436850]/15"}`}
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          Flip board
+                        </button>
+                        <span className={`text-[11px] ${t.textTertiary}`}>Move {Math.ceil(currentPly / 2) || 0}</span>
+                      </div>
+                    </aside>
                   </div>
                 </div>
               )}
@@ -593,17 +610,17 @@ export default function PrepAnalysis() {
 
             {/* Lichess analysis embed */}
             {analysisEmbedResult?.ok && analysisFallbackResult?.ok && (
-              <div className={t.card + " p-3 sm:p-5"}>
-                <div className="mb-4">
-                  <p className={`text-sm font-semibold ${t.textPrimary}`}>Deep position analysis</p>
-                  <p className={`text-xs mt-1 ${t.textTertiary}`}>Full-size Lichess board with Stockfish and tablebase tools for the selected position.</p>
+              <div className={t.card + " p-3 sm:p-4 min-h-[min(880px,calc(100dvh-10rem))]"}>
+                <div className="mb-3 px-1">
+                  <p className={`text-sm font-semibold ${t.textPrimary}`}>Position analysis</p>
+                  <p className={`text-xs mt-1 ${t.textTertiary}`}>Full-workspace Lichess analysis with board, engine, opening explorer, and tablebase tools.</p>
                 </div>
                 <LichessEmbed
                   embedUrl={analysisEmbedResult.url}
                   title={`Lichess analysis board for position after ${currentPly === 0 ? "starting position" : sanBreadcrumb[currentPly - 1] ?? "move " + currentPly}`}
                   fallbackUrl={analysisFallbackResult.url}
                   fallbackLabel="Open full analysis on Lichess"
-                  minHeight={720}
+                  minHeight={860}
                   isDark={isDark}
                 />
               </div>
