@@ -370,14 +370,14 @@ export default function PrepAnalysis() {
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0c]" : "bg-[#f5f9f5]"}`}>
       {/* Nav */}
       <header className={`sticky top-0 z-40 border-b ${isDark ? "bg-[#0a1a0c]/95 border-[#1e2e22]" : "bg-white/95 border-[#ADBC9F]/40"} backdrop-blur-sm`}>
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
           <NavLogo />
           <div className="flex-1" />
           <AvatarNavDropdown />
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-5 space-y-4">
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-5">
         {/* Back + title */}
         <div className="flex items-start gap-3">
           <button
@@ -482,16 +482,17 @@ export default function PrepAnalysis() {
             <div className="space-y-4">
               {/* Lichess game embed */}
               {hasLichessGameEmbed && gameEmbedResult?.ok && gameFallbackResult?.ok && (
-                <div className={t.card + " p-4"}>
-                  <p className={`text-xs mb-3 ${t.textTertiary}`}>
-                    Official Lichess game replay — move list, result, and any attached analysis.
-                  </p>
+                <div className={t.card + " p-3 sm:p-5"}>
+                  <div className="mb-4">
+                    <p className={`text-sm font-semibold ${t.textPrimary}`}>Interactive game replay</p>
+                    <p className={`text-xs mt-1 ${t.textTertiary}`}>Full-size Lichess board with move list, result, and attached analysis.</p>
+                  </div>
                   <LichessEmbed
                     embedUrl={gameEmbedResult.url}
                     title={`Lichess game: ${game?.white ?? "?"} vs ${game?.black ?? "?"}`}
                     fallbackUrl={gameFallbackResult.url}
                     fallbackLabel="Open game on Lichess"
-                    minHeight={480}
+                    minHeight={680}
                     isDark={isDark}
                   />
                 </div>
@@ -499,22 +500,36 @@ export default function PrepAnalysis() {
 
               {/* Native PGN replay (non-Lichess or fallback) */}
               {!hasLichessGameEmbed && hasNativeGame && game && (
-                <div className={t.card + " p-4"}>
-                  <p className={`text-xs mb-3 ${t.textTertiary}`}>
-                    Native game replay ({game.provider === "chesscom" ? "chess.com" : "ChessOTB"} game)
-                  </p>
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="shrink-0 w-full max-w-[320px] mx-auto lg:mx-0">
+                <div className={t.card + " p-3 sm:p-5"}>
+                  <div className="flex items-start justify-between gap-4 mb-5">
+                    <div>
+                      <p className={`text-sm font-semibold ${t.textPrimary}`}>Interactive game replay</p>
+                      <p className={`text-xs mt-1 ${t.textTertiary}`}>Study the complete game on the board, then step through the notation at your pace.</p>
+                    </div>
+                    <span className={`hidden sm:inline-flex shrink-0 items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? "bg-[#7ed957]/10 text-[#8dcc9b]" : "bg-[#436850]/10 text-[#315640]"}`}>
+                      Board replay
+                    </span>
+                  </div>
+                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.7fr)] xl:items-start">
+                    <div className="w-full max-w-[740px] mx-auto xl:mx-0">
                       <Chessboard
                         options={{
                           position: currentFen ?? "start",
                           boardOrientation: orientation,
                           allowDragging: false,
-                          boardStyle: { borderRadius: "12px" },
+                          animationDurationInMs: 220,
+                          boardStyle: {
+                            borderRadius: "16px",
+                            boxShadow: isDark ? "0 14px 36px rgba(0, 0, 0, 0.34)" : "0 14px 30px rgba(30, 54, 36, 0.14)",
+                          },
                         }}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className={`min-w-0 rounded-2xl p-3 sm:p-4 xl:sticky xl:top-20 ${isDark ? "bg-white/[0.035] border border-white/[0.06]" : "bg-[#f0f7f0]/70 border border-[#ADBC9F]/35"}`}>
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <p className={`text-xs font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Move navigator</p>
+                        <span className={`text-xs tabular-nums ${t.textTertiary}`}>{sanBreadcrumb.length} plies</span>
+                      </div>
                       <MoveNav
                         sanBreadcrumb={sanBreadcrumb}
                         currentPly={currentPly}
@@ -578,16 +593,17 @@ export default function PrepAnalysis() {
 
             {/* Lichess analysis embed */}
             {analysisEmbedResult?.ok && analysisFallbackResult?.ok && (
-              <div className={t.card + " p-4"}>
-                <p className={`text-xs mb-3 ${t.textTertiary}`}>
-                  Lichess analysis board — Stockfish engine and tablebase provided by Lichess.
-                </p>
+              <div className={t.card + " p-3 sm:p-5"}>
+                <div className="mb-4">
+                  <p className={`text-sm font-semibold ${t.textPrimary}`}>Deep position analysis</p>
+                  <p className={`text-xs mt-1 ${t.textTertiary}`}>Full-size Lichess board with Stockfish and tablebase tools for the selected position.</p>
+                </div>
                 <LichessEmbed
                   embedUrl={analysisEmbedResult.url}
                   title={`Lichess analysis board for position after ${currentPly === 0 ? "starting position" : sanBreadcrumb[currentPly - 1] ?? "move " + currentPly}`}
                   fallbackUrl={analysisFallbackResult.url}
                   fallbackLabel="Open full analysis on Lichess"
-                  minHeight={500}
+                  minHeight={720}
                   isDark={isDark}
                 />
               </div>

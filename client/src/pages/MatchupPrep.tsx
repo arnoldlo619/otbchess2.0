@@ -638,14 +638,14 @@ export default function MatchupPrep() {
       {/* ── Sticky Header ── */}
       <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
         {/* Nav bar row */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-2 sm:pb-3 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
           <NavLogo />
           <div className="flex items-center gap-2">
             <AvatarNavDropdown />
           </div>
         </div>
         {/* Search row */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-2.5 sm:pb-3 flex items-center gap-2 sm:gap-3">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
             <div className="relative flex-1">
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
@@ -662,11 +662,11 @@ export default function MatchupPrep() {
             <button
               type="submit"
               disabled={!searchInput.trim() || loading}
-              className={`group inline-flex min-h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-lg border px-3.5 py-2 text-[13px] font-semibold transition-[background-color,border-color,color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] focus-visible:ring-offset-2 active:scale-[0.98] ${
+              className={`group relative inline-flex min-h-[42px] shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl border px-4 py-2 text-sm font-semibold tracking-[-0.01em] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] focus-visible:ring-offset-2 active:scale-[0.98] ${
                 searchInput.trim() && !loading
                   ? isDark
-                    ? "border-[#78b884]/45 bg-[#436850]/12 text-[#c7f0cd] hover:-translate-y-px hover:border-[#9bd8a7]/70 hover:bg-[#436850]/24"
-                    : "border-[#436850]/35 bg-[#436850]/06 text-[#315640] hover:-translate-y-px hover:border-[#315640]/60 hover:bg-[#436850]/12"
+                    ? "border-[#8dcc9b]/40 bg-[linear-gradient(135deg,#4d8060_0%,#355f45_100%)] text-white shadow-[0_5px_18px_rgba(22,58,33,0.34)] hover:-translate-y-px hover:border-[#b7e3c0]/65 hover:shadow-[0_9px_24px_rgba(22,58,33,0.46)]"
+                    : "border-[#315640] bg-[linear-gradient(135deg,#4e805d_0%,#365f44_100%)] text-white shadow-[0_4px_14px_rgba(43,79,52,0.22)] hover:-translate-y-px hover:border-[#23432f] hover:shadow-[0_8px_20px_rgba(43,79,52,0.3)]"
                   : isDark ? "cursor-not-allowed border-white/5 bg-white/[0.045] text-white/25 shadow-none" : "cursor-not-allowed border-[#ADBC9F]/35 bg-[#ADBC9F]/35 text-[#436850]/50 shadow-none"
               }`}
               aria-label="Scout opponent"
@@ -751,7 +751,7 @@ export default function MatchupPrep() {
         </div>
 
           {/* ── Smart Filters Row ── */}
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 sm:pb-4 flex items-center gap-2 flex-wrap">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
             {/* Provider selector (V3 only) */}
             {useV3 && (
               <>

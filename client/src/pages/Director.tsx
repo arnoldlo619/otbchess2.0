@@ -4737,7 +4737,7 @@ export default function Director() {
                           {/* Primary action row: View Results + Player Reports + Create Recap */}
                           <div className="flex flex-wrap items-center gap-2">
                             <button
-                              onClick={() => window.location.href = `/tournament/${tournamentId}/report`}
+                              onClick={() => window.location.href = `/tournament/${tournamentId}/overview`}
                               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                                 isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#436850] text-white hover:bg-[#2d5235]"
                               }`}>

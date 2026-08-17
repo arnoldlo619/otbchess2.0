@@ -7707,37 +7707,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Locate and remove the unused My Analyzed Games section and dependent Profile state
 - [x] Verify TypeScript, focused Profile behavior, and production build before checkpointing
 
-## Matchup Prep Snapshot Cleanup
-- [x] Inspect Snapshot opening data and redundant If You Have White content
-- [x] Show only two familiar top opening names in Prep Snapshot
-- [x] Remove the redundant If You Have White report block
-- [x] Add regression coverage and verify TypeScript, report UI, and production build
-
-## Matchup Prep Header Navigation Spacing
-- [x] Audit the Matchup Prep header controls against established platform header spacing
-- [x] Expand the header navigation container and apply responsive spacing hierarchy
-- [x] Verify responsive layout, TypeScript, focused regression coverage, and production build
-
-## Matchup Prep Report Readability Cleanup
-- [x] Inspect targeted section headings, opening cards, and AI Weakness Read integration
-- [x] Increase report section-title hierarchy and add restrained opening-card hover depth
-- [x] Remove AI Weakness Read components and their unused report wiring
-- [x] Add regression coverage and verify TypeScript, responsive rendering, and production build
-
-## Matchup Prep Opening and Action Refinement
-- [x] Inspect the two opening cards and Scout opponent action against the updated report/header hierarchy
-- [x] Elevate opening-card prominence and simplify the Scout opponent action treatment
-- [x] Verify focused tests, TypeScript, responsive rendering, and production build
-
-## Matchup Prep Repertoire Detail Modal
-- [x] Inspect opening-level win/draw/loss data and existing modal patterns
-- [x] Make repertoire cards accessible interactive controls with an opening-statistics modal
-- [ ] Add regression coverage and verify TypeScript, responsive behavior, and production build
-- [x] Invalidate existing V3 cache entries so repertoire modals always receive opening win/draw/loss fields
-- [x] Add an accessible visual pie chart to the repertoire win/draw/loss statistics modal
-
-## Completed Tournament Results Routing
-- [x] Route the director’s completed-tournament View Results action directly to the Full Report page
-
-## Instagram Carousel Podium Slide
-- [x] Prevent exported podium-slide player names and usernames from overlapping
+## Matchup Prep Analysis Workspace
+- [x] Redesign the Analyze replay workspace around a full-display, board-first chessboard layout

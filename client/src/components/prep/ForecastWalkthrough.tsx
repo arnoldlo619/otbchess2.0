@@ -14,9 +14,12 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import {
   ChevronLeft, RotateCcw, ChevronDown, ChevronRight,
-  BookOpen, FlipVertical2, AlertCircle,
+  BookOpen, FlipVertical2, AlertCircle, ExternalLink, X,
 } from "lucide-react";
 import type { ForecastBranch } from "../../../../shared/prepTypes";
+import type { Insight } from "../../../../shared/prepTypes";
+import { OpeningForecastWeaknessSummary } from "./OpeningForecastWeaknessSummary";
+import { gamesForSelectedWeakness } from "@/lib/openingWeaknessSummary";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +40,7 @@ interface ForecastWalkthroughProps {
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
+  weaknessInsights?: Insight[];
   analysisHrefForUciPath?: (uciPath: string[]) => string | null;
 }
 
@@ -56,6 +60,52 @@ interface FNode {
   label?: string;
   rawChildren: ForecastBranch[];
   confidence: "high" | "medium" | "low" | "tiny";
+}
+
+function WeaknessGameList({
+  weakness,
+  onClear,
+  isDark,
+  t,
+}: {
+  weakness: Insight;
+  onClear: () => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  return (
+    <section className={`mb-4 rounded-xl border p-3 ${isDark ? "border-[#7cf562]/20 bg-[#0d1a0f]/55" : "border-[#436850]/15 bg-[#f7faf4]"}`} aria-label="Games matching selected weakness">
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-[#8dcc9b]" : "text-[#436850]"}`}>Filtered source games</p>
+          <p className={`mt-0.5 text-xs font-semibold leading-snug ${t.textPrimary}`}>{weakness.claim}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors ${isDark ? "text-white/55 hover:bg-white/8 hover:text-white" : "text-[#436850] hover:bg-[#436850]/8 hover:text-[#12372A]"}`}
+          aria-label="Clear weakness game filter"
+        >
+          <X className="h-3 w-3" /> Clear
+        </button>
+      </div>
+      <ul className="mt-2 divide-y divide-current/10">
+        {weakness.evidence.games.map((game) => (
+          <li key={game.url} className="flex items-center gap-2 py-2 first:pt-0 last:pb-0">
+            <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[9px] font-bold ${
+              game.result === "W" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
+              : game.result === "L" ? "bg-rose-500/15 text-rose-600 dark:text-rose-300"
+              : "bg-slate-500/12 text-slate-500 dark:text-slate-300"
+            }`}>{game.result}</span>
+            <span className={`min-w-0 flex-1 text-[11px] ${t.textSecondary}`}>{new Date(`${game.date}T12:00:00Z`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+            <a href={game.url} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1 text-[10px] font-semibold ${isDark ? "text-[#8dcc9b] hover:text-[#b9ffad]" : "text-[#436850] hover:text-[#12372A]"}`}>
+              Open <ExternalLink className="h-3 w-3" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -677,6 +727,7 @@ export function ForecastWalkthrough({
   isDark,
   t,
   opponentUsername,
+  weaknessInsights = [],
   analysisHrefForUciPath,
 }: ForecastWalkthroughProps) {
   const defaultOpponentColor: "white" | "black" =
@@ -692,6 +743,7 @@ export function ForecastWalkthrough({
   const [selectedNode, setSelectedNode] = useState<FNode | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [flipped, setFlipped] = useState(opponentColor === "black");
+  const [selectedWeaknessId, setSelectedWeaknessId] = useState<string | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Track previous FEN for piece animation
@@ -956,6 +1008,23 @@ export function ForecastWalkthrough({
   const hasColorData = (openingForecast[opponentColor]?.length ?? 0) > 0;
   const opponentPerspective = opponentColor === "white" ? "Opponent plays White" : "Opponent plays Black";
   const yourPerspective = opponentColor === "white" ? "You have Black" : "You have White";
+  const openingWeaknesses = useMemo(
+    () => weaknessInsights.filter((insight) => insight.color === opponentColor),
+    [opponentColor, weaknessInsights],
+  );
+  const selectedWeakness = useMemo(
+    () => openingWeaknesses.find((insight) => insight.id === selectedWeaknessId) ?? null,
+    [openingWeaknesses, selectedWeaknessId],
+  );
+  const filteredWeaknessGames = useMemo(
+    () => gamesForSelectedWeakness(openingWeaknesses, selectedWeaknessId),
+    [openingWeaknesses, selectedWeaknessId],
+  );
+
+  useEffect(() => {
+    if (selectedWeaknessId && !selectedWeakness) setSelectedWeaknessId(null);
+  }, [selectedWeakness, selectedWeaknessId]);
+
   // Current eval score: use selectedNode's score, or null at root
   const evalScore = selectedNode?.score ?? null;
   const analysisHref = useMemo(() => {
@@ -977,7 +1046,7 @@ export function ForecastWalkthrough({
           {(["white", "black"] as const).map((c) => (
             <button
               key={c}
-              onClick={() => { handleColorSwitch(c); }}
+              onClick={() => { handleColorSwitch(c); setSelectedWeaknessId(null); }}
               className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                 opponentColor === c
                   ? "bg-[#436850] text-white"
@@ -1008,6 +1077,25 @@ export function ForecastWalkthrough({
         <span>·</span>
         <span>{yourPerspective}</span>
       </div>
+
+      <OpeningForecastWeaknessSummary
+        opponentUsername={opponentUsername}
+        opponentColor={opponentColor}
+        weaknesses={openingWeaknesses}
+        selectedWeaknessId={selectedWeaknessId}
+        onSelectWeakness={(insightId) => setSelectedWeaknessId((current) => current === insightId ? null : insightId)}
+        isDark={isDark}
+        t={t}
+      />
+
+      {selectedWeakness && filteredWeaknessGames.length > 0 && (
+        <WeaknessGameList
+          weakness={selectedWeakness}
+          onClear={() => setSelectedWeaknessId(null)}
+          isDark={isDark}
+          t={t}
+        />
+      )}
 
       {!hasColorData ? (
         <div className={`flex items-center gap-2 p-4 rounded-xl ${isDark ? "bg-[#1e2e22]/30" : "bg-[#f8faf5]"}`}>

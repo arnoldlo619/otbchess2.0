@@ -22,32 +22,6 @@ export const ENGINE_VERSION = "3.1.0";
 
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
 
-/** Turns granular ECO labels into opening names a casual tournament player will recognise. */
-export function toFamiliarOpeningName(name: string): string {
-  const normalized = name.toLowerCase().replace(/[–—]/g, "-");
-  const known: Array<[RegExp, string]> = [
-    [/jobava.*london|london.*jobava/, "Jobava London"],
-    [/london system/, "London System"],
-    [/scandinavian/, "Scandinavian Defense"],
-    [/sicilian/, "Sicilian Defense"],
-    [/caro[- ]kann/, "Caro-Kann Defense"],
-    [/french defense|french/, "French Defense"],
-    [/king'?s indian/, "King's Indian Defense"],
-    [/queen'?s gambit/, "Queen's Gambit"],
-    [/ruy lopez|spanish/, "Ruy Lopez"],
-    [/italian/, "Italian Game"],
-    [/english/, "English Opening"],
-    [/pirc/, "Pirc Defense"],
-    [/nimzo[- ]indian/, "Nimzo-Indian Defense"],
-    [/grunfeld|grünfeld/, "Grünfeld Defense"],
-    [/slav/, "Slav Defense"],
-    [/benoni/, "Benoni Defense"],
-  ];
-  const match = known.find(([pattern]) => pattern.test(normalized));
-  if (match) return match[1];
-  return name.split(":")[0].replace(/\s+(variation|attack|defense)$/i, "").trim() || "Unclassified Opening";
-}
-
 export function buildReport(
   provider: Provider,
   username: string,
@@ -144,21 +118,6 @@ export function buildReport(
   ];
 
   const forecasts = buildForecasts(parsed);
-  const openingCounts = new Map<string, { name: string; color: Color; count: number; total: number; wins: number; draws: number; losses: number }>();
-  for (const game of parsed) {
-    const name = toFamiliarOpeningName(game.opening.name);
-    const key = `${game.scoutedColor}:${name}`;
-    const current = openingCounts.get(key) ?? { name, color: game.scoutedColor, count: 0, total: 0, wins: 0, draws: 0, losses: 0 };
-    current.count++;
-    if (game.scoutedScore === 1) current.wins++;
-    else if (game.scoutedScore === 0.5) current.draws++;
-    else current.losses++;
-    current.total = parsed.filter(candidate => candidate.scoutedColor === game.scoutedColor).length;
-    openingCounts.set(key, current);
-  }
-  const topOpenings = Array.from(openingCounts.values())
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-    .slice(0, 2);
 
   return {
     version: 3,
@@ -185,7 +144,6 @@ export function buildReport(
       notes,
     },
     openingForecast: forecasts,
-    topOpenings,
     insights: kept,
     sections: {
       matchupSummary: ids([...tendencies, ...responses].filter(headlineOK)),

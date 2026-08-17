@@ -4,7 +4,7 @@
  * Structure:
  * 1. Prep Snapshot — top 3 highest-value insights above the fold
  * 2. Opening Forecast — nested move trees with conditional denominators
- * 3. Game Plan — concise Black-side guidance with resolved insights
+ * 3. Game Plan — "If You Have White" / "If You Have Black" with resolved insights
  * 4. All Insights — filterable cards with full detail
  * 5. Prep Checklist — actionable items with progress tracking
  * 6. Evidence & Methodology — collapsed data quality + guard log
@@ -19,10 +19,10 @@ import {
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
+import { ScoutAISummary } from "./ScoutAISummary";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 import { PopulationContextCard } from "./PopulationContextCard";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Tokens = {
   card: string;
@@ -69,110 +69,59 @@ function resolveInsights(ids: string[], allInsights: Insight[]): Insight[] {
 // ── Prep Snapshot ─────────────────────────────────────────────────────────────
 
 function PrepSnapshot({
-  openings,
+  insights,
   isDark,
   t,
 }: {
-  openings: ScoutReportV3["topOpenings"];
+  insights: Insight[];
   isDark: boolean;
   t: Tokens;
 }) {
-  const [selectedOpening, setSelectedOpening] = useState<NonNullable<ScoutReportV3["topOpenings"]>[number] | null>(null);
-  if (!openings?.length) return null;
+  if (insights.length === 0) return null;
 
-  const openingTotal = selectedOpening ? selectedOpening.wins + selectedOpening.draws + selectedOpening.losses : 0;
-  const openingStats = selectedOpening && openingTotal > 0
-    ? [
-      { label: "Wins", count: selectedOpening.wins, tone: "bg-emerald-500", text: "text-emerald-500", color: "#10b981" },
-      { label: "Draws", count: selectedOpening.draws, tone: "bg-slate-400", text: "text-slate-500", color: "#94a3b8" },
-      { label: "Losses", count: selectedOpening.losses, tone: "bg-rose-500", text: "text-rose-500", color: "#f43f5e" },
-    ]
-    : [];
-  const pieChartGradient = openingTotal > 0
-    ? `conic-gradient(${openingStats.reduce<{ stops: string[]; offset: number }>((chart, stat) => {
-      const start = (chart.offset / openingTotal) * 360;
-      chart.offset += stat.count;
-      const end = (chart.offset / openingTotal) * 360;
-      chart.stops.push(`${stat.color} ${start}deg ${end}deg`);
-      return chart;
-    }, { stops: [], offset: 0 }).stops.join(", ")})`
-    : "none";
-  const outcomeSummary = selectedOpening
-    ? `Win, draw, and loss pie chart: ${selectedOpening.wins} wins, ${selectedOpening.draws} draws, ${selectedOpening.losses} losses.`
-    : "";
+  // Pick top 3: prioritize weaknesses, then deviation points, then tendencies
+  const priority: Insight["kind"][] = ["weakness", "deviation_point", "opening_tendency", "response_pattern", "strength", "behavior"];
+  const sorted = [...insights].sort((a, b) => {
+    const ai = priority.indexOf(a.kind);
+    const bi = priority.indexOf(b.kind);
+    if (ai !== bi) return ai - bi;
+    return b.sampleSize - a.sampleSize;
+  });
+  const top3 = sorted.slice(0, 3);
+
+  const kindIcon: Record<string, React.ReactNode> = {
+    weakness: <TrendingDown className="w-3.5 h-3.5 text-red-400" />,
+    strength: <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />,
+    deviation_point: <GitBranch className="w-3.5 h-3.5 text-purple-400" />,
+    opening_tendency: <Crosshair className="w-3.5 h-3.5 text-blue-400" />,
+    response_pattern: <Zap className="w-3.5 h-3.5 text-amber-400" />,
+    behavior: <Activity className="w-3.5 h-3.5 text-orange-400" />,
+  };
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-4">
         <Telescope className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-bold text-base sm:text-lg tracking-[-0.01em] ${t.textPrimary}`}>Prep Snapshot</h3>
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>Most played</span>
+        <h3 className={`font-bold text-sm ${t.textPrimary}`}>Prep Snapshot</h3>
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>
+          Top findings
+        </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {openings.map((opening) => (
-          <button
-            key={`${opening.color}-${opening.name}`}
-            type="button"
-            onClick={() => setSelectedOpening(opening)}
-            className={`group relative overflow-hidden rounded-2xl border p-4 text-left sm:p-5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] focus-visible:ring-offset-2 ${isDark ? "border-[#2c4c34]/65 bg-[linear-gradient(135deg,rgba(24,47,30,0.92),rgba(10,23,13,0.85))] hover:border-[#78b884]/65 hover:shadow-black/30 focus-visible:ring-offset-[#0d1a0f]" : "border-[#436850]/18 bg-[linear-gradient(135deg,#fbfdf8,#f0f6ec)] hover:border-[#436850]/42 hover:shadow-[#436850]/15 focus-visible:ring-offset-white"}`}
-            aria-label={`View ${opening.name} win, draw, and loss statistics`}
+      <div className="space-y-3">
+        {top3.map((ins) => (
+          <div
+            key={ins.id}
+            className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50" : "bg-[#f8faf5] border border-[#ADBC9F]/40"}`}
           >
-            <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 ${opening.color === "white" ? "bg-amber-400/80" : "bg-[#5B9A6A]"}`} />
-            <div className="flex items-start justify-between gap-3 pl-1">
-              <div className="min-w-0">
-                <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDark ? "text-[#9ec9a7]" : "text-[#436850]/70"}`}>{opening.color === "white" ? "White repertoire" : "Black repertoire"}</p>
-                <p className={`mt-1.5 text-base font-bold tracking-[-0.015em] sm:text-lg ${t.textPrimary}`}>{opening.name}</p>
-              </div>
-              <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold tabular-nums ${isDark ? "bg-[#5B9A6A]/15 text-[#b9e8c0]" : "bg-[#436850]/10 text-[#315640]"}`}>{opening.count} games</span>
+            <span className="mt-0.5 shrink-0">{kindIcon[ins.kind] ?? <AlertCircle className="w-3.5 h-3.5" />}</span>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold leading-snug mb-1 ${t.textPrimary}`}>{ins.claim}</p>
+              <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{ins.recommendation.action}</p>
             </div>
-            <p className={`mt-2 pl-1 text-xs ${t.textTertiary}`}>Most played as {opening.color}</p>
-          </button>
+            <span className={`shrink-0 text-[10px] font-medium ${t.textTertiary}`}>n={ins.sampleSize}</span>
+          </div>
         ))}
       </div>
-      <Dialog open={selectedOpening !== null} onOpenChange={(open) => { if (!open) setSelectedOpening(null); }}>
-        <DialogContent className={`max-w-sm border p-0 ${isDark ? "border-[#315640] bg-[#0c1710] text-white" : "border-[#436850]/20 bg-white"}`}>
-          {selectedOpening && (
-            <div className="p-5 sm:p-6">
-              <DialogHeader className="text-left">
-                <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDark ? "text-[#9ec9a7]" : "text-[#436850]/70"}`}>{selectedOpening.color === "white" ? "White repertoire" : "Black repertoire"}</p>
-                <DialogTitle className={`mt-1 text-xl tracking-[-0.02em] ${t.textPrimary}`}>{selectedOpening.name}</DialogTitle>
-                <DialogDescription className={t.textTertiary}>{selectedOpening.count} games in this report</DialogDescription>
-              </DialogHeader>
-              <div className={`mt-5 flex items-center gap-4 rounded-2xl border p-3 ${isDark ? "border-white/10 bg-white/[0.025]" : "border-[#436850]/10 bg-[#f7faf4]"}`}>
-                <div
-                  role="img"
-                  aria-label={outcomeSummary}
-                  className={`relative grid size-24 shrink-0 place-items-center rounded-full ${isDark ? "shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_12px_28px_rgba(0,0,0,0.26)]" : "shadow-[0_8px_22px_rgba(67,104,80,0.15)]"}`}
-                  style={{ background: pieChartGradient }}
-                >
-                  <span aria-hidden="true" className={`grid size-14 place-items-center rounded-full text-center ${isDark ? "bg-[#0c1710]" : "bg-white"}`}>
-                    <span className={`text-lg font-bold leading-none tabular-nums ${t.textPrimary}`}>{openingTotal}</span>
-                    <span className={`mt-0.5 text-[8px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>games</span>
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Outcome distribution</p>
-                  <p className={`mt-1 text-xs leading-relaxed ${t.textSecondary}`}>A color-coded view of this opening’s results from your opponent’s perspective.</p>
-                  <div className={`mt-3 h-1.5 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#436850]/10"}`} aria-hidden="true">
-                    <div className="flex h-full w-full">
-                      {openingStats.map((stat) => <span key={stat.label} className={stat.tone} style={{ width: `${(stat.count / openingTotal) * 100}%` }} />)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <dl className="mt-4 grid grid-cols-3 gap-2">
-                {openingStats.map((stat) => (
-                  <div key={stat.label} className={`rounded-xl p-3 ${isDark ? "bg-white/[0.045]" : "bg-[#f5f8f2]"}`}>
-                    <dt className={`text-[10px] font-bold uppercase tracking-[0.1em] ${t.textTertiary}`}>{stat.label}</dt>
-                    <dd className={`mt-1 text-lg font-bold tabular-nums ${stat.text}`}>{stat.count}</dd>
-                    <dd className={`text-[11px] ${t.textTertiary}`}>{Math.round((stat.count / openingTotal) * 100)}%</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
@@ -207,7 +156,7 @@ function GamePlanSection({
         aria-expanded={expanded}
       >
         <span className={isDark ? "text-[#5B9A6A]" : "text-[#436850]"}>{icon}</span>
-        <h3 className={`font-semibold text-base sm:text-lg tracking-[-0.01em] flex-1 ${t.textPrimary}`}>{title}</h3>
+        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>{title}</h3>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
           {insights.length}
         </span>
@@ -282,7 +231,7 @@ function PrepChecklist({
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-3">
         <CheckSquare className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-semibold text-base sm:text-lg tracking-[-0.01em] flex-1 ${t.textPrimary}`}>Prep Checklist</h3>
+        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>Prep Checklist</h3>
         <span className={`text-[10px] font-bold ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           {doneCount}/{items.length}
         </span>
@@ -381,6 +330,10 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
 
   // Resolve section IDs to actual insight objects
   const allInsights = report.insights;
+  const weaknessInsights = useMemo(
+    () => resolveInsights(s.weaknesses, allInsights),
+    [s.weaknesses, allInsights],
+  );
 
   // Apply color filter based on myColor (opponent's color is opposite of user's color)
   const filteredInsights = useMemo(() => {
@@ -391,6 +344,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
   }, [allInsights, myColor]);
 
   // Resolve game plan sections
+  const ifWhiteInsights = useMemo(() => resolveInsights(s.ifYouHaveWhite, allInsights), [s.ifYouHaveWhite, allInsights]);
   const ifBlackInsights = useMemo(() => resolveInsights(s.ifYouHaveBlack, allInsights), [s.ifYouHaveBlack, allInsights]);
   const analysisHrefForInsight = (insight: Insight): string | null => {
     if (!reportCacheKey || !insight.recommendation.line?.san) return null;
@@ -425,7 +379,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
     <div className="space-y-4">
 
       {/* Prep Snapshot — top 3 above the fold */}
-      <PrepSnapshot openings={report.topOpenings} isDark={isDark} t={t} />
+      <PrepSnapshot insights={filteredInsights} isDark={isDark} t={t} />
 
       <PopulationContextCard references={report.populationReferences} isDark={isDark} />
 
@@ -436,6 +390,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
         isDark={isDark}
         t={t}
         opponentUsername={report.opponent.username}
+        weaknessInsights={weaknessInsights}
         analysisHrefForUciPath={reportCacheKey ? (canonicalUciPath) => buildPositionAnalysisUrl({
           reportCacheKey,
           canonicalUciPath,
@@ -443,7 +398,17 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
         }) : undefined}
       />
 
-      {/* 4. Game Plan — White-side guidance is already covered by Forecast and insights. */}
+      {/* 4. Game Plan — If You Have White / Black */}
+      {myColor !== "black" && ifWhiteInsights.length > 0 && (
+        <GamePlanSection
+          title="If You Have White"
+          icon={<Crosshair className="w-4 h-4" />}
+          insights={ifWhiteInsights}
+          isDark={isDark}
+          t={t}
+          analysisHrefForInsight={analysisHrefForInsight}
+        />
+      )}
       {myColor !== "white" && ifBlackInsights.length > 0 && (
         <GamePlanSection
           title="If You Have Black"
@@ -459,7 +424,7 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
       {filteredInsights.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <h3 className={`font-semibold text-base sm:text-lg tracking-[-0.01em] ${t.textPrimary}`}>Detailed Insights</h3>
+            <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Detailed Insights</h3>
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
               {filteredInsights.length}
             </span>
