@@ -7716,3 +7716,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Landing Hero CTA Simplification
 - [x] Replace the Chicago Chess Club Highlight pill with a View Live Tournament Demo CTA and remove the redundant demo CTA below the primary actions
+
+## Landing Copy Editorial Cleanup
+- [x] Remove em dashes from all landing-page messaging and preserve natural, human editorial phrasing

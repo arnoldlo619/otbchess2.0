@@ -1,7 +1,7 @@
 /*
- * OTB Chess — Landing Page
- * Design: "The Board Room" — Apple Minimalism + Chess.com Green
- * Dark Mode: Deep Forest Green CTA Aesthetic — green checkered bg, white text
+ * OTB Chess Landing Page
+ * Design: "The Board Room" with Apple Minimalism and Chess.com Green
+ * Dark Mode: Deep Forest Green CTA Aesthetic with green checkered background and white text
  *
  * Sections:
  * 1. Navigation (with light/dark toggle)
@@ -75,7 +75,7 @@ import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
-// (mascot illustrations removed — sections use clean text-only layouts)
+// Mascot illustrations removed; sections use clean text-only layouts.
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
 function useInView(threshold = 0.15) {
@@ -111,7 +111,7 @@ function useCountUp(
 
   useEffect(() => {
     if (!active) return;
-    // Respect prefers-reduced-motion — jump straight to target
+    // Respect prefers-reduced-motion; jump straight to target.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       const fmt = decimals > 0
         ? target.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
@@ -187,16 +187,16 @@ function Nav({
       }`}
     >
       <div className="container flex items-center justify-between h-[72px]">
-        {/* Logo — navigates to landing page */}
+        {/* Logo navigates to landing page */}
         <Link href="/" className="flex items-center gap-1 group cursor-pointer">
           <img
             src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
-            alt="OTB Chess — Home"
+            alt="OTB Chess Home"
             className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
           />
         </Link>
 
-        {/* Desktop Links — canonical order from NAV_REGISTRY */}
+        {/* Desktop Links use canonical order from NAV_REGISTRY */}
         <div className="hidden md:flex items-center gap-1">
           {DESKTOP_NAV_ITEMS.map((item) => {
             const isActive = isNavItemActive(item, currentPath);
@@ -325,7 +325,7 @@ function Nav({
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-[#F2F7F3] border-[#436850]/12"}`}>
-          {/* Host Tournament CTA — top of mobile menu */}
+          {/* Host Tournament CTA at top of mobile menu */}
           <Link
             href={NAV_CTA_PRIMARY.path}
             className={`flex items-center justify-center min-h-[48px] w-full mt-3 mb-2 rounded-xl text-sm font-semibold transition-colors ${
@@ -439,12 +439,12 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               </span>
             </h1>
 
-            {/* SEO H2 — visually styled as a subtitle, semantically an H2 for crawlers */}
+            {/* SEO H2, visually styled as a subtitle and semantically an H2 for crawlers */}
             <h2
               className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
               style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
             >
-              <span className="sm:hidden">Sign up with chess.com username — pairings generated automatically.</span>
+              <span className="sm:hidden">Sign up with chess.com username. Pairings are generated automatically.</span>
               <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
             </h2>
           </div>
@@ -486,7 +486,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           darkScreenshotUrl={DARK_SCREENSHOT}
           lightScreenshotUrl={LIGHT_SCREENSHOT}
           isDark={isDark}
-          alt="OTB!! Open 2026 — live tournament dashboard with Swiss pairings, round timer, and board results"
+          alt="OTB!! Open 2026: live tournament dashboard with Swiss pairings, round timer, and board results"
         />
       </div>
     </section>
@@ -494,7 +494,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 }
 
 /// ─── Stats Bar ───────────────────────────────────────────────────────────────
-// Slot machine scramble hook — randomises digits on hover then settles to the real value
+// Slot machine scramble hook randomises digits on hover then settles to the real value.
 const SCRAMBLE_CHARS = "0123456789";
 function useScramble(value: string, running: boolean) {
   const [scrambled, setScrambled] = useState(value);
@@ -553,7 +553,7 @@ function StatsBar() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  // Floor values shown while loading or on API failure — never show false zeros
+  // Floor values shown while loading or on API failure. Never show false zeros.
   const FLOORS = { tournaments: 300, players: 550, clubs: 80 };
   const [liveCounts, setLiveCounts] = useState<{ tournaments: number; players: number; clubs: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -585,7 +585,7 @@ function StatsBar() {
       ref={ref}
       className="relative overflow-hidden mt-0"
       style={{
-/* Solid green band — hard contrast edges, no top/bottom faders */
+/* Solid green band with hard contrast edges and no top or bottom faders */
         background: "#436850",
       }}
     >
@@ -801,7 +801,7 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Gradient glow ring — soft green halo on hover */}
+      {/* Gradient glow ring with soft green halo on hover */}
       <div
         className="absolute pointer-events-none z-0"
         style={{
@@ -814,14 +814,14 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
           transition: "opacity 350ms ease, box-shadow 350ms ease",
         }}
       />
-      {/* Side buttons — left (positions scale with the container via percentage) */}
+      {/* Left-side buttons position with the container via percentage */}
       <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "21.5%", width: 3, height: "6.15%", background: "#2a2a2a" }} />
       <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "30%", width: 3, height: "9.85%", background: "#2a2a2a" }} />
       <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "42.3%", width: 3, height: "9.85%", background: "#2a2a2a" }} />
-      {/* Side button — right */}
+      {/* Right-side button */}
       <div className="absolute z-20 rounded-r-sm" style={{ right: -3, top: "31.5%", width: 3, height: "13.85%", background: "#2a2a2a" }} />
 
-      {/* Phone outer shell — border only, transparent center */}
+      {/* Phone outer shell, border only with transparent center */}
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
@@ -834,7 +834,7 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
         }}
       />
 
-      {/* Screen area — fills the interior */}
+      {/* Screen area fills the interior */}
       <div
         className="absolute overflow-hidden"
         style={{
@@ -978,7 +978,7 @@ function ParallaxStep({
         ref={sectionRef}
         className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 py-20 lg:py-28"
       >
-        {/* MacBook mockup — left */}
+        {/* MacBook mockup on the left */}
         <motion.div
           className="flex-[1.6] flex justify-center lg:justify-end group cursor-pointer"
           variants={stepMockupVariants}
@@ -990,7 +990,7 @@ function ParallaxStep({
           </div>
         </motion.div>
 
-        {/* Text content — right, staggered children */}
+        {/* Text content on the right with staggered children */}
         <motion.div
           className="flex-1 max-w-md"
           variants={stepContainerVariants}
@@ -1095,7 +1095,7 @@ function ParallaxStep({
         </div>
       </div>
 
-      {/* Text content — staggered children */}
+      {/* Text content with staggered children */}
       <motion.div
         className="flex-1 w-full max-w-md px-2 sm:px-0"
         variants={stepContainerVariants}
@@ -1130,7 +1130,7 @@ function ParallaxStep({
           {description}
         </motion.p>
 
-        {/* Divider accent — grows from left */}
+        {/* Divider accent grows from left */}
         <motion.div
           variants={stepAccentVariants}
           className={`w-12 h-1 rounded-full mb-6 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#436850]"}`}
@@ -1160,7 +1160,7 @@ function HowItWorks() {
       number: "01",
       icon: <Trophy className="w-3 h-3" />,
       title: "Create Your Tournament, Share QR Code",
-      description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code — players scan and register on the spot.",
+      description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code. Players scan and register on the spot.",
       cta: "Host a Tournament",
       ctaHref: "/?action=create",
       imageSrc: "/manus-storage/qr-screen_b1e19e90.webp",
@@ -1172,7 +1172,7 @@ function HowItWorks() {
       number: "02",
       icon: <Users className="w-3 h-3" />,
       title: "Players Sign Up with chess.com ELO",
-      description: "Share a link. Players enter their chess.com username — we automatically pull their verified ELO rating in real time.",
+      description: "Share a link. Players enter their chess.com username, and we automatically pull their verified ELO rating in real time.",
       cta: "Try the Join Flow",
       ctaHref: "/join/OTB2026",
       imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
@@ -1273,7 +1273,7 @@ function EcosystemPathways() {
     {
       icon: <Users className="w-5 h-5" />,
       label: "Clubs",
-      description: "Build your club's home base — members, events, history, and leaderboards.",
+      description: "Build your club's home base for members, events, history, and leaderboards.",
       href: "/clubs",
       cta: "Explore Clubs",
     },
@@ -1287,7 +1287,7 @@ function EcosystemPathways() {
     {
       icon: <Swords className="w-5 h-5" />,
       label: "Match Prep Tools",
-      description: "Openings library, opponent analysis, and matchup prep — all in one place.",
+      description: "Openings library, opponent analysis, and matchup prep in one place.",
       href: "/tools",
       cta: "Open Tools",
     },
@@ -1425,7 +1425,7 @@ function BentoCard({
       aria-label={`${tag}: ${title}`}
     >
 
-      {/* Hover lift — respects reduced motion */}
+      {/* Hover lift respects reduced motion */}
       <div
         className={`absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300 ${
           prefersReducedMotion ? "" : "group-hover:opacity-100 opacity-0"
@@ -1437,7 +1437,7 @@ function BentoCard({
         }}
       />
 
-      {/* Screenshot — shown when provided */}
+      {/* Screenshot shown when provided */}
       {screenshot && (
         <div className="relative overflow-hidden" style={{ aspectRatio: "16/9", flexShrink: 0 }}>
           <img
@@ -1493,7 +1493,7 @@ function BentoCard({
           {description}
         </p>
 
-        {/* Inline card image — fills remaining space when provided */}
+        {/* Inline card image fills remaining space when provided */}
         {cardImage && (
           <div className="relative overflow-hidden rounded-xl mt-2 flex-1" style={{ minHeight: "180px" }}>
             <img
@@ -1554,7 +1554,7 @@ function Features() {
             Everything in one ecosystem.
           </h2>
           <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${isDark ? "text-white/55" : "text-[#436850]"}`}>
-            Tournaments, clubs, leagues, and match prep — one platform, built for OTB chess.
+            Tournaments, clubs, leagues, and match prep. One platform built for OTB chess.
           </p>
         </div>
 
@@ -1564,12 +1564,12 @@ function Features() {
           <BentoCard
             tag="Club League"
             title="Weekly Club League"
-            description="Season-long matchups, live leaderboards, and a playoff bracket. Give your members a reason to show up every week — and crown a champion at the end of the season."
+            description="Season-long matchups, live leaderboards, and a playoff bracket. Give your members a reason to show up every week. Crown a champion at the end of the season."
             cta="View Live Demo"
             href="/league-demo"
             icon={<Trophy className="w-4 h-4" />}
             screenshot="/manus-storage/league-bracket-v2_e04e38ae.png"
-            screenshotAlt="ChessOTB Club League Playoff Bracket — Quarterfinals through Champion"
+            screenshotAlt="ChessOTB Club League Playoff Bracket: Quarterfinals through Champion"
             isDark={isDark}
             inView={inView}
             delay={80}
@@ -1579,7 +1579,7 @@ function Features() {
           <BentoCard
             tag="Clubs & Community"
             title="Club Roster & Events"
-            description="Manage your club roster, post events, run polls, and track every member's OTB ELO history — all in one place."
+            description="Manage your club roster, post events, run polls, and track every member's OTB ELO history in one place."
             cta="Explore Clubs"
             href="/clubs"
             icon={<Shield className="w-4 h-4" />}
@@ -1596,7 +1596,7 @@ function Features() {
           <BentoCard
             tag="Tournament Director"
             title="Intuitive Host Dashboard"
-            description="Run Swiss, Round Robin, or Elimination tournaments from one dashboard. Pairings, timers, results, and standings — all in real time."
+            description="Run Swiss, Round Robin, or Elimination tournaments from one dashboard. Pairings, timers, results, and standings update in real time."
             cta="Host a Tournament"
             href="/?action=create"
             icon={<BarChart3 className="w-4 h-4" />}
@@ -1607,7 +1607,7 @@ function Features() {
           <BentoCard
             tag="Matchup Preparation"
             title="Scout Your Next Opponent"
-            description="AI-powered scouting report: openings, problem lines, and blunder patterns from their chess.com history — before you sit down."
+            description="AI-powered scouting report: openings, problem lines, and blunder patterns from their chess.com history before you sit down."
             cta="Try Scout Report"
             href="/prep"
             icon={<Brain className="w-4 h-4" />}
@@ -1618,7 +1618,7 @@ function Features() {
           <BentoCard
             tag="Openings & Training"
             title="Build Your OTB Repertoire"
-            description="Study 18+ openings with interactive boards, coaching notes, and spaced-repetition drills — built for over-the-board club players."
+            description="Study 18+ openings with interactive boards, coaching notes, and spaced-repetition drills for over-the-board club players."
             cta="Study Openings"
             href="/repertoire"
             icon={<BookOpen className="w-4 h-4" />}
@@ -1628,7 +1628,7 @@ function Features() {
           />
         </div>
 
-        {/* Row 3: Player Performance Reports — full-width horizontal card */}
+        {/* Row 3: Player Performance Reports full-width horizontal card */}
         <div
           className={`group relative rounded-2xl border cursor-pointer grid grid-cols-1 sm:grid-cols-[1fr_48%] transition-all duration-500 ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -1704,13 +1704,13 @@ function Features() {
             </button>
           </div>
 
-          {/* Right: player cards grid image — landscape, fills the column */}
+          {/* Right: player cards grid image in landscape that fills the column */}
           <div className={`relative overflow-hidden sm:border-l ${
             isDark ? "border-white/[0.06]" : "border-[#ADBC9F]/30"
           }`} style={{ minWidth: 0 }}>
             <img
               src="/manus-storage/player-cards-grid_60400ab2.png"
-              alt="Player cards grid — Levy Rozman 1st and Magnus Carlsen 2nd, OTB!! Open 2026"
+              alt="Player cards grid: Levy Rozman 1st and Magnus Carlsen 2nd, OTB!! Open 2026"
               className="block w-full h-full object-cover object-top"
               style={{ minHeight: "200px", maxHeight: "320px" }}
               loading="lazy"
@@ -1731,14 +1731,14 @@ function Features() {
 }
 // ─── Features CTA Banner ─────────────────────────────────────────────────────
 
-// ─── Showcase — Contra Labs-style 2×2 Image-Dominant Feature Grid ───────────
+// Showcase: Contra Labs-style 2×2 Image-Dominant Feature Grid
 
 const SHOWCASE_FEATURES = [
   {
     id: "tournaments",
     tag: "Swiss + Elim Format",
     title: "Run a\nTournament",
-    description: "Swiss pairings, live standings, and elimination brackets — all from one director dashboard.",
+    description: "Swiss pairings, live standings, and elimination brackets from one director dashboard.",
     href: "/?action=create",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
     screenshotAlt: "Swiss Tournament Director Dashboard",
@@ -1747,7 +1747,7 @@ const SHOWCASE_FEATURES = [
     id: "league",
     tag: "Chess Club League",
     title: "Host a\nLeague",
-    description: "Weekly matchups and a season champion — incentivize your members to show up every week.",
+    description: "Weekly matchups and a season champion incentivize your members to show up every week.",
     href: "/league",
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
@@ -1778,7 +1778,7 @@ function Showcase() {
   const isDark = theme === "dark";
   const [, navigate] = useLocation();
 
-  // Section background: muted sage (light) / deep forest (dark) — Contra Labs style
+  // Section background: muted sage in light mode and deep forest in dark mode, Contra Labs style.
   const sectionBg = isDark
     ? "bg-[oklch(0.16_0.05_145)]"
     : "bg-[oklch(0.92_0.03_160)]";
@@ -1796,7 +1796,7 @@ function Showcase() {
     >
       <div className="container max-w-6xl">
 
-        {/* ── Section header — left-aligned, editorial serif ── */}
+        {/* Section header: left-aligned editorial serif */}
         <div className={`mb-8 sm:mb-12 mx-auto max-w-lg text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
           <h2
             className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight mb-3 sm:mb-4 ${
@@ -1811,7 +1811,7 @@ function Showcase() {
           <p className={`text-base leading-relaxed ${
             isDark ? "text-white/60" : "text-[#436850]"
           }`}>
-            Four tools that power your over-the-board chess experience — from hosting tournaments to scouting your next opponent.
+            Four tools power your over-the-board chess experience, from hosting tournaments to scouting your next opponent.
           </p>
         </div>
 
@@ -1841,14 +1841,14 @@ function Showcase() {
               }}
               aria-label={`${feature.tag}: ${feature.title.replace("\n", " ")}`}
             >
-              {/* Screenshot image — fills entire card */}
+              {/* Screenshot image fills entire card */}
               <img
                 src={feature.screenshot}
                 alt={feature.screenshotAlt}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
               />
 
-              {/* Gradient scrim — stronger at bottom for text readability */}
+              {/* Gradient scrim is stronger at bottom for text readability */}
               <div
                 className="absolute inset-0 pointer-events-none transition-opacity duration-300"
                 style={{
@@ -1856,12 +1856,12 @@ function Showcase() {
                 }}
               />
 
-              {/* Hover overlay — subtle green tint */}
+              {/* Hover overlay with subtle green tint */}
               <div className="absolute inset-0 bg-[oklch(0.45_0.14_145)]/0 group-hover:bg-[oklch(0.45_0.14_145)]/10 transition-colors duration-300 pointer-events-none" />
 
               {/* Tag label removed for minimalist look */}
 
-              {/* Title + description — bottom-left overlay */}
+              {/* Title and description in a bottom-left overlay */}
               <div className="absolute bottom-5 left-5 right-14 z-10">
                 <h3
                   className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white leading-tight mb-2"
@@ -1876,7 +1876,7 @@ function Showcase() {
                 )}
               </div>
 
-              {/* Arrow hint — bottom-right, appears on hover */}
+              {/* Arrow hint in the bottom-right, appears on hover */}
               <div className="absolute bottom-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
                 <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <ArrowRight className="w-5 h-5 text-white" />
@@ -1995,7 +1995,7 @@ function PlayerDemo() {
               </div>
             )}
 
-            {/* Profile card — premium redesign */}
+            {/* Profile card with premium redesign */}
             {profile && status === "success" && (
               <div
                 className="animate-fade-in-up overflow-hidden rounded-2xl"
@@ -2062,7 +2062,7 @@ function PlayerDemo() {
                         className="text-3xl font-black leading-none"
                         style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#2d5a35" }}
                       >
-                        {profile.rapid || profile.blitz || profile.bullet || "—"}
+                        {profile.rapid || profile.blitz || profile.bullet || "N/A"}
                       </div>
                       <div className="text-[10px] font-semibold uppercase tracking-widest mt-1" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>
                         Rapid ELO
@@ -2123,7 +2123,7 @@ function PlayerDemo() {
                           >
                             {/* Label row */}
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Form — Last {total} Games</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Form: Last {total} Games</span>
                               <div className="flex items-center gap-3">
                                 <span className="text-[11px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.18 145)" : "#2e7d32" }}>
                                   {profile.analysis.wins}W
@@ -2292,7 +2292,7 @@ function Testimonials() {
 
   const testimonials = [
     { quote: "We ran a 24-player Swiss last Saturday. I shared the QR code, players scanned and registered in under 2 minutes, and Round 1 pairings were ready before everyone had even sat down. Genuinely the smoothest tournament I've ever directed.", author: "Marcus T.", role: "Club President, NYC Chess Society", elo: "1842" },
-    { quote: "The ELO pull from chess.com eliminated every rating dispute we used to have. One player tried to claim a higher rating — I just showed him the screen. Done. No spreadsheets, no arguments, no drama.", author: "Aisha K.", role: "Tournament Director, London Chess Club", elo: "2105" },
+    { quote: "The ELO pull from chess.com eliminated every rating dispute we used to have. One player tried to claim a higher rating. I just showed him the screen. Done. No spreadsheets, no arguments, no drama.", author: "Aisha K.", role: "Tournament Director, London Chess Club", elo: "2105" },
     { quote: "Our club night went from 45 minutes of setup chaos to 8 minutes flat. 32 players, 5 rounds of Swiss, live standings on the projector. People were checking standings between moves. We're not going back to paper.", author: "Rafael M.", role: "Organizer, São Paulo Open Chess", elo: "1654" },
   ];
 
@@ -2422,7 +2422,7 @@ function Footer() {
         className="absolute inset-0 w-full h-full"
         style={{ objectFit: "contain", objectPosition: "center center", opacity: 0.38 }}
       />
-      {/* Dark overlay — lighter in center to reveal trophy, darker at edges to keep text legible */}
+      {/* Dark overlay is lighter in center to reveal trophy and darker at edges to keep text legible */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ background: "radial-gradient(ellipse 70% 90% at 50% 50%, oklch(0.12 0.05 145 / 0.68) 0%, oklch(0.10 0.04 145 / 0.90) 100%)" }}
@@ -2495,12 +2495,12 @@ export default function Home() {
     const target = active ?? myLeagues[0];
     return `/league/${target.id}`;
   })();
-  // Active tab state — synced with AnimeNavBar via IntersectionObserver
+  // Active tab state synced with AnimeNavBar via IntersectionObserver.
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
 
   // SEO
   usePageMeta({
-    title: "ChessOTB.club — The Home for Over-the-Board Chess",
+    title: "ChessOTB.club: The Home for Over-the-Board Chess",
     description: "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and QR check-in. Free for chess clubs.",
     path: "/",
   });
@@ -2556,11 +2556,11 @@ export default function Home() {
       }
     }
 
-    // No live tournament — send to join page
+  // No live tournament, so send to join page.
     return "/join";
   };
 
-  // AnimeNavBar items — Home removed; logo navigates to landing page
+  // AnimeNavBar items; Home removed and logo navigates to landing page.
   const navItems = [
     { name: "Clubs",       url: "/clubs",         icon: Building2,      sectionId: "for-clubs" },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
