@@ -398,7 +398,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const LIGHT_SCREENSHOT = "/manus-storage/Screenshot2026-07-09at6.00.48PM_cf9817c3.png";
 
   return (
-    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-[18vh] sm:pb-0 md:pb-10 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
+    <section className={`relative overflow-hidden pt-20 sm:pt-24 md:pt-16 pb-10 sm:pb-0 md:pb-10 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#F5F8F5]"}`}>
       {/* Chess board texture */}
       <div className={`absolute inset-0 chess-board-bg pointer-events-none ${isDark ? "opacity-40" : "opacity-60"}`} />
 
@@ -413,15 +413,15 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       />
 
       <div className="container relative z-10 h-full">
-        {/* On mobile: use flex column to distribute space so View Live Demo sits at bottom of viewport */}
+        {/* Mobile-first hero content */}
         <div className="hero-mobile-content max-w-3xl mx-auto text-center flex flex-col justify-center gap-8 sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0">
           {/* ── Top group: announcement + heading + subtitle ── */}
           <div className="flex flex-col items-center">
             <div className="opacity-0-init animate-fade-in-up flex justify-center mb-4 sm:mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
               <AnnouncementBanner
-                label="NEW"
-                text="Chicago Chess Club Highlight!"
-                href="/blog/chicago-chess-club-highlight"
+                label="LIVE"
+                text="View Live Tournament Demo!"
+                href="/tournament/otb-demo-2026/manage"
                 isDark={isDark}
               />
             </div>
@@ -449,7 +449,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </h2>
           </div>
 
-          {/* ── Bottom group: CTAs + View live demo ── */}
+          {/* ── Primary tournament actions ── */}
           <div className="flex flex-col items-center gap-0 sm:mt-0">
             <div
               className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center items-center w-full max-w-[320px] sm:max-w-none mx-auto px-0"
@@ -474,27 +474,6 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
                 Join a Tournament
                 <ArrowRight className="w-4 h-4" />
               </SpinBorderButton>
-            </div>
-            <div
-              className="opacity-0-init animate-fade-in-up mt-4 sm:mt-3 pb-2 sm:pb-0 flex flex-col sm:flex-row items-center gap-3"
-              style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
-            >
-              <button
-                type="button"
-                onClick={() => window.location.href = "/tournament/otb-demo-2026/manage"}
-                className={`group flex items-center gap-1.5 text-sm font-bold transition-all duration-200 ${
-                  isDark
-                    ? "text-[#7cf562] hover:text-white"
-                    : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                <span className="relative flex h-2 w-2 flex-shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7cf562] opacity-70" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#7cf562]" />
-                </span>
-                View Live Demo Dashboard
-                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </button>
             </div>
           </div>
 

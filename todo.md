@@ -7713,3 +7713,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Club Background Templates
 - [x] Add a Green Waves animated background template to club settings with persistent selection and reduced-motion fallback
+
+## Landing Hero CTA Simplification
+- [x] Replace the Chicago Chess Club Highlight pill with a View Live Tournament Demo CTA and remove the redundant demo CTA below the primary actions
