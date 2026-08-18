@@ -9,6 +9,7 @@
 import React, { useCallback } from "react";
 import { Check, X, Sparkles } from "lucide-react";
 import Silk from "./Silk";
+import { GreenWaves } from "./GreenWaves";
 import { NeonNebula } from "./ui/neon-nebula";
 
 /** Sentinel value stored in club.backgroundImage to indicate the Silk animated background */
@@ -16,6 +17,9 @@ export const SILK_BG_VALUE = "__silk__";
 
 /** Sentinel value stored in club.backgroundImage to indicate the Neon Nebula animated background */
 export const NEON_NEBULA_BG_VALUE = "__neon_nebula__";
+
+/** Sentinel value stored in club.backgroundImage to indicate the Green Waves animated background */
+export const GREEN_WAVES_BG_VALUE = "__green_waves__";
 
 /** Default Silk settings */
 export const SILK_DEFAULTS = {
@@ -287,6 +291,47 @@ export function ClubBackgroundPicker({
             </div>
           )}
         </button>
+
+        {/* ── Green Waves animated option ───────────────────────────────── */}
+        {(() => {
+          const greenWavesSelected = value === GREEN_WAVES_BG_VALUE;
+          return (
+            <button
+              type="button"
+              onClick={() => onChange(GREEN_WAVES_BG_VALUE)}
+              className={`relative flex-shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                greenWavesSelected
+                  ? "shadow-lg scale-[1.03]"
+                  : "border-white/10 hover:border-white/30"
+              }`}
+              style={{
+                width: 120,
+                height: 72,
+                borderColor: greenWavesSelected ? accent : undefined,
+              }}
+              aria-label="Green Waves animated background"
+              aria-pressed={greenWavesSelected}
+            >
+              <div className="absolute inset-0 pointer-events-none">
+                <GreenWaves className="w-full h-full" />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 py-1 flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-lime-200" />
+                <span className="text-[9px] font-semibold text-white/90 tracking-wide">
+                  Green Waves
+                </span>
+              </div>
+              {greenWavesSelected && (
+                <div
+                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ background: accent }}
+                >
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </div>
+              )}
+            </button>
+          );
+        })()}
 
         {/* ── Neon Nebula animated option ─────────────────────────────── */}
         {(() => {

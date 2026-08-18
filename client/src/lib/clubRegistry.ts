@@ -39,7 +39,7 @@ export interface Club {
   avatarUrl: string | null;
   /** CDN URL for the club banner/cover image */
   bannerUrl: string | null;
-  /** Background image template path, or "__silk__" for the animated Silk WebGL background */
+  /** Background image template path, or an animated template sentinel such as "__silk__" or "__green_waves__" */
   backgroundImage?: string | null;
   /** Silk animation speed (1–15) */
   silkSpeed?: number | null;

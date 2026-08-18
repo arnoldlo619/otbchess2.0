@@ -18,7 +18,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Silk from "../Silk";
-import { SILK_BG_VALUE, SILK_DEFAULTS } from "../ClubBackgroundPicker";
+import { GreenWaves } from "../GreenWaves";
+import { GREEN_WAVES_BG_VALUE, SILK_BG_VALUE, SILK_DEFAULTS } from "../ClubBackgroundPicker";
 import {
   MapPin, Globe, Lock, Users, Trophy, Award, Bell,
   CheckCircle2, Camera, X, Instagram, Sparkles, QrCode,
@@ -101,10 +102,10 @@ export function ClubHero({
   avatarDropdown, isDark, onCreatePromo, onShareQR,
   silkSpeed, silkColor, silkNoise,
 }: ClubHeroProps) {
-  // bannerUrl (custom upload) takes priority; backgroundImage (template) is fallback
-  // SILK_BG_VALUE is a special sentinel — render the Silk WebGL animation instead of an image
+  // bannerUrl (custom upload) takes priority; animated sentinel values render a shader.
   const isSilk = !bannerUrl && backgroundImage === SILK_BG_VALUE;
-  const heroBg = isSilk ? null : (bannerUrl || backgroundImage || null);
+  const isGreenWaves = !bannerUrl && backgroundImage === GREEN_WAVES_BG_VALUE;
+  const heroBg = (isSilk || isGreenWaves) ? null : (bannerUrl || backgroundImage || null);
 
   return (
     <div
@@ -145,6 +146,14 @@ export function ClubHero({
         </div>
       )}
 
+      {/* Green Waves animated WebGL background */}
+      {isGreenWaves && (
+        <div className="absolute inset-0 pointer-events-none">
+          <GreenWaves className="w-full h-full" />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(2,14,6,0.26), transparent 55%, rgba(2,14,6,0.38))" }} />
+        </div>
+      )}
+
       {/* Gradient overlay — multi-stop scrim ensures text readability at all positions */}
       {heroBg && (
         <div
@@ -178,8 +187,8 @@ export function ClubHero({
         />
       )}
 
-      {/* Micro-grid checkered pattern (no background only) — matches landing page hero */}
-      {!heroBg && (
+      {/* Micro-grid checkered pattern (no static background only) — matches landing page hero */}
+      {!heroBg && !isGreenWaves && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -194,7 +203,7 @@ export function ClubHero({
       )}
 
       {/* Radial glow behind avatar area */}
-      {!heroBg && (
+      {!heroBg && !isGreenWaves && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
