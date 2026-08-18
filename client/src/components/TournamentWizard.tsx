@@ -701,6 +701,106 @@ function TextArea({
 
 // ─── Mode Selection Screen ────────────────────────────────────────────────────
 
+type TournamentFormatMode = "quickstart" | "schedule" | "large_event" | "quads";
+
+interface TournamentFormatCardProps {
+  mode: TournamentFormatMode;
+  title: string;
+  description: string;
+  badge: string;
+  number: string;
+  imageSrc: string;
+  imagePosition: string;
+  accent: string;
+  accentSoft: string;
+  icon: typeof Bolt;
+  meta: string;
+  chips: string[];
+  onSelect: (mode: TournamentFormatMode) => void;
+}
+
+function TournamentFormatCard({
+  mode,
+  title,
+  description,
+  badge,
+  number,
+  imageSrc,
+  imagePosition,
+  accent,
+  accentSoft,
+  icon: Icon,
+  meta,
+  chips,
+  onSelect,
+}: TournamentFormatCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(mode)}
+      aria-label={`${title}. ${description}`}
+      className="group relative flex min-h-[220px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
+      style={{
+        background: "#12311d",
+        borderColor: accentSoft,
+        touchAction: "manipulation",
+      }}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 scale-100 bg-cover opacity-60 blur-[1.2px] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.35] contrast-[0.9] group-hover:scale-[1.07] group-hover:opacity-75 group-hover:blur-[0.5px] group-hover:saturate-100 group-hover:contrast-100"
+        style={{ backgroundImage: `url(${imageSrc})`, backgroundPosition: imagePosition }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.72)_0%,rgba(7,29,16,0.90)_44%,rgba(3,17,9,0.98)_100%)] transition-opacity duration-500 group-hover:opacity-90"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        style={{ background: `linear-gradient(120deg, ${accent}55 0%, transparent 46%, ${accent}22 100%)` }}
+      />
+
+      <div className="relative z-10 flex w-full items-center justify-between">
+        <span
+          className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-sm sm:px-3"
+          style={{ background: accent }}
+        >
+          {badge}
+        </span>
+        <span className="font-mono text-xs font-bold tracking-[0.2em] text-white/50">{number}</span>
+      </div>
+
+      <div className="relative z-10 mt-auto w-full">
+        <div
+          className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border text-white transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12 sm:rounded-2xl"
+          style={{ background: `${accent}33`, borderColor: `${accent}88` }}
+        >
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.9} />
+        </div>
+
+        <h3 className="font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          {title}
+        </h3>
+        <p className="mt-2 max-w-[34ch] text-[12px] leading-relaxed text-white/72 sm:text-sm">{description}</p>
+
+        <div className="mt-3 hidden flex-wrap gap-1.5 sm:flex">
+          {chips.map((chip) => (
+            <span key={chip} className="rounded-full bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/80 ring-1 ring-white/10">
+              {chip}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-white/12 pt-3 sm:mt-5">
+          <span className="text-[11px] font-semibold text-white/68 sm:text-xs">{meta}</span>
+          <ArrowRight className="h-4 w-4 text-white/80 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5" />
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function ModeSelect({
   isDark,
   onSelect,
@@ -771,315 +871,68 @@ function ModeSelect({
           <p className="text-white/50 text-base">How would you like to get started?</p>
         </div>
 
-        {/* Mode cards — 2-col grid on mobile, 2-col on desktop */}
-        <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-6 lg:max-w-5xl">
-          {/* Quickstart */}
-          <button
-            type="button"
-            onClick={() => onSelect("quickstart")}
-            aria-label="Quickstart — set up a tournament in under 30 seconds"
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-            style={{
-              padding: "20px 18px 24px",
-              background: "rgba(77,105,64,0.22)",
-              border: "2px solid rgba(77,105,64,0.50)",
-              backdropFilter: "blur(12px)",
-              minHeight: "200px",
-              touchAction: "manipulation",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.38)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#436850";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(77,105,64,0.30), 0 0 0 1px rgba(77,105,64,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(77,105,64,0.22)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(77,105,64,0.50)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            {/* Top row: badge + number */}
-            <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
-              <span
-                className="text-[9px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
-                style={{ background: T.green, color: "#FFFFFF" }}
-              >
-                Recommended
-              </span>
-              <span className="text-white/20 text-xs font-bold font-mono hidden sm:block">01</span>
-            </div>
-
-            {/* Icon */}
-            <div
-              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
-              style={{ background: "rgba(255,255,255,0.12)" }}
-            >
-              <Bolt className="w-5 h-5 sm:w-7 sm:h-7 text-white" strokeWidth={1.8} />
-            </div>
-
-            <div className="flex-1">
-              <h3
-                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Quickstart
-              </h3>
-              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Name &amp; location only. Start playing in under 30 seconds.
-              </p>
-              {/* Metadata chips */}
-              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }}>4–32 players</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }}>Swiss format</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.55)" }}>Auto rounds</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
-                <Clock className="w-3.5 h-3.5" />
-                Setup method · picks format for you
-              </div>
-              <ArrowRight
-                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-                style={{ color: "rgba(255,255,255,0.35)" }}
-              />
-            </div>
-            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.35)" }} />
-          </button>
-
-          {/* Schedule Tournament */}
-          <button
-            type="button"
-            onClick={() => onSelect("schedule")}
-            aria-label="Schedule — full wizard with format, rounds, time control and ratings"
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-            style={{
-              padding: "20px 18px 24px",
-              background: "rgba(255,255,255,0.05)",
-              border: "2px solid rgba(255,255,255,0.10)",
-              backdropFilter: "blur(12px)",
-              minHeight: "200px",
-              touchAction: "manipulation",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            {/* Top row: number */}
-            <div className="hidden sm:flex items-center justify-between w-full mb-5">
-              <span />
-              <span className="text-white/20 text-sm font-bold font-mono">02</span>
-            </div>
-
-            {/* Icon */}
-            <div
-              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
-              style={{ background: "rgba(255,255,255,0.08)" }}
-            >
-              <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-white" strokeWidth={1.8} />
-            </div>
-
-            <div className="flex-1">
-              <h3
-                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Schedule
-              </h3>
-              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Swiss, Quads, or Elimination. Full config — format, rounds, time &amp; ratings.
-              </p>
-              {/* Metadata chips */}
-              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>4–100 players</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Swiss · Quads · Elim</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Configurable rounds</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
-                <Clock className="w-3.5 h-3.5" />
-                ~2 minutes · 4 steps
-              </div>
-              <ArrowRight
-                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-                style={{ color: "rgba(255,255,255,0.25)" }}
-              />
-            </div>
-            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.25)" }} />
-          </button>
-
-          {/* Large Event */}
-          <button
-            type="button"
-            onClick={() => onSelect("large_event")}
-            aria-label="Large Event — Swiss qualification rounds into elimination bracket, 30 to 100 players"
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-            style={{
-              padding: "20px 18px 24px",
-              background: "rgba(255,255,255,0.05)",
-              border: "2px solid rgba(255,255,255,0.10)",
-              backdropFilter: "blur(12px)",
-              minHeight: "200px",
-              touchAction: "manipulation",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.22)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.05)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.10)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            {/* Top row: badge + number */}
-            <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
-              <span
-                className="text-[9px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
-                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)" }}
-              >
-                New
-              </span>
-              <span className="text-white/20 text-xs font-bold font-mono hidden sm:block">03</span>
-            </div>
-
-            {/* Icon */}
-            <div
-              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
-              style={{ background: "rgba(255,255,255,0.08)" }}
-            >
-              <img src={OTB_LOGO_URL} alt="OTB" className="w-5 h-5 sm:w-7 sm:h-7 object-contain drop-shadow-sm" />
-            </div>
-
-            <div className="flex-1">
-              <h3
-                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Large Event (Swiss + Elim)
-              </h3>
-              <p className="text-white/50 text-[12px] sm:text-[15px] leading-relaxed">
-                Swiss qualification rounds, then a seeded elimination bracket. Best for open events.
-              </p>
-              {/* Metadata chips */}
-              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>30–100 players</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Swiss + Elimination</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>Seeded bracket</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
-                <Users className="w-3.5 h-3.5" />
-                Up to 100 players · ~5 min setup
-              </div>
-              <ArrowRight
-                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-                style={{ color: "rgba(255,255,255,0.25)" }}
-              />
-            </div>
-            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(255,255,255,0.25)" }} />
-          </button>
-
-          {/* Quads */}
-          <button
-            type="button"
-            onClick={() => onSelect("quads")}
-            aria-label="Quads — 4-player rating-grouped sections, 3-round round robin, no Swiss pairings"
-            className="group relative flex flex-col items-start rounded-[20px] sm:rounded-[28px] border text-left transition-all duration-300 overflow-hidden active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-            style={{
-              padding: "20px 18px 24px",
-              background: "rgba(76,175,80,0.06)",
-              border: "2px solid rgba(76,175,80,0.25)",
-              backdropFilter: "blur(12px)",
-              minHeight: "200px",
-              touchAction: "manipulation",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(76,175,80,0.14)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(76,175,80,0.45)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-4px) scale(1.01)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 20px 60px rgba(76,175,80,0.15), 0 0 0 1px rgba(76,175,80,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(76,175,80,0.06)";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(76,175,80,0.25)";
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0) scale(1)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-            }}
-          >
-            {/* Top row: badge + number */}
-            <div className="flex items-center justify-between w-full mb-3 sm:mb-5">
-              <span
-                className="text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest uppercase"
-                style={{ background: "rgba(76,175,80,0.18)", color: "#4CAF50" }}
-              >
-                Popular
-              </span>
-              <span className="text-[#4CAF50]/20 text-xs font-bold font-mono hidden sm:block">04</span>
-            </div>
-
-            {/* Icon — 2×2 grid representing 4-player sections */}
-            <div
-              className="flex w-11 h-11 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl items-center justify-center mb-3 sm:mb-5"
-              style={{ background: "rgba(76,175,80,0.12)" }}
-            >
-              <Users2 className="w-5 h-5 sm:w-7 sm:h-7" style={{ color: "#4CAF50" }} strokeWidth={1.8} />
-            </div>
-
-            <div className="flex-1">
-              <h3
-                className="text-[16px] sm:text-2xl font-black text-white mb-1 sm:mb-2"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Quads
-              </h3>
-              <p className="text-white/55 text-[12px] sm:text-[15px] leading-relaxed">
-                <span className="hidden sm:inline">Rating-grouped sections of 4. Every player faces each section opponent once. Fair and fast.</span>
-                <span className="sm:hidden">4-player sections, round robin. Grouped by rating.</span>
-              </p>
-              {/* Metadata chips */}
-              <div className="hidden sm:flex flex-wrap gap-1.5 mt-3">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>Multiples of 4 (4, 8, 12…)</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>3 rounds fixed</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(76,175,80,0.12)", color: "rgba(76,175,80,0.80)" }}>No Swiss pairings</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="hidden sm:flex items-center justify-between w-full mt-5 pt-4" style={{ borderTop: "1px solid rgba(76,175,80,0.12)" }}>
-              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(76,175,80,0.65)" }}>
-                <Users2 className="w-3.5 h-3.5" />
-                Grouped by rating · ~1 min setup
-              </div>
-              <ArrowRight
-                className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
-                style={{ color: "rgba(76,175,80,0.50)" }}
-              />
-            </div>
-            <ArrowRight className="sm:hidden w-4 h-4 mt-2" style={{ color: "rgba(76,175,80,0.50)" }} />
-          </button>
+        {/* Format cards: screenshot evidence stays visually quiet until a hover or keyboard focus asks for detail. */}
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6 lg:max-w-5xl">
+          <TournamentFormatCard
+            mode="quickstart"
+            title="Quickstart"
+            description="Name and location only. Start playing in under 30 seconds."
+            badge="Recommended"
+            number="01"
+            imageSrc="/manus-storage/quickstart-setup_ad291b38.webp"
+            imagePosition="65% center"
+            accent="#1DA34A"
+            accentSoft="rgba(65, 211, 111, 0.58)"
+            icon={Bolt}
+            meta="Guided setup, instant defaults"
+            chips={["4–32 players", "Swiss format", "Auto rounds"]}
+            onSelect={onSelect}
+          />
+          <TournamentFormatCard
+            mode="schedule"
+            title="Schedule"
+            description="Build every detail, from formats and rounds to time control and ratings."
+            badge="Full control"
+            number="02"
+            imageSrc="/manus-storage/schedule-live-dashboard_d998f071.webp"
+            imagePosition="center 26%"
+            accent="#38BDF8"
+            accentSoft="rgba(56, 189, 248, 0.48)"
+            icon={Calendar}
+            meta="Four steps, complete configuration"
+            chips={["4–100 players", "Swiss · Quads · Elim", "Custom rounds"]}
+            onSelect={onSelect}
+          />
+          <TournamentFormatCard
+            mode="large_event"
+            title="Large Event"
+            description="Swiss qualification rounds, then a seeded elimination bracket for open events."
+            badge="Tournament scale"
+            number="03"
+            imageSrc="/manus-storage/large-event-bracket_da3b67b9.webp"
+            imagePosition="center"
+            accent="#F5B642"
+            accentSoft="rgba(245, 182, 66, 0.48)"
+            icon={Trophy}
+            meta="Up to 100 players, seeded finish"
+            chips={["30–100 players", "Swiss + elimination", "Seeded bracket"]}
+            onSelect={onSelect}
+          />
+          <TournamentFormatCard
+            mode="quads"
+            title="Quads"
+            description="Rating-grouped sections of four. Every player meets each opponent once."
+            badge="Club favorite"
+            number="04"
+            imageSrc="/manus-storage/quads-pairings_356cb6c0.webp"
+            imagePosition="center 62%"
+            accent="#A3E635"
+            accentSoft="rgba(163, 230, 53, 0.48)"
+            icon={Users2}
+            meta="Fair sections, three rounds fixed"
+            chips={["Multiples of 4", "Round robin", "Rating grouped"]}
+            onSelect={onSelect}
+          />
         </div>
       </div>
     </div>

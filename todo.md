@@ -7719,3 +7719,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Landing Copy Editorial Cleanup
 - [x] Remove em dashes from all landing-page messaging and preserve natural, human editorial phrasing
+
+## Tournament Format Card Redesign
+- [x] Redesign Quickstart, Schedule, Large Event, and Quads selection cards with real format-specific screenshots and accessible animated color transitions
