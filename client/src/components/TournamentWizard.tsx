@@ -879,7 +879,7 @@ function ModeSelect({
             description="Start in under 30 seconds"
             badge="Recommended"
             number="01"
-            imageSrc="/manus-storage/quickstart_58821e1e.png"
+            imageSrc="/manus-storage/quickstart_fabb5e03.png"
             meta="Fastest setup"
             isSelected={selectedMode === "quickstart"}
             onSelect={handleSelect}
@@ -890,7 +890,7 @@ function ModeSelect({
             description="Four-player rating groups"
             badge="Club favorite"
             number="02"
-            imageSrc="/manus-storage/quads_b95ab818.png"
+            imageSrc="/manus-storage/quads_e9f0eb03.png"
             meta="Three fixed rounds"
             isSelected={selectedMode === "quads"}
             onSelect={handleSelect}
@@ -901,7 +901,7 @@ function ModeSelect({
             description="Swiss rounds to a seeded finish"
             badge="Tournament scale"
             number="03"
-            imageSrc="/manus-storage/large-event_0c7ade67.png"
+            imageSrc="/manus-storage/large-event_3f6a565e.png"
             meta="Built for 30–100 players"
             isSelected={selectedMode === "large_event"}
             onSelect={handleSelect}
@@ -912,7 +912,7 @@ function ModeSelect({
             description="Configure every detail"
             badge="Full control"
             number="04"
-            imageSrc="/manus-storage/schedule_a2ee4343.png"
+            imageSrc="/manus-storage/schedule_485beed2.png"
             meta="Formats, rounds and timing"
             isSelected={selectedMode === "schedule"}
             onSelect={handleSelect}

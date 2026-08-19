@@ -10,10 +10,10 @@ const formatSelection = wizard.slice(
 
 describe("tournament format card editorial illustration redesign", () => {
   it("uses the four AI-generated editorial illustration assets", () => {
-    expect(wizard).toContain('/manus-storage/quickstart_58821e1e.png');
-    expect(wizard).toContain('/manus-storage/quads_b95ab818.png');
-    expect(wizard).toContain('/manus-storage/large-event_0c7ade67.png');
-    expect(wizard).toContain('/manus-storage/schedule_a2ee4343.png');
+    expect(wizard).toContain('/manus-storage/quickstart_fabb5e03.png');
+    expect(wizard).toContain('/manus-storage/quads_e9f0eb03.png');
+    expect(wizard).toContain('/manus-storage/large-event_3f6a565e.png');
+    expect(wizard).toContain('/manus-storage/schedule_485beed2.png');
   });
 
   it("keeps the four format choices reachable through explicit selection modes", () => {
