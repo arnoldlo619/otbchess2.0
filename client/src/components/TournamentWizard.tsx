@@ -73,6 +73,8 @@ import { authFetch } from "@/lib/apiFetch";
 import { getFormatConfig } from "@/lib/formatRegistry";
 import { apiListMyClubs } from "@/lib/clubsApi";
 import type { Club } from "@/lib/clubRegistry";
+import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
+import { hasValidPaymentLinks, validatePaymentLinks } from "@/lib/paymentLinks";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
@@ -743,6 +745,18 @@ function PaymentQrUpload({
   );
 }
 
+function PaymentLinkValidationNotice({ data, isDark }: { data: WizardData; isDark: boolean }) {
+  const errors = Object.values(validatePaymentLinks(data));
+  if (errors.length === 0) return null;
+
+  return (
+    <div role="alert" className="mt-3 rounded-xl border px-3 py-2.5 text-xs leading-relaxed" style={{ background: isDark ? "rgba(239,68,68,0.10)" : "#FEF2F2", borderColor: isDark ? "rgba(248,113,113,0.35)" : "#FECACA", color: isDark ? "#FCA5A5" : "#B91C1C" }}>
+      <p className="font-bold">Fix payment links before continuing</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-4">{errors.map((error) => <li key={error}>{error}</li>)}</ul>
+    </div>
+  );
+}
+
 function TextArea({
   value,
   onChange,
@@ -1320,6 +1334,11 @@ function QuickstartForm({
           <div className="space-y-2"><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
           <div className="space-y-2"><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
           <div className="space-y-2"><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
+        </div>
+        <PaymentLinkValidationNotice data={data} isDark={isDark} />
+        <div className="mt-4 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(47,132,74,0.15)" }}>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Player registration preview</p>
+          <PlayerPaymentMethods payments={data} preview isDark={isDark} />
         </div>
       </section>
 
@@ -3152,6 +3171,11 @@ function StepDetails({
           <div className="space-y-2"><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
           <div className="space-y-2"><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
         </div>
+        <PaymentLinkValidationNotice data={data} isDark={isDark} />
+        <div className="mt-4 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(47,132,74,0.15)" }}>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Player registration preview</p>
+          <PlayerPaymentMethods payments={data} preview isDark={isDark} />
+        </div>
       </section>
     </div>
   );
@@ -4492,11 +4516,11 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         : true
       : mode === "quickstart"
       ? step === 0
-        ? data.name.trim().length > 0
+        ? data.name.trim().length > 0 && hasValidPaymentLinks(data)
         : true
       // schedule / quads / large_event modes: step-specific validation
       : step === 0
-      ? data.name.trim().length > 0
+      ? data.name.trim().length > 0 && hasValidPaymentLinks(data)
       : step === 1
       // Format step: for Quads, must have rounds=3 (auto-set); for all, time control required
       ? data.timePreset.trim().length > 0

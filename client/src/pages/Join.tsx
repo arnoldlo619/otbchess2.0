@@ -27,6 +27,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { validateEmail, validatePassword, validateDisplayName, scorePassword } from "@/components/AuthModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
 import {resolveTournament, registerTournament, type TournamentConfig} from "@/lib/tournamentRegistry";
@@ -1748,6 +1749,8 @@ export default function JoinPage() {
                       </div>
                     ))}
                   </div>
+
+                  <PlayerPaymentMethods payments={resolvedConfig ?? {}} isDark={isDark} />
                   {/* -- Optional contact fields --------------------------- */}
                   <div className={`h-px ${divider}`} />
                   <div className="space-y-3">
