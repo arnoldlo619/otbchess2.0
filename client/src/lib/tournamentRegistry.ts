@@ -44,6 +44,10 @@ export interface TournamentConfig {
   paymentVenmo?: string | null;
   paymentCashapp?: string | null;
   paymentPaypal?: string | null;
+  /** Optional event-specific QR images for direct payment methods. */
+  paymentVenmoQrUrl?: string | null;
+  paymentCashappQrUrl?: string | null;
+  paymentPaypalQrUrl?: string | null;
 
   // ── Quads-specific fields ──
   /** Rating source used to sort players into quads. Defaults to "best_available". */

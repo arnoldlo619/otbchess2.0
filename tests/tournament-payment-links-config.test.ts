@@ -38,4 +38,36 @@ describe("tournament payment-link configuration", () => {
     expect(registry).toContain("paymentCashapp?: string | null;");
     expect(registry).toContain("paymentPaypal?: string | null;");
   });
+
+  it("includes a separate optional QR image state for each payment method", () => {
+    expect(wizard).toContain("paymentVenmoQrUrl: string;");
+    expect(wizard).toContain("paymentCashappQrUrl: string;");
+    expect(wizard).toContain("paymentPaypalQrUrl: string;");
+    expect(wizard).toContain('paymentVenmoQrUrl: "",');
+    expect(wizard).toContain('paymentCashappQrUrl: "",');
+    expect(wizard).toContain('paymentPaypalQrUrl: "",');
+  });
+
+  it("uses a reusable QR uploader with safe file validation and accessible image controls", () => {
+    expect(wizard).toContain("function PaymentQrUpload");
+    expect(wizard).toContain('accept="image/png,image/jpeg,image/webp"');
+    expect(wizard).toContain("QR image must be 1.5 MB or smaller.");
+    expect(wizard).toContain("payment QR preview");
+    expect(wizard).toContain("Remove ${method} QR image");
+  });
+
+  it("shows method-specific QR upload controls in both post-preview configuration flows", () => {
+    expect(wizard.match(/method="Venmo"/g)).toHaveLength(2);
+    expect(wizard.match(/method="Cash App"/g)).toHaveLength(2);
+    expect(wizard.match(/method="PayPal"/g)).toHaveLength(2);
+  });
+
+  it("persists QR image values with the event-level payment configuration", () => {
+    expect(wizard).toContain("paymentVenmoQrUrl: data.paymentVenmoQrUrl || null");
+    expect(wizard).toContain("paymentCashappQrUrl: data.paymentCashappQrUrl || null");
+    expect(wizard).toContain("paymentPaypalQrUrl: data.paymentPaypalQrUrl || null");
+    expect(registry).toContain("paymentVenmoQrUrl?: string | null;");
+    expect(registry).toContain("paymentCashappQrUrl?: string | null;");
+    expect(registry).toContain("paymentPaypalQrUrl?: string | null;");
+  });
 });

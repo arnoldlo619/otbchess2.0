@@ -7747,3 +7747,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace the four tournament format card illustrations with the newly supplied format-specific artwork
 - [x] Add a host-facing tournament format preview and confirmation step before configuration
 - [x] Add event-level Venmo, Cash App, and PayPal inputs after tournament format preview with club-default prefills
+- [x] Add optional per-method QR image uploads for Venmo, Cash App, and PayPal in tournament configuration

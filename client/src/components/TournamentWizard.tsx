@@ -65,6 +65,8 @@ import {
   Timer,
   Globe,
   DollarSign,
+  ImagePlus,
+  Trash2,
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
@@ -110,6 +112,10 @@ interface WizardData {
   paymentVenmo: string;
   paymentCashapp: string;
   paymentPaypal: string;
+  /** Optional data URLs for event-specific payment QR images. */
+  paymentVenmoQrUrl: string;
+  paymentCashappQrUrl: string;
+  paymentPaypalQrUrl: string;
 }
 
 function todayIso(): string {
@@ -143,6 +149,9 @@ const DEFAULT_DATA: WizardData = {
   paymentVenmo: "",
   paymentCashapp: "",
   paymentPaypal: "",
+  paymentVenmoQrUrl: "",
+  paymentCashappQrUrl: "",
+  paymentPaypalQrUrl: "",
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -663,6 +672,73 @@ function TextInput({
         onFocus={() => setFocused(true)}
         onBlur={() => { setFocused(false); setHovered(false); }}
       />
+    </div>
+  );
+}
+
+function readPaymentQrImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read image"));
+    reader.onerror = () => reject(new Error("Could not read image"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function PaymentQrUpload({
+  method,
+  value,
+  onChange,
+  isDark,
+}: {
+  method: "Venmo" | "Cash App" | "PayPal";
+  value: string;
+  onChange: (value: string) => void;
+  isDark: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      toast.error("Upload a PNG, JPEG, or WebP QR image.");
+      return;
+    }
+    if (file.size > 1.5 * 1024 * 1024) {
+      toast.error("QR image must be 1.5 MB or smaller.");
+      return;
+    }
+    setUploading(true);
+    try {
+      onChange(await readPaymentQrImage(file));
+      toast.success(`${method} QR image added.`);
+    } catch {
+      toast.error("Unable to read that QR image. Please try another file.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const surface = isDark ? "rgba(5,22,12,0.44)" : "rgba(255,255,255,0.56)";
+  const border = isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)";
+
+  return (
+    <div className="rounded-xl border p-2.5" style={{ background: surface, borderColor: border }}>
+      <input ref={inputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void handleFile(event.target.files?.[0])} />
+      {value ? (
+        <div className="flex items-center gap-2">
+          <img src={value} alt={`${method} payment QR preview`} className="h-10 w-10 rounded-lg border bg-white object-contain p-0.5" style={{ borderColor: border }} />
+          <span className="min-w-0 flex-1 truncate text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{method} QR ready</span>
+          <button type="button" onClick={() => inputRef.current?.click()} className="rounded-md p-1.5 transition-colors hover:bg-emerald-500/10" aria-label={`Replace ${method} QR image`}><ImagePlus className="h-3.5 w-3.5" style={{ color: T.green }} /></button>
+          <button type="button" onClick={() => onChange("")} className="rounded-md p-1.5 transition-colors hover:bg-red-500/10" aria-label={`Remove ${method} QR image`}><Trash2 className="h-3.5 w-3.5" style={{ color: isDark ? "#fca5a5" : "#b91c1c" }} /></button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold transition-colors hover:bg-emerald-500/10 disabled:cursor-wait" style={{ color: T.green }}>
+          <ImagePlus className="h-3.5 w-3.5" />
+          {uploading ? "Reading QR…" : `Upload ${method} QR`}
+        </button>
+      )}
     </div>
   );
 }
@@ -1241,9 +1317,9 @@ function QuickstartForm({
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} />
-          <TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} />
-          <TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} />
+          <div className="space-y-2"><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
+          <div className="space-y-2"><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
+          <div className="space-y-2"><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
         </div>
       </section>
 
@@ -3072,9 +3148,9 @@ function StepDetails({
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} />
-          <TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} />
-          <TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} />
+          <div className="space-y-2"><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
+          <div className="space-y-2"><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
+          <div className="space-y-2"><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
         </div>
       </section>
     </div>
@@ -4458,6 +4534,9 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       paymentVenmo: data.paymentVenmo.trim() || null,
       paymentCashapp: data.paymentCashapp.trim() || null,
       paymentPaypal: data.paymentPaypal.trim() || null,
+      paymentVenmoQrUrl: data.paymentVenmoQrUrl || null,
+      paymentCashappQrUrl: data.paymentCashappQrUrl || null,
+      paymentPaypalQrUrl: data.paymentPaypalQrUrl || null,
       ...(data.isBracketParent ? { isBracketParent: true } : {}),
     });
     grantDirectorSession(slug);
