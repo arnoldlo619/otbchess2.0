@@ -3,6 +3,10 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const wizard = readFileSync(resolve(process.cwd(), "client/src/components/TournamentWizard.tsx"), "utf8");
+const formatSelection = wizard.slice(
+  wizard.indexOf("interface TournamentFormatCardProps"),
+  wizard.indexOf("// ─── Quickstart Form"),
+);
 
 describe("tournament format card redesign", () => {
   it("uses authentic managed ChessOTB workflow captures for all four selection cards", () => {
@@ -32,5 +36,16 @@ describe("tournament format card redesign", () => {
     expect(wizard).toContain('group-active:saturate-100');
     expect(wizard).toContain('pb-[calc(2rem+env(safe-area-inset-bottom))]');
     expect(wizard).toContain('text-[22px]');
+  });
+
+  it("uses the Quickstart green treatment consistently without icon tiles", () => {
+    expect(formatSelection).toContain('background: "#1DA34A"');
+    expect(formatSelection).toContain('borderColor: "rgba(65, 211, 111, 0.58)"');
+    expect(formatSelection).not.toContain("accent: string;");
+    expect(formatSelection).not.toContain("icon: typeof Bolt;");
+    expect(formatSelection).not.toContain("icon={Bolt}");
+    expect(formatSelection).not.toContain("icon={Calendar}");
+    expect(formatSelection).not.toContain("icon={Trophy}");
+    expect(formatSelection).not.toContain("icon={Users2}");
   });
 });

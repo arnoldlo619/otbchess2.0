@@ -711,9 +711,6 @@ interface TournamentFormatCardProps {
   number: string;
   imageSrc: string;
   imagePosition: string;
-  accent: string;
-  accentSoft: string;
-  icon: typeof Bolt;
   meta: string;
   chips: string[];
   onSelect: (mode: TournamentFormatMode) => void;
@@ -727,9 +724,6 @@ function TournamentFormatCard({
   number,
   imageSrc,
   imagePosition,
-  accent,
-  accentSoft,
-  icon: Icon,
   meta,
   chips,
   onSelect,
@@ -742,7 +736,7 @@ function TournamentFormatCard({
       className="group relative flex min-h-[244px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
       style={{
         background: "#12311d",
-        borderColor: accentSoft,
+        borderColor: "rgba(65, 211, 111, 0.58)",
         touchAction: "manipulation",
       }}
     >
@@ -758,13 +752,13 @@ function TournamentFormatCard({
       <div
         aria-hidden="true"
         className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100"
-        style={{ background: `linear-gradient(120deg, ${accent}55 0%, transparent 46%, ${accent}22 100%)` }}
+        style={{ background: "linear-gradient(120deg, rgba(29, 163, 74, 0.33) 0%, transparent 46%, rgba(29, 163, 74, 0.13) 100%)" }}
       />
 
       <div className="relative z-10 flex w-full items-center justify-between">
         <span
           className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-sm sm:px-3"
-          style={{ background: accent }}
+          style={{ background: "#1DA34A" }}
         >
           {badge}
         </span>
@@ -772,13 +766,6 @@ function TournamentFormatCard({
       </div>
 
       <div className="relative z-10 mt-auto w-full">
-        <div
-          className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border text-white transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110 sm:mb-4 sm:h-12 sm:w-12 sm:rounded-2xl"
-          style={{ background: `${accent}33`, borderColor: `${accent}88` }}
-        >
-          <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.9} />
-        </div>
-
         <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {title}
         </h3>
@@ -881,9 +868,6 @@ function ModeSelect({
             number="01"
             imageSrc="/manus-storage/quickstart-setup_ad291b38.webp"
             imagePosition="65% center"
-            accent="#1DA34A"
-            accentSoft="rgba(65, 211, 111, 0.58)"
-            icon={Bolt}
             meta="Guided setup, instant defaults"
             chips={["4–32 players", "Swiss format", "Auto rounds"]}
             onSelect={onSelect}
@@ -896,9 +880,6 @@ function ModeSelect({
             number="02"
             imageSrc="/manus-storage/schedule-live-dashboard_d998f071.webp"
             imagePosition="center 26%"
-            accent="#38BDF8"
-            accentSoft="rgba(56, 189, 248, 0.48)"
-            icon={Calendar}
             meta="Four steps, complete configuration"
             chips={["4–100 players", "Swiss · Quads · Elim", "Custom rounds"]}
             onSelect={onSelect}
@@ -911,9 +892,6 @@ function ModeSelect({
             number="03"
             imageSrc="/manus-storage/large-event-bracket_da3b67b9.webp"
             imagePosition="center"
-            accent="#F5B642"
-            accentSoft="rgba(245, 182, 66, 0.48)"
-            icon={Trophy}
             meta="Up to 100 players, seeded finish"
             chips={["30–100 players", "Swiss + elimination", "Seeded bracket"]}
             onSelect={onSelect}
@@ -926,9 +904,6 @@ function ModeSelect({
             number="04"
             imageSrc="/manus-storage/quads-pairings_356cb6c0.webp"
             imagePosition="center 62%"
-            accent="#A3E635"
-            accentSoft="rgba(163, 230, 53, 0.48)"
-            icon={Users2}
             meta="Fair sections, three rounds fixed"
             chips={["Multiples of 4", "Round robin", "Rating grouped"]}
             onSelect={onSelect}
