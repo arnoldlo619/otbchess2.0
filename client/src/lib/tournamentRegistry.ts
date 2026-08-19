@@ -40,6 +40,10 @@ export interface TournamentConfig {
   customSlug?: string | null;
   /** Optional cover image (data URL or remote URL) shown in the tournament hero banner. */
   coverImageUrl?: string | null;
+  /** Optional event-specific direct payment methods selected during tournament setup. */
+  paymentVenmo?: string | null;
+  paymentCashapp?: string | null;
+  paymentPaypal?: string | null;
 
   // ── Quads-specific fields ──
   /** Rating source used to sort players into quads. Defaults to "best_available". */

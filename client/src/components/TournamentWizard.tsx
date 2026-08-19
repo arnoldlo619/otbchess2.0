@@ -64,6 +64,7 @@ import {
   Users2,
   Timer,
   Globe,
+  DollarSign,
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
@@ -105,6 +106,10 @@ interface WizardData {
   coverImageUrl: string;
   /** Whether this tournament will be split into rating brackets post-registration. */
   isBracketParent?: boolean;
+  /** Optional event-specific payment methods. Prefilled from a linked club when available. */
+  paymentVenmo: string;
+  paymentCashapp: string;
+  paymentPaypal: string;
 }
 
 function todayIso(): string {
@@ -135,6 +140,9 @@ const DEFAULT_DATA: WizardData = {
   customSlug: "",
   coverImageUrl: "",
   isBracketParent: false,
+  paymentVenmo: "",
+  paymentCashapp: "",
+  paymentPaypal: "",
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -266,7 +274,13 @@ function ClubLinkDropdown({
   const selected = ownedClubs.find((c) => c.id === data.clubId) ?? null;
 
   const handleSelect = (club: Club | null) => {
-    onChange({ clubId: club?.id ?? null, clubName: club?.name ?? null });
+    onChange({
+      clubId: club?.id ?? null,
+      clubName: club?.name ?? null,
+      paymentVenmo: club?.paymentVenmo ?? "",
+      paymentCashapp: club?.paymentCashapp ?? "",
+      paymentPaypal: club?.paymentPaypal ?? "",
+    });
     setOpen(false);
   };
 
@@ -1207,6 +1221,31 @@ function QuickstartForm({
           loading={loadingClubs}
         />
       )}
+
+      <section
+        className="rounded-2xl border p-4 sm:p-5"
+        style={{
+          background: isDark ? "rgba(71,173,98,0.07)" : "rgba(71,173,98,0.06)",
+          borderColor: isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)",
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: isDark ? "rgba(123,220,145,0.13)" : "rgba(47,132,74,0.11)" }}>
+            <DollarSign className="h-4 w-4" style={{ color: T.green }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>Optional entry payment links</h3>
+            <p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+              Let players pay the host directly. Linking a club prefills its saved methods; these values stay editable for this tournament.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} />
+          <TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} />
+          <TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} />
+        </div>
+      </section>
 
       {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
       <div>
@@ -3013,6 +3052,31 @@ function StepDetails({
           </span>
         </div>
       )}
+
+      <section
+        className="rounded-2xl border p-4 sm:p-5"
+        style={{
+          background: isDark ? "rgba(71,173,98,0.07)" : "rgba(71,173,98,0.06)",
+          borderColor: isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)",
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: isDark ? "rgba(123,220,145,0.13)" : "rgba(47,132,74,0.11)" }}>
+            <DollarSign className="h-4 w-4" style={{ color: T.green }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>Optional entry payment links</h3>
+            <p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+              Let players pay the host directly. Linking a club prefills its saved methods; these values stay editable for this tournament.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} />
+          <TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} />
+          <TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} />
+        </div>
+      </section>
     </div>
   );
 }
@@ -4391,6 +4455,9 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       clubName: data.clubName ?? null,
       customSlug: data.customSlug.trim() || null,
       coverImageUrl: data.coverImageUrl || null,
+      paymentVenmo: data.paymentVenmo.trim() || null,
+      paymentCashapp: data.paymentCashapp.trim() || null,
+      paymentPaypal: data.paymentPaypal.trim() || null,
       ...(data.isBracketParent ? { isBracketParent: true } : {}),
     });
     grantDirectorSession(slug);

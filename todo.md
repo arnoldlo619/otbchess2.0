@@ -7746,3 +7746,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add a motion-safe subtle colored border glow to clearly indicate the selected tournament format card
 - [x] Replace the four tournament format card illustrations with the newly supplied format-specific artwork
 - [x] Add a host-facing tournament format preview and confirmation step before configuration
+- [x] Add event-level Venmo, Cash App, and PayPal inputs after tournament format preview with club-default prefills
