@@ -739,7 +739,7 @@ function TournamentFormatCard({
       type="button"
       onClick={() => onSelect(mode)}
       aria-label={`${title}. ${description}`}
-      className="group relative flex min-h-[220px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
+      className="group relative flex min-h-[244px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
       style={{
         background: "#12311d",
         borderColor: accentSoft,
@@ -748,16 +748,16 @@ function TournamentFormatCard({
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 scale-100 bg-cover opacity-60 blur-[1.2px] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.35] contrast-[0.9] group-hover:scale-[1.07] group-hover:opacity-75 group-hover:blur-[0.5px] group-hover:saturate-100 group-hover:contrast-100"
+        className="absolute inset-0 scale-100 bg-cover opacity-60 blur-[1.2px] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.35] contrast-[0.9] group-hover:scale-[1.07] group-hover:opacity-75 group-hover:blur-[0.5px] group-hover:saturate-100 group-hover:contrast-100 group-active:scale-[1.025] group-active:opacity-75 group-active:blur-[0.5px] group-active:saturate-100"
         style={{ backgroundImage: `url(${imageSrc})`, backgroundPosition: imagePosition }}
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.72)_0%,rgba(7,29,16,0.90)_44%,rgba(3,17,9,0.98)_100%)] transition-opacity duration-500 group-hover:opacity-90"
+        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.72)_0%,rgba(7,29,16,0.90)_44%,rgba(3,17,9,0.98)_100%)] transition-opacity duration-500 group-hover:opacity-90 group-active:opacity-90"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100"
         style={{ background: `linear-gradient(120deg, ${accent}55 0%, transparent 46%, ${accent}22 100%)` }}
       />
 
@@ -779,10 +779,10 @@ function TournamentFormatCard({
           <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.9} />
         </div>
 
-        <h3 className="font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+        <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {title}
         </h3>
-        <p className="mt-2 max-w-[34ch] text-[12px] leading-relaxed text-white/72 sm:text-sm">{description}</p>
+        <p className="mt-2 max-w-[34ch] text-[13px] leading-relaxed text-white/72 sm:text-sm">{description}</p>
 
         <div className="mt-3 hidden flex-wrap gap-1.5 sm:flex">
           {chips.map((chip) => (
@@ -852,7 +852,7 @@ function ModeSelect({
       </button>
 
       {/* Content */}
-      <div className="relative w-full max-w-5xl mx-auto px-6 sm:px-10 pb-12 sm:pb-16 flex flex-col items-center gap-6 sm:gap-8" style={{ paddingTop: "max(4rem, calc(env(safe-area-inset-top) + 3.5rem))" }}>
+      <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:gap-8 sm:px-10 sm:pb-16" style={{ paddingTop: "max(4rem, calc(env(safe-area-inset-top) + 3.5rem))" }}>
         {/* Logo */}
         <img
           src="/manus-storage/otbchesslogo_brilliant_v2_04cf93cb.webp"
@@ -868,7 +868,7 @@ function ModeSelect({
           >
             Create a Tournament
           </h2>
-          <p className="text-white/50 text-base">How would you like to get started?</p>
+          <p className="px-4 text-sm leading-relaxed text-white/55 sm:px-0 sm:text-base">How would you like to get started?</p>
         </div>
 
         {/* Format cards: screenshot evidence stays visually quiet until a hover or keyboard focus asks for detail. */}

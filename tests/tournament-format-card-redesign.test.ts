@@ -25,4 +25,12 @@ describe("tournament format card redesign", () => {
     expect(wizard).toContain('focus-visible:ring-2');
     expect(wizard).not.toContain('framer-motion');
   });
+
+  it("stacks cleanly on small screens with large tap targets and touch-visible image feedback", () => {
+    expect(wizard).toContain('grid-cols-1 gap-3 sm:grid-cols-2');
+    expect(wizard).toContain('min-h-[244px]');
+    expect(wizard).toContain('group-active:saturate-100');
+    expect(wizard).toContain('pb-[calc(2rem+env(safe-area-inset-bottom))]');
+    expect(wizard).toContain('text-[22px]');
+  });
 });
