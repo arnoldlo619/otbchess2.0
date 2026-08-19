@@ -16,10 +16,10 @@
   ],
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/117675823/J6FsDoRMH9x5xbUvpyzxyf",
-    "access_key_id": "ASIAZV3A2ECZDFUAF4ER",
-    "secret_access_key": "KmWdA3jhK8ggGJOYeL/bzd7bKiWuBebrH/Vtur9U",
-    "session_token": "IQoJb3JpZ2luX2VjEGAaCXVzLWVhc3QtMSJHMEUCIAb6WWDCoJ9vTAOltFLD4YyPbUALvENBWqghbi1/lOqXAiEA4Y9az5IAyBvITfqJ/jHD4ODGu+eclXdRULCWKyj8Vlgq5AMIKRAEGgw2NjUzODYwOTg4NjYiDMDqlqAB0perZd8KuirBA9R5VRlsC9MzgnF7w5Lg2992cqCpV+SqRkDWC06qIa8Gd0xQUC2GvCkbFZBCju42H+ylf2wSqxLLcVIQgxQEpvpi6Xru67UGWug9eTZa3QJLdgaw4HHxuuH6FB1IoQCyoBry+ymxwQLXaSdNZUfhLcU5tIBCTHGZkU/j+7EHAVRmpYvpVZmWTWluZWCcR3WjIbOMWcwkHNiBfwL6nEWHr1gBL3sRL05w0EtRcf4XX2bKTLckKDzkMHRjF7kUiZfJsLeVRbgfZ/85UGATTZUX4OBUqqbX/nvZwJFJ2Tsndak5j55XB9pxrzw7ZmT6GCmYS2M2nZz6KFXY5XH+S+7q2gNxkmflZTX0NWaHhsYaTJdQmKVj0mH51SyOdQ55P1C/hKprX2lGkHx0P8vGlZJ0bmDKIBESzc+fU9Jx+c33rpn8fyd2Z/Q9M/uz4q5EbOEoSPrU58St5t65acjLr8zj3Jv5FELcbr6NYi9YNQRY4rPuApojQCIJ9fmNamRO+sWinOgJqsTwef8IPb3zedPVui337aOnHkaMBMh4gl/+YvOsdnbtLCE/du7aXi/bhEHDv6nYRPvhBbjUMymGT3bagKRzMIrPhdQGOp0BZNb5ErKDt4kwb4DHfkdgz4OYM3DwIobGA0+4FLsi4A2Ny/VzySanQ7ErsYrfu1hBQpkVFqhD4BlK2z6PX+yHi+g6VQDvnfdAWi5JBon7sUSQo7LhZEwsqOFvEB0NkQD9kHtLXGX/ajDPQ0sVaTdnUQlAamzFpW2/Yx2PnRC6KvYMKcCNyFRMc1HYO1IwfyIR4XoZj/WeNk9SzRjKWw==",
-    "expiration": "2026-08-16T19:32:26.000Z",
+    "access_key_id": "ASIAZV3A2ECZIF6WGIWM",
+    "secret_access_key": "aP+4SuhXl7MovzAYduy/ttKFPwI9rVBW07uIP8Q+",
+    "session_token": "IQoJb3JpZ2luX2VjEKX//////////wEaCXVzLWVhc3QtMSJIMEYCIQDm/NMLd6RzsL2eyG+nBh/z4Hp9moD9RNgHLJWRET6iuwIhAIHcAvyJUjk7fne7lslC3TUQQZ3VhICJGkCRG6P2wu54KuQDCG4QBBoMNjY1Mzg2MDk4ODY2IgzB8XhRB8I3BHKFATYqwQM3y+bkwAa6Pxx4/2gsK8gtyZCOBlmOVc4t0hiY95IVFy3tCaI1l8QPsfdrk5Vgzpt/4c5OaJt1U9iXlbfvkL+8/rPlXNZbinlLP53u0mx2REHaJdC2qhxTc2j8scVTUoPL5rMBDRCvI+acNutngWc5WebzgkWUmqnCxKONnkE2Y1+0VYirqYypoYbNdh7aZ2saXKscoo0yySpFa5rylTsuMRUX2dLZJioj7TzXzYirvkzy0TtnmbjLcDjwPm4Allu7U0H+3QwQ7rUJAxcZ3rUIghCfgAxbsaEbdo6x4n37CJWfR9CSLcXmuUp0U7QaYqDVBztEz1wdmydLgW9r2Qg0qEr+1+zzlCBwux8vFxscOJTBvi9sDKPzv0Qu30+ReNPvB4PDmzCi5eyLxtBIznH9MjoDZKlmM0C6IulL9GfprNfei74rXq+kJlndzN71FLNk1tJnX9TXFC2jTEzaaCje3I1vOTx3x9650YX0q/ynfjBh5FJuvqR0PkonKnZ1v0okMcbGrdKrpiVuzXYnw7QnhgiwkiYdZXaWADPDVK5pN/SsINsoxo3BaXJIDnqIXeaDtaB8Lua1Zse8NE6yzdbzmTC75ZTUBjqcAQJvQhE9xSjy+cIh3H3B0kU+IzxNRvfVvK4oBPpa8zXxf5XOImkSonkHwzzAMiFGldJ/1jCgfxjiocPMwA/Dl5C20mnBBMAHnasGPCJSlfhhCCaHJJiOC3iae9YbusWmJ5MiiFi3bvi8XtewZhkFdSzeoKoV/8410aQIxh1P9MD9BIAQYimTsW4qNYxDOAiOyvPSml15XHqqKQgHwQ==",
+    "expiration": "2026-08-19T16:36:11.000Z",
     "backend": "GIT_BACKEND_S3"
   },
   "name": "otb-chess",
@@ -42,8 +42,8 @@
     "PLATFORM_SMTP_USER": "info@chessotb.club",
     "STRIPE_PRICE_ANNUAL": "price_1TN3UtJVOxnvgGLcAkUTXKW1",
     "STRIPE_PRICE_MONTHLY": "price_1TN3R9JVOxnvgGLczpxjrchm",
-    "STRIPE_SECRET_KEY": "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",
-    "STRIPE_WEBHOOK_SECRET": "whsec_aXcDqCjtAr0FtZasb3punDve6JO6dZzW",
+    "STRIPE_SECRET_KEY": "sk_test_51U5z8jA7IDhMzgemPBHRb5kSCIJIribDQ5wHKlsh2TnmP78bCqWfprd8x0dl8eSoFWPlViZ5L1255Mf6DPZ6cumf00hOwLlmKI",
+    "STRIPE_WEBHOOK_SECRET": "whsec_afeqvLmWMz9N6o6quB0umZuxZWFp1nfI",
     "VAPID_PRIVATE_KEY": "bUVjaRtQ074Z2N-XDJwZiAGfm9JeJupcHnKknclL_1s",
     "VAPID_PUBLIC_KEY": "BEUf0TSJ3uBrTybWfUjaO79RUqaDUGNH7cYfqiBm5cmEwLSUR2zQMitoyvbDgFsJ9hE_E1AmvdMT4RmConYlLvI",
     "VAPID_SUBJECT": "mailto:hello@otbchess.app",
@@ -55,7 +55,8 @@
     "VITE_ARCHIVE_ADMIN_PASSWORD": "619220!",
     "VITE_FRONTEND_FORGE_API_KEY": "VkuzvtCULrRj9RH49LLRbQ",
     "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
-    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im",
+    "VITE_STRIPE_PUBLISHABLE_KEY": "pk_test_51U5z8jA7IDhMzgemPXOJTRyIkwSQo9LoNfOF9KnXIP4nqx8xwqFccJUQbO7PTml6HGAqHw7NBWhrJrV6QgpiQd4200CEcH0SDb"
   },
   "template_id": "web-db-user",
   "test_command": "pnpm test"

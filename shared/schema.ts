@@ -758,6 +758,12 @@ export const dbClubs = mysqlTable(
     featuredEventId: varchar("featured_event_id", { length: 64 }),
     featuredTournamentId: varchar("featured_tournament_id", { length: 64 }),
     foundedAt: timestamp("founded_at").defaultNow().notNull(),
+    // Owner payment links for tournament/event fee collection
+    paymentVenmo: varchar("payment_venmo", { length: 200 }),
+    paymentCashapp: varchar("payment_cashapp", { length: 200 }),
+    paymentPaypal: varchar("payment_paypal", { length: 200 }),
+    paymentQrUrl: text("payment_qr_url"),
+    paymentNote: varchar("payment_note", { length: 300 }),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
   (table) => ({

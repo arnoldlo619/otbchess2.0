@@ -194,6 +194,8 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  FileText,
+  Info,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -6065,93 +6067,125 @@ export default function ClubDashboard() {
               <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-2">
                   <DollarSign className="w-5 h-5" style={{ color: accent }} />
-                  <h3 className="text-white font-bold text-lg">Tournament Buy-In Payments</h3>
+                  <h3 className="text-white font-bold text-lg">Payment Links</h3>
+                </div>
+                <p className="text-white/50 text-sm -mt-4">Add your personal payment handles so players can easily send tournament entry fees. These links appear on your event and tournament pages.</p>
+
+                {/* Venmo */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">💸</span>
+                    <h4 className="text-white font-semibold text-sm">Venmo</h4>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="@your-venmo-handle or link"
+                    defaultValue={club.paymentVenmo ?? ""}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (club.paymentVenmo ?? "")) {
+                        updateClub(club.id, { paymentVenmo: v || undefined });
+                        setClub((prev) => prev ? { ...prev, paymentVenmo: v || undefined } : prev);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#436850] transition"
+                  />
                 </div>
 
-                {/* Stripe-ready notice */}
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 flex items-start gap-3">
-                  <CreditCard className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-amber-400 font-semibold text-sm">Stripe Payments — Coming Soon</p>
-                    <p className="text-white/50 text-xs mt-1">The payment infrastructure is built and ready. Connect your Stripe account to start collecting tournament buy-ins and automatically distribute prize pools to winners.</p>
-                    <button className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-amber-400 text-xs font-semibold border border-amber-400/20 transition">
-                      <CreditCard className="w-3.5 h-3.5" /> Connect Stripe Account
-                    </button>
+                {/* Cash App */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">💵</span>
+                    <h4 className="text-white font-semibold text-sm">Cash App</h4>
                   </div>
+                  <input
+                    type="text"
+                    placeholder="$your-cashtag or link"
+                    defaultValue={club.paymentCashapp ?? ""}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (club.paymentCashapp ?? "")) {
+                        updateClub(club.id, { paymentCashapp: v || undefined });
+                        setClub((prev) => prev ? { ...prev, paymentCashapp: v || undefined } : prev);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#436850] transition"
+                  />
                 </div>
 
-                {/* Buy-in configuration per event */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Wallet className="w-4 h-4" style={{ color: accent }} />
-                    <h3 className="text-white font-semibold text-sm">Configure Buy-Ins for Upcoming Events</h3>
+                {/* PayPal */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">🅿️</span>
+                    <h4 className="text-white font-semibold text-sm">PayPal</h4>
                   </div>
-                  {upcomingEvents.length === 0 ? (
-                    <p className="text-white/30 text-sm text-center py-4">No upcoming events. Create an event first.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {upcomingEvents.map((ev) => (
-                        <div key={ev.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-3 border-b border-white/5 last:border-0">
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">{ev.title}</p>
-                            <p className="text-xs text-white/40">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                              <DollarSign className="w-3 h-3 text-white/40" />
-                              <input
-                                type="number"
-                                placeholder="0.00"
-                                min="0"
-                                step="0.50"
-                                className="w-16 bg-transparent text-sm text-white outline-none"
-                                disabled
-                              />
-                            </div>
-                            <span className="text-[10px] text-white/25 hidden sm:inline">Stripe required</span>
-                          </div>
-                        </div>
-                      ))}
+                  <input
+                    type="text"
+                    placeholder="paypal.me/yourname or email"
+                    defaultValue={club.paymentPaypal ?? ""}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (club.paymentPaypal ?? "")) {
+                        updateClub(club.id, { paymentPaypal: v || undefined });
+                        setClub((prev) => prev ? { ...prev, paymentPaypal: v || undefined } : prev);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#436850] transition"
+                  />
+                </div>
+
+                {/* QR Code URL */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <QrCode className="w-4.5 h-4.5 text-white/60" />
+                    <h4 className="text-white font-semibold text-sm">Payment QR Code</h4>
+                  </div>
+                  <p className="text-white/40 text-xs">Upload or paste a link to your payment QR code image. Players will see this on your event page.</p>
+                  <input
+                    type="url"
+                    placeholder="https://... (image URL of your QR code)"
+                    defaultValue={club.paymentQrUrl ?? ""}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (club.paymentQrUrl ?? "")) {
+                        updateClub(club.id, { paymentQrUrl: v || undefined });
+                        setClub((prev) => prev ? { ...prev, paymentQrUrl: v || undefined } : prev);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#436850] transition"
+                  />
+                  {club.paymentQrUrl && (
+                    <div className="mt-3 flex justify-center">
+                      <img src={club.paymentQrUrl} alt="Payment QR code preview" className="w-32 h-32 rounded-xl border border-white/10 object-contain bg-white/5" />
                     </div>
                   )}
                 </div>
 
-                {/* Prize pool distribution preview */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Trophy className="w-4 h-4 text-amber-400" />
-                    <h3 className="text-white font-semibold text-sm">Prize Pool Distribution</h3>
-                    <span className="ml-auto text-[10px] text-white/30">Auto-allocated on tournament completion</span>
+                {/* Payment Note */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText className="w-4 h-4 text-white/60" />
+                    <h4 className="text-white font-semibold text-sm">Payment Instructions</h4>
                   </div>
-                  <div className="space-y-3">
-                    {[
-                      { place: "1st Place", pct: 50, color: "text-amber-400" },
-                      { place: "2nd Place", pct: 30, color: "text-[#436850]/70" },
-                      { place: "3rd Place", pct: 20, color: "text-amber-700" },
-                    ].map(({ place, pct, color }) => (
-                      <div key={place} className="flex items-center gap-3">
-                        <span className={`text-sm font-bold w-20 ${color}`}>{place}</span>
-                        <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: accent }} />
-                        </div>
-                        <span className="text-sm font-semibold text-white/60 w-10 text-right">{pct}%</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-white/30 mt-4">Distribution percentages are configurable per tournament once Stripe is connected.</p>
+                  <textarea
+                    placeholder="e.g. Please include your chess.com username in the payment note"
+                    defaultValue={club.paymentNote ?? ""}
+                    rows={3}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (club.paymentNote ?? "")) {
+                        updateClub(club.id, { paymentNote: v || undefined });
+                        setClub((prev) => prev ? { ...prev, paymentNote: v || undefined } : prev);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#436850] transition resize-none"
+                  />
                 </div>
 
-                {/* Transaction history placeholder */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <CheckSquare className="w-4 h-4" style={{ color: accent }} />
-                    <h3 className="text-white font-semibold text-sm">Transaction History</h3>
-                  </div>
-                  <div className="text-center py-8">
-                    <Wallet className="w-10 h-10 text-white/10 mx-auto mb-3" />
-                    <p className="text-white/30 text-sm">No transactions yet.</p>
-                    <p className="text-white/20 text-xs mt-1">Transactions will appear here once Stripe is connected and buy-ins are collected.</p>
-                  </div>
+                {/* Preview hint */}
+                <div className="rounded-2xl border border-white/8 bg-white/3 p-4 flex items-start gap-3">
+                  <Info className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
+                  <p className="text-white/40 text-xs leading-relaxed">Players will see your active payment links on your event and tournament pages. They can tap to open the app or scan your QR code directly.</p>
                 </div>
               </div>
             )}

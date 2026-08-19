@@ -105,6 +105,12 @@ export interface Club {
   whatToExpect?: string;
   featuredEventId?: string;
   featuredTournamentId?: string;
+  // Payment links for tournament/event fee collection
+  paymentVenmo?: string;
+  paymentCashapp?: string;
+  paymentPaypal?: string;
+  paymentQrUrl?: string;
+  paymentNote?: string;
 }
 
 export interface ClubMember {

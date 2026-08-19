@@ -155,6 +155,12 @@ function dbRowToClub(row: typeof dbClubs.$inferSelect) {
     whatToExpect: row.whatToExpect ?? undefined,
     featuredEventId: row.featuredEventId ?? undefined,
     featuredTournamentId: row.featuredTournamentId ?? undefined,
+    // Payment links
+    paymentVenmo: row.paymentVenmo ?? undefined,
+    paymentCashapp: row.paymentCashapp ?? undefined,
+    paymentPaypal: row.paymentPaypal ?? undefined,
+    paymentQrUrl: row.paymentQrUrl ?? undefined,
+    paymentNote: row.paymentNote ?? undefined,
     foundedAt:
       row.foundedAt instanceof Date
         ? row.foundedAt.toISOString()
@@ -720,6 +726,12 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
       "whatToExpect",
       "featuredEventId",
       "featuredTournamentId",
+      // Payment links
+      "paymentVenmo",
+      "paymentCashapp",
+      "paymentPaypal",
+      "paymentQrUrl",
+      "paymentNote",
     ];
     const updates: Record<string, unknown> = {};
     for (const key of allowed) {

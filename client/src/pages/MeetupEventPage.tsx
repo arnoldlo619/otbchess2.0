@@ -25,6 +25,7 @@ import {
   Megaphone,
   Settings2,
   CalendarPlus,
+  DollarSign,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { NavLogo } from "@/components/NavLogo";
@@ -748,7 +749,81 @@ export default function MeetupEventPage() {
                           <p className="text-white/40 text-xs mt-0.5">Build a form &amp; get a shareable link for attendees</p>
                         </div>
                         <svg className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                      </a>
+                    </a>
+                    )}
+
+                    {/* ── Payment Links — shown when club has at least one payment method configured ── */}
+                    {club && (club.paymentVenmo || club.paymentCashapp || club.paymentPaypal || club.paymentQrUrl) && (
+                      <div
+                        className="rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/15"
+                        style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
+                      >
+                        <div className="px-5 py-4 border-b border-white/08 flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" style={{ color: accentColor }} />
+                          <h2 className="text-white/60 text-xs font-bold uppercase tracking-wider">Pay Entry Fee</h2>
+                          {event.admissionNote && (
+                            <span className="ml-auto text-xs font-semibold" style={{ color: accentColor }}>{event.admissionNote}</span>
+                          )}
+                        </div>
+                        <div className="p-5 space-y-3">
+                          {club.paymentNote && (
+                            <p className="text-white/50 text-xs leading-relaxed mb-3">{club.paymentNote}</p>
+                          )}
+                          {club.paymentVenmo && (
+                            <a
+                              href={club.paymentVenmo.startsWith("http") ? club.paymentVenmo : `https://venmo.com/${club.paymentVenmo.replace(/^@/, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+                            >
+                              <span className="text-lg">💸</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white font-semibold text-sm">Venmo</p>
+                                <p className="text-white/40 text-xs truncate">{club.paymentVenmo}</p>
+                              </div>
+                              <ExternalLink className="w-3.5 h-3.5 text-white/30" />
+                            </a>
+                          )}
+                          {club.paymentCashapp && (
+                            <a
+                              href={club.paymentCashapp.startsWith("http") ? club.paymentCashapp : `https://cash.app/${club.paymentCashapp.replace(/^\$/, "$")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+                            >
+                              <span className="text-lg">💵</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white font-semibold text-sm">Cash App</p>
+                                <p className="text-white/40 text-xs truncate">{club.paymentCashapp}</p>
+                              </div>
+                              <ExternalLink className="w-3.5 h-3.5 text-white/30" />
+                            </a>
+                          )}
+                          {club.paymentPaypal && (
+                            <a
+                              href={club.paymentPaypal.startsWith("http") ? club.paymentPaypal : `https://paypal.me/${club.paymentPaypal}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" }}
+                            >
+                              <span className="text-lg">🅿️</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white font-semibold text-sm">PayPal</p>
+                                <p className="text-white/40 text-xs truncate">{club.paymentPaypal}</p>
+                              </div>
+                              <ExternalLink className="w-3.5 h-3.5 text-white/30" />
+                            </a>
+                          )}
+                          {club.paymentQrUrl && (
+                            <div className="flex justify-center pt-2">
+                              <img src={club.paymentQrUrl} alt="Payment QR code" className="w-36 h-36 rounded-xl border border-white/10 object-contain bg-white/5" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     {/* Going attendees list */}

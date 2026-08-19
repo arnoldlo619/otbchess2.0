@@ -7723,6 +7723,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Browser Tab Metadata
 - [x] Simplify the browser tab title to Play Chess OTB while preserving existing favicon references
 
+## Club Tournament Payments
+- [x] Audit Stripe configuration, payment data model, registration flow, and club-owner fee controls
+- [x] Confirm the club funds-destination model before implementing event checkout and registration fulfillment
+- [x] Confirm Stripe Connect direct charges as the selected club funds-destination model
+- [x] Pivoted: use personal payment links (Venmo, Cash App, PayPal) instead of Stripe Connect
+- [x] Design personal payment-link data model and owner configuration UX
+- [x] Implement owner payment-link configuration in club settings and event/tournament creation
+- [x] Build player-facing payment prompt on event and tournament pages
+- [ ] Add owner payment-status tracking and manual confirmation controls
+- [x] Add regression coverage and verify end-to-end payment-link experience
+
 ## Tournament Format Card Redesign
 - [x] Redesign Quickstart, Schedule, Large Event, and Quads selection cards with real format-specific screenshots and accessible animated color transitions
 - [x] Verify and refine tournament-format cards for small mobile screens and touch interaction
