@@ -114,6 +114,9 @@ interface WizardData {
   paymentVenmo: string;
   paymentCashapp: string;
   paymentPaypal: string;
+  paymentVenmoEnabled: boolean;
+  paymentCashappEnabled: boolean;
+  paymentPaypalEnabled: boolean;
   /** Optional data URLs for event-specific payment QR images. */
   paymentVenmoQrUrl: string;
   paymentCashappQrUrl: string;
@@ -151,6 +154,9 @@ const DEFAULT_DATA: WizardData = {
   paymentVenmo: "",
   paymentCashapp: "",
   paymentPaypal: "",
+  paymentVenmoEnabled: true,
+  paymentCashappEnabled: true,
+  paymentPaypalEnabled: true,
   paymentVenmoQrUrl: "",
   paymentCashappQrUrl: "",
   paymentPaypalQrUrl: "",
@@ -757,6 +763,41 @@ function PaymentLinkValidationNotice({ data, isDark }: { data: WizardData; isDar
   );
 }
 
+function PaymentMethodToggle({
+  method,
+  enabled,
+  onChange,
+  isDark,
+}: {
+  method: string;
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+  isDark: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      onClick={() => onChange(!enabled)}
+      className="flex w-full items-center justify-between rounded-xl border px-3 py-2 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]"
+      style={{
+        background: enabled ? (isDark ? "rgba(76,175,80,0.15)" : "rgba(76,175,80,0.10)") : (isDark ? "rgba(255,255,255,0.04)" : "rgba(67,104,80,0.05)"),
+        borderColor: enabled ? (isDark ? "rgba(76,175,80,0.42)" : "rgba(47,132,74,0.35)") : (isDark ? "rgba(255,255,255,0.10)" : "rgba(67,104,80,0.15)"),
+        color: isDark ? "rgba(255,255,255,0.88)" : "#12372A",
+      }}
+    >
+      <span>{method}</span>
+      <span className="flex items-center gap-2" aria-hidden="true">
+        <span style={{ color: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.42)" : "#6B7280") }}>{enabled ? "Enabled" : "Disabled"}</span>
+        <span className="relative h-5 w-9 rounded-full transition-colors" style={{ background: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.20)" : "#9CA3AF") }}>
+          <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform" style={{ transform: enabled ? "translateX(18px)" : "translateX(2px)" }} />
+        </span>
+      </span>
+    </button>
+  );
+}
+
 function TextArea({
   value,
   onChange,
@@ -1331,9 +1372,9 @@ function QuickstartForm({
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="space-y-2"><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
-          <div className="space-y-2"><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
-          <div className="space-y-2"><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
+          <div className={`space-y-2 ${data.paymentVenmoEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Venmo" enabled={data.paymentVenmoEnabled} onChange={(paymentVenmoEnabled) => onChange({ paymentVenmoEnabled })} isDark={isDark} /><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
+          <div className={`space-y-2 ${data.paymentCashappEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Cash App" enabled={data.paymentCashappEnabled} onChange={(paymentCashappEnabled) => onChange({ paymentCashappEnabled })} isDark={isDark} /><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
+          <div className={`space-y-2 ${data.paymentPaypalEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="PayPal" enabled={data.paymentPaypalEnabled} onChange={(paymentPaypalEnabled) => onChange({ paymentPaypalEnabled })} isDark={isDark} /><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
         </div>
         <PaymentLinkValidationNotice data={data} isDark={isDark} />
         <div className="mt-4 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(47,132,74,0.15)" }}>
@@ -3167,9 +3208,9 @@ function StepDetails({
           </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="space-y-2"><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
-          <div className="space-y-2"><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
-          <div className="space-y-2"><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
+          <div className={`space-y-2 ${data.paymentVenmoEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Venmo" enabled={data.paymentVenmoEnabled} onChange={(paymentVenmoEnabled) => onChange({ paymentVenmoEnabled })} isDark={isDark} /><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
+          <div className={`space-y-2 ${data.paymentCashappEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Cash App" enabled={data.paymentCashappEnabled} onChange={(paymentCashappEnabled) => onChange({ paymentCashappEnabled })} isDark={isDark} /><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
+          <div className={`space-y-2 ${data.paymentPaypalEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="PayPal" enabled={data.paymentPaypalEnabled} onChange={(paymentPaypalEnabled) => onChange({ paymentPaypalEnabled })} isDark={isDark} /><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
         </div>
         <PaymentLinkValidationNotice data={data} isDark={isDark} />
         <div className="mt-4 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(47,132,74,0.15)" }}>
@@ -4558,6 +4599,9 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       paymentVenmo: data.paymentVenmo.trim() || null,
       paymentCashapp: data.paymentCashapp.trim() || null,
       paymentPaypal: data.paymentPaypal.trim() || null,
+      paymentVenmoEnabled: data.paymentVenmoEnabled,
+      paymentCashappEnabled: data.paymentCashappEnabled,
+      paymentPaypalEnabled: data.paymentPaypalEnabled,
       paymentVenmoQrUrl: data.paymentVenmoQrUrl || null,
       paymentCashappQrUrl: data.paymentCashappQrUrl || null,
       paymentPaypalQrUrl: data.paymentPaypalQrUrl || null,

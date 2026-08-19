@@ -4,6 +4,9 @@ export interface PaymentLinkValues {
   paymentVenmo?: string | null;
   paymentCashapp?: string | null;
   paymentPaypal?: string | null;
+  paymentVenmoEnabled?: boolean | null;
+  paymentCashappEnabled?: boolean | null;
+  paymentPaypalEnabled?: boolean | null;
   paymentVenmoQrUrl?: string | null;
   paymentCashappQrUrl?: string | null;
   paymentPaypalQrUrl?: string | null;
@@ -55,9 +58,9 @@ export function validatePaymentLink(method: PaymentMethod, value: string | null 
 
 export function validatePaymentLinks(values: PaymentLinkValues): PaymentLinkErrors {
   const errors: PaymentLinkErrors = {};
-  const venmo = validatePaymentLink("venmo", values.paymentVenmo);
-  const cashapp = validatePaymentLink("cashapp", values.paymentCashapp);
-  const paypal = validatePaymentLink("paypal", values.paymentPaypal);
+  const venmo = values.paymentVenmoEnabled === false ? undefined : validatePaymentLink("venmo", values.paymentVenmo);
+  const cashapp = values.paymentCashappEnabled === false ? undefined : validatePaymentLink("cashapp", values.paymentCashapp);
+  const paypal = values.paymentPaypalEnabled === false ? undefined : validatePaymentLink("paypal", values.paymentPaypal);
   if (venmo) errors.venmo = venmo;
   if (cashapp) errors.cashapp = cashapp;
   if (paypal) errors.paypal = paypal;

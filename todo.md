@@ -7750,3 +7750,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add optional per-method QR image uploads for Venmo, Cash App, and PayPal in tournament configuration
 - [x] Validate Venmo, Cash App, and PayPal payment links before tournament configuration can continue
 - [x] Add a live host preview of payment links and QR codes as players will see them during registration
+- [x] Add independent enable and disable toggles for Venmo, Cash App, and PayPal in tournament payment configuration

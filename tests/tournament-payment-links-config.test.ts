@@ -57,9 +57,9 @@ describe("tournament payment-link configuration", () => {
   });
 
   it("shows method-specific QR upload controls in both post-preview configuration flows", () => {
-    expect(wizard.match(/method="Venmo"/g)).toHaveLength(2);
-    expect(wizard.match(/method="Cash App"/g)).toHaveLength(2);
-    expect(wizard.match(/method="PayPal"/g)).toHaveLength(2);
+    expect(wizard.match(/<PaymentQrUpload method="Venmo"/g)).toHaveLength(2);
+    expect(wizard.match(/<PaymentQrUpload method="Cash App"/g)).toHaveLength(2);
+    expect(wizard.match(/<PaymentQrUpload method="PayPal"/g)).toHaveLength(2);
   });
 
   it("persists QR image values with the event-level payment configuration", () => {

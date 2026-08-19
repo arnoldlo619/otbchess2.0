@@ -28,6 +28,12 @@ describe("tournament payment validation and registration preview", () => {
     expect(hasValidPaymentLinks({ paymentPaypal: "paypal.me/chessotb" })).toBe(false);
   });
 
+  it("allows disabled methods to retain their values without blocking configuration", () => {
+    const disabledVenmo = { paymentVenmo: "@legacy-handle", paymentVenmoEnabled: false };
+    expect(validatePaymentLinks(disabledVenmo).venmo).toBeUndefined();
+    expect(hasValidPaymentLinks(disabledVenmo)).toBe(true);
+  });
+
   it("gates the configuration flow and renders validation feedback in both payment sections", () => {
     expect(wizard).toContain("hasValidPaymentLinks(data)");
     expect(wizard.match(/PaymentLinkValidationNotice data=\{data\}/g)).toHaveLength(2);
@@ -41,5 +47,17 @@ describe("tournament payment validation and registration preview", () => {
     expect(playerPayment).toContain("rel=\"noreferrer\"");
     expect(playerPayment).toContain("Player registration preview");
     expect(playerPayment).toContain("payment QR code");
+  });
+
+  it("provides independent accessible toggles and persists enabled states for all payment methods", () => {
+    expect(wizard.match(/<PaymentMethodToggle method=/g)).toHaveLength(6);
+    expect(wizard).toContain("role=\"switch\"");
+    expect(wizard).toContain("aria-checked={enabled}");
+    expect(wizard).toContain("paymentVenmoEnabled: data.paymentVenmoEnabled");
+    expect(wizard).toContain("paymentCashappEnabled: data.paymentCashappEnabled");
+    expect(wizard).toContain("paymentPaypalEnabled: data.paymentPaypalEnabled");
+    expect(playerPayment).toContain("values.paymentVenmoEnabled === false");
+    expect(playerPayment).toContain("values.paymentCashappEnabled === false");
+    expect(playerPayment).toContain("values.paymentPaypalEnabled === false");
   });
 });

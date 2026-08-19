@@ -44,6 +44,10 @@ export interface TournamentConfig {
   paymentVenmo?: string | null;
   paymentCashapp?: string | null;
   paymentPaypal?: string | null;
+  /** Enabled state for each method. Undefined remains enabled for pre-toggle tournaments. */
+  paymentVenmoEnabled?: boolean;
+  paymentCashappEnabled?: boolean;
+  paymentPaypalEnabled?: boolean;
   /** Optional event-specific QR images for direct payment methods. */
   paymentVenmoQrUrl?: string | null;
   paymentCashappQrUrl?: string | null;

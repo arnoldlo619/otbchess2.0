@@ -10,9 +10,9 @@ type PaymentMethodDisplay = {
 
 function methodsFrom(values: PaymentLinkValues): PaymentMethodDisplay[] {
   const methods: PaymentMethodDisplay[] = [
-    { key: "venmo", label: "Venmo", url: values.paymentVenmo?.trim() ?? "", qrUrl: values.paymentVenmoQrUrl ?? "" },
-    { key: "cashapp", label: "Cash App", url: values.paymentCashapp?.trim() ?? "", qrUrl: values.paymentCashappQrUrl ?? "" },
-    { key: "paypal", label: "PayPal", url: values.paymentPaypal?.trim() ?? "", qrUrl: values.paymentPaypalQrUrl ?? "" },
+    { key: "venmo", label: "Venmo", url: values.paymentVenmoEnabled === false ? "" : values.paymentVenmo?.trim() ?? "", qrUrl: values.paymentVenmoEnabled === false ? "" : values.paymentVenmoQrUrl ?? "" },
+    { key: "cashapp", label: "Cash App", url: values.paymentCashappEnabled === false ? "" : values.paymentCashapp?.trim() ?? "", qrUrl: values.paymentCashappEnabled === false ? "" : values.paymentCashappQrUrl ?? "" },
+    { key: "paypal", label: "PayPal", url: values.paymentPaypalEnabled === false ? "" : values.paymentPaypal?.trim() ?? "", qrUrl: values.paymentPaypalEnabled === false ? "" : values.paymentPaypalQrUrl ?? "" },
   ];
   return methods.filter((method) => method.url || method.qrUrl);
 }
