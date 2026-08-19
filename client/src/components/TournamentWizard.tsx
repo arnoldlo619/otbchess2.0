@@ -742,12 +742,16 @@ function TournamentFormatCard({
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 scale-100 bg-cover opacity-60 blur-[1.2px] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.35] contrast-[0.9] group-hover:scale-[1.07] group-hover:opacity-75 group-hover:blur-[0.5px] group-hover:saturate-100 group-hover:contrast-100 group-active:scale-[1.025] group-active:opacity-75 group-active:blur-[0.5px] group-active:saturate-100"
+        className="absolute inset-0 scale-100 bg-cover opacity-80 blur-[0.5px] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.46] contrast-[0.96] group-hover:scale-[1.07] group-hover:opacity-90 group-hover:blur-0 group-hover:saturate-100 group-hover:contrast-100 group-active:scale-[1.025] group-active:opacity-90 group-active:blur-0 group-active:saturate-100"
         style={{ backgroundImage: `url(${imageSrc})`, backgroundPosition: imagePosition }}
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.72)_0%,rgba(7,29,16,0.90)_44%,rgba(3,17,9,0.98)_100%)] transition-opacity duration-500 group-hover:opacity-90 group-active:opacity-90"
+        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.42)_0%,rgba(7,29,16,0.60)_44%,rgba(3,17,9,0.80)_100%)] transition-opacity duration-500 group-hover:opacity-90 group-active:opacity-90"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-[66%] bg-gradient-to-t from-[#031109]/95 via-[#071d10]/72 to-transparent"
       />
       <div
         aria-hidden="true"

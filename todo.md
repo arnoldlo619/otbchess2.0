@@ -7727,3 +7727,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Redesign Quickstart, Schedule, Large Event, and Quads selection cards with real format-specific screenshots and accessible animated color transitions
 - [x] Verify and refine tournament-format cards for small mobile screens and touch interaction
 - [x] Unify all tournament-format cards to the Quickstart green treatment and remove their icon tiles
+- [x] Balance format-card screenshot visibility and text-protection overlays for clear imagery and readable copy

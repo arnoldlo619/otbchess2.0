@@ -24,10 +24,17 @@ describe("tournament format card redesign", () => {
   });
 
   it("provides motion-safe, keyboard-visible image treatment without a new animation dependency", () => {
-    expect(wizard).toContain('saturate-[0.35]');
+    expect(wizard).toContain('opacity-80');
+    expect(wizard).toContain('saturate-[0.46]');
     expect(wizard).toContain('group-hover:saturate-100');
     expect(wizard).toContain('focus-visible:ring-2');
     expect(wizard).not.toContain('framer-motion');
+  });
+
+  it("keeps screenshots visible while protecting copy with a localized lower scrim", () => {
+    expect(formatSelection).toContain('group-hover:opacity-90');
+    expect(formatSelection).toContain('rgba(4,25,13,0.42)');
+    expect(formatSelection).toContain('h-[66%] bg-gradient-to-t from-[#031109]/95');
   });
 
   it("stacks cleanly on small screens with large tap targets and touch-visible image feedback", () => {
