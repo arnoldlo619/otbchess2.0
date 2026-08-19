@@ -32,9 +32,18 @@ describe("tournament format card redesign", () => {
   });
 
   it("keeps screenshots visible while protecting copy with a localized lower scrim", () => {
-    expect(formatSelection).toContain('group-hover:opacity-90');
+    expect(formatSelection).toContain('group-hover:opacity-95');
     expect(formatSelection).toContain('rgba(4,25,13,0.42)');
     expect(formatSelection).toContain('h-[66%] bg-gradient-to-t from-[#031109]/95');
+  });
+
+  it("brightens the screenshot directly on hover, focus, and touch without an accent glow layer", () => {
+    expect(formatSelection).toContain('group-hover:brightness-110');
+    expect(formatSelection).toContain('group-focus-visible:brightness-110');
+    expect(formatSelection).toContain('group-active:brightness-110');
+    expect(formatSelection).toContain('group-hover:opacity-75');
+    expect(formatSelection).not.toContain('rgba(29, 163, 74, 0.33)');
+    expect(formatSelection).not.toContain('hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)]');
   });
 
   it("stacks cleanly on small screens with large tap targets and touch-visible image feedback", () => {

@@ -733,7 +733,7 @@ function TournamentFormatCard({
       type="button"
       onClick={() => onSelect(mode)}
       aria-label={`${title}. ${description}`}
-      className="group relative flex min-h-[244px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
+      className="group relative flex min-h-[244px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,border-color] duration-500 ease-out hover:-translate-y-0.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
       style={{
         background: "#12311d",
         borderColor: "rgba(65, 211, 111, 0.58)",
@@ -742,23 +742,17 @@ function TournamentFormatCard({
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 scale-100 bg-cover opacity-80 blur-[0.5px] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.46] contrast-[0.96] group-hover:scale-[1.07] group-hover:opacity-90 group-hover:blur-0 group-hover:saturate-100 group-hover:contrast-100 group-active:scale-[1.025] group-active:opacity-90 group-active:blur-0 group-active:saturate-100"
+        className="absolute inset-0 scale-100 bg-cover opacity-80 blur-[0.5px] brightness-[0.86] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.46] contrast-[0.96] group-hover:scale-[1.04] group-hover:opacity-95 group-hover:blur-0 group-hover:brightness-110 group-hover:saturate-100 group-hover:contrast-100 group-focus-visible:opacity-95 group-focus-visible:blur-0 group-focus-visible:brightness-110 group-focus-visible:saturate-100 group-active:scale-[1.02] group-active:opacity-95 group-active:blur-0 group-active:brightness-110 group-active:saturate-100"
         style={{ backgroundImage: `url(${imageSrc})`, backgroundPosition: imagePosition }}
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.42)_0%,rgba(7,29,16,0.60)_44%,rgba(3,17,9,0.80)_100%)] transition-opacity duration-500 group-hover:opacity-90 group-active:opacity-90"
+        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.42)_0%,rgba(7,29,16,0.60)_44%,rgba(3,17,9,0.80)_100%)] transition-opacity duration-500 group-hover:opacity-75 group-focus-visible:opacity-75 group-active:opacity-75"
       />
       <div
         aria-hidden="true"
         className="absolute inset-x-0 bottom-0 h-[66%] bg-gradient-to-t from-[#031109]/95 via-[#071d10]/72 to-transparent"
       />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-active:opacity-100"
-        style={{ background: "linear-gradient(120deg, rgba(29, 163, 74, 0.33) 0%, transparent 46%, rgba(29, 163, 74, 0.13) 100%)" }}
-      />
-
       <div className="relative z-10 flex w-full items-center justify-between">
         <span
           className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-sm sm:px-3"
