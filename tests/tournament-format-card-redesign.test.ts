@@ -9,11 +9,18 @@ const formatSelection = wizard.slice(
 );
 
 describe("tournament format card editorial illustration redesign", () => {
-  it("uses the four AI-generated editorial illustration assets", () => {
-    expect(wizard).toContain('/manus-storage/quickstart_fabb5e03.png');
-    expect(wizard).toContain('/manus-storage/quads_e9f0eb03.png');
-    expect(wizard).toContain('/manus-storage/large-event_3f6a565e.png');
-    expect(wizard).toContain('/manus-storage/schedule_485beed2.png');
+  it("uses optimized WebP editorial illustration assets", () => {
+    expect(wizard).toContain('/manus-storage/quickstart-card_9af1c159.webp');
+    expect(wizard).toContain('/manus-storage/quads-card_7af5dc0e.webp');
+    expect(wizard).toContain('/manus-storage/large-event-card_18ffa5c2.webp');
+    expect(wizard).toContain('/manus-storage/schedule-card_2d98c379.webp');
+  });
+
+  it("uses decode-safe eager loading with a reduced-motion-safe placeholder", () => {
+    expect(formatSelection).toContain('decoding="async"');
+    expect(formatSelection).toContain('fetchPriority="high"');
+    expect(formatSelection).toContain('format-image-placeholder');
+    expect(formatSelection).toContain('onLoad={() => setImageReady(true)}');
   });
 
   it("keeps the four format choices reachable through explicit selection modes", () => {

@@ -7753,3 +7753,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add independent enable and disable toggles for Venmo, Cash App, and PayPal in tournament payment configuration
 - [x] Add optional host payment instructions to tournament configuration and player registration
 - [x] Add accessible drag-and-drop ordering for enabled tournament payment methods
+- [x] Optimize tournament format card image delivery, preload behavior, and loading transitions for faster perceived rendering

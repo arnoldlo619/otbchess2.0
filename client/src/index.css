@@ -93,6 +93,16 @@
   to { background-position: 200% 50%; }
 }
 
+@keyframes formatImagePlaceholder {
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .format-image-placeholder {
+    animation: none;
+  }
+}
+
 .otb-step-badge {
   position: relative;
   isolation: isolate;

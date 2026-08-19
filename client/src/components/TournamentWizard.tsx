@@ -927,7 +927,7 @@ const FORMAT_PREVIEWS: Record<TournamentFormatMode, {
     title: "Quickstart",
     badge: "Recommended",
     description: "A focused setup for starting a club tournament in minutes. Add the essentials now and fine-tune details later.",
-    imageSrc: "/manus-storage/quickstart_fabb5e03.png",
+    imageSrc: "/manus-storage/quickstart-card_9af1c159.webp",
     highlights: ["Swiss pairing", "5 rounds", "Up to 16 players", "10 + 5 rapid"],
     primaryLabel: "Use Quickstart",
   },
@@ -935,7 +935,7 @@ const FORMAT_PREVIEWS: Record<TournamentFormatMode, {
     title: "Quads",
     badge: "Club favorite",
     description: "Create balanced four-player rating groups where every player meets each opponent once.",
-    imageSrc: "/manus-storage/quads_e9f0eb03.png",
+    imageSrc: "/manus-storage/quads-card_7af5dc0e.webp",
     highlights: ["Rating grouped", "Four-player sections", "3 fixed rounds", "Round robin"],
     primaryLabel: "Use Quads",
   },
@@ -943,7 +943,7 @@ const FORMAT_PREVIEWS: Record<TournamentFormatMode, {
     title: "Large Event",
     badge: "Tournament scale",
     description: "Run Swiss qualification rounds followed by a seeded elimination finish for a larger field.",
-    imageSrc: "/manus-storage/large-event_3f6a565e.png",
+    imageSrc: "/manus-storage/large-event-card_18ffa5c2.webp",
     highlights: ["Up to 100 players", "Swiss qualification", "Top-64 cutoff", "Seeded elimination"],
     primaryLabel: "Use Large Event",
   },
@@ -951,7 +951,7 @@ const FORMAT_PREVIEWS: Record<TournamentFormatMode, {
     title: "Schedule",
     badge: "Full control",
     description: "Configure the full event: format, time control, capacity, rounds, ratings, and club details.",
-    imageSrc: "/manus-storage/schedule_485beed2.png",
+    imageSrc: "/manus-storage/schedule-card_2d98c379.webp",
     highlights: ["Custom format", "Custom rounds", "Time controls", "Ratings and capacity"],
     primaryLabel: "Customize Tournament",
   },
@@ -980,6 +980,8 @@ function TournamentFormatCard({
   isSelected,
   onSelect,
 }: TournamentFormatCardProps) {
+  const [imageReady, setImageReady] = useState(false);
+
   return (
     <button
       type="button"
@@ -1026,13 +1028,22 @@ function TournamentFormatCard({
 
       {/* Illustration */}
       <div className="w-full flex-1 px-4 pt-3 pb-0 sm:px-5 sm:pt-4">
-        <div className="relative w-full overflow-hidden rounded-[10px] sm:rounded-[14px]" style={{ aspectRatio: "3 / 2" }}>
+        <div className="relative w-full overflow-hidden rounded-[10px] bg-[#e4dbc8] sm:rounded-[14px]" style={{ aspectRatio: "3 / 2" }}>
+          <div
+            aria-hidden="true"
+            className="format-image-placeholder absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.08),rgba(255,255,255,0.38),rgba(255,255,255,0.08))] bg-[length:200%_100%] motion-safe:animate-[formatImagePlaceholder_1.3s_ease-in-out_infinite]"
+            style={{ opacity: imageReady ? 0 : 1, transition: "opacity 220ms ease" }}
+          />
           <img
             src={imageSrc}
             alt=""
             aria-hidden="true"
             loading="eager"
-            className="absolute inset-0 h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
+            decoding="async"
+            fetchPriority="high"
+            onLoad={() => setImageReady(true)}
+            className="absolute inset-0 h-full w-full object-contain transition-[opacity,transform] duration-500 ease-out group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
+            style={{ opacity: imageReady ? 1 : 0 }}
           />
         </div>
       </div>
@@ -1056,6 +1067,15 @@ function ModeSelect({
   onClose: () => void;
 }) {
   const [selectedMode, setSelectedMode] = useState<TournamentFormatMode | null>(null);
+
+  useEffect(() => {
+    for (const preview of Object.values(FORMAT_PREVIEWS)) {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = preview.imageSrc;
+      void image.decode?.().catch(() => undefined);
+    }
+  }, []);
 
   const handleSelect = (mode: TournamentFormatMode) => {
     if (selectedMode) return;
