@@ -7720,6 +7720,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Landing Copy Editorial Cleanup
 - [x] Remove em dashes from all landing-page messaging and preserve natural, human editorial phrasing
 
+## Browser Tab Metadata
+- [x] Simplify the browser tab title to Play Chess OTB while preserving existing favicon references
+
 ## Tournament Format Card Redesign
 - [x] Redesign Quickstart, Schedule, Large Event, and Quads selection cards with real format-specific screenshots and accessible animated color transitions
 - [x] Verify and refine tournament-format cards for small mobile screens and touch interaction

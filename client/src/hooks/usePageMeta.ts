@@ -36,6 +36,7 @@ interface PageMetaOptions {
 const SITE_NAME = "ChessOTB.club";
 const SITE_URL = "https://chessotb.club";
 const DEFAULT_OG_IMAGE = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png";
+const DEFAULT_PAGE_TITLE = "Play Chess OTB";
 
 function setMeta(name: string, content: string, property = false) {
   const attr = property ? "property" : "name";
@@ -112,7 +113,7 @@ export function usePageMeta(opts: PageMetaOptions = {}) {
 
     // Cleanup: restore defaults on unmount
     return () => {
-      document.title = `${SITE_NAME} — The Home for Over-the-Board Chess`;
+      document.title = DEFAULT_PAGE_TITLE;
     };
   }, [opts.title, opts.description, opts.image, opts.path, opts.type, opts.publishedTime, opts.author]);
 }

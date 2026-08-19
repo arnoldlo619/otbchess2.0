@@ -2500,7 +2500,7 @@ export default function Home() {
 
   // SEO
   usePageMeta({
-    title: "ChessOTB.club: The Home for Over-the-Board Chess",
+    title: "Play Chess OTB",
     description: "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and QR check-in. Free for chess clubs.",
     path: "/",
   });
