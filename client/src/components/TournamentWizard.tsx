@@ -710,9 +710,7 @@ interface TournamentFormatCardProps {
   badge: string;
   number: string;
   imageSrc: string;
-  imagePosition: string;
   meta: string;
-  chips: string[];
   onSelect: (mode: TournamentFormatMode) => void;
 }
 
@@ -723,9 +721,7 @@ function TournamentFormatCard({
   badge,
   number,
   imageSrc,
-  imagePosition,
   meta,
-  chips,
   onSelect,
 }: TournamentFormatCardProps) {
   return (
@@ -733,54 +729,50 @@ function TournamentFormatCard({
       type="button"
       onClick={() => onSelect(mode)}
       aria-label={`${title}. ${description}`}
-      className="group relative flex min-h-[244px] flex-col items-start overflow-hidden rounded-[20px] border p-4 text-left transition-[transform,border-color] duration-500 ease-out hover:-translate-y-0.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:min-h-[278px] sm:rounded-[28px] sm:p-6"
-      style={{
-        background: "#12311d",
-        borderColor: "rgba(65, 211, 111, 0.58)",
-        touchAction: "manipulation",
-      }}
+      className="group relative flex flex-col items-start overflow-hidden rounded-[16px] border text-left transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#436850] focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:rounded-[20px] motion-reduce:hover:translate-y-0"
+      style={{ background: "#f5f0e6", borderColor: "rgba(67,104,80,0.25)", touchAction: "manipulation", boxShadow: "0 2px 12px rgba(0,0,0,0.12)" }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.22)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.12)"; }}
     >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 scale-100 bg-cover opacity-80 blur-[0.5px] brightness-[0.86] transition-[filter,opacity,transform] duration-700 ease-out saturate-[0.46] contrast-[0.96] group-hover:scale-[1.04] group-hover:opacity-95 group-hover:blur-0 group-hover:brightness-110 group-hover:saturate-100 group-hover:contrast-100 group-focus-visible:opacity-95 group-focus-visible:blur-0 group-focus-visible:brightness-110 group-focus-visible:saturate-100 group-active:scale-[1.02] group-active:opacity-95 group-active:blur-0 group-active:brightness-110 group-active:saturate-100"
-        style={{ backgroundImage: `url(${imageSrc})`, backgroundPosition: imagePosition }}
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(145deg,rgba(4,25,13,0.42)_0%,rgba(7,29,16,0.60)_44%,rgba(3,17,9,0.80)_100%)] transition-opacity duration-500 group-hover:opacity-75 group-focus-visible:opacity-75 group-active:opacity-75"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-[66%] bg-gradient-to-t from-[#031109]/95 via-[#071d10]/72 to-transparent"
-      />
-      <div className="relative z-10 flex w-full items-center justify-between">
+      {/* Header: badge + number */}
+      <div className="flex w-full items-center justify-between px-4 pt-4 sm:px-5 sm:pt-5">
         <span
-          className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-sm sm:px-3"
-          style={{ background: "#1DA34A" }}
+          className="rounded-[4px] border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] sm:px-2.5 sm:text-[10px]"
+          style={{ color: "#2a5535", borderColor: "#2a5535", background: "transparent" }}
         >
           {badge}
         </span>
-        <span className="font-mono text-xs font-bold tracking-[0.2em] text-white/50">{number}</span>
+        <span className="font-mono text-xs font-bold tracking-[0.2em] text-[#2a5535]/50">{number}</span>
       </div>
 
-      <div className="relative z-10 mt-auto w-full">
-        <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+      {/* Title + subtitle */}
+      <div className="w-full px-4 pt-2 sm:px-5 sm:pt-3">
+        <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-[#1a3a22] sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {title}
         </h3>
-        <p className="mt-2 max-w-[34ch] text-[13px] leading-relaxed text-white/72 sm:text-sm">{description}</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-[#2a5535]/60 sm:text-sm">{description}</p>
+      </div>
 
-        <div className="mt-3 hidden flex-wrap gap-1.5 sm:flex">
-          {chips.map((chip) => (
-            <span key={chip} className="rounded-full bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/80 ring-1 ring-white/10">
-              {chip}
-            </span>
-          ))}
-        </div>
+      {/* Separator */}
+      <div className="w-full px-4 sm:px-5"><div className="mt-2 border-t border-[#2a5535]/15 sm:mt-3" /></div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-white/12 pt-3 sm:mt-5">
-          <span className="text-[11px] font-semibold text-white/68 sm:text-xs">{meta}</span>
-          <ArrowRight className="h-4 w-4 text-white/80 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5" />
+      {/* Illustration */}
+      <div className="w-full flex-1 px-4 pt-3 pb-0 sm:px-5 sm:pt-4">
+        <div className="relative w-full overflow-hidden rounded-[10px] sm:rounded-[14px]" style={{ aspectRatio: "3 / 2" }}>
+          <img
+            src={imageSrc}
+            alt=""
+            aria-hidden="true"
+            loading="eager"
+            className="absolute inset-0 h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
+          />
         </div>
+      </div>
+
+      {/* Footer: meta + arrow */}
+      <div className="flex w-full items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
+        <span className="text-[11px] font-semibold text-[#2a5535]/55 sm:text-xs">{meta}</span>
+        <ArrowRight className="h-4 w-4 text-[#2a5535]/60 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5" />
       </div>
     </button>
   );
@@ -854,6 +846,7 @@ function ModeSelect({
             Create a Tournament
           </h2>
           <p className="px-4 text-sm leading-relaxed text-white/55 sm:px-0 sm:text-base">How would you like to get started?</p>
+          <p className="px-4 text-sm leading-relaxed text-white/55 sm:px-0 sm:text-base" style={{ marginTop: "-0.25rem" }}>Choose a format to get started.</p>
         </div>
 
         {/* Format cards: screenshot evidence stays visually quiet until a hover or keyboard focus asks for detail. */}
@@ -861,49 +854,41 @@ function ModeSelect({
           <TournamentFormatCard
             mode="quickstart"
             title="Quickstart"
-            description="Name and location only. Start playing in under 30 seconds."
+            description="Start in under 30 seconds"
             badge="Recommended"
             number="01"
-            imageSrc="/manus-storage/quickstart-setup_ad291b38.webp"
-            imagePosition="65% center"
-            meta="Guided setup, instant defaults"
-            chips={["4–32 players", "Swiss format", "Auto rounds"]}
-            onSelect={onSelect}
-          />
-          <TournamentFormatCard
-            mode="schedule"
-            title="Schedule"
-            description="Build every detail, from formats and rounds to time control and ratings."
-            badge="Full control"
-            number="02"
-            imageSrc="/manus-storage/schedule-live-dashboard_d998f071.webp"
-            imagePosition="center 26%"
-            meta="Four steps, complete configuration"
-            chips={["4–100 players", "Swiss · Quads · Elim", "Custom rounds"]}
-            onSelect={onSelect}
-          />
-          <TournamentFormatCard
-            mode="large_event"
-            title="Large Event"
-            description="Swiss qualification rounds, then a seeded elimination bracket for open events."
-            badge="Tournament scale"
-            number="03"
-            imageSrc="/manus-storage/large-event-bracket_da3b67b9.webp"
-            imagePosition="center"
-            meta="Up to 100 players, seeded finish"
-            chips={["30–100 players", "Swiss + elimination", "Seeded bracket"]}
+            imageSrc="/manus-storage/quickstart_58821e1e.png"
+            meta="Fastest setup"
             onSelect={onSelect}
           />
           <TournamentFormatCard
             mode="quads"
             title="Quads"
-            description="Rating-grouped sections of four. Every player meets each opponent once."
+            description="Four-player rating groups"
             badge="Club favorite"
+            number="02"
+            imageSrc="/manus-storage/quads_b95ab818.png"
+            meta="Three fixed rounds"
+            onSelect={onSelect}
+          />
+          <TournamentFormatCard
+            mode="large_event"
+            title="Large Event"
+            description="Swiss rounds to a seeded finish"
+            badge="Tournament scale"
+            number="03"
+            imageSrc="/manus-storage/large-event_0c7ade67.png"
+            meta="Built for 30–100 players"
+            onSelect={onSelect}
+          />
+          <TournamentFormatCard
+            mode="schedule"
+            title="Schedule"
+            description="Configure every detail"
+            badge="Full control"
             number="04"
-            imageSrc="/manus-storage/quads-pairings_356cb6c0.webp"
-            imagePosition="center 62%"
-            meta="Fair sections, three rounds fixed"
-            chips={["Multiples of 4", "Round robin", "Rating grouped"]}
+            imageSrc="/manus-storage/schedule_a2ee4343.png"
+            meta="Formats, rounds and timing"
             onSelect={onSelect}
           />
         </div>

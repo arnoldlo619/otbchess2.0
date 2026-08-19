@@ -7740,3 +7740,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Unify all tournament-format cards to the Quickstart green treatment and remove their icon tiles
 - [x] Balance format-card screenshot visibility and text-protection overlays for clear imagery and readable copy
 - [x] Replace format-card hover glow with direct screenshot brightening and focus visibility
+- [ ] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
+- [x] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
+- [x] Preserve existing card typography hierarchy during illustration card redesign

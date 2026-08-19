@@ -5,15 +5,15 @@ import { describe, expect, it } from "vitest";
 const wizard = readFileSync(resolve(process.cwd(), "client/src/components/TournamentWizard.tsx"), "utf8");
 const formatSelection = wizard.slice(
   wizard.indexOf("interface TournamentFormatCardProps"),
-  wizard.indexOf("// ─── Quickstart Form"),
+  wizard.indexOf("// ─── Quickstart Form") !== -1 ? wizard.indexOf("// ─── Quickstart Form") : wizard.indexOf("function ModeSelect"),
 );
 
-describe("tournament format card redesign", () => {
-  it("uses authentic managed ChessOTB workflow captures for all four selection cards", () => {
-    expect(wizard).toContain('/manus-storage/quickstart-setup_ad291b38.webp');
-    expect(wizard).toContain('/manus-storage/schedule-live-dashboard_d998f071.webp');
-    expect(wizard).toContain('/manus-storage/large-event-bracket_da3b67b9.webp');
-    expect(wizard).toContain('/manus-storage/quads-pairings_356cb6c0.webp');
+describe("tournament format card editorial illustration redesign", () => {
+  it("uses the four AI-generated editorial illustration assets", () => {
+    expect(wizard).toContain('/manus-storage/quickstart_58821e1e.png');
+    expect(wizard).toContain('/manus-storage/quads_b95ab818.png');
+    expect(wizard).toContain('/manus-storage/large-event_0c7ade67.png');
+    expect(wizard).toContain('/manus-storage/schedule_a2ee4343.png');
   });
 
   it("keeps the four format choices reachable through explicit selection modes", () => {
@@ -23,45 +23,47 @@ describe("tournament format card redesign", () => {
     expect(wizard).toContain('mode="quads"');
   });
 
-  it("provides motion-safe, keyboard-visible image treatment without a new animation dependency", () => {
-    expect(wizard).toContain('opacity-80');
-    expect(wizard).toContain('saturate-[0.46]');
-    expect(wizard).toContain('group-hover:saturate-100');
-    expect(wizard).toContain('focus-visible:ring-2');
-    expect(wizard).not.toContain('framer-motion');
+  it("uses a warm paper background instead of dark green cards", () => {
+    expect(formatSelection).toContain('#f5f0e6');
+    expect(formatSelection).not.toContain('background: "#12311d"');
   });
 
-  it("keeps screenshots visible while protecting copy with a localized lower scrim", () => {
-    expect(formatSelection).toContain('group-hover:opacity-95');
-    expect(formatSelection).toContain('rgba(4,25,13,0.42)');
-    expect(formatSelection).toContain('h-[66%] bg-gradient-to-t from-[#031109]/95');
+  it("renders illustrations with object-contain to preserve full artwork", () => {
+    expect(formatSelection).toContain('object-contain');
+    expect(formatSelection).toContain('aspectRatio: "3 / 2"');
   });
 
-  it("brightens the screenshot directly on hover, focus, and touch without an accent glow layer", () => {
-    expect(formatSelection).toContain('group-hover:brightness-110');
-    expect(formatSelection).toContain('group-focus-visible:brightness-110');
-    expect(formatSelection).toContain('group-active:brightness-110');
-    expect(formatSelection).toContain('group-hover:opacity-75');
-    expect(formatSelection).not.toContain('rgba(29, 163, 74, 0.33)');
-    expect(formatSelection).not.toContain('hover:shadow-[0_24px_64px_rgba(0,0,0,0.34)]');
+  it("uses dark forest-green text on warm paper for readability", () => {
+    expect(formatSelection).toContain('text-[#1a3a22]');
+    expect(formatSelection).toContain('text-[#2a5535]');
   });
 
-  it("stacks cleanly on small screens with large tap targets and touch-visible image feedback", () => {
+  it("provides keyboard-visible focus ring and accessible labels", () => {
+    expect(formatSelection).toContain('focus-visible:ring-2');
+    expect(formatSelection).toContain('aria-label=');
+  });
+
+  it("respects reduced-motion preferences on hover scale", () => {
+    expect(formatSelection).toContain('motion-reduce:');
+  });
+
+  it("preserves the existing Clash Display font for card titles", () => {
+    expect(formatSelection).toContain("Clash Display");
+  });
+
+  it("stacks cleanly on small screens with responsive grid", () => {
     expect(wizard).toContain('grid-cols-1 gap-3 sm:grid-cols-2');
-    expect(wizard).toContain('min-h-[244px]');
-    expect(wizard).toContain('group-active:saturate-100');
     expect(wizard).toContain('pb-[calc(2rem+env(safe-area-inset-bottom))]');
     expect(wizard).toContain('text-[22px]');
   });
 
-  it("uses the Quickstart green treatment consistently without icon tiles", () => {
-    expect(formatSelection).toContain('background: "#1DA34A"');
-    expect(formatSelection).toContain('borderColor: "rgba(65, 211, 111, 0.58)"');
-    expect(formatSelection).not.toContain("accent: string;");
-    expect(formatSelection).not.toContain("icon: typeof Bolt;");
-    expect(formatSelection).not.toContain("icon={Bolt}");
-    expect(formatSelection).not.toContain("icon={Calendar}");
-    expect(formatSelection).not.toContain("icon={Trophy}");
-    expect(formatSelection).not.toContain("icon={Users2}");
+  it("maps the correct order: Quickstart 01, Quads 02, Large Event 03, Schedule 04", () => {
+    const quickstartIdx = wizard.indexOf('number="01"');
+    const quadsIdx = wizard.indexOf('number="02"');
+    const largeIdx = wizard.indexOf('number="03"');
+    const scheduleIdx = wizard.indexOf('number="04"');
+    expect(quickstartIdx).toBeLessThan(quadsIdx);
+    expect(quadsIdx).toBeLessThan(largeIdx);
+    expect(largeIdx).toBeLessThan(scheduleIdx);
   });
 });
