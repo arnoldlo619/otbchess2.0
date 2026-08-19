@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { hasValidPaymentLinks, validatePaymentLink, validatePaymentLinks } from "../client/src/lib/paymentLinks";
+import { DEFAULT_PAYMENT_METHOD_ORDER, hasValidPaymentLinks, normalizePaymentMethodOrder, validatePaymentLink, validatePaymentLinks } from "../client/src/lib/paymentLinks";
+import type { TournamentConfig } from "../client/src/lib/tournamentRegistry";
 
 const root = resolve(__dirname, "..");
 const wizard = readFileSync(resolve(root, "client/src/components/TournamentWizard.tsx"), "utf8");
@@ -59,5 +60,31 @@ describe("tournament payment validation and registration preview", () => {
     expect(playerPayment).toContain("values.paymentVenmoEnabled === false");
     expect(playerPayment).toContain("values.paymentCashappEnabled === false");
     expect(playerPayment).toContain("values.paymentPaypalEnabled === false");
+  });
+
+  it("normalizes a persisted payment order and retains a safe default for legacy tournaments", () => {
+    expect(normalizePaymentMethodOrder(["paypal", "venmo", "cashapp"])).toEqual(["paypal", "venmo", "cashapp"]);
+    expect(normalizePaymentMethodOrder(["paypal", "paypal"] as never)).toEqual(["paypal", "venmo", "cashapp"]);
+    expect(normalizePaymentMethodOrder()).toEqual(DEFAULT_PAYMENT_METHOD_ORDER);
+  });
+
+  it("persists host payment instructions and a sortable payment method order", () => {
+    const config: Pick<TournamentConfig, "paymentInstructions" | "paymentMethodOrder"> = {
+      paymentInstructions: "Include your USCF ID in the payment note.",
+      paymentMethodOrder: ["cashapp", "paypal", "venmo"],
+    };
+    expect(config.paymentInstructions).toContain("USCF ID");
+    expect(config.paymentMethodOrder?.[0]).toBe("cashapp");
+    expect(wizard).toContain("DndContext");
+    expect(wizard).toContain("sortableKeyboardCoordinates");
+    expect(wizard).toContain("paymentMethodOrder: arrayMove(order, from, to)");
+    expect(wizard).toContain("Payment instructions for players");
+    expect(wizard).toContain("Include your USCF ID");
+  });
+
+  it("renders the registration payment methods in host order with their instruction note", () => {
+    expect(playerPayment).toContain("normalizePaymentMethodOrder(values.paymentMethodOrder)");
+    expect(playerPayment).toContain("paymentInstructions?.trim()");
+    expect(playerPayment).toContain("Host note:");
   });
 });

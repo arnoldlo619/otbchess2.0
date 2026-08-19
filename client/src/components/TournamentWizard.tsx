@@ -26,6 +26,9 @@ import { useConfetti } from "@/hooks/useConfetti";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { useTheme } from "@/contexts/ThemeContext";
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
@@ -67,6 +70,7 @@ import {
   DollarSign,
   ImagePlus,
   Trash2,
+  GripVertical,
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
@@ -74,7 +78,7 @@ import { getFormatConfig } from "@/lib/formatRegistry";
 import { apiListMyClubs } from "@/lib/clubsApi";
 import type { Club } from "@/lib/clubRegistry";
 import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
-import { hasValidPaymentLinks, validatePaymentLinks } from "@/lib/paymentLinks";
+import { DEFAULT_PAYMENT_METHOD_ORDER, hasValidPaymentLinks, normalizePaymentMethodOrder, validatePaymentLinks, type PaymentMethod } from "@/lib/paymentLinks";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
@@ -121,6 +125,10 @@ interface WizardData {
   paymentVenmoQrUrl: string;
   paymentCashappQrUrl: string;
   paymentPaypalQrUrl: string;
+  /** Optional host-written note displayed to players alongside direct payment methods. */
+  paymentInstructions: string;
+  /** Host-controlled display order for direct payment methods. */
+  paymentMethodOrder: PaymentMethod[];
 }
 
 function todayIso(): string {
@@ -160,6 +168,8 @@ const DEFAULT_DATA: WizardData = {
   paymentVenmoQrUrl: "",
   paymentCashappQrUrl: "",
   paymentPaypalQrUrl: "",
+  paymentInstructions: "",
+  paymentMethodOrder: DEFAULT_PAYMENT_METHOD_ORDER,
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -798,6 +808,63 @@ function PaymentMethodToggle({
   );
 }
 
+const PAYMENT_METHOD_DETAILS: Record<PaymentMethod, { label: "Venmo" | "Cash App" | "PayPal"; placeholder: string }> = {
+  venmo: { label: "Venmo", placeholder: "Venmo @handle or link" },
+  cashapp: { label: "Cash App", placeholder: "Cash App $cashtag or link" },
+  paypal: { label: "PayPal", placeholder: "PayPal link" },
+};
+
+function SortablePaymentMethodCard({ method, data, isDark }: { method: PaymentMethod; data: WizardData; isDark: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: method });
+  const detail = PAYMENT_METHOD_DETAILS[method];
+  const enabled = method === "venmo" ? data.paymentVenmoEnabled : method === "cashapp" ? data.paymentCashappEnabled : data.paymentPaypalEnabled;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex items-center gap-2 rounded-xl border p-2.5 transition-opacity ${enabled ? "" : "opacity-55"}`}
+      style={{
+        transform: CSS.Transform.toString(transform), transition,
+        background: isDark ? "rgba(5,22,12,0.24)" : "rgba(255,255,255,0.32)",
+        borderColor: isDragging ? "rgba(76,175,80,0.75)" : isDark ? "rgba(123,220,145,0.16)" : "rgba(47,132,74,0.16)",
+        boxShadow: isDragging ? "0 16px 32px rgba(0,0,0,0.24)" : "none",
+        zIndex: isDragging ? 10 : undefined,
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <button type="button" className="flex h-8 w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg transition-colors hover:bg-emerald-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] active:cursor-grabbing" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "#436850" }} aria-label={`Reorder ${detail.label}`} {...attributes} {...listeners}>
+          <GripVertical className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <div className="min-w-0 flex-1"><p className="text-xs font-bold" style={{ color: isDark ? T.dText : T.lText }}>{detail.label}</p><p className="text-[11px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>{enabled ? "Enabled for players" : "Currently disabled"}</p></div>
+        <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Drag</span>
+      </div>
+    </div>
+  );
+}
+
+function PaymentConfiguration({ data, onChange, isDark }: { data: WizardData; onChange: (patch: Partial<WizardData>) => void; isDark: boolean }) {
+  const order = normalizePaymentMethodOrder(data.paymentMethodOrder);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = order.indexOf(active.id as PaymentMethod);
+    const to = order.indexOf(over.id as PaymentMethod);
+    if (from >= 0 && to >= 0) onChange({ paymentMethodOrder: arrayMove(order, from, to) });
+  };
+
+  return (
+    <section className="mt-4 rounded-2xl border p-4 sm:p-5" style={{ background: isDark ? "rgba(71,173,98,0.07)" : "rgba(71,173,98,0.06)", borderColor: isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)" }}>
+      <div><h3 className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>Player payment order and instructions</h3><p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Drag a method to prioritize it on registration. Add any details players should include with their payment.</p></div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={order} strategy={rectSortingStrategy}>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">{order.map((method) => <SortablePaymentMethodCard key={method} method={method} data={data} isDark={isDark} />)}</div>
+        </SortableContext>
+      </DndContext>
+      <div className="mt-4"><Label isDark={isDark} hint="optional">Payment instructions for players</Label><TextArea value={data.paymentInstructions} onChange={(paymentInstructions) => onChange({ paymentInstructions })} placeholder="e.g. Include your USCF ID and tournament name in the payment note. Please pay before your first round." isDark={isDark} /></div>
+    </section>
+  );
+}
+
 function TextArea({
   value,
   onChange,
@@ -1382,6 +1449,8 @@ function QuickstartForm({
           <PlayerPaymentMethods payments={data} preview isDark={isDark} />
         </div>
       </section>
+
+      <PaymentConfiguration data={data} onChange={onChange} isDark={isDark} />
 
       {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
       <div>
@@ -3218,6 +3287,7 @@ function StepDetails({
           <PlayerPaymentMethods payments={data} preview isDark={isDark} />
         </div>
       </section>
+      <PaymentConfiguration data={data} onChange={onChange} isDark={isDark} />
     </div>
   );
 }
@@ -4605,6 +4675,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       paymentVenmoQrUrl: data.paymentVenmoQrUrl || null,
       paymentCashappQrUrl: data.paymentCashappQrUrl || null,
       paymentPaypalQrUrl: data.paymentPaypalQrUrl || null,
+      paymentInstructions: data.paymentInstructions.trim() || null,
+      paymentMethodOrder: normalizePaymentMethodOrder(data.paymentMethodOrder),
       ...(data.isBracketParent ? { isBracketParent: true } : {}),
     });
     grantDirectorSession(slug);

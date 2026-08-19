@@ -1,5 +1,18 @@
 export type PaymentMethod = "venmo" | "cashapp" | "paypal";
 
+export const DEFAULT_PAYMENT_METHOD_ORDER: PaymentMethod[] = ["venmo", "cashapp", "paypal"];
+
+/** Keeps legacy or malformed saved orders compatible with the three supported methods. */
+export function normalizePaymentMethodOrder(order?: PaymentMethod[] | null): PaymentMethod[] {
+  const seen = new Set<PaymentMethod>();
+  const normalized = (order ?? []).filter((method): method is PaymentMethod => {
+    if (!DEFAULT_PAYMENT_METHOD_ORDER.includes(method) || seen.has(method)) return false;
+    seen.add(method);
+    return true;
+  });
+  return [...normalized, ...DEFAULT_PAYMENT_METHOD_ORDER.filter((method) => !seen.has(method))];
+}
+
 export interface PaymentLinkValues {
   paymentVenmo?: string | null;
   paymentCashapp?: string | null;
@@ -10,6 +23,8 @@ export interface PaymentLinkValues {
   paymentVenmoQrUrl?: string | null;
   paymentCashappQrUrl?: string | null;
   paymentPaypalQrUrl?: string | null;
+  paymentInstructions?: string | null;
+  paymentMethodOrder?: PaymentMethod[] | null;
 }
 
 export type PaymentLinkErrors = Partial<Record<PaymentMethod, string>>;

@@ -25,9 +25,9 @@ describe("tournament payment-link configuration", () => {
 
   it("renders the payment configuration directly after the preview in both Quickstart and Schedule flows", () => {
     expect(wizard.match(/Optional entry payment links/g)).toHaveLength(2);
-    expect(wizard.match(/Venmo @handle or link/g)).toHaveLength(2);
-    expect(wizard.match(/Cash App \$cashtag or link/g)).toHaveLength(2);
-    expect(wizard.match(/PayPal link/g)).toHaveLength(2);
+    expect(wizard.match(/placeholder="Venmo @handle or link"/g)).toHaveLength(2);
+    expect(wizard.match(/placeholder="Cash App \$cashtag or link"/g)).toHaveLength(2);
+    expect(wizard.match(/placeholder="PayPal link"/g)).toHaveLength(2);
   });
 
   it("persists payment choices in the new tournament configuration", () => {

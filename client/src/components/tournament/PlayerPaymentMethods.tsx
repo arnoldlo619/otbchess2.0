@@ -1,5 +1,5 @@
 import { ExternalLink, QrCode, WalletCards } from "lucide-react";
-import type { PaymentLinkValues } from "@/lib/paymentLinks";
+import { normalizePaymentMethodOrder, type PaymentLinkValues, type PaymentMethod } from "@/lib/paymentLinks";
 
 type PaymentMethodDisplay = {
   key: "venmo" | "cashapp" | "paypal";
@@ -9,12 +9,14 @@ type PaymentMethodDisplay = {
 };
 
 function methodsFrom(values: PaymentLinkValues): PaymentMethodDisplay[] {
-  const methods: PaymentMethodDisplay[] = [
-    { key: "venmo", label: "Venmo", url: values.paymentVenmoEnabled === false ? "" : values.paymentVenmo?.trim() ?? "", qrUrl: values.paymentVenmoEnabled === false ? "" : values.paymentVenmoQrUrl ?? "" },
-    { key: "cashapp", label: "Cash App", url: values.paymentCashappEnabled === false ? "" : values.paymentCashapp?.trim() ?? "", qrUrl: values.paymentCashappEnabled === false ? "" : values.paymentCashappQrUrl ?? "" },
-    { key: "paypal", label: "PayPal", url: values.paymentPaypalEnabled === false ? "" : values.paymentPaypal?.trim() ?? "", qrUrl: values.paymentPaypalEnabled === false ? "" : values.paymentPaypalQrUrl ?? "" },
-  ];
-  return methods.filter((method) => method.url || method.qrUrl);
+  const methodsByKey: Record<PaymentMethod, PaymentMethodDisplay> = {
+    venmo: { key: "venmo", label: "Venmo", url: values.paymentVenmoEnabled === false ? "" : values.paymentVenmo?.trim() ?? "", qrUrl: values.paymentVenmoEnabled === false ? "" : values.paymentVenmoQrUrl ?? "" },
+    cashapp: { key: "cashapp", label: "Cash App", url: values.paymentCashappEnabled === false ? "" : values.paymentCashapp?.trim() ?? "", qrUrl: values.paymentCashappEnabled === false ? "" : values.paymentCashappQrUrl ?? "" },
+    paypal: { key: "paypal", label: "PayPal", url: values.paymentPaypalEnabled === false ? "" : values.paymentPaypal?.trim() ?? "", qrUrl: values.paymentPaypalEnabled === false ? "" : values.paymentPaypalQrUrl ?? "" },
+  };
+  return normalizePaymentMethodOrder(values.paymentMethodOrder)
+    .map((method) => methodsByKey[method])
+    .filter((method) => method.url || method.qrUrl);
 }
 
 export function PlayerPaymentMethods({
@@ -27,6 +29,7 @@ export function PlayerPaymentMethods({
   isDark?: boolean;
 }) {
   const methods = methodsFrom(payments);
+  const instructions = payments.paymentInstructions?.trim();
   if (methods.length === 0 && !preview) return null;
 
   const text = isDark ? "text-white" : "text-[#12372A]";
@@ -46,6 +49,13 @@ export function PlayerPaymentMethods({
           </p>
         </div>
       </div>
+
+      {instructions && (
+        <div className={`mt-3 rounded-xl border px-3 py-2.5 text-xs leading-relaxed ${isDark ? "border-white/10 bg-black/10 text-white/75" : "border-[#436850]/12 bg-white text-[#436850]/85"}`}>
+          <span className={`mr-1 font-bold ${text}`}>Host note:</span>
+          {instructions}
+        </div>
+      )}
 
       {methods.length > 0 && (
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
