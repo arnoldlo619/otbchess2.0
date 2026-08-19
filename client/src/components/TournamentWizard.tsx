@@ -711,6 +711,7 @@ interface TournamentFormatCardProps {
   number: string;
   imageSrc: string;
   meta: string;
+  isSelected: boolean;
   onSelect: (mode: TournamentFormatMode) => void;
 }
 
@@ -722,18 +723,31 @@ function TournamentFormatCard({
   number,
   imageSrc,
   meta,
+  isSelected,
   onSelect,
 }: TournamentFormatCardProps) {
   return (
     <button
       type="button"
       onClick={() => onSelect(mode)}
+      aria-pressed={isSelected}
       aria-label={`${title}. ${description}`}
-      className="group relative flex flex-col items-start overflow-hidden rounded-[16px] border text-left transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#436850] focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:rounded-[20px] motion-reduce:hover:translate-y-0"
-      style={{ background: "#f5f0e6", borderColor: "rgba(67,104,80,0.25)", touchAction: "manipulation", boxShadow: "0 2px 12px rgba(0,0,0,0.12)" }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.22)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.12)"; }}
+      className="group relative flex flex-col items-start overflow-hidden rounded-[16px] border text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#436850] focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:rounded-[20px] motion-reduce:hover:translate-y-0"
+      style={{
+        background: "#f5f0e6",
+        borderColor: isSelected ? "rgba(49,139,75,0.9)" : "rgba(67,104,80,0.25)",
+        touchAction: "manipulation",
+        boxShadow: isSelected ? "0 0 0 1px rgba(96,214,121,0.35), 0 6px 22px rgba(31,123,65,0.20)" : "0 2px 12px rgba(0,0,0,0.12)",
+      }}
+      onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.22)"; }}
+      onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.12)"; }}
     >
+      {isSelected && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-[#5cd57a]/80 animate-[formatSelectionGlow_1.6s_ease-in-out_infinite] motion-reduce:animate-none"
+        />
+      )}
       {/* Header: badge + number */}
       <div className="flex w-full items-center justify-between px-4 pt-4 sm:px-5 sm:pt-5">
         <span
@@ -787,6 +801,14 @@ function ModeSelect({
   onSelect: (mode: "quickstart" | "schedule" | "large_event" | "brackets" | "quads") => void;
   onClose: () => void;
 }) {
+  const [selectedMode, setSelectedMode] = useState<TournamentFormatMode | null>(null);
+
+  const handleSelect = (mode: TournamentFormatMode) => {
+    if (selectedMode) return;
+    setSelectedMode(mode);
+    window.setTimeout(() => onSelect(mode), 220);
+  };
+
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col overflow-y-auto"
@@ -859,7 +881,8 @@ function ModeSelect({
             number="01"
             imageSrc="/manus-storage/quickstart_58821e1e.png"
             meta="Fastest setup"
-            onSelect={onSelect}
+            isSelected={selectedMode === "quickstart"}
+            onSelect={handleSelect}
           />
           <TournamentFormatCard
             mode="quads"
@@ -869,7 +892,8 @@ function ModeSelect({
             number="02"
             imageSrc="/manus-storage/quads_b95ab818.png"
             meta="Three fixed rounds"
-            onSelect={onSelect}
+            isSelected={selectedMode === "quads"}
+            onSelect={handleSelect}
           />
           <TournamentFormatCard
             mode="large_event"
@@ -879,7 +903,8 @@ function ModeSelect({
             number="03"
             imageSrc="/manus-storage/large-event_0c7ade67.png"
             meta="Built for 30–100 players"
-            onSelect={onSelect}
+            isSelected={selectedMode === "large_event"}
+            onSelect={handleSelect}
           />
           <TournamentFormatCard
             mode="schedule"
@@ -889,7 +914,8 @@ function ModeSelect({
             number="04"
             imageSrc="/manus-storage/schedule_a2ee4343.png"
             meta="Formats, rounds and timing"
-            onSelect={onSelect}
+            isSelected={selectedMode === "schedule"}
+            onSelect={handleSelect}
           />
         </div>
       </div>
@@ -4350,6 +4376,10 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         <ModeSelect isDark={isDark} onSelect={handleSelectMode} onClose={onClose} />
         <style>{`
           @keyframes wizardFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes formatSelectionGlow {
+            0%, 100% { box-shadow: inset 0 0 0 1px rgba(92,213,122,0.20), 0 0 8px rgba(92,213,122,0.18); }
+            50% { box-shadow: inset 0 0 0 1px rgba(92,213,122,0.50), 0 0 15px rgba(92,213,122,0.32); }
+          }
         `}</style>
       </>,
       document.body

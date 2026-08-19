@@ -57,6 +57,14 @@ describe("tournament format card editorial illustration redesign", () => {
     expect(wizard).toContain('text-[22px]');
   });
 
+  it("shows a short, motion-safe green border glow after format selection", () => {
+    expect(formatSelection).toContain('aria-pressed={isSelected}');
+    expect(formatSelection).toContain('formatSelectionGlow');
+    expect(formatSelection).toContain('border-[#5cd57a]/80');
+    expect(formatSelection).toContain('motion-reduce:animate-none');
+    expect(formatSelection).toContain('window.setTimeout(() => onSelect(mode), 220)');
+  });
+
   it("maps the correct order: Quickstart 01, Quads 02, Large Event 03, Schedule 04", () => {
     const quickstartIdx = wizard.indexOf('number="01"');
     const quadsIdx = wizard.indexOf('number="02"');

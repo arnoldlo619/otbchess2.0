@@ -7743,3 +7743,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
 - [x] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
 - [x] Preserve existing card typography hierarchy during illustration card redesign
+- [x] Add a motion-safe subtle colored border glow to clearly indicate the selected tournament format card
