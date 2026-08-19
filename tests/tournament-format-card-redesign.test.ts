@@ -65,6 +65,24 @@ describe("tournament format card editorial illustration redesign", () => {
     expect(formatSelection).toContain('window.setTimeout(() => onSelect(mode), 220)');
   });
 
+  it("requires hosts to preview and confirm their selected format before setup", () => {
+    expect(wizard).toContain('const FORMAT_PREVIEWS: Record<TournamentFormatMode');
+    expect(wizard).toContain('function FormatPreview');
+    expect(wizard).toContain('FORMAT PREVIEW');
+    expect(wizard).toContain('Change format');
+    expect(wizard).toContain('You can change details in the next step.');
+    expect(wizard).toContain('const [previewMode, setPreviewMode]');
+    expect(wizard).toContain('onSelect={setPreviewMode}');
+  });
+
+  it("preserves existing setup routing only after preview confirmation and supports returning to format options", () => {
+    expect(wizard).toContain('handleSelectMode(previewMode);');
+    expect(wizard).toContain('onBack={() => setPreviewMode(null)}');
+    expect(wizard).toContain('if (previewMode) setPreviewMode(null);');
+    expect(wizard).toContain('setMode("quickstart")');
+    expect(wizard).toContain('setMode(m)');
+  });
+
   it("maps the correct order: Quickstart 01, Quads 02, Large Event 03, Schedule 04", () => {
     const quickstartIdx = wizard.indexOf('number="01"');
     const quadsIdx = wizard.indexOf('number="02"');
