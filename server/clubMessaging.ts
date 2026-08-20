@@ -13,7 +13,7 @@
  */
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import { eq, and, or, desc, asc } from "drizzle-orm";
+import { eq, and, or, desc, asc, gt, ne, sql } from "drizzle-orm";
 import { Chess } from "chess.js";
 import { getDb } from "./db";
 import { requireAuth } from "./auth";
@@ -70,7 +70,21 @@ router.get("/", requireAuth, async (req, res) => {
           .where(eq(clubMessages.conversationId, conv.id))
           .orderBy(desc(clubMessages.createdAt))
           .limit(1);
-        return { ...conv, otherUser: other ?? null, lastMessage: lastMsg ?? null };
+        const lastReadAt = conv.userAId === userId ? conv.userALastReadAt : conv.userBLastReadAt;
+        const [unread] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(clubMessages)
+          .where(and(
+            eq(clubMessages.conversationId, conv.id),
+            ne(clubMessages.senderId, userId),
+            gt(clubMessages.createdAt, lastReadAt),
+          ));
+        return {
+          ...conv,
+          otherUser: other ?? null,
+          lastMessage: lastMsg ?? null,
+          unreadCount: Number(unread?.count ?? 0),
+        };
       })
     );
     return res.json({ conversations: enriched });
@@ -190,6 +204,11 @@ router.get("/:convId/messages", requireAuth, async (req, res) => {
       .where(eq(clubMessages.conversationId, convId))
       .orderBy(asc(clubMessages.createdAt))
       .limit(limit);
+
+    const readCursor = conv.userAId === userId
+      ? { userALastReadAt: new Date() }
+      : { userBLastReadAt: new Date() };
+    await db.update(clubConversations).set(readCursor).where(eq(clubConversations.id, convId));
 
     // Attach chess game data for chess_invite / chess_move messages
     const enriched = await Promise.all(

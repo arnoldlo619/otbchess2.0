@@ -26,15 +26,10 @@ import {
   Zap,
   Award as _Award,
   ArrowLeft,
-  Share2,
   Download,
   CheckCircle2,
 } from "lucide-react";
-import { GameHighlightCard } from "@/components/GameHighlightCard";
 import { buildAnnotatedPgn, downloadPgn } from "@/lib/exportPgn";
-import { GameVideoPlayer, type MoveTimestamp } from "@/components/GameVideoPlayer";
-import { FenScrubber, type FenEntry } from "@/components/FenScrubber";
-import { logger } from "@/lib/logger";
 
 import { authFetch } from "@/lib/apiFetch";
 import { Chess } from "chess.js";
@@ -65,8 +60,6 @@ interface GameData {
   totalMoves: number | null;
   openingName: string | null;
   openingEco: string | null;
-  // JSON string of MoveTimestamp[] — populated when game came from a video recording
-  moveTimestamps: string | null;
 }
 
 interface AnalysisSummary {
@@ -96,11 +89,10 @@ interface KeyMoment {
 
 interface AnalysisResponse {
   game: GameData;
-  session: { status: string; videoKey?: string | null } | null;
+  session: { status: string } | null;
   analyses: MoveAnalysis[];
   summary: AnalysisSummary;
   keyMoments: KeyMoment[];
-  fenTimeline: FenEntry[];
 }
 
 // ── Classification colors ───────────────────────────────────────────────────
@@ -654,11 +646,8 @@ export default function GameAnalysis() {
   const [error, setError] = useState<string | null>(null);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 = starting position
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
-  const [highlightStatus, setHighlightStatus] = useState<"idle" | "generating" | "done">("idle");
   const [pgnDownloadStatus, setPgnDownloadStatus] = useState<"idle" | "done">("idle");
-  const [selectedFenEntry, setSelectedFenEntry] = useState<FenEntry | null>(null);
   const [showCompletionReport, setShowCompletionReport] = useState(false);
-  const highlightCardRef = useRef<HTMLDivElement>(null);
 
   const gameId = matched ? params?.gameId : null;
   // Prevent double-firing the auto-analysis trigger
@@ -723,30 +712,23 @@ export default function GameAnalysis() {
   }, [gameId]);
 
   // ── Compute FEN for current move ────────────────────────────────────────
-  // When a FEN entry is selected from the scrubber, show that detected position.
-  // Otherwise show the PGN-derived FEN from the Stockfish analysis.
   const currentFen = useMemo(() => {
-    if (selectedFenEntry) {
-      // FEN scrubber mode — show the raw detected position
-      return selectedFenEntry.fen;
-    }
     if (!data || currentMoveIndex < 0) {
       return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     }
     const analysis = data.analyses[currentMoveIndex];
     return analysis?.fen ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  }, [data, currentMoveIndex, selectedFenEntry]);
+  }, [data, currentMoveIndex]);
 
   const currentEval = useMemo(() => {
-    if (selectedFenEntry) return 0; // No eval for raw detected positions
     if (!data || currentMoveIndex < 0) return 0;
     return data.analyses[currentMoveIndex]?.eval ?? 0;
-  }, [data, currentMoveIndex, selectedFenEntry]);
+  }, [data, currentMoveIndex]);
 
   // ── Last-move highlight squares ─────────────────────────────────────────────
   // Derive from/to squares by replaying the SAN on the previous FEN.
   const lastMoveSquares = useMemo<{ from: string; to: string } | null>(() => {
-    if (selectedFenEntry || !data || currentMoveIndex < 0) return null;
+    if (!data || currentMoveIndex < 0) return null;
     const analysis = data.analyses[currentMoveIndex];
     if (!analysis?.san) return null;
     const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -758,18 +740,18 @@ export default function GameAnalysis() {
       const chess = new Chess(prevFen);
       const move = chess.move(analysis.san);
       if (!move) return null;
-      return { from: move.from, to: move.to };
+    return { from: move.from, to: move.to };
     } catch {
       return null;
     }
-  }, [data, currentMoveIndex, selectedFenEntry]);
+  }, [data, currentMoveIndex]);
 
   // ── Best-move arrow ─────────────────────────────────────────────────────────
   // Convert bestMove SAN → from/to squares using the pre-move FEN.
   // Only show when the played move was NOT already the best move.
   type ChessArrow = { startSquare: string; endSquare: string; color: string };
   const bestMoveArrow = useMemo<ChessArrow[]>(() => {
-    if (selectedFenEntry || !data || currentMoveIndex < 0) return [];
+    if (!data || currentMoveIndex < 0) return [];
     const analysis = data.analyses[currentMoveIndex];
     if (!analysis?.bestMove || analysis.classification === "best") return [];
     const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -785,7 +767,7 @@ export default function GameAnalysis() {
     } catch {
       return [];
     }
-  }, [data, currentMoveIndex, selectedFenEntry]);
+  }, [data, currentMoveIndex]);
 
   // ── Keyboard navigation ─────────────────────────────────────────────────
   // Use functional setState so these callbacks never need to close over `data`
@@ -851,69 +833,6 @@ export default function GameAnalysis() {
     [data]
   );
 
-  // ── Critical moment (biggest eval swing) ───────────────────────────────────
-  const criticalMoment = useMemo(() => {
-    if (!data || data.analyses.length === 0) return null;
-    let maxSwing = 0;
-    let best: (typeof data.analyses)[0] | null = null;
-    for (let i = 1; i < data.analyses.length; i++) {
-      const prev = data.analyses[i - 1];
-      const curr = data.analyses[i];
-      if (prev.eval === null || curr.eval === null) continue;
-      const swing = Math.abs(curr.eval - prev.eval);
-      if (swing > maxSwing) {
-        maxSwing = swing;
-        best = curr;
-      }
-    }
-    return best ? { analysis: best, swing: maxSwing } : null;
-  }, [data]);
-
-  // ── Share / Download highlight ─────────────────────────────────────────────
-  const handleShareHighlight = useCallback(async () => {
-    if (!highlightCardRef.current || !data) return;
-    setHighlightStatus("generating");
-    try {
-      const { toBlob: htiToBlob } = await import("html-to-image");
-      const blobResult = await htiToBlob(highlightCardRef.current, {
-        pixelRatio: 2,
-        fetchRequestInit: { mode: "cors" },
-      });
-      if (!blobResult) throw new Error("html-to-image toBlob returned null");
-      const blob = blobResult;
-
-      const white = data.game.whitePlayer || "White";
-      const black = data.game.blackPlayer || "Black";
-      const cls = criticalMoment?.analysis.classification ?? "move";
-      const mv = criticalMoment
-        ? `${criticalMoment.analysis.moveNumber}${criticalMoment.analysis.color === "w" ? "." : "..."} ${criticalMoment.analysis.san}`
-        : "";
-      const shareText = `${white} vs ${black} — ${cls} on ${mv} #ChessOTB #ChessOTBclub`;
-      const file = new File([blob], "chess-highlight.png", { type: "image/png" });
-
-      // Try native share with image file
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Chess Game Highlight", text: shareText });
-      } else if (navigator.share) {
-        await navigator.share({ title: "Chess Game Highlight", text: shareText, url: window.location.href });
-      } else {
-        // Fallback: trigger download
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `chess-highlight-${data.game.id?.slice(0, 8) ?? "game"}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-
-      setHighlightStatus("done");
-      setTimeout(() => setHighlightStatus("idle"), 3000);
-    } catch (err) {
-      logger.error("Highlight generation failed:", err);
-      setHighlightStatus("idle");
-    }
-  }, [data, criticalMoment]);
-
   // ── Download annotated PGN ───────────────────────────────────────────────
   const handleDownloadPgn = useCallback(() => {
     if (!data) return;
@@ -921,27 +840,6 @@ export default function GameAnalysis() {
     downloadPgn(pgn, data.game);
     setPgnDownloadStatus("done");
     setTimeout(() => setPgnDownloadStatus("idle"), 2500);
-  }, [data]);
-
-  const handleDownloadHighlight = useCallback(async () => {
-    if (!highlightCardRef.current || !data) return;
-    setHighlightStatus("generating");
-    try {
-      const { toPng: htiToPng } = await import("html-to-image");
-      const url = await htiToPng(highlightCardRef.current, {
-        pixelRatio: 2,
-        fetchRequestInit: { mode: "cors" },
-      });
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `chess-highlight-${data.game.id?.slice(0, 8) ?? "game"}.png`;
-      a.click();
-      setHighlightStatus("done");
-      setTimeout(() => setHighlightStatus("idle"), 3000);
-    } catch (err) {
-      logger.error("Highlight download failed:", err);
-      setHighlightStatus("idle");
-    }
   }, [data]);
 
   // ── Loading state ─────────────────────────────────────────────────────────
@@ -991,26 +889,12 @@ export default function GameAnalysis() {
 
   const isAnalyzing = data.session?.status === "analyzing";
 
-  // ── Video sync derived values ───────────────────────────────────────────────
-  const videoKey = data.session?.videoKey ?? null;
-  const parsedMoveTimestamps: MoveTimestamp[] = (() => {
-    if (!data.game.moveTimestamps) return [];
-    try {
-      return JSON.parse(data.game.moveTimestamps) as MoveTimestamp[];
-    } catch {
-      return [];
-    }
-  })();
-
   const analysisProgress =
     data.game.totalMoves && data.game.totalMoves > 0
       ? Math.round((data.analyses.length / (data.game.totalMoves * 2)) * 100)
       : data.analyses.length > 0
         ? 100
         : 0;
-
-  // FEN timeline from CV pipeline (may be empty for manually-entered games)
-  const fenTimeline = data.fenTimeline ?? [];
 
   return (
     <div
@@ -1094,33 +978,6 @@ export default function GameAnalysis() {
             <div className="lg:hidden">
               <EvalBar evalCp={currentEval} isDark={isDark} orientation="horizontal" />
             </div>
-
-            {/* FEN scrubber mode banner */}
-            {selectedFenEntry && (
-              <div
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs border ${
-                  isDark
-                    ? "bg-[#436850]/15 border-[#436850]/30 text-[#7ab88a]"
-                    : "bg-[#436850]/8 border-[#436850]/20 text-[#2d5235]"
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-[#436850] animate-pulse flex-shrink-0" />
-                <span className="font-medium">Detected position</span>
-                <span className={isDark ? "text-white/40" : "text-[#436850]"}>
-                  — CV snapshot, not from PGN
-                </span>
-                <button
-                  onClick={() => setSelectedFenEntry(null)}
-                  className={`ml-auto text-[10px] px-2 py-0.5 rounded font-medium transition-colors ${
-                    isDark
-                      ? "bg-white/10 hover:bg-white/20 text-white/60"
-                      : "bg-[#ADBC9F] hover:bg-[#ADBC9F] text-[#436850]"
-                  }`}
-                >
-                  Back to PGN
-                </button>
-              </div>
-            )}
 
             {/* Auto-analysis progress banner — shown for imported games being analyzed */}
             {isAnalyzing && data.analyses.length === 0 && (
@@ -1435,31 +1292,6 @@ export default function GameAnalysis() {
 
           {/* Right: Move list + Summary */}
           <div className="lg:w-[360px] space-y-4">
-            {/* Video player — only shown when this game came from a video recording */}
-            {videoKey && data.game.sessionId && (
-              <GameVideoPlayer
-                sessionId={data.game.sessionId}
-                moveTimestamps={parsedMoveTimestamps}
-                currentMoveIndex={currentMoveIndex}
-                totalMoves={data.analyses.length}
-                isDark={isDark}
-              />
-            )}
-
-            {/* FEN timeline scrubber — only shown when CV pipeline produced detected positions */}
-            {fenTimeline.length > 0 && (
-              <FenScrubber
-                fenTimeline={fenTimeline}
-                onSelectFen={(entry) => {
-                  setSelectedFenEntry(entry);
-                  // When returning to PGN mode, restore board to current move
-                  if (!entry) setCurrentMoveIndex((i) => i);
-                }}
-                selectedEntry={selectedFenEntry}
-                isDark={isDark}
-              />
-            )}
-
             {/* Move list */}
             <MoveList
               analyses={data.analyses}
@@ -1479,163 +1311,10 @@ export default function GameAnalysis() {
               />
             )}
 
-            {/* ── Game Highlight Generator ─────────────────────────────── */}
-            {criticalMoment && data.analyses.length > 0 && (
-              <div
-                className={`rounded-2xl border p-4 space-y-3 ${
-                  isDark
-                    ? "bg-[#0f1f12] border-white/10"
-                    : "bg-white border-[#ADBC9F]"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[#436850]" />
-                  <span
-                    className={`text-sm font-semibold ${
-                      isDark ? "text-white" : "text-[#12372A]"
-                    }`}
-                  >
-                    Game Highlight
-                  </span>
-                  <span
-                    className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                      isDark
-                        ? "bg-white/10 text-white/50"
-                        : "bg-[#ADBC9F]/40 text-[#436850]"
-                    }`}
-                  >
-                    Move {criticalMoment.analysis.moveNumber}
-                    {criticalMoment.analysis.color === "w" ? "." : "..."}{" "}
-                    {criticalMoment.analysis.san}
-                  </span>
-                </div>
-
-                <p
-                  className={`text-xs leading-relaxed ${
-                    isDark ? "text-white/50" : "text-[#436850]"
-                  }`}
-                >
-                  The biggest swing of the game —{" "}
-                  <span className="font-medium capitalize">
-                    {criticalMoment.analysis.classification}
-                  </span>{" "}
-                  with a{" "}
-                  {(criticalMoment.swing / 100).toFixed(1)} cp eval shift.
-                  Share it as a 1080×1080 PNG.
-                </p>
-
-                {/* Preview thumbnail */}
-                <div
-                  className={`rounded-xl overflow-hidden border ${
-                    isDark ? "border-white/10" : "border-[#ADBC9F]"
-                  }`}
-                  style={{ maxHeight: 200, overflow: "hidden" }}
-                >
-                  <div style={{ transform: "scale(0.37)", transformOrigin: "top left", width: "270%", pointerEvents: "none" }}>
-                    <GameHighlightCard
-                      fen={criticalMoment.analysis.fen ?? "start"}
-                      moveNumber={criticalMoment.analysis.moveNumber}
-                      moveColor={criticalMoment.analysis.color}
-                      san={criticalMoment.analysis.san}
-                      classification={criticalMoment.analysis.classification ?? "good"}
-                      evalCp={criticalMoment.analysis.eval ?? 0}
-                      evalSwing={criticalMoment.swing}
-                      whitePlayer={data.game.whitePlayer ?? "White"}
-                      blackPlayer={data.game.blackPlayer ?? "Black"}
-                      result={data.game.result}
-                      openingName={data.game.openingName}
-                      openingEco={data.game.openingEco}
-                      whiteAccuracy={data.summary?.white?.accuracy ?? null}
-                      blackAccuracy={data.summary?.black?.accuracy ?? null}
-                      boardOrientation={boardOrientation}
-                    />
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleShareHighlight}
-                    disabled={highlightStatus === "generating"}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      highlightStatus === "done"
-                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : highlightStatus === "generating"
-                          ? isDark
-                            ? "bg-white/5 text-white/30 cursor-not-allowed"
-                            : "bg-[#ADBC9F]/40 text-[#436850] cursor-not-allowed"
-                          : "bg-[#436850] hover:bg-[#4a7d55] text-white"
-                    }`}
-                  >
-                    {highlightStatus === "generating" ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : highlightStatus === "done" ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      <Share2 className="w-4 h-4" />
-                    )}
-                    {highlightStatus === "generating"
-                      ? "Generating…"
-                      : highlightStatus === "done"
-                        ? "Shared!"
-                        : "Share Highlight"}
-                  </button>
-                  <button
-                    onClick={handleDownloadHighlight}
-                    disabled={highlightStatus === "generating"}
-                    className={`px-3 py-2.5 rounded-xl transition-all ${
-                      highlightStatus === "generating"
-                        ? isDark
-                          ? "text-white/20 cursor-not-allowed"
-                          : "text-[#436850]/70 cursor-not-allowed"
-                        : isDark
-                          ? "text-white/50 hover:bg-white/10 hover:text-white"
-                          : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A]"
-                    }`}
-                    title="Download PNG"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </main>
 
-      {/* ── Hidden full-resolution export card (off-screen) ──────────────── */}
-      {criticalMoment && (
-        <div
-          style={{
-            position: "fixed",
-            left: "-9999px",
-            top: 0,
-            width: 540,
-            height: 540,
-            pointerEvents: "none",
-            zIndex: -1,
-          }}
-        >
-          <GameHighlightCard
-            ref={highlightCardRef}
-            fen={criticalMoment.analysis.fen ?? "start"}
-            moveNumber={criticalMoment.analysis.moveNumber}
-            moveColor={criticalMoment.analysis.color}
-            san={criticalMoment.analysis.san}
-            classification={criticalMoment.analysis.classification ?? "good"}
-            evalCp={criticalMoment.analysis.eval ?? 0}
-            evalSwing={criticalMoment.swing}
-            whitePlayer={data.game.whitePlayer ?? "White"}
-            blackPlayer={data.game.blackPlayer ?? "Black"}
-            result={data.game.result}
-            openingName={data.game.openingName}
-            openingEco={data.game.openingEco}
-            whiteAccuracy={data.summary?.white?.accuracy ?? null}
-            blackAccuracy={data.summary?.black?.accuracy ?? null}
-            boardOrientation={boardOrientation}
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -63,6 +63,7 @@ interface Conversation {
   userAId: string;
   userBId: string;
   lastMessageAt: string;
+  unreadCount: number;
   otherUser: OtherUser | null;
   lastMessage: { body: string | null; type: string; senderId: string; createdAt: string } | null;
 }
@@ -256,6 +257,9 @@ export default function ClubMessages() {
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages ?? []);
+        setConversations((previous) => previous.map((conversation) => (
+          conversation.id === convId ? { ...conversation, unreadCount: 0 } : conversation
+        )));
       }
     } catch { /* silent */ } finally {
       setMessagesLoading(false);
@@ -472,9 +476,19 @@ export default function ClubMessages() {
                     </p>
                   </div>
                   {conv.lastMessage && (
-                    <span className="text-[10px] text-white/30 flex-shrink-0">
-                      {timeAgo(conv.lastMessage.createdAt)}
-                    </span>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className="text-[10px] text-white/30">
+                        {timeAgo(conv.lastMessage.createdAt)}
+                      </span>
+                      {conv.unreadCount > 0 && (
+                        <span
+                          className="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-[#4ade80] text-[#0d1f12] text-[10px] font-black tabular-nums"
+                          aria-label={`${conv.unreadCount} unread message${conv.unreadCount === 1 ? "" : "s"}`}
+                        >
+                          {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </button>
               ))

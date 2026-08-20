@@ -1,0 +1,2 @@
+ALTER TABLE `club_conversations` ADD `user_a_last_read_at` timestamp DEFAULT (now()) NOT NULL;--> statement-breakpoint
+ALTER TABLE `club_conversations` ADD `user_b_last_read_at` timestamp DEFAULT (now()) NOT NULL;

@@ -533,6 +533,9 @@ export const clubConversations = mysqlTable(
     userBId: varchar("user_b_id", { length: 36 }).notNull(),
     // ISO timestamp of the last message (for sorting)
     lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+    // Per-participant read cursors drive unread conversation counts.
+    userALastReadAt: timestamp("user_a_last_read_at").defaultNow().notNull(),
+    userBLastReadAt: timestamp("user_b_last_read_at").defaultNow().notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({

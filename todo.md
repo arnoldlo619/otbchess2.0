@@ -2862,10 +2862,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Goal 2 — Profile Page Enhancements
 
 - [ ] Add profile photo upload (base64 stored in localStorage via AuthContext)
-- [ ] Add FIDE ID field to profile edit form
+- [x] Add FIDE ID field to profile edit form
 - [ ] Add Lichess account link with verification badge
 - [ ] Add chess.com account link with verification badge
-- [ ] Show linked accounts section with external profile links
+- [x] Show linked accounts section with external profile links
 
 ## Goal 3 — Club Direct Messaging & Turn-Based Chess
 
@@ -7755,3 +7755,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add accessible drag-and-drop ordering for enabled tournament payment methods
 - [x] Optimize tournament format card image delivery, preload behavior, and loading transitions for faster perceived rendering
 - [x] Add a live board-side engine evaluation bar and scored candidate moves to the Repertoire Builder
+
+## Obsolete Video and Highlight Removal, Messaging, and Profiles
+- [x] Inventory and remove obsolete Video Sync UI and client modules without disturbing core game analysis
+- [x] Inventory and remove obsolete Game Highlight code and client modules without disturbing core game analysis
+- [x] Audit the current club messaging architecture and define the smallest production-ready messaging improvement
+- [x] Audit player-profile capabilities and define the smallest production-ready profile improvement
+- [ ] Implement and validate the selected messaging and profile improvements with regression coverage
+- [x] Add per-user unread conversation counts that clear when a member opens a thread
