@@ -18,7 +18,7 @@ const TOOLS = [
     title: "Matchup Prep",
     tagline: "Scout your opponent before you sit down.",
     description:
-      "Enter any chess.com username and get a deep pre-game scouting report in seconds — opening tendencies, preparation depth, and the exact moves where they most commonly go wrong.",
+      "Enter any chess.com username and get a deep pre-game scouting report in seconds...",
     cta: "Prepare for Opponent",
     href: "/prep",
     external: false,
@@ -60,7 +60,7 @@ const TOOLS = [
     title: "Video Editor",
     tagline: "Annotate your OTB games on video.",
     description:
-      "Upload your OTB game video and open a side-by-side editor: your video plays on the left while a live interactive digital chessboard sits on the right.",
+      "Side-by-side editor: your video plays on the left while a live interactive digital chessboard sits on the right.",
     cta: "Open Video Editor",
     href: "https://otbanalysis.lovable.app",
     external: true,

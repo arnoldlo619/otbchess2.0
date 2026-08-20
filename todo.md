@@ -7769,3 +7769,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Prevent duplicate pending chess challenges within a club conversation
 - [x] Refine public player-profile presentation with a responsive identity and performance summary
 - [x] Refine Chess.com and Lichess account linking with clear connected-state management and safe external profile access
+- [x] Verify and shorten the requested Matchup Prep and Video Analysis copy on the Training page
