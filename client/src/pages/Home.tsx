@@ -73,6 +73,7 @@ import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { DynamicSquare } from "@/components/ui/dynamic-square";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
+import { PatternText } from "@/components/ui/pattern-text";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // Mascot illustrations removed; sections use clean text-only layouts.
@@ -434,9 +435,10 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               <br />
               Chess Tournaments,
               <br />
-              <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}>
-                Over The Board.
-              </span>
+              <PatternText
+                text="Over The Board."
+                className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}
+              />
             </h1>
 
             {/* SEO H2, visually styled as a subtitle and semantically an H2 for crawlers */}
