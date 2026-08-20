@@ -7761,5 +7761,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inventory and remove obsolete Game Highlight code and client modules without disturbing core game analysis
 - [x] Audit the current club messaging architecture and define the smallest production-ready messaging improvement
 - [x] Audit player-profile capabilities and define the smallest production-ready profile improvement
-- [ ] Implement and validate the selected messaging and profile improvements with regression coverage
+- [x] Implement and validate the selected messaging and profile improvements with regression coverage
 - [x] Add per-user unread conversation counts that clear when a member opens a thread
+- [x] Validate FIDE ID and linked chess-platform usernames before saving a player profile

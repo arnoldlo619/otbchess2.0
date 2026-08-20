@@ -99,6 +99,27 @@ interface EditState {
   avatarDataUrl: string | null; // base64 preview before upload
 }
 
+export function validateProfileIdentifiers({
+  chesscomUsername,
+  lichessUsername,
+  fideId,
+}: Pick<EditState, "chesscomUsername" | "lichessUsername" | "fideId">): string | null {
+  const chesscom = chesscomUsername.trim();
+  const lichess = lichessUsername.trim();
+  const fide = fideId.trim();
+
+  if (chesscom && !/^[A-Za-z0-9_-]{1,30}$/.test(chesscom)) {
+    return "Chess.com usernames may use letters, numbers, hyphens, and underscores only.";
+  }
+  if (lichess && !/^[A-Za-z0-9_-]{1,30}$/.test(lichess)) {
+    return "Lichess usernames may use letters, numbers, hyphens, and underscores only.";
+  }
+  if (fide && !/^\d{5,10}$/.test(fide)) {
+    return "FIDE ID must contain 5 to 10 digits.";
+  }
+  return null;
+}
+
 function StatBadge({
   label,
   value,
@@ -460,14 +481,19 @@ export default function ProfilePage() {
   const tournamentCount = (apiTournaments?.length ?? 0) + localOnly.length;
 
   async function handleSave() {
-    setSaving(true);
     setSaveError(null);
+    const identifierError = validateProfileIdentifiers(editState);
+    if (identifierError) {
+      setSaveError(identifierError);
+      return;
+    }
+    setSaving(true);
     try {
       await updateProfile({
-        displayName: editState.displayName,
-        chesscomUsername: editState.chesscomUsername || undefined,
-        lichessUsername: editState.lichessUsername || undefined,
-        fideId: editState.fideId || undefined,
+        displayName: editState.displayName.trim(),
+        chesscomUsername: editState.chesscomUsername.trim() || undefined,
+        lichessUsername: editState.lichessUsername.trim() || undefined,
+        fideId: editState.fideId.trim() || undefined,
         avatarUrl: editState.avatarDataUrl || undefined,
       });
       setEditing(false);
