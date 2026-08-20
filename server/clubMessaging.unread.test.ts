@@ -30,4 +30,11 @@ describe("Club messaging unread state", () => {
     expect(clientSource).toContain('activeConvId ? "flex" : "hidden"');
     expect(clientSource).toContain('aria-label="Back to conversations"');
   });
+
+  it("replaces silent message-operation failures with dismissible alert feedback", () => {
+    expect(clientSource).toContain("async function requestError(response: Response");
+    expect(clientSource).toContain("setActionError(error instanceof Error ? error.message");
+    expect(clientSource).toContain('role="alert"');
+    expect(clientSource).toContain('aria-label="Dismiss message error"');
+  });
 });

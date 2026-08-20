@@ -18,6 +18,7 @@ import {
   Loader2,
   Crown,
   Users,
+  AlertCircle,
 } from "lucide-react";
 import { NavLogo } from "@/components/NavLogo";
 import { useAuthContext } from "@/context/AuthContext";
@@ -79,6 +80,11 @@ function timeAgo(iso: string) {
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+async function requestError(response: Response, fallback: string): Promise<Error> {
+  const payload = await response.json().catch(() => null) as { error?: string } | null;
+  return new Error(payload?.error || fallback);
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
@@ -226,6 +232,7 @@ export default function ClubMessages() {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -283,6 +290,7 @@ export default function ClubMessages() {
   // ── Start a new conversation ────────────────────────────────────────────────
   async function startConversation(otherUserId: string) {
     if (!clubId) return;
+    setActionError(null);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/conversations`, {
         method: "POST",
@@ -290,19 +298,21 @@ export default function ClubMessages() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otherUserId }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        await loadConversations();
-        setActiveConvId(data.conversation.id);
-        setShowNewChat(false);
-      }
-    } catch { /* silent */ }
+      if (!res.ok) throw await requestError(res, "Could not start this conversation. Please try again.");
+      const data = await res.json();
+      await loadConversations();
+      setActiveConvId(data.conversation.id);
+      setShowNewChat(false);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not start this conversation. Please try again.");
+    }
   }
 
   // ── Send a text message ─────────────────────────────────────────────────────
   async function sendMessage() {
     if (!activeConvId || !messageInput.trim()) return;
     setSending(true);
+    setActionError(null);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/messages`, {
         method: "POST",
@@ -310,13 +320,14 @@ export default function ClubMessages() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: messageInput.trim() }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages((prev) => [...prev, data.message]);
-        setMessageInput("");
-        loadConversations();
-      }
-    } catch { /* silent */ } finally {
+      if (!res.ok) throw await requestError(res, "Your message was not sent. Please try again.");
+      const data = await res.json();
+      setMessages((prev) => [...prev, data.message]);
+      setMessageInput("");
+      loadConversations();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Your message was not sent. Please try again.");
+    } finally {
       setSending(false);
     }
   }
@@ -324,22 +335,25 @@ export default function ClubMessages() {
   // ── Send a chess invite ─────────────────────────────────────────────────────
   async function sendChessInvite() {
     if (!activeConvId) return;
+    setActionError(null);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-invite`, {
         method: "POST",
         credentials: "include",
       });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages((prev) => [...prev, data.message]);
-        loadConversations();
-      }
-    } catch { /* silent */ }
+      if (!res.ok) throw await requestError(res, "Could not send the chess challenge. Please try again.");
+      const data = await res.json();
+      setMessages((prev) => [...prev, data.message]);
+      loadConversations();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not send the chess challenge. Please try again.");
+    }
   }
 
   // ── Respond to chess invite ─────────────────────────────────────────────────
   async function respondToInvite(gameId: string, action: "accept" | "decline") {
     if (!activeConvId) return;
+    setActionError(null);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-games/${gameId}/respond`, {
         method: "POST",
@@ -347,15 +361,17 @@ export default function ClubMessages() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      if (res.ok) {
-        await loadMessages(activeConvId);
-      }
-    } catch { /* silent */ }
+      if (!res.ok) throw await requestError(res, "Could not update the chess challenge. Please try again.");
+      await loadMessages(activeConvId);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not update the chess challenge. Please try again.");
+    }
   }
 
   // ── Make a chess move ───────────────────────────────────────────────────────
   async function makeMove(gameId: string, from: string, to: string, promotion?: string) {
     if (!activeConvId) return;
+    setActionError(null);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-games/${gameId}/move`, {
         method: "POST",
@@ -363,10 +379,11 @@ export default function ClubMessages() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ from, to, promotion }),
       });
-      if (res.ok) {
-        await loadMessages(activeConvId);
-      }
-    } catch { /* silent */ }
+      if (!res.ok) throw await requestError(res, "Your move was not recorded. Please try again.");
+      await loadMessages(activeConvId);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Your move was not recorded. Please try again.");
+    }
   }
 
   if (!user) {
@@ -533,6 +550,23 @@ export default function ClubMessages() {
                   Challenge to Chess
                 </button>
               </div>
+
+              {actionError && (
+                <div
+                  role="alert"
+                  className="mx-5 mt-3 flex items-start gap-2 rounded-xl border border-red-400/25 bg-red-400/10 px-3 py-2 text-xs text-red-100"
+                >
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-red-300" />
+                  <span className="flex-1 leading-relaxed">{actionError}</span>
+                  <button
+                    onClick={() => setActionError(null)}
+                    className="-mr-1 -mt-1 rounded-lg p-1 text-red-200/70 transition hover:bg-red-400/10 hover:text-red-100"
+                    aria-label="Dismiss message error"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">

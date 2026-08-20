@@ -7765,3 +7765,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add per-user unread conversation counts that clear when a member opens a thread
 - [x] Validate FIDE ID and linked chess-platform usernames before saving a player profile
 - [x] Make Club Messages switch cleanly between conversation list and active thread on mobile
+- [x] Show clear recoverable errors when club message or chess-challenge actions fail
