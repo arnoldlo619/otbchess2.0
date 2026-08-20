@@ -237,6 +237,7 @@ export default function ClubMessages() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const activeConv = conversations.find((c) => c.id === activeConvId) ?? null;
+  const hasPendingChessInvite = messages.some((message) => message.chessGame?.status === "pending");
 
   // ── Load conversations ──────────────────────────────────────────────────────
   const loadConversations = useCallback(async () => {
@@ -544,10 +545,11 @@ export default function ClubMessages() {
                 </div>
                 <button
                   onClick={sendChessInvite}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#436850]/30 hover:bg-[#436850]/50 text-[#4ade80] text-xs font-semibold border border-[#4ade80]/20 transition"
+                  disabled={hasPendingChessInvite}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#436850]/30 hover:bg-[#436850]/50 text-[#4ade80] text-xs font-semibold border border-[#4ade80]/20 transition disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <Swords className="w-3.5 h-3.5" />
-                  Challenge to Chess
+                  {hasPendingChessInvite ? "Challenge Pending" : "Challenge to Chess"}
                 </button>
               </div>
 

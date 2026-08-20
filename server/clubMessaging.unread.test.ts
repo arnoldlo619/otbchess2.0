@@ -37,4 +37,11 @@ describe("Club messaging unread state", () => {
     expect(clientSource).toContain('role="alert"');
     expect(clientSource).toContain('aria-label="Dismiss message error"');
   });
+
+  it("prevents duplicate pending chess challenges on both the server and client", () => {
+    expect(serverSource).toContain('eq(clubChessGames.status, "pending")');
+    expect(serverSource).toContain("A chess challenge is already awaiting a response.");
+    expect(clientSource).toContain('message.chessGame?.status === "pending"');
+    expect(clientSource).toContain('"Challenge Pending"');
+  });
 });

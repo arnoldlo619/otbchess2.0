@@ -270,6 +270,17 @@ router.post("/:convId/chess-invite", requireAuth, async (req, res) => {
     if (!conv || (conv.userAId !== userId && conv.userBId !== userId)) {
       return res.status(403).json({ error: "Not a participant" });
     }
+    const [pendingGame] = await db
+      .select({ id: clubChessGames.id })
+      .from(clubChessGames)
+      .where(and(
+        eq(clubChessGames.conversationId, convId),
+        eq(clubChessGames.status, "pending"),
+      ))
+      .limit(1);
+    if (pendingGame) {
+      return res.status(409).json({ error: "A chess challenge is already awaiting a response." });
+    }
     const otherId = conv.userAId === userId ? conv.userBId : conv.userAId;
     const gameId = nanoid();
     await db.insert(clubChessGames).values({
