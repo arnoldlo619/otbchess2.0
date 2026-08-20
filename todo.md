@@ -1246,9 +1246,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add OTB!! NavLogo to Director Dashboard header, left of breadcrumb
 
 ## Vertical Round Tracker — Mar 2026
-- [ ] Remove horizontal circle round-counter bar from Director Dashboard header
-- [ ] Build vertical round tracker component (left sidebar, below event info)
-- [ ] Style: compact pill/dot column, completed=green filled, current=green ring pulse, upcoming=muted
+- [x] Remove horizontal circle round-counter bar from Director Dashboard header
+- [x] Build vertical round tracker component (left sidebar, below event info)
+- [x] Style: compact pill/dot column, completed=green filled, current=green ring pulse, upcoming=muted
 
 ## Player Card Redesign — Mar 2026
 - [x] Redesign player cards in Report page — clean, minimal, premium
@@ -1563,7 +1563,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build self-contained ECO opening detection utility (server/openingDetection.ts, ~500 openings inline)
 - [x] Wire opening detection into POST /api/recordings/:id/pgn handler
 - [x] Display opening ECO badge + name on GameAnalysis page (Accuracy panel, above accuracy grid)
-- [ ] Display opening name on game card in My Games list (GameRecorder page)
+- [x] Display opening name on game card in My Games list (GameRecorder page)
 
 ### OTB Accuracy Rating (Lichess win-probability formula)
 - [x] Create server/accuracyCalc.ts with winProbability(cp) and moveAccuracy(wpBefore, wpAfter) functions
@@ -1571,7 +1571,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Store computed accuracy on processed_games (white_accuracy, black_accuracy) after analysis completes
 - [x] Display OTB Accuracy Rating with label (Brilliant/Excellent/Good/Decent/Inaccurate/Poor/Blunder-heavy)
 - [x] Display best-move streak on GameAnalysis page (shown when streak > 2)
-- [ ] Display accuracy on game card in GameRecorder My Games list
+- [x] Display accuracy on game card in GameRecorder My Games list
 - [x] Write 44 tests for win-probability formula, accuracy labels, streak, and ECO detection (1130 total)
 
 ## Game Highlight Generator
@@ -7740,7 +7740,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Unify all tournament-format cards to the Quickstart green treatment and remove their icon tiles
 - [x] Balance format-card screenshot visibility and text-protection overlays for clear imagery and readable copy
 - [x] Replace format-card hover glow with direct screenshot brightening and focus visibility
-- [ ] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
+- [x] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
 - [x] Replace tournament format cards with AI-generated editorial illustrations (notebook/journal aesthetic)
 - [x] Preserve existing card typography hierarchy during illustration card redesign
 - [x] Add a motion-safe subtle colored border glow to clearly indicate the selected tournament format card

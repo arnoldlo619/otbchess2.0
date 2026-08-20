@@ -1,5 +1,9 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect, beforeEach } from "vitest";
+
+const directorSource = readFileSync(resolve(process.cwd(), "client/src/pages/Director.tsx"), "utf8");
 
 // ── Command Center Strip Tests ──────────────────────────────────────────────
 
@@ -50,41 +54,16 @@ describe("Command Center Status Strip", () => {
     });
   });
 
-  describe("Round timeline dots", () => {
-    it("generates correct dot states for 5-round tournament in round 3", () => {
-      const totalRounds = 5;
-      const currentRound = 3;
-      const dots = Array.from({ length: totalRounds }, (_, i) => {
-        const roundNum = i + 1;
-        if (roundNum < currentRound) return "completed";
-        if (roundNum === currentRound) return "current";
-        return "upcoming";
-      });
-      expect(dots).toEqual(["completed", "completed", "current", "upcoming", "upcoming"]);
+  describe("Consolidated round navigation", () => {
+    it("keeps the single round status label while rendering the detailed tracker in the left rail", () => {
+      expect(directorSource).toContain("Round {state.currentRound} / {state.totalRounds}");
+      expect(directorSource).toContain("<VerticalRoundTracker");
+      expect(directorSource).toContain("Pulse ring for current round");
     });
 
-    it("all dots are upcoming during registration", () => {
-      const totalRounds = 4;
-      const currentRound = 0;
-      const dots = Array.from({ length: totalRounds }, (_, i) => {
-        const roundNum = i + 1;
-        if (roundNum < currentRound) return "completed";
-        if (roundNum === currentRound) return "current";
-        return "upcoming";
-      });
-      expect(dots).toEqual(["upcoming", "upcoming", "upcoming", "upcoming"]);
-    });
-
-    it("all dots completed when tournament is done", () => {
-      const totalRounds = 4;
-      const currentRound = 5;
-      const dots = Array.from({ length: totalRounds }, (_, i) => {
-        const roundNum = i + 1;
-        if (roundNum < currentRound) return "completed";
-        if (roundNum === currentRound) return "current";
-        return "upcoming";
-      });
-      expect(dots).toEqual(["completed", "completed", "completed", "completed"]);
+    it("does not reintroduce the redundant header timeline-dot group", () => {
+      expect(directorSource).not.toContain("Round timeline dots");
+      expect(directorSource).not.toContain("const _isUpcoming = rn > state.currentRound");
     });
   });
 });

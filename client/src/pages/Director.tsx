@@ -3452,31 +3452,6 @@ export default function Director() {
                       Round {state.currentRound} / {state.totalRounds}
                     </span>
                   )}
-                  {/* Round timeline dots */}
-                  {!isRegistration && state.totalRounds > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5">
-                      {Array.from({ length: state.totalRounds }, (_, i) => i + 1).map((rn) => {
-                        const isCompleted = rn < state.currentRound;
-                        const isCurrent = rn === state.currentRound;
-                        const _isUpcoming = rn > state.currentRound;
-                        return (
-                          <span
-                            key={rn}
-                            title={`Round ${rn}${isCompleted ? " (complete)" : isCurrent ? " (current)" : " (upcoming)"}`}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                              isCompleted
-                                ? isDark ? "bg-[#4CAF50]" : "bg-[#436850]"
-                                : isCurrent
-                                ? allResultsIn
-                                  ? isDark ? "bg-[#4CAF50] ring-2 ring-[#4CAF50]/30" : "bg-[#436850] ring-2 ring-[#436850]/25"
-                                  : "bg-amber-400 ring-2 ring-amber-400/30 animate-pulse"
-                                : isDark ? "bg-white/12" : "bg-[#ADBC9F]"
-                            }`}
-                          />
-                        );
-                      })}
-                    </span>
-                  )}
                   {/* Players */}
                   <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
                     isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
