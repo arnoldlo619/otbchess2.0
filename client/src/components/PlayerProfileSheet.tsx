@@ -272,6 +272,11 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
   const wins = eloGames.filter((g) => g.result === "win").length;
   const draws = eloGames.filter((g) => ["stalemate", "insufficient", "50move", "repetition", "agreed", "timevsinsufficient"].includes(g.result)).length;
   const losses = eloGames.length - wins - draws;
+  const tournamentGames = player.wins + player.draws + player.losses;
+  const tournamentScoreRate = tournamentGames > 0
+    ? Math.round(((player.wins + player.draws * 0.5) / tournamentGames) * 100)
+    : null;
+  const platformLabel = platform === "chesscom" ? "chess.com" : "Lichess";
 
   const bgSheet = isDark ? "oklch(0.14 0.05 145)" : "oklch(0.98 0.01 145)";
   const bgOverlay = isDark ? "rgba(0,0,0,0.72)" : "rgba(0,0,0,0.45)";
@@ -325,54 +330,76 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
         <div className="overflow-y-auto" style={{ maxHeight: "calc(88dvh - 32px)" }}>
           <div className="px-5 pb-8 space-y-5">
 
-            {/* ── Profile header ── */}
-            <div className="flex items-center gap-4 pt-2">
-              {/* Avatar */}
-              <div
-                className="relative flex-shrink-0 rounded-2xl overflow-hidden"
-                style={{ width: 72, height: 72, background: isDark ? "oklch(0.20 0.06 145)" : "oklch(0.90 0.03 145)", border: `2px solid ${accent}44` }}
-              >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl font-black" style={{ color: accent }}>
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                {/* Platform badge */}
-                <div
-                  className="absolute bottom-0 right-0 text-[10px] font-bold px-1 py-0.5 rounded-tl-lg"
-                  style={{ background: isDark ? "oklch(0.14 0.05 145)" : "white", color: textMuted }}
+            {/* ── Public identity header ── */}
+            <div
+              className="relative overflow-hidden rounded-[24px] border p-4"
+              style={{
+                background: isDark ? "linear-gradient(135deg, oklch(0.23 0.07 145), oklch(0.17 0.05 145))" : "linear-gradient(135deg, oklch(0.96 0.03 145), oklch(0.99 0.01 145))",
+                borderColor: `${accent}33`,
+              }}
+            >
+              <div className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full" style={{ background: `${accent}18`, filter: "blur(18px)" }} />
+              <div className="relative flex items-start justify-between gap-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: accent }}>Player Profile</p>
+                <a
+                  href={profileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-xl transition active:scale-90"
+                  style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.65)" : "white", color: accent, border: `1px solid ${accent}33` }}
+                  aria-label={`Open ${displayName}'s ${platformLabel} profile`}
                 >
-                  {platform === "chesscom" ? "♟" : "♜"}
-                </div>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
               </div>
-
-              {/* Name + meta */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {player.title && (
-                    <span
-                      className="text-xs font-black px-1.5 py-0.5 rounded-md flex-shrink-0"
-                      style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
-                    >
-                      {player.title}
-                    </span>
+              <div className="relative mt-3 flex items-center gap-4">
+                <div
+                  className="relative flex-shrink-0 overflow-hidden rounded-2xl"
+                  style={{ width: 76, height: 76, background: isDark ? "oklch(0.20 0.06 145)" : "oklch(0.90 0.03 145)", border: `2px solid ${accent}66` }}
+                >
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={`${displayName} avatar`} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-2xl font-black" style={{ color: accent }}>
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
                   )}
-                  <span className="text-base font-bold truncate" style={{ color: textMain }}>
-                    {displayName}
-                  </span>
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {flag && <span className="text-sm">{flag}</span>}
-                  <span className="text-sm" style={{ color: textMuted }}>@{player.username}</span>
-                </div>
-                {/* Tournament ELO */}
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-xs font-semibold" style={{ color: textMuted }}>ELO:</span>
-                  <span className="text-sm font-black tabular-nums" style={{ color: accent }}>{player.elo}</span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {player.title && (
+                      <span className="rounded-md px-1.5 py-0.5 text-xs font-black" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
+                        {player.title}
+                      </span>
+                    )}
+                    <span className="truncate text-lg font-black" style={{ color: textMain }}>{displayName}</span>
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5">
+                    {flag && <span className="text-sm" aria-label={`Country: ${player.country}`}>{flag}</span>}
+                    <span className="truncate text-sm" style={{ color: textMuted }}>@{player.username}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="rounded-full px-2 py-1 text-[10px] font-bold" style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.72)" : "white", color: textMuted, border: `1px solid ${dividerColor}` }}>
+                      {platformLabel}
+                    </span>
+                    <span className="rounded-full px-2 py-1 text-[10px] font-bold tabular-nums" style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}>
+                      ELO {player.elo}
+                    </span>
+                    {tournamentGames > 0 && (
+                      <span className="rounded-full px-2 py-1 text-[10px] font-bold tabular-nums" style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.72)" : "white", color: textMuted, border: `1px solid ${dividerColor}` }}>
+                        {tournamentGames} game{tournamentGames === 1 ? "" : "s"} played
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+              {tournamentScoreRate !== null && (
+                <div className="relative mt-3 flex items-center justify-between rounded-xl px-3 py-2" style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.62)" : "white", border: `1px solid ${dividerColor}` }}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Event score rate</span>
+                  <span className="text-sm font-black tabular-nums" style={{ color: accent }}>{tournamentScoreRate}%</span>
+                </div>
+              )}
             </div>
 
             {/* ── Divider ── */}
