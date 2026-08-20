@@ -97,26 +97,34 @@
   to { background-position: -200% 0; }
 }
 
-@keyframes otb-pattern-text-scan {
-  0%, 10% { background-position: 0 0, 0 0; }
-  48%, 54% { background-position: 1.35em -1.35em, -75% 0; }
-  90%, 100% { background-position: 2.7em -2.7em, -150% 0; }
+@keyframes otb-pattern-text-breathe {
+  0%, 100% { opacity: 0.28; }
+  50% { opacity: 0.88; }
 }
 
 .otb-pattern-text {
   position: relative;
   display: inline-block;
+  color: var(--otb-pattern-base);
+  text-shadow: 0 0.05em 0.1em color-mix(in srgb, var(--otb-pattern-base) 18%, transparent);
+}
+
+.otb-pattern-text::after {
+  position: absolute;
+  inset: 0;
+  content: attr(data-pattern-text);
+  pointer-events: none;
   color: transparent;
   background-image:
     repeating-linear-gradient(135deg, var(--otb-pattern-line) 0 1px, transparent 1px 5px),
-    linear-gradient(105deg, var(--otb-pattern-base) 0%, var(--otb-pattern-base) 42%, var(--otb-pattern-mid) 47%, var(--otb-pattern-glint) 50%, var(--otb-pattern-mid) 53%, var(--otb-pattern-base) 58%, var(--otb-pattern-base) 100%);
-  background-size: 0.46em 0.46em, 250% 100%;
-  background-position: 0 0, 0 0;
+    linear-gradient(105deg, transparent 0%, transparent 32%, var(--otb-pattern-mid) 43%, var(--otb-pattern-glint) 50%, var(--otb-pattern-mid) 57%, transparent 68%, transparent 100%);
+  background-size: 0.46em 0.46em, 100% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0.06em 0.08em color-mix(in srgb, var(--otb-pattern-base) 20%, transparent));
-  animation: otb-pattern-text-scan 3.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  will-change: opacity;
+  transform: translateZ(0);
+  animation: otb-pattern-text-breathe 3.2s ease-in-out infinite;
 }
 
 .otb-pattern-text--dark {
@@ -134,7 +142,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .otb-pattern-text { animation: none; }
+  .otb-pattern-text::after { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
