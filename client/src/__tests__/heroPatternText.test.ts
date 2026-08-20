@@ -11,13 +11,14 @@ describe("landing hero pattern text", () => {
     expect(home).toContain('<PatternText\n                text="Over The Board."');
   });
 
-  it("uses a premium hover depth treatment and remains safe for reduced motion", () => {
+  it("uses a restrained premium hover treatment and remains safe for reduced motion", () => {
     expect(styles).toContain(".otb-pattern-text--dark");
     expect(styles).toContain(".otb-pattern-text--light");
     expect(styles).toContain("@media (hover: hover) and (pointer: fine)");
     expect(styles).toContain(".otb-pattern-text:hover");
-    expect(styles).toContain("transform: translateY(-0.035em) scale(1.012);");
-    expect(styles).toContain(".otb-pattern-text:hover::before");
+    expect(styles).toContain("opacity: 0.66;");
+    expect(styles).not.toContain("translateY(-0.035em)");
+    expect(styles).not.toContain(".otb-pattern-text::before");
     expect(styles).toContain(".otb-pattern-text::after { transition: none; }");
   });
 });

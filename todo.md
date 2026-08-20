@@ -7777,3 +7777,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace the imperceptible hero pattern effect with a more visible brand-aligned animated text treatment
 - [x] Optimize the landing hero text animation to eliminate choppiness while retaining visible motion
 - [x] Add a subtle premium hover interaction to the landing hero’s “Over The Board.” text
+- [x] Refine the hero headline hover interaction into a quieter, sleek premium treatment
