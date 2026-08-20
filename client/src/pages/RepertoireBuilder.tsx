@@ -555,7 +555,7 @@ function ExplorerMoveRow({
     <div
       onMouseEnter={onHoverEnter}
       onMouseLeave={onHoverLeave}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all group ${
+      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all group ${
         isInRepertoire
           ? isDark
             ? "bg-emerald-500/10 border border-emerald-500/30"
@@ -568,7 +568,7 @@ function ExplorerMoveRow({
     >
       {/* Move SAN */}
       <div className="w-16 shrink-0">
-        <span className={`font-bold font-mono text-base ${isDark ? "text-white" : "text-[#12372A]"}`}>
+        <span className={`font-bold font-mono text-lg ${isDark ? "text-white" : "text-[#12372A]"}`}>
           {move.san}
         </span>
       </div>
@@ -576,7 +576,7 @@ function ExplorerMoveRow({
       <div className="w-14 shrink-0 text-right">
         {engineLine ? (
           <span
-            className={`inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold ${
+            className={`inline-flex items-center rounded-md px-2 py-1 font-mono text-xs font-bold ${
               engineLine.mate !== null
                 ? "bg-emerald-500/15 text-emerald-500"
                 : engineLine.cp > 30
@@ -607,7 +607,7 @@ function ExplorerMoveRow({
             </span>
           )}
           {openingName && (
-            <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-[#436850]"}`}>
+            <span className={`text-sm font-medium truncate ${isDark ? "text-white/70" : "text-[#436850]"}`}>
               {openingName}
             </span>
           )}
@@ -615,7 +615,7 @@ function ExplorerMoveRow({
       </div>
 
       {/* Frequency */}
-      <div className={`text-xs text-right shrink-0 w-20 ${isDark ? "text-white/50" : "text-[#436850]"}`}>
+      <div className={`text-sm font-medium text-right shrink-0 w-20 ${isDark ? "text-white/65" : "text-[#436850]"}`}>
         {games > 0 ? `1 in ${Math.round(1 / freq)}` : "rare"}
       </div>
 
@@ -1662,7 +1662,7 @@ export default function RepertoireBuilder() {
                   setEditingName(true);
                   setTimeout(() => nameInputRef.current?.focus(), 50);
                 }}
-                className="text-lg font-bold hover:underline text-white"
+                className="text-xl sm:text-2xl font-bold tracking-tight hover:underline text-white"
               >
                 {repertoireName}
               </button>
@@ -1894,7 +1894,7 @@ export default function RepertoireBuilder() {
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center gap-2">
                   {openingName && (
-                    <span className={`text-sm font-medium ${isDark ? "text-white/70" : "text-[#436850]"}`}>
+                    <span className={`text-base font-semibold ${isDark ? "text-white/80" : "text-[#436850]"}`}>
                       {openingName}
                     </span>
                   )}
@@ -1958,7 +1958,7 @@ export default function RepertoireBuilder() {
 
               {/* Engine info line */}
               {showEngine && sfEval && (
-                <div className={`mt-2 text-xs flex items-center gap-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+                <div className={`mt-2 text-sm flex flex-wrap items-center gap-x-2 gap-y-1 ${isDark ? "text-white/60" : "text-[#436850]"}`}>
                   <Zap size={12} />
                   <span>Stockfish 18 Lite{isMultiThreaded ? ` · ${threadCount}T` : ""} · depth {sfEval.depth}</span>
                   {sfEval.bestMove && (
@@ -1980,8 +1980,8 @@ export default function RepertoireBuilder() {
                   }`}>
                     <div className="flex items-center gap-1.5">
                       <MessageSquare size={13} className={isDark ? "text-white/40" : "text-[#436850]"} />
-                      <span className={`text-xs font-medium ${
-                        isDark ? "text-white/50" : "text-[#436850]"
+                      <span className={`text-sm font-semibold ${
+                        isDark ? "text-white/70" : "text-[#436850]"
                       }`}>
                         {currentNode && currentNode.fen !== moveTree.fen
                           ? `Note on ${currentNode.san ?? "starting position"}`
@@ -1989,7 +1989,7 @@ export default function RepertoireBuilder() {
                       </span>
                     </div>
                     {noteSaved && (
-                      <span className="flex items-center gap-1 text-[11px] text-emerald-500">
+                      <span className="flex items-center gap-1 text-xs font-medium text-emerald-500">
                         <Check size={11} /> Saved
                       </span>
                     )}
@@ -2009,7 +2009,7 @@ export default function RepertoireBuilder() {
                     }}
                     placeholder={`Add coaching notes for this position… (Ctrl+Enter to save)`}
                     rows={3}
-                    className={`w-full px-3 py-2 text-sm resize-none bg-transparent outline-none placeholder:text-sm ${
+                    className={`w-full px-3 py-2.5 text-[15px] leading-relaxed resize-none bg-transparent outline-none placeholder:text-sm ${
                       isDark
                         ? "text-white/80 placeholder-white/25"
                         : "text-[#12372A]/85 placeholder-gray-400"
@@ -2454,7 +2454,7 @@ export default function RepertoireBuilder() {
             {rightTab === "explorer" && (
             <>
             {/* Explorer moves table header */}
-              <div className={`px-4 py-2 flex items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+              <div className={`px-4 py-2.5 flex items-center gap-3 text-sm font-semibold ${isDark ? "text-white/60" : "text-[#436850]"}`}>
               <div className="w-16 shrink-0">Move</div>
               <div className="w-14 shrink-0 text-right">SF</div>
               <div className="flex-1">Opening</div>
