@@ -7772,3 +7772,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Verify and shorten the requested Matchup Prep and Video Analysis copy on the Training page
 - [x] Improve Repertoire Builder workspace typography for premium visibility and readability
 - [x] Normalize Repertoire Builder opening labels into familiar player-friendly names
+- [x] Apply familiar opening-family labels consistently beyond the first move in Repertoire Builder lines

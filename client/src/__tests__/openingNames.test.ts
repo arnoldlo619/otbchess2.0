@@ -20,4 +20,11 @@ describe("formatFriendlyOpeningName", () => {
     expect(formatFriendlyOpeningName("Catalan: Open Variation", "E06", "d4")).toBe("Catalan Opening");
     expect(formatFriendlyOpeningName("Scandinavian: Mieses-Kotrc", "B01", "e4")).toBe("Scandinavian Defense");
   });
+
+  it("keeps deeper variation-only labels anchored to their ECO opening family", () => {
+    expect(formatFriendlyOpeningName("Four Knights, Main Line", "A29", "Nc3")).toBe("English Opening");
+    expect(formatFriendlyOpeningName("Classical Variation, 7...Qe7", "B90", "d6")).toBe("Sicilian Defense");
+    expect(formatFriendlyOpeningName("Exchange Variation, 4...Bf5", "B13", "exd5")).toBe("Caro-Kann Defense");
+    expect(formatFriendlyOpeningName("Classical, 7...Qe7", "E92", "Be2")).toBe("King's Indian Defense");
+  });
 });

@@ -76,6 +76,53 @@ function firstMoveFallback(eco?: string, san?: string): string | undefined {
   return undefined;
 }
 
+/**
+ * ECO codes remain stable even when an explorer supplies only a niche variation
+ * label. This gives every deeper move a familiar opening family instead of
+ * exposing terms such as "Four Knights" or "Classical, 7...Qe7" in isolation.
+ */
+function ecoFamilyName(eco?: string): string | undefined {
+  if (!eco || !/^[A-E]\d{2}$/.test(eco)) return undefined;
+  const code = Number(eco.slice(1));
+
+  switch (eco[0]) {
+    case "A":
+      if (code >= 4 && code <= 9) return "Reti Opening";
+      if (code >= 10 && code <= 39) return "English Opening";
+      if (code >= 40 && code <= 44) return "Queen's Pawn Opening";
+      if (code >= 45 && code <= 79) return "Indian Defense";
+      if (code >= 80 && code <= 99) return "Dutch Defense";
+      return undefined;
+    case "B":
+      if (code === 0) return "King's Pawn Opening";
+      if (code === 1) return "Scandinavian Defense";
+      if (code >= 2 && code <= 5) return "Alekhine Defense";
+      if (code >= 6 && code <= 9) return "Modern Defense";
+      if (code >= 10 && code <= 19) return "Caro-Kann Defense";
+      if (code >= 20) return "Sicilian Defense";
+      return undefined;
+    case "C":
+      if (code <= 19) return "French Defense";
+      if (code <= 29) return "King's Pawn Opening";
+      if (code <= 39) return "King's Gambit";
+      if (code <= 59) return "Italian Game";
+      return "Ruy Lopez";
+    case "D":
+      if (code <= 5) return "Queen's Pawn Opening";
+      if (code <= 19) return "Queen's Gambit";
+      if (code <= 69) return "Queen's Gambit";
+      if (code <= 79) return "Grünfeld Defense";
+      return "Grünfeld Defense";
+    case "E":
+      if (code <= 9) return "Catalan Opening";
+      if (code <= 19) return "Queen's Indian Defense";
+      if (code <= 59) return "Nimzo-Indian Defense";
+      return "King's Indian Defense";
+    default:
+      return undefined;
+  }
+}
+
 export function formatFriendlyOpeningName(
   rawName?: string,
   eco?: string,
@@ -111,6 +158,11 @@ export function formatFriendlyOpeningName(
   for (const [pattern, friendlyName] of FAMILY_NAMES) {
     if (normalized.includes(pattern)) return friendlyName;
   }
+
+  // Once a line moves beyond its first few moves, source names can become
+  // variation-only labels. Prefer their stable ECO family over a niche label.
+  const ecoFamily = ecoFamilyName(eco);
+  if (ecoFamily) return ecoFamily;
 
   if (normalized === "king's pawn game" || normalized === "king's pawn opening") {
     return "King's Pawn Opening";
