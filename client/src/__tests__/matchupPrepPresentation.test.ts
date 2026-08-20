@@ -32,11 +32,14 @@ describe("Matchup Prep report presentation", () => {
     expect(weaknessSummarySource).toContain("Evidence-based");
   });
 
-  it("uses concise onboarding copy, text-only pill badges, and a breathing filter surface", () => {
+  it("uses concise onboarding copy, text-only pill badges, and a grouped filter-control rail", () => {
     expect(matchupPrepPageSource).toContain("Enter your opponent's chess.com username for a custom scouting report");
     expect(matchupPrepPageSource).toContain('["Scout", "Study", "Practice"].map');
     expect(matchupPrepPageSource).toContain("hover:shadow-[0_0_18px_rgba(91,154,106,0.16)]");
-    expect(matchupPrepPageSource).toContain("gap-x-3 gap-y-2.5 flex-wrap rounded-2xl border");
+    expect(matchupPrepPageSource).toContain("Preparation controls");
+    expect(matchupPrepPageSource).toContain("flex flex-wrap items-center gap-x-4 gap-y-2 border-y py-3");
+    expect(matchupPrepPageSource).toContain("Your side");
+    expect(matchupPrepPageSource).toContain("shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]");
     expect(matchupPrepPageSource).not.toContain('<Eye className="w-3.5 h-3.5" /> Scout');
   });
 });

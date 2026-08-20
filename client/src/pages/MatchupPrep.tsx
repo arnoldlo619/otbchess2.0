@@ -750,115 +750,110 @@ export default function MatchupPrep() {
           )}
         </div>
 
-          {/* ── Smart Filters Row ── */}
-          <div className={`max-w-3xl mx-auto mb-2 flex items-center gap-x-3 gap-y-2.5 flex-wrap rounded-2xl border px-3.5 py-2.5 sm:px-4 ${
-            isDark ? "border-[#1e2e22]/70 bg-[#08110a]/45" : "border-[#ADBC9F]/55 bg-white/55"
-          }`}>
-            {/* Provider selector (V3 only) */}
-            {useV3 && (
-              <>
-                <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Source</span>
-                <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-                  {(["chesscom", "lichess"] as const).map((p) => (
+          {/* ── Preparation controls ── */}
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-3">
+            <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-y py-3 ${isDark ? "border-[#1e2e22]/75" : "border-[#ADBC9F]/65"}`}>
+              {useV3 && (
+                <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
+                  <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Source</span>
+                  <div className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}>
+                    {(["chesscom", "lichess"] as const).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => {
+                          if (p === provider) return;
+                          setProvider(p);
+                          const activeUser = reportV3?.opponent.username ?? searchInput.trim();
+                          if (activeUser) fetchReport(activeUser, false, undefined, undefined, p);
+                        }}
+                        className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                          provider === p
+                            ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+                            : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
+                        }`}
+                      >
+                        {p === "chesscom" ? "Chess.com" : "Lichess"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
+                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Format</span>
+                <div className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}>
+                  {(["all", "rapid", "blitz", "bullet"] as const).map((tc) => (
                     <button
-                      key={p}
+                      key={tc}
+                      data-testid={`tc-filter-${tc}`}
                       onClick={() => {
-                        if (p === provider) return;
-                        setProvider(p);
-                        const activeUser = reportV3?.opponent.username ?? searchInput.trim();
-                        if (activeUser) fetchReport(activeUser, false, undefined, undefined, p);
+                        if (tc === tcFilter) return;
+                        setTcFilter(tc);
+                        const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                        if (activeUser) fetchReport(activeUser, false, tc);
                       }}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                        provider === p
-                          ? "bg-[#436850] text-white shadow-sm"
-                          : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+                      className={`rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
+                        tcFilter === tc
+                          ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+                          : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
                       }`}
                     >
-                      {p === "chesscom" ? "chess.com" : "Lichess"}
+                      {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : tc === "blitz" ? "Blitz" : "Bullet"}
                     </button>
                   ))}
                 </div>
-                <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
-              </>
-            )}
+              </div>
 
-            {/* Time Control */}
-            <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
-            <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-              {(["all", "rapid", "blitz", "bullet"] as const).map((tc) => (
-                <button
-                  key={tc}
-                  data-testid={`tc-filter-${tc}`}
-                  onClick={() => {
-                    if (tc === tcFilter) return;
-                    setTcFilter(tc);
-                    const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
-                    if (activeUser) fetchReport(activeUser, false, tc);
-                  }}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all capitalize ${
-                  tcFilter === tc
-                    ? "bg-[#436850] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : tc === "blitz" ? "Blitz" : "Bullet"}
-              </button>
-            ))}
+              <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
+                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Depth</span>
+                <div className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}>
+                  {(["50", "100"] as const).map((gc) => (
+                    <button
+                      key={gc}
+                      onClick={() => {
+                        if (gc === gameCountFilter) return;
+                        setGameCountFilter(gc);
+                        const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                        if (activeUser) fetchReport(activeUser, false, undefined, gc);
+                      }}
+                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                        gameCountFilter === gc
+                          ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+                          : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
+                      }`}
+                    >
+                      {gc === "50" ? "Standard" : "Deep"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Your side</span>
+                <div
+                  role="radiogroup"
+                  aria-label="Your color"
+                  className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}
+                >
+                  {(["white", "black"] as const).map((c) => (
+                    <button
+                      key={c}
+                      role="radio"
+                      aria-checked={myColor === c}
+                      onClick={() => setMyColor(c)}
+                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                        myColor === c
+                          ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+                          : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
+                      }`}
+                    >
+                      {c === "white" ? "White" : "Black"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-
-          {/* Separator */}
-          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
-
-          {/* Game Count */}
-          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Depth</span>
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-            {(["50", "100"] as const).map((gc) => (
-              <button
-                key={gc}
-                onClick={() => {
-                  if (gc === gameCountFilter) return;
-                  setGameCountFilter(gc);
-                  const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
-                  if (activeUser) fetchReport(activeUser, false, undefined, gc);
-                }}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                  gameCountFilter === gc
-                    ? "bg-[#436850] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                {gc === "50" ? "Standard" : "Deep"}
-              </button>
-            ))}
-          </div>
-
-          {/* Separator */}
-          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
-
-          {/* I'm playing — canonical color perspective */}
-          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>I'm playing</span>
-          <div
-            role="radiogroup"
-            aria-label="Your color"
-            className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}
-          >
-            {(["white", "black"] as const).map((c) => (
-              <button
-                key={c}
-                role="radio"
-                aria-checked={myColor === c}
-                onClick={() => setMyColor(c)}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                  myColor === c
-                    ? "bg-[#436850] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                {c === "white" ? "♔ White" : "♚ Black"}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ── Page Content ── */}

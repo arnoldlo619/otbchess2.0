@@ -7780,3 +7780,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Refine the hero headline hover interaction into a quieter, sleek premium treatment
 - [x] Remove emoji-style decoration from Matchup Prep reports and simplify Prep Snapshot into Against e4 and Against d5 rows
 - [x] Refine Matchup Prep search-panel spacing and replace onboarding icons with subtle animated pill badges
+- [x] Redesign the Matchup Prep filter bar with a clearer premium analysis-control hierarchy
