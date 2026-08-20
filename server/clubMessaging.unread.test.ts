@@ -24,4 +24,10 @@ describe("Club messaging unread state", () => {
     expect(clientSource).toContain("conversation.id === convId ? { ...conversation, unreadCount: 0 } : conversation");
     expect(clientSource).toContain("unread message");
   });
+
+  it("uses a focused thread view on mobile while preserving the desktop split pane", () => {
+    expect(clientSource).toContain('activeConvId ? "hidden" : "flex"');
+    expect(clientSource).toContain('activeConvId ? "flex" : "hidden"');
+    expect(clientSource).toContain('aria-label="Back to conversations"');
+  });
 });

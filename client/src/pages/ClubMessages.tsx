@@ -402,7 +402,7 @@ export default function ClubMessages() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* ── Sidebar: Conversation List ── */}
-        <div className="w-72 flex-shrink-0 border-r border-white/10 flex flex-col bg-[#0d1f12]">
+        <div className={`${activeConvId ? "hidden" : "flex"} md:flex w-full md:w-72 flex-shrink-0 border-r border-white/10 flex-col bg-[#0d1f12]`}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
             <span className="text-sm font-bold text-white">Conversations</span>
             <button
@@ -497,7 +497,7 @@ export default function ClubMessages() {
         </div>
 
         {/* ── Main: Chat View ── */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={`${activeConvId ? "flex" : "hidden"} md:flex flex-1 flex-col min-w-0`}>
           {!activeConvId ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8">
               <MessageSquare className="w-12 h-12 text-white/10" />
@@ -508,6 +508,13 @@ export default function ClubMessages() {
               {/* Chat header */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/5">
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveConvId(null)}
+                    className="md:hidden -ml-2 p-2 rounded-xl text-white/55 hover:text-white hover:bg-white/10 transition"
+                    aria-label="Back to conversations"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
                   <Avatar user={activeConv?.otherUser ?? null} size={36} />
                   <div>
                     <p className="text-sm font-bold text-white">
