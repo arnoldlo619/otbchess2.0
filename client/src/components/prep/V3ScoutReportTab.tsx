@@ -11,11 +11,7 @@
  */
 import { useState, useMemo } from "react";
 import { Chess } from "chess.js";
-import {
-  BookOpen, TrendingDown, TrendingUp, Zap, Target,
-  ChevronDown, ChevronRight, GitBranch, CheckSquare, AlertCircle,
-  Shield, Crosshair, Activity, Eye, Telescope,
-} from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
@@ -79,7 +75,7 @@ function PrepSnapshot({
 }) {
   if (insights.length === 0) return null;
 
-  // Pick top 3: prioritize weaknesses, then deviation points, then tendencies
+  // Resolve the two recurring preparation surfaces from the strongest evidence.
   const priority: Insight["kind"][] = ["weakness", "deviation_point", "opening_tendency", "response_pattern", "strength", "behavior"];
   const sorted = [...insights].sort((a, b) => {
     const ai = priority.indexOf(a.kind);
@@ -87,38 +83,39 @@ function PrepSnapshot({
     if (ai !== bi) return ai - bi;
     return b.sampleSize - a.sampleSize;
   });
-  const top3 = sorted.slice(0, 3);
-
-  const kindIcon: Record<string, React.ReactNode> = {
-    weakness: <TrendingDown className="w-3.5 h-3.5 text-red-400" />,
-    strength: <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />,
-    deviation_point: <GitBranch className="w-3.5 h-3.5 text-purple-400" />,
-    opening_tendency: <Crosshair className="w-3.5 h-3.5 text-blue-400" />,
-    response_pattern: <Zap className="w-3.5 h-3.5 text-amber-400" />,
-    behavior: <Activity className="w-3.5 h-3.5 text-orange-400" />,
-  };
+  const findOpeningInsight = (pattern: RegExp) => sorted.find((insight) =>
+    pattern.test(`${insight.claim} ${insight.recommendation.action} ${insight.recommendation.line?.san ?? ""}`),
+  );
+  const snapshotRows = [
+    { id: "e4", label: "Against e4", insight: findOpeningInsight(/\b1\.?e4\b/i) },
+    { id: "d5", label: "Against d5", insight: findOpeningInsight(/\b1\.\.\.d5\b|\bd5\b/i) },
+  ];
+  const rowDetail = (label: string, insight: Insight) => label === "Against e4"
+    ? insight.claim.replace(/^Against\s+1\.?e4\s+they\s*/i, "")
+    : insight.recommendation.action;
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
-      <div className="flex items-center gap-2 mb-4">
-        <Telescope className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
+      <div className="mb-4">
         <h3 className={`font-bold text-sm ${t.textPrimary}`}>Prep Snapshot</h3>
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>
-          Top findings
-        </span>
       </div>
-      <div className="space-y-3">
-        {top3.map((ins) => (
-          <div
-            key={ins.id}
-            className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50" : "bg-[#f8faf5] border border-[#ADBC9F]/40"}`}
-          >
-            <span className="mt-0.5 shrink-0">{kindIcon[ins.kind] ?? <AlertCircle className="w-3.5 h-3.5" />}</span>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-semibold leading-snug mb-1 ${t.textPrimary}`}>{ins.claim}</p>
-              <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{ins.recommendation.action}</p>
+      <div className={`divide-y ${t.divider}`}>
+        {snapshotRows.map(({ id, label, insight }) => (
+          <div key={id} className="py-3 first:pt-0 last:pb-0">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className={`text-sm font-semibold ${t.textPrimary}`}>{label}</p>
+                {insight ? (
+                  <>
+                    <p className={`mt-1 text-sm leading-snug ${t.textSecondary}`}>{rowDetail(label, insight)}</p>
+                    {label === "Against e4" && <p className={`mt-1 text-xs leading-relaxed ${t.textTertiary}`}>{insight.recommendation.action}</p>}
+                  </>
+                ) : (
+                  <p className={`mt-1 text-sm ${t.textTertiary}`}>No repeatable pattern in the analyzed games.</p>
+                )}
+              </div>
+              {insight && <span className={`shrink-0 text-[10px] font-medium ${t.textTertiary}`}>n={insight.sampleSize}</span>}
             </div>
-            <span className={`shrink-0 text-[10px] font-medium ${t.textTertiary}`}>n={ins.sampleSize}</span>
           </div>
         ))}
       </div>
@@ -132,14 +129,12 @@ function PrepSnapshot({
 
 function GamePlanSection({
   title,
-  icon,
   insights,
   isDark,
   t,
   analysisHrefForInsight,
 }: {
   title: string;
-  icon: React.ReactNode;
   insights: Insight[];
   isDark: boolean;
   t: Tokens;
@@ -155,7 +150,6 @@ function GamePlanSection({
         className="w-full flex items-center gap-2 mb-3 text-left"
         aria-expanded={expanded}
       >
-        <span className={isDark ? "text-[#5B9A6A]" : "text-[#436850]"}>{icon}</span>
         <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>{title}</h3>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
           {insights.length}
@@ -230,7 +224,6 @@ function PrepChecklist({
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
       <div className="flex items-center gap-2 mb-3">
-        <CheckSquare className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
         <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>Prep Checklist</h3>
         <span className={`text-[10px] font-bold ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           {doneCount}/{items.length}
@@ -289,7 +282,6 @@ function EvidenceSection({
         className={`w-full flex items-center gap-2 p-4 sm:p-5 text-left ${isDark ? "hover:bg-white/[0.02]" : "hover:bg-[#FBFADA]/50"}`}
         aria-expanded={expanded}
       >
-        <Eye className={`w-4 h-4 ${t.textTertiary}`} />
         <h3 className={`font-semibold text-sm flex-1 ${t.textTertiary}`}>Evidence & Methodology</h3>
         {expanded
           ? <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
@@ -365,14 +357,14 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
     return base;
   }, [filteredInsights, insightFilter]);
 
-  const filterOptions: { id: typeof insightFilter; label: string; icon: React.ReactNode }[] = [
-    { id: "all",              label: "All",          icon: <Zap className="w-3 h-3" /> },
-    { id: "weakness",         label: "Weaknesses",   icon: <TrendingDown className="w-3 h-3" /> },
-    { id: "strength",         label: "Strengths",    icon: <TrendingUp className="w-3 h-3" /> },
-    { id: "opening_tendency", label: "Openings",     icon: <Crosshair className="w-3 h-3" /> },
-    { id: "deviation_point",  label: "Deviations",   icon: <GitBranch className="w-3 h-3" /> },
-    { id: "response_pattern", label: "Responses",    icon: <Shield className="w-3 h-3" /> },
-    { id: "behavior",         label: "Behavior",     icon: <AlertCircle className="w-3 h-3" /> },
+  const filterOptions: { id: typeof insightFilter; label: string }[] = [
+    { id: "all",              label: "All" },
+    { id: "weakness",         label: "Weaknesses" },
+    { id: "strength",         label: "Strengths" },
+    { id: "opening_tendency", label: "Openings" },
+    { id: "deviation_point",  label: "Deviations" },
+    { id: "response_pattern", label: "Responses" },
+    { id: "behavior",         label: "Behavior" },
   ];
 
   return (
@@ -402,7 +394,6 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
       {myColor !== "black" && ifWhiteInsights.length > 0 && (
         <GamePlanSection
           title="If You Have White"
-          icon={<Crosshair className="w-4 h-4" />}
           insights={ifWhiteInsights}
           isDark={isDark}
           t={t}
@@ -412,7 +403,6 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
       {myColor !== "white" && ifBlackInsights.length > 0 && (
         <GamePlanSection
           title="If You Have Black"
-          icon={<Shield className="w-4 h-4" />}
           insights={ifBlackInsights}
           isDark={isDark}
           t={t}
@@ -447,7 +437,6 @@ export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", repo
                       : isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70 text-white/40 hover:text-white/70" : "bg-white border border-[#ADBC9F]/80 text-[#436850] hover:text-[#12372A]"
                   }`}
                 >
-                  {opt.icon}
                   {opt.label}
                   <span className="opacity-60">({count})</span>
                 </button>
