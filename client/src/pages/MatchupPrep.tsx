@@ -751,7 +751,9 @@ export default function MatchupPrep() {
         </div>
 
           {/* ── Smart Filters Row ── */}
-          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
+          <div className={`max-w-3xl mx-auto mb-2 flex items-center gap-x-3 gap-y-2.5 flex-wrap rounded-2xl border px-3.5 py-2.5 sm:px-4 ${
+            isDark ? "border-[#1e2e22]/70 bg-[#08110a]/45" : "border-[#ADBC9F]/55 bg-white/55"
+          }`}>
             {/* Provider selector (V3 only) */}
             {useV3 && (
               <>
@@ -1062,13 +1064,22 @@ export default function MatchupPrep() {
                 Prepare for your next match
               </h3>
               <p className={`text-sm ${t.textSecondary} leading-relaxed`}>
-                Enter your opponent's chess.com username to scout their weaknesses, study counter-lines, and drill them on a real board.
+                Enter your opponent's chess.com username for a custom scouting report
               </p>
             </div>
-            <div className={`flex gap-6 text-xs ${t.textTertiary}`}>
-              <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> Scout</span>
-              <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Study</span>
-              <span className="flex items-center gap-1.5"><Dumbbell className="w-3.5 h-3.5" /> Practice</span>
+            <div className="flex flex-wrap justify-center gap-2 text-[11px]">
+              {["Scout", "Study", "Practice"].map((label) => (
+                <span
+                  key={label}
+                  className={`rounded-full border px-3 py-1 font-semibold transition-all duration-300 ${
+                    isDark
+                      ? "border-[#5B9A6A]/20 bg-white/[0.025] text-white/45 hover:border-[#8dcc9b]/35 hover:bg-[#436850]/18 hover:text-[#b9ffad] hover:shadow-[0_0_18px_rgba(91,154,106,0.16)]"
+                      : "border-[#436850]/15 bg-[#436850]/[0.035] text-[#436850]/70 hover:border-[#436850]/25 hover:bg-[#436850]/10 hover:text-[#12372A] hover:shadow-[0_0_18px_rgba(67,104,80,0.1)]"
+                  }`}
+                >
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
         )}
