@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Chessboard, type PieceDropHandlerArgs, type SquareHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
 import { useTheme } from "@/contexts/ThemeContext";
+import { formatFriendlyOpeningName } from "@/lib/openingNames";
 import { useAuth } from "@/hooks/useAuth";
 import { useStockfish, type StockfishEval, type PVLine } from "@/hooks/useStockfish";
 import { authFetch } from "@/lib/apiFetch";
@@ -496,7 +497,7 @@ function MoveTreeBreadcrumb({
         })}
       </div>
       {/* Show opening name for current position */}
-      {currentNode?.openingName && (
+      {formatFriendlyOpeningName(currentNode?.openingName, currentNode?.openingEco, currentNode?.san) && (
         <div className="flex items-center gap-1.5 mt-1">
           {currentNode.openingEco && (
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${
@@ -508,7 +509,7 @@ function MoveTreeBreadcrumb({
           <span className={`text-xs font-medium ${
             isDark ? "text-white/60" : "text-[#436850]"
           }`}>
-            {currentNode.openingName}
+            {formatFriendlyOpeningName(currentNode.openingName, currentNode.openingEco, currentNode.san)}
           </span>
         </div>
       )}
@@ -550,6 +551,7 @@ function ExplorerMoveRow({
   const winPct = games > 0 ? (move.white / games) * 100 : 0;
   const drawPct = games > 0 ? (move.draws / games) * 100 : 0;
   const lossPct = games > 0 ? (move.black / games) * 100 : 0;
+  const friendlyOpeningName = formatFriendlyOpeningName(openingName, openingEco, move.san);
 
   return (
     <div
@@ -606,9 +608,9 @@ function ExplorerMoveRow({
               {openingEco}
             </span>
           )}
-          {openingName && (
+          {friendlyOpeningName && (
             <span className={`text-sm font-medium truncate ${isDark ? "text-white/70" : "text-[#436850]"}`}>
-              {openingName}
+              {friendlyOpeningName}
             </span>
           )}
         </div>
@@ -1893,9 +1895,9 @@ export default function RepertoireBuilder() {
               {/* Board controls */}
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center gap-2">
-                  {openingName && (
+                  {formatFriendlyOpeningName(openingName, openingEco, currentNode?.san) && (
                     <span className={`text-base font-semibold ${isDark ? "text-white/80" : "text-[#436850]"}`}>
-                      {openingName}
+                      {formatFriendlyOpeningName(openingName, openingEco, currentNode?.san)}
                     </span>
                   )}
                 </div>
@@ -2358,12 +2360,12 @@ export default function RepertoireBuilder() {
                           {child.openingEco}
                         </span>
                       )}
-                      {child.openingName && (
-                        <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-[#436850]"}`}>
-                          {child.openingName}
+                      {formatFriendlyOpeningName(child.openingName, child.openingEco, child.san) && (
+                        <span className={`text-sm font-medium truncate ${isDark ? "text-white/70" : "text-[#436850]"}`}>
+                          {formatFriendlyOpeningName(child.openingName, child.openingEco, child.san)}
                         </span>
                       )}
-                      {!child.openingName && (
+                      {!formatFriendlyOpeningName(child.openingName, child.openingEco, child.san) && (
                         <span className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>
                           {countMoves({ ...child, children: child.children }) + 1} move{countMoves({ ...child, children: child.children }) + 1 !== 1 ? "s" : ""} deep
                         </span>
