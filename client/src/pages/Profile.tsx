@@ -606,6 +606,7 @@ export default function ProfilePage() {
     .slice(0, 2);
 
   const elo = user.chesscomElo ?? user.lichessElo;
+  const linkedAccountCount = [user.chesscomUsername, user.lichessUsername, user.fideId].filter(Boolean).length;
 
   return (
     <div className={`min-h-screen ${bg}`}>
@@ -760,6 +761,15 @@ export default function ProfilePage() {
                   {saveError}
                 </div>
               )}
+              <div className={`rounded-2xl border px-4 py-3 ${isDark ? "border-[#4ade80]/15 bg-[#4ade80]/5" : "border-[#436850]/15 bg-[#436850]/5"}`}>
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4 text-[#4ade80]" />
+                  <p className={`text-sm font-bold ${text}`}>Linked chess accounts</p>
+                </div>
+                <p className={`mt-1 text-xs leading-relaxed ${muted}`}>
+                  Add a public username to connect it for Matchup Prep and profile links. Clear a field and save to remove that connection.
+                </p>
+              </div>
               <div>
                 <label className={`block text-sm font-medium mb-1.5 ${muted}`}>
                   Display name
@@ -855,6 +865,21 @@ export default function ProfilePage() {
           ) : (
             /* Platform links (read-only) */
             <div className="space-y-2 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between px-1 pb-1">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4 text-[#4ade80]" />
+                  <div>
+                    <p className={`text-sm font-bold ${text}`}>Linked chess accounts</p>
+                    <p className={`text-xs ${muted}`}>{linkedAccountCount} connected account{linkedAccountCount === 1 ? "" : "s"}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setEditing(true)}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12 hover:text-white" : "bg-[#ADBC9F]/35 text-[#436850] hover:bg-[#ADBC9F]"}`}
+                >
+                  Manage
+                </button>
+              </div>
               {user.chesscomUsername && (
                 <a
                   href={`https://chess.com/member/${user.chesscomUsername}`}
@@ -867,7 +892,10 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-lg">♟️</span>
                     <div>
-                      <p className={`text-sm font-medium ${text}`}>Chess.com</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-sm font-medium ${text}`}>Chess.com</p>
+                        <span className="rounded-full bg-[#4ade80]/12 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#4ade80]">Connected</span>
+                      </div>
                       <p className={`text-xs ${muted}`}>@{user.chesscomUsername}</p>
                     </div>
                   </div>
@@ -925,7 +953,10 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-lg">🏛️</span>
                     <div>
-                      <p className={`text-sm font-medium ${text}`}>Lichess</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-sm font-medium ${text}`}>Lichess</p>
+                        <span className="rounded-full bg-[#4ade80]/12 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#4ade80]">Connected</span>
+                      </div>
                       <p className={`text-xs ${muted}`}>@{user.lichessUsername}</p>
                     </div>
                   </div>

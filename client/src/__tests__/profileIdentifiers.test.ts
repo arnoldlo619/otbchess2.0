@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { validateProfileIdentifiers } from "../pages/Profile";
+
+const profileSource = readFileSync(resolve(process.cwd(), "client/src/pages/Profile.tsx"), "utf8");
 
 describe("Profile linked-account identifiers", () => {
   it("accepts conservative chess-platform handles and a numeric FIDE ID", () => {
@@ -22,5 +26,13 @@ describe("Profile linked-account identifiers", () => {
       .toBe("FIDE ID must contain 5 to 10 digits.");
     expect(validateProfileIdentifiers({ chesscomUsername: "", lichessUsername: "", fideId: "1234" }))
       .toBe("FIDE ID must contain 5 to 10 digits.");
+  });
+
+  it("shows linked-account management without implying unsupported external verification", () => {
+    expect(profileSource).toContain("Linked chess accounts");
+    expect(profileSource).toContain("Clear a field and save to remove that connection.");
+    expect(profileSource).toContain("linkedAccountCount");
+    expect(profileSource).toContain(">Connected</span>");
+    expect(profileSource).toContain("Manage");
   });
 });
