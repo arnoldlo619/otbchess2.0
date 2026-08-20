@@ -7754,3 +7754,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add optional host payment instructions to tournament configuration and player registration
 - [x] Add accessible drag-and-drop ordering for enabled tournament payment methods
 - [x] Optimize tournament format card image delivery, preload behavior, and loading transitions for faster perceived rendering
+- [x] Add a live board-side engine evaluation bar and scored candidate moves to the Repertoire Builder

@@ -409,45 +409,36 @@ function removeNode(root: MoveNode, targetFen: string): MoveNode {
 
 // ─── Eval Bar Component ───────────────────────────────────────────────────────
 
-function EvalBar({ cp, mate, isDark: _isDark }: { cp: number; mate: number | null; isDark: boolean }) {
-  // Convert cp to a percentage for the bar (clamped between 5% and 95%)
+export function formatEngineEval(cp: number, mate: number | null) {
+  return mate !== null
+    ? `M${Math.abs(mate)}`
+    : `${cp >= 0 ? "+" : ""}${(cp / 100).toFixed(1)}`;
+}
+
+function EvalBar({ cp, mate, isDark: _isDark, isLoading = false }: { cp: number; mate: number | null; isDark: boolean; isLoading?: boolean }) {
   let whitePct: number;
   if (mate !== null) {
     whitePct = mate > 0 ? 95 : 5;
   } else {
-    // Sigmoid-like mapping: cp of 300 ≈ 75%, cp of -300 ≈ 25%
     whitePct = 50 + 50 * (2 / (1 + Math.exp(-cp / 200)) - 1);
     whitePct = Math.max(5, Math.min(95, whitePct));
   }
 
-  const label = mate !== null
-    ? `M${Math.abs(mate)}`
-    : `${cp >= 0 ? "+" : ""}${(cp / 100).toFixed(1)}`;
+  const label = isLoading ? "…" : formatEngineEval(cp, mate);
 
   return (
-    <div className="flex flex-col items-center w-6 h-full rounded-md overflow-hidden border border-white/10">
-      {/* Black portion (top) */}
-      <div
-        className="w-full bg-[#12372A] transition-all duration-500 relative"
-        style={{ height: `${100 - whitePct}%` }}
-      >
-        {whitePct < 50 && (
-          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white whitespace-nowrap">
-            {label}
-          </span>
-        )}
+    <div
+      className="relative flex flex-col items-center w-7 h-full rounded-md overflow-hidden border border-white/10 shadow-[0_0_14px_rgba(16,185,129,0.14)]"
+      aria-label={isLoading ? "Stockfish evaluation loading" : `Stockfish evaluation ${label}, positive scores favor White`}
+    >
+      <div className="w-full bg-[#0b1e12] transition-all duration-500 relative" style={{ height: `${100 - whitePct}%` }}>
+        {whitePct < 50 && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white whitespace-nowrap">{label}</span>}
       </div>
-      {/* White portion (bottom) */}
-      <div
-        className="w-full bg-white transition-all duration-500 relative"
-        style={{ height: `${whitePct}%` }}
-      >
-        {whitePct >= 50 && (
-          <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#12372A] whitespace-nowrap">
-            {label}
-          </span>
-        )}
+      <div className="w-full bg-[#f7f5ed] transition-all duration-500 relative" style={{ height: `${whitePct}%` }}>
+        {whitePct >= 50 && <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#12372A] whitespace-nowrap">{label}</span>}
       </div>
+      <span className="absolute left-1/2 top-1 -translate-x-1/2 text-[8px] font-black tracking-wide text-white/45">B</span>
+      <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-black tracking-wide text-[#12372A]/55">W</span>
     </div>
   );
 }
@@ -539,6 +530,7 @@ function ExplorerMoveRow({
   isDark,
   openingName,
   openingEco,
+  engineLine,
 }: {
   move: ExplorerMove;
   totalGames: number;
@@ -551,6 +543,7 @@ function ExplorerMoveRow({
   isDark: boolean;
   openingName?: string;
   openingEco?: string;
+  engineLine?: PVLine;
 }) {
   const games = move.white + move.draws + move.black;
   const freq = totalGames > 0 ? games / totalGames : 0;
@@ -578,6 +571,29 @@ function ExplorerMoveRow({
         <span className={`font-bold font-mono text-base ${isDark ? "text-white" : "text-[#12372A]"}`}>
           {move.san}
         </span>
+      </div>
+
+      <div className="w-14 shrink-0 text-right">
+        {engineLine ? (
+          <span
+            className={`inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold ${
+              engineLine.mate !== null
+                ? "bg-emerald-500/15 text-emerald-500"
+                : engineLine.cp > 30
+                ? "bg-emerald-500/12 text-emerald-500"
+                : engineLine.cp < -30
+                ? "bg-rose-500/12 text-rose-500"
+                : isDark
+                ? "bg-white/10 text-white/70"
+                : "bg-[#ADBC9F]/45 text-[#436850]"
+            }`}
+            title={`Stockfish depth ${engineLine.depth}. Positive scores favor White.`}
+          >
+            {formatEngineEval(engineLine.cp, engineLine.mate)}
+          </span>
+        ) : (
+          <span className={isDark ? "text-white/20 text-xs" : "text-[#436850]/35 text-xs"}>—</span>
+        )}
       </div>
 
       {/* Opening name + ECO badge */}
@@ -1762,9 +1778,9 @@ export default function RepertoireBuilder() {
           {/* ── Left: Board + Eval Bar ──────────────────────────────────────── */}
           <div className="w-full lg:w-[55%] flex gap-2 items-start justify-center min-h-0 pt-1">
             {/* Eval bar */}
-            {showEngine && sfEval && (
+            {showEngine && (
               <div className="hidden sm:block" style={{ height: `${boardSize}px` }}>
-                <EvalBar cp={sfEval.cp} mate={sfEval.mate} isDark={isDark} />
+                <EvalBar cp={sfEval?.cp ?? 0} mate={sfEval?.mate ?? null} isDark={isDark} isLoading={!sfEval || !sfReady} />
               </div>
             )}
 
@@ -2438,8 +2454,9 @@ export default function RepertoireBuilder() {
             {rightTab === "explorer" && (
             <>
             {/* Explorer moves table header */}
-            <div className={`px-4 py-2 flex items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+              <div className={`px-4 py-2 flex items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
               <div className="w-16 shrink-0">Move</div>
+              <div className="w-14 shrink-0 text-right">SF</div>
               <div className="flex-1">Opening</div>
               <div className="w-20 text-right shrink-0">Expected in</div>
               <div className="w-24 shrink-0 text-center">W / D / L</div>
@@ -2483,6 +2500,7 @@ export default function RepertoireBuilder() {
                     isDark={isDark}
                     openingName={move.openingName}
                     openingEco={move.openingEco}
+                    engineLine={showEngine ? sfPVLines.find((line) => line.move === move.uci) : undefined}
                   />
                 ))
               )}
