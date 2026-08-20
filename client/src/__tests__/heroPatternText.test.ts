@@ -11,9 +11,10 @@ describe("landing hero pattern text", () => {
     expect(home).toContain('<PatternText\n                text="Over The Board."');
   });
 
-  it("keeps the moving texture visually subtle and safe for reduced motion", () => {
-    expect(styles).toContain("@keyframes otb-pattern-text-drift");
-    expect(styles).toContain(".otb-pattern-text::after");
-    expect(styles).toContain(".otb-pattern-text::after { animation: none; }");
+  it("uses a visible brand-green scan treatment and remains safe for reduced motion", () => {
+    expect(styles).toContain("@keyframes otb-pattern-text-scan");
+    expect(styles).toContain(".otb-pattern-text--dark");
+    expect(styles).toContain(".otb-pattern-text--light");
+    expect(styles).toContain(".otb-pattern-text { animation: none; }");
   });
 });

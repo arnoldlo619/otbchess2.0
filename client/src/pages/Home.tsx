@@ -437,7 +437,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               <br />
               <PatternText
                 text="Over The Board."
-                className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}
+                className={isDark ? "otb-pattern-text--dark" : "otb-pattern-text--light"}
               />
             </h1>
 

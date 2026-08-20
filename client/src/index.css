@@ -97,36 +97,44 @@
   to { background-position: -200% 0; }
 }
 
-@keyframes otb-pattern-text-drift {
-  from { background-position: 0 0; }
-  to { background-position: 1.2em -1.2em; }
+@keyframes otb-pattern-text-scan {
+  0%, 10% { background-position: 0 0, 0 0; }
+  48%, 54% { background-position: 1.35em -1.35em, -75% 0; }
+  90%, 100% { background-position: 2.7em -2.7em, -150% 0; }
 }
 
 .otb-pattern-text {
   position: relative;
-  isolation: isolate;
   display: inline-block;
-  color: currentColor;
-  text-shadow: 0.025em 0.03em 0 color-mix(in srgb, var(--background) 72%, transparent);
-}
-
-.otb-pattern-text::after {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  content: attr(data-pattern-text);
-  pointer-events: none;
   color: transparent;
-  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, currentColor 78%, transparent) 0 1px, transparent 1px 5px);
-  background-size: 0.45em 0.45em;
+  background-image:
+    repeating-linear-gradient(135deg, var(--otb-pattern-line) 0 1px, transparent 1px 5px),
+    linear-gradient(105deg, var(--otb-pattern-base) 0%, var(--otb-pattern-base) 42%, var(--otb-pattern-mid) 47%, var(--otb-pattern-glint) 50%, var(--otb-pattern-mid) 53%, var(--otb-pattern-base) 58%, var(--otb-pattern-base) 100%);
+  background-size: 0.46em 0.46em, 250% 100%;
+  background-position: 0 0, 0 0;
   background-clip: text;
   -webkit-background-clip: text;
-  animation: otb-pattern-text-drift 16s linear infinite;
-  opacity: 0.42;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0.06em 0.08em color-mix(in srgb, var(--otb-pattern-base) 20%, transparent));
+  animation: otb-pattern-text-scan 3.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.otb-pattern-text--dark {
+  --otb-pattern-base: oklch(0.7 0.15 145);
+  --otb-pattern-mid: oklch(0.82 0.15 132);
+  --otb-pattern-glint: oklch(0.94 0.12 112);
+  --otb-pattern-line: oklch(0.96 0.08 120 / 0.32);
+}
+
+.otb-pattern-text--light {
+  --otb-pattern-base: #2f6b42;
+  --otb-pattern-mid: #4f8a57;
+  --otb-pattern-glint: #a0c878;
+  --otb-pattern-line: rgb(12 59 35 / 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .otb-pattern-text::after { animation: none; }
+  .otb-pattern-text { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
