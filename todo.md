@@ -7780,4 +7780,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Refine the hero headline hover interaction into a quieter, sleek premium treatment
 - [x] Remove the Contact control from the Club Profile side-navigation footer for club members
 - [x] Remove the Contact control from the Club Profile side-navigation footer for club members
+- [x] Remove redundant non-member logo imagery and enlarge members-only headings across Club Profile tabs
 - [x] Fix overlapping Tournament Setup payment-method toggles with contained responsive header controls

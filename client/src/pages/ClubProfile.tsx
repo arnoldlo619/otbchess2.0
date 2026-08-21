@@ -1890,12 +1890,9 @@ export default function ClubProfile() {
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (() => {
           if (!joined) return (
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
-                <Users className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
-              </div>
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-3`}>
               <div>
-                <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only</h3>
+                <h3 className={`text-lg font-bold tracking-tight sm:text-xl mb-1.5 ${textMain}`}>Members-only</h3>
                 <p className={`text-sm ${textMuted} max-w-xs`}>The member directory is only visible to club members. Join to see who's in the club.</p>
               </div>
               <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
@@ -2107,12 +2104,9 @@ export default function ClubProfile() {
           <div className="space-y-4 animate-in fade-in duration-200">
             {/* Non-member gate */}
             {!joined ? (
-              <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
-                  <MessageSquare className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
-                </div>
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-3`}>
                 <div>
-                  <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only Feed</h3>
+                  <h3 className={`text-lg font-bold tracking-tight sm:text-xl mb-1.5 ${textMain}`}>Members-only Feed</h3>
                   <p className={`text-sm ${textMuted} max-w-xs`}>Posts, polls, and announcements are only visible to club members. Join to participate in the conversation.</p>
                 </div>
                 <button
@@ -2296,12 +2290,9 @@ export default function ClubProfile() {
         {/* ── Events tab ──────────────────────────────────────────────────────────── */}
         {activeTab === "events" && (() => {
           if (!joined) return (
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
-                <Calendar className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
-              </div>
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-3`}>
               <div>
-                <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only Events</h3>
+                <h3 className={`text-lg font-bold tracking-tight sm:text-xl mb-1.5 ${textMain}`}>Members-only Events</h3>
                 <p className={`text-sm ${textMuted} max-w-xs`}>Club events and tournaments are only visible to members. Join to see upcoming events and RSVP.</p>
               </div>
               <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
@@ -3185,12 +3176,9 @@ export default function ClubProfile() {
         {/* ── Leagues tab ──────────────────────────────────────────────────── */}
         {activeTab === "leagues" && (
           !joined ? (
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-4`}>
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/30"}`}>
-                <Award className={`w-7 h-7 ${isDark ? "text-white/40" : "text-[#436850]/60"}`} />
-              </div>
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-3`}>
               <div>
-                <h3 className={`text-base font-bold mb-1 ${textMain}`}>Members-only Leagues</h3>
+                <h3 className={`text-lg font-bold tracking-tight sm:text-xl mb-1.5 ${textMain}`}>Members-only Leagues</h3>
                 <p className={`text-sm ${textMuted} max-w-xs`}>Club leagues and standings are only visible to members. Join to compete and track your progress.</p>
               </div>
               <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
