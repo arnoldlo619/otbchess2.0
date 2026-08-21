@@ -50,6 +50,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 import { OTBLoader } from "@/components/OTBLoader";
+import { BorderBeamSearch } from "@/components/ui/border-beam-search";
 import { derivePrepErrorCode, describePrepError } from "@/lib/prepErrorPresentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -647,18 +648,20 @@ export default function MatchupPrep() {
         {/* Search row */}
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
-                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
-                autoComplete="off"
-                autoCapitalize="none"
-              />
-            </div>
+            <BorderBeamSearch className="flex-1" active={Boolean(searchInput.trim()) || loading} isDark={isDark}>
+              <div className="relative">
+                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
+                  className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
+                  autoComplete="off"
+                  autoCapitalize="none"
+                />
+              </div>
+            </BorderBeamSearch>
             <button
               type="submit"
               disabled={!searchInput.trim() || loading}

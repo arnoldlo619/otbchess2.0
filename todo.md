@@ -7782,3 +7782,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Refine Matchup Prep search-panel spacing and replace onboarding icons with subtle animated pill badges
 - [x] Redesign the Matchup Prep filter bar with a clearer premium analysis-control hierarchy
 - [x] Restore the Chess Integration landing-section video background with a resilient visual fallback
+- [x] Enhance the Matchup Prep username search with a premium motion-safe border-beam treatment

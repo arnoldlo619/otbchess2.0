@@ -14,6 +14,14 @@ const matchupPrepPageSource = readFileSync(
   resolve(process.cwd(), "client/src/pages/MatchupPrep.tsx"),
   "utf8",
 );
+const borderBeamSource = readFileSync(
+  resolve(process.cwd(), "client/src/components/ui/border-beam-search.tsx"),
+  "utf8",
+);
+const globalStyles = readFileSync(
+  resolve(process.cwd(), "client/src/index.css"),
+  "utf8",
+);
 
 describe("Matchup Prep report presentation", () => {
   it("uses two concise opening-specific Prep Snapshot rows", () => {
@@ -41,5 +49,13 @@ describe("Matchup Prep report presentation", () => {
     expect(matchupPrepPageSource).toContain("Your side");
     expect(matchupPrepPageSource).toContain("shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]");
     expect(matchupPrepPageSource).not.toContain('<Eye className="w-3.5 h-3.5" /> Scout');
+  });
+
+  it("wraps the username search in a local motion-safe border-beam treatment", () => {
+    expect(matchupPrepPageSource).toContain("<BorderBeamSearch");
+    expect(matchupPrepPageSource).toContain("active={Boolean(searchInput.trim()) || loading}");
+    expect(borderBeamSource).toContain("prep-border-beam__track");
+    expect(globalStyles).toContain("@keyframes prepSearchBeamOrbit");
+    expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
   });
 });
