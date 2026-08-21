@@ -7783,4 +7783,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove redundant non-member logo imagery and enlarge members-only headings across Club Profile tabs
 - [x] Use tournament names as automated club result-feed headers and eliminate duplicate winner-score titles
 - [x] Format automated club tournament-result titles with the exact tournament name and completion date
+- [x] Redesign Club Meetup setup to align with the premium full-page Tournament Setup wizard system
 - [x] Fix overlapping Tournament Setup payment-method toggles with contained responsive header controls
