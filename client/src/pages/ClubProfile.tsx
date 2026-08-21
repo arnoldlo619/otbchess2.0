@@ -518,7 +518,7 @@ function FeedEventCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-[15px] font-bold ${textMain} leading-tight`}>
-                  {event.type === "tournament_completed" ? formatTournamentResultFeedTitle(event.tournamentName, event.createdAt) : event.actorName}
+                  {event.type === "tournament_completed" ? formatTournamentResultFeedTitle(event.tournamentName) : event.actorName}
                 </span>
                 <span className={`text-[13px] ${textMuted} leading-tight`}>{relativeTime(event.createdAt)}</span>
                 {event.type !== "announcement" && event.type !== "tournament_completed" && (

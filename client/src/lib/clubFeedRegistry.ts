@@ -584,18 +584,21 @@ export function recordTournamentCompleted(
 /** Build the concise result-post header used across club feeds. */
 export function formatTournamentResultFeedTitle(
   tournamentName: string | null | undefined,
-  createdAt: string,
 ): string {
   const name = tournamentName?.trim() || "Tournament";
-  const completedAt = new Date(createdAt);
-  if (Number.isNaN(completedAt.getTime())) return `${name} Results`;
+  return `${name} Results`;
+}
 
-  const dateLabel = completedAt.toLocaleDateString("en-US", {
+/** Format the single tournament-date marker shown beside completed result cards. */
+export function formatTournamentResultDate(createdAt: string): string {
+  const completedAt = new Date(createdAt);
+  if (Number.isNaN(completedAt.getTime())) return "Results";
+
+  return completedAt.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     timeZone: "UTC",
   });
-  return `${name} Results, ${dateLabel}`;
 }
 
 /**

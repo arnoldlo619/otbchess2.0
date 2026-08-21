@@ -100,6 +100,7 @@ import {
   recordTournamentCreated,
   recordMeetupCreated,
   formatTournamentResultFeedTitle,
+  formatTournamentResultDate,
   type FeedEvent,
   type PollOption as _PollOption,
   type FeedRSVPEntry,
@@ -1441,15 +1442,23 @@ function FeedCard({
         </div>
       )}
       <div className="flex items-start gap-3 p-4 pb-3">
-        <FeedIcon type={event.type} />
+        {event.type === "tournament_completed" ? (
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/[0.08] px-1.5 text-center text-[11px] font-black leading-tight text-amber-300">
+            {formatTournamentResultDate(event.createdAt)}
+          </div>
+        ) : (
+          <FeedIcon type={event.type} />
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
             {event.type === "tournament_completed" ? (
-              <span className="text-amber-300 text-sm font-bold">{formatTournamentResultFeedTitle(event.tournamentName, event.createdAt)}</span>
+              <span className="text-amber-300 text-sm font-bold">{formatTournamentResultFeedTitle(event.tournamentName)}</span>
             ) : (
               <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
             )}
-            <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
+            {event.type !== "tournament_completed" && (
+              <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
+            )}
           </div>
           {event.type !== "tournament_completed" && (
             <p className="text-white/50 text-xs mt-0.5">{event.description}</p>

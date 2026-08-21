@@ -23,6 +23,7 @@ import {
   recordTournamentCreated,
   recordTournamentCompleted,
   formatTournamentResultFeedTitle,
+  formatTournamentResultDate,
   deleteFeedEvent,
   clearFeed,
   seedFeedIfEmpty,
@@ -127,13 +128,14 @@ describe("recordTournamentCreated / recordTournamentCompleted", () => {
 });
 
 describe("formatTournamentResultFeedTitle", () => {
-  it("uses the exact tournament name followed by the completion date", () => {
-    expect(formatTournamentResultFeedTitle("ChessOTB SD Tournament", "2026-08-01T18:30:00.000Z"))
-      .toBe("ChessOTB SD Tournament Results, Aug 1");
+  it("uses the exact tournament name without duplicating the date in the title", () => {
+    expect(formatTournamentResultFeedTitle("ChessOTB SD Tournament"))
+      .toBe("ChessOTB SD Tournament Results");
   });
 
-  it("keeps a stable title if a legacy event has no valid completion timestamp", () => {
-    expect(formatTournamentResultFeedTitle("Spring Open", "not-a-date")).toBe("Spring Open Results");
+  it("formats the completion date separately for the accent marker", () => {
+    expect(formatTournamentResultDate("2026-08-01T18:30:00.000Z")).toBe("Aug 1");
+    expect(formatTournamentResultDate("not-a-date")).toBe("Results");
   });
 });
 
