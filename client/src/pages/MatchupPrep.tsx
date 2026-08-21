@@ -50,7 +50,6 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
 import type { ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 import { OTBLoader } from "@/components/OTBLoader";
-import { BorderBeamSearch } from "@/components/ui/border-beam-search";
 import { derivePrepErrorCode, describePrepError } from "@/lib/prepErrorPresentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -634,10 +633,10 @@ export default function MatchupPrep() {
   ];
 
   return (
-    <div className={`min-h-screen ${isDark ? t.page : "bg-[#EEF1F5] text-[#12372A]"}`}>
+    <div className={`min-h-screen ${t.page}`}>
 
       {/* ── Sticky Header ── */}
-      <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${isDark ? t.header : "border-b border-[#DDE2EA] bg-[#F8F8FF]/95 shadow-[0_1px_0_rgba(35,55,42,0.06)]"}`}>
+      <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
         {/* Nav bar row */}
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
           <NavLogo />
@@ -648,20 +647,18 @@ export default function MatchupPrep() {
         {/* Search row */}
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
-            <BorderBeamSearch className="flex-1" active={Boolean(searchInput.trim()) || loading} isDark={isDark}>
-              <div className="relative">
-                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
-                  className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
-                  autoComplete="off"
-                  autoCapitalize="none"
-                />
-              </div>
-            </BorderBeamSearch>
+            <div className="relative flex-1">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
+                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
+                autoComplete="off"
+                autoCapitalize="none"
+              />
+            </div>
             <button
               type="submit"
               disabled={!searchInput.trim() || loading}
@@ -753,110 +750,113 @@ export default function MatchupPrep() {
           )}
         </div>
 
-          {/* ── Preparation controls ── */}
-          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-3">
-            <div className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-y py-3 ${isDark ? "border-[#1e2e22]/75" : "border-[#ADBC9F]/65"}`}>
-              {useV3 && (
-                <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
-                  <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Source</span>
-                  <div className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}>
-                    {(["chesscom", "lichess"] as const).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => {
-                          if (p === provider) return;
-                          setProvider(p);
-                          const activeUser = reportV3?.opponent.username ?? searchInput.trim();
-                          if (activeUser) fetchReport(activeUser, false, undefined, undefined, p);
-                        }}
-                        className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                          provider === p
-                            ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-                            : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
-                        }`}
-                      >
-                        {p === "chesscom" ? "Chess.com" : "Lichess"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
-                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Format</span>
-                <div className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}>
-                  {(["all", "rapid", "blitz", "bullet"] as const).map((tc) => (
+          {/* ── Smart Filters Row ── */}
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap">
+            {/* Provider selector (V3 only) */}
+            {useV3 && (
+              <>
+                <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Source</span>
+                <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
+                  {(["chesscom", "lichess"] as const).map((p) => (
                     <button
-                      key={tc}
-                      data-testid={`tc-filter-${tc}`}
+                      key={p}
                       onClick={() => {
-                        if (tc === tcFilter) return;
-                        setTcFilter(tc);
-                        const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
-                        if (activeUser) fetchReport(activeUser, false, tc);
+                        if (p === provider) return;
+                        setProvider(p);
+                        const activeUser = reportV3?.opponent.username ?? searchInput.trim();
+                        if (activeUser) fetchReport(activeUser, false, undefined, undefined, p);
                       }}
-                      className={`rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
-                        tcFilter === tc
-                          ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-                          : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
+                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                        provider === p
+                          ? "bg-[#436850] text-white shadow-sm"
+                          : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
                       }`}
                     >
-                      {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : tc === "blitz" ? "Blitz" : "Bullet"}
+                      {p === "chesscom" ? "chess.com" : "Lichess"}
                     </button>
                   ))}
                 </div>
-              </div>
+                <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
+              </>
+            )}
 
-              <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
-                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Depth</span>
-                <div className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}>
-                  {(["50", "100"] as const).map((gc) => (
-                    <button
-                      key={gc}
-                      onClick={() => {
-                        if (gc === gameCountFilter) return;
-                        setGameCountFilter(gc);
-                        const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
-                        if (activeUser) fetchReport(activeUser, false, undefined, gc);
-                      }}
-                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                        gameCountFilter === gc
-                          ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-                          : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
-                      }`}
-                    >
-                      {gc === "50" ? "Standard" : "Deep"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Your side</span>
-                <div
-                  role="radiogroup"
-                  aria-label="Your color"
-                  className={`flex items-center rounded-lg p-0.5 ${isDark ? "bg-[#0d1a0f]/75" : "bg-[#436850]/[0.055]"}`}
-                >
-                  {(["white", "black"] as const).map((c) => (
-                    <button
-                      key={c}
-                      role="radio"
-                      aria-checked={myColor === c}
-                      onClick={() => setMyColor(c)}
-                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                        myColor === c
-                          ? "bg-[#436850] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-                          : isDark ? "text-white/45 hover:bg-white/[0.045] hover:text-white/75" : "text-[#436850]/70 hover:bg-white/75 hover:text-[#12372A]"
-                      }`}
-                    >
-                      {c === "white" ? "White" : "Black"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Time Control */}
+            <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
+            <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
+              {(["all", "rapid", "blitz", "bullet"] as const).map((tc) => (
+                <button
+                  key={tc}
+                  data-testid={`tc-filter-${tc}`}
+                  onClick={() => {
+                    if (tc === tcFilter) return;
+                    setTcFilter(tc);
+                    const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                    if (activeUser) fetchReport(activeUser, false, tc);
+                  }}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all capitalize ${
+                  tcFilter === tc
+                    ? "bg-[#436850] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+                }`}
+              >
+                {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : tc === "blitz" ? "Blitz" : "Bullet"}
+              </button>
+            ))}
           </div>
+
+          {/* Separator */}
+          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
+
+          {/* Game Count */}
+          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Depth</span>
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
+            {(["50", "100"] as const).map((gc) => (
+              <button
+                key={gc}
+                onClick={() => {
+                  if (gc === gameCountFilter) return;
+                  setGameCountFilter(gc);
+                  const activeUser = reportV3?.opponent.username ?? report?.opponent.username ?? searchInput.trim();
+                  if (activeUser) fetchReport(activeUser, false, undefined, gc);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                  gameCountFilter === gc
+                    ? "bg-[#436850] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+                }`}
+              >
+                {gc === "50" ? "Standard" : "Deep"}
+              </button>
+            ))}
+          </div>
+
+          {/* Separator */}
+          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
+
+          {/* I'm playing — canonical color perspective */}
+          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>I'm playing</span>
+          <div
+            role="radiogroup"
+            aria-label="Your color"
+            className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}
+          >
+            {(["white", "black"] as const).map((c) => (
+              <button
+                key={c}
+                role="radio"
+                aria-checked={myColor === c}
+                onClick={() => setMyColor(c)}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                  myColor === c
+                    ? "bg-[#436850] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
+                }`}
+              >
+                {c === "white" ? "♔ White" : "♚ Black"}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ── Page Content ── */}
@@ -1062,22 +1062,13 @@ export default function MatchupPrep() {
                 Prepare for your next match
               </h3>
               <p className={`text-sm ${t.textSecondary} leading-relaxed`}>
-                Enter your opponent's chess.com username for a custom scouting report
+                Enter your opponent's chess.com username to scout their weaknesses, study counter-lines, and drill them on a real board.
               </p>
             </div>
-            <div className="flex flex-wrap justify-center gap-2 text-[11px]">
-              {["Scout", "Study", "Practice"].map((label) => (
-                <span
-                  key={label}
-                  className={`rounded-full border px-3 py-1 font-semibold transition-all duration-300 ${
-                    isDark
-                      ? "border-[#5B9A6A]/20 bg-white/[0.025] text-white/45 hover:border-[#8dcc9b]/35 hover:bg-[#436850]/18 hover:text-[#b9ffad] hover:shadow-[0_0_18px_rgba(91,154,106,0.16)]"
-                      : "border-[#436850]/15 bg-[#436850]/[0.035] text-[#436850]/70 hover:border-[#436850]/25 hover:bg-[#436850]/10 hover:text-[#12372A] hover:shadow-[0_0_18px_rgba(67,104,80,0.1)]"
-                  }`}
-                >
-                  {label}
-                </span>
-              ))}
+            <div className={`flex gap-6 text-xs ${t.textTertiary}`}>
+              <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> Scout</span>
+              <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Study</span>
+              <span className="flex items-center gap-1.5"><Dumbbell className="w-3.5 h-3.5" /> Practice</span>
             </div>
           </div>
         )}

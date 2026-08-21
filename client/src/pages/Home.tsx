@@ -1912,19 +1912,13 @@ function PlayerDemo() {
       className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
       ref={ref}
     >
-      {/* Video background with a first-frame fallback so the section never collapses into a flat color. */}
-      <div
-        className="absolute inset-0 pointer-events-none overflow-hidden bg-[center_42%] bg-cover"
-        style={{
-          zIndex: 0,
-          backgroundImage: "url(https://i.ytimg.com/vi/KEi0wr1vRG8/maxresdefault.jpg)",
-        }}
-      >
+      {/* YouTube video background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <iframe
-          src="https://www.youtube-nocookie.com/embed/KEi0wr1vRG8?autoplay=1&mute=1&loop=1&playlist=KEi0wr1vRG8&controls=0&rel=0&modestbranding=1&playsinline=1"
+          src="https://www.youtube.com/embed/KEi0wr1vRG8?autoplay=1&mute=1&loop=1&playlist=KEi0wr1vRG8&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=0"
           allow="autoplay; encrypted-media"
           allowFullScreen={false}
-          title="ChessOTB tournament background video"
+          title=""
           aria-hidden="true"
           style={{
             position: "absolute",
@@ -1936,7 +1930,7 @@ function PlayerDemo() {
             minHeight: "100%",
             transform: "translate(-50%, -50%)",
             border: "none",
-            opacity: isDark ? 0.62 : 0.5,
+            opacity: 0.35,
             pointerEvents: "none",
           }}
         />
@@ -1946,8 +1940,8 @@ function PlayerDemo() {
             position: "absolute",
             inset: 0,
             background: isDark
-              ? "linear-gradient(90deg, oklch(0.16 0.05 145 / 0.62), oklch(0.23 0.07 145 / 0.36))"
-              : "linear-gradient(90deg, oklch(0.93 0.04 145 / 0.62), oklch(0.93 0.04 145 / 0.34))",
+              ? "oklch(0.23 0.07 145 / 0.58)"
+              : "oklch(0.93 0.04 145 / 0.65)",
           }}
         />
       </div>

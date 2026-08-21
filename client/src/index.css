@@ -97,47 +97,6 @@
   to { background-position: -200% 0; }
 }
 
-@keyframes prepSearchBeamOrbit {
-  to { transform: rotate(360deg); }
-}
-
-.prep-border-beam {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: 0.8rem;
-  padding: 1px;
-}
-
-.prep-border-beam__track {
-  position: absolute;
-  inset: -150%;
-  z-index: 0;
-  background: conic-gradient(from 45deg, transparent 0deg, transparent 288deg, rgba(141, 204, 155, 0.06) 306deg, rgba(185, 255, 173, 0.82) 324deg, rgba(91, 154, 106, 0.28) 342deg, transparent 360deg);
-  animation: prepSearchBeamOrbit 7s linear infinite;
-  opacity: 0.45;
-}
-
-.prep-border-beam--active .prep-border-beam__track,
-.prep-border-beam:focus-within .prep-border-beam__track {
-  animation-duration: 3.8s;
-  opacity: 1;
-}
-
-.prep-border-beam__surface {
-  position: absolute;
-  inset: 1px;
-  z-index: 1;
-  border-radius: calc(0.8rem - 1px);
-}
-
-.prep-border-beam--dark .prep-border-beam__surface { background: #0d1a0f; }
-.prep-border-beam--light .prep-border-beam__surface { background: #ffffff; }
-
-@media (prefers-reduced-motion: reduce) {
-  .prep-border-beam__track { animation: none; opacity: 0.7; }
-}
-
 .otb-pattern-text {
   position: relative;
   display: inline-block;

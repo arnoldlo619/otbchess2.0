@@ -790,18 +790,19 @@ function PaymentMethodToggle({
       role="switch"
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
-      className="flex w-full items-center justify-between rounded-xl border px-3 py-2 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]"
+      className="group flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]"
+      data-payment-method-toggle={method.toLowerCase().replace(/\s+/g, "-")}
       style={{
         background: enabled ? (isDark ? "rgba(76,175,80,0.15)" : "rgba(76,175,80,0.10)") : (isDark ? "rgba(255,255,255,0.04)" : "rgba(67,104,80,0.05)"),
         borderColor: enabled ? (isDark ? "rgba(76,175,80,0.42)" : "rgba(47,132,74,0.35)") : (isDark ? "rgba(255,255,255,0.10)" : "rgba(67,104,80,0.15)"),
         color: isDark ? "rgba(255,255,255,0.88)" : "#12372A",
       }}
     >
-      <span>{method}</span>
-      <span className="flex items-center gap-2" aria-hidden="true">
-        <span style={{ color: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.42)" : "#6B7280") }}>{enabled ? "Enabled" : "Disabled"}</span>
-        <span className="relative h-5 w-9 rounded-full transition-colors" style={{ background: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.20)" : "#9CA3AF") }}>
-          <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform" style={{ transform: enabled ? "translateX(18px)" : "translateX(2px)" }} />
+      <span className="min-w-0 truncate">{method}</span>
+      <span className="flex shrink-0 items-center gap-2.5" aria-hidden="true">
+        <span className="text-xs font-semibold" style={{ color: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.42)" : "#6B7280") }}>{enabled ? "On" : "Off"}</span>
+        <span className="flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors" style={{ background: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.20)" : "#9CA3AF") }}>
+          <span className="h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200" style={{ transform: enabled ? "translateX(20px)" : "translateX(0)" }} />
         </span>
       </span>
     </button>
