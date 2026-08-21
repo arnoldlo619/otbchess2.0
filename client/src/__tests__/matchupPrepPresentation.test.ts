@@ -47,7 +47,7 @@ describe("Matchup Prep report presentation", () => {
     expect(matchupPrepPageSource).toContain('["Scout", "Study", "Practice"].map');
     expect(matchupPrepPageSource).toContain("hover:shadow-[0_0_18px_rgba(91,154,106,0.16)]");
     expect(matchupPrepPageSource).toContain("Preparation controls");
-    expect(matchupPrepPageSource).toContain("flex flex-wrap items-center gap-x-4 gap-y-2 border-y py-3");
+    expect(matchupPrepPageSource).toContain("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-y py-3");
     expect(matchupPrepPageSource).toContain("Your side");
     expect(matchupPrepPageSource).toContain("shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]");
     expect(matchupPrepPageSource).not.toContain('<Eye className="w-3.5 h-3.5" /> Scout');

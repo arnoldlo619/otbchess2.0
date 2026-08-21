@@ -755,7 +755,7 @@ export default function MatchupPrep() {
 
           {/* ── Preparation controls ── */}
           <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-3">
-            <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 border-y py-3 ${isDark ? "border-[#1e2e22]/75" : "border-[#ADBC9F]/65"}`}>
+            <div className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-y py-3 ${isDark ? "border-[#1e2e22]/75" : "border-[#ADBC9F]/65"}`}>
               {useV3 && (
                 <div className={`flex items-center gap-2 sm:pr-4 sm:border-r ${isDark ? "sm:border-[#1e2e22]" : "sm:border-[#ADBC9F]/70"}`}>
                   <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${t.textTertiary}`}>Source</span>

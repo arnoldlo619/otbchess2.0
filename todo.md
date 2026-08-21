@@ -7784,3 +7784,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Restore the Chess Integration landing-section video background with a resilient visual fallback
 - [x] Enhance the Matchup Prep username search with a premium motion-safe border-beam treatment
 - [x] Simplify Prep Snapshot wording so opponent tendency and preparation takeaway are not repeated
+- [x] Center the grouped Matchup Prep filter-control rail across responsive layouts
