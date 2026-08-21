@@ -90,9 +90,19 @@ function PrepSnapshot({
     { id: "e4", label: "Against e4", insight: findOpeningInsight(/\b1\.?e4\b/i) },
     { id: "d5", label: "Against d5", insight: findOpeningInsight(/\b1\.\.\.d5\b|\bd5\b/i) },
   ];
-  const rowDetail = (label: string, insight: Insight) => label === "Against e4"
-    ? insight.claim.replace(/^Against\s+1\.?e4\s+they\s*/i, "")
-    : insight.recommendation.action;
+  const rowDetail = (label: string, insight: Insight) => {
+    if (label === "Against e4") {
+      return insight.claim
+        .replace(/^Against\s+1\.?e4\s+they\s*/i, "")
+        .replace(/^choose\s+/i, "");
+    }
+
+    const combined = `${insight.claim} ${insight.recommendation.action}`;
+    if (/1\.\.\.d5|\bScandinavian\b/i.test(combined)) {
+      return "Prepare your Scandinavian Defense response.";
+    }
+    return "Prepare your reply before the game.";
+  };
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
@@ -106,10 +116,7 @@ function PrepSnapshot({
               <div className="min-w-0">
                 <p className={`text-sm font-semibold ${t.textPrimary}`}>{label}</p>
                 {insight ? (
-                  <>
-                    <p className={`mt-1 text-sm leading-snug ${t.textSecondary}`}>{rowDetail(label, insight)}</p>
-                    {label === "Against e4" && <p className={`mt-1 text-xs leading-relaxed ${t.textTertiary}`}>{insight.recommendation.action}</p>}
-                  </>
+                  <p className={`mt-1 text-sm leading-snug ${t.textSecondary}`}>{rowDetail(label, insight)}</p>
                 ) : (
                   <p className={`mt-1 text-sm ${t.textTertiary}`}>No repeatable pattern in the analyzed games.</p>
                 )}

@@ -28,6 +28,8 @@ describe("Matchup Prep report presentation", () => {
     expect(prepReportSource).toContain('label: "Against e4"');
     expect(prepReportSource).toContain('label: "Against d5"');
     expect(prepReportSource).toContain("No repeatable pattern in the analyzed games.");
+    expect(prepReportSource).toContain("Prepare your Scandinavian Defense response.");
+    expect(prepReportSource).not.toContain('label === "Against e4" && <p');
     expect(prepReportSource).not.toContain("Top findings");
     expect(prepReportSource).not.toContain("kindIcon");
   });
