@@ -60,4 +60,9 @@ describe("Matchup Prep report presentation", () => {
     expect(globalStyles).toContain("@keyframes prepSearchBeamOrbit");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
   });
+
+  it("uses Ghost White for the light-mode header with a complementary report surface", () => {
+    expect(matchupPrepPageSource).toContain('"bg-[#EEF1F5] text-[#12372A]"');
+    expect(matchupPrepPageSource).toContain('"border-b border-[#DDE2EA] bg-[#F8F8FF]/95');
+  });
 });

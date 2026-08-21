@@ -634,10 +634,10 @@ export default function MatchupPrep() {
   ];
 
   return (
-    <div className={`min-h-screen ${t.page}`}>
+    <div className={`min-h-screen ${isDark ? t.page : "bg-[#EEF1F5] text-[#12372A]"}`}>
 
       {/* ── Sticky Header ── */}
-      <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
+      <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${isDark ? t.header : "border-b border-[#DDE2EA] bg-[#F8F8FF]/95 shadow-[0_1px_0_rgba(35,55,42,0.06)]"}`}>
         {/* Nav bar row */}
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
           <NavLogo />
