@@ -7778,4 +7778,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Optimize the landing hero text animation to eliminate choppiness while retaining visible motion
 - [x] Add a subtle premium hover interaction to the landing hero’s “Over The Board.” text
 - [x] Refine the hero headline hover interaction into a quieter, sleek premium treatment
+- [x] Remove the Contact control from the Club Profile side-navigation footer for club members
+- [x] Remove the Contact control from the Club Profile side-navigation footer for club members
 - [x] Fix overlapping Tournament Setup payment-method toggles with contained responsive header controls

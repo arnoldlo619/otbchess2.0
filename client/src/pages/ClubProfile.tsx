@@ -1587,20 +1587,6 @@ export default function ClubProfile() {
               <AvatarNavDropdown currentPage="Clubs" variant="sidebar" />
             </div>
 
-            {user && !isOwner && !isDirector && (
-              <button
-                onClick={() => setShowContactOwner(true)}
-                className="relative flex flex-row items-center gap-3 rounded-xl transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-                style={{ height: "52px", paddingLeft: "14px", paddingRight: "10px", color: "rgba(255,255,255,0.38)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
-                aria-label="Contact Owner"
-              >
-                <span className="flex-shrink-0 w-7 flex items-center justify-center"><MessageSquare size={24} /></span>
-                <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Contact</span>
-              </button>
-            )}
-
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
