@@ -99,6 +99,7 @@ import {
   getPreviousMonthLabel,
   recordTournamentCreated,
   recordMeetupCreated,
+  formatTournamentResultFeedTitle,
   type FeedEvent,
   type PollOption as _PollOption,
   type FeedRSVPEntry,
@@ -1444,7 +1445,7 @@ function FeedCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
             {event.type === "tournament_completed" ? (
-              <span className="text-amber-300 text-sm font-bold">{event.tournamentName?.trim() || "Tournament Results"}</span>
+              <span className="text-amber-300 text-sm font-bold">{formatTournamentResultFeedTitle(event.tournamentName, event.createdAt)}</span>
             ) : (
               <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
             )}

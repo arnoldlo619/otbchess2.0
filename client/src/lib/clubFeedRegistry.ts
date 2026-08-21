@@ -581,6 +581,23 @@ export function recordTournamentCompleted(
   });
 }
 
+/** Build the concise result-post header used across club feeds. */
+export function formatTournamentResultFeedTitle(
+  tournamentName: string | null | undefined,
+  createdAt: string,
+): string {
+  const name = tournamentName?.trim() || "Tournament";
+  const completedAt = new Date(createdAt);
+  if (Number.isNaN(completedAt.getTime())) return `${name} Results`;
+
+  const dateLabel = completedAt.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  return `${name} Results, ${dateLabel}`;
+}
+
 /**
  * Check for expired polls that don't yet have a result post, and automatically
  * post a poll_result summary for each one. Returns true if any polls were closed.

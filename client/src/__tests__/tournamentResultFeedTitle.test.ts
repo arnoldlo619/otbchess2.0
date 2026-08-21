@@ -12,9 +12,9 @@ const clubProfileSource = readFileSync(
 
 describe("automated tournament-result feed titles", () => {
   it("uses the tournament name for result-card headers instead of winner-score fallback text", () => {
-    expect(clubDashboardSource).toContain('event.tournamentName?.trim() || "Tournament Results"');
+    expect(clubDashboardSource).toContain("formatTournamentResultFeedTitle(event.tournamentName, event.createdAt)");
     expect(clubDashboardSource).not.toContain("event.tournamentName ?? event.description");
-    expect(clubProfileSource).toContain('event.type === "tournament_completed" ? (event.tournamentName?.trim() || "Tournament Results") : event.actorName');
+    expect(clubProfileSource).toContain('event.type === "tournament_completed" ? formatTournamentResultFeedTitle(event.tournamentName, event.createdAt) : event.actorName');
   });
 
   it("does not repeat the automated result post description in the Club Profile card body", () => {

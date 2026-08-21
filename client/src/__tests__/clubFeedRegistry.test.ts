@@ -22,6 +22,7 @@ import {
   recordMemberLeave,
   recordTournamentCreated,
   recordTournamentCompleted,
+  formatTournamentResultFeedTitle,
   deleteFeedEvent,
   clearFeed,
   seedFeedIfEmpty,
@@ -122,6 +123,17 @@ describe("recordTournamentCreated / recordTournamentCompleted", () => {
     expect(event.type).toBe("tournament_completed");
     expect(event.detail).toContain("Magnus");
     expect(event.linkHref).toBe("/tournament/spring-open-2026/results");
+  });
+});
+
+describe("formatTournamentResultFeedTitle", () => {
+  it("uses the exact tournament name followed by the completion date", () => {
+    expect(formatTournamentResultFeedTitle("ChessOTB SD Tournament", "2026-08-01T18:30:00.000Z"))
+      .toBe("ChessOTB SD Tournament Results, Aug 1");
+  });
+
+  it("keeps a stable title if a legacy event has no valid completion timestamp", () => {
+    expect(formatTournamentResultFeedTitle("Spring Open", "not-a-date")).toBe("Spring Open Results");
   });
 });
 

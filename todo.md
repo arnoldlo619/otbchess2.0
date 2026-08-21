@@ -7782,4 +7782,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove the Contact control from the Club Profile side-navigation footer for club members
 - [x] Remove redundant non-member logo imagery and enlarge members-only headings across Club Profile tabs
 - [x] Use tournament names as automated club result-feed headers and eliminate duplicate winner-score titles
+- [x] Format automated club tournament-result titles with the exact tournament name and completion date
 - [x] Fix overlapping Tournament Setup payment-method toggles with contained responsive header controls
