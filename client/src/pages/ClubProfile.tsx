@@ -516,9 +516,11 @@ function FeedEventCard({
             {/* Name + timestamp on same row, type badge below */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-[15px] font-bold ${textMain} leading-tight`}>{event.actorName}</span>
+                <span className={`text-[15px] font-bold ${textMain} leading-tight`}>
+                  {event.type === "tournament_completed" ? (event.tournamentName?.trim() || "Tournament Results") : event.actorName}
+                </span>
                 <span className={`text-[13px] ${textMuted} leading-tight`}>{relativeTime(event.createdAt)}</span>
-                {event.type !== "announcement" && (
+                {event.type !== "announcement" && event.type !== "tournament_completed" && (
                   <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${accentCls}`}>
                     {cfg.icon}
                     <span className="capitalize">{event.type.replace(/_/g, " ")}</span>
@@ -553,7 +555,9 @@ function FeedEventCard({
           {/* ── POST BODY ── */}
           <div className="ml-[56px]">
             {/* Primary description — Threads uses regular weight 15px */}
-            <p className={`text-[15px] font-normal ${textMain} leading-[1.55] mb-1`}>{event.description}</p>
+            {event.type !== "tournament_completed" && (
+              <p className={`text-[15px] font-normal ${textMain} leading-[1.55] mb-1`}>{event.description}</p>
+            )}
             {/* Secondary detail */}
             {event.detail && (
               <p className={`text-[14px] leading-[1.55] mb-2 ${
