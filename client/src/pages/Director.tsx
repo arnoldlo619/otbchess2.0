@@ -10,15 +10,12 @@
  *   - Round progress tracker
  */
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { lazy, Suspense, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { fireTournamentConfetti } from "@/lib/confetti";
-import { AddPlayerModal } from "@/components/AddPlayerModal";
-import { UploadRSVPModal } from "@/components/UploadRSVPModal";
 import { QRModal } from "@/components/QRModal";
 import { RoundTimer } from "@/components/RoundTimer";
 import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
-import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
 import { useParams, useLocation } from "wouter";
 import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
@@ -32,7 +29,6 @@ import { suggestElimCutoff, computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession, updateTournamentConfig } from "@/lib/tournamentRegistry";
 import { encodeMetaParam } from "@/lib/base64";
 import { useAuthContext } from "@/context/AuthContext";
-import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
@@ -40,19 +36,12 @@ import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { getPlayerCountError } from "@/lib/formatRegistry";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
-import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
-import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
-import { BroadcastSettingsPanel } from "@/components/BroadcastSettingsPanel";
-import {EliminationBracketView} from "@/components/EliminationBracketView";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
-import { StyleAwarePairingsPanel } from "@/components/StyleAwarePairingsPanel";
 import {type StylePairingPlayer} from "@/lib/styleAwarePairings";
-import { EditPlayerModal } from "@/components/EditPlayerModal";
 import { PairingSwapModal } from "@/components/PairingSwapModal";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
-import QuadsDirectorPanel from "@/components/tournament/QuadsDirectorPanel";
 import {
   Crown,
   ChevronLeft,
@@ -114,6 +103,29 @@ import { logger } from "@/lib/logger";
 import { apiFetch, authFetch } from "@/lib/apiFetch";
 import { fetchFromChessCom } from "@/hooks/useChessComProfile";
 import { fetchFromLichess } from "@/hooks/useLichessProfile";
+
+const AddPlayerModal = lazy(() => import("@/components/AddPlayerModal").then((module) => ({ default: module.AddPlayerModal })));
+const UploadRSVPModal = lazy(() => import("@/components/UploadRSVPModal").then((module) => ({ default: module.UploadRSVPModal })));
+const InstagramCarouselModal = lazy(() => import("@/components/InstagramCarouselModal").then((module) => ({ default: module.InstagramCarouselModal })));
+const EditPlayerModal = lazy(() => import("@/components/EditPlayerModal").then((module) => ({ default: module.EditPlayerModal })));
+const SpectatorQRScreen = lazy(() => import("@/components/SpectatorQRScreen").then((module) => ({ default: module.SpectatorQRScreen })));
+const TournamentSettingsPanel = lazy(() => import("@/components/TournamentSettingsPanel").then((module) => ({ default: module.TournamentSettingsPanel })));
+const BroadcastSettingsPanel = lazy(() => import("@/components/BroadcastSettingsPanel").then((module) => ({ default: module.BroadcastSettingsPanel })));
+const SmtpSettingsCard = lazy(() => import("@/components/SmtpSettingsCard").then((module) => ({ default: module.SmtpSettingsCard })));
+const EliminationBracketView = lazy(() => import("@/components/EliminationBracketView").then((module) => ({ default: module.EliminationBracketView })));
+const StyleAwarePairingsPanel = lazy(() => import("@/components/StyleAwarePairingsPanel").then((module) => ({ default: module.StyleAwarePairingsPanel })));
+const QuadsDirectorPanel = lazy(() => import("@/components/tournament/QuadsDirectorPanel"));
+
+function DirectorFeatureFallback({ overlay = false }: { overlay?: boolean }) {
+  return (
+    <div className={overlay ? "fixed inset-0 z-[70] flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm" : "flex min-h-44 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]"}>
+      <div className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-[oklch(0.18_0.04_145)] px-4 py-3 text-sm font-semibold text-white/75 shadow-xl">
+        <RefreshCw className="h-4 w-4 animate-spin text-[#4CAF50]" aria-hidden="true" />
+        Loading tournament tools…
+      </div>
+    </div>
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -4298,24 +4310,26 @@ export default function Director() {
 
                   {/* ── Quads Section Panel ─────────────────────────────────────────────── */}
                   {state.format === "quads" && state.quadSections && (
-                    <QuadsDirectorPanel
-                      sections={state.quadSections}
-                      players={state.players}
-                      games={state.rounds.flatMap((r) => r.games)}
-                      currentRound={state.currentRound}
-                      totalRounds={state.totalRounds}
-                      onEnterResult={enterResult}
-                      onSwapPlayers={(_sectionId, playerIdA, playerIdB) => swapQuadPlayers(playerIdA, playerIdB)}
-                      onRenameSection={(sectionId, newName) => renameQuadSection(sectionId, newName)}
-                      onAdvanceRound={() => generateNextRound()}
-                      onCompleteTournament={() => completeTournament()}
-                      isDark={isDark}
-                      tournamentId={tournamentId}
-                      tournamentConfig={tournamentConfig}
-                      tournamentStatus={state.status}
-                      externalSelectedSectionId={activeQuadSectionId}
-                      onSectionChange={(id) => setActiveQuadSectionId(id)}
-                    />
+                    <Suspense fallback={<DirectorFeatureFallback />}>
+                      <QuadsDirectorPanel
+                        sections={state.quadSections}
+                        players={state.players}
+                        games={state.rounds.flatMap((r) => r.games)}
+                        currentRound={state.currentRound}
+                        totalRounds={state.totalRounds}
+                        onEnterResult={enterResult}
+                        onSwapPlayers={(_sectionId, playerIdA, playerIdB) => swapQuadPlayers(playerIdA, playerIdB)}
+                        onRenameSection={(sectionId, newName) => renameQuadSection(sectionId, newName)}
+                        onAdvanceRound={() => generateNextRound()}
+                        onCompleteTournament={() => completeTournament()}
+                        isDark={isDark}
+                        tournamentId={tournamentId}
+                        tournamentConfig={tournamentConfig}
+                        tournamentStatus={state.status}
+                        externalSelectedSectionId={activeQuadSectionId}
+                        onSectionChange={(id) => setActiveQuadSectionId(id)}
+                      />
+                    </Suspense>
                   )}
                   {/* ── Round Pairings standalone header row ─────────────────────────────────────── */}
                   {state.format !== "quads" && (<div>
@@ -6344,6 +6358,7 @@ export default function Director() {
                 const elimCutoffSize = state.elimCutoff ?? state.elimPlayers?.length ?? state.players.length;
                 const totalElimRounds = elimCutoffSize > 1 ? Math.ceil(Math.log2(elimCutoffSize)) : 1;
                 return (
+                  <Suspense fallback={<DirectorFeatureFallback />}>
                   <EliminationBracketView
                     rounds={elimRounds}
                     players={state.players}
@@ -6409,6 +6424,7 @@ export default function Director() {
                       setTimeout(() => navigate(`/tournament/${tournamentId}/overview`), 900);
                     }}
                   />
+                  </Suspense>
                 );
               })()}
 
@@ -6718,6 +6734,7 @@ export default function Director() {
                   </div>
                 </div>
                 <div className="px-5 py-4">
+                  <Suspense fallback={<DirectorFeatureFallback />}>
                   <StyleAwarePairingsPanel
                     players={state.players
                       .filter((p) => checkedInIds.has(p.id))
@@ -6731,12 +6748,14 @@ export default function Director() {
                       }))}
                     isDark={isDark}
                   />
+                  </Suspense>
                 </div>
               </div>
               )}{/* end state.format !== "quads" */}
 
               {/* Editable tournament settings panel */}
               {tournamentId !== "otb-demo-2026" ? (
+                <Suspense fallback={<DirectorFeatureFallback />}>
                 <TournamentSettingsPanel
                   tournamentId={tournamentId}
                   isLocked={isSettingsLocked}
@@ -6749,6 +6768,7 @@ export default function Director() {
                     });
                   }}
                 />
+                </Suspense>
               ) : (
                 /* Demo tournament — show read-only info */
                 <div
@@ -6843,14 +6863,18 @@ export default function Director() {
               />
 
               {/* ── Board Broadcast ─────────────────────────────────────────── */}
+              <Suspense fallback={<DirectorFeatureFallback />}>
               <BroadcastSettingsPanel
                 tournamentId={tournamentId}
                 totalBoards={Math.ceil((state.players?.length ?? 0) / 2)}
                 isDark={isDark}
               />
+              </Suspense>
 
               {/* ── SMTP Email Settings ──────────────────────────────────────── */}
-              <SmtpSettingsCard isDark={isDark} />
+              <Suspense fallback={<DirectorFeatureFallback />}>
+                <SmtpSettingsCard isDark={isDark} />
+              </Suspense>
 
               {/* Danger zone */}
               <div
@@ -7061,13 +7085,17 @@ export default function Director() {
       />
 
       {/* ── Spectator QR Screen (full-screen projection mode) ────────────────── */}
-      <SpectatorQRScreen
-        open={showSpectatorQR}
-        onClose={() => setShowSpectatorQR(false)}
-        tournamentName={state.tournamentName}
-        spectatorUrl={spectatorUrl}
-        tournamentId={state.tournamentId}
-      />
+      {showSpectatorQR && (
+        <Suspense fallback={<DirectorFeatureFallback overlay />}>
+          <SpectatorQRScreen
+            open
+            onClose={() => setShowSpectatorQR(false)}
+            tournamentName={state.tournamentName}
+            spectatorUrl={spectatorUrl}
+            tournamentId={state.tournamentId}
+          />
+        </Suspense>
+      )}
 
       {/* ── QR Modal ────────────────────────────────────────────────────── */}
       <QRModal
@@ -7088,63 +7116,73 @@ export default function Director() {
       />
 
       {/* ── Add Player Modal ─────────────────────────────────────────────────── */}
-      <AddPlayerModal
-        open={showAddPlayer}
-        onClose={() => setShowAddPlayer(false)}
-        onAdd={(player) => {
-          if (!isRegistration && state.currentRound === 1) {
-            // Late registration during Round 1
-            const outcome = addLatePlayer(player);
-            if ('duplicate' in outcome) {
-              toast.error(`${player.name} is already in the tournament`);
-            } else if ('locked' in outcome) {
-              toast.error("Late registration is only available during Round 1");
-            } else if ('paired' in outcome) {
-              toast.success(`${player.name} paired with ${outcome.opponentName} on Board ${outcome.board}`);
-              // Scroll to top so all boards are visible after pairings regenerate
-              setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
-            } else {
-              toast.success(`${player.name} added — pairings regenerated with bye (+1pt)`);
-              // Scroll to top so all boards are visible after pairings regenerate
-              setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
-            }
-          } else {
-            addPlayer(player);
-            toast.success(`${player.name} added to the tournament`);
-          }
-        }}
-        onBulkUpsert={({ toUpdate }) => {
-          toUpdate.forEach(({ id, patch }) => updatePlayer(id, patch));
-        }}
-        existingPlayers={state.players.map((p) => ({ id: p.id, username: p.username, name: p.name, elo: p.elo }))}
-        existingUsernames={existingUsernames}
-        ratingType={tournamentConfig?.ratingType}
-      />
+      {showAddPlayer && (
+        <Suspense fallback={<DirectorFeatureFallback overlay />}>
+          <AddPlayerModal
+            open
+            onClose={() => setShowAddPlayer(false)}
+            onAdd={(player) => {
+              if (!isRegistration && state.currentRound === 1) {
+                // Late registration during Round 1
+                const outcome = addLatePlayer(player);
+                if ('duplicate' in outcome) {
+                  toast.error(`${player.name} is already in the tournament`);
+                } else if ('locked' in outcome) {
+                  toast.error("Late registration is only available during Round 1");
+                } else if ('paired' in outcome) {
+                  toast.success(`${player.name} paired with ${outcome.opponentName} on Board ${outcome.board}`);
+                  // Scroll to top so all boards are visible after pairings regenerate
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
+                } else {
+                  toast.success(`${player.name} added — pairings regenerated with bye (+1pt)`);
+                  // Scroll to top so all boards are visible after pairings regenerate
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
+                }
+              } else {
+                addPlayer(player);
+                toast.success(`${player.name} added to the tournament`);
+              }
+            }}
+            onBulkUpsert={({ toUpdate }) => {
+              toUpdate.forEach(({ id, patch }) => updatePlayer(id, patch));
+            }}
+            existingPlayers={state.players.map((p) => ({ id: p.id, username: p.username, name: p.name, elo: p.elo }))}
+            existingUsernames={existingUsernames}
+            ratingType={tournamentConfig?.ratingType}
+          />
+        </Suspense>
+      )}
 
        {/* ── Instagram Carousel Modal ──────────────────────────────────────── */}
       {showCarousel && (
-        <InstagramCarouselModal
-          open={showCarousel}
-          onClose={() => setShowCarousel(false)}
-          rows={liveStandings}
-          config={getTournamentConfig(tournamentId) ?? null}
-          tournamentName={state.tournamentName}
-          totalRounds={state.totalRounds}
-          rounds={state.rounds}
-          clubLogoUrl={clubAvatarUrl}
-        />
+        <Suspense fallback={<DirectorFeatureFallback overlay />}>
+          <InstagramCarouselModal
+            open
+            onClose={() => setShowCarousel(false)}
+            rows={liveStandings}
+            config={getTournamentConfig(tournamentId) ?? null}
+            tournamentName={state.tournamentName}
+            totalRounds={state.totalRounds}
+            rounds={state.rounds}
+            clubLogoUrl={clubAvatarUrl}
+          />
+        </Suspense>
       )}
 
       {/* ── Upload RSVP Modal ────────────────────────────────────────────── */}
-      <UploadRSVPModal
-        open={showUploadRSVP}
-        onClose={() => setShowUploadRSVP(false)}
-        onAdd={(player) => {
-          addPlayer(player);
-        }}
-        existingUsernames={existingUsernames}
-        tournamentId={tournamentId}
-      />
+      {showUploadRSVP && (
+        <Suspense fallback={<DirectorFeatureFallback overlay />}>
+          <UploadRSVPModal
+            open
+            onClose={() => setShowUploadRSVP(false)}
+            onAdd={(player) => {
+              addPlayer(player);
+            }}
+            existingUsernames={existingUsernames}
+            tournamentId={tournamentId}
+          />
+        </Suspense>
+      )}
 
       {/* ── Start Tournament Confirmation Dialog ─────────────────────────────── */}
       {showStartConfirm && (
@@ -7272,24 +7310,28 @@ export default function Director() {
       />
 
       {/* ── Edit Player Modal ─────────────────────────────────────────────── */}
-      <EditPlayerModal
-        open={editingPlayer !== null}
-        player={editingPlayer}
-        tournamentRatingType={tournamentConfig?.ratingType ?? "rapid"}
-        onSave={(updated) => {
-          updatePlayer(updated.id, {
-            name: updated.name,
-            elo: updated.elo,
-            rapidElo: updated.rapidElo,
-            blitzElo: updated.blitzElo,
-            manualPairingRating: updated.manualPairingRating,
-            pairingRating: updated.pairingRating,
-            ratingSource: updated.ratingSource,
-          });
-          toast.success(`${updated.name} updated`);
-        }}
-        onClose={() => setEditingPlayer(null)}
-      />
+      {editingPlayer && (
+        <Suspense fallback={<DirectorFeatureFallback overlay />}>
+          <EditPlayerModal
+            open
+            player={editingPlayer}
+            tournamentRatingType={tournamentConfig?.ratingType ?? "rapid"}
+            onSave={(updated) => {
+              updatePlayer(updated.id, {
+                name: updated.name,
+                elo: updated.elo,
+                rapidElo: updated.rapidElo,
+                blitzElo: updated.blitzElo,
+                manualPairingRating: updated.manualPairingRating,
+                pairingRating: updated.pairingRating,
+                ratingSource: updated.ratingSource,
+              });
+              toast.success(`${updated.name} updated`);
+            }}
+            onClose={() => setEditingPlayer(null)}
+          />
+        </Suspense>
+      )}
 
       {/* ── Pairing Swap Modal ──────────────────────────────────────────────── */}
       {currentRoundData && (
