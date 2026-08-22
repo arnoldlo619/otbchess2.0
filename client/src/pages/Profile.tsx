@@ -46,6 +46,7 @@ import { TournamentsIcon, BattleIcon, MembersIcon, ProfileIcon } from "@/compone
 import { AvatarCropModal } from "@/components/AvatarCropModal";
 import { AchievementBadgeGrid } from "@/components/tournament/AchievementBadge";
 import { OTBLoader } from "@/components/OTBLoader";
+import { ApiErrorNotice } from "@/components/ApiErrorNotice";
 // ── PasswordField helper ─────────────────────────────────────────────────────
 function PasswordField({
   id, label, value, onChange, isDark,
@@ -225,7 +226,7 @@ export default function ProfilePage() {
   const [isDark, setIsDark] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<unknown>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   // Holds the raw data URL while the crop modal is open
@@ -498,7 +499,7 @@ export default function ProfilePage() {
       });
       setEditing(false);
     } catch (err) {
-      setSaveError((err as Error).message);
+      setSaveError(err);
     } finally {
       setSaving(false);
     }
@@ -756,10 +757,13 @@ export default function ProfilePage() {
           {/* Edit form */}
           {editing ? (
             <div className="space-y-4 pt-4 border-t border-white/10">
-              {saveError && (
-                <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
-                  {saveError}
-                </div>
+              {Boolean(saveError) && (
+                <ApiErrorNotice
+                  error={saveError}
+                  title="Profile changes weren’t saved"
+                  onRetry={handleSave}
+                  isDark={isDark}
+                />
               )}
               <div className={`rounded-2xl border px-4 py-3 ${isDark ? "border-[#4ade80]/15 bg-[#4ade80]/5" : "border-[#436850]/15 bg-[#436850]/5"}`}>
                 <div className="flex items-center gap-2">

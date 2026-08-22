@@ -1,5 +1,18 @@
 # OTB Chess — Project TODO
 
+## Current Sprint — Error UX and Server Decomposition
+
+- [x] Frontend resilience: Gracefully present structured API and global Express error responses with actionable, non-technical messaging
+- [x] Frontend resilience: Add regression coverage for API error normalization and presentation
+- [x] Architecture: Extract user authentication routes into a dedicated server module without changing route contracts
+- [x] Architecture: Extract profile management routes into a dedicated server module without changing route contracts
+- [x] Architecture: Add regression coverage for extracted authentication and profile route registration
+- [x] Architecture: Move the global Express error handler after all API routes and add request correlation IDs
+- [x] Architecture: Extract user-owned tournament and join-resolution routes from the former auth monolith
+- [x] Frontend resilience: Extend shared authFetch handling so structured 500 and network failures surface consistently beyond Auth/Profile
+- [x] Frontend resilience: Mount a global accessible API error notifier for shared raw-response call sites
+- [x] Frontend resilience: Add rendered UI regression coverage for friendly 500 copy and request reference IDs
+
 ## Phase 2 — Theme Token Migration & Light-Mode Contrast Fixes
 
 - [x] Add 8 OTB semantic CSS tokens to index.css (:root and .dark) — `--otb-surface-page`, `--otb-surface-card`, `--otb-surface-elevated`, `--otb-text-primary`, `--otb-text-secondary`, `--otb-text-muted`, `--otb-border`, `--otb-accent`

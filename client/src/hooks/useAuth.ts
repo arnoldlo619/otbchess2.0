@@ -21,6 +21,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/apiFetch";
 
 /** How often to silently refresh the token (ms). */
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
@@ -64,34 +65,11 @@ export interface UpdateProfileFields {
 /** In-memory + localStorage token store — fallback when httpOnly cookie is stripped by proxy */
 const TOKEN_KEY = "otb-auth-token";
 
-function getStoredToken(): string | null {
-  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
-}
 function setStoredToken(token: string | null) {
   try {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
   } catch { /* ignore */ }
-}
-
-async function apiFetch<T>(
-  url: string,
-  options?: RequestInit
-): Promise<T> {
-  const storedToken = getStoredToken();
-  const authHeader: Record<string, string> = storedToken
-    ? { Authorization: `Bearer ${storedToken}` }
-    : {};
-  const res = await fetch(url, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...authHeader, ...(options?.headers ?? {}) },
-    ...options,
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error((data as { error?: string }).error ?? "Request failed");
-  }
-  return data as T;
 }
 
 export function useAuth() {

@@ -14,6 +14,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Eye, EyeOff, Loader2, ChevronRight, CheckCircle2, Ghost, ArrowLeft } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
+import { ApiErrorNotice } from "@/components/ApiErrorNotice";
 import {
   validateEmail,
   validatePassword,
@@ -151,14 +152,14 @@ export default function AuthPage() {
   const [siEmail, setSiEmail] = useState(savedEmail);
   const [siPassword, setSiPassword] = useState("");
   const [siRemember, setSiRemember] = useState(savedRemember);
-  const [siErrors, setSiErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [siErrors, setSiErrors] = useState<{ email?: string; password?: string; general?: unknown }>({});
 
   // Sign Up
   const [suName, setSuName] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suPassword, setSuPassword] = useState("");
   const [suChesscom, setSuChesscom] = useState("");
-  const [suErrors, setSuErrors] = useState<{ name?: string; email?: string; password?: string; general?: string }>({});
+  const [suErrors, setSuErrors] = useState<{ name?: string; email?: string; password?: string; general?: unknown }>({});
 
   // Guest
   const [guestName, setGuestName] = useState("");
@@ -198,7 +199,7 @@ export default function AuthPage() {
       setSuccess(true);
       setTimeout(() => navigate(redirectPath), 1000);
     } catch (err) {
-      setSiErrors({ general: (err as Error).message });
+      setSiErrors({ general: err });
     } finally {
       setLoading(false);
     }
@@ -219,7 +220,7 @@ export default function AuthPage() {
       setSuccess(true);
       setTimeout(() => navigate(redirectPath), 1000);
     } catch (err) {
-      setSuErrors({ general: (err as Error).message });
+      setSuErrors({ general: err });
     } finally {
       setLoading(false);
     }
@@ -452,10 +453,8 @@ export default function AuthPage() {
                 {/* ── Sign In form ── */}
                 {tab === "signin" && (
                   <form onSubmit={handleSignIn} className="space-y-4" noValidate>
-                    {siErrors.general && (
-                      <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-xs text-red-400">
-                        {siErrors.general}
-                      </div>
+                    {Boolean(siErrors.general) && (
+                      <ApiErrorNotice error={siErrors.general} title="Sign-in unavailable" />
                     )}
 
                     {/* Google OAuth */}
@@ -554,10 +553,8 @@ export default function AuthPage() {
                 {/* ── Sign Up form ── */}
                 {tab === "signup" && (
                   <form onSubmit={handleSignUp} className="space-y-4" noValidate>
-                    {suErrors.general && (
-                      <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-xs text-red-400">
-                        {suErrors.general}
-                      </div>
+                    {Boolean(suErrors.general) && (
+                      <ApiErrorNotice error={suErrors.general} title="Account creation unavailable" />
                     )}
 
                     {/* Google OAuth */}

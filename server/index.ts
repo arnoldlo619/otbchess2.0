@@ -413,6 +413,8 @@ export function createApp() {
   app.use(express.json({ limit: "512kb" }));
   app.use(cookieParser());
 
+  app.use(requestCorrelation);
+
   // ── Security headers ────────────────────────────────────────────────────────
   app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -625,15 +627,6 @@ export function createApp() {
   app.use("/api/brackets", bracketsRouter);
   registerStorageProxy(app);
 
-  // ── Global Express error handler ───────────────────────────────────────────
-  // Catches unhandled errors from any route and returns a structured 500 response
-  // instead of crashing or leaking stack traces to the client.
-  app.use((err: any, _req: any, res: any, _next: any) => {
-    logger.error("[express] Unhandled route error:", err?.message ?? err);
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
 
   // ── Tournament Players: GET /api/tournament/:id/players ─────────────────────
   // Returns all registered players for a tournament (polled by Director dashboard).
@@ -2382,6 +2375,8 @@ function getRaceRoom(code: string): RaceRoomState {
     }
   });
 
+  // Must remain after every API route so next(err) from any route is normalized.
+  app.use(globalErrorHandler);
   return app;
 }
 
@@ -2514,3 +2509,4 @@ process.on('uncaughtException', (err) => {
   // Give the logger time to flush before exiting
   setTimeout(() => process.exit(1), 500);
 });
+import { globalErrorHandler, requestCorrelation } from "./errorHandler.js";

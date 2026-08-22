@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
+import { ApiErrorNotifier } from "./components/ApiErrorNotifier";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
 // Each page is split into its own JS chunk, dramatically reducing initial bundle
@@ -205,6 +206,7 @@ function App() {
         >
           <TooltipProvider>
             <Toaster />
+            <ApiErrorNotifier />
             <Router />
             <InstallBanner />
           </TooltipProvider>
