@@ -47,6 +47,7 @@ import {
 import { eq, sql, asc, inArray, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { Chess } from "chess.js";
+import { logger } from "./logger.js";
 
 // ─── Admin Middleware ─────────────────────────────────────────────────────────
 
@@ -217,7 +218,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ openings: result });
     } catch (err) {
-      console.error("[admin] list openings error:", err);
+      logger.error("admin_list_openings_failed", { error: err });
       res.status(500).json({ error: "Failed to list openings" });
     }
   });
@@ -263,7 +264,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.status(201).json({ id, slug });
     } catch (err) {
-      console.error("[admin] create opening error:", err);
+      logger.error("admin_create_opening_failed", { error: err });
       res.status(500).json({ error: "Failed to create opening" });
     }
   });
@@ -289,7 +290,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ opening, tags });
     } catch (err) {
-      console.error("[admin] get opening error:", err);
+      logger.error("admin_get_opening_failed", { error: err });
       res.status(500).json({ error: "Failed to get opening" });
     }
   });
@@ -331,7 +332,7 @@ export function createOpeningsAdminRouter(): Router {
       await db.update(openings).set(updates).where(eq(openings.id, req.params.id));
       res.json({ success: true });
     } catch (err) {
-      console.error("[admin] update opening error:", err);
+      logger.error("admin_update_opening_failed", { error: err });
       res.status(500).json({ error: "Failed to update opening" });
     }
   });
@@ -359,7 +360,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ success: true, deletedLines: lineIds.length });
     } catch (err) {
-      console.error("[admin] delete opening error:", err);
+      logger.error("admin_delete_opening_failed", { error: err });
       res.status(500).json({ error: "Failed to delete opening" });
     }
   });
@@ -383,7 +384,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ lines: result });
     } catch (err) {
-      console.error("[admin] list lines error:", err);
+      logger.error("admin_list_opening_lines_failed", { error: err });
       res.status(500).json({ error: "Failed to list lines" });
     }
   });
@@ -449,7 +450,7 @@ export function createOpeningsAdminRouter(): Router {
         uciMoves: parsed.uci.join(" "),
       });
     } catch (err) {
-      console.error("[admin] create line error:", err);
+      logger.error("admin_create_opening_line_failed", { error: err });
       res.status(500).json({ error: "Failed to create line" });
     }
   });
@@ -484,7 +485,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ line, nodes, tags, _qa: { complete, missing } });
     } catch (err) {
-      console.error("[admin] get line error:", err);
+      logger.error("admin_get_opening_line_failed", { error: err });
       res.status(500).json({ error: "Failed to get line" });
     }
   });
@@ -532,7 +533,7 @@ export function createOpeningsAdminRouter(): Router {
       await db.update(openingLines).set(updates).where(eq(openingLines.id, req.params.lineId));
       res.json({ success: true });
     } catch (err) {
-      console.error("[admin] update line error:", err);
+      logger.error("admin_update_opening_line_failed", { error: err });
       res.status(500).json({ error: "Failed to update line" });
     }
   });
@@ -546,7 +547,7 @@ export function createOpeningsAdminRouter(): Router {
       await db.delete(openingLines).where(eq(openingLines.id, req.params.lineId));
       res.json({ success: true });
     } catch (err) {
-      console.error("[admin] delete line error:", err);
+      logger.error("admin_delete_opening_line_failed", { error: err });
       res.status(500).json({ error: "Failed to delete line" });
     }
   });
@@ -593,7 +594,7 @@ export function createOpeningsAdminRouter(): Router {
         completeness: { complete, missing },
       });
     } catch (err) {
-      console.error("[admin] validate line error:", err);
+      logger.error("admin_validate_opening_line_failed", { error: err });
       res.status(500).json({ error: "Failed to validate line" });
     }
   });
@@ -616,7 +617,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ success: true, updated: lineIds.length });
     } catch (err) {
-      console.error("[admin] bulk publish error:", err);
+      logger.error("admin_bulk_publish_openings_failed", { error: err });
       res.status(500).json({ error: "Failed to bulk publish" });
     }
   });
@@ -648,7 +649,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ success: true, updated: lineIds.length });
     } catch (err) {
-      console.error("[admin] bulk tag error:", err);
+      logger.error("admin_bulk_tag_openings_failed", { error: err });
       res.status(500).json({ error: "Failed to bulk tag" });
     }
   });
@@ -743,7 +744,7 @@ export function createOpeningsAdminRouter(): Router {
         uciMoves: uciMoves.join(" "),
       });
     } catch (err) {
-      console.error("[admin] PGN import error:", err);
+      logger.error("admin_pgn_import_failed", { error: err });
       res.status(500).json({ error: "Failed to import PGN" });
     }
   });
@@ -757,7 +758,7 @@ export function createOpeningsAdminRouter(): Router {
       const tags = await db.select().from(openingTags).orderBy(asc(openingTags.category), asc(openingTags.name));
       res.json({ tags });
     } catch (err) {
-      console.error("[admin] list tags error:", err);
+      logger.error("admin_list_opening_tags_failed", { error: err });
       res.status(500).json({ error: "Failed to list tags" });
     }
   });
@@ -782,7 +783,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.status(201).json({ id });
     } catch (err) {
-      console.error("[admin] create tag error:", err);
+      logger.error("admin_create_opening_tag_failed", { error: err });
       res.status(500).json({ error: "Failed to create tag" });
     }
   });
@@ -801,7 +802,7 @@ export function createOpeningsAdminRouter(): Router {
       await db.update(openingTags).set(updates).where(eq(openingTags.id, req.params.id));
       res.json({ success: true });
     } catch (err) {
-      console.error("[admin] update tag error:", err);
+      logger.error("admin_update_opening_tag_failed", { error: err });
       res.status(500).json({ error: "Failed to update tag" });
     }
   });
@@ -815,7 +816,7 @@ export function createOpeningsAdminRouter(): Router {
       await db.delete(openingTags).where(eq(openingTags.id, req.params.id));
       res.json({ success: true });
     } catch (err) {
-      console.error("[admin] delete tag error:", err);
+      logger.error("admin_delete_opening_tag_failed", { error: err });
       res.status(500).json({ error: "Failed to delete tag" });
     }
   });
@@ -863,7 +864,7 @@ export function createOpeningsAdminRouter(): Router {
         },
       });
     } catch (err) {
-      console.error("[admin] QA dashboard error:", err);
+      logger.error("admin_openings_qa_dashboard_failed", { error: err });
       res.status(500).json({ error: "Failed to get QA stats" });
     }
   });
@@ -883,7 +884,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ lines: incomplete });
     } catch (err) {
-      console.error("[admin] incomplete lines error:", err);
+      logger.error("admin_incomplete_opening_lines_failed", { error: err });
       res.status(500).json({ error: "Failed to get incomplete lines" });
     }
   });
@@ -946,7 +947,7 @@ export function createOpeningsAdminRouter(): Router {
 
       res.json({ duplicates, count: duplicates.length });
     } catch (err) {
-      console.error("[admin] duplicates error:", err);
+      logger.error("admin_duplicate_openings_failed", { error: err });
       res.status(500).json({ error: "Failed to check duplicates" });
     }
   });

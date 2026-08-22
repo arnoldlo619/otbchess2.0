@@ -19,6 +19,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { users } from "../shared/schema.js";
 import { requireFullAuth } from "./auth.js";
+import { logger } from "./logger.js";
 
 // ─── Stripe client (lazy — only initialised when keys are present) ─────────────────────────────
 function getStripe(): Stripe | null {
@@ -89,7 +90,7 @@ export function createBillingRouter(): Router {
 
       return res.json({ url: session.url });
     } catch (err) {
-      console.error("[billing] checkout error:", err);
+      logger.error("billing_checkout_failed", { error: err });
       return res.status(500).json({ error: "Failed to create checkout session." });
     }
   });
@@ -122,7 +123,7 @@ export function createBillingRouter(): Router {
 
       return res.json({ url: portalSession.url });
     } catch (err) {
-      console.error("[billing] portal error:", err);
+      logger.error("billing_portal_failed", { error: err });
       return res.status(500).json({ error: "Failed to create portal session." });
     }
   });
@@ -148,7 +149,7 @@ export function createBillingRouter(): Router {
     try {
       event = stripe.webhooks.constructEvent(req.body as Buffer, sig, webhookSecret);
     } catch (err) {
-      console.error("[billing] webhook signature verification failed:", err);
+      logger.warn("billing_webhook_signature_rejected", { error: err });
       return res.status(400).json({ error: "Webhook signature verification failed." });
     }
 
@@ -171,7 +172,7 @@ export function createBillingRouter(): Router {
                 ...(customerId ? { stripeCustomerId: customerId } : {}),
               })
               .where(eq(users.id, userId));
-            console.log(`[billing] Activated Pro for user ${userId}`);
+            logger.info("billing_pro_activated", { stripeEventId: event.id });
           }
           break;
         }
@@ -184,14 +185,13 @@ export function createBillingRouter(): Router {
               .update(users)
               .set({ isPro: false })
               .where(eq(users.id, userId));
-            console.log(`[billing] Deactivated Pro for user ${userId}`);
+            logger.info("billing_pro_deactivated", { stripeEventId: event.id });
           }
           break;
         }
 
         case "invoice.payment_failed": {
-          const invoice = event.data.object as Stripe.Invoice;
-          console.warn(`[billing] Payment failed for customer ${invoice.customer}`);
+          logger.warn("billing_payment_failed", { stripeEventId: event.id });
           // Future: send email notification
           break;
         }
@@ -201,7 +201,7 @@ export function createBillingRouter(): Router {
           break;
       }
     } catch (err) {
-      console.error("[billing] webhook handler error:", err);
+      logger.error("billing_webhook_handler_failed", { stripeEventId: event.id, error: err });
       return res.status(500).json({ error: "Webhook processing failed." });
     }
 

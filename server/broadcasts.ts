@@ -22,6 +22,7 @@ import { liveBroadcasts, liveMoves, liveBridgeSessions } from "../shared/schema.
 import type { ServerResponse } from "http";
 import { Chess } from "chess.js";
 import crypto from "crypto";
+import { logger } from "./logger.js";
 
 // ─── In-memory bridge log ring buffer (last 100 entries per broadcast) ────────
 const bridgeLogs = new Map<string, Array<{ ts: number; level: string; msg: string }>>();
@@ -106,7 +107,7 @@ router.post("/", async (req, res) => {
     const [row] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, id)).limit(1);
     res.status(201).json(row);
   } catch (err) {
-    console.error("[broadcasts] POST /", err);
+    logger.error("broadcast_create_failed", { error: err });
     res.status(500).json({ error: "Failed to create broadcast" });
   }
 });
@@ -123,7 +124,7 @@ router.get("/slug/:slug", async (req, res) => {
     if (!row) return res.status(404).json({ error: "Not found" });
     res.json(row);
   } catch (err) {
-    console.error("[broadcasts] GET /slug/:slug", err);
+    logger.error("broadcast_get_by_slug_failed", { error: err });
     res.status(500).json({ error: "Failed to fetch broadcast" });
   }
 });
@@ -139,7 +140,7 @@ router.get("/tournament/:tid", async (req, res) => {
       .orderBy(desc(liveBroadcasts.createdAt));
     res.json(rows);
   } catch (err) {
-    console.error("[broadcasts] GET /tournament/:tid", err);
+    logger.error("broadcast_get_by_tournament_failed", { error: err });
     res.status(500).json({ error: "Failed to fetch broadcasts" });
   }
 });
@@ -156,7 +157,7 @@ router.get("/:id", async (req, res) => {
     if (!row) return res.status(404).json({ error: "Not found" });
     res.json(row);
   } catch (err) {
-    console.error("[broadcasts] GET /:id", err);
+    logger.error("broadcast_get_failed", { error: err });
     res.status(500).json({ error: "Failed to fetch broadcast" });
   }
 });
@@ -179,7 +180,7 @@ router.patch("/:id/status", async (req, res) => {
     fanOut(req.params.id, "status_changed", { status, broadcast: row });
     res.json(row);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/status", err);
+    logger.error("broadcast_status_update_failed", { error: err });
     res.status(500).json({ error: "Failed to update status" });
   }
 });
@@ -251,7 +252,7 @@ router.post("/:id/moves", async (req, res) => {
     fanOut(req.params.id, "move_played", { san, uci, fenAfter, pgn: updated?.pgn, moveNumber: ply, sideToMove, broadcast: updated });
     res.json({ ok: true, broadcast: updated });
   } catch (err) {
-    console.error("[broadcasts] POST /:id/moves", err);
+    logger.error("broadcast_move_create_failed", { error: err });
     res.status(500).json({ error: "Failed to submit move" });
   }
 });
@@ -323,7 +324,7 @@ router.delete("/:id/moves/last", async (req, res) => {
     fanOut(req.params.id, "move_undone", { fenAfter: newFen, pgn, moveNumber: newPly, broadcast: updated });
     res.json({ ok: true, broadcast: updated });
   } catch (err) {
-    console.error("[broadcasts] DELETE /:id/moves/last", err);
+    logger.error("broadcast_last_move_delete_failed", { error: err });
     res.status(500).json({ error: "Failed to undo move" });
   }
 });
@@ -346,7 +347,7 @@ router.patch("/:id/fen", async (req, res) => {
     fanOut(req.params.id, "position_set", { fen, broadcast: updated });
     res.json(updated);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/fen", err);
+    logger.error("broadcast_fen_update_failed", { error: err });
     res.status(500).json({ error: "Failed to set position" });
   }
 });
@@ -370,7 +371,7 @@ router.patch("/:id/result", async (req, res) => {
     fanOut(req.params.id, "result_set", { result, broadcast: updated });
     res.json(updated);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/result", err);
+    logger.error("broadcast_result_update_failed", { error: err });
     res.status(500).json({ error: "Failed to set result" });
   }
 });
@@ -386,7 +387,7 @@ router.get("/:id/moves", async (req, res) => {
       .orderBy(liveMoves.ply);
     res.json(moves);
   } catch (err) {
-    console.error("[broadcasts] GET /:id/moves", err);
+    logger.error("broadcast_moves_get_failed", { error: err });
     res.status(500).json({ error: "Failed to fetch moves" });
   }
 });
@@ -405,7 +406,7 @@ router.patch("/:id/display-settings", async (req, res) => {
     fanOut(req.params.id, "display_settings_changed", { displayMode: updated.displayMode, displaySettings: updated.displaySettings, broadcast: updated });
     res.json(updated);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/display-settings", err);
+    logger.error("broadcast_display_settings_update_failed", { error: err });
     res.status(500).json({ error: "Failed to update display settings" });
   }
 });
@@ -517,7 +518,7 @@ router.post("/:id/bridge-move", async (req, res) => {
     fanOut(req.params.id, "move_played", { san: validatedSan, uci: validatedUci, fenAfter: validatedFenAfter, pgn, moveNumber: ply, sideToMove: newSide, source: "chessnut_pro_beta", broadcast: updated });
     res.json({ ok: true, san: validatedSan, uci: validatedUci, fenAfter: validatedFenAfter, broadcast: updated });
   } catch (err) {
-    console.error("[broadcasts] POST /:id/bridge-move", err);
+    logger.error("broadcast_bridge_move_failed", { error: err });
     res.status(500).json({ error: "Failed to submit bridge move" });
   }
 });
@@ -583,7 +584,7 @@ router.post("/:id/bridge-heartbeat", async (req, res) => {
     fanOut(req.params.id, "bridge_status", { status, deviceName, connectionType, bridgeVersion, lastSeenAt: now.toISOString() });
     res.json({ ok: true });
   } catch (err) {
-    console.error("[broadcasts] POST /:id/bridge-heartbeat", err);
+    logger.error("broadcast_bridge_heartbeat_failed", { error: err });
     res.status(500).json({ error: "Failed to record heartbeat" });
   }
 });
@@ -599,7 +600,7 @@ router.post("/:id/token-revoke", async (req, res) => {
     fanOut(req.params.id, "bridge_token_revoked", {});
     res.json({ ok: true });
   } catch (err) {
-    console.error("[broadcasts] POST /:id/token-revoke", err);
+    logger.error("broadcast_token_revoke_failed", { error: err });
     res.status(500).json({ error: "Failed to revoke token" });
   }
 });
@@ -624,7 +625,7 @@ router.post("/:id/token-regenerate", async (req, res) => {
     const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
     res.json({ ok: true, token: newToken, broadcast: updated });
   } catch (err) {
-    console.error("[broadcasts] POST /:id/token-regenerate", err);
+    logger.error("broadcast_token_regenerate_failed", { error: err });
     res.status(500).json({ error: "Failed to regenerate token" });
   }
 });
@@ -670,7 +671,7 @@ router.patch("/:id/correction", async (req, res) => {
     fanOut(req.params.id, "position_corrected", { fen, note, broadcast: updated });
     res.json(updated);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/correction", err);
+    logger.error("broadcast_correction_failed", { error: err });
     res.status(500).json({ error: "Failed to apply correction" });
   }
 });
@@ -697,7 +698,7 @@ router.post("/:id/reset", async (req, res) => {
     fanOut(req.params.id, "broadcast_reset", { broadcast: updated });
     res.json(updated);
   } catch (err) {
-    console.error("[broadcasts] POST /:id/reset", err);
+    logger.error("broadcast_reset_failed", { error: err });
     res.status(500).json({ error: "Failed to reset broadcast" });
   }
 });
@@ -838,7 +839,7 @@ router.patch("/:id/clock", async (req, res) => {
     fanOut(req.params.id, "clock_update", clockState);
     res.json(clockState);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/clock", err);
+    logger.error("broadcast_clock_update_failed", { error: err });
     res.status(500).json({ error: "Failed to update clock" });
   }
 });
@@ -886,7 +887,7 @@ router.patch("/:id/input-source", async (req, res) => {
       .limit(1);
     res.json(updated);
   } catch (err) {
-    console.error("[broadcasts] PATCH /:id/input-source", err);
+    logger.error("broadcast_input_source_update_failed", { error: err });
     res.status(500).json({ error: "Failed to update input source" });
   }
 });

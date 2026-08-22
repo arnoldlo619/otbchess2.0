@@ -54,7 +54,7 @@ try {
 } catch (err) {
   // Non-fatal: sandbox filesystem may block mkdirSync at module load time.
   // Chunk uploads will fail gracefully at request time if the dir is unavailable.
-  console.warn("[recordings] Could not create uploads/video-chunks dir:", (err as Error).message);
+  logger.warn("recordings_upload_directory_unavailable", { error: err });
 }
 
 // ── Multer storage: saves each chunk as <sessionId>-chunk-<index>.<ext> ──────

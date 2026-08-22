@@ -8,6 +8,9 @@
 - [x] Architecture: Extract profile management routes into a dedicated server module without changing route contracts
 - [x] Architecture: Add regression coverage for extracted authentication and profile route registration
 - [x] Architecture: Move the global Express error handler after all API routes and add request correlation IDs
+- [x] Operations: Emit structured JSON server logs with stable event names and request timing correlation
+- [x] Privacy: Redact credentials, bearer tokens, secrets, and email addresses from structured logs
+- [x] Operations: Replace direct server console calls with the centralized structured logger
 - [x] Architecture: Extract user-owned tournament and join-resolution routes from the former auth monolith
 - [x] Frontend resilience: Extend shared authFetch handling so structured 500 and network failures surface consistently beyond Auth/Profile
 - [x] Frontend resilience: Mount a global accessible API error notifier for shared raw-response call sites
@@ -7433,10 +7436,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### K. Observability
 - [ ] Frontend error logging verified (Sentry or equivalent)
-- [ ] Failed API requests logged
+- [x] Failed API requests logged
 - [ ] Core Web Vitals reporting
 - [ ] SSE reconnect frequency monitored
-- [ ] No sensitive user data in logs
+- [x] No sensitive user data in logs
 
 ### L. CI Quality Gates
 - [ ] TypeScript check in CI (0 errors)

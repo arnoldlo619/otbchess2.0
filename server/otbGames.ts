@@ -17,6 +17,7 @@ import crypto from "crypto";
 import { eq, and, or, desc, gte, sql } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { requireAuth } from "./auth.js";
+import { logger } from "./logger.js";
 import {
   gameSessions,
   gameResultSubmissions,
@@ -91,7 +92,7 @@ router.post("/", requireAuth, async (req: any, res) => {
       status: "pending_opponent",
     });
   } catch (err: any) {
-    console.error("[otb-games] create session error:", err);
+    logger.error("otb_game_create_failed", { error: err });
     return res.status(500).json({ error: "Failed to create game session" });
   }
 });
@@ -116,7 +117,7 @@ router.get("/my/active", requireAuth, async (req: any, res) => {
 
     return res.json(sessions);
   } catch (err: any) {
-    console.error("[otb-games] get active sessions error:", err);
+    logger.error("otb_game_active_list_failed", { error: err });
     return res.status(500).json({ error: "Failed to get sessions" });
   }
 });
@@ -157,7 +158,7 @@ router.get("/:id", async (req, res) => {
 
     return res.json({ ...session[0], submissions, ratedGame });
   } catch (err: any) {
-    console.error("[otb-games] get session error:", err);
+    logger.error("otb_game_get_failed", { error: err });
     return res.status(500).json({ error: "Failed to get session" });
   }
 });
@@ -232,7 +233,7 @@ router.post("/join/:token", requireAuth, async (req: any, res) => {
       status: "opponent_joined",
     });
   } catch (err: any) {
-    console.error("[otb-games] join session error:", err);
+    logger.error("otb_game_join_failed", { error: err });
     return res.status(500).json({ error: "Failed to join game" });
   }
 });
@@ -286,7 +287,7 @@ router.patch("/:id/status", requireAuth, async (req: any, res) => {
 
     return res.json({ ...session, ...updateData });
   } catch (err: any) {
-    console.error("[otb-games] update status error:", err);
+    logger.error("otb_game_status_update_failed", { error: err });
     return res.status(500).json({ error: "Failed to update status" });
   }
 });
@@ -413,7 +414,7 @@ router.post("/:id/result", requireAuth, async (req: any, res) => {
       });
     }
   } catch (err: any) {
-    console.error("[otb-games] submit result error:", err);
+    logger.error("otb_game_result_submit_failed", { error: err });
     return res.status(500).json({ error: "Failed to submit result" });
   }
 });
@@ -460,7 +461,7 @@ router.get("/ratings/:userId", async (req, res) => {
       history,
     });
   } catch (err: any) {
-    console.error("[otb-games] get ratings error:", err);
+    logger.error("otb_game_ratings_get_failed", { error: err });
     return res.status(500).json({ error: "Failed to get ratings" });
   }
 });
@@ -517,7 +518,7 @@ router.get("/leaderboard/:category", async (req, res) => {
 
     return res.json(leaderboard);
   } catch (err: any) {
-    console.error("[otb-games] get leaderboard error:", err);
+    logger.error("otb_game_leaderboard_get_failed", { error: err });
     return res.status(500).json({ error: "Failed to get leaderboard" });
   }
 });

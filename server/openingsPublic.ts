@@ -23,6 +23,7 @@ import {
 } from "../shared/schema.js";
 import { eq, sql, and, asc, desc, inArray, like, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { logger } from "./logger.js";
 
 function getUserId(req: Request): string | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -144,7 +145,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
 
       res.json({ openings: result, total: result.length });
     } catch (err) {
-      console.error("GET /api/openings error:", err);
+      logger.error("openings_list_failed", { error: err });
       res.status(500).json({ error: "Failed to fetch openings" });
     }
   });
@@ -260,7 +261,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
         lineCount: lines.length,
       });
     } catch (err) {
-      console.error("GET /api/openings/:slug error:", err);
+      logger.error("opening_get_failed", { error: err });
       res.status(500).json({ error: "Failed to fetch opening" });
     }
   });
@@ -394,7 +395,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
         navigation: { prev: prevLine, next: nextLine },
       });
     } catch (err) {
-      console.error("GET /api/openings/:slug/lines/:lineSlug error:", err);
+      logger.error("opening_line_get_failed", { error: err });
       res.status(500).json({ error: "Failed to fetch line" });
     }
   });
@@ -471,7 +472,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
 
       res.json({ stats, progress: progressByLine });
     } catch (err) {
-      console.error("GET /api/study/progress error:", err);
+      logger.error("study_progress_get_failed", { error: err });
       res.status(500).json({ error: "Failed to fetch progress" });
     }
   });
@@ -539,7 +540,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
 
       res.json({ queue, count: queue.length });
     } catch (err) {
-      console.error("GET /api/study/queue error:", err);
+      logger.error("study_queue_get_failed", { error: err });
       res.status(500).json({ error: "Failed to fetch queue" });
     }
   });
@@ -659,7 +660,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
         });
       }
     } catch (err) {
-      console.error("POST /api/study/review error:", err);
+      logger.error("study_review_create_failed", { error: err });
       res.status(500).json({ error: "Failed to save review" });
     }
   });
@@ -729,7 +730,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
 
       res.json({ favorites, count: favorites.length });
     } catch (err) {
-      console.error("GET /api/favorites error:", err);
+      logger.error("opening_favorites_list_failed", { error: err });
       res.status(500).json({ error: "Failed to fetch favorites" });
     }
   });
@@ -786,7 +787,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
         res.json({ favorited: true, message: "Added to favorites", id });
       }
     } catch (err) {
-      console.error("POST /api/favorites/:lineId error:", err);
+      logger.error("opening_favorite_toggle_failed", { error: err });
       res.status(500).json({ error: "Failed to toggle favorite" });
     }
   });
@@ -827,7 +828,7 @@ export function registerOpeningsPublicRoutes(router: Router) {
 
       res.json({ favorites });
     } catch (err) {
-      console.error("GET /api/favorites/status error:", err);
+      logger.error("opening_favorites_status_failed", { error: err });
       res.status(500).json({ error: "Failed to check favorites" });
     }
   });

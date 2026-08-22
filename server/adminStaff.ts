@@ -12,6 +12,7 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { users } from "../shared/schema.js";
 import { requireFullAuth } from "./auth.js";
+import { logger } from "./logger.js";
 
 // ─── Middleware: requireStaff ─────────────────────────────────────────────────
 async function requireStaff(
@@ -58,7 +59,7 @@ export function createAdminStaffRouter(): Router {
         .where(eq(users.isStaff, true));
       return res.json({ staff: staffMembers });
     } catch (err) {
-      console.error("[adminStaff] GET / error:", err);
+      logger.error("admin_staff_list_failed", { error: err });
       return res.status(500).json({ error: "Failed to fetch staff list." });
     }
   });
@@ -86,7 +87,7 @@ export function createAdminStaffRouter(): Router {
       if (!found) return res.status(404).json({ error: "No user found with that email." });
       return res.json({ user: found });
     } catch (err) {
-      console.error("[adminStaff] GET /search error:", err);
+      logger.error("admin_staff_search_failed", { error: err });
       return res.status(500).json({ error: "Search failed." });
     }
   });
@@ -105,10 +106,10 @@ export function createAdminStaffRouter(): Router {
       if (!target) return res.status(404).json({ error: "No user found with that email." });
       if (target.isStaff) return res.json({ message: `${target.email} is already OTB Staff.`, user: target });
       await db.update(users).set({ isStaff: true }).where(eq(users.id, target.id));
-      console.log(`[adminStaff] Granted isStaff to ${target.email} (id=${target.id})`);
+      logger.info("admin_staff_granted", { targetUserId: target.id });
       return res.json({ message: `✓ Staff access granted to ${target.email}.`, user: { ...target, isStaff: true } });
     } catch (err) {
-      console.error("[adminStaff] POST /grant error:", err);
+      logger.error("admin_staff_grant_failed", { error: err });
       return res.status(500).json({ error: "Failed to grant staff access." });
     }
   });
@@ -133,7 +134,7 @@ export function createAdminStaffRouter(): Router {
         .where(sql`${users.isGuest} = 0`);
       return res.json({ users: allUsers });
     } catch (err) {
-      console.error("[adminStaff] GET /users error:", err);
+      logger.error("admin_users_list_failed", { error: err });
       return res.status(500).json({ error: "Failed to fetch users." });
     }
   });
@@ -160,13 +161,13 @@ export function createAdminStaffRouter(): Router {
       if (!target) return res.status(404).json({ error: "No user found with that email." });
       await db.update(users).set({ isPro: true, proExpiresAt: expiryDate }).where(eq(users.id, target.id));
       const expiryMsg = expiryDate ? ` (expires ${expiryDate.toISOString().split('T')[0]})` : " (permanent)";
-      console.log(`[adminStaff] Granted isPro to ${target.email} (id=${target.id})${expiryMsg}`);
+      logger.info("admin_pro_granted", { targetUserId: target.id, hasExpiry: Boolean(expiryDate) });
       return res.json({
         message: `✓ Pro access granted to ${target.email}${expiryMsg}.`,
         user: { ...target, isPro: true, proExpiresAt: expiryDate },
       });
     } catch (err) {
-      console.error("[adminStaff] POST /grant-pro error:", err);
+      logger.error("admin_pro_grant_failed", { error: err });
       return res.status(500).json({ error: "Failed to grant Pro access." });
     }
   });
@@ -185,10 +186,10 @@ export function createAdminStaffRouter(): Router {
       if (!target) return res.status(404).json({ error: "No user found with that email." });
       if (!target.isPro) return res.json({ message: `${target.email} does not have Pro access.`, user: target });
       await db.update(users).set({ isPro: false }).where(eq(users.id, target.id));
-      console.log(`[adminStaff] Revoked isPro from ${target.email} (id=${target.id})`);
+      logger.info("admin_pro_revoked", { targetUserId: target.id });
       return res.json({ message: `✓ Pro access revoked from ${target.email}.`, user: { ...target, isPro: false } });
     } catch (err) {
-      console.error("[adminStaff] POST /revoke-pro error:", err);
+      logger.error("admin_pro_revoke_failed", { error: err });
       return res.status(500).json({ error: "Failed to revoke Pro access." });
     }
   });
@@ -212,10 +213,10 @@ export function createAdminStaffRouter(): Router {
       }
       if (!target.isStaff) return res.json({ message: `${target.email} is not OTB Staff.`, user: target });
       await db.update(users).set({ isStaff: false }).where(eq(users.id, target.id));
-      console.log(`[adminStaff] Revoked isStaff from ${target.email} (id=${target.id})`);
+      logger.info("admin_staff_revoked", { targetUserId: target.id });
       return res.json({ message: `✓ Staff access revoked from ${target.email}.`, user: { ...target, isStaff: false } });
     } catch (err) {
-      console.error("[adminStaff] POST /revoke error:", err);
+      logger.error("admin_staff_revoke_failed", { error: err });
       return res.status(500).json({ error: "Failed to revoke staff access." });
     }
   });

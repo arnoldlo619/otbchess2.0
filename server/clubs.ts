@@ -59,7 +59,7 @@ try {
   if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
   if (!fs.existsSync(BANNERS_DIR)) fs.mkdirSync(BANNERS_DIR, { recursive: true });
 } catch (err) {
-  console.warn("[clubs] Could not create upload dirs:", (err as Error).message);
+  logger.warn("clubs_upload_directory_unavailable", { error: err });
 }
 
 export const clubsRouter = Router();

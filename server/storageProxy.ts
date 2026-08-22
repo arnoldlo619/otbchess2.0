@@ -3,6 +3,7 @@
  * Converts storage keys to signed URLs via the Forge presign API.
  */
 import type { Express } from "express";
+import { logger } from "./logger.js";
 
 export function registerStorageProxy(app: Express) {
   app.get("/manus-storage/*", async (req, res) => {
@@ -32,8 +33,7 @@ export function registerStorageProxy(app: Express) {
       });
 
       if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[StorageProxy] forge error: ${forgeResp.status} ${body}`);
+        logger.error("storage_proxy_backend_failed", { status: forgeResp.status });
         res.status(502).send("Storage backend error");
         return;
       }
@@ -52,7 +52,7 @@ export function registerStorageProxy(app: Express) {
       }
       res.redirect(307, url);
     } catch (err) {
-      console.error("[StorageProxy] failed:", err);
+      logger.error("storage_proxy_fetch_failed", { error: err });
       res.status(502).send("Storage proxy error");
     }
   });
