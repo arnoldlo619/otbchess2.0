@@ -1129,8 +1129,8 @@ export default function JoinPage() {
       >
         <div className="px-4 pt-5 pb-32 max-w-sm mx-auto space-y-4">
 
-          {/* Tournament info chip */}
-          {step !== "code" && step !== "success" && (
+          {/* Tournament info chip — QR flows use the primary hero heading instead. */}
+          {!isQrMode && step !== "code" && step !== "success" && (
             <div key={`chip-${stepKey}`} className={`animate-slide-down-fade rounded-2xl border px-4 py-3 flex items-center gap-3 ${
               isDark ? "bg-[#436850]/12 border-[#4CAF50]/18" : "bg-[#436850]/05 border-[#436850]/12"
             }`}>

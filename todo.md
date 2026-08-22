@@ -7786,3 +7786,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Move tournament-result dates into a left-side accent marker and eliminate duplicate feed-card date text
 - [x] Redesign Club Meetup setup to align with the premium full-page Tournament Setup wizard system
 - [x] Fix overlapping Tournament Setup payment-method toggles with contained responsive header controls
+- [x] Remove the redundant tournament-summary card from the mobile QR tournament-join flow
