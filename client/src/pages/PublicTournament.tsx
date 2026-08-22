@@ -1655,7 +1655,7 @@ export default function PublicTournament() {
       </nav>
 
       {/* ── Content ────────────────────────────────────────────────────────────── */}
-      <main className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Hero — switches to CompletedHero when tournament is finalized */}
         {isCompleted ? (
           <CompletedHero data={data} standings={standings} isDark={isDark} quadSections={quadSections} />
@@ -1945,7 +1945,7 @@ export default function PublicTournament() {
             </a>
           </p>
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

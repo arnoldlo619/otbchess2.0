@@ -1081,7 +1081,7 @@ export default function BroadcastConsole() {
       </div>
 
       {/* ─── Main Content ──────────────────────────────────────────────────── */}
-      <main className="max-w-[1600px] mx-auto p-4">
+      <div className="max-w-[1600px] mx-auto p-4">
 
         {/* ═══ BOARD CONTROL SECTION ═══ */}
         {activeSection === "control" && (
@@ -1649,7 +1649,7 @@ export default function BroadcastConsole() {
             )}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

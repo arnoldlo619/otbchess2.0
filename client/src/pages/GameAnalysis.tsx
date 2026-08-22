@@ -970,7 +970,7 @@ export default function GameAnalysis() {
       </header>
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left: Board + Eval + Controls */}
           <div className="flex-1 space-y-4">
@@ -1313,7 +1313,7 @@ export default function GameAnalysis() {
 
           </div>
         </div>
-      </main>
+      </div>
 
     </div>
   );

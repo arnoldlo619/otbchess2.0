@@ -626,7 +626,7 @@ export default function GameRecorder() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-10">
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-10">
         {/* ── Mode Selection ─────────────────────────────────────────────── */}
         {mode === "select" && (
           <>
@@ -1023,7 +1023,7 @@ export default function GameRecorder() {
             )}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

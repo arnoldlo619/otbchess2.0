@@ -1180,7 +1180,7 @@ export default function ReportPage() {
       )}
 
       {/* ── Content ── */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Quads section tabs */}
         {isQuads && quadSectionPerfs.length > 0 && (
           <div className="mb-5">
@@ -1517,7 +1517,7 @@ export default function ReportPage() {
 
         {/* Bottom padding */}
         <div className="h-16" />
-      </main>
+      </div>
 
       {/* ── Share Results Modal ── */}
       {shareModal.open && (

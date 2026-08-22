@@ -50,7 +50,7 @@ export default function Terms() {
   return (
     <div className="min-h-screen" style={{ background: page, color: text }}>
       <AppNavBar />
-      <main className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 sm:px-6 sm:pt-32">
+      <div className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 sm:px-6 sm:pt-32">
         <Link
           href="/"
           className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors hover:bg-[#436850]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4D6940]"
@@ -101,7 +101,7 @@ export default function Terms() {
             </section>
           ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

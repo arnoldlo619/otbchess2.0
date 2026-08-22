@@ -1,8 +1,8 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { OTBLoader } from "@/components/OTBLoader";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
@@ -84,6 +84,46 @@ function PageLoader() {
   return <OTBLoader fullPage label="Preparing the board" />;
 }
 
+function RouteFocusManager() {
+  const [location] = useLocation();
+  const isInitialRoute = useRef(true);
+
+  useEffect(() => {
+    if (isInitialRoute.current) {
+      isInitialRoute.current = false;
+      return;
+    }
+
+    let userMovedFocus = false;
+    const noteUserInteraction = () => {
+      userMovedFocus = true;
+    };
+    const focusMainContent = () => {
+      const mainContent = document.getElementById("main-content");
+      if (!mainContent) return;
+
+      mainContent.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
+
+    document.addEventListener("keydown", noteUserInteraction, { once: true, capture: true });
+    document.addEventListener("pointerdown", noteUserInteraction, { once: true, capture: true });
+    const frameId = window.requestAnimationFrame(focusMainContent);
+    const focusStabilizerId = window.setTimeout(() => {
+      if (!userMovedFocus) focusMainContent();
+    }, 450);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(focusStabilizerId);
+      document.removeEventListener("keydown", noteUserInteraction, true);
+      document.removeEventListener("pointerdown", noteUserInteraction, true);
+    };
+  }, [location]);
+
+  return null;
+}
+
 function HardRedirect({
   to,
   tournamentCreate = false,
@@ -124,16 +164,13 @@ function Router() {
 
   return (
     <>
-    {/* Skip to main content — accessibility */}
-    <a
-      href="#main-content"
-      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#4D6940] focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:shadow-lg"
-    >
-      Skip to main content
-    </a>
-    <main id="main-content">
-    <Suspense fallback={<PageLoader />}>
-      <Switch>
+      <RouteFocusManager />
+      <a href="#main-content" className="otb-skip-link">
+        Skip to main content
+      </a>
+      <main id="main-content" tabIndex={-1} aria-label="Main content">
+        <Suspense fallback={<PageLoader />}>
+          <Switch>
         <Route path={"/auth"} component={AuthPage} />
         <Route path={"/"} component={Home} />
         <Route path={"/tournament/:id"} component={TournamentPage} />
@@ -208,9 +245,9 @@ function Router() {
         <Route path={"/tools"} component={() => <HardRedirect to="/training" />} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
-      </Switch>
-    </Suspense>
-    </main>
+          </Switch>
+        </Suspense>
+      </main>
     </>
   );
 }

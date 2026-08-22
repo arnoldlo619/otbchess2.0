@@ -6573,9 +6573,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix 404 page: clear explanation, navigation links
 - [ ] Fix Footer: contrast, font sizes, link grouping
 - [ ] Fix CTA sections: enlarge subtext, improve contrast
-- [ ] Add skip-to-content link and semantic landmarks
+- [x] Add skip-to-content link and semantic landmarks
 - [ ] Add ARIA labels on icons, charts, toggles
-- [ ] Add keyboard focus outlines on all interactive elements
+- [x] Add keyboard focus outlines on all interactive elements
 - [ ] Responsive: fix mobile spacing, touch targets, condensed nav
 ## Tournament Lobby → Board Redirect (Critical Fix)
 

@@ -307,7 +307,7 @@ export default function LiveBoard() {
       </header>
 
       {/* ─── Main Content ────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col max-w-lg mx-auto w-full px-3 py-3 gap-3">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-3 py-3 gap-3">
         {/* Tournament info */}
         {broadcast.tournamentName && (
           <div className="text-center">
@@ -518,7 +518,7 @@ export default function LiveBoard() {
             </div>
           )}
         </div>
-      </main>
+      </div>
 
       {/* ─── Footer branding ─────────────────────────────────────────────── */}
       <footer className="text-center py-3 border-t border-white/5">

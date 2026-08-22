@@ -481,7 +481,7 @@ export default function RsvpFormBuilderPage() {
       </div>
 
       {/* ── MAIN CONTENT ───────────────────────────────────────────────────── */}
-      <main className="flex-1 pt-14 md:pt-14 pb-16 overflow-y-auto">
+      <div className="flex-1 pt-14 md:pt-14 pb-16 overflow-y-auto">
 
         {/* ── QUESTIONS TAB ──────────────────────────────────────────────── */}
         {tab === "questions" && (
@@ -1065,7 +1065,7 @@ export default function RsvpFormBuilderPage() {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

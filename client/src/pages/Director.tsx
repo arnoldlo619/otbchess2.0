@@ -3469,7 +3469,7 @@ export default function Director() {
           )}
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
-          <main className="flex-1 min-w-0 space-y-5">
+          <div className="flex-1 min-w-0 space-y-5">
 
             <DirectorLifecycleBand
               lifecycle={directorLifecycle}
@@ -7283,7 +7283,7 @@ export default function Director() {
             )}
             </div>
           )}
-          </main>
+          </div>
         </div>{/* end flex gap-6 */}
       </div>
 

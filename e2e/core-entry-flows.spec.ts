@@ -53,6 +53,36 @@ test("authentication and join entry points expose their primary actions", async 
   await expect(page.getByText(/Camera access is requested only after/i)).toBeVisible();
 });
 
+test("keyboard users can skip to the single main landmark", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  await page.keyboard.press("Tab");
+  const skipLink = page.getByRole("link", { name: "Skip to main content" });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeVisible();
+
+  const focusStyle = await skipLink.evaluate((element) => {
+    const styles = window.getComputedStyle(element);
+    return { style: styles.outlineStyle, width: styles.outlineWidth };
+  });
+  expect(focusStyle.style).not.toBe("none");
+  expect(Number.parseFloat(focusStyle.width)).toBeGreaterThanOrEqual(2);
+
+  await skipLink.press("Enter");
+  await expect(page.locator("#main-content")).toBeFocused();
+  await expect(page.getByRole("main")).toHaveCount(1);
+});
+
+test("client-side route changes move focus to main content", async ({ page }) => {
+  await page.goto("/pricing", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: /Simple, honest pricing/i })).toBeVisible();
+  await page.locator('a[href="/join"]').first().click();
+
+  await expect(page).toHaveURL(/\/join$/);
+  await expect(page.locator("#main-content")).toBeFocused();
+  await expect(page.getByRole("main")).toHaveCount(1);
+});
+
 test("demo QR Join preserves tournament context", async ({ page }) => {
   await page.goto("/join/OTB2026", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "OTB!! Open 2026" })).toBeVisible();

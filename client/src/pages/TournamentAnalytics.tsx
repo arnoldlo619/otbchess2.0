@@ -683,7 +683,7 @@ export default function TournamentAnalytics() {
         </div>
       </nav>
 
-      <main className="container max-w-4xl mx-auto px-4 py-5 sm:py-6 space-y-4 sm:space-y-5">
+      <div className="container max-w-4xl mx-auto px-4 py-5 sm:py-6 space-y-4 sm:space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -1182,7 +1182,7 @@ export default function TournamentAnalytics() {
             </a>
           </p>
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

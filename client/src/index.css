@@ -362,6 +362,8 @@
   --border: oklch(0.73 0.07 145 / 0.50);     /* #ADBC9F sage border at 50% */
   --input: oklch(0.73 0.07 145 / 0.40);
   --ring: var(--chess-green);
+  --otb-focus-ring: oklch(0.38 0.13 145);
+  --otb-focus-halo: oklch(0.98 0.02 105);
   --sidebar: oklch(0.96 0.03 120);           /* sage-cream sidebar */
   --sidebar-foreground: oklch(0.24 0.07 155);
   --sidebar-accent: oklch(0.93 0.04 135);
@@ -406,6 +408,8 @@
   --border: oklch(1 0 0 / 0.10);
   --input: oklch(1 0 0 / 0.12);
   --ring: oklch(0.55 0.13 145);
+  --otb-focus-ring: oklch(0.82 0.15 140);
+  --otb-focus-halo: oklch(0.13 0.04 145);
   --sidebar: oklch(0.22 0.06 145);
   --sidebar-foreground: oklch(0.97 0.01 95);
   --sidebar-accent: oklch(0.27 0.07 145);
@@ -450,10 +454,11 @@
     @apply border-border;
   }
 
-  /* Visible focus ring for keyboard navigation (WCAG 2.4.7) */
+  /* High-contrast focus indicator for keyboard navigation (WCAG 2.4.7). */
   :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
+    outline: 3px solid var(--otb-focus-ring);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 1px var(--otb-focus-halo);
   }
   body {
     @apply bg-background text-foreground;
@@ -479,6 +484,48 @@
     font-family: 'Clash Display', 'Inter', sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
+  }
+}
+
+.otb-skip-link {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: max(0.75rem, env(safe-area-inset-left));
+  z-index: 1200;
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in oklab, var(--otb-focus-ring) 72%, white);
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  color: white;
+  background: oklch(0.26 0.09 145 / 0.98);
+  box-shadow: 0 12px 32px oklch(0.12 0.04 145 / 0.34);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-100% - 1rem));
+  transition: opacity 160ms ease-out, transform 160ms ease-out;
+}
+
+.otb-skip-link:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+#main-content:focus,
+#main-content:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otb-skip-link {
+    transition: none;
   }
 }
 
@@ -1659,16 +1706,6 @@
 }
 
 /* ── Global UI/UX Polish ───────────────────────────────────────────────────── */
-
-/* Focus-visible ring for keyboard accessibility — consistent chess-green */
-:focus-visible {
-  outline: 2px solid oklch(0.44 0.12 145);
-  outline-offset: 2px;
-  border-radius: inherit;
-}
-.dark :focus-visible {
-  outline-color: oklch(0.55 0.13 145);
-}
 
 /* Hide scrollbars on horizontal scroll containers while keeping scroll functional */
 .scrollbar-none,

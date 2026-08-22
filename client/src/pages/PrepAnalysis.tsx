@@ -377,7 +377,7 @@ export default function PrepAnalysis() {
         </div>
       </header>
 
-      <main className="w-full px-3 sm:px-5 xl:px-6 py-3 sm:py-4 space-y-3">
+      <div className="w-full px-3 sm:px-5 xl:px-6 py-3 sm:py-4 space-y-3">
         {/* Back + title */}
         <div className="flex items-start gap-3">
           <button
@@ -653,7 +653,7 @@ export default function PrepAnalysis() {
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
