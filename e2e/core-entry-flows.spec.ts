@@ -49,6 +49,16 @@ test("authentication and join entry points expose their primary actions", async 
 
   await page.goto("/join", { waitUntil: "domcontentloaded" });
   await expect(page.getByText(/Join.*Tournament/i).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Scan QR code/i })).toBeVisible();
+  await expect(page.getByText(/Camera access is requested only after/i)).toBeVisible();
+});
+
+test("demo QR Join preserves tournament context", async ({ page }) => {
+  await page.goto("/join/OTB2026", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "OTB!! Open 2026" })).toBeVisible();
+  await expect(page.getByText("Swiss", { exact: true })).toBeVisible();
+  await expect(page.getByText("Mar 22, 2026", { exact: true })).toBeVisible();
+  await expect(page.getByText("90+30", { exact: true })).toBeVisible();
 });
 
 test("landing footer and demo calls to action use their canonical destinations", async ({ page }) => {

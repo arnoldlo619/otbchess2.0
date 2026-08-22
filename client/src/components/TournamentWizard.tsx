@@ -3861,6 +3861,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     id: makeSlug(data.name, data.date),
     name: data.name,
     venue: data.venue || undefined,
+    date: data.date || undefined,
     format: data.format,
     rounds: data.rounds,
     maxPlayers: data.maxPlayers,

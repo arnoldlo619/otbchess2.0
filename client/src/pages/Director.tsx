@@ -2546,6 +2546,7 @@ export default function Director() {
         id: tournamentId,
         name: tournamentConfig.name,
         venue: tournamentConfig.venue || undefined,
+        date: tournamentConfig.date || undefined,
         format: tournamentConfig.format,
         rounds: tournamentConfig.rounds,
         maxPlayers: tournamentConfig.maxPlayers,

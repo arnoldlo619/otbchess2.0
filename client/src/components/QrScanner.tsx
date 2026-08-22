@@ -138,7 +138,7 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
         </div>
         <button
           onClick={onClose}
-          className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform"
+          className="min-h-11 min-w-11 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Close scanner"
         >
           <X className="w-5 h-5 text-white" />
@@ -148,13 +148,13 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
       {/* Viewfinder */}
       <div className="flex-1 flex items-center justify-center px-6">
         {error ? (
-          <div className={`rounded-2xl p-6 text-center max-w-xs ${bg}`}>
+          <div className={`rounded-2xl p-6 text-center max-w-xs ${bg}`} role="alert" aria-live="assertive">
             <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <p className={`text-sm font-medium mb-1 ${textMain}`}>Camera unavailable</p>
             <p className={`text-xs leading-relaxed ${textMuted}`}>{error}</p>
             <button
               onClick={onClose}
-              className="mt-4 w-full py-2.5 rounded-xl bg-[#436850] text-white text-sm font-semibold"
+              className="mt-4 min-h-11 w-full rounded-xl bg-[#436850] text-white text-sm font-semibold"
             >
               Enter code manually
             </button>

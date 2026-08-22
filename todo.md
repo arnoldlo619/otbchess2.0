@@ -7087,19 +7087,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### D. Join Tournament Flow
 - [x] Join: one primary CTA per step (already correct — confirmed no duplicate CTAs)
 - [x] Join: inline errors on each step (upgraded to styled error pills)
-- [ ] Join: tournament context (name, format, date) visible throughout all steps
+- [x] Join: tournament context (name, format, date) visible throughout all steps
 - [x] Join: back navigation preserves entered information (confirmed — handleSwipeBack + back button both reset state correctly)
-- [ ] Join: QR scan only requests camera permission when user explicitly selects Scan
-- [ ] Join: success state explains check-in, round timing, where to find pairings
+- [x] Join: QR scan only requests camera permission when user explicitly selects Scan
+- [x] Join: success state explains check-in, round timing, where to find pairings
 - [x] Join: all touch targets ≥44px (touch-target=48px, mobile-cta=52px — confirmed)
 - [x] Join: sticky mobile CTA does not obscure content or browser safe areas (pb-32 content, safe-area-inset-bottom padding — confirmed)
 - [x] Join: paste support on code input (onPaste handler strips non-alphanumeric, extracts code from /join/:code URLs)
 - [x] Join: uppercase/normalize codes without destroying user input (onChange + onPaste both normalize)
 
 ### E. Player Profile Confirmation
-- [ ] Confirm step: clearly shows name, username, avatar, platform, rating category, rating value, verification state, tournament being joined
-- [ ] Confirm step: allow correction before final registration
-- [ ] Confirm step: never imply official federation verification (chess.com/Lichess only)
+- [x] Confirm step: clearly shows name, username, avatar, platform, rating category, rating value, verification state, tournament being joined
+- [x] Confirm step: allow correction before final registration
+- [x] Confirm step: never imply official federation verification (chess.com/Lichess only)
 
 ### F. Error and Recovery States
 - [x] 404: existing page extended with error variant system (?error= param)
@@ -7116,8 +7116,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add prefers-reduced-motion respect to all animated elements (Phase 3 additions: EcosystemPathways hover, animate-spring-in, animate-slide-down-fade, pairing-text-glow, Framer Motion hint)
 - [ ] Hero product preview: existing BorderBeam + fade-up preserved
 - [ ] Card hover hierarchy: subtle lift on capabilities bento cards
-- [ ] Step progression: smooth slide transitions in Join flow
-- [ ] Form confirmation: success animation on registration complete
+- [x] Step progression: smooth slide transitions in Join flow
+- [x] Form confirmation: success animation on registration complete
 - [ ] No excessive scroll-triggered movement
 
 ### H. SEO and Sharing

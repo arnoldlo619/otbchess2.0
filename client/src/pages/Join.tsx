@@ -28,6 +28,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { validateEmail, validatePassword, validateDisplayName, scorePassword } from "@/components/AuthModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
+import { QrScanner } from "@/components/QrScanner";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
 import {resolveTournament, registerTournament, type TournamentConfig} from "@/lib/tournamentRegistry";
@@ -79,6 +80,9 @@ import {
   Eye,
   EyeOff,
   LogIn,
+  CalendarDays,
+  ShieldCheck,
+  Camera,
 } from "lucide-react";
 
 // --- Types --------------------------------------------------------------------
@@ -346,6 +350,7 @@ interface EmbeddedTournamentMeta {
   id: string;
   name: string;
   venue?: string;
+  date?: string;
   format: "swiss" | "roundrobin" | "elimination" | "swiss_elim" | "quads" | "doubleswiss";
   rounds: number;
   maxPlayers: number;
@@ -371,6 +376,13 @@ function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
 export function encodeEmbeddedMeta(meta: EmbeddedTournamentMeta): string {
   // Unicode-safe base64 encoding
   return encodeMetaParam(meta as unknown as Record<string, unknown>);
+}
+
+export function formatJoinDate(value?: string): string {
+  if (!value) return "Date to be announced";
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00`) : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Date to be announced";
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(parsed);
 }
 
 // --- Main Page ----------------------------------------------------------------
@@ -439,6 +451,7 @@ export default function JoinPage() {
         venue?: string | null;
         format?: string | null;
         rounds?: number | null;
+        date?: string | null;
         inviteCode?: string | null;
         customSlug?: string | null;
       } | null) => {
@@ -451,7 +464,7 @@ export default function JoinPage() {
             directorCode: "",
             name: data.name,
             venue: data.venue ?? "",
-            date: "",
+            date: data.date ?? "",
             description: "",
             format: (data.format ?? "swiss") as TournamentConfig["format"],
             rounds: data.rounds ?? 5,
@@ -515,6 +528,7 @@ export default function JoinPage() {
   const loading = lookupStatus === "loading";
   const [error, setError] = useState("");
   const [showShare, setShowShare] = useState(false);
+  const [showQrScanner, setShowQrScanner] = useState(false);
   const [stepKey, setStepKey] = useState(0); // force re-mount for animation
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -620,6 +634,7 @@ export default function JoinPage() {
       ? getTournamentFormatLabel(embeddedMeta.format)
       : (isDemoCode ? DEMO_TOURNAMENT.format : ""),
     timeControl: resolvedConfig?.timePreset ?? embeddedMeta?.timePreset ?? (isDemoCode ? DEMO_TOURNAMENT.timeControl : ""),
+    date: formatJoinDate(resolvedConfig?.date ?? embeddedMeta?.date ?? (isDemoCode ? DEMO_TOURNAMENT.date : undefined)),
     playerCount: (() => {
       if (isDemoCode) return DEMO_TOURNAMENT.players.length;
       if (!resolvedConfig) return 0;
@@ -754,6 +769,7 @@ export default function JoinPage() {
         venue?: string | null;
         format?: string | null;
         rounds?: number | null;
+        date?: string | null;
         inviteCode?: string | null;
         customSlug?: string | null;
       };
@@ -765,7 +781,7 @@ export default function JoinPage() {
           directorCode: "",
           name: data.name,
           venue: data.venue ?? "",
-          date: "",
+          date: data.date ?? "",
           description: "",
           format: (data.format ?? "swiss") as TournamentConfig["format"],
           rounds: data.rounds ?? 5,
@@ -1235,6 +1251,12 @@ export default function JoinPage() {
                   <span className={`text-xs flex items-center gap-1 ${textMuted}`}>
                     <Users className="w-2.5 h-2.5" />{tournamentDisplay.playerCount} players
                   </span>
+                  <span className={`text-xs ${isDark ? "text-white/15" : "text-[#436850]/50"}`}>·</span>
+                  <span className={`text-xs flex items-center gap-1 ${textMuted}`}>
+                    <CalendarDays className="w-2.5 h-2.5" />{tournamentDisplay.date}
+                  </span>
+                  <span className={`text-xs ${isDark ? "text-white/15" : "text-[#436850]/50"}`}>·</span>
+                  <span className={`text-xs ${textMuted}`}>{tournamentDisplay.format}</span>
                 </div>
               </div>
             </div>
@@ -1352,6 +1374,18 @@ export default function JoinPage() {
                 >
                   Try the demo → OTB2026
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowQrScanner(true)}
+                  className={`mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors ${
+                    isDark ? "border-white/15 text-white/75 hover:bg-white/06" : "border-[#436850]/25 text-[#436850] hover:bg-[#436850]/06"
+                  }`}
+                >
+                  <Camera className="h-4 w-4" /> Scan QR code
+                </button>
+                <p className={`mt-2 text-center text-[11px] leading-relaxed ${textMuted}`}>
+                  Camera access is requested only after you tap Scan QR code.
+                </p>
               </div>
             </div>
           )}
@@ -1544,6 +1578,12 @@ export default function JoinPage() {
                     <MapPin className="w-3.5 h-3.5" />{tournamentDisplay.venue}
                   </p>
                 )}
+                <div className={`mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs ${textMuted}`}>
+                  <span>{tournamentDisplay.format}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{tournamentDisplay.date}</span>
+                  {tournamentDisplay.timeControl && <><span aria-hidden="true">·</span><span>{tournamentDisplay.timeControl}</span></>}
+                </div>
               </div>
 
               {/* Already registered banner */}
@@ -1781,9 +1821,12 @@ export default function JoinPage() {
                             ? isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-600"
                             : isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/20" : "bg-[#436850]/10 text-[#436850] border border-[#436850]/15"
                         }`}>
-                          {profile.platform === "lichess" ? "♞ Lichess" : "♔ chess.com"}
+                          {profile.platform === "lichess" ? "Lichess" : "Chess.com"}
                         </span>
                       </div>
+                      <p className={`mt-1 inline-flex items-center gap-1 text-xs ${textMuted}`}>
+                        <ShieldCheck className="h-3.5 w-3.5" /> Profile matched on {profile.platform === "lichess" ? "Lichess" : "Chess.com"}; not federation verification
+                      </p>
                     </div>
                   </div>
 
@@ -1805,6 +1848,10 @@ export default function JoinPage() {
                         </>
                       )}
                     </div>
+                    <div className={`mt-2 flex items-center justify-between rounded-xl px-3 py-2 text-xs ${isDark ? "bg-[#4CAF50]/08 text-white/70" : "bg-[#436850]/06 text-[#436850]"}`}>
+                      <span>Pairing rating</span>
+                      <strong>{resolvedConfig?.ratingType === "blitz" ? "Blitz" : "Rapid"} · {pickRating(profile, resolvedConfig?.ratingType)}</strong>
+                    </div>
                   </div>
 
                   {/* Tier badge */}
@@ -1825,6 +1872,7 @@ export default function JoinPage() {
                     {[
                       { icon: Trophy, text: tournamentDisplay.name },
                       { icon: MapPin, text: tournamentDisplay.venue },
+                      { icon: CalendarDays, text: tournamentDisplay.date },
                       { icon: Clock, text: `${tournamentDisplay.timeControl} · ${tournamentDisplay.format}` },
                       { icon: Users, text: `${tournamentDisplay.playerCount} players registered` },
                     ].map(({ icon: Icon, text }) => (
@@ -1833,6 +1881,25 @@ export default function JoinPage() {
                         <span className={`text-sm ${isDark ? "text-white/70" : "text-[#436850]"}`}>{text}</span>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => advanceStep("username")}
+                      className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${isDark ? "border-white/15 text-white/75" : "border-[#436850]/25 text-[#436850]"}`}
+                    >
+                      Edit profile
+                    </button>
+                    {!isQrMode ? (
+                      <button
+                        type="button"
+                        onClick={() => advanceStep("code")}
+                        className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${isDark ? "border-white/15 text-white/75" : "border-[#436850]/25 text-[#436850]"}`}
+                      >
+                        Change tournament
+                      </button>
+                    ) : <div aria-hidden="true" />}
                   </div>
 
                   <PlayerPaymentMethods payments={resolvedConfig ?? {}} isDark={isDark} />
@@ -1976,9 +2043,9 @@ export default function JoinPage() {
                     </p>
                     <ul className="space-y-1.5">
                       {[
-                        "Show up at the venue before Round 1",
-                        "Director will announce pairings - check the board list",
-                        "First opponent matched by ELO proximity",
+                        "Check in with the director when you arrive",
+                        "Round timing is announced by the director",
+                        "Open the tournament dashboard to find your board and pairings",
                       ].map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <span className={`text-xs font-bold mt-0.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>
@@ -2152,6 +2219,31 @@ export default function JoinPage() {
           onClose={() => setShowShare(false)}
           isDark={isDark}
           ratingType={resolvedConfig?.ratingType}
+        />
+      )}
+
+      {showQrScanner && (
+        <QrScanner
+          isDark={isDark}
+          onClose={() => setShowQrScanner(false)}
+          onScan={(code) => {
+            setTournamentCode(code.toUpperCase());
+            setError("");
+            setShowQrScanner(false);
+          }}
+          onScanUrl={(rawUrl) => {
+            try {
+              const parsed = new URL(rawUrl, window.location.origin);
+              if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith("/join/")) {
+                throw new Error("invalid join URL");
+              }
+              setShowQrScanner(false);
+              navigate(`${parsed.pathname}${parsed.search}${parsed.hash}`);
+            } catch {
+              setShowQrScanner(false);
+              setError("That QR code is not a ChessOTB tournament link. Enter the invite code instead.");
+            }
+          }}
         />
       )}
 

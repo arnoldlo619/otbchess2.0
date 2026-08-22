@@ -122,6 +122,7 @@ export function createUserTournamentRouter(): Router {
         tournamentId: userTournaments.tournamentId,
         name: userTournaments.name,
         venue: userTournaments.venue,
+        date: userTournaments.date,
         format: userTournaments.format,
         rounds: userTournaments.rounds,
         inviteCode: userTournaments.inviteCode,
