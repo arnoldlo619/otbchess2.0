@@ -367,7 +367,7 @@ function BoardCard({
           </span>
           {!editMode && !isComplete && (
             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-              isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+              isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-800"
             }`}>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               Live
@@ -551,13 +551,13 @@ function BoardCard({
 
         {/* VS divider */}
         <div className={`flex items-center gap-2 py-0 ${
-          isDark ? "text-white/15" : "text-[#436850]/70"
+          isDark ? "text-white/15" : "text-[#436850]"
         }`}>
           <div className={`flex-1 h-px ${
             isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"
           }`} />
           <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${
-            isDark ? "text-white/20" : "text-[#436850]/70"
+            isDark ? "text-white/20" : "text-[#436850]"
           }`}>vs</span>
           <div className={`flex-1 h-px ${
             isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"
@@ -1262,7 +1262,7 @@ function VerticalRoundTracker({
                     ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
                     : roundDone === roundTotal
                     ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
-                    : isDark ? "text-amber-400" : "text-amber-600"
+                    : isDark ? "text-amber-400" : "text-amber-800"
                 }`}
               >
                 {roundDone}/{roundTotal}
@@ -3541,7 +3541,7 @@ export default function Director() {
                             <span className={`text-[9px] font-bold tabular-nums leading-none mt-0.5 ${
                               isComplete || roundDone === roundTotal
                                 ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
-                                : isDark ? "text-amber-400" : "text-amber-600"
+                                : isDark ? "text-amber-400" : "text-amber-800"
                             }`}>{roundDone}/{roundTotal}</span>
                           )}
                         </div>
@@ -3644,7 +3644,7 @@ export default function Director() {
                     <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${
                       allResultsIn
                         ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
-                        : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+                        : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-800"
                     }`}>
                       <CheckCircle2 className="w-3 h-3" />
                       {completedGames}/{totalGames}
@@ -3808,7 +3808,7 @@ export default function Director() {
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       activeTab === "players"
                         ? isDark ? "bg-white/20 text-white" : "bg-[#436850]/10 text-[#436850]"
-                        : isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F] text-[#436850]"
+                        : isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F] text-[#12372A]"
                     }`}>
                       {state.players.length}
                     </span>
@@ -3817,14 +3817,14 @@ export default function Director() {
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       activeTab === "bracket"
                         ? isDark ? "bg-white/20 text-white" : "bg-[#436850]/10 text-[#436850]"
-                        : isDark ? "bg-amber-400/20 text-amber-400" : "bg-amber-50 text-amber-600"
+                        : isDark ? "bg-amber-400/20 text-amber-400" : "bg-amber-50 text-amber-800"
                     }`}>
                       Live
                     </span>
                   )}
                   {tab.id === "bracket" && state.elimPhase === "cutoff" && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                      isDark ? "bg-amber-400/20 text-amber-400" : "bg-amber-50 text-amber-600"
+                      isDark ? "bg-amber-400/20 text-amber-400" : "bg-amber-50 text-amber-800"
                     }`}>
                       !
                     </span>
@@ -4564,7 +4564,7 @@ export default function Director() {
                               : "bg-green-50 border-green-200 text-green-700"
                             : isDark
                             ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                            : "bg-amber-50 border-amber-200 text-amber-600"
+                            : "bg-amber-50 border-amber-200 text-amber-800"
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                             allResultsIn ? (isDark ? "bg-[#4CAF50]" : "bg-green-500") : "bg-amber-400 animate-pulse"
@@ -5081,7 +5081,7 @@ export default function Director() {
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
                                 isDark
                                   ? "bg-amber-500/10 border-amber-500/25 text-amber-400 hover:bg-amber-500/20"
-                                  : "bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100"
+                                  : "bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100"
                               }`}
                               title={`Jump to Board ${unreported.board}`}
                             >

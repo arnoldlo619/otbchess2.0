@@ -78,10 +78,10 @@ import QuadsDirectorPanel from "@/components/tournament/QuadsDirectorPanel";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
   const color =
-    elo >= 2200 ? "text-purple-400 bg-purple-500/10 border-purple-500/20"
-    : elo >= 2000 ? "text-amber-500 bg-amber-500/10 border-amber-500/20"
-    : elo >= 1800 ? "text-sky-500 bg-sky-500/10 border-sky-500/20"
-    : "text-slate-400 bg-slate-500/10 border-slate-500/20";
+    elo >= 2200 ? "text-purple-800 dark:text-purple-300 bg-purple-500/10 border-purple-500/20"
+    : elo >= 2000 ? "text-amber-800 dark:text-amber-300 bg-amber-500/10 border-amber-500/20"
+    : elo >= 1800 ? "text-sky-800 dark:text-sky-300 bg-sky-500/10 border-sky-500/20"
+    : "text-slate-700 dark:text-slate-300 bg-slate-500/10 border-slate-500/20";
 
   return (
     <span
@@ -106,7 +106,7 @@ function TitleBadge({ title }: { title?: string }) {
 function ResultPill({ result, perspective }: { result: Result; perspective: "white" | "black" }) {
   if (result === "*") {
     return (
-      <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+      <span className="flex items-center gap-1 text-xs font-semibold text-amber-800 dark:text-amber-300">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
         Live
       </span>
@@ -689,7 +689,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
           </h3>
           <span className={`text-sm font-semibold px-3 py-1.5 rounded-full border ${
             round.status === "in_progress"
-              ? "text-amber-600 bg-amber-500/10 border-amber-500/20"
+              ? "text-amber-800 dark:text-amber-300 bg-amber-500/10 border-amber-500/20"
               : round.status === "completed"
               ? isDark ? "text-white/50 bg-white/05 border-white/10" : "text-[#6B7280] bg-[#FBFADA] border-[#EEEED2]"
               : "text-muted-foreground bg-muted border-border"
@@ -747,7 +747,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
               </div>
               <div className="flex items-center gap-2">
                 {isLive ? (
-                  <span className="flex items-center gap-1.5 text-amber-500 font-bold">
+                  <span className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-bold">
                     <Wifi className="w-4 h-4" />
                     Live
                   </span>

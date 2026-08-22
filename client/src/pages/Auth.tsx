@@ -408,7 +408,7 @@ export default function AuthPage() {
                 )}
                 <span className="text-lg font-semibold text-white">{tabLabel[tab]}</span>
               </div>
-              <span className="text-xs text-white/40">
+              <span className="text-xs text-white/55">
                 {tab === "signin" && "Sign in to your OTB Chess account."}
                 {tab === "signup" && "Create your free OTB Chess account."}
                 {tab === "guest" && "Jump in without an account."}
@@ -426,7 +426,7 @@ export default function AuthPage() {
                     className={`flex-1 py-2 rounded-lg text-xs font-medium transition ${
                       tab === t
                         ? "bg-[oklch(0.55_0.13_145)] text-white shadow-sm"
-                        : "text-white/40 hover:text-white/70"
+                        : "text-white/55 hover:text-white/80"
                     }`}
                   >
                     {t === "signin" ? "Sign In" : t === "signup" ? "Sign Up" : (
@@ -473,7 +473,7 @@ export default function AuthPage() {
                     {/* Divider */}
                     <div className="flex items-center gap-3">
                       <span className="flex-1 h-px bg-white/10" />
-                      <span className="text-[11px] uppercase text-white/30 tracking-wide">or</span>
+                      <span className="text-[11px] uppercase text-white/55 tracking-wide">or</span>
                       <span className="flex-1 h-px bg-white/10" />
                     </div>
 
@@ -504,7 +504,7 @@ export default function AuthPage() {
                           <button
                             type="button"
                             onClick={() => switchTab("forgot")}
-                            className="text-[11px] text-white/30 hover:text-white/60 transition"
+                            className="text-[11px] text-white/55 hover:text-white/80 transition"
                           >
                             Forgot?
                           </button>
@@ -546,7 +546,7 @@ export default function AuthPage() {
                       {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</> : <>Sign In <ChevronRight className="w-4 h-4" /></>}
                     </button>
 
-                    <p className="text-center text-xs text-white/40">
+                    <p className="text-center text-xs text-white/55">
                       No account?{" "}
                       <button type="button" onClick={() => switchTab("signup")} className="text-[oklch(0.75_0.14_145)] font-medium hover:underline">
                         Create one free

@@ -1686,7 +1686,7 @@ function Features() {
               </h3>
               {/* Feature bullets */}
               <ul className={`flex flex-col gap-1.5 text-sm ${
-                isDark ? "text-[oklch(0.65_0.07_145)]" : "text-[#436850]/80"
+                isDark ? "text-[oklch(0.65_0.07_145)]" : "text-[#436850]"
               }`}>
                 {[
                   "Score, ELO performance & rating change",
