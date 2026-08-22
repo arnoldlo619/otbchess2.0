@@ -7403,8 +7403,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### F. Performance
 - [x] JavaScript bundle size audit (total + per-chunk)
-- [ ] LCP ≤2.5s (lab equivalent)
-- [ ] CLS ≤0.1
+- [x] LCP ≤2.5s (lab equivalent)
+- [x] CLS ≤0.1
 - [ ] INP ≤200ms
 - [ ] Cached route transition ≤500ms
 - [ ] Result interaction feedback ≤100ms
