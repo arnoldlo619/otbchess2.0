@@ -84,18 +84,29 @@ export function buildCrossTableMatrix(
   return { headers, rows };
 }
 
+export function isQuadsPdfFormat(format?: string): boolean {
+  return format?.trim().toLowerCase().startsWith("quads") ?? false;
+}
+
+export function buildStandingsHeaders(includeBuchholz = true): string[] {
+  const headers = ["#", "Player", "ELO", "Pts", "W", "D", "L"];
+  return includeBuchholz ? [...headers, "Buch."] : headers;
+}
+
 /** Builds the standings rows for the PDF table. */
-export function buildStandingsRows(sortedPlayers: Player[]): string[][] {
-  return sortedPlayers.map((p, i) => [
-    String(i + 1),
-    p.title ? `${p.title} ${p.name}` : p.name,
-    String(p.elo),
-    String(p.points),
-    `${p.wins}`,
-    `${p.draws}`,
-    `${p.losses}`,
-    p.buchholz.toFixed(1),
-  ]);
+export function buildStandingsRows(sortedPlayers: Player[], includeBuchholz = true): string[][] {
+  return sortedPlayers.map((p, i) => {
+    const cells = [
+      String(i + 1),
+      p.title ? `${p.title} ${p.name}` : p.name,
+      String(p.elo),
+      String(p.points),
+      `${p.wins}`,
+      `${p.draws}`,
+      `${p.losses}`,
+    ];
+    return includeBuchholz ? [...cells, p.buchholz.toFixed(1)] : cells;
+  });
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -506,6 +517,7 @@ export interface PdfOptions {
 }
 
 export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
+  const isQuads = isQuadsPdfFormat(opts.format);
   // Dynamic imports keep jsPDF + autoTable out of the initial bundle
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -568,11 +580,11 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   cursorY += 4;
 
   const sortedPlayers = getStandings(players);
-  const standingsRows = buildStandingsRows(sortedPlayers);
+  const standingsRows = buildStandingsRows(sortedPlayers, !isQuads);
 
   autoTable(doc, {
     startY: cursorY,
-    head: [["#", "Player", "ELO", "Pts", "W", "D", "L", "Buch."]],
+    head: [buildStandingsHeaders(!isQuads)],
     body: standingsRows,
     margin: { left: margin, right: margin },
     styles: { fontSize: 8.5, cellPadding: 2.8, font: "helvetica", textColor: TEXT_DARK },
@@ -683,11 +695,11 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
     },
   });
 
-  // ── Page 3: Scoring System ─────────────────────────────────────────────────
-  addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
-
-  // ── Page 4: Swiss Pairing System ──────────────────────────────────────────
-  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
+  if (!isQuads) {
+    // Quads use section-local SB/direct encounter tiebreaks, not Swiss Buchholz.
+    addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
+    addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
+  }
 
   // ── Footers on every page ──────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
@@ -709,6 +721,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
  * server-side emails via the SMTP system.
  */
 export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string> {
+  const isQuads = isQuadsPdfFormat(opts.format);
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -763,11 +776,11 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
   cursorY += 4;
 
   const sortedPlayers = getStandings(players);
-  const standingsRows = buildStandingsRows(sortedPlayers);
+  const standingsRows = buildStandingsRows(sortedPlayers, !isQuads);
 
   autoTable(doc, {
     startY: cursorY,
-    head: [["#", "Player", "ELO", "Pts", "W", "D", "L", "Buch."]],
+    head: [buildStandingsHeaders(!isQuads)],
     body: standingsRows,
     margin: { left: margin, right: margin },
     styles: { fontSize: 9, cellPadding: 3, font: "helvetica", textColor: TEXT_DARK },
@@ -833,9 +846,11 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
     },
   });
 
-  // Pages 3 & 4: Explanation pages
-  addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
-  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
+  if (!isQuads) {
+    // Quads use section-local SB/direct encounter tiebreaks, not Swiss Buchholz.
+    addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
+    addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
+  }
 
   // Footers
   const totalPages = doc.getNumberOfPages();

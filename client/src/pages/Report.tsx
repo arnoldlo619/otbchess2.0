@@ -23,6 +23,7 @@ import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { computeAllPerformances, computeQuadSectionPerformances, type PlayerPerformance, type QuadSectionPerformances } from "@/lib/performanceStats";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
+import { calculateCompletedGameDrawRate } from "@/lib/reportMetrics";
 import PlayerStatsCard, {
   ACCENT_PALETTE,
   defaultAccentForBadge,
@@ -172,12 +173,14 @@ async function renderCardToBlob(element: HTMLElement): Promise<Blob> {
 // ─── Summary Banner ───────────────────────────────────────────────────────────
 function SummaryBanner({
   performances,
+  rounds,
   tournamentName,
   isDark,
   isQuadsAllSections,
   numSections,
 }: {
   performances: PlayerPerformance[];
+  rounds: import("@/lib/tournamentData").Round[];
   tournamentName: string;
   isDark: boolean;
   /** When true (Quads all-sections view), suppress global champion and show section count instead. */
@@ -188,13 +191,7 @@ function SummaryBanner({
   const avgPerf = Math.round(
     performances.reduce((s, p) => s + p.performanceRating, 0) / performances.length
   );
-  // Each game appears once per player in performances, so divide by 2 to avoid double-counting
-  const totalDraws = performances.reduce((s, p) => s + p.draws, 0) / 2;
-  const totalWins = performances.reduce((s, p) => s + p.wins, 0) / 2;
-  const totalLosses = performances.reduce((s, p) => s + p.losses, 0) / 2;
-  // Draw rate = draws / total completed games (wins + draws + losses)
-  const totalGames = totalWins + totalDraws + totalLosses;
-  const drawRate = totalGames > 0 ? Math.round((totalDraws / totalGames) * 100) : 0;
+  const drawRate = calculateCompletedGameDrawRate(rounds);
 
   return (
     <div
@@ -756,6 +753,13 @@ export default function ReportPage() {
         : quadSectionPerfs.flatMap(s => s.performances))
     : performances;
 
+  const displayRounds = isQuads && activeSection !== "all"
+    ? rounds.map((round) => ({
+        ...round,
+        games: round.games.filter((game) => game.sectionId === activeSection),
+      }))
+    : rounds;
+
   // Fetch club avatar for PDF branding
   const { avatarUrl: clubAvatarUrl } = useClubAvatar(config?.clubId ?? null);
 
@@ -1231,6 +1235,7 @@ export default function ReportPage() {
         {/* Summary banner */}
         <SummaryBanner
           performances={displayPerformances}
+          rounds={displayRounds}
           tournamentName={
             isQuads && activeSection !== "all"
               ? `${quadSectionPerfs.find(s => s.sectionId === activeSection)?.sectionName ?? tournamentName}`
