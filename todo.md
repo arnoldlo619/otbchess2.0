@@ -6736,6 +6736,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix ClubProfile banner paddingLeft to be responsive (remove hardcoded 210px on mobile)
 - [x] Increase content bottom padding on ClubDashboard and LeagueDashboard for safe area
 - [x] Prevent horizontal overflow on mobile across all 3 pages
+- [x] Responsive audit: Verify eight critical routes at 375px and 768px; add contained, accessible League bracket scrolling and readable mobile titles
 
 ## Quad Prize Templates / Winner Recognition / Social Recap Assets (Jul 5 2026)
 - [x] SocialAssetGenerator: 8 built-in themes (Dark Forest, Midnight Blue, Royal Purple, Crimson, Gold, Slate, Light Clean, Neon)

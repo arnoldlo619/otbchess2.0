@@ -322,7 +322,7 @@ export default function LeagueDemo() {
 
           {/* ── BRANDED TOP BAR ───────────────────────────────────────────── */}
           <div
-            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5"
+            className="relative flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5"
             style={{
               background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
               backdropFilter: "blur(12px)",
@@ -339,14 +339,10 @@ export default function LeagueDemo() {
             </button>
 
             {/* Mobile title */}
-            <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-base font-bold truncate block" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
+            <div className="pointer-events-none absolute inset-x-16 text-center lg:hidden">
+              <span className="block whitespace-nowrap text-base font-bold" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
             </div>
-
-            {/* Spacer to keep mobile title centred */}
-            <div className="flex-1" />
-
-
+            <div className="hidden flex-1 lg:block" />
           </div>
 
           {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
@@ -365,7 +361,7 @@ export default function LeagueDemo() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1
-                    className="text-3xl sm:text-4xl font-black truncate leading-tight"
+                    className="whitespace-nowrap text-[clamp(1.55rem,7vw,2.25rem)] font-black leading-tight"
                     style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                   >
                     ChessOTB Club League

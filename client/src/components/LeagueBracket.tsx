@@ -284,8 +284,19 @@ export function LeagueBracket({
   const roundGaps = [GAP, CARD_H + GAP * 2, (CARD_H + GAP * 2) * 2 + GAP];
 
   return (
-    <div className="w-full overflow-x-auto pb-4">
-      <div className="flex items-start gap-0" style={{ minWidth: "900px", padding: "24px 16px" }}>
+    <div className="w-full max-w-full overflow-hidden">
+      <div className="flex items-center justify-end gap-1.5 px-4 pt-2 text-[10px] font-semibold uppercase tracking-wider lg:hidden" style={{ color: textMuted }}>
+        <span>Swipe to view the full bracket</span>
+        <span aria-hidden="true">→</span>
+      </div>
+      <div
+        className="w-full max-w-full overflow-x-auto overscroll-x-contain pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+        style={{ scrollbarColor: `${accent} transparent` }}
+        role="region"
+        aria-label="Playoff bracket. Scroll horizontally to view later rounds."
+        tabIndex={0}
+      >
+        <div className="flex items-start gap-0" style={{ minWidth: "900px", padding: "24px 16px" }}>
 
         {rounds.map((round, rIdx) => {
           const topOffset = rIdx === 0 ? 0 : rIdx === 1 ? (CARD_H + GAP) / 2 : (CARD_H + GAP) * 1.5 + GAP / 2;
@@ -408,6 +419,7 @@ export function LeagueBracket({
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
