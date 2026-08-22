@@ -872,7 +872,7 @@ export function createApp() {
   // ── Analysis Workspace: POST /api/prep/analysis/resolve ──────────────────
   // Resolves a trusted analysis workspace from a launch context.
   // Server validates the report, game/position, and derives canonical FEN.
-  app.post("/api/prep/analysis/resolve", requireAuth, prepLimiter, async (req, res) => {
+  app.post("/api/prep/analysis/resolve", requireAuth, prepLimiter, validate(prepResolveSchema), async (req, res) => {
     try {
       const { subject } = req.body as { subject: unknown };
       if (!subject || typeof subject !== "object") {
@@ -1033,7 +1033,7 @@ export function createApp() {
 
     // ── Saved Prep Reports: POST /api/prep/saved ────────────────────────────
   // Save a prep report for the current user (requires auth).
-  app.post("/api/prep/saved", requireAuth, async (req: any, res) => {
+  app.post("/api/prep/saved", requireAuth, validate(prepSaveSchema), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
@@ -1157,7 +1157,7 @@ export function createApp() {
   // ── Coach Insight: POST /api/prep/coach-insight ─────────────────────────────
   // Generates a coach-like insight from prep data using the built-in LLM.
   // Rate-limited to prevent abuse. Requires auth to prevent anonymous LLM abuse.
-  app.post("/api/prep/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), async (req: any, res) => {
+  app.post("/api/prep/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), validate(coachInsightSchema), async (req: any, res) => {
     try {
       const { promptJson } = req.body;
       if (!promptJson || typeof promptJson !== "string") {
@@ -1431,8 +1431,25 @@ export function createApp() {
 
   // ── Proxy: GET /api/avatar-proxy?url=... ─────────────────────────────────────
   // Fetches a remote avatar image (chess.com, lichess, etc.) server-side and
-  // re-serves it with permissive CORS headers so html2canvas can draw it onto
-  // a canvas without triggering the "tainted canvas" security error.
+  // re-serves it with origin-restricted CORS headers so html2canvas can draw it
+  // onto a canvas without triggering the "tainted canvas" security error.
+
+  // CORS helper: restrict proxy responses to our own origins in production
+  const PROXY_ALLOWED_ORIGINS = new Set([
+    "https://chessotb.club",
+    "https://www.chessotb.club",
+    "https://otbchess.manus.space",
+  ]);
+  function setProxyCors(req: any, res: any) {
+    const origin = req.headers.origin as string | undefined;
+    if (origin && PROXY_ALLOWED_ORIGINS.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+    } else if (process.env.NODE_ENV !== "production") {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+  }
+
   app.get("/api/avatar-proxy", async (req, res) => {
     const raw = req.query.url as string | undefined;
     if (!raw) { res.status(400).json({ error: "Missing url parameter" }); return; }
@@ -1461,7 +1478,7 @@ export function createApp() {
       const buffer = await upstream.arrayBuffer();
 
       res.setHeader("Content-Type", contentType);
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      setProxyCors(req, res);
       res.setHeader("Cache-Control", "public, max-age=86400"); // 24 h browser cache
       res.send(Buffer.from(buffer));
     } catch (err) {
@@ -1495,7 +1512,7 @@ export function createApp() {
       if (!upstream.ok) { res.status(upstream.status).end(); return; }
       const css = await upstream.text();
       res.setHeader("Content-Type", "text/css; charset=utf-8");
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      setProxyCors(req, res);
       res.setHeader("Cache-Control", "public, max-age=86400");
       res.send(css);
     } catch (err) {
@@ -1616,7 +1633,7 @@ export function createApp() {
   // ── Push: POST /api/push/subscribe ────────────────────────────────────────
   // Body: { tournamentId: string, subscription: PushSubscription, chessUsername?: string }
   // Upserts by endpoint — if the same endpoint re-subscribes it updates keys.
-  app.post("/api/push/subscribe", pushSubscribeLimiter, async (req, res) => {
+  app.post("/api/push/subscribe", pushSubscribeLimiter, validate(pushSubscribeSchema), async (req, res) => {
     const { tournamentId, subscription, chessUsername } = req.body as {
       tournamentId: string;
       subscription: PushSub;
@@ -1715,7 +1732,7 @@ export function createApp() {
   // ── Push: POST /api/push/notify/:tournamentId ──────────────────────────────
   // Broadcasts a push notification to all subscribers of a tournament.
   // Body: { round: number, tournamentName: string }
-  app.post("/api/push/notify/:tournamentId", async (req, res) => {
+  app.post("/api/push/notify/:tournamentId", validate(pushNotifySchema), async (req, res) => {
     const { tournamentId } = req.params;
     const { round, tournamentName } = req.body as {
       round: number;
@@ -2159,7 +2176,7 @@ export function createApp() {
   // ── Tournament Players: POST /api/tournament/:id/players ─────────────────────
   // Upserts a player registration (insert or update by username).
   // Body: { player: Player }  (the full Player object from the client)
-  app.post("/api/tournament/:id/players", async (req, res) => {
+  app.post("/api/tournament/:id/players", validate(addPlayerSchema), async (req, res) => {
     const { id } = req.params;
     const { player } = req.body as { player: Record<string, unknown> };
     if (!id || !player || typeof player.username !== "string") {
@@ -2358,7 +2375,7 @@ export function createApp() {
   // ── Tournament State: PUT /api/tournament/:id/state ─────────────────────────
   // Upserts the full director state JSON for a tournament.
   // Body: { state: DirectorState }
-  app.put("/api/tournament/:id/state", async (req, res) => {
+  app.put("/api/tournament/:id/state", validate(saveStateSchema), async (req, res) => {
     const { id } = req.params;
     const { state, baseRevision } = req.body as { state: unknown; baseRevision?: unknown };
     if (!id || !state) return res.status(400).json({ error: "Missing tournament id or state" });
@@ -2602,7 +2619,7 @@ export function createApp() {
   // Accepts: { tournamentId, eventType, metadata? }
   // Rate-limited to prevent abuse.
   const analyticsLimiter = rateLimit({ windowMs: 60_000, max: 60, keyGenerator: (req) => ipKeyGenerator(req.ip ?? "") });
-  app.post("/api/analytics/event", analyticsLimiter, async (req, res) => {
+  app.post("/api/analytics/event", analyticsLimiter, validate(analyticsEventSchema), async (req, res) => {
     const { tournamentId, eventType, metadata } = req.body ?? {};
     if (!tournamentId || !eventType) return res.status(400).json({ error: "Missing fields" });
     const validTypes = ["search", "follow", "unfollow", "email_capture", "card_claim", "cta_click"];
@@ -3036,7 +3053,7 @@ export function createApp() {
   // When status is "running", schedules a server-side setTimeout to fire a
   // Web Push "Time's up!" notification at the exact expiry wall-clock time.
   // Pausing or resetting cancels any pending timeout.
-  app.put("/api/tournament/:id/timer", (req, res) => {
+  app.put("/api/tournament/:id/timer", validate(timerUpdateSchema), (req, res) => {
     const { id } = req.params;
     const snap = req.body as TimerSnapshot;
     if (!id || !snap || typeof snap.status !== "string") {
@@ -3367,7 +3384,7 @@ export function createApp() {
   });
 
   // PUT /api/tournament/:id/broadcast — save broadcast settings (host only)
-  app.put("/api/tournament/:id/broadcast", requireAuth, async (req: any, res) => {
+  app.put("/api/tournament/:id/broadcast", requireAuth, validate(broadcastSchema), async (req: any, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
     const { broadcastEnabled, broadcastUrl, broadcastProvider, featuredBoardNumber, broadcastTitle, broadcastStatus } = req.body;
@@ -4015,3 +4032,16 @@ process.on('uncaughtException', (err) => {
   // Give the logger time to flush before exiting
   setTimeout(() => process.exit(1), 500);
 });
+import {
+  validate,
+  addPlayerSchema,
+  saveStateSchema,
+  pushSubscribeSchema,
+  pushNotifySchema,
+  analyticsEventSchema,
+  prepResolveSchema,
+  prepSaveSchema,
+  coachInsightSchema,
+  broadcastSchema,
+  timerUpdateSchema,
+} from "./validation.js";

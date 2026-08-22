@@ -7787,3 +7787,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Redesign Club Meetup setup to align with the premium full-page Tournament Setup wizard system
 - [x] Fix overlapping Tournament Setup payment-method toggles with contained responsive header controls
 - [x] Remove the redundant tournament-summary card from the mobile QR tournament-join flow
+- [x] Security: Audit and parameterize all raw SQL usages across server modules (all 26 usages use Drizzle parameterized sql`` — no injection risk)
+- [x] Security: Restrict CORS on avatar-proxy and font-proxy to production domains (chessotb.club, www.chessotb.club, otbchess.manus.space) with dev fallback
+- [x] Security: Add zod input validation schemas on 10 highest-risk POST/PUT API routes (addPlayer, saveState, pushSubscribe, pushNotify, analyticsEvent, prepResolve, prepSave, coachInsight, broadcast, timerUpdate) with 29 regression tests
