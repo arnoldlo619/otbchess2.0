@@ -16,8 +16,9 @@
  * Design: OTB Chess design system (green/dark, Clash Display, OKLCH tokens)
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { X, Trophy, AlertTriangle, ChevronRight, Swords, Info } from "lucide-react";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,8 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
   const isDark = props.isDark;
 
   const [selected, setSelected] = useState(defaultCutoff);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const sizes = useMemo(() => validCutoffSizes(totalPlayers), [totalPlayers]);
   const rounds = elimRoundsNeeded(selected);
   const eliminated = totalPlayers - selected;
@@ -99,6 +102,12 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
       props.onClose();
     }
   };
+  useAccessibleOverlay({
+    open: true,
+    onClose: handleClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const T = {
     overlay: "fixed inset-0 z-50 flex items-center justify-center p-4",
@@ -134,10 +143,12 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
 
       {/* Modal card */}
       <div
+        ref={dialogRef}
         className={`relative w-full max-w-sm rounded-2xl border shadow-2xl overflow-hidden ${T.card}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cutoff-modal-title"
+        tabIndex={-1}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-5 py-4 border-b ${T.divider}`}>
@@ -159,6 +170,7 @@ export function CutoffOverrideModal(props: CutoffOverrideModalProps) {
             </p>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={handleClose}
             className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${T.closeBtn}`}
             aria-label="Close"

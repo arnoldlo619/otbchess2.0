@@ -31,6 +31,7 @@ import type { Player, Game, Result, Round } from "../../lib/tournamentData";
 import type { QuadSection } from "../../lib/quads";
 import type { TournamentConfig } from "../../lib/tournamentRegistry";
 import type { StandingRow } from "../../lib/swiss";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import {
   calculateQuadStandings,
   formatRatingRange,
@@ -159,18 +160,26 @@ function ResultEntryPanel({
   const whiteRating = white?.elo ?? 0;
   const blackRating = black?.elo ?? 0;
   const current = game.result;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
-  // Keyboard shortcuts: W = white wins, D = draw, B = black wins, Esc = close
+  // Keyboard shortcuts: W = white wins, D = draw, B = black wins.
+  // Escape is handled by the shared accessible-overlay behavior.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
       if (e.key === "w" || e.key === "W") { onEnterResult(game.id, "1-0"); onAdvanceToNext(game.id); }
       if (e.key === "d" || e.key === "D") { onEnterResult(game.id, "½-½"); onAdvanceToNext(game.id); }
       if (e.key === "b" || e.key === "B") { onEnterResult(game.id, "0-1"); onAdvanceToNext(game.id); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [game.id, onEnterResult, onClose, onAdvanceToNext]);
+  }, [game.id, onEnterResult, onAdvanceToNext]);
 
   const handleResult = (result: "1-0" | "½-½" | "0-1") => {
     if (current === result) {
@@ -189,7 +198,9 @@ function ResultEntryPanel({
       <div className="fixed inset-0 z-40" style={{ background: "oklch(0 0 0 / 0.5)" }} onClick={onClose} aria-hidden="true" />
       {/* Slide-out panel */}
       <div
+        ref={dialogRef}
         role="dialog" aria-modal="true" aria-label={`Enter result for Board ${boardIndex}`}
+        tabIndex={-1}
         className="fixed right-0 top-0 h-full z-50 flex flex-col overflow-y-auto"
         style={{ width: "min(380px, 92vw)", background: isDark ? "oklch(0.10 0.025 145)" : "#ffffff", borderLeft: `1px solid ${T.border ?? T.cardBorder}`, boxShadow: "-8px 0 32px oklch(0 0 0 / 0.35)", animation: "slideInPanel 0.28s cubic-bezier(0.16, 1, 0.3, 1) both" }}
       >
@@ -199,7 +210,7 @@ function ResultEntryPanel({
             <span className="text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded" style={{ background: T.greenBg, color: T.green }}>Board {boardIndex}</span>
             <span className="text-sm font-semibold" style={{ color: T.textMuted }}>Enter Result</span>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close result panel" className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:opacity-80" style={{ background: T.rowBg, color: T.textMuted, touchAction: "manipulation" }}>
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Close result panel" className="w-11 h-11 flex items-center justify-center rounded-lg transition-colors hover:opacity-80" style={{ background: T.rowBg, color: T.textMuted, touchAction: "manipulation" }}>
             <X size={14} />
           </button>
         </div>

@@ -14,8 +14,9 @@
  *   4. "Adjust Cutoff" link also opens CutoffOverrideModal directly
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { X, Swords, ChevronRight, Users, Trophy, ArrowRight } from "lucide-react";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import type { StandingRow } from "@/lib/swiss";
 import { suggestElimCutoff } from "@/lib/swiss";
 
@@ -93,6 +94,14 @@ export function SwissPhaseSummaryModal({
 
   // Allow the director to preview a different cutoff inline before proceeding
   const [previewCutoff, setPreviewCutoff] = useState(suggestedCutoff);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose: onCancel,
+    containerRef: dialogRef,
+    initialFocusRef: confirmButtonRef,
+  });
 
   // Build the valid power-of-2 options
   const cutoffOptions = useMemo(() => {
@@ -151,11 +160,13 @@ export function SwissPhaseSummaryModal({
 
       {/* Modal card */}
       <div
+        ref={dialogRef}
         className={`relative w-full max-w-lg rounded-2xl border shadow-2xl flex flex-col overflow-hidden ${T.card}`}
         style={{ maxHeight: "min(90vh, 680px)" }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="swiss-summary-title"
+        tabIndex={-1}
       >
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${T.divider}`}>
@@ -293,6 +304,7 @@ export function SwissPhaseSummaryModal({
             Cancel
           </button>
           <button
+            ref={confirmButtonRef}
             onClick={onProceed}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 active:scale-[0.98] ${T.confirmBtn}`}
             style={isDark ? { boxShadow: "0 4px 16px rgba(76,175,80,0.25)" } : {}}

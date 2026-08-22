@@ -14,6 +14,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, RefreshCw, Check, AlertCircle, ChevronDown } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import type { Player } from "@/lib/tournamentData";
 import { resolvePairingRating } from "@/lib/swiss";
 
@@ -72,6 +73,13 @@ export function EditPlayerModal({
   const eloError = eloStr.trim() !== "" && parseElo(eloStr) === null ? "Enter a valid ELO (0–4000)" : null;
 
   const nameRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useAccessibleOverlay({
+    open: open && Boolean(player),
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: nameRef,
+  });
 
   // Populate form when player changes
   useEffect(() => {
@@ -90,14 +98,6 @@ export function EditPlayerModal({
   useEffect(() => {
     if (open) setTimeout(() => nameRef.current?.focus(), 60);
   }, [open]);
-
-  // Escape key
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [open, onClose]);
 
   if (!open || !player) return null;
 
@@ -186,6 +186,11 @@ export function EditPlayerModal({
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Edit ${player.name}`}
+      tabIndex={-1}
       className="fixed inset-0 z-[300] flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -206,6 +211,7 @@ export function EditPlayerModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close edit player dialog"
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
             }`}

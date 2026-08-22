@@ -11,10 +11,11 @@
  * 3. If both agree → result confirmed → ratings processed
  * 4. If disagreement → dispute state → admin resolution
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Trophy, X, CheckCircle2, AlertTriangle, Loader2, Handshake } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { fetchWithRetry } from "@/lib/fetchWithRetry";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface GameResultModalProps {
   isOpen: boolean;
@@ -37,6 +38,14 @@ export function GameResultModal({
   const [selectedResult, setSelectedResult] = useState<ResultChoice | null>(null);
   const [error, setError] = useState<string>("");
   const [ratingChange, setRatingChange] = useState<number | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const handleSubmitResult = useCallback(async (result: ResultChoice) => {
     if (!user || !sessionId) return;
@@ -80,16 +89,25 @@ export function GameResultModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="game-result-title"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+    >
       <div className="bg-[#1a1a1a] rounded-3xl px-6 py-6 mx-4 max-w-sm w-full shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-[#5a9e5f]" />
-            <h2 className="text-white text-lg font-bold">Game Result</h2>
+            <h2 id="game-result-title" className="text-white text-lg font-bold">Game Result</h2>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
+            aria-label="Close game result dialog"
             className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
           >
             <X className="w-4 h-4 text-white/70" />

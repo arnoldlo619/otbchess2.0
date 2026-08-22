@@ -11,8 +11,9 @@
  * for 1.8 s when the director taps it, giving strong visual confirmation in a noisy hall.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -33,20 +34,18 @@ export function AnnounceModal({
   code,
 }: AnnounceModalProps) {
   const [codeCopied, setCodeCopied] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   // Keep the screen awake while the QR code is displayed so it doesn't dim
   // on the director's device. Silently no-ops on unsupported browsers.
   useWakeLock(open);
-
-  // Close on Escape key
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
 
   // Prevent body scroll while open
   useEffect(() => {
@@ -78,12 +77,20 @@ export function AnnounceModal({
   })();
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[oklch(0.14_0.07_145)]">
+    <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Announce ${tournamentName}`}
+      tabIndex={-1}
+      className="fixed inset-0 z-[100] flex flex-col bg-[oklch(0.14_0.07_145)]"
+    >
 
       {/* ── Sticky top bar — always visible, never scrolls away ─────────────── */}
       <div className="flex-shrink-0 flex items-center justify-end px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
         {/* Right: close button — large tap target (min 44×44 px) */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           aria-label="Close announce screen"
           className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-90 touch-manipulation"

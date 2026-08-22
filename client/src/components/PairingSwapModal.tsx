@@ -15,9 +15,10 @@
  * is responsible for persisting the change to state and the server.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { X, ArrowLeftRight, Search, Crown, AlertCircle } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import type { Player, Game } from "@/lib/tournamentData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -168,6 +169,8 @@ export function PairingSwapModal({
   const [search, setSearch] = useState("");
   const [selectedA, setSelectedA] = useState<string | null>(null);
   const [selectedB, setSelectedB] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Build a flat list of all player slots (excluding BYE)
   const playerMap = useMemo(() => {
@@ -243,6 +246,12 @@ export function PairingSwapModal({
     setSearch("");
     onClose();
   }
+  useAccessibleOverlay({
+    open,
+    onClose: handleClose,
+    containerRef: dialogRef,
+    initialFocusRef: searchRef,
+  });
 
   if (!open) return null;
 
@@ -262,6 +271,11 @@ export function PairingSwapModal({
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Swap round ${roundNumber} board assignments`}
+        tabIndex={-1}
         className={`w-full max-w-lg rounded-2xl border shadow-2xl flex flex-col max-h-[90vh] ${surface}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -278,6 +292,7 @@ export function PairingSwapModal({
           </div>
           <button
             onClick={handleClose}
+            aria-label="Close pairing swap dialog"
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isDark ? "hover:bg-white/08 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
             }`}
@@ -330,6 +345,7 @@ export function PairingSwapModal({
           }`}>
             <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
             <input
+              ref={searchRef}
               aria-label="Search players"
               type="text"
               value={search}
@@ -340,7 +356,7 @@ export function PairingSwapModal({
               }`}
             />
             {search && (
-              <button onClick={() => setSearch("")} className={isDark ? "text-white/30 hover:text-white/60" : "text-[#436850] hover:text-[#436850]"}>
+              <button aria-label="Clear player search" onClick={() => setSearch("")} className={isDark ? "text-white/30 hover:text-white/60" : "text-[#436850] hover:text-[#436850]"}>
                 <X className="w-3.5 h-3.5" />
               </button>
             )}

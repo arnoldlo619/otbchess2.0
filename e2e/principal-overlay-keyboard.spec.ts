@@ -70,3 +70,21 @@ test("Join QR scanner contains focus, closes with Escape, and restores its opene
   await expect(dialog).toBeHidden();
   await expect(opener).toBeFocused();
 });
+
+test("Quads result panel contains focus, closes with Escape, and restores its board opener", async ({ page }) => {
+  await page.goto("/tournament/otb-demo-2026/manage?mockQuads=mid", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("tablist", { name: "Round tabs" })).toBeVisible();
+
+  const opener = page.getByRole("button", { name: /Open result entry for Board/i }).first();
+  await opener.focus();
+  await opener.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: /Enter result for Board/i });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close result panel" })).toBeFocused();
+  await expectFocusContainment(dialog);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});

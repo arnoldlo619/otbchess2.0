@@ -40,6 +40,7 @@ import { QRCodeSVG } from "qrcode.react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import type { Round, Player } from "@/lib/tournamentData";
 import { logger } from "@/lib/logger";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -247,18 +248,17 @@ function QRCodePanel({
   isDark: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const projectionRef = useRef<HTMLDivElement>(null);
+  const projectionCloseRef = useRef<HTMLButtonElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [projecting, setProjecting] = useState(false);
-
-  useEffect(() => {
-    if (!projecting) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setProjecting(false);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [projecting]);
+  useAccessibleOverlay({
+    open: projecting,
+    onClose: () => setProjecting(false),
+    containerRef: projectionRef,
+    initialFocusRef: projectionCloseRef,
+  });
 
   const hasUrl = Boolean(reportUrl);
   const qrValue = reportUrl || window.location.href;
@@ -454,12 +454,19 @@ function QRCodePanel({
       {/* Fullscreen projection overlay */}
       {projecting && (
         <div
+          ref={projectionRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${tournamentName} results QR projection`}
+          tabIndex={-1}
           className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
           style={{ background: "linear-gradient(145deg, #0f2d1a 0%, #1a3d25 60%, #0d2518 100%)" }}
           onClick={() => setProjecting(false)}
         >
           <button
+            ref={projectionCloseRef}
             onClick={() => setProjecting(false)}
+            aria-label="Exit QR projection"
             className="absolute top-6 right-6 p-2 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
           >
             <Minimize2 className="w-5 h-5" />
@@ -566,6 +573,14 @@ export function ShareResultsModal({
   const [sendStates, setSendStates] = useState<PlayerSendState>({});
   const [isSendingAll, setIsSendingAll] = useState(false);
   const [sendSummary, setSendSummary] = useState<{ sent: number; failed: number } | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const targets = useMemo(
     () => singlePlayer ? [singlePlayer] : performances,
@@ -717,6 +732,11 @@ export function ShareResultsModal({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-results-title"
+        tabIndex={-1}
         className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${bg}`}
         style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
       >
@@ -725,6 +745,7 @@ export function ShareResultsModal({
           <div className="flex items-start justify-between">
             <div>
               <h2
+                id="share-results-title"
                 className={`text-base font-black ${textMain}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
@@ -739,7 +760,9 @@ export function ShareResultsModal({
               </p>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={onClose}
+              aria-label="Close share results dialog"
               className={`p-1.5 rounded-xl transition-colors ${
                 isDark ? "hover:bg-white/10 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
               }`}
