@@ -7405,9 +7405,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] JavaScript bundle size audit (total + per-chunk)
 - [x] LCP ≤2.5s (lab equivalent)
 - [x] CLS ≤0.1
-- [ ] INP ≤200ms
+- [x] INP ≤200ms
 - [x] Cached route transition ≤500ms
-- [ ] Result interaction feedback ≤100ms
+- [x] Result interaction feedback ≤100ms
 - [ ] No unnecessary full-screen route loader
 - [x] Cached client-route transitions do not flash the full-screen route loader
 - [ ] No main-thread blocking from decorative animation
