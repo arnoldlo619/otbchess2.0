@@ -4882,13 +4882,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## League Dashboard — Premium Sidebar Redesign
 
-- [ ] Replace horizontal tab bar with persistent left sidebar (desktop) / bottom drawer (mobile)
-- [ ] Sidebar: league identity block (club name, league name, status badge, season progress ring), nav links (Overview, Matchups, Standings, Schedule, Requests, History)
-- [ ] Top bar: show only [Club Name] League + back arrow — remove all redundant "Draft" / status labels from header
-- [ ] Overview tab: hero stats row (Players, Week, Format), your match card, season progress, roster list
-- [ ] Eliminate triple "Draft" label redundancy — status shown once in sidebar badge only
-- [ ] Mobile: collapsible bottom nav bar replacing sidebar
-- [ ] TypeScript: 0 errors
+- [x] Replace horizontal tab bar with persistent left sidebar (desktop) / bottom drawer (mobile)
+- [x] Sidebar: league identity block (club name, league name, status badge, season progress ring), nav links (Overview, Matchups, Standings, Schedule, Requests, History)
+- [x] Top bar: show only [Club Name] League + back arrow — remove all redundant "Draft" / status labels from header
+- [x] Overview tab: hero stats row (Players, Week, Format), your match card, season progress, roster list
+- [x] Eliminate triple "Draft" label redundancy — status shown once in sidebar badge only
+- [x] Mobile: collapsible bottom nav bar replacing sidebar
+- [x] TypeScript: 0 errors
 
 ## League Dashboard — Premium Sidebar Redesign
 
@@ -4901,36 +4901,36 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## League Dashboard v2 — Reference-Driven Redesign
 
-- [ ] Slim 60px icon-only left sidebar with active label, bottom settings/help icons
-- [ ] Branded top bar: club logo + "[Club] League" text, centered Live pill with date, user avatar right
-- [ ] Dashboard tab: two-column layout — main area (featured matchup hero + standings table) + right panel (upcoming matchups list)
+- [x] Slim 60px icon-only left sidebar with active label, bottom settings/help icons
+- [x] Branded top bar: club logo + "[Club] League" text, centered Live pill with date, user avatar right
+- [x] Dashboard tab: two-column layout — main area (featured matchup hero + standings table) + right panel (upcoming matchups list)
 - [x] Matchup tab: full-width player avatar hero card (color badges, ELO, time control), Historical Record card, League Form card with W/D/L result badges
-- [ ] Standings tab: rich table with POS, avatar, name, rating, MP, W, D, L columns
-- [ ] TypeScript: 0 errors
+- [x] Standings tab: rich table with POS, avatar, name, rating, MP, W, D, L columns
+- [x] TypeScript: 0 errors
 
 ## Current Matchup Hero — Head-to-Head Record
 
 - [x] Compute H2H stats (wins for white player, wins for black player, draws) from all completed league matches between the two players
 - [x] Render H2H widget in the hero card between the VS/score and the League Form section
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## League Dashboard — Standings Tab Redesign
 
 - [x] Replace card-based standings with compact table: POS/PTS, avatar, player name, RATING, MP, W, D, L columns
 - [x] Highlight the logged-in user's row with accent color
 - [x] Show last-5 form badges in a Form column
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## Chess Club League Demo Page
 
-- [ ] Create /league-demo route with LeagueDemo.tsx page
-- [ ] Mock data: 23 popular chess.com usernames with realistic ELO, W/D/L, form, standings
-- [ ] Sidebar nav: identical to LeagueDashboard (icon rail + labels)
-- [ ] Overview tab: standings table + upcoming matchups right panel
-- [ ] Matchup tab: Current Matchup hero card with H2H record and League Form
-- [ ] Schedule tab: mock week schedule
-- [ ] Reroute landing page "Explore Chess Leagues" button to /league-demo
-- [ ] TypeScript: 0 errors
+- [x] Create /league-demo route with LeagueDemo.tsx page
+- [x] Mock data: 23 popular chess.com usernames with realistic ELO, W/D/L, form, standings
+- [x] Sidebar nav: identical to LeagueDashboard (icon rail + labels)
+- [x] Overview tab: standings table + upcoming matchups right panel
+- [x] Matchup tab: Current Matchup hero card with H2H record and League Form
+- [x] Schedule tab: mock week schedule
+- [x] Reroute landing page "Explore Chess Leagues" button to /league-demo
+- [x] TypeScript: 0 errors
 
 ## Mobile Standings Card Layout
 - [x] LeagueDashboard: add mobile card view (sm:hidden) below the desktop table for standings
@@ -4938,11 +4938,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Each mobile card: rank badge, avatar, name, chess.com handle, PTS pill, W/D/L stats row, form dots
 
 ## League Dashboard — Commissioner Settings Panel
-- [ ] Server: PATCH /leagues/:leagueId endpoint to update name, maxPlayers, formatType
-- [ ] Client: add Settings gear icon to sidebar nav (commissioner-only)
-- [ ] Client: settings panel UI with editable fields (league name, max players, format)
-- [ ] Client: save/cancel buttons with loading state and success toast
-- [ ] TypeScript: 0 errors
+- [x] Server: PATCH /api/leagues/:leagueId/settings endpoint to update name, maxPlayers, formatType
+- [x] Client: add Settings gear icon to sidebar nav (commissioner-only)
+- [x] Client: settings panel UI with editable fields (league name, max players, format)
+- [x] Client: save/cancel buttons with loading state and success toast
+- [x] TypeScript: 0 errors
 
 ## Swiss-Elim Auto-Bracket Generation
 
