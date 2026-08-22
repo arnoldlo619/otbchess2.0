@@ -7790,3 +7790,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Security: Audit and parameterize all raw SQL usages across server modules (all 26 usages use Drizzle parameterized sql`` — no injection risk)
 - [x] Security: Restrict CORS on avatar-proxy and font-proxy to production domains (chessotb.club, www.chessotb.club, otbchess.manus.space) with dev fallback
 - [x] Security: Add zod input validation schemas on 10 highest-risk POST/PUT API routes (addPlayer, saveState, pushSubscribe, pushNotify, analyticsEvent, prepResolve, prepSave, coachInsight, broadcast, timerUpdate) with 29 regression tests
+- [x] Architecture: Extract push notification routes from server/index.ts into server/pushRoutes.ts (320 lines, 9 routes)
+- [x] Architecture: Extract chess/lichess proxy routes from server/index.ts into server/chessProxy.ts (311 lines, 7 routes)
+- [x] Architecture: Extract matchup prep routes from server/index.ts into server/prepRoutes.ts (542 lines, 9 routes)
+- [x] Architecture: Fix misplaced validation import at bottom of server/index.ts (moved to top with other imports)
+- [x] Architecture: Add global Express error handler for unhandled route errors
+- [x] Architecture: Clean up unused imports after route extraction (prepCache, savedPrepReports, buildPrepReport, 10+ prep-related imports)
+- [ ] Performance: Add loading="lazy" and decoding="async" to below-fold images across all components
