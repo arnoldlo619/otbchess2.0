@@ -67,12 +67,12 @@ describe("Swiss pairing performance for 100 players", () => {
         if (g.whiteId === "BYE" || g.blackId === "BYE") return g;
         const wElo = currentPlayers.find((p) => p.id === g.whiteId)?.elo ?? 1500;
         const bElo = currentPlayers.find((p) => p.id === g.blackId)?.elo ?? 1500;
-        const rand = Math.random();
-        if (rand < 0.15) return simulateResult(g, "½-½");
+        const roll = ((r * 17 + g.board * 13) % 100) / 100;
+        if (roll < 0.15) return simulateResult(g, "½-½");
         if (wElo >= bElo) {
-          return simulateResult(g, rand < 0.7 ? "1-0" : "0-1");
+          return simulateResult(g, roll < 0.7 ? "1-0" : "0-1");
         }
-        return simulateResult(g, rand < 0.7 ? "0-1" : "1-0");
+        return simulateResult(g, roll < 0.7 ? "0-1" : "1-0");
       });
 
       rounds.push({ number: r, games: completedGames });

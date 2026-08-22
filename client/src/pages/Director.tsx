@@ -1136,11 +1136,20 @@ function _StandingsPanel({
             </div>
             <span className={`text-[11px] tabular-nums flex items-center gap-1 ${isDark ? "text-white/30" : "text-[#436850]"}`}>
               {p.pairingRating ?? p.elo}
-              {p.ratingSource === "manual" && (
-                <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${isDark ? "bg-amber-500/20 text-amber-300" : "bg-amber-50 text-amber-700"}`}>M</span>
-              )}
-              {p.ratingSource === "default" && (
-                <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${isDark ? "bg-white/10 text-white/30" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>?</span>
+              {p.ratingSource && (
+                <span
+                  aria-label={`Pairing rating source: ${p.ratingSource === "manual" ? "Manual" : p.ratingSource === "default" ? "Default" : p.ratingSource === "rapid" ? "Rapid" : p.ratingSource === "blitz" ? "Blitz" : "Bullet"}`}
+                  title={`${p.ratingSource === "manual" ? "Manual" : p.ratingSource === "default" ? "Default" : p.ratingSource === "rapid" ? "Rapid" : p.ratingSource === "blitz" ? "Blitz" : "Bullet"} pairing rating`}
+                  className={`rounded px-1 py-0.5 text-[9px] font-bold ${
+                    p.ratingSource === "manual"
+                      ? isDark ? "bg-amber-500/20 text-amber-300" : "bg-amber-50 text-amber-700"
+                      : p.ratingSource === "default"
+                        ? isDark ? "bg-white/10 text-white/30" : "bg-[#ADBC9F]/40 text-[#436850]"
+                        : isDark ? "bg-[#4CAF50]/15 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
+                  }`}
+                >
+                  {p.ratingSource === "manual" ? "M" : p.ratingSource === "default" ? "?" : p.ratingSource === "rapid" ? "R" : p.ratingSource === "blitz" ? "B" : "Bu"}
+                </span>
               )}
             </span>
           </div>
