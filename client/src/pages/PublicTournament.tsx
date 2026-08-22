@@ -26,6 +26,7 @@ import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type {Player, Round, Result} from "@/lib/tournamentData";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 
 import { authFetch } from "@/lib/apiFetch";
 import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
@@ -98,13 +99,7 @@ function getResultLabel(result: Result, perspective: "white" | "black") {
   return isWin ? { label: "Win", color: "text-emerald-500" } : { label: "Loss", color: "text-red-400" };
 }
 
-function formatLabel(f: string): string {
-  if (f === "doubleswiss") return "Double Swiss";
-  if (f === "roundrobin") return "Round Robin";
-  if (f === "elimination") return "Elimination";
-  if (f === "quads") return "Quads";
-  return f.charAt(0).toUpperCase() + f.slice(1);
-}
+const formatLabel = getTournamentFormatLabel;
 
 function scoreFraction(pts: number): string {
   return pts % 1 !== 0 ? `${Math.floor(pts)}½` : `${pts}`;

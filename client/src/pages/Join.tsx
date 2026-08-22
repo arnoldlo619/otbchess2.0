@@ -31,6 +31,7 @@ import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMetho
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
 import {resolveTournament, registerTournament, type TournamentConfig} from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 
 /**
  * Pick the correct rating from a profile based on the tournament's ratingType.
@@ -568,19 +569,9 @@ export default function JoinPage() {
     name: resolvedConfig?.name ?? embeddedMeta?.name ?? (isDemoCode ? DEMO_TOURNAMENT.name : ""),
     venue: resolvedConfig?.venue ?? embeddedMeta?.venue ?? (isDemoCode ? DEMO_TOURNAMENT.venue : ""),
     format: resolvedConfig
-      ? (resolvedConfig.format === "swiss" ? "Swiss"
-        : resolvedConfig.format === "roundrobin" ? "Round Robin"
-        : resolvedConfig.format === "quads" ? "Quads"
-        : resolvedConfig.format === "doubleswiss" ? "Double Swiss"
-        : resolvedConfig.format === "swiss_elim" ? "Swiss+Elim"
-        : "Elimination")
+      ? getTournamentFormatLabel(resolvedConfig.format)
       : embeddedMeta
-      ? (embeddedMeta.format === "swiss" ? "Swiss"
-        : embeddedMeta.format === "roundrobin" ? "Round Robin"
-        : embeddedMeta.format === "quads" ? "Quads"
-        : embeddedMeta.format === "doubleswiss" ? "Double Swiss"
-        : embeddedMeta.format === "swiss_elim" ? "Swiss+Elim"
-        : "Elimination")
+      ? getTournamentFormatLabel(embeddedMeta.format)
       : (isDemoCode ? DEMO_TOURNAMENT.format : ""),
     timeControl: resolvedConfig?.timePreset ?? embeddedMeta?.timePreset ?? (isDemoCode ? DEMO_TOURNAMENT.timeControl : ""),
     playerCount: (() => {

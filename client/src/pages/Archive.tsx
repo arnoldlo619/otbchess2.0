@@ -42,6 +42,7 @@ import {
   type ArchivePlayer,
 } from "@/lib/archiveData";
 import { listTournaments, deleteTournament, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { exportStandingsCsv } from "@/lib/exportCsv";
@@ -427,7 +428,7 @@ function UserTournamentCard({
     : state?.status === "in_progress"
     ? isDark ? "bg-amber-500/15 text-amber-400 border-amber-500/25" : "bg-amber-50 text-amber-700 border-amber-200"
     : isDark ? "bg-white/05 text-white/40 border-white/10" : "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]";
-  const formatLabel = config.format === "swiss" ? "Swiss" : config.format === "doubleswiss" ? "Double Swiss" : config.format === "roundrobin" ? "Round Robin" : config.format === "quads" ? "Quads" : config.format === "swiss_elim" ? "Swiss + Elim" : config.format === "elimination" ? "Elimination" : (config.format ?? "Unknown");
+  const formatLabel = getTournamentFormatLabel(config.format, { fallback: "Unknown" });
   return (
     <div className={`rounded-2xl border overflow-hidden ${
       isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"

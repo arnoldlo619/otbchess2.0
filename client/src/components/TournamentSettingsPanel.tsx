@@ -20,6 +20,7 @@ import {
   updateTournamentConfig,
   type TournamentConfig,
 } from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import {
   Trophy,
   MapPin,
@@ -66,6 +67,35 @@ const TIME_PRESETS = [
   { label: "Classical", sub: "90+30", base: 90, inc: 30, tag: "FIDE standard" },
   { label: "Custom", sub: "custom", base: -1, inc: -1, tag: "" },
 ];
+
+function getPairingInfoRows(format: string): Array<[string, string]> {
+  const label = getTournamentFormatLabel(format);
+  if (format === "quads") {
+    return [
+      ["Format", `${label} (Round Robin)`],
+      ["Section Size", "4 players per section"],
+      ["Color Balance", "Automatic"],
+      ["Rematch Prevention", "Enabled"],
+      ["Tiebreak", "Sonneborn-Berger (SB)"],
+    ];
+  }
+  if (format === "roundrobin") {
+    return [["Format", label], ["Schedule", "Everyone plays everyone"], ["Color Balance", "Automatic"], ["Tiebreak", "Sonneborn-Berger (SB)"]];
+  }
+  if (format === "elimination") {
+    return [["Format", label], ["Seeding", "By rating"], ["Advancement", "Single knockout"], ["Color Balance", "Automatic"]];
+  }
+  if (format === "swiss_elim") {
+    return [["Format", label], ["Qualification", "Swiss (FIDE)"], ["Final Phase", "Seeded elimination bracket"], ["Color Balance", "Automatic"]];
+  }
+  return [
+    ["Format", label],
+    ["Algorithm", format === "doubleswiss" ? "Double Swiss (FIDE)" : "Swiss (FIDE)"],
+    ["Color Balance", "Automatic"],
+    ["Rematch Prevention", "Enabled"],
+    ["Bye Assignment", "Lowest score"],
+  ];
+}
 
 // ─── Local form state ─────────────────────────────────────────────────────────
 
@@ -412,10 +442,12 @@ export function TournamentSettingsPanel({
             </label>
             <div className="space-y-2">
               {[
-                { value: "swiss" as const,       label: "Swiss System",  desc: "Paired by score — best for large groups.", icon: Shuffle },
-                { value: "roundrobin" as const,  label: "Round Robin",   desc: "Everyone plays everyone.", icon: Users },
-                { value: "elimination" as const, label: "Elimination",   desc: "Single knockout bracket.", icon: Trophy },
-                { value: "quads" as const,       label: "Quads",         desc: "4-player sections by rating.", icon: Users },
+                { value: "swiss" as const,       desc: "Paired by score; best for large groups.", icon: Shuffle },
+                { value: "doubleswiss" as const, desc: "Each pairing plays both colors.", icon: Shuffle },
+                { value: "roundrobin" as const,  desc: "Everyone plays everyone.", icon: Users },
+                { value: "elimination" as const, desc: "Single knockout bracket.", icon: Trophy },
+                { value: "swiss_elim" as const,  desc: "Swiss qualification, then knockout.", icon: Trophy },
+                { value: "quads" as const,       desc: "4-player sections by rating.", icon: Users },
               ].map((f) => {
                 const Icon = f.icon;
                 const active = form.format === f.value;
@@ -446,7 +478,7 @@ export function TournamentSettingsPanel({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                        {f.label}
+                        {getTournamentFormatLabel(f.value)}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                         {f.desc}
@@ -683,21 +715,7 @@ export function TournamentSettingsPanel({
           <SectionHeader title="Pairing Algorithm" isDark={isDark} />
         </div>
         <div className="divide-y" style={{ borderColor: isDark ? T.dBorder : "#F5F5F5" }}>
-          {(form.format === "quads"
-            ? [
-                ["Format",             "Quads (Round Robin)"],
-                ["Section Size",       "4 players per section"],
-                ["Color Balance",      "Automatic"],
-                ["Rematch Prevention", "Enabled"],
-                ["Tiebreak",           "Sonneborn-Berger (SB)"],
-              ]
-            : [
-                ["Algorithm",            "Swiss (FIDE)"],
-                ["Color Balance",        "Automatic"],
-                ["Rematch Prevention",   "Enabled"],
-                ["Bye Assignment",       "Lowest score"],
-              ]
-          ).map(([label, value]) => (
+          {getPairingInfoRows(form.format).map(([label, value]) => (
             <div key={label} className="flex items-center justify-between px-5 py-3">
               <span className="text-sm" style={{ color: isDark ? T.dMuted : T.lSub }}>{label}</span>
               <span className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.70)" : "#374151" }}>{value}</span>

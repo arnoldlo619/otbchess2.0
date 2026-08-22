@@ -74,7 +74,7 @@ import {
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
-import { getFormatConfig } from "@/lib/formatRegistry";
+import { getFormatConfig, getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { apiListMyClubs } from "@/lib/clubsApi";
 import type { Club } from "@/lib/clubRegistry";
 import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
@@ -1521,7 +1521,7 @@ function QuickstartForm({
                 className="text-base font-semibold"
                 style={{ color: data.format !== "swiss" ? T.green : isDark ? T.dText : T.lText }}
               >
-                {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : data.format === "quads" ? "Quads" : "Elimination"}
+                {getTournamentFormatLabel(data.format)}
               </span>
               <ChevronDown
                 className="w-4 h-4 transition-transform duration-200"
@@ -1539,12 +1539,13 @@ function QuickstartForm({
             >
               <div className="grid grid-cols-2 gap-2 pt-3">
                 {([
-                  { value: "swiss",        label: "Swiss",       sub: "Optimal pairings" },
-                  { value: "doubleswiss",  label: "Double Swiss", sub: "Play both colors" },
-                  { value: "roundrobin",   label: "Round Robin",  sub: "Everyone plays all" },
-                  { value: "elimination",  label: "Elimination",  sub: "Single knockout" },
-                  { value: "quads",        label: "Quads",        sub: "4-player sections" },
-                ] as { value: WizardData["format"]; label: string; sub: string }[]).map((f) => {
+                  { value: "swiss",        sub: "Optimal pairings" },
+                  { value: "doubleswiss",  sub: "Play both colors" },
+                  { value: "roundrobin",   sub: "Everyone plays all" },
+                  { value: "elimination",  sub: "Single knockout" },
+                  { value: "swiss_elim",   sub: "Swiss, then knockout" },
+                  { value: "quads",        sub: "4-player sections" },
+                ] as { value: WizardData["format"]; sub: string }[]).map((f) => {
                   const active = data.format === f.value;
                   return (
                     <button
@@ -1575,7 +1576,7 @@ function QuickstartForm({
                       }}
                     >
                       <span className="text-sm font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                        {f.label}
+                        {getTournamentFormatLabel(f.value)}
                       </span>
                       <span className="text-[10px] mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                         {f.sub}
@@ -1585,7 +1586,17 @@ function QuickstartForm({
                 })}
               </div>
               <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
-                {data.format === "doubleswiss" ? "Each round players play two games — once as White, once as Black." : data.format === "roundrobin" ? "Every player faces every other player. Rounds = players − 1." : data.format === "elimination" ? "Single-elimination bracket. Losers are out." : "Standard Swiss system — optimal pairings based on score and rating."}
+                {data.format === "doubleswiss"
+                  ? "Each round players play two games: once as White and once as Black."
+                  : data.format === "roundrobin"
+                  ? "Every player faces every other player. Rounds equal players minus one."
+                  : data.format === "elimination"
+                  ? "Single-elimination bracket. Winners advance to the next round."
+                  : data.format === "swiss_elim"
+                  ? "Swiss qualification rounds lead into a seeded elimination bracket."
+                  : data.format === "quads"
+                  ? "Players are grouped by rating into four-player round-robin sections."
+                  : "Standard Swiss pairings balance score groups, colors, and rematches."}
               </p>
             </div>
           )}
@@ -2237,12 +2248,7 @@ function QuickstartForm({
 
       {/* ── Real-time configuration summary ───────────────────────────── */}
       {data.name.trim().length > 0 && (() => {
-        const formatLabel =
-          data.format === "swiss" ? "Swiss" :
-          data.format === "doubleswiss" ? "Double Swiss" :
-          data.format === "roundrobin" ? "Round Robin" :
-          data.format === "swiss_elim" ? "Swiss + Elim" :
-          data.format === "quads" ? "Quads" : "Elimination";
+        const formatLabel = getTournamentFormatLabel(data.format);
 
         const timeLabel = (() => {
           const base = data.timeBase;
@@ -3445,7 +3451,11 @@ function StepFormat({
             ? `Double Swiss · ${data.rounds} rounds · ${data.maxPlayers} players. Each round: 2 games per pairing (both colors).`
             : data.format === "roundrobin"
             ? `Round Robin · ${data.maxPlayers} players = ${(data.maxPlayers * (data.maxPlayers - 1)) / 2} total games.`
-            : `Single elimination bracket for up to ${data.maxPlayers} players.`}
+            : data.format === "quads"
+            ? `Quads · ${data.rounds} rounds · up to ${data.maxPlayers} players in rating-grouped sections of 4.`
+            : data.format === "swiss_elim"
+            ? `Swiss + Elimination · ${data.rounds} qualification rounds, followed by a seeded knockout bracket.`
+            : `Elimination · Single knockout bracket for up to ${data.maxPlayers} players.`}
         </span>
       </div>
 
@@ -3943,7 +3953,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     setTimeout(() => setSlugSaved(false), 2000);
   };
 
-  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : data.format === "quads" ? "Quads" : "Elimination";
+  const formatLabel = getTournamentFormatLabel(data.format);
   const timeLabel = data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (

@@ -40,6 +40,7 @@ import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { listTournamentsByClub, getTournamentConfig, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
 import {
@@ -4877,14 +4878,7 @@ function TournamentCard({
     : dirState?.status === "in_progress" ? "active"
     : "upcoming";
 
-  const formatLabel =
-    tournament.format === "swiss" ? "Swiss"
-    : tournament.format === "doubleswiss" ? "Double Swiss"
-    : tournament.format === "roundrobin" ? "Round Robin"
-    : tournament.format === "elimination" ? "Elimination"
-    : tournament.format === "swiss_elim" ? "Swiss + Elim"
-    : tournament.format === "quads" ? "Quads"
-    : (tournament.format ?? "Unknown");
+  const formatLabel = getTournamentFormatLabel(tournament.format, { fallback: "Unknown" });
 
   const statusColor =
     tournStatus === "active" ? "text-green-500 bg-green-500/10 border-green-500/20"

@@ -24,6 +24,7 @@ import {
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, registerTournament } from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import {
   Crown,
   Printer,
@@ -864,7 +865,7 @@ export default function PrintPage() {
                       { icon: MapPin, text: safeTournament.venue },
                       { icon: Calendar, text: safeTournament.date },
                       { icon: Clock, text: `Time Control: ${safeTournament.timeControl}` },
-                      { icon: Trophy, text: `${safeTournament.format} · ${safeTournament.rounds} Rounds` },
+                      { icon: Trophy, text: `${getTournamentFormatLabel(safeTournament.format)} · ${safeTournament.rounds} Rounds` },
                       { icon: Users, text: `${players.length} Players` },
                       { icon: Trophy, text: `${ratingType === "blitz" ? "\u{1F525} Blitz" : "\u26A1 Rapid"} ELO` },
                     ].map(({ icon: Icon, text }) => (

@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
 import { loadTournamentState } from "@/lib/directorState";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { fireTournamentConfetti } from "@/lib/confetti";
 import {
   computeAllPerformances,
@@ -401,12 +402,12 @@ export default function TournamentOverview() {
   // ── Format label ─────────────────────────────────────────────────────────────
   const formatLabel = (() => {
     const fmt = rawState?.format;
+    const label = getTournamentFormatLabel(fmt);
     if (fmt === "quads")
-      return `Quads · ${quadSections.length} Section${quadSections.length !== 1 ? "s" : ""}`;
-    if (fmt === "swiss") return `Swiss · ${rawState?.totalRounds ?? 0}R`;
-    if (fmt === "roundrobin") return "Round Robin";
-    if (fmt === "doubleswiss") return `Double Swiss · ${rawState?.totalRounds ?? 0}R`;
-    return fmt ?? "Tournament";
+      return `${label} · ${quadSections.length} Section${quadSections.length !== 1 ? "s" : ""}`;
+    if (fmt === "swiss" || fmt === "doubleswiss" || fmt === "swiss_elim")
+      return `${label} · ${rawState?.totalRounds ?? 0}R`;
+    return label;
   })();
 
   if (serverLoading) {

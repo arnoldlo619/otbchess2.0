@@ -156,14 +156,30 @@ export function getFormatConfig(format: string): FormatConfig {
   return FORMAT_REGISTRY[format as TournamentFormat] ?? FORMAT_REGISTRY.swiss;
 }
 
+/**
+ * Canonical user-visible tournament format label.
+ * Unlike getFormatConfig(), unknown or missing values never fall through to
+ * Swiss, which prevents legacy records from being mislabeled in the UI.
+ */
+export function getTournamentFormatLabel(
+  format: unknown,
+  options: { short?: boolean; fallback?: string } = {},
+): string {
+  const config = typeof format === "string"
+    ? FORMAT_REGISTRY[format as TournamentFormat]
+    : undefined;
+  if (!config) return options.fallback ?? "Tournament";
+  return options.short ? config.shortLabel : config.label;
+}
+
 /** Short label for tight spaces (badges, cards) */
 export function getFormatShortLabel(format: string): string {
-  return getFormatConfig(format).shortLabel;
+  return getTournamentFormatLabel(format, { short: true });
 }
 
 /** Full label for display */
 export function getFormatLabel(format: string): string {
-  return getFormatConfig(format).label;
+  return getTournamentFormatLabel(format);
 }
 
 /**

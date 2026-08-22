@@ -33,7 +33,7 @@ import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
-import { getPlayerCountError } from "@/lib/formatRegistry";
+import { getPlayerCountError, getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
@@ -128,6 +128,22 @@ function DirectorFeatureFallback({ overlay = false }: { overlay?: boolean }) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+export function getDirectorFormatSummary(
+  format: string,
+  totalRounds: number,
+  playerCount: number,
+  quadSectionCount = 1,
+): string {
+  const label = getTournamentFormatLabel(format);
+  if (format === "quads") {
+    return `${label} · ${quadSectionCount} Section${quadSectionCount > 1 ? "s" : ""} · ${playerCount} Players · ${totalRounds}R`;
+  }
+  if (format === "swiss" || format === "doubleswiss" || format === "swiss_elim") {
+    return `${label} · ${totalRounds}R`;
+  }
+  return label;
+}
 
 /** Download the current player roster as a CSV file.
  *  Includes check-in status and payment method for treasurer reconciliation.
@@ -2943,12 +2959,12 @@ export default function Director() {
           score: s.points,
           totalRounds: state.totalRounds,
         }));
-        const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
-          : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
-          : state.format === "roundrobin" ? "Round Robin"
-          : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
-          : state.format === "quads" ? `Quads · ${state.quadSections?.length ?? 1} Section${(state.quadSections?.length ?? 1) > 1 ? "s" : ""} · ${state.players.length} Players · ${state.totalRounds}R`
-          : "Elimination";
+        const fmtLabel = getDirectorFormatSummary(
+          state.format,
+          state.totalRounds,
+          state.players.length,
+          state.quadSections?.length ?? 1,
+        );
         recordTournamentCompleted(
           tournamentConfig.clubId,
           state.tournamentName,
@@ -3009,10 +3025,12 @@ export default function Director() {
           score: s.points,
           totalRounds: state.totalRounds,
         }));
-        const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
-          : state.format === "roundrobin" ? "Round Robin"
-          : state.format === "quads" ? `Quads · ${state.quadSections?.length ?? 1} Section${(state.quadSections?.length ?? 1) > 1 ? "s" : ""} · ${state.players.length} Players · ${state.totalRounds}R`
-          : `Double Swiss · ${state.totalRounds}R`;
+        const fmtLabel = getDirectorFormatSummary(
+          state.format,
+          state.totalRounds,
+          state.players.length,
+          state.quadSections?.length ?? 1,
+        );
         recordTournamentCompleted(
           tournamentConfig.clubId,
           state.tournamentName,
@@ -3451,7 +3469,7 @@ export default function Director() {
                     isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
                   }`}>
                     <Trophy className="w-3 h-3" />
-                    {state.format === "doubleswiss" ? "Double Swiss" : state.format === "quads" ? "Quads" : state.format === "roundrobin" ? "Round Robin" : state.format === "swiss_elim" ? "Swiss+Elim" : "Swiss"}
+                    {getTournamentFormatLabel(state.format)}
                     {state.format === "quads" && state.quadSections ? ` · ${state.quadSections.length} Section${state.quadSections.length > 1 ? "s" : ""}` : ""}
                     {tournamentConfig?.timePreset ? ` · ${tournamentConfig.timePreset}` : ""}
                   </span>
@@ -4421,7 +4439,7 @@ export default function Director() {
                             style={{ background: "#436850", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
                           >
                             <Zap className="w-4 h-4" />
-                            Generate Round {state.currentRound + 1} — {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} Pairings
+                            Generate Round {state.currentRound + 1} — {getTournamentFormatLabel(state.format)} Pairings
                             <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
                           </button>
                         ) : (
@@ -6394,12 +6412,12 @@ export default function Director() {
                           score: s.points,
                           totalRounds: state.totalRounds,
                         }));
-                        const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
-                          : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
-                          : state.format === "roundrobin" ? "Round Robin"
-                          : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
-                          : state.format === "quads" ? `Quads · ${state.quadSections?.length ?? 1} Section${(state.quadSections?.length ?? 1) > 1 ? "s" : ""} · ${state.players.length} Players · ${state.totalRounds}R`
-                          : "Elimination";
+                        const fmtLabel = getDirectorFormatSummary(
+                          state.format,
+                          state.totalRounds,
+                          state.players.length,
+                          state.quadSections?.length ?? 1,
+                        );
                         recordTournamentCompleted(
                           tournamentConfig.clubId,
                           state.tournamentName,
@@ -6782,7 +6800,7 @@ export default function Director() {
                   <div className="divide-y">
                     {[
                       { label: "Name", value: state.tournamentName },
-                      { label: "Format", value: `${state.format === "doubleswiss" ? "Double Swiss" : state.format === "roundrobin" ? "Round Robin" : state.format === "elimination" ? "Elimination" : state.format === "quads" ? "Quads" : "Swiss"} · ${state.totalRounds} rounds` },
+                      { label: "Format", value: `${getTournamentFormatLabel(state.format)} · ${state.totalRounds} rounds` },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between px-5 py-3">
                         <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>{label}</span>
@@ -6966,12 +6984,12 @@ export default function Director() {
                                 score: s.points,
                                 totalRounds: state.totalRounds,
                               }));
-                              const fmtLabel2 = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
-                                : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
-                                : state.format === "roundrobin" ? "Round Robin"
-                                : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
-                                : state.format === "quads" ? `Quads · ${state.totalRounds}R`
-                                : "Elimination";
+                              const fmtLabel2 = getDirectorFormatSummary(
+                                state.format,
+                                state.totalRounds,
+                                state.players.length,
+                                state.quadSections?.length ?? 1,
+                              );
                               recordTournamentCompleted(
                                 tournamentConfig.clubId,
                                 state.tournamentName,

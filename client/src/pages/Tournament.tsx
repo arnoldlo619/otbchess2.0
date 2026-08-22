@@ -33,6 +33,7 @@ import {
 } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { useAuthContext } from "@/context/AuthContext";
 import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
@@ -1494,10 +1495,7 @@ export default function TournamentPage() {
   const displayVenue = config?.venue ?? (isDemo ? DEMO_TOURNAMENT.venue : "");
   const displayTimeControl = config?.timePreset ?? (isDemo ? DEMO_TOURNAMENT.timeControl : "");
   const displayFormat = config?.format
-    ? config.format === "doubleswiss" ? "Double Swiss"
-    : config.format === "roundrobin" ? "Round Robin"
-    : config.format === "quads" ? "Quads"
-    : config.format.charAt(0).toUpperCase() + config.format.slice(1)
+    ? getTournamentFormatLabel(config.format)
     : (isDemo ? DEMO_TOURNAMENT.format : "");
 
   // Simulate live clock
