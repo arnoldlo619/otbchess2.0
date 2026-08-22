@@ -5279,7 +5279,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] FinalStandings confetti burst — fires once when champion podium slot animates in
 - [x] Enhanced confetti — multi-wave celebration with center burst, sustained shower, varied shapes
 - [x] Director confetti — fire celebration when director finalizes/ends tournament
-- [ ] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
+- [x] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
 - [x] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
 - [x] Fix: auth cookie not persisting across page navigation in production — add trust proxy
 - [x] Silent token refresh — server POST /api/auth/refresh endpoint + client-side interval + visibility-based refresh
@@ -5486,12 +5486,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Find and fix nested <button> inside <button> on /tournament/:slug/manage page — UploadRSVPModal.tsx line 566 outer button → div[role=button]
 
 ## Upload RSVP — Dual ELO (Rapid + Blitz) Display & Pairing Selector
-- [ ] Fetch both Rapid and Blitz ELO from chess.com API in UploadRSVPModal lookup
-- [ ] Store both eloRapid and eloBlitz on the player data model
-- [ ] Show RAPID and BLITZ columns side-by-side in UploadRSVPModal preview table
-- [ ] Add rating-type selector (RAPID / BLITZ) in Director players tab header
-- [ ] Default rating type to tournament time format (Rapid → RAPID, Blitz → BLITZ)
-- [ ] Wire selected rating type into pairing ELO used for Swiss pairings
+- [x] Fetch both Rapid and Blitz ELO from chess.com API in UploadRSVPModal lookup
+- [x] Store both eloRapid and eloBlitz on the player data model
+- [x] Show RAPID and BLITZ columns side-by-side in UploadRSVPModal preview table
+- [x] Add rating-type selector (RAPID / BLITZ) in Director players tab header
+- [x] Default rating type to tournament time format (Rapid → RAPID, Blitz → BLITZ)
+- [x] Wire selected rating type into pairing ELO used for Swiss pairings
 
 ## Upload RSVP — Dual ELO (Rapid + Blitz) Display
 - [x] Fetch both rapidElo and blitzElo from chess.com in UploadRSVPModal lookupChessCom
