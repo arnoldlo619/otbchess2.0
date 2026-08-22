@@ -6917,7 +6917,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] P1: Lock rounds to 3 for Quads in TournamentWizard (hide rounds selector)
 - [x] P1: Enforce rating source (rapid/blitz) end-to-end in Quads seeding
 - [x] P1: Co-champion display in Director Tournament Complete and SectionCompleteCard
-- [ ] P1: Result history/audit trail in directorState (who entered, when, undo log)
+- [x] P1: Result history/audit trail in directorState (who entered, when, undo log)
 - [x] P1: Lock rounds to 3 for Quads in wizard (hide rounds picker)
 - [x] P1: Enforce rating source end-to-end (wire config.ratingType into quadSettings)
 - [x] P1: Co-champion display in Director Tournament Complete card

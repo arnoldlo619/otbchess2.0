@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useUndoResult, UNDO_DURATION_MS } from "../useUndoResult";
 import type { Result } from "@/lib/tournamentData";
+import type { ResultEntryMeta } from "@/lib/directorState";
 
 // Use fake timers for deterministic timeout testing
 beforeEach(() => {
@@ -13,7 +14,7 @@ afterEach(() => {
 });
 
 function makeEnterResult() {
-  return vi.fn<[string, Result], void>();
+  return vi.fn<(gameId: string, result: Result, meta?: ResultEntryMeta) => void>();
 }
 
 // ─── recordWithUndo ───────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ describe("undo", () => {
     });
 
     expect(enterResult).toHaveBeenCalledTimes(2);
-    expect(enterResult).toHaveBeenNthCalledWith(2, "g1", "*");
+    expect(enterResult).toHaveBeenNthCalledWith(2, "g1", "*", { action: "undone" });
   });
 
   it("clears pending after undo", () => {

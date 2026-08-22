@@ -30,6 +30,7 @@ import { getTournamentConfig, hasDirectorSession, updateTournamentConfig } from 
 import { encodeMetaParam } from "@/lib/base64";
 import { useAuthContext } from "@/context/AuthContext";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
+import { ResultAuditTrail } from "@/components/tournament/ResultAuditTrail";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
@@ -2304,6 +2305,11 @@ export default function Director() {
   const tournamentId = id ?? "otb-demo-2026";
   const [, navigate] = useLocation();
   const [accessChecked, setAccessChecked] = useState(false);
+  const { user } = useAuthContext();
+  const resultActor = useMemo(() => ({
+    id: user?.id ?? null,
+    displayName: user?.displayName?.trim() || "Tournament Director",
+  }), [user?.displayName, user?.id]);
 
   // ── Director session guard ───────────────────────────────────────────────
   // The demo tournament is always accessible so reviewers can explore freely.
@@ -2352,13 +2358,11 @@ export default function Director() {
     isSwissElimSwissPhaseComplete,
     isElimBracketComplete,
     loadMockQuadsState,
-  } = useDirectorState(tournamentId);
+  } = useDirectorState(tournamentId, resultActor);
   const tournamentStatusDisplay = getTournamentStatusDisplay(state);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
     useUndoResult(enterResult);
-
-  const { user } = useAuthContext();
 
   // ── Keep a ref to the latest state so pushStandingsNow always sends fresh data ──
   // Using a ref avoids stale closure captures without needing localStorage timing hacks.
@@ -4426,7 +4430,16 @@ export default function Director() {
                         games={state.rounds.flatMap((r) => r.games)}
                         currentRound={state.currentRound}
                         totalRounds={state.totalRounds}
-                        onEnterResult={enterResult}
+                        onEnterResult={(gameId, result) => {
+                          const game = state.rounds.flatMap((round) => round.games).find((candidate) => candidate.id === gameId);
+                          if (!game) return;
+                          recordWithUndo(
+                            gameId,
+                            result,
+                            game.result,
+                            `Board ${game.board}: ${result}`,
+                          );
+                        }}
                         onSwapPlayers={(_sectionId, playerIdA, playerIdB) => swapQuadPlayers(playerIdA, playerIdB)}
                         onRenameSection={(sectionId, newName) => renameQuadSection(sectionId, newName)}
                         onAdvanceRound={() => generateNextRound()}
@@ -4439,6 +4452,20 @@ export default function Director() {
                         onSectionChange={(id) => setActiveQuadSectionId(id)}
                       />
                     </Suspense>
+                  )}
+                  {state.format === "quads" && (
+                    <ResultAuditTrail
+                      entries={state.resultHistory ?? []}
+                      players={state.players}
+                      sections={state.quadSections}
+                      isDark={isDark}
+                      canUndo={Boolean(undoPending)}
+                      undoLabel={undoPending?.label}
+                      onUndo={() => {
+                        undoResult();
+                        pushStandingsNow();
+                      }}
+                    />
                   )}
                   {/* ── Round Pairings standalone header row ─────────────────────────────────────── */}
                   {state.format !== "quads" && (<div>

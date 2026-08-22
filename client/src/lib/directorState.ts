@@ -57,8 +57,14 @@ export interface DirectorState {
 }
 
 export interface ResultHistoryEntry {
+  /** Stable entry identifier for rendering and support references. */
+  id: string;
   /** ISO timestamp */
   timestamp: string;
+  /** Game identifier. */
+  gameId: string;
+  /** Quad section identifier when applicable. */
+  sectionId?: string;
   /** Round number */
   round: number;
   /** Board number */
@@ -71,6 +77,47 @@ export interface ResultHistoryEntry {
   previousResult: Result | null;
   /** New result */
   newResult: Result;
+  /** Whether this entry recorded, corrected, or undid a result. */
+  action: "recorded" | "corrected" | "undone";
+  /** Authenticated actor identifier when available. */
+  actorId: string | null;
+  /** Human-readable actor label; never stores email addresses. */
+  actorName: string;
+}
+
+export interface ResultEntryActor {
+  id: string | null;
+  displayName: string;
+}
+
+export interface ResultEntryMeta {
+  action?: ResultHistoryEntry["action"];
+}
+
+export function createResultHistoryEntry(
+  game: Game,
+  newResult: Result,
+  actor: ResultEntryActor,
+  historyIndex: number,
+  meta?: ResultEntryMeta,
+  now: Date = new Date(),
+): ResultHistoryEntry {
+  const previousResult = game.result === "*" ? null : game.result;
+  return {
+    id: `${now.getTime()}-${game.id}-${historyIndex}`,
+    timestamp: now.toISOString(),
+    gameId: game.id,
+    ...(game.sectionId ? { sectionId: game.sectionId } : {}),
+    round: game.round,
+    board: game.board,
+    whiteId: game.whiteId,
+    blackId: game.blackId,
+    previousResult,
+    newResult,
+    action: meta?.action ?? (previousResult === null ? "recorded" : "corrected"),
+    actorId: actor.id,
+    actorName: actor.displayName.trim() || "Tournament Director",
+  };
 }
 
 export function computeTournamentLiveStandings(
@@ -276,7 +323,10 @@ function resolveInitialState(tournamentId: string): DirectorState {
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
-export function useDirectorState(tournamentId: string = "otb-demo-2026") {
+export function useDirectorState(
+  tournamentId: string = "otb-demo-2026",
+  resultActor: ResultEntryActor = { id: null, displayName: "Tournament Director" },
+) {
   const [state, setState] = useState<DirectorState>(() => resolveInitialState(tournamentId));
   const [lastSaved, setLastSaved] = useState<string | null>(() => getSavedAt(tournamentId));
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -571,8 +621,8 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     return result;
   }, []);
 
-  // Enter a result for a game
-  const enterResult = useCallback((gameId: string, result: Result) => {
+  // Enter a result for a game and append a durable audit record.
+  const enterResult = useCallback((gameId: string, result: Result, meta?: ResultEntryMeta) => {
     setState((prev) => {
       // Find the game being updated
       let targetGame: Game | undefined;
@@ -580,6 +630,8 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         targetGame = r.games.find((g) => g.id === gameId);
         if (targetGame) break;
       }
+
+      if (!targetGame || targetGame.result === result) return prev;
 
       // Update rounds with the new result
       const rounds = prev.rounds.map((r) => ({
@@ -614,20 +666,18 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       );
 
       // Audit trail: record the result change
-      const historyEntry: ResultHistoryEntry = {
-        timestamp: new Date().toISOString(),
-        round: targetGame?.round ?? prev.currentRound,
-        board: targetGame?.board ?? 0,
-        whiteId: targetGame?.whiteId ?? "",
-        blackId: targetGame?.blackId ?? "",
-        previousResult: (targetGame?.result as Result) ?? null,
-        newResult: result,
-      };
+      const historyEntry = createResultHistoryEntry(
+        targetGame,
+        result,
+        resultActor,
+        prev.resultHistory?.length ?? 0,
+        meta,
+      );
       const resultHistory = [...(prev.resultHistory ?? []), historyEntry];
 
       return { ...prev, rounds: updatedRounds, players: playersWithBuchholz, resultHistory };
     });
-  }, []);
+  }, [resultActor]);
 
   // Generate pairings for next round using the full Swiss engine
   const generateNextRound = useCallback((): { roundNum: number; games: Game[]; players: Player[] } | null => {

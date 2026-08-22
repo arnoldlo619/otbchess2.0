@@ -20,6 +20,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { Result } from "@/lib/tournamentData";
+import type { ResultEntryMeta } from "@/lib/directorState";
 
 export const UNDO_DURATION_MS = 5000;
 
@@ -46,7 +47,7 @@ interface UseUndoResultReturn {
 }
 
 export function useUndoResult(
-  enterResult: (gameId: string, result: Result) => void
+  enterResult: (gameId: string, result: Result, meta?: ResultEntryMeta) => void
 ): UseUndoResultReturn {
   const [pending, setPending] = useState<UndoPending | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,7 +100,7 @@ export function useUndoResult(
     if (!pending) return;
     clearTimer();
     // Revert to the previous result
-    enterResult(pending.gameId, pending.prevResult);
+    enterResult(pending.gameId, pending.prevResult, { action: "undone" });
     setPending(null);
   }, [pending, enterResult, clearTimer]);
 
