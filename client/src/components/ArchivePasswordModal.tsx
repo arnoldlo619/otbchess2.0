@@ -7,10 +7,11 @@
  *   - Accessible labels and keyboard support (Enter to submit)
  */
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Lock, Eye, EyeOff, ArrowLeft, ShieldAlert } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface ArchivePasswordModalProps {
   /** Called with the entered password; return true if correct, false otherwise */
@@ -20,6 +21,7 @@ interface ArchivePasswordModalProps {
 export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModalProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [, navigate] = useLocation();
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,11 +29,14 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
   const [shaking, setShaking] = useState(false);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeModal = useCallback(() => navigate("/"), [navigate]);
+  useAccessibleOverlay({
+    open: true,
+    onClose: closeModal,
+    containerRef: dialogRef,
+    initialFocusRef: inputRef,
+  });
 
   const triggerShake = useCallback(() => {
     setShaking(true);
@@ -71,6 +76,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
 
   return (
     <div
+      ref={dialogRef}
       className="modal-overlay z-50"
       style={{
         background: isDark
@@ -81,6 +87,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
       role="dialog"
       aria-modal="true"
       aria-label="Archive password required"
+      tabIndex={-1}
     >
       {/* Back to home */}
       <Link

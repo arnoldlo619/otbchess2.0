@@ -11,7 +11,7 @@
  * It auto-positions above or below based on available space.
  */
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useId } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 // ─── Tiebreak definitions ─────────────────────────────────────────────────────
@@ -94,6 +94,7 @@ interface TiebreakTooltipProps {
 }
 
 export function TiebreakTooltip({ type, position, className = "" }: TiebreakTooltipProps) {
+  const tooltipId = useId();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [open, setOpen] = useState(false);
@@ -164,7 +165,7 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
         type="button"
         aria-label={`Explain ${def.label}`}
         aria-expanded={open}
-        aria-haspopup="dialog"
+        aria-describedby={open ? tooltipId : undefined}
         onClick={handleToggle}
         onMouseEnter={handleOpen}
         onMouseLeave={handleClose}
@@ -197,7 +198,8 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           ref={tooltipRef}
-          role="dialog"
+          id={tooltipId}
+          role="tooltip"
           aria-label={`${def.label} explanation`}
           className={`absolute z-50 w-64 rounded-xl shadow-xl border transition-all duration-150 ${
             isDark

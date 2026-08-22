@@ -5,14 +5,15 @@
 
 ## Result
 
-The audit found **11 already compliant or invoker-only files** and **45 custom-overlay files with at least one confirmed keyboard gap**. The shared stack-aware focus-management hook now covers four principal public overlays, nine tournament-director operational overlays, eight participant/gameplay overlays, and nine club creation/management overlays.
+The audit found **11 already compliant or invoker-only files** and **45 files that required modal or overlay classification work**. Shared stack-aware focus management now covers 40 of those files; the tiebreak explanation was correctly reclassified and fixed as a non-modal tooltip. Four complex files remain open.
 
 | Category | Count | Status |
 |---|---:|---|
 | Audited overlay-related files | 56 | Complete |
 | Already compliant/invoker-only | 11 | No change required |
-| Custom overlays migrated | 30 | Complete |
-| Remaining custom-overlay files | 15 | Open |
+| Custom overlay files migrated | 40 | Complete |
+| Non-modal tooltip reclassified and corrected | 1 | Complete |
+| Remaining complex overlay files | 4 | Open |
 
 ## Principal overlays migrated
 
@@ -37,6 +38,10 @@ These surfaces use `client/src/hooks/useAccessibleOverlay.ts`, which is stack-aw
 
 `ClubMeetupWizard.tsx`, `ClubShareModal.tsx`, `ContactOwnerModal.tsx`, `CreateClubAuthGate.tsx`, `CreateClubWizard.tsx`, `CreateLeagueWizard.tsx`, `EditClubDetailsModal.tsx`, `club/ClubPromoModal.tsx`, and `club/ClubQRProjectionModal.tsx`.
 
+## System and inline overlays migrated
+
+`ArchivePasswordModal.tsx`, `InstallBanner.tsx`, `BroadcastConsole.tsx`, `BroadcastControl.tsx`, `ChessClock.tsx`, the remaining start confirmation in `Director.tsx`, the registration share sheet in `Join.tsx`, the mobile filter drawer in `MyClubs.tsx`, the stream sheet in `PlayerView.tsx`, and the quiz/PGN dialogs in `RepertoireBuilder.tsx`. `TiebreakTooltip.tsx` now uses `role="tooltip"` with `aria-describedby` rather than claiming modal-dialog semantics.
+
 ## Already compliant or invoker-only
 
 `AvatarCropModal.tsx`, `ManusDialog.tsx`, `ui/alert-dialog.tsx`, `ui/command.tsx`, `ui/dialog.tsx`, `ui/drawer.tsx`, `ui/sheet.tsx`, `ui/sidebar.tsx`, `Home.tsx`, `OpeningsAdmin.tsx`, and `VideoRecorder.tsx`.
@@ -45,7 +50,7 @@ These surfaces use `client/src/hooks/useAccessibleOverlay.ts`, which is stack-aw
 
 The following files still require migration or a dedicated interaction audit before the global “No keyboard trap in any modal or drawer” checklist item can be closed:
 
-`ArchivePasswordModal.tsx`, `AvatarNavDropdown.tsx`, `InstallBanner.tsx`, `TiebreakTooltip.tsx`, `TournamentWizard.tsx`, `BroadcastConsole.tsx`, `BroadcastControl.tsx`, `ChessClock.tsx`, `ClubDashboard.tsx`, `ClubProfile.tsx`, `Director.tsx`, `Join.tsx`, `MyClubs.tsx`, `PlayerView.tsx`, and `RepertoireBuilder.tsx`.
+`AvatarNavDropdown.tsx`, `TournamentWizard.tsx`, `ClubDashboard.tsx`, and `ClubProfile.tsx`.
 
 ## Acceptance criteria for each remaining migration
 

@@ -28,6 +28,7 @@ import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
 import { ChessnutBoardPanel } from "@/components/ChessnutBoardPanel";
 import { QRCodeSVG } from "qrcode.react";
 import { OTBLoader } from "@/components/OTBLoader";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Broadcast {
@@ -84,14 +85,29 @@ interface ChecklistItem {
 function ConfirmDialog({ open, title, message, confirmLabel, onConfirm, onCancel }: {
   open: boolean; title: string; message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open,
+    onClose: onCancel,
+    containerRef: dialogRef,
+    initialFocusRef: cancelButtonRef,
+  });
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[oklch(0.15_0.04_145)] border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        className="bg-[oklch(0.15_0.04_145)] border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl"
+      >
         <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
         <p className="text-sm text-white/60 mb-5">{message}</p>
         <div className="flex gap-3 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 text-sm rounded-lg border border-white/10 text-white/70 hover:bg-white/5">Cancel</button>
+          <button ref={cancelButtonRef} onClick={onCancel} className="px-4 py-2 text-sm rounded-lg border border-white/10 text-white/70 hover:bg-white/5">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 text-sm rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-medium">
             {confirmLabel ?? "Confirm"}
           </button>

@@ -34,6 +34,7 @@ import { ResultAuditTrail } from "@/components/tournament/ResultAuditTrail";
 import { DirectorLifecycleBand } from "@/components/tournament/DirectorLifecycleBand";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { getPlayerCountError, getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { getTournamentStatusDisplay, selectDirectorLifecycleStatus } from "@/lib/tournamentUtils";
@@ -2598,6 +2599,15 @@ export default function Director() {
   const [showCarousel, setShowCarousel] = useState(false);
   const [showSecondaryActions, setShowSecondaryActions] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
+  const startConfirmDialogRef = useRef<HTMLDivElement>(null);
+  const startConfirmCancelRef = useRef<HTMLButtonElement>(null);
+  const closeStartConfirm = useCallback(() => setShowStartConfirm(false), []);
+  useAccessibleOverlay({
+    open: showStartConfirm,
+    onClose: closeStartConfirm,
+    containerRef: startConfirmDialogRef,
+    initialFocusRef: startConfirmCancelRef,
+  });
 
   // ── Multi-Tournament Brackets: parent detection + child bracket list ──────
   const isBracketParent = !!tournamentConfig?.isBracketParent;
@@ -7412,6 +7422,11 @@ export default function Director() {
           />
           {/* Dialog */}
           <div
+            ref={startConfirmDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Start tournament confirmation"
+            tabIndex={-1}
             className={`modal-card max-w-sm rounded-2xl p-6 shadow-2xl ${
               isDark ? "bg-[oklch(0.18_0.04_145)] border border-white/10" : "bg-white border border-[#ADBC9F]/70"
             }`}
@@ -7472,7 +7487,8 @@ export default function Director() {
             {/* Actions */}
             <div className="flex gap-3">
               <button
-                onClick={() => setShowStartConfirm(false)}
+                ref={startConfirmCancelRef}
+                onClick={closeStartConfirm}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isDark
                     ? "bg-white/08 text-white/70 hover:bg-white/12"

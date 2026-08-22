@@ -16,6 +16,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { NotifyBell } from "@/components/NotifyBell";
 
@@ -336,6 +337,14 @@ function ShareSheet({
   onClose: () => void; isDark: boolean; ratingType?: "rapid" | "blitz";
 }) {
   const [copied, setCopied] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: cancelButtonRef,
+  });
   const rType = ratingType ?? "rapid";
   const displayRating = rType === "blitz" ? profile.blitz : profile.rapid;
   const ratingLabel = rType === "blitz" ? "Blitz" : "Rapid";
@@ -363,7 +372,12 @@ function ShareSheet({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-end"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Share your registration"
+      tabIndex={-1}
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -440,6 +454,7 @@ function ShareSheet({
           </button>
 
           <button
+            ref={cancelButtonRef}
             onClick={onClose}
             className={`w-full mt-2 py-3 text-sm font-medium ${textMuted} active:opacity-60`}
           >

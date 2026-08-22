@@ -19,6 +19,7 @@ import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, Volume
 import { NavLogo } from "@/components/NavLogo";
 import { resolveTournament } from "@/lib/tournamentRegistry";
 import { useClockSounds } from "@/hooks/useClockSounds";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { RegisterGameModal } from "@/components/RegisterGameModal";
 import { GameResultModal } from "@/components/GameResultModal";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
@@ -106,6 +107,14 @@ function SettingsPanel({
   const [baseMin, setBaseMin] = useState(Math.round(config.baseMs / 60000));
   const [incSec, setIncSec] = useState(Math.round(config.incrementMs / 1000));
   const [localOpponent, setLocalOpponent] = useState(opponentUsername);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const apply = () => {
     onApply({ baseMs: baseMin * 60 * 1000, incrementMs: incSec * 1000 });
@@ -115,11 +124,19 @@ function SettingsPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70">
-      <div className="w-full max-w-sm rounded-t-3xl px-6 pt-6 pb-10 safe-bottom" style={{ background: "#0d1f12", border: "1px solid rgba(34,197,94,0.15)" }}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clock-settings-title"
+        tabIndex={-1}
+        className="w-full max-w-sm rounded-t-3xl px-6 pt-6 pb-10 safe-bottom"
+        style={{ background: "#0d1f12", border: "1px solid rgba(34,197,94,0.15)" }}
+      >
         <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-6" />
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white text-lg font-bold">Time Control</h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10">
+          <h2 id="clock-settings-title" className="text-white text-lg font-bold">Time Control</h2>
+          <button ref={closeButtonRef} onClick={onClose} aria-label="Close clock settings" className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10">
             <X className="w-4 h-4 text-white/70" />
           </button>
         </div>
@@ -590,6 +607,15 @@ export default function ChessClock() {
   const [clockState, setClockState] = useState<ClockState>("idle");
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const resetDialogRef = useRef<HTMLDivElement>(null);
+  const resetCancelRef = useRef<HTMLButtonElement>(null);
+  const closeResetConfirm = useCallback(() => setShowResetConfirm(false), []);
+  useAccessibleOverlay({
+    open: showResetConfirm,
+    onClose: closeResetConfirm,
+    containerRef: resetDialogRef,
+    initialFocusRef: resetCancelRef,
+  });
 
   // ── URL params (tournament mode) ──────────────────────────────────────────
   const urlParams = new URLSearchParams(search);
@@ -1014,13 +1040,22 @@ export default function ChessClock() {
       {/* Reset confirmation */}
       {showResetConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="rounded-3xl px-8 py-7 mx-6 text-center max-w-xs w-full" style={{ background: "#0d1f12", border: "1px solid rgba(34,197,94,0.2)" }}>
+          <div
+            ref={resetDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clock-reset-title"
+            tabIndex={-1}
+            className="rounded-3xl px-8 py-7 mx-6 text-center max-w-xs w-full"
+            style={{ background: "#0d1f12", border: "1px solid rgba(34,197,94,0.2)" }}
+          >
             <RotateCcw className="w-8 h-8 text-white/60 mx-auto mb-4" />
-            <p className="text-white text-lg font-bold mb-2">Reset Clock?</p>
+            <p id="clock-reset-title" className="text-white text-lg font-bold mb-2">Reset Clock?</p>
             <p className="text-white/50 text-sm mb-6">Both clocks will be reset to the starting time.</p>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowResetConfirm(false)}
+                ref={resetCancelRef}
+                onClick={closeResetConfirm}
                 className="flex-1 py-3 rounded-2xl text-white/70 font-semibold"
                 style={{ background: "rgba(255,255,255,0.08)" }}
               >

@@ -7391,6 +7391,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director operational overlays: shared focus containment, Escape dismissal, and opener restoration
 - [x] Participant/gameplay overlays: shared focus containment, Escape dismissal, and opener restoration
 - [x] Club creation/management overlays: shared focus containment, Escape dismissal, and opener restoration
+- [x] System and inline overlays: archive, install, broadcast, clock, sharing, filters, and repertoire
 - [x] All principal controls have accessible labels
 - [x] Focus order logical on all principal pages
 - [ ] Landmark regions on all pages (main, nav, header, footer)

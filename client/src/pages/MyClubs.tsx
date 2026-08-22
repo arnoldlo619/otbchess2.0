@@ -73,6 +73,7 @@ import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
 import { CreateClubAuthGate } from "@/components/CreateClubAuthGate";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -648,6 +649,14 @@ function MobileFilterDrawer({
   setSortBy: (v: SortOption) => void;
   locationTree: Array<{ code: string; name: string; cities: string[] }>;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
   if (!open) return null;
 
   const textMain = isDark ? "text-white" : "text-[#12372A]";
@@ -664,16 +673,21 @@ function MobileFilterDrawer({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       {/* Drawer */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="club-filter-drawer-title"
+        tabIndex={-1}
         className={`relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 pb-8 max-h-[80vh] overflow-y-auto ${
           isDark ? "bg-[#1a2e1d]" : "bg-white"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className={`text-lg font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          <h2 id="club-filter-drawer-title" className={`text-lg font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Filters
           </h2>
-          <button onClick={onClose} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}>
+          <button ref={closeButtonRef} onClick={onClose} aria-label="Close club filters" className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}>
             <X className="w-4 h-4" />
           </button>
         </div>

@@ -35,6 +35,16 @@ const migratedOverlays = [
   "client/src/components/EditClubDetailsModal.tsx",
   "client/src/components/club/ClubPromoModal.tsx",
   "client/src/components/club/ClubQRProjectionModal.tsx",
+  "client/src/components/ArchivePasswordModal.tsx",
+  "client/src/components/InstallBanner.tsx",
+  "client/src/pages/BroadcastConsole.tsx",
+  "client/src/pages/BroadcastControl.tsx",
+  "client/src/pages/ChessClock.tsx",
+  "client/src/pages/Director.tsx",
+  "client/src/pages/Join.tsx",
+  "client/src/pages/MyClubs.tsx",
+  "client/src/pages/PlayerView.tsx",
+  "client/src/pages/RepertoireBuilder.tsx",
 ];
 
 describe("principal custom overlay accessibility", () => {
@@ -77,5 +87,12 @@ describe("principal custom overlay accessibility", () => {
     const source = readSource("client/src/components/CreateClubWizard.tsx");
     expect(source).toContain('e.key === "Enter"');
     expect(source).not.toContain('if (e.key === "Escape") onClose()');
+  });
+
+  it("uses tooltip semantics rather than modal semantics for tiebreak explanations", () => {
+    const source = readSource("client/src/components/TiebreakTooltip.tsx");
+    expect(source).toContain('role="tooltip"');
+    expect(source).toContain("aria-describedby={open ? tooltipId : undefined}");
+    expect(source).not.toContain('aria-haspopup="dialog"');
   });
 });

@@ -16,10 +16,11 @@
  * - Fully ARIA-labelled for screen readers
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X, Share, Plus, Download, Smartphone } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 export function InstallBanner() {
   const { showBanner, platform, promptInstall, dismissBanner } = usePwaInstall();
@@ -27,6 +28,14 @@ export function InstallBanner() {
   const isDark = theme === "dark";
   const [iosSheetOpen, setIosSheetOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const gotItButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: iosSheetOpen,
+    onClose: () => setIosSheetOpen(false),
+    containerRef: sheetRef,
+    initialFocusRef: gotItButtonRef,
+  });
 
   if (!showBanner) return null;
 
@@ -142,12 +151,13 @@ export function InstallBanner() {
       {iosSheetOpen && (
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
+          ref={sheetRef}
           className="fixed inset-0 z-[90] md:hidden flex flex-col justify-end"
           role="dialog"
           aria-modal="true"
           aria-label="How to add OTB Chess to your Home Screen"
+          tabIndex={-1}
           onClick={() => setIosSheetOpen(false)}
-          onKeyDown={(e) => e.key === "Escape" && setIosSheetOpen(false)}
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
@@ -242,6 +252,7 @@ export function InstallBanner() {
 
             {/* CTA */}
             <button
+              ref={gotItButtonRef}
               onClick={() => { setIosSheetOpen(false); dismissBanner(); }}
               className={`
                 w-full py-3.5 rounded-2xl text-sm font-semibold

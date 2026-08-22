@@ -11,6 +11,7 @@
  * Inspired by chessbook.com's repertoire builder UI.
  */
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { toast } from "sonner";
 import { Chessboard, type PieceDropHandlerArgs, type SquareHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
@@ -702,6 +703,29 @@ export default function RepertoireBuilder() {
   const pgnImportFileRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pgnExportDialogRef = useRef<HTMLDivElement>(null);
+  const pgnExportCloseRef = useRef<HTMLButtonElement>(null);
+  const pgnImportDialogRef = useRef<HTMLDivElement>(null);
+  const pgnImportCancelRef = useRef<HTMLButtonElement>(null);
+  const closePgnExport = useCallback(() => setShowPgnExport(false), []);
+  const closePgnImport = useCallback(() => {
+    setShowPgnImport(false);
+    setPgnImportText("");
+    setPgnImportPreview(null);
+    setPgnImportError(null);
+  }, []);
+  useAccessibleOverlay({
+    open: showPgnExport,
+    onClose: closePgnExport,
+    containerRef: pgnExportDialogRef,
+    initialFocusRef: pgnExportCloseRef,
+  });
+  useAccessibleOverlay({
+    open: showPgnImport,
+    onClose: closePgnImport,
+    containerRef: pgnImportDialogRef,
+    initialFocusRef: pgnImportCancelRef,
+  });
 
   // ── Quiz mode state ─────────────────────────────────────────────────────────
   type QuizStatus = "idle" | "playing" | "correct" | "wrong" | "complete";
@@ -720,6 +744,8 @@ export default function RepertoireBuilder() {
   const [quizMoveLog, setQuizMoveLog] = useState<Array<{ san: string; correct: boolean }>>([]); // history for summary
   const [showQuizSummary, setShowQuizSummary] = useState(false);
   const quizFlashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const quizDialogRef = useRef<HTMLDivElement>(null);
+  const quizTryAgainRef = useRef<HTMLButtonElement>(null);
 
   // ── Annotation notes state ──────────────────────────────────────────────────
   const [noteText, setNoteText] = useState("");
@@ -1061,6 +1087,12 @@ export default function RepertoireBuilder() {
     setQuizHintFen(null);
     setQuizHintSan(null);
   }, []);
+  useAccessibleOverlay({
+    open: showQuizSummary,
+    onClose: exitQuiz,
+    containerRef: quizDialogRef,
+    initialFocusRef: quizTryAgainRef,
+  });
 
   // ── Make a move on the board ────────────────────────────────────────────────
   const makeMove = useCallback(
@@ -2520,14 +2552,21 @@ export default function RepertoireBuilder() {
       {/* ── Quiz Summary Modal ──────────────────────────────────────────────────────────────────────────── */}
       {showQuizSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl ${
-            isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#F0F5E8] border border-[#ADBC9F]"
-          }`}>
+          <div
+            ref={quizDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="repertoire-quiz-summary-title"
+            tabIndex={-1}
+            className={`w-full max-w-md rounded-2xl shadow-2xl ${
+              isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#F0F5E8] border border-[#ADBC9F]"
+            }`}
+          >
             <div className="px-6 py-6 text-center">
               <Trophy size={40} className="mx-auto mb-3 text-amber-400" />
               <h2 className={`text-2xl font-bold mb-1 ${
                 isDark ? "text-white" : "text-[#12372A]"
-              }`}>Quiz Complete!</h2>
+              }`} id="repertoire-quiz-summary-title">Quiz Complete!</h2>
               <p className={`text-sm mb-6 ${
                 isDark ? "text-white/50" : "text-[#436850]"
               }`}>
@@ -2595,6 +2634,7 @@ export default function RepertoireBuilder() {
 
               <div className="flex gap-3">
                 <button
+                  ref={quizTryAgainRef}
                   onClick={startQuiz}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white transition-colors"
                 >
@@ -2619,18 +2659,25 @@ export default function RepertoireBuilder() {
       {/* ── PGN Export Modal ──────────────────────────────────────────────────────────────── */}
       {showPgnExport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
-            isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#F0F5E8] border border-[#ADBC9F]"
-          }`}>
+          <div
+            ref={pgnExportDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="repertoire-pgn-export-title"
+            tabIndex={-1}
+            className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
+              isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#F0F5E8] border border-[#ADBC9F]"
+            }`}
+          >
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b ${
               isDark ? "border-white/10" : "border-[#ADBC9F]"
             }`}>
               <div className="flex items-center gap-2">
                 <FileText size={18} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>Export PGN</h2>
+                <h2 id="repertoire-pgn-export-title" className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>Export PGN</h2>
               </div>
-              <button onClick={() => setShowPgnExport(false)} className={isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"}>
+              <button ref={pgnExportCloseRef} onClick={closePgnExport} aria-label="Close PGN export" className={isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"}>
                 <X size={20} />
               </button>
             </div>
@@ -2683,18 +2730,25 @@ export default function RepertoireBuilder() {
       {/* ── PGN Import Modal ──────────────────────────────────────────────────────────────── */}
       {showPgnImport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
-            isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#F0F5E8] border border-[#ADBC9F]"
-          }`}>
+          <div
+            ref={pgnImportDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="repertoire-pgn-import-title"
+            tabIndex={-1}
+            className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
+              isDark ? "bg-[#0f1f12] border border-white/10" : "bg-[#F0F5E8] border border-[#ADBC9F]"
+            }`}
+          >
             {/* Header */}
             <div className={`flex items-center justify-between px-6 py-4 border-b ${
               isDark ? "border-white/10" : "border-[#ADBC9F]"
             }`}>
               <div className="flex items-center gap-2">
                 <Upload size={18} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>Import PGN</h2>
+                <h2 id="repertoire-pgn-import-title" className={`text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>Import PGN</h2>
               </div>
-              <button onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }} className={isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"}>
+              <button onClick={closePgnImport} aria-label="Close PGN import" className={isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"}>
                 <X size={20} />
               </button>
             </div>
@@ -2803,7 +2857,8 @@ export default function RepertoireBuilder() {
               isDark ? "border-white/10" : "border-[#ADBC9F]"
             }`}>
               <button
-                onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }}
+                ref={pgnImportCancelRef}
+                onClick={closePgnImport}
                 className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                   isDark ? "border-white/20 text-white/70 hover:bg-white/5" : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"
                 }`}

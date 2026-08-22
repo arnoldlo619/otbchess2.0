@@ -13,6 +13,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
@@ -745,6 +746,15 @@ function MyBoardScreen({
   const [showStreamSheet, setShowStreamSheet] = useState(false);
   const [showFilmSheet, setShowFilmSheet] = useState(false);
   const [showOppStats, setShowOppStats] = useState(true);
+  const streamDialogRef = useRef<HTMLDivElement>(null);
+  const streamCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const closeStreamSheet = useCallback(() => setShowStreamSheet(false), []);
+  useAccessibleOverlay({
+    open: showStreamSheet && Boolean(broadcast?.broadcastEnabled && broadcast.broadcastUrl),
+    onClose: closeStreamSheet,
+    containerRef: streamDialogRef,
+    initialFocusRef: streamCloseButtonRef,
+  });
 
   // ── Pairing pulse: fire when round or opponent changes ──────────────────
   const [logoPulse, setLogoPulse] = useState(false);
@@ -1424,8 +1434,13 @@ function MyBoardScreen({
       {/* ── Watch Stream bottom sheet ── */}
       {showStreamSheet && hasBroadcast && (
         <div
+          ref={streamDialogRef}
           className="fixed inset-0 z-50 flex items-end"
-          onClick={() => setShowStreamSheet(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Watch tournament stream"
+          tabIndex={-1}
+          onClick={closeStreamSheet}
         >
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div
@@ -1455,7 +1470,9 @@ function MyBoardScreen({
                 )}
               </div>
               <button
-                onClick={() => setShowStreamSheet(false)}
+                ref={streamCloseButtonRef}
+                onClick={closeStreamSheet}
+                aria-label="Close tournament stream"
                 className={`p-2 rounded-xl ${isDark ? "hover:bg-white/08" : "hover:bg-[#ADBC9F]/50"}`}
               >
                 <X className={`w-4 h-4 ${textMuted}`} />
