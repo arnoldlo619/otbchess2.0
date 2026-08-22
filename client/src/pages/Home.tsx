@@ -65,7 +65,14 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
-import { DESKTOP_NAV_ITEMS, MOBILE_NAV_ITEMS, NAV_CTA_PRIMARY, isNavItemActive } from "@/lib/navRegistry";
+import {
+  DESKTOP_NAV_ITEMS,
+  FOOTER_NAV_ITEMS,
+  MOBILE_NAV_ITEMS,
+  NAV_CTA_PRIMARY,
+  NAV_CTA_SECONDARY,
+  isNavItemActive,
+} from "@/lib/navRegistry";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -75,6 +82,9 @@ import { DynamicSquare } from "@/components/ui/dynamic-square";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
 import { PatternText } from "@/components/ui/pattern-text";
+import { normalizePlatformStats, PLATFORM_STATS_FLOORS } from "@/lib/platformStats";
+
+const LIVE_TOURNAMENT_DEMO_PATH = "/tournament/otb-demo-2026/manage";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // Mascot illustrations removed; sections use clean text-only layouts.
@@ -557,7 +567,6 @@ function StatsBar() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   // Floor values shown while loading or on API failure. Never show false zeros.
-  const FLOORS = { tournaments: 300, players: 550, clubs: 80 };
   const [liveCounts, setLiveCounts] = useState<{ tournaments: number; players: number; clubs: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   useEffect(() => {
@@ -565,18 +574,14 @@ function StatsBar() {
       .then((r) => r.ok ? r.json() : null)
       .then((data: { tournaments?: number; players?: number; clubs?: number } | null) => {
         if (data && typeof data.tournaments === "number") {
-          setLiveCounts({
-            tournaments: Math.max(data.tournaments, FLOORS.tournaments),
-            players: Math.max(data.players ?? 0, FLOORS.players),
-            clubs: Math.max(data.clubs ?? 0, FLOORS.clubs),
-          });
+          setLiveCounts(normalizePlatformStats(data));
         }
       })
       .catch(() => { /* silently keep floor values */ })
       .finally(() => setStatsLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const counts = liveCounts ?? FLOORS;
+  const counts = liveCounts ?? PLATFORM_STATS_FLOORS;
   const stats: { target: number; suffix: string; decimals: number; label: string; demo?: boolean }[] = [
     { target: counts.tournaments, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
     { target: counts.players, suffix: "+", decimals: 0, label: "Players Registered" },
@@ -599,7 +604,7 @@ function StatsBar() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 sm:gap-8">
           {statsLoading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-2">
+                <div key={i} data-testid="platform-stats-loading" className="flex flex-col items-center gap-2">
                   <div className="h-10 w-24 rounded-lg bg-white/20 animate-pulse" />
                   <div className="h-3 w-28 rounded bg-white/15 animate-pulse" />
                 </div>
@@ -1169,7 +1174,7 @@ function HowItWorks() {
       title: "Create Your Tournament, Share QR Code",
       description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code. Players scan and register on the spot.",
       cta: "Host a Tournament",
-      ctaHref: "/?action=create",
+      ctaHref: NAV_CTA_PRIMARY.path,
       imageSrc: "/manus-storage/qr-screen_b1e19e90.webp",
       imageAlt: "Tournament QR Code screen",
       phoneLeft: true,
@@ -1194,7 +1199,7 @@ function HowItWorks() {
       title: "Optimal Pairings Generated",
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
       cta: "View Live Demo",
-      ctaHref: "/tournaments/new",
+      ctaHref: LIVE_TOURNAMENT_DEMO_PATH,
       imageSrc: "/manus-storage/IMG_63952_5020b27c.jpg",
       imageAlt: "Player board assignment screen showing opponent and board number",
       imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
@@ -1295,7 +1300,7 @@ function EcosystemPathways() {
       icon: <Swords className="w-5 h-5" />,
       label: "Match Prep Tools",
       description: "Openings library, opponent analysis, and matchup prep in one place.",
-      href: "/tools",
+      href: "/training",
       cta: "Open Tools",
     },
   ];
@@ -1607,7 +1612,7 @@ function Features() {
             title="Intuitive Host Dashboard"
             description="Run Swiss, Round Robin, or Elimination tournaments from one dashboard. Pairings, timers, results, and standings update in real time."
             cta="Host a Tournament"
-            href="/?action=create"
+            href={NAV_CTA_PRIMARY.path}
             icon={<BarChart3 className="w-4 h-4" />}
             isDark={isDark}
             inView={inView}
@@ -1749,7 +1754,7 @@ const SHOWCASE_FEATURES = [
     tag: "Swiss + Elim Format",
     title: "Run a\nTournament",
     description: "Swiss pairings, live standings, and elimination brackets from one director dashboard.",
-    href: "/?action=create",
+    href: NAV_CTA_PRIMARY.path,
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
     screenshotAlt: "Swiss Tournament Director Dashboard",
   },
@@ -2391,7 +2396,8 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             </button>
             <SpinBorderButton
               variant="glass"
-              onClick={() => window.location.href = "/tournaments/new"}
+              onClick={() => window.location.href = LIVE_TOURNAMENT_DEMO_PATH}
+              data-testid="final-live-tournament-demo"
             >
               View Live Demo
               <ArrowRight className="w-4 h-4" />
@@ -2406,22 +2412,18 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer() {
   const links: Record<string, { label: string; href: string }[]> = {
-    Platform: [
-      { label: "Clubs", href: "/clubs" },
-      { label: "Tournaments", href: "/tournaments" },
-      { label: "League", href: "/league" },
-      { label: "Tools", href: "/training" },
-      { label: "Pricing", href: "/pricing" },
-    ],
+    Platform: FOOTER_NAV_ITEMS
+      .filter((item) => item.key !== "blog")
+      .map((item) => ({ label: item.label, href: item.path })),
     Community: [
-      { label: "Host Tournament", href: "/tournaments/new" },
-      { label: "Join a Tournament", href: "/join" },
+      { label: NAV_CTA_PRIMARY.label, href: NAV_CTA_PRIMARY.path },
+      { label: "Join a Tournament", href: NAV_CTA_SECONDARY.path },
       { label: "Discord", href: "https://discord.gg/chessotb" },
       { label: "X / Twitter", href: "https://x.com/chessotbclub" },
     ],
     Company: [
       { label: "About", href: "/#how-it-works" },
-      { label: "Blog", href: "/blog" },
+      { label: "Blog", href: FOOTER_NAV_ITEMS.find((item) => item.key === "blog")?.path ?? "/blog" },
       { label: "Contact", href: "mailto:info@chessotb.club" },
       { label: "Terms", href: "/terms" },
     ],

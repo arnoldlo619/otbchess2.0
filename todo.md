@@ -7465,15 +7465,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] P0-1b: Fix /create to redirect to /tournaments/new (preserve query params)
 - [x] P0-1c: Add /tools route redirecting to /training
 - [x] Superseded: /tournaments Archive is public and contains no admin password gate
-- [ ] P0-1e: Audit and fix all broken CTAs (Host Tournament, View Live Demo, Tools, footer links)
+- [x] P0-1e: Audit and fix all broken CTAs (Host Tournament, View Live Demo, Tools, footer links)
 - [x] P0-2: Create canonical getTournamentFormatLabel() helper; fix all inline format ternaries missing quads case
 - [x] P0-3: Create canonical getTournamentStatus() selector; ensure completed tournaments never show Live badge
 - [x] P0-4: Fix quads live standings to use calculateQuadStandings (not Swiss computeStandings); remove Buchholz label from QuadsDirectorPanel
 - [x] P0-5: Fix draw rate formula in Report.tsx to use completedGames as denominator; fix generateResultsPdf to skip Buchholz page for quads
 - [x] P0-6: Fix nested interactive elements in Pricing.tsx and other pages (Link wrapping button)
 - [x] Testing: Add Playwright coverage for six core public routes, mobile/desktop overflow, create redirect, landing host CTA, auth tabs, and join entry
-- [ ] P0-7: Fix duplicate H1 in tournament report export cards (aria-hidden on export-only clones)
-- [ ] P0-8: Verify homepage zero-stat flash is fixed (already has skeleton + FLOORS)
+- [x] P0-7: Fix duplicate H1 in tournament report export cards (aria-hidden on export-only clones)
+- [x] P0-8: Verify homepage zero-stat flash is fixed (already has skeleton + FLOORS)
 - [x] P0-9: Add unit tests for format label, status selector, draw rate, quads tiebreaks
 
 ## Dedicated /auth Page (SignIn6 Layout Remix)

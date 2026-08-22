@@ -3315,6 +3315,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
       {/* ── Off-screen export renders (no scale transform, exact 1080px) ── */}
       <div
         aria-hidden="true"
+        inert
         style={{
           position: "fixed",
           top: 0,

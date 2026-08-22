@@ -50,3 +50,40 @@ test("authentication and join entry points expose their primary actions", async 
   await page.goto("/join", { waitUntil: "domcontentloaded" });
   await expect(page.getByText(/Join.*Tournament/i).first()).toBeVisible();
 });
+
+test("landing footer and demo calls to action use their canonical destinations", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const footer = page.locator("footer");
+  await expect(footer.getByRole("link", { name: "Tools", exact: true })).toHaveAttribute("href", "/training");
+  await expect(footer.getByRole("link", { name: "Host Tournament", exact: true })).toHaveAttribute("href", "/tournaments/new");
+  await expect(footer.getByRole("link", { name: "Join a Tournament", exact: true })).toHaveAttribute("href", "/join");
+  await expect(footer.getByRole("link", { name: "Blog", exact: true })).toHaveAttribute("href", "/blog");
+
+  await page.getByTestId("final-live-tournament-demo").click();
+  await expect(page).toHaveURL(/\/tournament\/otb-demo-2026\/manage$/);
+});
+
+test("homepage stats show skeletons before resolving zero API counts to published floors", async ({ page }) => {
+  let releaseResponse: (() => void) | undefined;
+  const responseGate = new Promise<void>((resolve) => { releaseResponse = resolve; });
+
+  await page.route("**/api/platform/stats", async (route) => {
+    await responseGate;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ tournaments: 0, players: 0, clubs: 0 }),
+    });
+  });
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("platform-stats-loading")).toHaveCount(4);
+  releaseResponse?.();
+  await expect(page.getByTestId("platform-stats-loading")).toHaveCount(0);
+
+  const tournamentStat = page.getByText("Tournaments Hosted", { exact: true }).locator("..");
+  await tournamentStat.scrollIntoViewIfNeeded();
+  await expect(tournamentStat).toContainText("300+");
+  await expect(page.getByText("Players Registered", { exact: true }).locator("..")).toContainText("550+");
+  await expect(page.getByText("Chess Clubs", { exact: true }).locator("..")).toContainText("80+");
+});
