@@ -149,7 +149,7 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
   return {
     tournamentId: config.id,
     tournamentName: config.name,
-    totalRounds: config.rounds,
+    totalRounds: config.format === "quads" ? 3 : config.rounds,
     format: config.format ?? "swiss",
     players: [],
     rounds: [],
@@ -161,7 +161,11 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
       elimPhase: "swiss" as const,
     } : {}),
     ...(config.format === "quads" ? {
-      quadSettings: { ...DEFAULT_QUAD_SETTINGS, ratingType: config.ratingType ?? "rapid" },
+      quadSettings: {
+        ...DEFAULT_QUAD_SETTINGS,
+        ratingSource: config.quadRatingSource ?? config.ratingType ?? "rapid",
+        ratingType: config.ratingType ?? "rapid",
+      },
     } : {}),
   };
 }
@@ -978,9 +982,9 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
-  // Update mutable tournament settings (name, totalRounds, roundMinutes) from the Settings panel
+  // Update mutable tournament settings from the Settings panel and pre-start Quads controls.
   const updateSettings = useCallback(
-    (patch: { tournamentName?: string; totalRounds?: number; roundMinutes?: number }) => {
+    (patch: { tournamentName?: string; totalRounds?: number; roundMinutes?: number; quadSettings?: QuadSettings }) => {
       setState((prev) => ({ ...prev, ...patch }));
     },
     []

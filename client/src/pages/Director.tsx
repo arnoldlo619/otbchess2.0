@@ -21,7 +21,7 @@ import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDirectorState } from "@/lib/directorState";
-import { calculateQuadStandings, getSectionWinners, type QuadSection } from "@/lib/quads";
+import { calculateQuadStandings, DEFAULT_QUAD_SETTINGS, getSectionWinners, type QuadSection } from "@/lib/quads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
@@ -3883,7 +3883,20 @@ export default function Director() {
                                 key={rt}
                                 type="button"
                                 onClick={() => {
-                                  updateTournamentConfig(tournamentId, { ratingType: rt });
+                                  updateTournamentConfig(tournamentId, {
+                                    ratingType: rt,
+                                    ...(state.format === "quads" ? { quadRatingSource: rt } : {}),
+                                  });
+                                  if (state.format === "quads") {
+                                    updateSettings({
+                                      totalRounds: 3,
+                                      quadSettings: {
+                                        ...(state.quadSettings ?? DEFAULT_QUAD_SETTINGS),
+                                        ratingSource: rt,
+                                        ratingType: rt,
+                                      },
+                                    });
+                                  }
                                   state.players.forEach((p) => {
                                     const newElo = rt === "blitz"
                                       ? (p.blitzElo || p.rapidElo || p.elo)
@@ -6732,7 +6745,20 @@ export default function Director() {
                             key={rt}
                             type="button"
                             onClick={() => {
-                              updateTournamentConfig(tournamentId, { ratingType: rt });
+                              updateTournamentConfig(tournamentId, {
+                                ratingType: rt,
+                                ...(state.format === "quads" ? { quadRatingSource: rt } : {}),
+                              });
+                              if (state.format === "quads") {
+                                updateSettings({
+                                  totalRounds: 3,
+                                  quadSettings: {
+                                    ...(state.quadSettings ?? DEFAULT_QUAD_SETTINGS),
+                                    ratingSource: rt,
+                                    ratingType: rt,
+                                  },
+                                });
+                              }
                               // Re-sync each player's active elo from stored rapidElo/blitzElo
                               state.players.forEach((p) => {
                                 const newElo = rt === "blitz"
@@ -6860,7 +6886,14 @@ export default function Director() {
                     // Sync name and rounds back into live director state
                     updateSettings({
                       tournamentName: updated.name,
-                      totalRounds: updated.rounds,
+                      totalRounds: updated.format === "quads" ? 3 : updated.rounds,
+                      ...(updated.format === "quads" ? {
+                        quadSettings: {
+                          ...(state.quadSettings ?? DEFAULT_QUAD_SETTINGS),
+                          ratingSource: updated.quadRatingSource ?? updated.ratingType ?? "rapid",
+                          ratingType: updated.ratingType ?? "rapid",
+                        },
+                      } : {}),
                     });
                   }}
                 />

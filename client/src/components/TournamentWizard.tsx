@@ -4206,9 +4206,10 @@ function BracketsStepEditor({
 
   // Sync back to parent data
   useEffect(() => {
+    const normalizedRounds = format === "quads" ? 3 : rounds;
     onChange({
       format,
-      rounds,
+      rounds: normalizedRounds,
       timeBase,
       timeIncrement,
       ratingSystem: ratingPlatform,
@@ -4416,7 +4417,10 @@ function BracketsStepEditor({
             <button
               key={f.value}
               type="button"
-              onClick={() => setFormat(f.value)}
+              onClick={() => {
+                setFormat(f.value);
+                if (f.value === "quads") setRounds(3);
+              }}
               className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
               style={{
                 background: format === f.value ? T.green : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
@@ -4432,11 +4436,18 @@ function BracketsStepEditor({
         {/* Rounds */}
         <div className="flex items-center justify-between mb-4 rounded-xl py-3 px-4" style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB", border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}` }}>
           <span className="text-sm font-medium" style={{ color: isDark ? T.dText : T.lText }}>Rounds</span>
+          {format === "quads" ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold" style={{ color: T.green }}>3</span>
+              <span className="text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: isDark ? "rgba(77,105,64,0.25)" : "#D1FAE5", color: T.green }}>Fixed</span>
+            </div>
+          ) : (
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setRounds(Math.max(1, rounds - 1))} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB", color: isDark ? T.dText : T.lText }}>−</button>
             <span className="text-sm font-bold w-6 text-center" style={{ color: isDark ? T.dText : T.lText }}>{rounds}</span>
             <button type="button" onClick={() => setRounds(Math.min(15, rounds + 1))} className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB", color: isDark ? T.dText : T.lText }}>+</button>
           </div>
+          )}
         </div>
 
         {/* Time Control */}
@@ -4682,7 +4693,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       date: data.date,
       description: data.description,
       format: data.format,
-      rounds: data.rounds,
+      rounds: data.format === "quads" ? 3 : data.rounds,
       ...(data.swissRounds ? { swissRounds: data.swissRounds } : {}),
       ...(data.elimCutoff ? { elimCutoff: data.elimCutoff } : {}),
       maxPlayers: data.maxPlayers,
@@ -4691,6 +4702,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       timePreset: data.timePreset,
       ratingSystem: data.ratingSystem,
       ratingType: data.ratingType,
+      ...(data.format === "quads" ? { quadRatingSource: data.ratingType } : {}),
       createdAt: new Date().toISOString(),
       ownerId: user?.id ? parseInt(user.id, 10) : null,
       clubId: data.clubId ?? null,

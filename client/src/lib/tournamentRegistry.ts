@@ -85,11 +85,28 @@ const DIRECTOR_SESSION_KEY = "otb-director-sessions-v1";
 
 // ── Registry helpers ──────────────────────────────────────────────────────────
 
+/**
+ * Apply format invariants before a config is consumed or persisted.
+ * Quads are always a three-round round robin, and wizard-selected rapid/blitz
+ * ratings become the explicit section-seeding source unless a specialized
+ * source was intentionally stored by a future advanced workflow.
+ */
+export function normalizeTournamentConfig(config: TournamentConfig): TournamentConfig {
+  if (config.format !== "quads") return config;
+  const ratingType = config.ratingType === "blitz" ? "blitz" : "rapid";
+  return {
+    ...config,
+    rounds: 3,
+    ratingType,
+    quadRatingSource: config.quadRatingSource ?? ratingType,
+  };
+}
+
 function loadRegistry(): TournamentConfig[] {
   try {
     const raw = localStorage.getItem(REGISTRY_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as TournamentConfig[];
+    return (JSON.parse(raw) as TournamentConfig[]).map(normalizeTournamentConfig);
   } catch {
     return [];
   }
@@ -110,11 +127,12 @@ export function clearRegistry(): void {
 
 /** Save a new tournament config. Returns the saved config. */
 export function registerTournament(config: TournamentConfig): TournamentConfig {
+  const normalized = normalizeTournamentConfig(config);
   const registry = loadRegistry();
   // Replace if same id already exists (re-creation edge case)
-  const filtered = registry.filter((c) => c.id !== config.id);
-  saveRegistry([...filtered, config]);
-  return config;
+  const filtered = registry.filter((c) => c.id !== normalized.id);
+  saveRegistry([...filtered, normalized]);
+  return normalized;
 }
 
 /** Look up a tournament config by its URL slug id. */
@@ -183,7 +201,7 @@ export function updateTournamentConfig(
   const registry = loadRegistry();
   const idx = registry.findIndex((c) => c.id === id);
   if (idx === -1) return null;
-  const updated: TournamentConfig = { ...registry[idx], ...patch };
+  const updated = normalizeTournamentConfig({ ...registry[idx], ...patch });
   registry[idx] = updated;
   saveRegistry(registry);
   return updated;
