@@ -4,7 +4,7 @@
  * Tests for player cap enforcement in addPlayerToTournament.
  */
 import {describe, it, expect, beforeEach, afterEach} from "vitest";
-import {addPlayerToTournament} from "../directorState";
+import {addPlayerToTournament, removeJoinedPlayerFromTournament} from "../directorState";
 import type { Player } from "../tournamentData";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ function seedRegistry(maxPlayers: number) {
   localStorage.setItem(REGISTRY_KEY, JSON.stringify([config]));
 }
 
-function seedState(players: Player[]) {
+function seedState(players: Player[], status: "registration" | "in_progress" | "paused" | "completed" = "registration") {
   const persisted = {
     schemaVersion: SCHEMA_VERSION,
     savedAt: new Date().toISOString(),
@@ -62,7 +62,7 @@ function seedState(players: Player[]) {
       tournamentName: "Cap Test",
       totalRounds: 5,
       currentRound: 0,
-      status: "registration",
+      status,
       players,
       rounds: [],
     },
@@ -140,6 +140,25 @@ describe("addPlayerToTournament — cap enforcement", () => {
     seedState([makePlayer("alice")]);
     const result = addPlayerToTournament(TOURNAMENT_ID, makePlayer("alice"));
     expect(result).toEqual({ success: false, reason: "duplicate" });
+  });
+
+  it.each(["in_progress", "paused", "completed"] as const)("returns closed while tournament status is %s", (status) => {
+    seedRegistry(10);
+    seedState([makePlayer("alice")], status);
+    const result = addPlayerToTournament(TOURNAMENT_ID, makePlayer("bob"));
+    expect(result).toEqual({ success: false, reason: "closed" });
+    expect(JSON.parse(localStorage.getItem(STATE_KEY)!).state.players).toHaveLength(1);
+  });
+
+  it("rolls back an optimistic local player without removing existing roster entries", () => {
+    seedRegistry(10);
+    seedState([makePlayer("alice")]);
+    const bob = makePlayer("bob");
+    expect(addPlayerToTournament(TOURNAMENT_ID, bob)).toEqual({ success: true, reason: "ok" });
+    expect(removeJoinedPlayerFromTournament(TOURNAMENT_ID, bob.id)).toBe(true);
+    expect(removeJoinedPlayerFromTournament(TOURNAMENT_ID, "missing-player")).toBe(false);
+    const players = JSON.parse(localStorage.getItem(STATE_KEY)!).state.players as Player[];
+    expect(players.map((player) => player.username)).toEqual(["alice"]);
   });
 
   it("returns { success: false, reason: 'unknown' } for unregistered tournament", () => {

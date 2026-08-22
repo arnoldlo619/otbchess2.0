@@ -261,7 +261,7 @@ export function loadTournamentState(tournamentId: string): DirectorState | null 
  */
 export type AddPlayerResult =
   | { success: true; reason: "ok" }
-  | { success: false; reason: "duplicate" | "full" | "unknown" };
+  | { success: false; reason: "duplicate" | "full" | "closed" | "unknown" };
 
 export function addPlayerToTournament(tournamentId: string, player: Player): AddPlayerResult {
   try {
@@ -271,6 +271,11 @@ export function addPlayerToTournament(tournamentId: string, player: Player): Add
       const config = getTournamentConfig(tournamentId);
       if (!config) return { success: false, reason: "unknown" };
       existing = getNewTournamentState(config);
+    }
+    // Registration is only valid before Round 1 starts. The explicit demo
+    // tournament remains open so public exploration continues to work.
+    if (tournamentId !== "otb-demo-2026" && existing.status !== "registration") {
+      return { success: false, reason: "closed" };
     }
     // Prevent duplicate registrations
     if (existing.players.some((p) => p.id === player.id || p.username === player.username)) {
@@ -288,6 +293,20 @@ export function addPlayerToTournament(tournamentId: string, player: Player): Add
     return { success: true, reason: "ok" };
   } catch {
     return { success: false, reason: "unknown" };
+  }
+}
+
+/** Roll back a local Join mutation when authoritative server sync rejects it. */
+export function removeJoinedPlayerFromTournament(tournamentId: string, playerId: string): boolean {
+  try {
+    const existing = loadFromStorage(tournamentId);
+    if (!existing) return false;
+    const players = existing.players.filter((player) => player.id !== playerId);
+    if (players.length === existing.players.length) return false;
+    saveToStorage(tournamentId, { ...existing, players });
+    return true;
+  } catch {
+    return false;
   }
 }
 

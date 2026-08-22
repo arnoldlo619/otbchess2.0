@@ -17,6 +17,11 @@
 - [x] Frontend resilience: Extend shared authFetch handling so structured 500 and network failures surface consistently beyond Auth/Profile
 - [x] Frontend resilience: Mount a global accessible API error notifier for shared raw-response call sites
 - [x] Frontend resilience: Add rendered UI regression coverage for friendly 500 copy and request reference IDs
+- [x] Join reliability: Reject local registration after tournament start, pause, or completion
+- [x] Join reliability: Await authoritative server roster confirmation before reporting success
+- [x] Join reliability: Roll back optimistic local roster changes when server synchronization fails
+- [x] Join reliability: Present distinct full, duplicate, closed, invalid-link, and network recovery messages
+- [x] Join reliability: Cover capacity, lifecycle, rollback, roster sync, and recovery states with focused regressions
 
 ## Phase 2 — Theme Token Migration & Light-Mode Contrast Fixes
 
@@ -7424,7 +7429,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] API timeout shows retry option
 - [x] Chess.com lookup failure shows clear error
 - [x] Invalid slug shows 404 with recovery link
-- [ ] Duplicate registration blocked with clear message
+- [x] Duplicate registration blocked with clear message
 - [ ] Browser refresh during multi-step flows preserves state
 
 ### J. Content QA

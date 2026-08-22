@@ -44,7 +44,7 @@ function pickRating(
   if (ratingType === "blitz") return prof.blitz || prof.rapid || prof.bullet || 1200;
   return prof.rapid || prof.blitz || prof.bullet || 1200;
 }
-import { addPlayerToTournament } from "@/lib/directorState";
+import { addPlayerToTournament, removeJoinedPlayerFromTournament } from "@/lib/directorState";
 import {
   saveRegistration,
   getRegistration,
@@ -108,19 +108,65 @@ function eloTierDark(elo: number) {
   return { label: "Beginner", color: "text-white/50", bg: "bg-white/05 border border-white/10" };
 }
 
-// --- Server sync helper -------------------------------------------------------
-// Fire-and-forget: POST the player to the server so the director dashboard can
-// poll it from any device. Failures are silently swallowed so they never block
-// the local registration flow.
-async function postPlayerToServer(tournamentId: string, player: Player): Promise<void> {
+export type RegistrationIssue = "full" | "duplicate" | "closed" | "invalid" | "network";
+
+export function getRegistrationIssuePresentation(type: RegistrationIssue): {
+  title: string;
+  message: string;
+  tone: "amber" | "blue" | "red";
+} {
+  if (type === "full") return {
+    title: "Tournament Full",
+    message: "This tournament has reached its player limit. Ask the director to increase the cap.",
+    tone: "amber",
+  };
+  if (type === "duplicate") return {
+    title: "Already Registered",
+    message: "This username is already registered for the tournament.",
+    tone: "blue",
+  };
+  if (type === "closed") return {
+    title: "Registration Closed",
+    message: "This tournament has already started or finished. Ask the director for assistance.",
+    tone: "amber",
+  };
+  if (type === "invalid") return {
+    title: "Tournament Not Found",
+    message: "The QR code or invite link is invalid. Ask the director to share a new one.",
+    tone: "red",
+  };
+  return {
+    title: "Could Not Register",
+    message: "The roster could not be updated. Check your connection and try again.",
+    tone: "red",
+  };
+}
+
+type RegistrationSyncResult =
+  | { success: true }
+  | { success: false; reason: RegistrationIssue };
+
+function mapAddPlayerIssue(reason: "duplicate" | "full" | "closed" | "unknown"): RegistrationIssue {
+  return reason === "unknown" ? "invalid" : reason;
+}
+
+// Server confirmation is authoritative for cross-device Director rosters. A
+// failed sync is surfaced and the optimistic local mutation is rolled back.
+export async function postPlayerToServer(tournamentId: string, player: Player): Promise<RegistrationSyncResult> {
   try {
-    await authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`, {
+    const response = await authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ player }),
     });
+    if (response.ok) return { success: true };
+    const payload = await response.json().catch(() => ({})) as { error?: string };
+    if (response.status === 409 && payload.error === "registration_closed") return { success: false, reason: "closed" };
+    if (response.status === 409) return { success: false, reason: "duplicate" };
+    if (response.status === 404) return { success: false, reason: "invalid" };
+    return { success: false, reason: "network" };
   } catch {
-    // Network error — local registration already succeeded, so ignore.
+    return { success: false, reason: "network" };
   }
 }
 
@@ -771,12 +817,15 @@ export default function JoinPage() {
   }, [lookupStatus, step, active.profile, lookupError, advanceStep]);
 
   const [confirming, setConfirming] = useState(false);
-  const [capToast, setCapToast] = useState<{ type: "full" | "duplicate" } | null>(null);
+  const qrRegistrationInFlightRef = useRef(false);
+  const [capToast, setCapToast] = useState<{ type: RegistrationIssue } | null>(null);
 
-  function showCapToast(type: "full" | "duplicate") {
+  function showCapToast(type: RegistrationIssue) {
     setCapToast({ type });
     setTimeout(() => setCapToast(null), 5000);
   }
+
+  const capToastPresentation = capToast ? getRegistrationIssuePresentation(capToast.type) : null;
 
   // Inline auth handler — sign up or sign in before the chess.com username step
   async function handleAuthSubmit(e: React.FormEvent) {
@@ -824,6 +873,8 @@ export default function JoinPage() {
 
   // QR mode: single-button join — lookup ELO then register immediately
   async function handleQrJoin() {
+    if (isTournamentClosed) { showCapToast("closed"); return; }
+    if (isTournamentFull) { showCapToast("full"); return; }
     if (!username.trim()) { setError("Enter your chess.com username."); return; }
     setConfirming(true);
     setError("");
@@ -835,6 +886,10 @@ export default function JoinPage() {
   useEffect(() => {
     if (!isQrMode || !confirming) return;
     if (lookupStatus === "success") {
+      if (qrRegistrationInFlightRef.current) return;
+      qrRegistrationInFlightRef.current = true;
+      void (async () => {
+      try {
       const raw = active.profile;
       if (!raw) return;
       const prof = raw as UnifiedProfile;
@@ -861,11 +916,17 @@ export default function JoinPage() {
         const result = addPlayerToTournament(config.id, player);
         if (!result.success) {
           setConfirming(false);
-          showCapToast(result.reason === "full" ? "full" : "duplicate");
+          showCapToast(mapAddPlayerIssue(result.reason));
           return;
         }
-        // Sync to server so director dashboard picks it up on any device
-        postPlayerToServer(config.id, player);
+        // Confirm the authoritative roster write before showing success.
+        const sync = await postPlayerToServer(config.id, player);
+        if (!sync.success) {
+          removeJoinedPlayerFromTournament(config.id, player.id);
+          setConfirming(false);
+          showCapToast(sync.reason);
+          return;
+        }
         saveRegistration({
           tournamentId: tournamentCode,
           username: prof.username,
@@ -901,11 +962,16 @@ export default function JoinPage() {
           const result = addPlayerToTournament(bootstrapped.id, player);
           if (!result.success) {
             setConfirming(false);
-            showCapToast(result.reason === "full" ? "full" : "duplicate");
+            showCapToast(mapAddPlayerIssue(result.reason));
             return;
           }
-          // Sync to server so director dashboard picks it up on any device
-          postPlayerToServer(bootstrapped.id, player);
+          const sync = await postPlayerToServer(bootstrapped.id, player);
+          if (!sync.success) {
+            removeJoinedPlayerFromTournament(bootstrapped.id, player.id);
+            setConfirming(false);
+            showCapToast(sync.reason);
+            return;
+          }
           saveRegistration({
             tournamentId: tournamentCode,
             username: prof.username,
@@ -925,6 +991,10 @@ export default function JoinPage() {
         setConfirming(false);
         setError("Tournament not found. Check the code and try again.");
       }
+      } finally {
+        qrRegistrationInFlightRef.current = false;
+      }
+      })();
     } else if (lookupStatus === "not_found" || lookupStatus === "error") {
       setConfirming(false);
       setError(lookupError || "Username not found on chess.com.");
@@ -932,6 +1002,8 @@ export default function JoinPage() {
   }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, navigate]);
 
   async function handleConfirm() {
+    if (isTournamentClosed) { showCapToast("closed"); return; }
+    if (isTournamentFull) { showCapToast("full"); return; }
     setConfirming(true);
     // Persist the player to the tournament's localStorage store so the Director
     // Dashboard picks them up immediately (via storage event listener)
@@ -967,14 +1039,29 @@ export default function JoinPage() {
         const result = addPlayerToTournament(config.id, player);
         if (!result.success) {
           setConfirming(false);
-          showCapToast(result.reason === "full" ? "full" : "duplicate");
+          showCapToast(mapAddPlayerIssue(result.reason));
           return;
         }
-        postPlayerToServer(config.id, player);
+        const sync = await postPlayerToServer(config.id, player);
+        if (!sync.success) {
+          removeJoinedPlayerFromTournament(config.id, player.id);
+          setConfirming(false);
+          showCapToast(sync.reason);
+          return;
+        }
       } else if (embeddedMeta?.id) {
         // Fresh device — no localStorage yet; post directly to server using the
         // tournament ID embedded in the QR ?t= payload.
-        postPlayerToServer(embeddedMeta.id, player);
+        const sync = await postPlayerToServer(embeddedMeta.id, player);
+        if (!sync.success) {
+          setConfirming(false);
+          showCapToast(sync.reason);
+          return;
+        }
+      } else {
+        setConfirming(false);
+        showCapToast("invalid");
+        return;
       }
     }
     // Persist registration to localStorage for duplicate detection
@@ -1053,31 +1140,38 @@ export default function JoinPage() {
       <StepProgress step={step} />
 
       {/* -- Cap / Duplicate Toast -------------------------------------------- */}
-      {capToast && (
+      {capToast && capToastPresentation && (
         <div
           className={`fixed top-[calc(env(safe-area-inset-top)+60px)] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm animate-slide-down-fade ${
-            capToast.type === "full"
+            capToastPresentation.tone === "amber"
               ? isDark
                 ? "bg-amber-500/15 border border-amber-500/30 text-amber-300"
                 : "bg-amber-50 border border-amber-300 text-amber-800"
-              : isDark
-              ? "bg-blue-500/15 border border-blue-500/30 text-blue-300"
-              : "bg-blue-50 border border-blue-300 text-blue-800"
+              : capToastPresentation.tone === "blue"
+                ? isDark
+                  ? "bg-blue-500/15 border border-blue-500/30 text-blue-300"
+                  : "bg-blue-50 border border-blue-300 text-blue-800"
+                : isDark
+                  ? "bg-red-500/15 border border-red-500/30 text-red-300"
+                  : "bg-red-50 border border-red-300 text-red-800"
           } rounded-2xl px-4 py-3.5 flex items-start gap-3 shadow-lg`}
+          role="alert"
         >
           <div className={`mt-0.5 w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center ${
-            capToast.type === "full" ? "bg-amber-400/20" : "bg-blue-400/20"
+            capToastPresentation.tone === "amber"
+              ? "bg-amber-400/20"
+              : capToastPresentation.tone === "blue"
+                ? "bg-blue-400/20"
+                : "bg-red-400/20"
           }`}>
             <AlertCircle className="w-3.5 h-3.5" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold leading-tight">
-              {capToast.type === "full" ? "Tournament Full" : "Already Registered"}
+              {capToastPresentation.title}
             </p>
             <p className="text-xs mt-0.5 opacity-80">
-              {capToast.type === "full"
-                ? `This tournament has reached its player limit. Ask the director to increase the cap or join the waitlist.`
-                : `You're already registered for this tournament with this username.`}
+              {capToastPresentation.message}
             </p>
           </div>
           <button
