@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X, Loader2, Globe, Instagram } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface EditClubDetailsModalProps {
   isOpen: boolean;
@@ -31,6 +32,14 @@ export function EditClubDetailsModal({
   const [instagram, setInstagram] = useState(currentInstagram);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: descriptionRef,
+  });
 
   const handleSave = async () => {
     setError(null);
@@ -74,13 +83,19 @@ export function EditClubDetailsModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-club-details-title"
+          tabIndex={-1}
           className={`${bgColor} border ${borderColor} rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto`}
         >
           {/* Header */}
           <div className={`flex items-center justify-between p-6 border-b ${borderColor}`}>
-            <h2 className={`text-lg font-semibold ${textColor}`}>Edit Club Details</h2>
+            <h2 id="edit-club-details-title" className={`text-lg font-semibold ${textColor}`}>Edit Club Details</h2>
             <button
               onClick={onClose}
+              aria-label="Close edit club details"
               className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-white/10" : "hover:bg-[#ADBC9F]/50"}`}
             >
               <X className="w-5 h-5" />
@@ -95,6 +110,7 @@ export function EditClubDetailsModal({
                 Description
               </label>
               <textarea
+                ref={descriptionRef}
                 aria-label="Description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}

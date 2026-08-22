@@ -9,7 +9,7 @@
  *   4. Review & Create — summary before submission
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import {
   X,
@@ -29,6 +29,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { authFetch } from "@/lib/apiFetch";
 import { toast } from "sonner";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -126,6 +127,15 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
   const [maxPlayers, setMaxPlayers] = useState<number>(8);
   const [submitting, setSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const closeWizard = useCallback(() => onClose?.(), [onClose]);
+  useAccessibleOverlay({
+    open: true,
+    onClose: closeWizard,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   // Derived
   const selectedClub = clubs.find((c) => c.id === selectedClubId);
@@ -153,15 +163,6 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
     if (user && !user.isGuest) fetchClubs();
     else setClubsLoading(false);
   }, [user, fetchClubs]);
-
-  // Keyboard: Escape to close
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose?.();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
 
   // Navigation helpers
   const canAdvance = () => {
@@ -540,6 +541,11 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
 
       {/* Panel */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create league"
+        tabIndex={-1}
         className="relative w-full max-w-lg mx-4 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{
           background: isDark
@@ -565,7 +571,9 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
           <div className="flex items-center gap-4">
             <StepIndicator current={step} total={TOTAL_STEPS} />
             <button
+              ref={closeButtonRef}
               onClick={onClose}
+              aria-label="Close create league wizard"
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="w-4 h-4" />

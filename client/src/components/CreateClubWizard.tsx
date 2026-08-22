@@ -27,6 +27,7 @@ import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBackgroundPicker } from "@/components/ClubBackgroundPicker";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import {
   X,
   ChevronLeft,
@@ -320,16 +321,23 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const [creating, setCreating] = useState(false);
   const [, _startTransition] = useTransition();
   const nameRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: nameRef,
+  });
 
   // Focus first input on mount
   useEffect(() => {
     setTimeout(() => nameRef.current?.focus(), 100);
   }, []);
 
-  // Keyboard navigation
+  // Preserve Enter-based step navigation. Escape is handled by the shared overlay.
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
       if (e.key === "Enter" && step < TOTAL_STEPS && !animating) {
         e.preventDefault();
         handleNext();
@@ -517,10 +525,12 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
 
   return createPortal(
     <div
+      ref={dialogRef}
       className={`fixed inset-0 z-50 flex flex-col ${bg}`}
       role="dialog"
       aria-modal="true"
       aria-label="Create Club"
+      tabIndex={-1}
     >
       {/* ── Progress bar ─────────────────────────────────────────────────── */}
       <div className={`h-0.5 w-full ${isDark ? "bg-white/8" : "bg-[#ADBC9F]/40"}`}>
@@ -560,7 +570,9 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         </div>
 
         <button
+          ref={closeButtonRef}
           onClick={onClose}
+          aria-label="Close create club wizard"
           className={`p-2 rounded-xl transition-colors ${
             isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
           }`}

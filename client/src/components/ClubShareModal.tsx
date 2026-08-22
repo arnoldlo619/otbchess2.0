@@ -14,6 +14,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface ClubShareModalProps {
   clubName: string;
@@ -45,6 +46,14 @@ export function ClubShareModal({
 
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<SVGSVGElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
   function handleCopy() {
@@ -132,7 +141,7 @@ export function ClubShareModal({
   const dividerCls = `border-t ${isDark ? "border-white/8" : "border-[#ADBC9F]/40"}`;
 
   return (
-    <div className={overlay} role="dialog" aria-modal aria-label={`Share ${clubName}`}>
+    <div ref={dialogRef} className={overlay} role="dialog" aria-modal="true" aria-label={`Share ${clubName}`} tabIndex={-1}>
       {/* Backdrop */}
       <div className={backdrop} onClick={onClose} />
 
@@ -153,6 +162,7 @@ export function ClubShareModal({
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition hover:scale-110 ${
               isDark ? "bg-white/8 text-white/60 hover:text-white" : "bg-black/5 text-[#436850] hover:text-[#12372A]"

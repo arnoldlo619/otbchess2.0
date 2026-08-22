@@ -16,7 +16,7 @@
  *   />
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { X, Trophy, Sparkles, ChevronDown } from "lucide-react";
 import SocialAssetGenerator, {
   type AssetConfig,
@@ -24,6 +24,7 @@ import SocialAssetGenerator, {
 } from "@/components/tournament/SocialAssetGenerator";
 import type { Club } from "@/lib/clubRegistry";
 import type { TournamentConfig } from "@/lib/tournamentRegistry";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -150,6 +151,14 @@ export function ClubPromoModal({
 }: ClubPromoModalProps) {
   const [selectedSource, setSelectedSource] = useState<SourceType>("club");
   const [pickerOpen, setPickerOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   // Derive the active AssetConfig from the selected source
   const config: AssetConfig = useMemo(() => {
@@ -189,11 +198,13 @@ export function ClubPromoModal({
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[9999] flex flex-col"
       style={{ background: isDark ? "rgba(5,18,10,0.97)" : "rgba(240,245,232,0.97)", backdropFilter: "blur(12px)" }}
       role="dialog"
-      aria-modal
+      aria-modal="true"
       aria-label="Create Promo Graphic"
+      tabIndex={-1}
     >
       {/* ── Header ── */}
       <div
@@ -344,6 +355,7 @@ export function ClubPromoModal({
 
           {/* Close button */}
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
               isDark ? "hover:bg-white/8 text-white/60 hover:text-white" : "hover:bg-[#ADBC9F]/30 text-[#436850]"

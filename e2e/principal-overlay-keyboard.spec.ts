@@ -106,3 +106,21 @@ test("spectator projection contains focus, closes with Escape, and restores its 
   await expect(dialog).toBeHidden();
   await expect(opener).toBeFocused();
 });
+
+test("create-club gate contains focus, closes with Escape, and restores its Clubs opener", async ({ page }) => {
+  await page.goto("/clubs", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Discover Chess Clubs" })).toBeVisible();
+
+  const opener = page.getByRole("button", { name: "Create Club", exact: true }).first();
+  await opener.focus();
+  await opener.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Create a Club" });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close create club sign-in options" })).toBeFocused();
+  await expectFocusContainment(dialog);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});

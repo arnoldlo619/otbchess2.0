@@ -12,6 +12,7 @@ import {
   type ClubEvent,
 } from "../lib/clubEventRegistry";
 import { addFeedEvent } from "../lib/clubFeedRegistry";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface Props {
   clubId: string;
@@ -82,6 +83,14 @@ export default function ClubMeetupWizard({
   const [dragging, setDragging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: titleInputRef,
+  });
 
   const inputCls =
     "w-full rounded-2xl border border-white/10 bg-white/[0.055] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-all focus:border-[#4CAF50]/70 focus:bg-white/[0.08] focus:ring-2 focus:ring-[#4CAF50]/15";
@@ -145,6 +154,11 @@ export default function ClubMeetupWizard({
       style={{ background: "rgba(0,0,0,0.76)", backdropFilter: "blur(14px)" }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="club-meetup-wizard-title"
+        tabIndex={-1}
         className="w-full max-w-5xl overflow-hidden rounded-[28px] shadow-2xl"
         style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(123,220,145,0.16)", boxShadow: "0 28px 80px rgba(0,0,0,0.48)" }}
       >
@@ -162,7 +176,7 @@ export default function ClubMeetupWizard({
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: clubAccent }}>Create club event</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">Plan a club meetup</h2>
+              <h2 id="club-meetup-wizard-title" className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">Plan a club meetup</h2>
               <p className="mt-1 text-sm text-white/45">Set the time, venue, and cadence for {clubName}.</p>
             </div>
           </div>
@@ -191,6 +205,7 @@ export default function ClubMeetupWizard({
               <div>
                 <label className={labelCls}>Event Title <span className="text-[#4CAF50]">*</span></label>
                 <input
+                  ref={titleInputRef}
                   aria-label="Event Title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}

@@ -18,6 +18,7 @@ import { useState, useRef, useEffect } from "react";
 import { X, Send, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/apiFetch";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface Props {
   isOpen: boolean;
@@ -45,6 +46,13 @@ export function ContactOwnerModal({
   const [sent, setSent] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: textareaRef,
+  });
 
   // Focus the textarea when the modal opens
   useEffect(() => {
@@ -123,6 +131,11 @@ export function ContactOwnerModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-owner-title"
+        tabIndex={-1}
         className={`w-full max-w-md rounded-3xl border ${cardBorder} ${card} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -165,6 +178,7 @@ export function ContactOwnerModal({
             {/* Owner name + username */}
             <div>
               <h2
+                id="contact-owner-title"
                 className={`text-sm font-bold leading-tight ${textMain}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
@@ -184,6 +198,7 @@ export function ContactOwnerModal({
 
           <button
             onClick={onClose}
+            aria-label="Close contact owner dialog"
             className={`p-1.5 rounded-xl transition-colors ${
               isDark
                 ? "text-white/40 hover:text-white hover:bg-white/8"

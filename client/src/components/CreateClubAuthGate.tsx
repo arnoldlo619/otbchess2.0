@@ -8,10 +8,11 @@
  *   3. Preview the wizard (read-only demo, no account needed)
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X, Trophy, Users, Star, ChevronRight, Eye } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import AuthModal from "@/components/AuthModal";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface Props {
   onClose: () => void;
@@ -26,6 +27,14 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
   const isDark = theme === "dark";
   const [showAuth, setShowAuth] = useState(false);
   const [authTab, setAuthTab] = useState<"signin" | "signup">("signup");
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: !showAuth,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-white";
   const card = isDark ? "bg-[#142018]" : "bg-[#f5f8f5]";
@@ -55,7 +64,14 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-club-auth-title"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -96,7 +112,9 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
 
         {/* Close */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
+          aria-label="Close create club sign-in options"
           className={`absolute top-3 right-3 p-1.5 rounded-lg transition-colors ${isDark ? "text-white/40 hover:text-white/80 hover:bg-white/10" : "text-[#436850] hover:text-[#12372A] hover:bg-black/5"}`}
         >
           <X className="w-4 h-4" />
@@ -104,7 +122,7 @@ export function CreateClubAuthGate({ onClose, onAuthenticated, onPreview }: Prop
 
         <div className="p-5 space-y-4">
           <div>
-            <h2 className={`text-lg font-bold ${textMain}`}>Create a Club</h2>
+            <h2 id="create-club-auth-title" className={`text-lg font-bold ${textMain}`}>Create a Club</h2>
             <p className={`text-sm mt-0.5 ${textMuted}`}>
               Sign in or create an account to get started.
             </p>

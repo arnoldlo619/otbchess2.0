@@ -26,6 +26,15 @@ const migratedOverlays = [
   "client/src/components/RegisterGameModal.tsx",
   "client/src/components/SpectatorQRScreen.tsx",
   "client/src/components/SpectatorShareModal.tsx",
+  "client/src/components/ClubMeetupWizard.tsx",
+  "client/src/components/ClubShareModal.tsx",
+  "client/src/components/ContactOwnerModal.tsx",
+  "client/src/components/CreateClubAuthGate.tsx",
+  "client/src/components/CreateClubWizard.tsx",
+  "client/src/components/CreateLeagueWizard.tsx",
+  "client/src/components/EditClubDetailsModal.tsx",
+  "client/src/components/club/ClubPromoModal.tsx",
+  "client/src/components/club/ClubQRProjectionModal.tsx",
 ];
 
 describe("principal custom overlay accessibility", () => {
@@ -62,5 +71,11 @@ describe("principal custom overlay accessibility", () => {
     expect(source).toContain('e.key === "ArrowRight"');
     expect(source).toContain('e.key === "ArrowLeft"');
     expect(source).not.toContain('e.key === "Escape" && isFullscreen');
+  });
+
+  it("preserves create-club Enter navigation while delegating Escape to the shared overlay", () => {
+    const source = readSource("client/src/components/CreateClubWizard.tsx");
+    expect(source).toContain('e.key === "Enter"');
+    expect(source).not.toContain('if (e.key === "Escape") onClose()');
   });
 });

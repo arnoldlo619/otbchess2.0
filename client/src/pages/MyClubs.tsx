@@ -961,6 +961,7 @@ export default function MyClubs() {
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
+              aria-label="Create Club"
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 isDark
                   ? "bg-white/10 text-white hover:bg-white/15 border border-white/10"
