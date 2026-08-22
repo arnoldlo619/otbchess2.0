@@ -7402,7 +7402,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] WCAG AA contrast in both themes
 
 ### F. Performance
-- [ ] JavaScript bundle size audit (total + per-chunk)
+- [x] JavaScript bundle size audit (total + per-chunk)
 - [ ] LCP ≤2.5s (lab equivalent)
 - [ ] CLS ≤0.1
 - [ ] INP ≤200ms

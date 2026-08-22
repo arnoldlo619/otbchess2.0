@@ -17,8 +17,6 @@
 
 import { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import Papa from "papaparse";
-import * as XLSX from "xlsx";
 import { nanoid } from "nanoid";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
@@ -184,7 +182,8 @@ function extractUsernames(rows: Record<string, string>[]): string[] {
     .filter(Boolean);
 }
 
-function parseCSV(text: string): string[] {
+async function parseCSV(text: string): Promise<string[]> {
+  const { default: Papa } = await import("papaparse");
   const result = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,
@@ -193,7 +192,8 @@ function parseCSV(text: string): string[] {
   return extractUsernames(result.data);
 }
 
-function parseXLSX(buffer: ArrayBuffer): string[] {
+async function parseXLSX(buffer: ArrayBuffer): Promise<string[]> {
+  const XLSX = await import("xlsx");
   const wb = XLSX.read(buffer, { type: "array" });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, {
@@ -316,16 +316,24 @@ export function UploadRSVPModal({
 
       if (ext === "csv") {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const usernames = parseCSV(e.target?.result as string);
-          initRows(usernames);
+        reader.onload = async (e) => {
+          try {
+            const usernames = await parseCSV(e.target?.result as string);
+            initRows(usernames);
+          } catch {
+            toast.error("Could not read this CSV file.");
+          }
         };
         reader.readAsText(file);
       } else {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const usernames = parseXLSX(e.target?.result as ArrayBuffer);
-          initRows(usernames);
+        reader.onload = async (e) => {
+          try {
+            const usernames = await parseXLSX(e.target?.result as ArrayBuffer);
+            initRows(usernames);
+          } catch {
+            toast.error("Could not read this spreadsheet file.");
+          }
         };
         reader.readAsArrayBuffer(file);
       }

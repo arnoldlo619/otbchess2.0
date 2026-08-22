@@ -46,7 +46,7 @@ const LeagueHistory = lazy(() => import("./pages/LeagueHistory"));
 const LeagueDemo = lazy(() => import("./pages/LeagueDemo"));
 const LeagueOverview = lazy(() => import("./pages/LeagueOverview"));
 const MatchupPrep = lazy(() => import("./pages/MatchupPrep"));
-import PrepAnalysis from "@/pages/PrepAnalysis";
+const PrepAnalysis = lazy(() => import("./pages/PrepAnalysis"));
 const PublicTournament = lazy(() => import("./pages/PublicTournament"));
 const TournamentAnalytics = lazy(() => import("./pages/TournamentAnalytics"));
 const OpeningsAdmin = lazy(() => import("./pages/OpeningsAdmin"));

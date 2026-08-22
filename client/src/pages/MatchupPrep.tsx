@@ -20,7 +20,6 @@ import {
   Zap, GitBranch, BarChart3, ChevronDown,
   Download, FileImage, FileText,
 } from "lucide-react";
-import { toBlob } from "html-to-image";
 import { PrepExportCard } from "../components/prep/PrepExportCard";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
@@ -303,6 +302,7 @@ export default function MatchupPrep() {
     if (!exportCardRef.current || !reportV3) return;
     setExportLoading("png");
     try {
+      const { toBlob } = await import("html-to-image");
       const blob = await toBlob(exportCardRef.current, {
         quality: 1,
         pixelRatio: 2,

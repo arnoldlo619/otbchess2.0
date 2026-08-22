@@ -35,7 +35,6 @@ import { DirectorLifecycleBand } from "@/components/tournament/DirectorLifecycle
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
-import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { getPlayerCountError, getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { getTournamentStatusDisplay, selectDirectorLifecycleStatus } from "@/lib/tournamentUtils";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
@@ -6789,7 +6788,9 @@ export default function Director() {
                     {
                       icon: Download,
                       label: "Download Results PDF",
-                      onClick: async () => { await generateResultsPdf({
+                      onClick: async () => {
+                        const { generateResultsPdf } = await import("@/lib/generateResultsPdf");
+                        await generateResultsPdf({
                         tournamentName: state.tournamentName,
                         location: tournamentConfig?.venue,
                         date: tournamentConfig?.date,
@@ -6798,7 +6799,8 @@ export default function Director() {
                         rounds: state.rounds,
                         clubName: tournamentConfig?.clubName ?? undefined,
                         clubLogoUrl: clubAvatarUrl ?? undefined,
-                      }); },
+                        });
+                      },
                     },
                   ].map(({ icon: Icon, label, onClick }) => {
                     const isEmptyStateJoinAction = state.players.length === 0 && (label === "Show QR Code" || label === "Copy Join Link");
