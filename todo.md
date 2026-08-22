@@ -7814,3 +7814,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Architecture: Clean up unused imports after route extraction (prepCache, savedPrepReports, buildPrepReport, 10+ prep-related imports)
 - [x] Performance: Add loading="lazy" and decoding="async" to below-fold images across all components
 - [x] Performance: Code-split heavy Director-only modals and panels behind local loading boundaries
+- [x] Performance: Code-split heavy ClubDashboard owner workflows behind local loading boundaries

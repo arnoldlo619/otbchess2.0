@@ -10,7 +10,7 @@
  *   • Feed tab    — chronological activity stream
  */
 
-import React, {useState, useEffect, useRef} from "react";
+import React, {lazy, Suspense, useState, useEffect, useRef} from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -204,13 +204,10 @@ import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
-import { TournamentWizard } from "@/components/TournamentWizard";
 import { apiGetClub, apiListClubMembers, apiListMyClubs, apiTransferOwnership } from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
-import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
-import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { ShaderBackground } from "@/components/ui/shader-r";
@@ -220,7 +217,21 @@ import { NeonNebula } from "@/components/ui/neon-nebula";
 import { SILK_DEFAULTS, CLUB_BACKGROUND_TEMPLATES, GREEN_WAVES_BG_VALUE } from "@/components/ClubBackgroundPicker";
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
-import RsvpFormAnalytics from "@/components/club/RsvpFormAnalytics";
+const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
+const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
+const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
+const RsvpFormAnalytics = lazy(() => import("@/components/club/RsvpFormAnalytics"));
+
+function ClubFeatureFallback({ overlay = false }: { overlay?: boolean }) {
+  return (
+    <div className={overlay ? "fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm" : "flex min-h-40 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]"}>
+      <div className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-[oklch(0.16_0.05_145)] px-4 py-3 text-sm font-semibold text-white/75 shadow-xl">
+        <RefreshCw className="h-4 w-4 animate-spin text-[#4CAF50]" aria-hidden="true" />
+        Loading club tools…
+      </div>
+    </div>
+  );
+}
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -4433,14 +4444,16 @@ export default function ClubDashboard() {
                     <ClipboardList className="w-4 h-4 text-white/40" />
                     <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest">RSVP Form Responses</h3>
                   </div>
-                  {meetupEventsWithForms.map((ev) => (
-                    <RsvpFormAnalytics
-                      key={ev.id}
-                      clubId={club.id}
-                      eventId={ev.id}
-                      accentColor={accent}
-                    />
-                  ))}
+                  <Suspense fallback={<ClubFeatureFallback />}>
+                    {meetupEventsWithForms.map((ev) => (
+                      <RsvpFormAnalytics
+                        key={ev.id}
+                        clubId={club.id}
+                        eventId={ev.id}
+                        accentColor={accent}
+                      />
+                    ))}
+                  </Suspense>
                 </div>
               );
             })()}
@@ -6227,15 +6240,17 @@ export default function ClubDashboard() {
 
             {/* ── CLUB PROFILE SUB-TAB (owner/director only) ──────────────── */}
             {settingsSubTab === "profile" && isOwnerOrDirector && (
-              <ClubSettingsPanel
-                club={club}
-                accent={accent}
-                isDark={isDark}
-                onClubChange={(patch: Partial<Omit<Club, "id" | "slug" | "foundedAt">>) => {
-                  updateClub(club.id, patch);
-                  setClub((prev) => prev ? { ...prev, ...patch } : prev);
-                }}
-              />
+              <Suspense fallback={<ClubFeatureFallback />}>
+                <ClubSettingsPanel
+                  club={club}
+                  accent={accent}
+                  isDark={isDark}
+                  onClubChange={(patch: Partial<Omit<Club, "id" | "slug" | "foundedAt">>) => {
+                    updateClub(club.id, patch);
+                    setClub((prev) => prev ? { ...prev, ...patch } : prev);
+                  }}
+                />
+              </Suspense>
             )}
             {/* ── JOIN SETTINGS SUB-TAB ─────────────────────────────────────────────────── */}
             {settingsSubTab === "join" && isOwnerOrDirector && (() => {
@@ -7374,8 +7389,9 @@ export default function ClubDashboard() {
         />
       )}
       {showTournamentWizard && user && (
+        <Suspense fallback={<ClubFeatureFallback overlay />}>
         <TournamentWizard
-          open={showTournamentWizard}
+          open
           initialClubId={club.id}
           initialClubName={club.name}
           onClose={(createdTournamentId, createdTournamentName) => {
@@ -7412,9 +7428,11 @@ export default function ClubDashboard() {
             }
           }}
         />
+        </Suspense>
       )}
       {/* ── Club Meetup Wizard ──────────────────────────────────────────── */}
       {showMeetupWizard && user && club && (
+        <Suspense fallback={<ClubFeatureFallback overlay />}>
         <ClubMeetupWizard
           clubId={club.id}
           clubName={club.name}
@@ -7430,6 +7448,7 @@ export default function ClubDashboard() {
           }}
           onClose={() => setShowMeetupWizard(false)}
         />
+        </Suspense>
       )}
       {/* ── Record Battle Modal ─────────────────────────────────────────── */}
       {showRecordBattle && club && (
