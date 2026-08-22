@@ -97,3 +97,15 @@ test("Archive search and standings disclosures expose purpose and state", async 
   await expect(disclosure).toHaveAttribute("aria-expanded", "true");
   await expect(disclosure).toHaveAccessibleName(/^Hide standings for /);
 });
+
+test("primary authentication and Join fields expose stable form labels", async ({ page }) => {
+  await page.goto("/auth", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText(/Welcome back/i).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Email" })).toBeVisible();
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Remember me for 30 days" })).toBeAttached();
+
+  await page.goto("/join", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText(/Join Tournament/i).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Tournament code" })).toBeVisible();
+});

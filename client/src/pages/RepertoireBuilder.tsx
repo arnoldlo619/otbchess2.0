@@ -1650,6 +1650,7 @@ export default function RepertoireBuilder() {
           <div className="flex-1 flex items-center gap-2">
             {editingName ? (
               <input
+                aria-label="Repertoire name"
                 ref={nameInputRef}
                 value={repertoireName}
                 onChange={(e) => setRepertoireName(e.target.value)}
@@ -1998,6 +1999,7 @@ export default function RepertoireBuilder() {
                   </div>
                   {/* Textarea */}
                   <textarea
+                    aria-label="Coaching notes"
                     value={noteText}
                     onChange={(e) => {
                       setNoteText(e.target.value);
@@ -2639,6 +2641,7 @@ export default function RepertoireBuilder() {
                 Copy or download the PGN to use in Chessbase, Lichess studies, or any other chess software.
               </p>
               <textarea
+                aria-label="PGN export text"
                 readOnly
                 value={exportToPgn(moveTree, repertoireName, color)}
                 rows={12}
@@ -2714,6 +2717,7 @@ export default function RepertoireBuilder() {
                   <span className="text-sm">Click to choose a .pgn file</span>
                 </div>
                 <input
+                  aria-label="PGN file upload"
                   ref={pgnImportFileRef}
                   type="file"
                   accept=".pgn,text/plain"
@@ -2728,6 +2732,7 @@ export default function RepertoireBuilder() {
                   Or paste PGN text
                 </label>
                 <textarea
+                  aria-label="PGN Paste Text"
                   value={pgnImportText}
                   onChange={(e) => handlePgnTextChange(e.target.value)}
                   rows={8}

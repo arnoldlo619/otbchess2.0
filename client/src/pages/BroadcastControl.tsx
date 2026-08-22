@@ -862,6 +862,7 @@ export default function BroadcastControl() {
           {/* SAN input */}
           <form onSubmit={handleSanSubmit} className="flex gap-2 rounded-xl p-3 border border-white/08 bg-[oklch(0.14_0.04_145)] max-w-[560px] mx-auto">
             <input
+              aria-label="Enter move"
               ref={sanInputRef}
               value={sanInput}
               onChange={(e) => setSanInput(e.target.value)}
@@ -910,6 +911,7 @@ export default function BroadcastControl() {
             {showPgnImport && (
               <div className="space-y-2 pt-2 border-t border-white/05">
                 <textarea
+                  aria-label="Paste PGN"
                   value={pgnImportText}
                   onChange={(e) => setPgnImportText(e.target.value)}
                   placeholder="Paste PGN here…"
@@ -937,12 +939,14 @@ export default function BroadcastControl() {
             {showCorrection && (
               <div className="space-y-2 pt-2 border-t border-white/05">
                 <input
+                  aria-label="Paste FEN"
                   value={correctionFen}
                   onChange={(e) => setCorrectionFen(e.target.value)}
                   placeholder="Paste FEN…"
                   className="w-full px-3 py-2 rounded-lg text-xs font-mono bg-white/05 border border-white/10 text-white placeholder-white/30"
                 />
                 <input
+                  aria-label="Correction note"
                   value={correctionNote}
                   onChange={(e) => setCorrectionNote(e.target.value)}
                   placeholder="Correction note (optional)"

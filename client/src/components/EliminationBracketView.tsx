@@ -919,6 +919,7 @@ export function SwissElimCutoffScreen({
           <div className="flex items-center gap-2">
             <label className={`text-xs font-semibold ${T.sub}`}>Top</label>
             <select
+              aria-label="Cutoff Select"
               value={cutoff}
               onChange={(e) => setCutoff(Number(e.target.value))}
               className={`text-sm font-bold px-3 py-1.5 rounded-xl border appearance-none cursor-pointer ${T.select}`}

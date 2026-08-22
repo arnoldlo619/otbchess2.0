@@ -770,6 +770,7 @@ export default function GameRecorder() {
                   White Player
                 </label>
                 <input
+                  aria-label="White Player"
                   type="text"
                   value={setup.whitePlayer}
                   onChange={(e) =>
@@ -792,6 +793,7 @@ export default function GameRecorder() {
                   Black Player
                 </label>
                 <input
+                  aria-label="Black Player"
                   type="text"
                   value={setup.blackPlayer}
                   onChange={(e) =>
@@ -818,6 +820,7 @@ export default function GameRecorder() {
                   Event (optional)
                 </label>
                 <input
+                  aria-label="Event"
                   type="text"
                   value={setup.event}
                   onChange={(e) =>
@@ -840,6 +843,7 @@ export default function GameRecorder() {
                   Date
                 </label>
                 <input
+                  aria-label="Date"
                   type="date"
                   value={setup.date}
                   onChange={(e) =>
@@ -927,6 +931,7 @@ export default function GameRecorder() {
                 </div>
               </div>
               <textarea
+                aria-label="PGN"
                 value={setup.pgn}
                 onChange={(e) => handlePgnChange(e.target.value)}
                 placeholder="1. e4 e5 2. Nf3 Nc6 3. Bb5 ..."

@@ -330,6 +330,7 @@ export function PairingSwapModal({
           }`}>
             <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
             <input
+              aria-label="Search players"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

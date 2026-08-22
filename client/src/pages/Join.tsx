@@ -1487,6 +1487,7 @@ export default function JoinPage() {
                 <div className="relative">
                   <Hash className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                   <input
+                    aria-label="Tournament Code"
                     id="tournament-code"
                     type="text"
                     value={tournamentCode}
@@ -1583,6 +1584,7 @@ export default function JoinPage() {
                     <div className="relative">
                       <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                       <input
+                        aria-label="Auth Name"
                         type="text"
                         value={authName}
                         onChange={(e) => { setAuthName(e.target.value); setAuthError(""); }}
@@ -1602,6 +1604,7 @@ export default function JoinPage() {
                   <div className="relative">
                     <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                     <input
+                      aria-label="Auth Email"
                       type="email"
                       value={authEmail}
                       onChange={(e) => { setAuthEmail(e.target.value); setAuthError(""); }}
@@ -1619,6 +1622,7 @@ export default function JoinPage() {
                   <label className={`mobile-section-label block mb-2 ${labelCls}`}>Password</label>
                   <div className="relative">
                       <input
+                        aria-label="Auth Password"
                         type={authShowPw ? "text" : "password"}
                         value={authPassword}
                         onChange={(e) => { setAuthPassword(e.target.value); setAuthError(""); }}
@@ -1661,6 +1665,7 @@ export default function JoinPage() {
                     <div className="relative">
                       <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none ${textMuted}`}>&#9812;</span>
                       <input
+                        aria-label="Auth Username"
                         type="text"
                         value={username}
                         onChange={(e) => { setUsername(e.target.value); }}
@@ -1773,6 +1778,7 @@ export default function JoinPage() {
                   <div className="relative">
                     <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                     <input
+                      aria-label="Player Name"
                       ref={nameRef}
                       type="text"
                       value={playerName}
@@ -1791,6 +1797,7 @@ export default function JoinPage() {
                   <div className="relative">
                     <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none ${textMuted}`}>&#9812;</span>
                     <input
+                      aria-label="Chesscom Username"
                       ref={usernameRef}
                       type="text"
                       value={username}
@@ -1880,6 +1887,7 @@ export default function JoinPage() {
                   <div className="relative">
                     <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                     <input
+                      aria-label="Platform Username"
                       ref={usernameRef}
                       type="text"
                       value={username}
@@ -2092,6 +2100,7 @@ export default function JoinPage() {
                     <div className="relative">
                       <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-[#436850]/70"}`} />
                       <input
+                        aria-label="Phone / WhatsApp number"
                         type="tel"
                         inputMode="tel"
                         autoComplete="tel"
@@ -2105,6 +2114,7 @@ export default function JoinPage() {
                     <div className="relative">
                       <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-[#436850]/70"}`} />
                       <input
+                        aria-label="Email address"
                         type="email"
                         inputMode="email"
                         autoComplete="email"

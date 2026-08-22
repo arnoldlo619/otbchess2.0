@@ -556,6 +556,7 @@ export function ChessnutBoardPanel({
                 <span className="font-mono text-white/60">{debounceMs}ms</span>
               </div>
               <input
+                aria-label="Stabilization delay"
                 type="range" min={200} max={1500} step={100} value={debounceMs}
                 onChange={e => {
                   const v = Number(e.target.value);

@@ -771,6 +771,7 @@ function Step1Identity({
           Club Name <span className="text-red-400">*</span>
         </label>
         <input
+          aria-label="Club Name"
           ref={nameRef}
           type="text"
           value={data.name}
@@ -797,6 +798,7 @@ function Step1Identity({
           </span>
         </div>
         <input
+          aria-label="Club Tagline"
           type="text"
           value={data.tagline}
           onChange={(e) => patch({ tagline: e.target.value })}
@@ -921,6 +923,7 @@ function Step3Location({
           City / Region <span className="text-red-400">*</span>
         </label>
         <input
+          aria-label="Club City"
           type="text"
           value={data.location}
           onChange={(e) => patch({ location: e.target.value })}
@@ -940,6 +943,7 @@ function Step3Location({
         </label>
         <div className="relative">
           <select
+            aria-label="Club Country"
             value={data.country}
             onChange={(e) => patch({ country: e.target.value })}
             className={selectCls}
@@ -998,6 +1002,7 @@ function Step4About({
           </span>
         </div>
         <textarea
+          aria-label="Club Description"
           value={data.description}
           onChange={(e) => patch({ description: e.target.value })}
           placeholder="Tell players about your club — history, what you do, who's welcome, when you meet…"
@@ -1055,6 +1060,7 @@ function Step4About({
         <div className="relative">
           <Link2 className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${textMuted}`} />
           <input
+            aria-label="Website URL"
             type="url"
             value={data.website}
             onChange={(e) => patch({ website: e.target.value })}
@@ -1065,6 +1071,7 @@ function Step4About({
         <div className="relative">
           <MessageSquare className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${textMuted}`} />
           <input
+            aria-label="Discord Server URL"
             type="url"
             value={data.discord}
             onChange={(e) => patch({ discord: e.target.value })}
@@ -1189,6 +1196,7 @@ function Step5Socials({
         <div className="relative">
           <Globe className={iconCls} />
           <input type="url" value={data.website} onChange={(e) => patch({ website: e.target.value })}
+            aria-label="Website URL"
             placeholder="https://yourclub.org"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
@@ -1196,6 +1204,7 @@ function Step5Socials({
         <div className="relative">
           <MessageSquare className={iconCls} />
           <input type="url" value={data.discord} onChange={(e) => patch({ discord: e.target.value })}
+            aria-label="Discord Server URL"
             placeholder="https://discord.gg/yourserver"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
@@ -1203,6 +1212,7 @@ function Step5Socials({
         <div className="relative">
           <Camera className={iconCls} />
           <input type="text" value={data.instagram} onChange={(e) => patch({ instagram: e.target.value })}
+            aria-label="Instagram Handle"
             placeholder="@yourclub (Instagram)"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
@@ -1210,6 +1220,7 @@ function Step5Socials({
         <div className="relative">
           <Video className={iconCls} />
           <input type="text" value={data.tiktok} onChange={(e) => patch({ tiktok: e.target.value })}
+            aria-label="TikTok Handle"
             placeholder="@yourclub (TikTok)"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
@@ -1217,6 +1228,7 @@ function Step5Socials({
         <div className="relative">
           <Play className={iconCls} />
           <input type="url" value={data.youtube} onChange={(e) => patch({ youtube: e.target.value })}
+            aria-label="YouTube Channel URL"
             placeholder="https://youtube.com/@yourclub"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
@@ -1224,6 +1236,7 @@ function Step5Socials({
         <div className="relative">
           <Link2 className={iconCls} />
           <input type="url" value={data.linktree} onChange={(e) => patch({ linktree: e.target.value })}
+            aria-label="Linktree URL"
             placeholder="https://linktr.ee/yourclub"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
@@ -1238,17 +1251,20 @@ function Step5Socials({
           <div>
             <label className={`block text-xs font-medium mb-1.5 ${labelCls}`}>Day</label>
             <input type="text" value={data.meetingDay} onChange={(e) => patch({ meetingDay: e.target.value })}
+              aria-label="Meeting Day"
               placeholder="e.g. Every Tuesday"
               className={`w-full px-3 py-2.5 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
           </div>
           <div>
             <label className={`block text-xs font-medium mb-1.5 ${labelCls}`}>Time</label>
             <input type="text" value={data.meetingTime} onChange={(e) => patch({ meetingTime: e.target.value })}
+              aria-label="Meeting Time"
               placeholder="e.g. 7:00 PM"
               className={`w-full px-3 py-2.5 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
           </div>
         </div>
         <input type="text" value={data.meetingNotes} onChange={(e) => patch({ meetingNotes: e.target.value })}
+          aria-label="Additional meeting notes"
           placeholder="Additional notes (venue, parking, etc.)"
           className={`w-full px-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
       </div>
@@ -1261,12 +1277,14 @@ function Step5Socials({
         <div className="relative">
           <Mail className={iconCls} />
           <input type="email" value={data.contactEmail} onChange={(e) => patch({ contactEmail: e.target.value })}
+            aria-label="Contact Email"
             placeholder="club@email.com"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>
         <div className="relative">
           <Phone className={iconCls} />
           <input type="tel" value={data.contactPhone} onChange={(e) => patch({ contactPhone: e.target.value })}
+            aria-label="Contact Phone"
             placeholder="+1 (555) 000-0000"
             className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
         </div>

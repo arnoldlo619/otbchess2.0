@@ -707,6 +707,7 @@ function MobileFilterDrawer({
         <div className="mb-5">
           <label className={`text-xs font-semibold uppercase tracking-wider mb-2 block ${textMuted}`}>Location</label>
           <select
+            aria-label="Location"
             value={locationFilter}
             onChange={(e) => { setLocationFilter(e.target.value); setCityFilter("all"); }}
             className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none ${selectCls}`}
@@ -720,6 +721,7 @@ function MobileFilterDrawer({
           </select>
           {selectedLoc && selectedLoc.cities.length > 0 && (
             <select
+              aria-label="City"
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
               className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none mt-2 ${selectCls}`}
@@ -736,6 +738,7 @@ function MobileFilterDrawer({
         <div className="mb-6">
           <label className={`text-xs font-semibold uppercase tracking-wider mb-2 block ${textMuted}`}>Sort By</label>
           <select
+            aria-label="Sort By"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
             className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none ${selectCls}`}
@@ -1037,6 +1040,7 @@ export default function MyClubs() {
               <div className="relative flex-1">
                 <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${textMuted}`} />
                 <input
+                  aria-label="Search by name, location, or category"
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -1077,6 +1081,7 @@ export default function MyClubs() {
                 <div className="relative">
                   <ArrowUpDown className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
                   <select
+                    aria-label="Sort clubs"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
                     className={`pl-8 pr-6 py-2.5 rounded-xl border text-xs font-medium outline-none cursor-pointer appearance-none ${
@@ -1120,6 +1125,7 @@ export default function MyClubs() {
                   <div className="relative">
                     <MapPin className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none ${textMuted}`} />
                     <select
+                      aria-label="Filter clubs by country"
                       value={locationFilter}
                       onChange={(e) => { setLocationFilter(e.target.value); setCityFilter("all"); }}
                       className={`pl-7 pr-6 py-1.5 rounded-full border text-xs font-medium outline-none cursor-pointer appearance-none ${
@@ -1144,6 +1150,7 @@ export default function MyClubs() {
                     const loc = locationTree.find((l) => l.code === locationFilter);
                     return loc && loc.cities.length > 0 ? (
                       <select
+                        aria-label="Filter clubs by city"
                         value={cityFilter}
                         onChange={(e) => setCityFilter(e.target.value)}
                         className={`px-3 py-1.5 rounded-full border text-xs font-medium outline-none cursor-pointer appearance-none ${

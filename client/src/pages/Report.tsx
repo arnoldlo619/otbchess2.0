@@ -1283,6 +1283,7 @@ export default function ReportPage() {
               }`}>
                 <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/40" : "text-[#436850]"}`} />
                 <input
+                  aria-label="Search players"
                   type="text"
                   placeholder="Search players…"
                   value={search}

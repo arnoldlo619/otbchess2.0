@@ -228,6 +228,7 @@ export function RoundTimerCard({
             ))}
             {/* Custom input */}
             <input
+              aria-label="Custom duration in minutes"
               type="number"
               min={1}
               max={180}

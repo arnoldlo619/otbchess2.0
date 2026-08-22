@@ -300,6 +300,7 @@ export default function InviteAccept() {
                   <div>
                     <label className={labelCls}>Display Name</label>
                     <input
+                      aria-label="DisplayName"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Your chess name"
@@ -310,6 +311,7 @@ export default function InviteAccept() {
                 <div>
                   <label className={labelCls}>Email</label>
                   <input
+                    aria-label="Email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -320,6 +322,7 @@ export default function InviteAccept() {
                 <div>
                   <label className={labelCls}>Password</label>
                   <input
+                    aria-label="Password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

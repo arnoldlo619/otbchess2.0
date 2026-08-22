@@ -127,6 +127,7 @@ export function AvatarCropModal({ imageSrc, onApply, onCancel }: AvatarCropModal
         <div className="flex items-center gap-3 px-5 py-3">
           <ZoomOut className="w-4 h-4 text-white/40 flex-shrink-0" />
           <input
+            aria-label="Zoom level"
             type="range"
             min={1}
             max={3}

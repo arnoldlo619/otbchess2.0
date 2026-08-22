@@ -639,6 +639,7 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-[#436850] cursor-pointer">
             <input
+              aria-label="Select all lines"
               type="checkbox"
               checked={selectedLines.size === lines.length && lines.length > 0}
               onChange={toggleAll}
@@ -677,6 +678,7 @@ function OpeningDetail({ openingId, onBack }: { openingId: string; onBack: () =>
             <CardContent className="py-3 px-4">
               <div className="flex items-center gap-3">
                 <input
+                  aria-label="Select line"
                   type="checkbox"
                   checked={selectedLines.has(line.id)}
                   onChange={() => toggleLineSelection(line.id)}

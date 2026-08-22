@@ -520,6 +520,7 @@ export function ClubBackgroundPicker({
               </span>
             </div>
             <input
+              aria-label="Speed"
               type="range"
               min={1}
               max={15}
@@ -549,6 +550,7 @@ export function ClubBackgroundPicker({
               </span>
             </div>
             <input
+              aria-label="Noise Intensity"
               type="range"
               min={0.2}
               max={4}

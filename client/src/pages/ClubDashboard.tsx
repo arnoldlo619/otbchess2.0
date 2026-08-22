@@ -666,6 +666,7 @@ function EventCard({
                 <PlayerAvatar username={displayName} name={displayName} avatarUrl={avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
               </div>
               <input
+                aria-label="Write a comment"
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
                 placeholder="Add a comment…"
@@ -1129,7 +1130,7 @@ function CreateEventModal({
           {/* Title */}
           <div>
             <label className={labelCls}>Event Title *</label>
-            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} aria-label="Thursday Night Blitz" />
           </div>
 
           {/* Date + Start + End */}
@@ -1152,23 +1153,23 @@ function CreateEventModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Venue</label>
-              <input value={venue} onChange={e => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
+              <input value={venue} onChange={e => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} aria-label="The Chess Lounge" />
             </div>
             <div>
               <label className={labelCls}>Admission</label>
-              <input value={admissionNote} onChange={e => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} />
+              <input value={admissionNote} onChange={e => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} aria-label="Free · $5 at door" />
             </div>
           </div>
 
           <div>
             <label className={labelCls}>Address</label>
-            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} />
+            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} aria-label="Full street address" />
           </div>
 
           {/* Cover image URL */}
           <div>
             <label className={labelCls}>Cover Image URL</label>
-            <input value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} placeholder="https://… (paste an image link)" className={inputCls} />
+            <input value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} placeholder="https://… (paste an image link)" className={inputCls} aria-label="https://… (paste an image link)" />
           </div>
 
           {/* Accent color */}
@@ -1196,7 +1197,7 @@ function CreateEventModal({
           {/* Description */}
           <div>
             <label className={labelCls}>Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell members what to expect…" rows={3} className={`${inputCls} resize-none`} />
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell members what to expect…" rows={3} className={`${inputCls} resize-none`} aria-label="Tell members what to expect…" />
           </div>
 
           <button
@@ -1302,7 +1303,7 @@ function EditEventModal({
 
           <div>
             <label className={labelCls}>Event Title *</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} aria-label="Thursday Night Blitz" />
           </div>
 
           <div>
@@ -1323,22 +1324,22 @@ function EditEventModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Venue</label>
-              <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
+              <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} aria-label="The Chess Lounge" />
             </div>
             <div>
               <label className={labelCls}>Admission</label>
-              <input value={admissionNote} onChange={(e) => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} />
+              <input value={admissionNote} onChange={(e) => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} aria-label="Free · $5 at door" />
             </div>
           </div>
 
           <div>
             <label className={labelCls}>Address</label>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} />
+            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} aria-label="Full street address" />
           </div>
 
           <div>
             <label className={labelCls}>Cover Image URL</label>
-            <input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://…" className={inputCls} />
+            <input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://…" className={inputCls} aria-label="https://…" />
           </div>
 
           <div>
@@ -1364,7 +1365,7 @@ function EditEventModal({
 
           <div>
             <label className={labelCls}>Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tell members what to expect…" rows={3} className={`${inputCls} resize-none`} />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tell members what to expect…" rows={3} className={`${inputCls} resize-none`} aria-label="Tell members what to expect…" />
           </div>
 
           <button
@@ -3948,6 +3949,7 @@ export default function ClubDashboard() {
                             )}
                           </div>
                           <input
+                            aria-label="Name"
                             id="banner-upload-dash"
                             type="file"
                             accept="image/*"
@@ -4947,6 +4949,7 @@ export default function ClubDashboard() {
                       <div className="flex-1 relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                         <input
+                          aria-label="Invite member email"
                           type="email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
@@ -5044,6 +5047,7 @@ export default function ClubDashboard() {
             {/* Search */}
             <div className="relative">
               <input
+                aria-label="Search members"
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
                 placeholder={`Search ${members.length} members…`}
@@ -5607,6 +5611,7 @@ export default function ClubDashboard() {
                     </div>
                     <div className="flex-1 flex flex-col gap-2">
                       <input
+                        aria-label="Post an announcement"
                         value={announcementText}
                         onChange={(e) => setAnnouncementText(e.target.value)}
                         placeholder="Post an announcement to the club…"
@@ -6108,6 +6113,7 @@ export default function ClubDashboard() {
                     <h4 className="text-white font-semibold text-sm">Venmo</h4>
                   </div>
                   <input
+                    aria-label="Venmo handle or link"
                     type="text"
                     placeholder="@your-venmo-handle or link"
                     defaultValue={club.paymentVenmo ?? ""}
@@ -6129,6 +6135,7 @@ export default function ClubDashboard() {
                     <h4 className="text-white font-semibold text-sm">Cash App</h4>
                   </div>
                   <input
+                    aria-label="Cash App cashtag or link"
                     type="text"
                     placeholder="$your-cashtag or link"
                     defaultValue={club.paymentCashapp ?? ""}
@@ -6150,6 +6157,7 @@ export default function ClubDashboard() {
                     <h4 className="text-white font-semibold text-sm">PayPal</h4>
                   </div>
                   <input
+                    aria-label="PayPal username or email"
                     type="text"
                     placeholder="paypal.me/yourname or email"
                     defaultValue={club.paymentPaypal ?? ""}
@@ -6172,6 +6180,7 @@ export default function ClubDashboard() {
                   </div>
                   <p className="text-white/40 text-xs">Upload or paste a link to your payment QR code image. Players will see this on your event page.</p>
                   <input
+                    aria-label="Payment QR Code URL"
                     type="url"
                     placeholder="https://... (image URL of your QR code)"
                     defaultValue={club.paymentQrUrl ?? ""}
@@ -6198,6 +6207,7 @@ export default function ClubDashboard() {
                     <h4 className="text-white font-semibold text-sm">Payment Instructions</h4>
                   </div>
                   <textarea
+                    aria-label="Payment Instructions"
                     placeholder="e.g. Please include your chess.com username in the payment note"
                     defaultValue={club.paymentNote ?? ""}
                     rows={3}
@@ -6305,6 +6315,7 @@ export default function ClubDashboard() {
                         localJoinPolicy === opt.value ? "border-white/20 bg-white/08" : "border-white/06 hover:border-white/12"
                       }`}>
                         <input
+                          aria-label="Name"
                           type="radio"
                           name="joinPolicy"
                           value={opt.value}
@@ -6326,6 +6337,7 @@ export default function ClubDashboard() {
                   <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Intake Questions</h3>
                   <p className="text-white/40 text-xs">Optional questions shown to new members when they request to join (one per line)</p>
                   <textarea
+                    aria-label="Intake Questions"
                     value={localIntakeQ}
                     onChange={e => setLocalIntakeQ(e.target.value)}
                     rows={4}
@@ -6374,6 +6386,7 @@ export default function ClubDashboard() {
                     {/* Event selector for RSVP/Check-In */}
                     {(qrMode === "rsvp" || qrMode === "checkin") && (
                       <select
+                        aria-label="Select an event for QR tools"
                         value={qrEventId ?? ""}
                         onChange={e => setQrEventId(e.target.value || null)}
                         className="w-full px-3 py-2.5 rounded-xl text-sm text-white border border-white/15 bg-white/05 focus:outline-none focus:border-white/30"
@@ -6505,6 +6518,7 @@ export default function ClubDashboard() {
                   <div className="space-y-2">
                     <p className="text-white/40 text-xs">Type <strong className="text-white/70">{club.name}</strong> to confirm:</p>
                     <input
+                      aria-label="Confirm club name to delete"
                       value={confirmDelete}
                       onChange={e => setConfirmDelete(e.target.value)}
                       placeholder={club.name}
@@ -6764,6 +6778,7 @@ export default function ClubDashboard() {
                   <div>
                     <label className="text-white/40 text-xs mb-1 block">Player A</label>
                     <select
+                      aria-label="BattlePlayerA"
                       value={battlePlayerA}
                       onChange={(e) => setBattlePlayerA(e.target.value)}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
@@ -6777,6 +6792,7 @@ export default function ClubDashboard() {
                   <div>
                     <label className="text-white/40 text-xs mb-1 block">Player B</label>
                     <select
+                      aria-label="BattlePlayerB"
                       value={battlePlayerB}
                       onChange={(e) => setBattlePlayerB(e.target.value)}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
@@ -6789,6 +6805,7 @@ export default function ClubDashboard() {
                   </div>
                 </div>
                 <input
+                  aria-label="Battle notes"
                   type="text"
                   placeholder="Notes (optional)"
                   value={battleNotes}
@@ -7110,6 +7127,7 @@ export default function ClubDashboard() {
                     <div>
                       <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5 block">League Name</label>
                       <input
+                        aria-label="LeagueName"
                         value={leagueName}
                         onChange={(e) => setLeagueName(e.target.value)}
                         placeholder="e.g. Spring 2026 League"
@@ -7119,6 +7137,7 @@ export default function ClubDashboard() {
                     <div>
                       <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Description <span className="text-white/20 normal-case">(optional)</span></label>
                       <textarea
+                        aria-label="LeagueDesc"
                         value={leagueDesc}
                         onChange={(e) => setLeagueDesc(e.target.value)}
                         placeholder="What's this league about?"
@@ -7200,6 +7219,7 @@ export default function ClubDashboard() {
                       </div>
                     </div>
                     <input
+                      aria-label="Search members to add to league"
                       value={leaguePickSearch}
                       onChange={(e) => setLeaguePickSearch(e.target.value)}
                       placeholder="Search members…"
@@ -7474,6 +7494,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">White</label>
               <select
+                aria-label="RbWhite"
                 value={rbWhite}
                 onChange={(e) => { setRbWhite(e.target.value); if (e.target.value === rbBlack) setRbBlack(""); }}
                 className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
@@ -7490,6 +7511,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Black</label>
               <select
+                aria-label="RbBlack"
                 value={rbBlack}
                 onChange={(e) => setRbBlack(e.target.value)}
                 className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
@@ -7533,6 +7555,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Date</label>
               <input
+                aria-label="RbDate"
                 type="date"
                 value={rbDate}
                 onChange={(e) => setRbDate(e.target.value)}
@@ -7545,6 +7568,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Notes <span className="normal-case font-normal">(optional)</span></label>
               <input
+                aria-label="RbNotes"
                 type="text"
                 value={rbNotes}
                 onChange={(e) => setRbNotes(e.target.value)}
@@ -7722,6 +7746,7 @@ export default function ClubDashboard() {
                       <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">Add Walk-In</h4>
                       <div className="flex gap-2">
                         <input
+                          aria-label="Walk-in name"
                           value={walkInName}
                           onChange={e => setWalkInName(e.target.value)}
                           onKeyDown={e => e.key === "Enter" && handleAddWalkIn(rsvpPanelEventId)}

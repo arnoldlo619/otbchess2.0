@@ -256,6 +256,7 @@ export default function GamesHistory() {
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
             <input
+              aria-label="Search opening, player, event…"
               ref={searchRef}
               type="text"
               value={searchInput}

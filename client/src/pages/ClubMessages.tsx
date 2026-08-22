@@ -629,6 +629,7 @@ export default function ClubMessages() {
               <div className="px-5 py-3 border-t border-white/10 bg-[#0d1f12]/80">
                 <div className="flex items-center gap-2">
                   <input
+                    aria-label="Type a message"
                     type="text"
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}

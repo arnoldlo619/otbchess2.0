@@ -223,6 +223,7 @@ function SpotlightSearch({
       >
         <Search className={`w-5 h-5 flex-shrink-0 transition-colors ${focused ? "text-[#436850]" : "text-muted-foreground"}`} />
         <input
+          aria-label="Search by name or chess.com username"
           ref={inputRef}
           type="text"
           value={query}
@@ -580,6 +581,7 @@ function PairingsSection({
             boardSearch ? "text-[#436850]" : "text-muted-foreground"
           }`} />
           <input
+            aria-label="Find a player or board number"
             ref={boardSearchRef}
             type="text"
             value={boardSearch}
@@ -1288,6 +1290,7 @@ function PostEventCTAs({
           {!submitted ? (
             <form onSubmit={handleSubmit} className="flex gap-2">
               <input
+                aria-label="Email address"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

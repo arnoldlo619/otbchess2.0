@@ -243,6 +243,7 @@ export function ContactOwnerModal({
                 Your message
               </label>
               <textarea
+                aria-label="Message Input"
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

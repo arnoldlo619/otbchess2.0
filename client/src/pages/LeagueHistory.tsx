@@ -344,6 +344,7 @@ export default function LeagueHistory() {
                     Select Player
                   </label>
                   <select
+                    aria-label="H2h Player Select"
                     value={h2hPlayer ?? ""}
                     onChange={(e) => setH2hPlayer(e.target.value)}
                     className="w-full bg-[#FBFADA]/70 dark:bg-[#162118] border border-[#ADBC9F] dark:border-[#2a3d2e] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#436850]/50"

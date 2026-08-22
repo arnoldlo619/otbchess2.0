@@ -261,6 +261,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
             <div className="col-span-2 sm:col-span-1">
               <label className={labelCls}>SMTP Host</label>
               <input
+                aria-label="SMTP Host"
                 className={inputCls}
                 placeholder="smtp.gmail.com"
                 value={config.host}
@@ -271,6 +272,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
             <div className="col-span-1">
               <label className={labelCls}>Port</label>
               <input
+                aria-label="SMTP Port"
                 className={inputCls}
                 type="number"
                 placeholder="587"
@@ -300,6 +302,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
             <div className="col-span-2 sm:col-span-1">
               <label className={labelCls}>SMTP Username</label>
               <input
+                aria-label="SMTP User"
                 className={inputCls}
                 placeholder="you@gmail.com"
                 value={config.smtpUser}
@@ -313,6 +316,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
               </label>
               <div className="relative">
                 <input
+                  aria-label="SMTP Pass"
                   className={`${inputCls} pr-9`}
                   type={showPass ? "text" : "password"}
                   placeholder={isConfigured ? "••••••••" : "App password or SMTP password"}
@@ -334,6 +338,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
             <div className="col-span-2 sm:col-span-1">
               <label className={labelCls}>From Name</label>
               <input
+                aria-label="SMTP From Name"
                 className={inputCls}
                 placeholder="Brooklyn Chess Club"
                 value={config.fromName}
@@ -344,6 +349,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
             <div className="col-span-2 sm:col-span-1">
               <label className={labelCls}>From Email</label>
               <input
+                aria-label="SMTP From Email"
                 className={inputCls}
                 placeholder="director@mychessclub.com"
                 value={config.fromEmail}

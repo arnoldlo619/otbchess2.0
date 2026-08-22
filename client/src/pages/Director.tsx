@@ -2049,6 +2049,7 @@ function BracketSortPanel({ players, tournamentId, bracketGroupId, isDark, onSpa
           </button>
           <div className="flex items-center gap-2">
             <input
+              aria-label="Custom thresholds"
               type="text"
               value={customThresholds}
               onChange={e => setCustomThresholds(e.target.value)}
@@ -3990,6 +3991,7 @@ export default function Director() {
                         }`}>
                           <Search className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
                           <input
+                            aria-label="Search by name or username"
                             type="text"
                             value={rosterSearch}
                             onChange={(e) => setRosterSearch(e.target.value)}
@@ -4352,6 +4354,7 @@ export default function Director() {
                       {/* Walk-in quick-add form */}
                       <div className="flex items-center gap-2">
                         <input
+                          aria-label="Walk-in name"
                           type="text"
                           value={walkInName}
                           onChange={(e) => setWalkInName(e.target.value)}
@@ -5807,6 +5810,7 @@ export default function Director() {
                       isDark ? "text-white/30" : "text-[#436850]"
                     }`} />
                     <input
+                      aria-label="Search name, username, ELO"
                       type="text"
                       value={playerSearch}
                       onChange={(e) => setPlayerSearch(e.target.value)}

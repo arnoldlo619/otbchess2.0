@@ -95,6 +95,7 @@ export function EditClubDetailsModal({
                 Description
               </label>
               <textarea
+                aria-label="Description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter club description"
@@ -113,6 +114,7 @@ export function EditClubDetailsModal({
                 Location
               </label>
               <input
+                aria-label="Location"
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -128,6 +130,7 @@ export function EditClubDetailsModal({
                 Website
               </label>
               <input
+                aria-label="Website"
                 type="url"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
@@ -145,6 +148,7 @@ export function EditClubDetailsModal({
               <div className="relative">
                 <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold ${textMuted}`}>@</span>
                 <input
+                  aria-label="Instagram"
                   type="text"
                   value={instagram.replace(/^@/, "")}
                   onChange={(e) => setInstagram(e.target.value.replace(/^@/, ""))}

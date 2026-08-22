@@ -281,6 +281,7 @@ export default function RsvpFormPage() {
                   Your Name <span className="text-red-400">*</span>
                 </label>
                 <input
+                  aria-label="Name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -296,6 +297,7 @@ export default function RsvpFormPage() {
                   Email <span className="text-white/30 font-normal normal-case">(optional)</span>
                 </label>
                 <input
+                  aria-label="Email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -323,6 +325,7 @@ export default function RsvpFormPage() {
 
                 {q.type === "text" && (
                   <input
+                    aria-label={q.label || `Question ${idx + 1}`}
                     value={(answers[q.id] as string) ?? ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
                     placeholder={q.placeholder ?? "Your answer"}
@@ -335,6 +338,7 @@ export default function RsvpFormPage() {
 
                 {q.type === "textarea" && (
                   <textarea
+                    aria-label={q.label || `Question ${idx + 1}`}
                     value={(answers[q.id] as string) ?? ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
                     placeholder={q.placeholder ?? "Your answer"}
@@ -348,6 +352,7 @@ export default function RsvpFormPage() {
 
                 {q.type === "number" && (
                   <input
+                    aria-label={q.label || `Question ${idx + 1}`}
                     type="number"
                     value={(answers[q.id] as string) ?? ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
@@ -422,6 +427,7 @@ export default function RsvpFormPage() {
 
                 {q.type === "select" && (
                   <select
+                    aria-label={q.label || `Question ${idx + 1}`}
                     value={(answers[q.id] as string) ?? ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl text-sm text-white outline-none cursor-pointer"

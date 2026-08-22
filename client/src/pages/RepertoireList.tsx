@@ -512,6 +512,7 @@ export default function RepertoireList() {
                           /* ── Inline rename input ── */
                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <input
+                              aria-label="Rename repertoire"
                               ref={renameInputRef}
                               value={editingTitle}
                               onChange={(e) => setEditingTitle(e.target.value)}

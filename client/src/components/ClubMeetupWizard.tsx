@@ -191,6 +191,7 @@ export default function ClubMeetupWizard({
               <div>
                 <label className={labelCls}>Event Title <span className="text-[#4CAF50]">*</span></label>
                 <input
+                  aria-label="Event Title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Thursday Night Open Play"
@@ -203,6 +204,7 @@ export default function ClubMeetupWizard({
               <div>
                 <label className={labelCls}>Short Description <span className="normal-case font-normal tracking-normal text-white/25">Optional</span></label>
                 <textarea
+                  aria-label="Short Description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Casual open play for all skill levels. Bring a board!"
@@ -215,15 +217,15 @@ export default function ClubMeetupWizard({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="sm:col-span-1">
                   <label className={labelCls}><Calendar className="mr-1 inline h-3 w-3" />Date <span className="text-[#4CAF50]">*</span></label>
-                  <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
+                  <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} aria-label="Date" />
                 </div>
                 <div>
                   <label className={labelCls}><Clock className="mr-1 inline h-3 w-3" />Start</label>
-                  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
+                  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} aria-label="Start Time" />
                 </div>
                 <div>
                   <label className={labelCls}>End</label>
-                  <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
+                  <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} aria-label="End Time" />
                 </div>
               </div>
 
@@ -231,11 +233,11 @@ export default function ClubMeetupWizard({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelCls}><MapPin className="mr-1 inline h-3 w-3" />Venue</label>
-                  <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
+                  <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="The Chess Lounge" className={inputCls} aria-label="Venue" />
                 </div>
                 <div>
                   <label className={labelCls}>Address</label>
-                  <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" className={inputCls} />
+                  <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" className={inputCls} aria-label="Address" />
                 </div>
               </div>
             </div>
@@ -307,6 +309,7 @@ export default function ClubMeetupWizard({
 
                 {/* Hidden file input */}
             <input
+              aria-label="Cover Image Upload"
               ref={fileInputRef}
               type="file"
               accept="image/*"

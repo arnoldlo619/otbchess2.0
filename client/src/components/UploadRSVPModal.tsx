@@ -585,6 +585,7 @@ export function UploadRSVPModal({
               Browse files
             </span>
             <input
+              aria-label="Upload spreadsheet"
               ref={fileInputRef}
               type="file"
               accept=".csv,.xlsx,.xls"

@@ -248,6 +248,7 @@ export function ClubBannerUpload({
 
       {/* Hidden file input */}
       <input
+        aria-label="Upload club banner"
         ref={inputRef}
         type="file"
         accept={ACCEPTED_TYPES.join(",")}

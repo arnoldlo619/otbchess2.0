@@ -441,6 +441,7 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
             <span style={{ color: G, fontWeight: 600 }}>click to browse</span>
           </p>
           <input
+            aria-label="Upload CSV file"
             ref={fileInputRef}
             type="file"
             accept=".csv,.txt"
@@ -451,6 +452,7 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
 
         {/* Paste area */}
         <textarea
+          aria-label="Paste CSV data"
           value={rawText}
           onChange={(e) => processText(e.target.value)}
           placeholder={"name,username,elo\nMagnus Carlsen,MagnusCarlsen,2882\nHikaru Nakamura,hikaru,2794"}
@@ -1011,6 +1013,7 @@ export function AddPlayerModal({
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }} />
                       <input
+                        aria-label="Username lookup"
                         ref={inputRef}
                         type="text"
                         value={username}
@@ -1136,6 +1139,7 @@ export function AddPlayerModal({
                       Full Name
                     </label>
                     <input
+                      aria-label="Full Name"
                       ref={inputRef}
                       type="text"
                       value={manualName}
@@ -1153,6 +1157,7 @@ export function AddPlayerModal({
                       ELO Rating
                     </label>
                     <input
+                      aria-label="ELO Rating"
                       ref={eloRef}
                       type="number"
                       value={manualElo}

@@ -906,6 +906,7 @@ export default function BroadcastConsole() {
             {/* SAN input — large */}
             <form onSubmit={handleSanSubmit} className="flex gap-2 w-full max-w-[600px]">
               <input
+                aria-label="Enter move"
                 ref={sanInputRef}
                 value={sanInput}
                 onChange={(e) => setSanInput(e.target.value)}
@@ -1116,6 +1117,7 @@ export default function BroadcastConsole() {
               {/* SAN input */}
               <form onSubmit={handleSanSubmit} className="flex gap-2 max-w-[560px] mx-auto">
                 <input
+                  aria-label="Enter move"
                   ref={sanInputRef}
                   value={sanInput}
                   onChange={(e) => setSanInput(e.target.value)}
@@ -1195,6 +1197,7 @@ export default function BroadcastConsole() {
                     <div className="flex items-center gap-2">
                       <label className="text-[10px] text-white/40 w-16">Minutes</label>
                       <input
+                        aria-label="Clock Minutes"
                         type="number" min={1} max={300} value={clockPresetMin}
                         onChange={e => setClockPresetMin(Number(e.target.value))}
                         className="flex-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-mono text-center outline-none focus:border-[#4CAF50]/50"

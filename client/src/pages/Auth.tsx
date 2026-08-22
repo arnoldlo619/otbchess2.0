@@ -63,6 +63,7 @@ function PasswordInput({
   return (
     <div className="relative">
       <input
+        aria-label="Password"
         id={id}
         type={show ? "text" : "password"}
         value={value}
@@ -482,6 +483,7 @@ export default function AuthPage() {
                           Email
                         </label>
                         <input
+                          aria-label="Email"
                           ref={firstInputRef}
                           id="auth-signin-email"
                           type="email"
@@ -532,7 +534,7 @@ export default function AuthPage() {
                           </svg>
                         )}
                       </div>
-                      <input type="checkbox" checked={siRemember} onChange={(e) => setSiRemember(e.target.checked)} className="sr-only" />
+                      <input type="checkbox" checked={siRemember} onChange={(e) => setSiRemember(e.target.checked)} className="sr-only" aria-label="Remember me for 30 days" />
                       <span className="text-xs text-white/50">Remember me for 30 days</span>
                     </label>
 
@@ -582,6 +584,7 @@ export default function AuthPage() {
                           Display name <span className="text-red-400">*</span>
                         </label>
                         <input
+                          aria-label="Auth Signup Name"
                           ref={firstInputRef}
                           type="text"
                           value={suName}
@@ -597,6 +600,7 @@ export default function AuthPage() {
                           Email <span className="text-red-400">*</span>
                         </label>
                         <input
+                          aria-label="Auth Signup Email"
                           type="email"
                           value={suEmail}
                           onChange={(e) => { setSuEmail(e.target.value); setSuErrors((p) => ({ ...p, email: undefined })); }}
@@ -626,6 +630,7 @@ export default function AuthPage() {
                           Chess.com username <span className="text-white/25 text-[11px]">(optional)</span>
                         </label>
                         <input
+                          aria-label="Auth Signup Chesscom"
                           type="text"
                           value={suChesscom}
                           onChange={(e) => setSuChesscom(e.target.value)}
@@ -681,6 +686,7 @@ export default function AuthPage() {
                         Your name <span className="text-red-400">*</span>
                       </label>
                       <input
+                        aria-label="Auth Guest Name"
                         ref={firstInputRef}
                         type="text"
                         value={guestName}
@@ -740,6 +746,7 @@ export default function AuthPage() {
                         <div>
                           <label className="block text-xs font-medium text-white/50 mb-1.5">Email address</label>
                           <input
+                            aria-label="Auth Forgot Email"
                             ref={firstInputRef}
                             type="email"
                             value={fpEmail}

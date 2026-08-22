@@ -192,6 +192,7 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
             <div>
               <label className={`text-xs font-medium block mb-1.5 ${labelColor}`}>Livestream URL</label>
               <input
+                aria-label="Livestream URL"
                 type="url"
                 value={data.broadcastUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
@@ -210,6 +211,7 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
             <div>
               <label className={`text-xs font-medium block mb-1.5 ${labelColor}`}>Featured board</label>
               <select
+                aria-label="Featured Board"
                 value={data.featuredBoardNumber}
                 onChange={(e) => setData((p) => ({ ...p, featuredBoardNumber: Number(e.target.value) }))}
                 className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none ${inputBg} ${inputBorder} ${inputText}`}
@@ -224,6 +226,7 @@ export function BroadcastSettingsPanel({ tournamentId, totalBoards, isDark }: Pr
             <div>
               <label className={`text-xs font-medium block mb-1.5 ${labelColor}`}>Broadcast title (optional)</label>
               <input
+                aria-label="Broadcast Title"
                 type="text"
                 value={data.broadcastTitle}
                 onChange={(e) => setData((p) => ({ ...p, broadcastTitle: e.target.value }))}

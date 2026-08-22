@@ -233,6 +233,7 @@ export default function RsvpFormBuilder({ clubId, eventId }: Props) {
           {/* Form title & description */}
           <div className="space-y-2">
             <input
+              aria-label="Form title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Form title"
@@ -245,6 +246,7 @@ export default function RsvpFormBuilder({ clubId, eventId }: Props) {
               onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
             />
             <textarea
+              aria-label="Form description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional description or instructions…"
@@ -341,6 +343,7 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
         <div className="flex-1 space-y-2">
           {/* Label input */}
           <input
+            aria-label="Question"
             value={question.label}
             onChange={(e) => onUpdate({ label: e.target.value })}
             placeholder={`Question ${index + 1}`}
@@ -352,6 +355,7 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
           {/* Type selector + required toggle */}
           <div className="flex items-center gap-2">
             <select
+              aria-label="Question type"
               value={question.type}
               onChange={(e) => onUpdate({ type: e.target.value as QuestionType, options: [] })}
               className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white/70 outline-none cursor-pointer"
@@ -378,6 +382,7 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
                 <div key={i} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ border: "1.5px solid rgba(255,255,255,0.25)" }} />
                   <input
+                    aria-label="Option"
                     value={opt}
                     onChange={(e) => onUpdateOption(i, e.target.value)}
                     placeholder={`Option ${i + 1}`}

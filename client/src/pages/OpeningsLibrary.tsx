@@ -534,6 +534,7 @@ function OpeningsLibraryContent() {
           <div className="mt-2.5 relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/30" : "text-[#436850]"}`} />
             <input
+              aria-label="Search openings"
               type="text"
               placeholder="Search openings..."
               value={search}

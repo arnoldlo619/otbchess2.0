@@ -163,6 +163,7 @@ function SettingsPanel({
           <div className="mb-6">
             <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Opponent (chess.com username)</p>
             <input
+              aria-label="Opponent (chess.com username)"
               type="text"
               value={localOpponent}
               onChange={(e) => setLocalOpponent(e.target.value)}

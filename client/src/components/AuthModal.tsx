@@ -90,6 +90,7 @@ function PasswordInput({
   return (
     <div className="relative">
       <input
+        aria-label={placeholder ?? "Password"}
         id={id}
         type={show ? "text" : "password"}
         value={value}
@@ -495,6 +496,7 @@ export default function AuthModal({
                     Email address
                   </label>
                   <input
+                    aria-label="Signin Email"
                     ref={firstInputRef}
                     id="signin-email"
                     type="email"
@@ -598,6 +600,7 @@ export default function AuthModal({
                     Display name <span className="text-red-400">*</span>
                   </label>
                   <input
+                    aria-label="Signup Name"
                     ref={firstInputRef}
                     type="text"
                     value={suName}
@@ -615,6 +618,7 @@ export default function AuthModal({
                     Email address <span className="text-red-400">*</span>
                   </label>
                   <input
+                    aria-label="Signup Email"
                     type="email"
                     value={suEmail}
                     onChange={(e) => { setSuEmail(e.target.value); setSuErrors((p) => ({ ...p, email: undefined })); }}
@@ -647,6 +651,7 @@ export default function AuthModal({
                     <span className={`text-xs ${muted}`}>(optional — for ELO sync)</span>
                   </label>
                   <input
+                    aria-label="Signup Chesscom"
                     type="text"
                     value={suChesscom}
                     onChange={(e) => setSuChesscom(e.target.value)}
@@ -736,6 +741,7 @@ export default function AuthModal({
                     Your name <span className="text-red-400">*</span>
                   </label>
                   <input
+                    aria-label="Guest Name"
                     ref={firstInputRef}
                     type="text"
                     value={guestName}

@@ -557,8 +557,10 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 rounded-md border border-white/20 flex-shrink-0" style={{ background: value }} />
         <input type="color" value={value.startsWith("#") ? value : "#4CAF50"} onChange={(e) => onChange(e.target.value)}
+          aria-label="Theme color value"
           className="w-8 h-6 rounded cursor-pointer border-0 bg-transparent p-0" style={{ appearance: "none" }} />
         <input type="text" value={value} onChange={(e) => onChange(e.target.value)}
+          aria-label="Theme color hex code"
           className="w-20 text-[11px] font-mono bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white/70 focus:outline-none focus:border-white/30"
           spellCheck={false} />
       </div>
@@ -598,6 +600,7 @@ function UploadZone({
         <span className="text-[10px] text-white/20">{hint}</span>
       </button>
       <input ref={inputRef} type="file" accept="image/*" className="hidden"
+        aria-label="Upload image"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
     </>
   );
@@ -1089,6 +1092,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                 <span className="text-[10px] font-bold tabular-nums text-white/50">{Math.round(bgImageOpacity * 100)}%</span>
               </div>
               <input type="range" min={10} max={100} step={5} value={Math.round(bgImageOpacity * 100)}
+                aria-label="Background image opacity"
                 onChange={(e) => setBgImageOpacity(Number(e.target.value) / 100)}
                 className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                 style={{ background: `linear-gradient(to right, #4CAF50 ${Math.round(bgImageOpacity * 100)}%, rgba(255,255,255,0.12) ${Math.round(bgImageOpacity * 100)}%)` }}
@@ -1114,6 +1118,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                   <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.blur}px</span>
                 </div>
                 <input type="range" min={0} max={20} step={1} value={bgFilters.blur}
+                  aria-label="Blur filter"
                   onChange={(e) => setBgFilters(f => ({ ...f, blur: Number(e.target.value) }))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                   style={{ background: `linear-gradient(to right, #4CAF50 ${bgFilters.blur / 20 * 100}%, rgba(255,255,255,0.12) ${bgFilters.blur / 20 * 100}%)` }}
@@ -1127,6 +1132,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                   <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.grayscale}%</span>
                 </div>
                 <input type="range" min={0} max={100} step={5} value={bgFilters.grayscale}
+                  aria-label="Grayscale filter"
                   onChange={(e) => setBgFilters(f => ({ ...f, grayscale: Number(e.target.value) }))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                   style={{ background: `linear-gradient(to right, #4CAF50 ${bgFilters.grayscale}%, rgba(255,255,255,0.12) ${bgFilters.grayscale}%)` }}
@@ -1140,6 +1146,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                   <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.sepia}%</span>
                 </div>
                 <input type="range" min={0} max={100} step={5} value={bgFilters.sepia}
+                  aria-label="Sepia filter"
                   onChange={(e) => setBgFilters(f => ({ ...f, sepia: Number(e.target.value) }))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                   style={{ background: `linear-gradient(to right, #4CAF50 ${bgFilters.sepia}%, rgba(255,255,255,0.12) ${bgFilters.sepia}%)` }}
@@ -1153,6 +1160,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                   <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.brightness}%</span>
                 </div>
                 <input type="range" min={50} max={150} step={5} value={bgFilters.brightness}
+                  aria-label="Brightness filter"
                   onChange={(e) => setBgFilters(f => ({ ...f, brightness: Number(e.target.value) }))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                   style={{ background: `linear-gradient(to right, #4CAF50 ${(bgFilters.brightness - 50) / 100 * 100}%, rgba(255,255,255,0.12) ${(bgFilters.brightness - 50) / 100 * 100}%)` }}
@@ -1169,6 +1177,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                   <span className="text-[10px] font-bold tabular-nums text-white/50">{bgFilters.contrast}%</span>
                 </div>
                 <input type="range" min={50} max={150} step={5} value={bgFilters.contrast}
+                  aria-label="Contrast filter"
                   onChange={(e) => setBgFilters(f => ({ ...f, contrast: Number(e.target.value) }))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                   style={{ background: `linear-gradient(to right, #4CAF50 ${(bgFilters.contrast - 50) / 100 * 100}%, rgba(255,255,255,0.12) ${(bgFilters.contrast - 50) / 100 * 100}%)` }}
@@ -1215,6 +1224,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                 <label className="text-[10px] text-[#4CAF50] hover:text-[#66BB6A] cursor-pointer transition-colors">
                   Change image
                   <input type="file" accept="image/*" className="hidden"
+                    aria-label="Change logo image"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoFile(f); e.target.value = ""; }} />
                 </label>
               </div>
@@ -1226,6 +1236,7 @@ export default function SocialAssetGenerator({ config }: { config: AssetConfig }
                 <span className="text-[10px] font-bold tabular-nums text-white/50">{Math.round(logoSize * 100)}%</span>
               </div>
               <input type="range" min={50} max={200} step={5} value={Math.round(logoSize * 100)}
+                aria-label="Logo size"
                 onChange={(e) => setLogoSize(Number(e.target.value) / 100)}
                 className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#4CAF50]"
                 style={{ background: `linear-gradient(to right, #4CAF50 ${(logoSize - 0.5) / 1.5 * 100}%, rgba(255,255,255,0.12) ${(logoSize - 0.5) / 1.5 * 100}%)` }}

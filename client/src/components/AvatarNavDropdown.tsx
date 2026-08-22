@@ -1523,6 +1523,7 @@ export function AvatarNavDropdown({
       )}
       {/* Hidden file input for avatar upload */}
       <input
+        aria-label="Upload profile photo"
         ref={avatarInputRef}
         type="file"
         accept="image/*"

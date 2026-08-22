@@ -202,6 +202,7 @@ export function UserRepertoirePanel({ value, onChange }: UserRepertoirePanelProp
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <input
+                  aria-label="chess.com username"
                   ref={inputRef}
                   type="text"
                   value={usernameInput}

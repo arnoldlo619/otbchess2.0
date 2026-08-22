@@ -556,6 +556,7 @@ export function ChessnutChromeBTPanel({
                   Test FEN (position after the move)
                 </label>
                 <input
+                  aria-label="Test FEN"
                   value={testFen}
                   onChange={e => setTestFen(e.target.value)}
                   className={`w-full text-xs font-mono px-2 py-1.5 rounded-lg border ${

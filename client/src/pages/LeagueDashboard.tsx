@@ -2858,6 +2858,7 @@ export default function LeagueDashboard() {
                   {isCommissioner && selectedWeekObj && !selectedWeekObj.isComplete && (
                     <div className="flex items-center gap-2">
                       <input
+                        aria-label="Set week deadline"
                         type="datetime-local"
                         className="text-xs rounded-lg px-2 py-1"
                         style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
@@ -3663,6 +3664,7 @@ export default function LeagueDashboard() {
                 <div className="px-4 pb-4 space-y-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
                   <div className="pt-3">
                     <input
+                      aria-label="Search members"
                       type="text"
                       placeholder="Search members…"
                       value={inviteSearch}
@@ -3891,6 +3893,7 @@ export default function LeagueDashboard() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>League Name</label>
                   <input
+                    aria-label="League Name"
                     type="text"
                     value={settingsName}
                     onChange={e => setSettingsName(e.target.value)}
@@ -3912,6 +3915,7 @@ export default function LeagueDashboard() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>Max Players</label>
                   <input
+                    aria-label="Max Players"
                     type="number"
                     value={settingsMaxPlayers}
                     onChange={e => setSettingsMaxPlayers(e.target.value)}
@@ -3934,6 +3938,7 @@ export default function LeagueDashboard() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>Format</label>
                   <select
+                    aria-label="Format"
                     value={settingsFormat || league.formatType}
                     onChange={e => setSettingsFormat(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all appearance-none"
@@ -3956,6 +3961,7 @@ export default function LeagueDashboard() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>Description <span className="normal-case font-normal">(optional)</span></label>
                   <textarea
+                    aria-label="Description"
                     value={settingsDescription}
                     onChange={e => setSettingsDescription(e.target.value)}
                     placeholder={league.description ?? "Add a description for your league…"}

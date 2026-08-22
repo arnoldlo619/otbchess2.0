@@ -220,6 +220,7 @@ export function EditPlayerModal({
           <div>
             <label className={labelBase}>Display Name</label>
             <input
+              aria-label="Display Name"
               ref={nameRef}
               type="text"
               value={name}
@@ -244,6 +245,7 @@ export function EditPlayerModal({
               </span>
             </label>
             <input
+              aria-label="Active ELO"
               type="number"
               value={eloStr}
               onChange={(e) => setEloStr(e.target.value)}
@@ -307,6 +309,7 @@ export function EditPlayerModal({
               </span>
             </label>
             <input
+              aria-label="Manual Pairing Rating"
               type="number"
               value={manualPairingRatingStr}
               onChange={(e) => setManualPairingRatingStr(e.target.value)}
@@ -337,6 +340,7 @@ export function EditPlayerModal({
                 <div>
                   <label className={labelBase}>Rapid ELO ⚡</label>
                   <input
+                    aria-label="Rapid ELO"
                     type="number"
                     value={rapidEloStr}
                     onChange={(e) => setRapidEloStr(e.target.value)}
@@ -349,6 +353,7 @@ export function EditPlayerModal({
                 <div>
                   <label className={labelBase}>Blitz ELO 🔥</label>
                   <input
+                    aria-label="Blitz ELO"
                     type="number"
                     value={blitzEloStr}
                     onChange={(e) => setBlitzEloStr(e.target.value)}

@@ -181,6 +181,7 @@ export default function DirectorAccessPage() {
                     isDark ? "text-white/25" : "text-[#436850]/70"
                   }`} />
                   <input
+                    aria-label="DirectorCode"
                     ref={inputRef}
                     type={showCode ? "text" : "password"}
                     value={code}

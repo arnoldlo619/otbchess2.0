@@ -208,6 +208,7 @@ function FieldInput({
         )}
         {multiline ? (
           <textarea
+            aria-label={label}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
@@ -219,6 +220,7 @@ function FieldInput({
           />
         ) : (
           <input
+            aria-label={label}
             type={type}
             value={value}
             onChange={(e) => onChange(e.target.value)}

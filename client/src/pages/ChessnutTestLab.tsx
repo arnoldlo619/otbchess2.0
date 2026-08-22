@@ -966,6 +966,7 @@ export default function ChessnutTestLab() {
               <div>
                 <label className="text-[10px] text-white/40 block mb-1">Optional Service UUIDs (comma-separated)</label>
                 <input
+                  aria-label="Optional Service UUIDs (comma-separated)"
                   value={extraUuids}
                   onChange={e => setExtraUuids(e.target.value)}
                   placeholder="e.g. 0000fff0-0000-1000-8000-00805f9b34fb"
@@ -1270,6 +1271,7 @@ export default function ChessnutTestLab() {
               <div>
                 <label className="text-[10px] text-white/40 block mb-1">Current FEN (position before the move)</label>
                 <input
+                  aria-label="Current FEN (position before the move)"
                   value={inferenceFen}
                   onChange={e => setInferenceFen(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-white/05 border border-white/10 text-xs font-mono text-white/80 focus:outline-none focus:border-[#4CAF50]/40"

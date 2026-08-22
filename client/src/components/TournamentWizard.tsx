@@ -663,6 +663,7 @@ function TextInput({
         />
       )}
       <input
+        aria-label={placeholder}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -743,7 +744,7 @@ function PaymentQrUpload({
 
   return (
     <div className="rounded-xl border p-2.5" style={{ background: surface, borderColor: border }}>
-      <input ref={inputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void handleFile(event.target.files?.[0])} />
+      <input ref={inputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void handleFile(event.target.files?.[0])} aria-label={`Upload ${method} QR code image`} />
       {value ? (
         <div className="flex items-center gap-2">
           <img src={value} alt={`${method} payment QR preview`} className="h-10 w-10 rounded-lg border bg-white object-contain p-0.5" style={{ borderColor: border }} />
@@ -889,6 +890,7 @@ function TextArea({
     : "none";
   return (
     <textarea
+      aria-label={placeholder ?? "Additional tournament information"}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
@@ -1997,6 +1999,7 @@ function QuickstartForm({
                         <div className="flex-1">
                           <label className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Base (min)</label>
                           <input
+                            aria-label="Custom Base"
                             type="number"
                             min={1}
                             max={180}
@@ -2015,6 +2018,7 @@ function QuickstartForm({
                         <div className="flex-1">
                           <label className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Increment (sec)</label>
                           <input
+                            aria-label="Custom Inc"
                             type="number"
                             min={0}
                             max={60}
@@ -2575,6 +2579,7 @@ function QuickstartForm({
                         Tournament starts at
                       </label>
                       <input
+                        aria-label="Start Time"
                         type="time"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
@@ -2635,6 +2640,7 @@ function QuickstartForm({
                           </span>
                         )}
                         <input
+                          aria-label="Round buffer duration (minutes)"
                           type="number"
                           min={0}
                           max={60}
@@ -2800,6 +2806,7 @@ function QuickstartForm({
                                   ))}
                                   {/* Custom label input */}
                                   <input
+                                    aria-label="Custom break label"
                                     type="text"
                                     value={breakLabel}
                                     onChange={(e) => setBreakLabel(e.target.value)}
@@ -2840,6 +2847,7 @@ function QuickstartForm({
                                     </button>
                                   ))}
                                   <input
+                                    aria-label="Break duration (minutes)"
                                     type="number"
                                     min={5}
                                     max={180}
@@ -3132,6 +3140,7 @@ function StepDetails({
       <div>
         <Label isDark={isDark} hint="optional">Cover Photo</Label>
         <input
+          aria-label="Upload cover photo"
           ref={coverInputRef}
           type="file"
           accept="image/*"
@@ -4321,6 +4330,7 @@ function BracketsStepEditor({
               {/* Label */}
               {editingIdx === i ? (
                 <input
+                  aria-label="Bracket label"
                   type="text"
                   value={b.label}
                   onChange={(e) => updateBracket(i, "label", e.target.value)}
@@ -4342,6 +4352,7 @@ function BracketsStepEditor({
               {editingIdx === i ? (
                 <div className="flex items-center gap-1">
                   <input
+                    aria-label="Minimum ELO"
                     type="number"
                     value={b.minElo}
                     onChange={(e) => updateBracket(i, "minElo", parseInt(e.target.value) || 0)}
@@ -4350,6 +4361,7 @@ function BracketsStepEditor({
                   />
                   <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>–</span>
                   <input
+                    aria-label="Maximum ELO"
                     type="number"
                     value={b.maxElo === 9999 ? "" : b.maxElo}
                     placeholder="∞"

@@ -1676,6 +1676,7 @@ export default function ClubProfile() {
             {(isOwner || isDirector) && (
               <input
                 id="banner-upload-profile"
+                aria-label="Upload club banner"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
@@ -1999,6 +2000,7 @@ export default function ClubProfile() {
                   <div className="relative flex-1">
                     <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
                     <input
+                      aria-label="Search by name or username"
                       type="text"
                       value={memberSearch}
                       onChange={(e) => { setMemberSearch(e.target.value); setMemberPage(1); }}
@@ -2012,6 +2014,7 @@ export default function ClubProfile() {
                   </div>
                   {/* Sort dropdown */}
                   <select
+                    aria-label="Sort members"
                     value={memberSort}
                     onChange={(e) => { setMemberSort(e.target.value as typeof memberSort); setMemberPage(1); }}
                     className={`text-xs px-2.5 py-2 rounded-xl border outline-none cursor-pointer flex-shrink-0 ${
@@ -2859,6 +2862,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Title *</label>
                       <input
+                        aria-label="Event Title"
                         type="text"
                         value={eventForm.title}
                         onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
@@ -2871,6 +2875,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Date & Time *</label>
                       <input
+                        aria-label="Event Date & Time"
                         type="datetime-local"
                         value={eventForm.startAt}
                         onChange={(e) => setEventForm((f) => ({ ...f, startAt: e.target.value }))}
@@ -2882,6 +2887,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Venue</label>
                       <input
+                        aria-label="Event Venue"
                         type="text"
                         value={eventForm.venue}
                         onChange={(e) => setEventForm((f) => ({ ...f, venue: e.target.value }))}
@@ -2894,6 +2900,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Description</label>
                       <textarea
+                        aria-label="Event Description"
                         value={eventForm.description}
                         onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
                         placeholder="Optional event details..."
@@ -2906,6 +2913,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Admission</label>
                       <input
+                        aria-label="Event Admission"
                         type="text"
                         value={eventForm.admissionNote}
                         onChange={(e) => setEventForm((f) => ({ ...f, admissionNote: e.target.value }))}
@@ -2935,6 +2943,7 @@ export default function ClubProfile() {
                         <div className="mt-2">
                           <label className={`text-xs ${textMuted} block mb-1`}>End date (optional)</label>
                           <input type="date" value={eventForm.recurrenceEndDate}
+                            aria-label="Event Recurrence End Date"
                             onChange={(e) => setEventForm((f) => ({ ...f, recurrenceEndDate: e.target.value }))}
                             className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
                               isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] focus:border-[#436850]/40"
@@ -3229,6 +3238,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-medium block mb-1 ${textMuted}`}>League Name *</label>
                       <input
+                        aria-label="League Name"
                         autoFocus
                         className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder-gray-400"}`}
                         placeholder="e.g. Spring 2026 League"
@@ -3239,6 +3249,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-medium block mb-1 ${textMuted}`}>Description <span className={textMuted}>(optional)</span></label>
                       <textarea
+                        aria-label="League Description"
                         rows={2}
                         className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 resize-none ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder-gray-400"}`}
                         placeholder="Brief description…"
@@ -3783,6 +3794,7 @@ export default function ClubProfile() {
                       Type <span className="font-mono text-red-400">{club?.name}</span> to confirm
                     </p>
                     <input
+                      aria-label="Confirm Delete Club"
                       type="text"
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
@@ -3859,6 +3871,7 @@ export default function ClubProfile() {
                       <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>Select new owner</p>
                     </div>
                     <select
+                      aria-label="Select new owner"
                       value={selectedTransferMemberId}
                       onChange={(e) => setSelectedTransferMemberId(e.target.value)}
                       className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
@@ -4202,6 +4215,7 @@ export default function ClubProfile() {
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Event Title *</label>
                 <input
+                  aria-label="Edit Event Title"
                   value={editForm.title}
                   onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Wednesday Night Blitz"
@@ -4213,6 +4227,7 @@ export default function ClubProfile() {
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Date &amp; Time *</label>
                 <input
+                  aria-label="Edit Event Date & Time"
                   type="datetime-local"
                   value={editForm.startAt}
                   onChange={e => setEditForm(f => ({ ...f, startAt: e.target.value }))}
@@ -4224,6 +4239,7 @@ export default function ClubProfile() {
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Venue</label>
                 <input
+                  aria-label="Edit Event Venue"
                   value={editForm.venue}
                   onChange={e => setEditForm(f => ({ ...f, venue: e.target.value }))}
                   placeholder="e.g. Club Hall, Room 2"
@@ -4235,6 +4251,7 @@ export default function ClubProfile() {
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Admission</label>
                 <input
+                  aria-label="Edit Event Admission"
                   value={editForm.admissionNote}
                   onChange={e => setEditForm(f => ({ ...f, admissionNote: e.target.value }))}
                   placeholder="e.g. Free · Members only"
@@ -4246,6 +4263,7 @@ export default function ClubProfile() {
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Description</label>
                 <textarea
+                  aria-label="Edit Event Description"
                   value={editForm.description}
                   onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
@@ -4276,6 +4294,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs ${textMuted} block mb-1`}>End date (optional)</label>
                       <input type="date" value={editForm.recurrenceEndDate}
+                        aria-label="Edit Event Recurrence End Date"
                         onChange={e => setEditForm(f => ({ ...f, recurrenceEndDate: e.target.value }))}
                         className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
                           isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] focus:border-[#436850]"

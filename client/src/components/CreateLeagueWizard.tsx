@@ -322,6 +322,7 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
                 League Name *
               </label>
               <input
+                aria-label="League Name"
                 autoFocus
                 type="text"
                 value={leagueName}
@@ -353,6 +354,7 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
                 Description <span className="normal-case font-normal">(optional)</span>
               </label>
               <textarea
+                aria-label="League Description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Brief description — rules, schedule, prizes…"

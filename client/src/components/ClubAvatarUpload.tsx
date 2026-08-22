@@ -242,6 +242,7 @@ export function ClubAvatarUpload({
 
       {/* Hidden file input */}
       <input
+        aria-label="Upload club avatar"
         ref={inputRef}
         type="file"
         accept={ACCEPTED_TYPES.join(",")}

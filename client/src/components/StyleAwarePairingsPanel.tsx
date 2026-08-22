@@ -548,6 +548,7 @@ function OrganizerControls({
               </span>
             </div>
             <input
+              aria-label="Rating Tolerance Band"
               type="range"
               min={100}
               max={600}
@@ -581,6 +582,7 @@ function OrganizerControls({
                 </span>
               </div>
               <input
+                aria-label="Style Influence"
                 type="range"
                 min={0}
                 max={1}

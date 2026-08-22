@@ -1246,6 +1246,7 @@ export default function QuadsDirectorPanel({
                 {editingSectionId === selectedSection.id ? (
                   <div className="flex items-center gap-1.5">
                     <input
+                      aria-label={`Rename ${selectedSection.name}`}
                       ref={renameInputRef} value={editingName} onChange={(e) => setEditingName(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") commitRename(selectedSection.id); if (e.key === "Escape") cancelRename(); }}
                       onBlur={() => commitRename(selectedSection.id)}

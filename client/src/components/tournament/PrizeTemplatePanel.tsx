@@ -309,6 +309,7 @@ function PrizeSlotCard({
           <div>
             <label className="text-[9px] font-medium block mb-0.5" style={{ color: "oklch(0.55 0.04 145)" }}>Title</label>
             <input
+              aria-label="Prize Title"
               type="text"
               value={prize.prizeTitle}
               onChange={(e) => onUpdate({ prizeTitle: e.target.value })}
@@ -319,6 +320,7 @@ function PrizeSlotCard({
           <div>
             <label className="text-[9px] font-medium block mb-0.5" style={{ color: "oklch(0.55 0.04 145)" }}>Value</label>
             <input
+              aria-label="Prize Value"
               type="text"
               value={prize.prizeValue}
               onChange={(e) => onUpdate({ prizeValue: e.target.value })}
@@ -332,6 +334,7 @@ function PrizeSlotCard({
           <div>
             <label className="text-[9px] font-medium block mb-0.5" style={{ color: "oklch(0.55 0.04 145)" }}>Type</label>
             <select
+              aria-label="Prize Type"
               value={prize.prizeType}
               onChange={(e) => onUpdate({ prizeType: e.target.value as PrizeType })}
               className="w-full px-2 py-1 rounded text-xs"
@@ -345,6 +348,7 @@ function PrizeSlotCard({
           <div>
             <label className="text-[9px] font-medium block mb-0.5" style={{ color: "oklch(0.55 0.04 145)" }}>Sponsor</label>
             <input
+              aria-label="Prize Sponsor"
               type="text"
               value={prize.sponsorName || ""}
               onChange={(e) => onUpdate({ sponsorName: e.target.value })}
@@ -359,6 +363,7 @@ function PrizeSlotCard({
           <div>
             <label className="text-[9px] font-medium block mb-0.5" style={{ color: "oklch(0.55 0.04 145)" }}>Assign to</label>
             <select
+              aria-label="Prize Assign"
               value={prize.assignedPlayerId || ""}
               onChange={(e) => {
                 const player = section.standings.find((s) => s.playerId === e.target.value);

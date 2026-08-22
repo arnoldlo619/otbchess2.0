@@ -779,6 +779,7 @@ export default function ProfilePage() {
                   Display name
                 </label>
                 <input
+                  aria-label="Display name"
                   type="text"
                   value={editState.displayName}
                   onChange={(e) =>
@@ -792,6 +793,7 @@ export default function ProfilePage() {
                   Chess.com username
                 </label>
                 <input
+                  aria-label="Chess.com username"
                   type="text"
                   value={editState.chesscomUsername}
                   onChange={(e) =>
@@ -810,6 +812,7 @@ export default function ProfilePage() {
                   Lichess username
                 </label>
                 <input
+                  aria-label="Lichess username"
                   type="text"
                   value={editState.lichessUsername}
                   onChange={(e) =>
@@ -828,6 +831,7 @@ export default function ProfilePage() {
                   FIDE ID
                 </label>
                 <input
+                  aria-label="FIDE ID"
                   type="text"
                   value={editState.fideId}
                   onChange={(e) =>

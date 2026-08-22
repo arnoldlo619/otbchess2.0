@@ -431,6 +431,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
             <div className="flex-1 relative">
               <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-mono ${isDark ? "text-white/30" : "text-[#436850]"}`}>#</span>
               <input
+                aria-label="Custom Hex Color"
                 className={`${inputCls} pl-7 font-mono uppercase`}
                 value={hexInput.replace(/^#/, "")}
                 onChange={(e) => handleHexInputChange(`#${e.target.value}`)}
@@ -462,6 +463,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               <span className="flex items-center gap-1.5"><Type className="w-3 h-3" /> Club Name</span>
             </label>
             <input
+              aria-label="Club Handle"
               className={inputCls}
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -476,6 +478,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> Description</span>
             </label>
             <textarea
+              aria-label="Description"
               className={`${inputCls} resize-none`}
               rows={3}
               value={description}
@@ -494,6 +497,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Location</span>
             </label>
             <input
+              aria-label="Location"
               className={inputCls}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -508,6 +512,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Tagline</span>
             </label>
             <input
+              aria-label="Tagline"
               className={inputCls}
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
@@ -523,6 +528,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               <span className="flex items-center gap-1.5"><Tag className="w-3 h-3" /> Club Type</span>
             </label>
             <select
+              aria-label="Club Type"
               className={inputCls}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
@@ -542,6 +548,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
               <span className="flex items-center gap-1.5"><Flag className="w-3 h-3" /> Country</span>
             </label>
             <input
+              aria-label="Country"
               className={inputCls}
               value={country}
               onChange={(e) => setCountry(e.target.value)}
@@ -616,7 +623,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
           ] as const).map(({ label, value, setter, placeholder, icon }) => (
             <div key={label}>
               <label className={labelCls}><span className="flex items-center gap-1.5">{icon} {label}</span></label>
-              <input className={inputCls} value={value} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} placeholder={placeholder} maxLength={200} />
+              <input className={inputCls} value={value} onChange={(e) => (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value)} placeholder={placeholder} maxLength={200} aria-label={label} />
             </div>
           ))}
         </div>
@@ -635,11 +642,11 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
         <div className="space-y-3">
           <div>
             <label className={labelCls}><span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> Email</span></label>
-            <input className={inputCls} type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="chess@yourclub.com" maxLength={120} />
+            <input className={inputCls} type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="chess@yourclub.com" maxLength={120} aria-label="Email" />
           </div>
           <div>
             <label className={labelCls}><span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> Phone</span></label>
-            <input className={inputCls} type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+1 (312) 555-0100" maxLength={30} />
+            <input className={inputCls} type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+1 (312) 555-0100" maxLength={30} aria-label="Phone" />
           </div>
         </div>
         <div className="pt-2">
@@ -658,19 +665,19 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Day</label>
-              <select className={inputCls} value={meetingDay} onChange={(e) => setMeetingDay(e.target.value)}>
+              <select aria-label="Meeting day" className={inputCls} value={meetingDay} onChange={(e) => setMeetingDay(e.target.value)}>
                 <option value="">Select day…</option>
                 {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div>
               <label className={labelCls}>Time</label>
-              <input className={inputCls} value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} placeholder="7:00 PM" maxLength={20} />
+              <input className={inputCls} value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} placeholder="7:00 PM" maxLength={20} aria-label="Meeting Time" />
             </div>
           </div>
           <div>
             <label className={labelCls}>Notes</label>
-            <textarea className={`${inputCls} resize-none`} rows={2} value={meetingNotes} onChange={(e) => setMeetingNotes(e.target.value)} placeholder="e.g. Every Thursday at Southside Social, Back of the Yards" maxLength={200} />
+            <textarea className={`${inputCls} resize-none`} rows={2} value={meetingNotes} onChange={(e) => setMeetingNotes(e.target.value)} placeholder="e.g. Every Thursday at Southside Social, Back of the Yards" maxLength={200} aria-label="Meeting Notes" />
           </div>
         </div>
         <div className="pt-2">
@@ -687,6 +694,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
         </h3>
         <p className={`text-xs mb-3 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Shown prominently at the top of your public club page.</p>
         <textarea
+          aria-label="Pinned Announcement"
           className={`${inputCls} resize-none`}
           rows={3}
           value={announcement}

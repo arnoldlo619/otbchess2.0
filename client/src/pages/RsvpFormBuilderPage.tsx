@@ -384,6 +384,7 @@ export default function RsvpFormBuilderPage() {
         <div className="flex-1 min-w-0 flex items-center gap-3">
           <ClipboardList className="w-5 h-5 flex-shrink-0" style={{ color: ACCENT }} />
           <input
+            aria-label="Form title"
             value={form.title}
             onChange={(e) => updateForm({ title: e.target.value })}
             className="bg-transparent text-white font-semibold text-base outline-none border-b border-transparent hover:border-white/20 focus:border-white/50 transition-colors truncate max-w-xs"
@@ -496,12 +497,14 @@ export default function RsvpFormBuilderPage() {
               <div className="h-2.5 w-full" style={{ background: ACCENT }} />
               <div className="p-6 space-y-3">
                 <input
+                  aria-label="Form title"
                   value={form.title}
                   onChange={(e) => updateForm({ title: e.target.value })}
                   placeholder="Form title"
                   className="w-full bg-transparent text-white text-2xl font-bold outline-none border-b border-transparent hover:border-white/20 focus:border-white/40 transition-colors pb-1"
                 />
                 <textarea
+                  aria-label="Form description"
                   value={form.description ?? ""}
                   onChange={(e) => updateForm({ description: e.target.value })}
                   placeholder="Form description (optional)"
@@ -852,6 +855,7 @@ export default function RsvpFormBuilderPage() {
                 <div className="flex items-center gap-3">
                   <label className="text-white/50 text-sm whitespace-nowrap">Max responses</label>
                   <input
+                    aria-label="Max responses"
                     type="number"
                     min={1}
                     max={10000}
@@ -900,6 +904,7 @@ export default function RsvpFormBuilderPage() {
               <h3 className="text-white font-semibold">Close Date</h3>
               <p className="text-white/40 text-sm">Automatically stop accepting responses after this date.</p>
               <input
+                aria-label="Close date"
                 type="datetime-local"
                 value={form.closesAt ? form.closesAt.slice(0, 16) : ""}
                 onChange={(e) => updateForm({ closesAt: e.target.value ? new Date(e.target.value).toISOString() : null })}
@@ -927,6 +932,7 @@ export default function RsvpFormBuilderPage() {
               <h3 className="text-white font-semibold">Confirmation Message</h3>
               <p className="text-white/40 text-sm">Shown to respondents after they submit the form.</p>
               <textarea
+                aria-label="Confirmation message"
                 value={form.confirmationMessage ?? ""}
                 onChange={(e) => updateForm({ confirmationMessage: e.target.value })}
                 placeholder="Thanks for your RSVP! We'll see you there."
@@ -976,6 +982,7 @@ export default function RsvpFormBuilderPage() {
               <p className="text-white/40 text-sm">Used for buttons, accents, and interactive elements.</p>
               <div className="flex items-center gap-3">
                 <input
+                  aria-label="Primary Color"
                   type="color"
                   value={form.theme_color ?? "#22c55e"}
                   onChange={(e) => updateForm({ theme_color: e.target.value })}
@@ -983,6 +990,7 @@ export default function RsvpFormBuilderPage() {
                 />
                 <div className="flex-1">
                   <input
+                    aria-label="Primary Color hex code"
                     type="text"
                     value={form.theme_color ?? "#22c55e"}
                     onChange={(e) => updateForm({ theme_color: e.target.value })}
@@ -1120,6 +1128,7 @@ function QuestionCard({
             {/* Label + type selector row */}
             <div className="flex items-center gap-3">
               <input
+                aria-label="Question label"
                 ref={labelRef}
                 value={question.label}
                 onChange={(e) => onUpdate({ label: e.target.value })}
@@ -1130,6 +1139,7 @@ function QuestionCard({
               {/* Type selector */}
               <div className="relative flex-shrink-0">
                 <select
+                  aria-label="Question type"
                   value={question.type}
                   onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined }); }}
                   onClick={(e) => e.stopPropagation()}
@@ -1185,6 +1195,7 @@ function QuestionCard({
                       <span className="text-white/30 text-xs w-4 text-center flex-shrink-0">{i + 1}.</span>
                     )}
                     <input
+                      aria-label="Option label"
                       value={opt}
                       onChange={(e) => { e.stopPropagation(); onUpdateOption(i, e.target.value); }}
                       onClick={(e) => e.stopPropagation()}

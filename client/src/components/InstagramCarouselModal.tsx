@@ -2718,6 +2718,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                       <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-white/50" : "text-[#12372A]/70"}`}>{Math.round(logoScale * 100)}%</span>
                     </div>
                     <input
+                      aria-label="Logo Size"
                       type="range"
                       min={40}
                       max={220}
@@ -2765,6 +2766,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
               )}
 
               <input
+                aria-label="Upload logo"
                 ref={logoInputRef}
                 type="file"
                 accept="image/*"
@@ -2849,6 +2851,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                   <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-white/50" : "text-[#12372A]/70"}`}>{headingSize}px</span>
                 </div>
                 <input
+                  aria-label="Heading Size"
                   type="range"
                   min={60}
                   max={200}
@@ -2868,6 +2871,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                 <span className={`text-[10px] font-semibold block mb-1.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>Heading Colour</span>
                 <div className="flex items-center gap-2">
                   <input
+                    aria-label="Heading Colour"
                     type="color"
                     value={headingColor}
                     onChange={(e) => setHeadingColor(e.target.value)}
@@ -2951,6 +2955,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
               {bgType === "solid" && (
                 <div className="flex items-center gap-3">
                   <input
+                    aria-label="Solid Background Colour"
                     type="color"
                     value={solidBgColor}
                     onChange={(e) => { setSolidBgColor(e.target.value); setBgValue(e.target.value); }}
@@ -3018,6 +3023,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                     </button>
                   )}
                   <input
+                    aria-label="Upload background image"
                     ref={bgImageInputRef}
                     type="file"
                     accept="image/*"
@@ -3044,6 +3050,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
               </p>
               <div className="flex gap-2">
                 <input
+                  aria-label="Template name"
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}

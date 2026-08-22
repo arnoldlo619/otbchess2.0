@@ -444,6 +444,7 @@ export default function AdminStaff() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
+                aria-label="Search user by email"
                 type="email"
                 value={searchEmail}
                 onChange={(e) => {
@@ -593,6 +594,7 @@ export default function AdminStaff() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
+                      aria-label="Filter users"
                       type="text"
                       value={userFilter}
                       onChange={(e) => setUserFilter(e.target.value)}

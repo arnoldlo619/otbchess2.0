@@ -767,6 +767,7 @@ export function FilmGameSheet({
                           Logo
                         </button>
                         <input
+                          aria-label="Upload logo"
                           ref={logoInputRef}
                           type="file"
                           accept="image/*"
@@ -778,6 +779,7 @@ export function FilmGameSheet({
                       {/* Text input */}
                       {!watermarkLogoDataUrl && (
                         <input
+                          aria-label="Watermark text"
                           type="text"
                           value={watermarkText}
                           onChange={(e) => setWatermarkText(e.target.value.slice(0, 40))}

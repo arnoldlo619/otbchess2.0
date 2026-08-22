@@ -7390,7 +7390,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] All principal controls have accessible labels
 - [ ] Focus order logical on all principal pages
 - [ ] Landmark regions on all pages (main, nav, header, footer)
-- [ ] Form labels on all inputs
+- [x] Form labels on all inputs
 - [x] Table semantics (thead, th scope)
 - [ ] Reduced-motion: no essential animation-only feedback
 - [ ] WCAG AA contrast in both themes

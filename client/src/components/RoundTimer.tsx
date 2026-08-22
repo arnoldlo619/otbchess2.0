@@ -218,6 +218,7 @@ export function RoundTimer({
         {editing ? (
           <div className="flex items-center gap-1.5">
             <input
+              aria-label="Round duration in minutes"
               ref={inputRef}
               type="number"
               min={1}
