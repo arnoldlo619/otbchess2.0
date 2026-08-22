@@ -82,7 +82,11 @@ const RsvpFormPage = lazy(() => import("./pages/RsvpFormPage"));
 const RsvpFormBuilderPage = lazy(() => import("./pages/RsvpFormBuilderPage"));
 
 function PageLoader() {
-  return <OTBLoader fullPage label="Preparing the board" />;
+  return (
+    <div className="otb-route-loader" data-route-loader>
+      <OTBLoader size={72} label="Preparing the page" />
+    </div>
+  );
 }
 
 function RouteFocusManager() {

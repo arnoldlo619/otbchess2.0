@@ -7408,7 +7408,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] INP ≤200ms
 - [x] Cached route transition ≤500ms
 - [x] Result interaction feedback ≤100ms
-- [ ] No unnecessary full-screen route loader
+- [x] No unnecessary full-screen route loader
 - [x] Cached client-route transitions do not flash the full-screen route loader
 - [x] No main-thread blocking from decorative animation
 - [x] Image optimization (principal routes: lazy loading, correct sizes)

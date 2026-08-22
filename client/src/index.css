@@ -291,6 +291,14 @@
   .otb-loader__square { left: 33.333%; top: 33.333%; }
 }
 
+.otb-route-loader {
+  display: grid;
+  min-height: clamp(18rem, 52vh, 34rem);
+  place-items: center;
+  padding: 4rem 1.5rem;
+  background: var(--background);
+}
+
 @keyframes director-empty-join-attention {
   0%, 100% {
     box-shadow: 0 0 0 0 rgb(76 175 80 / 0), 0 0 0 0 rgb(76 175 80 / 0);

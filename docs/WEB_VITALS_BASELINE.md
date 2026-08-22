@@ -26,6 +26,8 @@ This is a **lab-equivalent warm-cache regression**, suitable for catching future
 
 `e2e/cached-route-transitions.spec.ts` enforces a **500 ms router-commit budget** on representative Pricing-to-Join and Pricing-to-Home navigation at desktop and mobile widths. Each destination is first opened and returned from inside the same application document so the route component is present in the `React.lazy` cache. The measured second activation excludes pre-click scrolling, verifies the URL commit and destination content, and rejects any flash of the full-screen “Preparing the board” fallback. All four route/viewport checks pass.
 
+Uncached lazy-route transitions now use the same branded chess loader in a bounded, in-flow surface rather than replacing the viewport with the full-page loader. `route-loader-behavior.spec.ts` deliberately delays the Blog route chunk, confirms the compact loader is visible and shorter than the viewport, rejects `.otb-loader-page`, and verifies destination rendering on desktop and mobile.
+
 ## Interaction responsiveness
 
 `e2e/principal-interaction-performance.spec.ts` establishes two complementary budgets at desktop and mobile widths. A real Pricing FAQ toggle is observed through Chromium Event Timing and must remain at or below the **200 ms INP-equivalent budget**. A real Quads Director draw result measures click-to-DOM-commit feedback and must remain at or below **100 ms**, after which the persisted `½–½` result is verified in the rendered board row. The eight repeated route/viewport checks pass.
