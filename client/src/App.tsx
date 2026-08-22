@@ -53,6 +53,7 @@ const OpeningsLibrary = lazy(() => import("./pages/OpeningsLibrary"));
 const OpeningDetail = lazy(() => import("./pages/OpeningDetail"));
 const StudyMode = lazy(() => import("./pages/StudyMode"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const Terms = lazy(() => import("./pages/Terms"));
 const ProSuccess = lazy(() => import("./pages/ProSuccess"));
 const OpeningsLibraryDemo = lazy(() => import("./pages/OpeningsLibraryDemo"));
 const OpeningDetailDemo = lazy(() => import("./pages/OpeningDetailDemo"));
@@ -193,6 +194,7 @@ function Router() {
         <Route path={"/repertoire/:id"} component={RepertoireBuilder} />
         <Route path={"/repertoire"} component={RepertoireList} />
         <Route path={"/pricing"} component={Pricing} />
+        <Route path={"/terms"} component={Terms} />
         <Route path={"/pro/success"} component={ProSuccess} />
         <Route path={"/admin/staff"} component={AdminStaff} />
         <Route path={"/blog/:slug"} component={BlogPost} />

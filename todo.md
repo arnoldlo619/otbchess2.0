@@ -7335,14 +7335,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Phase 6 — Platform-Wide QA, Performance and Release Readiness
 
 ### A. Route Audit
-- [ ] Canonical route inventory document
-- [ ] All public static routes return 200 (no 404)
-- [ ] All dynamic routes (clubs/:id, tournaments/:id, etc.) have correct fallbacks
-- [ ] No broken CTAs on Home, Pricing, Join pages
-- [ ] No stale slugs in navigation
-- [ ] No redirect loops
-- [ ] Blog/Journal routes valid
-- [ ] Training routes valid
+- [x] Canonical route inventory document
+- [x] All public static routes return 200 (no 404)
+- [x] All dynamic routes (clubs/:id, tournaments/:id, etc.) have correct fallbacks
+- [x] No broken CTAs on Home, Pricing, Join pages
+- [x] No stale slugs in navigation
+- [x] No redirect loops
+- [x] Blog/Journal routes valid
+- [x] Training routes valid
 - [x] Error pages (404, 500) render correctly
 
 ### B. Design System Compliance
