@@ -88,3 +88,21 @@ test("Quads result panel contains focus, closes with Escape, and restores its bo
   await expect(dialog).toBeHidden();
   await expect(opener).toBeFocused();
 });
+
+test("spectator projection contains focus, closes with Escape, and restores its Director opener", async ({ page }) => {
+  await page.goto("/tournament/otb-demo-2026/manage", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText(/OTB!! Open 2026/i).filter({ visible: true }).first()).toBeVisible();
+
+  const opener = page.getByRole("button", { name: "Live Stream", exact: true }).first();
+  await opener.focus();
+  await opener.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Spectator QR projection screen" });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close spectator QR screen" })).toBeFocused();
+  await expectFocusContainment(dialog);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});

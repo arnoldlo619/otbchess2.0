@@ -18,6 +18,14 @@ const migratedOverlays = [
   "client/src/components/ShareResultsModal.tsx",
   "client/src/components/SwissPhaseSummaryModal.tsx",
   "client/src/components/tournament/QuadsDirectorPanel.tsx",
+  "client/src/components/ChessLineViewer.tsx",
+  "client/src/components/FilmGameSheet.tsx",
+  "client/src/components/FullScreenClock.tsx",
+  "client/src/components/NotationModeOverlay.tsx",
+  "client/src/components/QRModal.tsx",
+  "client/src/components/RegisterGameModal.tsx",
+  "client/src/components/SpectatorQRScreen.tsx",
+  "client/src/components/SpectatorShareModal.tsx",
 ];
 
 describe("principal custom overlay accessibility", () => {
@@ -47,5 +55,12 @@ describe("principal custom overlay accessibility", () => {
     const source = readSource("client/src/components/ShareResultsModal.tsx");
     expect(source.match(/useAccessibleOverlay\(\{/g)).toHaveLength(2);
     expect(source).toContain('aria-label="Exit QR projection"');
+  });
+
+  it("preserves chess-line arrow navigation while delegating Escape to the shared overlay", () => {
+    const source = readSource("client/src/components/ChessLineViewer.tsx");
+    expect(source).toContain('e.key === "ArrowRight"');
+    expect(source).toContain('e.key === "ArrowLeft"');
+    expect(source).not.toContain('e.key === "Escape" && isFullscreen');
   });
 });

@@ -28,6 +28,7 @@ import {
   Type,
   Trash2,
 } from "lucide-react";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 type WatermarkPosition = "top-right" | "top-left" | "bottom-right" | "bottom-left";
 
@@ -244,6 +245,8 @@ export function FilmGameSheet({
   const timerRemaining = useTimerRemaining(timerSnap);
   // For the overlay: both players share the round timer; show it as the clock value
   const sharedTimeSec = timerRemaining;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -252,6 +255,12 @@ export function FilmGameSheet({
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rafRef = useRef<number>(0);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [recordState, setRecordState] = useState<RecordState>("idle");
@@ -495,6 +504,11 @@ export function FilmGameSheet({
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="film-game-title"
+        tabIndex={-1}
         className={`relative w-full rounded-t-3xl border-t overflow-hidden ${cardBg} ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"} animate-slide-up-fade safe-bottom`}
         style={{ maxHeight: "92dvh" }}
         onClick={e => e.stopPropagation()}
@@ -508,10 +522,12 @@ export function FilmGameSheet({
         <div className={`flex items-center justify-between px-5 py-3 border-b ${isDark ? "border-white/06" : "border-[#ADBC9F]/70"}`}>
           <div className="flex items-center gap-2">
             <Camera className={`w-4 h-4 ${accent}`} />
-            <span className={`text-sm font-bold ${textMain}`}>Film Your Game</span>
+            <span id="film-game-title" className={`text-sm font-bold ${textMain}`}>Film Your Game</span>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
+            aria-label="Close film game sheet"
             className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? "bg-white/10 hover:bg-white/15" : "bg-[#ADBC9F]/40 hover:bg-[#ADBC9F]"} transition-colors`}
           >
             <X className={`w-4 h-4 ${textMuted}`} />

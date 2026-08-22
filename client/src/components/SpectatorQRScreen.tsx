@@ -13,6 +13,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Maximize2, Copy, Check, Tv2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -210,15 +211,16 @@ export function SpectatorQRScreen({
   // on the director's device. Silently no-ops on unsupported browsers.
   useWakeLock(open);
   const esRef = useRef<EventSource | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
-  // ── Keyboard / scroll lock ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
+  // ── Scroll lock ─────────────────────────────────────────────────────────────
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -278,11 +280,13 @@ export function SpectatorQRScreen({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[10000] flex flex-col"
       style={{ background: "oklch(0.13 0.06 240)" }}
       role="dialog"
       aria-modal="true"
       aria-label="Spectator QR projection screen"
+      tabIndex={-1}
     >
       {/* ── Sticky top bar — always visible, never scrolls away ───────────────── */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
@@ -294,6 +298,7 @@ export function SpectatorQRScreen({
         </div>
         {/* Right: close button — 44×44 px minimum tap target */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           aria-label="Close spectator QR screen"
           className="w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-90 touch-manipulation"

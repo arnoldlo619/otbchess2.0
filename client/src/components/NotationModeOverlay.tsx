@@ -18,6 +18,7 @@ import MoveListPanel from "./MoveListPanel";
 import type { UseNotationModeReturn } from "../hooks/useNotationMode";
 import type { LnmAnalysisStatus } from "../hooks/useLnmAnalysis";
 import type { LnmSaveStatus } from "../hooks/useLnmSave";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,8 @@ export default function NotationModeOverlay({
   // Confirmation prompt shown when user taps Analyse without selecting a result
   const [confirmAnalyse, setConfirmAnalyse] = useState(false);
   const confirmAnalyseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const exitButtonRef = useRef<HTMLButtonElement>(null);
 
   // ── Result selector state ──────────────────────────────────────────────────
   // Auto-populated from chess.js when the game ends naturally; otherwise null
@@ -171,6 +174,12 @@ export default function NotationModeOverlay({
     const pgn = notation.deactivate();
     onExit(pgn);
   }, [notation, onExit]);
+  useAccessibleOverlay({
+    open: true,
+    onClose: handleExit,
+    containerRef: dialogRef,
+    initialFocusRef: exitButtonRef,
+  });
 
   const handleReset = useCallback(() => {
     if (!confirmReset) {
@@ -233,7 +242,14 @@ export default function NotationModeOverlay({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#0a0a1a] flex flex-col overflow-hidden">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Live notation mode"
+      tabIndex={-1}
+      className="fixed inset-0 z-[100] bg-[#0a0a1a] flex flex-col overflow-hidden"
+    >
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a0a1a]/95 backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-3">
@@ -248,7 +264,9 @@ export default function NotationModeOverlay({
           <span className="font-medium">{guestName}</span>
         </div>
         <button
+          ref={exitButtonRef}
           onClick={handleExit}
+          aria-label="Exit live notation mode"
           className="p-2 rounded-xl hover:bg-white/10 text-white/50 hover:text-white transition-colors"
           title="Exit notation mode"
         >

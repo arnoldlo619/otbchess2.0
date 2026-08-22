@@ -7,8 +7,9 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Crown, X, Copy, Check, Smartphone, Download } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface QRModalProps {
   open: boolean;
@@ -22,6 +23,14 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [copied, setCopied] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   if (!open) return null;
 
@@ -66,6 +75,11 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
 
       {/* Modal */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="player-join-qr-title"
+        tabIndex={-1}
         className={`relative z-10 w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
           isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-[#ADBC9F]/70"
         }`}
@@ -83,6 +97,7 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
             </div>
             <div>
               <p
+                id="player-join-qr-title"
                 className={`font-bold text-sm leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
@@ -96,6 +111,7 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
 
           {/* Close button — 44px tap target, always-visible background, labelled */}
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close QR code"
             className={`group flex items-center gap-1.5 h-11 px-3 rounded-xl font-semibold text-sm transition-all active:scale-95 ${

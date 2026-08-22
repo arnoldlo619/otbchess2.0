@@ -16,6 +16,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import {
   ChevronLeft,
   ChevronRight,
@@ -340,6 +341,14 @@ export default function ChessLineViewer({
   const [boardFlipped, setBoardFlipped] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const moveListRef = useRef<HTMLDivElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: isFullscreen,
+    onClose: () => setIsFullscreen(false),
+    containerRef: fullscreenRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   const goTo = useCallback(
     (idx: number) => {
@@ -349,16 +358,15 @@ export default function ChessLineViewer({
     [totalSteps]
   );
 
-  // Keyboard navigation + Escape to close fullscreen
+  // Preserve left/right move navigation. Escape is handled by the shared overlay.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goTo(stepIndex + 1);
       if (e.key === "ArrowLeft") goTo(stepIndex - 1);
-      if (e.key === "Escape" && isFullscreen) setIsFullscreen(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [stepIndex, goTo, isFullscreen]);
+  }, [stepIndex, goTo]);
 
   // Prevent body scroll when fullscreen is open
   useEffect(() => {
@@ -431,13 +439,20 @@ export default function ChessLineViewer({
       {/* Fullscreen overlay */}
       {isFullscreen && (
         <div
+          ref={fullscreenRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${lineName} fullscreen chess line`}
+          tabIndex={-1}
           className="fixed inset-0 z-50 flex items-stretch"
           style={{ background: isDark ? "rgba(5,12,7,0.97)" : "rgba(240,245,241,0.97)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setIsFullscreen(false); }}
         >
           {/* Close button (top-right corner) */}
           <button
+            ref={closeButtonRef}
             onClick={() => setIsFullscreen(false)}
+            aria-label="Exit fullscreen chess line"
             className={`absolute top-4 right-4 z-10 flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
               isDark
                 ? "border-[#2e4a34]/60 text-white/60 hover:bg-[#162018] hover:text-white"

@@ -8,9 +8,10 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { X, Copy, Check, ExternalLink, Download, Tv2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface SpectatorShareModalProps {
   open: boolean;
@@ -31,6 +32,14 @@ export function SpectatorShareModal({
   const isDark = theme === "dark";
   const [copied, setCopied] = useState(false);
   const statusDisplay = getTournamentStatusDisplay(tournamentStatus);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   if (!open) return null;
 
@@ -77,6 +86,11 @@ export function SpectatorShareModal({
 
       {/* Modal */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="spectator-share-title"
+        tabIndex={-1}
         className={`relative z-10 w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
           isDark
             ? "bg-[oklch(0.22_0.06_145)] border-white/10"
@@ -100,6 +114,7 @@ export function SpectatorShareModal({
             </div>
             <div>
               <p
+                id="spectator-share-title"
                 className={`font-bold text-sm leading-tight ${
                   isDark ? "text-white" : "text-[#12372A]"
                 }`}
@@ -115,7 +130,9 @@ export function SpectatorShareModal({
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
+            aria-label="Close spectator sharing dialog"
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isDark
                 ? "hover:bg-white/10 text-white/50"

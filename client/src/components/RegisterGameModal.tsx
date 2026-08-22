@@ -8,10 +8,11 @@
  * B) Manual (Trophy button, no usernames):
  *    - Original configure → waiting → ready flow.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { X, QrCode, Copy, Check, Users, Trophy, Loader2, Share2, RotateCcw } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface PlayerInfo {
   username: string;
@@ -60,6 +61,14 @@ export function RegisterGameModal({
   const [opponentName, setOpponentName] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [timeControlCategory, setTimeControlCategory] = useState<string>("");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   // Color assignment: "p1white" = player1 is White, "p2white" = player2 is White
   const [colorAssignment, setColorAssignment] = useState<"p1white" | "p2white">("p1white");
@@ -282,17 +291,26 @@ export function RegisterGameModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-[#1a1a1a] rounded-3xl px-6 py-6 mx-4 max-w-sm w-full shadow-2xl">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="register-game-title"
+        tabIndex={-1}
+        className="bg-[#1a1a1a] rounded-3xl px-6 py-6 mx-4 max-w-sm w-full shadow-2xl"
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-[#5a9e5f]" />
-            <h2 className="text-white text-lg font-bold">
+            <h2 id="register-game-title" className="text-white text-lg font-bold">
               {step === "headtohead" ? "Confirm Game" : "Register Game"}
             </h2>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
+            aria-label="Close register game dialog"
             className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
           >
             <X className="w-4 h-4 text-white/70" />

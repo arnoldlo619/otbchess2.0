@@ -26,6 +26,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pause, Play, Minimize2, Flag, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useClockSounds } from "../hooks/useClockSounds";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,7 @@ export default function FullScreenClock({
   const flagAlarmFiredRef = useRef(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const exitButtonRef = useRef<HTMLButtonElement>(null);
 
   // ── Wake Lock ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -267,6 +269,12 @@ export default function FullScreenClock({
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     onExit();
   }
+  useAccessibleOverlay({
+    open: true,
+    onClose: handleExit,
+    containerRef,
+    initialFocusRef: exitButtonRef,
+  });
 
   // ── Derived ───────────────────────────────────────────────────────────────────
   const hostLow = hostMs < 10_000 && hostMs > 0;
@@ -302,6 +310,10 @@ export default function FullScreenClock({
   return (
     <div
       ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${hostName} versus ${guestName} full-screen chess clock`}
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex"
       style={{ background: "oklch(0.06 0.01 240)", touchAction: "none" }}
     >
@@ -419,7 +431,9 @@ export default function FullScreenClock({
       >
         {/* Exit full-screen */}
         <motion.button
+          ref={exitButtonRef}
           onClick={handleExit}
+          aria-label="Exit full-screen chess clock"
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.88 }}
           className="w-9 h-9 rounded-full flex items-center justify-center"
