@@ -56,10 +56,11 @@ function BoardCard({ broadcast, isDark }: { broadcast: Broadcast; isDark: boolea
       >
         {/* Board thumbnail */}
         <div className="relative">
-          <div className="pointer-events-none select-none">
+          <div className="pointer-events-none select-none" inert aria-hidden="true">
             <Chessboard
               options={{
                 position: broadcast.currentFen,
+                allowDragging: false,
                 boardStyle: {
                   borderRadius: "0",
                   boxShadow: "none",

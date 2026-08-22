@@ -651,6 +651,7 @@ export default function MatchupPrep() {
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
               <input
                 type="text"
+                aria-label={provider === "lichess" ? "Lichess opponent username" : "Chess.com opponent username"}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}

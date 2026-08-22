@@ -2,6 +2,10 @@
  * Tests for LiveBoardsSection data-sorting and status logic
  */
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+const liveBoardsSource = readFileSync(path.resolve("client/src/components/LiveBoardsSection.tsx"), "utf8");
 
 // ─── Broadcast sort helper (mirrors LiveBoardsSection logic) ──────────────────
 interface Broadcast {
@@ -93,5 +97,12 @@ describe("LiveBoardsSection — live count", () => {
     ];
     const liveCount = data.filter((b) => b.status === "live").length;
     expect(liveCount).toBe(2);
+  });
+});
+
+describe("LiveBoardsSection — read-only preview accessibility", () => {
+  it("keeps third-party chess pieces out of the accessibility tree and tab order", () => {
+    expect(liveBoardsSource).toContain('inert aria-hidden="true"');
+    expect(liveBoardsSource).toContain("allowDragging: false");
   });
 });

@@ -254,6 +254,13 @@ function TournamentCard({
 
           {/* Expand toggle */}
           <button
+            type="button"
+            aria-expanded={expanded}
+            aria-label={`${expanded ? "Hide" : "Show"} standings for ${tournament.name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onExpand();
+            }}
             className={`flex-shrink-0 p-2 rounded-lg transition-colors ${
               isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
             }`}
@@ -832,6 +839,7 @@ export default function Archive() {
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
               <input
                 type="text"
+                aria-label="Search tournaments, clubs, and players"
                 placeholder="Search tournaments, clubs, players…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -841,6 +849,8 @@ export default function Archive() {
               />
               {search && (
                 <button
+                  type="button"
+                  aria-label="Clear tournament search"
                   onClick={() => setSearch("")}
                   className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-white/30 hover:text-white/60" : "text-[#436850]/70 hover:text-[#436850]"}`}
                 >

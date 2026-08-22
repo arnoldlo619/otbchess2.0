@@ -1481,12 +1481,13 @@ export default function JoinPage() {
               </div>
 
               <div className={`mobile-card border ${card} p-5`}>
-                <label className={`mobile-section-label block mb-2 ${labelCls}`}>
+                <label htmlFor="tournament-code" className={`mobile-section-label block mb-2 ${labelCls}`}>
                   Tournament Code
                 </label>
                 <div className="relative">
                   <Hash className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                   <input
+                    id="tournament-code"
                     type="text"
                     value={tournamentCode}
                     onChange={(e) => { setTournamentCode(e.target.value.toUpperCase()); setError(""); }}

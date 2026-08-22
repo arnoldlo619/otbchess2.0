@@ -1986,6 +1986,7 @@ function PlayerDemo() {
             <div className="flex gap-3 mb-6">
               <input
                 type="text"
+                aria-label="Chess.com username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLookup()}

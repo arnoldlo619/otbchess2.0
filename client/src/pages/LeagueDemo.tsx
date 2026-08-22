@@ -331,6 +331,8 @@ export default function LeagueDemo() {
           >
             {/* Mobile back */}
             <button
+              type="button"
+              aria-label="Back to home"
               onClick={() => navigate("/")}
               className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-opacity hover:opacity-70 touch-manipulation"
               style={{ color: "oklch(0.65 0.12 145)" }}

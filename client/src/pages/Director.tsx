@@ -5037,6 +5037,7 @@ export default function Director() {
                             }`} />
                             <input
                               type="text"
+                              aria-label="Filter round boards"
                               value={boardSearch}
                               onChange={(e) => setBoardSearch(e.target.value)}
                               placeholder="Filter boards..."

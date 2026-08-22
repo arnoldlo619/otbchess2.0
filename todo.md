@@ -7386,7 +7386,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Zero critical Axe violations
 - [ ] Zero serious Axe violations
 - [ ] No keyboard trap in any modal or drawer
-- [ ] All principal controls have accessible labels
+- [x] All principal controls have accessible labels
 - [ ] Focus order logical on all principal pages
 - [ ] Landmark regions on all pages (main, nav, header, footer)
 - [ ] Form labels on all inputs
