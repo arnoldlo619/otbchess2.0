@@ -1468,7 +1468,7 @@ export default function ProfilePage() {
                     {/* Opponent avatar */}
                     <div className="flex-shrink-0">
                       {b.opponent?.avatarUrl ? (
-                        <img src={b.opponent.avatarUrl} alt={b.opponent.displayName} className="w-8 h-8 rounded-xl object-cover" />
+                        <img loading="lazy" decoding="async" src={b.opponent.avatarUrl} alt={b.opponent.displayName} className="w-8 h-8 rounded-xl object-cover" />
                       ) : (
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
                           isDark ? "bg-white/10 text-white/60" : "bg-[#ADBC9F] text-[#436850]"

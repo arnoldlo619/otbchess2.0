@@ -87,6 +87,8 @@ function Avatar({ name, size = 9, url }: { name: string; size?: number; url?: st
   if (url) {
     return (
       <img
+        loading="lazy"
+        decoding="async"
         src={url}
         alt={name}
         className="rounded-full object-cover flex-shrink-0"

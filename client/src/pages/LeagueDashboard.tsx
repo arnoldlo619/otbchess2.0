@@ -419,7 +419,7 @@ function PlayerProfileModal({
               style={{ width: 72, height: 72, border: `3px solid ${bg}`, boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}
             >
               {chesscomAvatarUrl ? (
-                <img src={chesscomAvatarUrl} alt={player.displayName} className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={chesscomAvatarUrl} alt={player.displayName} className="w-full h-full object-cover" />
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center text-2xl font-black"

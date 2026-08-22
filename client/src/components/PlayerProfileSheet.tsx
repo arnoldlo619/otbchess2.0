@@ -358,7 +358,7 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
                   style={{ width: 76, height: 76, background: isDark ? "oklch(0.20 0.06 145)" : "oklch(0.90 0.03 145)", border: `2px solid ${accent}66` }}
                 >
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt={`${displayName} avatar`} className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={avatarUrl} alt={`${displayName} avatar`} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-2xl font-black" style={{ color: accent }}>
                       {displayName.charAt(0).toUpperCase()}

@@ -1902,6 +1902,8 @@ function FeedCard({
               <div className="relative flex-shrink-0">
                 {event.potmWinnerAvatarUrl ? (
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src={event.potmWinnerAvatarUrl}
                     alt={event.potmWinnerName}
                     className="w-14 h-14 rounded-2xl object-cover"
@@ -2167,7 +2169,7 @@ function PlayerOfMonthWidget({
         <div className="relative flex-shrink-0">
           <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-amber-400/60 flex items-center justify-center bg-amber-500/20">
             {top.avatarUrl ? (
-              <img src={top.avatarUrl} alt={top.memberName} className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={top.avatarUrl} alt={top.memberName} className="w-full h-full object-cover" />
             ) : (
               <span className="text-xl font-black text-amber-400">{initials(top.memberName)}</span>
             )}
@@ -2211,7 +2213,7 @@ function PlayerOfMonthWidget({
               </span>
               <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center bg-white/8 flex-shrink-0">
                 {entry.avatarUrl ? (
-                  <img src={entry.avatarUrl} alt={entry.memberName} className="w-full h-full object-cover" />
+                  <img loading="lazy" decoding="async" src={entry.avatarUrl} alt={entry.memberName} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xs font-black text-white/50">{initials(entry.memberName)}</span>
                 )}
@@ -2245,7 +2247,7 @@ function PlayerOfMonthWidget({
                 {/* Avatar */}
                 <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-amber-500/15 flex-shrink-0">
                   {entry.avatarUrl ? (
-                    <img src={entry.avatarUrl} alt={entry.memberName} className="w-full h-full object-cover" />
+                    <img loading="lazy" decoding="async" src={entry.avatarUrl} alt={entry.memberName} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-[10px] font-black text-amber-400">{initials(entry.memberName)}</span>
                   )}
@@ -5830,7 +5832,7 @@ export default function ClubDashboard() {
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             {s.avatarUrl ? (
-                              <img src={s.avatarUrl} alt={s.name} className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                              <img loading="lazy" decoding="async" src={s.avatarUrl} alt={s.name} className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
                             ) : (
                               <div className="w-5 h-5 rounded-full bg-[#436850] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
                                 {s.name.charAt(0).toUpperCase()}
@@ -5882,7 +5884,7 @@ export default function ClubDashboard() {
                       <div key={m.userId} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                         <div className="flex items-center gap-2.5">
                           {m.avatarUrl ? (
-                            <img src={m.avatarUrl} alt={m.displayName} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                            <img loading="lazy" decoding="async" src={m.avatarUrl} alt={m.displayName} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
                           ) : (
                             <div className="w-7 h-7 rounded-full bg-[#436850] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                               {m.displayName.charAt(0).toUpperCase()}
@@ -6693,6 +6695,8 @@ export default function ClubDashboard() {
                                           style={{ background: "oklch(0.3 0.08 145)" }}>
                                           {rec.opponentAvatarUrl ? (
                                             <img src={rec.opponentAvatarUrl} alt={rec.opponentName} className="w-full h-full object-cover rounded-full"
+                                              loading="lazy"
+                                              decoding="async"
                                               aria-hidden="true"
                                               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                                           ) : rec.opponentName.charAt(0).toUpperCase()}
@@ -6947,6 +6951,8 @@ export default function ClubDashboard() {
                                       style={{ background: "oklch(0.3 0.08 145)" }}>
                                       {rec.opponentAvatarUrl ? (
                                         <img
+                                          loading="lazy"
+                                          decoding="async"
                                           src={rec.opponentAvatarUrl}
                                           alt={rec.opponentName}
                                           className="w-full h-full object-cover"

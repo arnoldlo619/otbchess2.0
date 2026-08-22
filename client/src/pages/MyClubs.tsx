@@ -146,6 +146,7 @@ function ClubCard({
           >
             {club.bannerUrl ? (
               <img
+                decoding="async"
                 src={club.bannerUrl}
                 alt=""
                 role="presentation"
@@ -207,7 +208,7 @@ function ClubCard({
               style={{ background: club.accentColor }}
             >
               {club.avatarUrl ? (
-                <img src={club.avatarUrl} alt="" className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={club.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <span>{flag}</span>
               )}
@@ -281,7 +282,7 @@ function FollowedClubCard({
           }}
         >
           {club.bannerUrl ? (
-            <img src={club.bannerUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+            <img decoding="async" src={club.bannerUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <div className="absolute inset-0 chess-board-bg opacity-15" />
           )}
@@ -295,7 +296,7 @@ function FollowedClubCard({
           style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
         >
           {club.avatarUrl ? (
-            <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
           ) : (
             <span className="text-white font-bold">{flag}</span>
           )}
@@ -473,7 +474,7 @@ function RsvpAvatarStack({
             title={r.displayName}
           >
             {r.avatarUrl ? (
-              <img src={r.avatarUrl} alt={r.displayName} className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={r.avatarUrl} alt={r.displayName} className="w-full h-full object-cover" />
             ) : (
               r.displayName.slice(0, 1).toUpperCase()
             )}
@@ -544,6 +545,7 @@ function EventCard({
       >
         {event.coverImageUrl ? (
           <img
+            decoding="async"
             src={event.coverImageUrl}
             alt=""
             loading="lazy"

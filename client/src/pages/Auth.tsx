@@ -361,6 +361,8 @@ export default function AuthPage() {
                     className="w-7 h-7 rounded-full ring-2 ring-[oklch(0.20_0.06_145)] overflow-hidden bg-[oklch(0.30_0.08_145)] flex items-center justify-center text-[10px] font-semibold text-white/70"
                   >
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={p.src}
                       alt=""
                       className="w-full h-full object-cover"

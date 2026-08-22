@@ -569,6 +569,8 @@ function FeedEventCard({
             {event.imageUrl && (
               <div className="mt-2 mb-3 rounded-2xl overflow-hidden border" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)" }}>
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={event.imageUrl}
                   alt="Post attachment"
                   className="w-full max-h-80 object-cover"
@@ -2477,7 +2479,7 @@ export default function ClubProfile() {
                             {/* Cover image — full bleed */}
                             {ev.coverImageUrl ? (
                               <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
-                                <img src={ev.coverImageUrl} alt={ev.title} className="w-full h-full object-cover" />
+                                <img loading="lazy" decoding="async" src={ev.coverImageUrl} alt={ev.title} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.75) 100%)" }} />
                                 {/* Date pill over image */}
                                 <div className="absolute top-3 left-3">
@@ -5483,7 +5485,7 @@ function LeagueCard({
                               <div className="flex items-center gap-2">
                                 <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
                                   {row.avatarUrl
-                                    ? <img src={row.avatarUrl} alt="" className="w-6 h-6 object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                                    ? <img loading="lazy" decoding="async" src={row.avatarUrl} alt="" className="w-6 h-6 object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                                     : <span className={textMuted}>{(row.displayName?.[0] ?? "?").toUpperCase()}</span>
                                   }
                                 </div>

@@ -560,7 +560,7 @@ export default function CheckInPage() {
                               </span>
                               {/* Avatar */}
                               {a.avatarUrl ? (
-                                <img src={a.avatarUrl} alt={a.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                                <img loading="lazy" decoding="async" src={a.avatarUrl} alt={a.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
                               ) : (
                                 <div
                                   className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"

@@ -153,7 +153,7 @@ function PlayerCard({
         }}
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt={player.displayName} className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={avatarUrl} alt={player.displayName} className="w-full h-full object-cover" />
         ) : (
           <div
             className="w-full h-full flex items-center justify-center text-sm font-black"
@@ -370,6 +370,8 @@ export function LeagueBracket({
               >
                 {getAvatar(champion?.chesscomUsername ?? "") ? (
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src={getAvatar(champion.chesscomUsername)}
                     alt={champion.displayName}
                     className="w-full h-full object-cover"

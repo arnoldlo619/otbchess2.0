@@ -174,6 +174,7 @@ function BlogCard({ post, isDark }: { post: BlogPost; isDark: boolean }) {
         {/* Image */}
         <div className="relative overflow-hidden rounded-lg aspect-[4/3] mb-4">
           <img
+            decoding="async"
             src={post.image}
             alt={post.title}
             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${

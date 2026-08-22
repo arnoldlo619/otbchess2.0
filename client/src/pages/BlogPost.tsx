@@ -738,7 +738,7 @@ function ContentBlock({ block, isDark }: { block: ContentBlock; isDark: boolean 
     if (float) {
       return (
         <figure className={`${floatClass} my-2`}>
-          <img src={block.src} alt={block.alt} className={imgClass} loading="lazy" />
+          <img decoding="async" src={block.src} alt={block.alt} className={imgClass} loading="lazy" />
           {block.caption && (
             <figcaption className={`mt-1.5 text-xs italic leading-snug ${
               isDark ? "text-white/45" : "text-[#436850]/60"
@@ -752,7 +752,7 @@ function ContentBlock({ block, isDark }: { block: ContentBlock; isDark: boolean 
 
     return (
       <figure className={`my-7 ${sizeClass}`}>
-        <img src={block.src} alt={block.alt} className={imgClass} loading="lazy" />
+        <img decoding="async" src={block.src} alt={block.alt} className={imgClass} loading="lazy" />
         {block.caption && (
           <figcaption className={`mt-2 text-center text-xs italic leading-snug ${
             isDark ? "text-white/45" : "text-[#436850]/60"
@@ -1150,6 +1150,7 @@ export default function BlogPost() {
                         }`}>
                           <div className="relative overflow-hidden bg-[#12372A]" style={{ aspectRatio: "16/9" }}>
                             <img
+                              decoding="async"
                               src={rel.image}
                               alt={rel.title}
                               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.07] group-hover:brightness-110"
@@ -1278,6 +1279,8 @@ export default function BlogPost() {
                   isDark ? "bg-[#12372A]" : "bg-[#12372A]"
                 }`}>
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
                     alt="OTB!!"
                     className="w-6 h-6 object-contain"
@@ -1370,6 +1373,8 @@ export default function BlogPost() {
                 {/* Brand badge */}
                 <div className="flex items-center gap-2 mb-4">
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
                     alt="OTB Chess"
                     className={`h-6 w-auto object-contain ${

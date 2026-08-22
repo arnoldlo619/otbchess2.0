@@ -330,6 +330,8 @@ function QRCodePanel({
         {/* Logo + wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative", zIndex: 1 }}>
           <img
+            loading="lazy"
+            decoding="async"
             src={OTB_LOGO_URL}
             alt="OTB!!"
             crossOrigin="anonymous"
@@ -464,7 +466,7 @@ function QRCodePanel({
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-            <img src={OTB_LOGO_URL} alt="OTB!!" style={{ width: 48, height: 48, objectFit: "contain" }} />
+            <img loading="lazy" decoding="async" src={OTB_LOGO_URL} alt="OTB!!" style={{ width: 48, height: 48, objectFit: "contain" }} />
             <span
               style={{
                 fontSize: 20,

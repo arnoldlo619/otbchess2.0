@@ -92,7 +92,7 @@ function Avatar({ user, size = 40 }: { user: OtherUser | null; size?: number }) 
   if (!user) return <div className="rounded-full bg-white/10" style={{ width: size, height: size }} />;
   const cls = `rounded-full object-cover flex-shrink-0 flex items-center justify-center font-bold text-white bg-[#436850]`;
   if (user.avatarUrl) {
-    return <img src={user.avatarUrl} alt={user.displayName} className={`rounded-full object-cover flex-shrink-0`} style={{ width: size, height: size }} />;
+    return <img loading="lazy" decoding="async" src={user.avatarUrl} alt={user.displayName} className={`rounded-full object-cover flex-shrink-0`} style={{ width: size, height: size }} />;
   }
   return (
     <div className={cls} style={{ width: size, height: size, fontSize: size * 0.35 }}>

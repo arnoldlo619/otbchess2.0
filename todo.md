@@ -7809,4 +7809,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Architecture: Fix misplaced validation import at bottom of server/index.ts (moved to top with other imports)
 - [x] Architecture: Add global Express error handler for unhandled route errors
 - [x] Architecture: Clean up unused imports after route extraction (prepCache, savedPrepReports, buildPrepReport, 10+ prep-related imports)
-- [ ] Performance: Add loading="lazy" and decoding="async" to below-fold images across all components
+- [x] Performance: Add loading="lazy" and decoding="async" to below-fold images across all components

@@ -274,7 +274,7 @@ export default function LeagueHistory() {
                     </div>
                     <div className="w-9 h-9 rounded-full bg-[#436850]/20 flex items-center justify-center text-sm font-bold flex-shrink-0">
                       {s.avatarUrl
-                        ? <img src={s.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                        ? <img loading="lazy" decoding="async" src={s.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
                         : s.displayName.charAt(0).toUpperCase()
                       }
                     </div>
@@ -365,7 +365,7 @@ export default function LeagueHistory() {
                       <div key={row.opponentId} className="flex items-center gap-3 p-3 bg-[#FBFADA]/70 dark:bg-[#162118] rounded-xl border border-[#ADBC9F]/70 dark:border-[#2a3d2e]">
                         <div className="w-9 h-9 rounded-full bg-[#436850]/20 flex items-center justify-center text-sm font-bold flex-shrink-0">
                           {row.opponentAvatar
-                            ? <img src={row.opponentAvatar} alt="" className="w-full h-full rounded-full object-cover" />
+                            ? <img loading="lazy" decoding="async" src={row.opponentAvatar} alt="" className="w-full h-full rounded-full object-cover" />
                             : row.opponentName.charAt(0).toUpperCase()
                           }
                         </div>
@@ -426,7 +426,7 @@ export default function LeagueHistory() {
                         <span className="text-xs font-bold text-[#436850] w-4">#{i + 1}</span>
                         <div className="w-7 h-7 rounded-full bg-[#436850]/20 flex items-center justify-center text-xs font-bold">
                           {s.avatarUrl
-                            ? <img src={s.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                            ? <img loading="lazy" decoding="async" src={s.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
                             : s.displayName.charAt(0).toUpperCase()
                           }
                         </div>
@@ -479,7 +479,7 @@ export default function LeagueHistory() {
                   <div className="relative">
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-xl font-bold text-white shadow-lg overflow-hidden">
                       {champion.avatarUrl
-                        ? <img src={champion.avatarUrl} alt="" className="w-full h-full object-cover" />
+                        ? <img loading="lazy" decoding="async" src={champion.avatarUrl} alt="" className="w-full h-full object-cover" />
                         : champion.displayName.charAt(0).toUpperCase()
                       }
                     </div>

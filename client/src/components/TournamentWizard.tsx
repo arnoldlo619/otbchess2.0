@@ -341,7 +341,7 @@ function ClubLinkDropdown({
           ) : selected ? (
             <>
               {selected.avatarUrl ? (
-                <img src={selected.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                <img loading="lazy" decoding="async" src={selected.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
               ) : (
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
@@ -423,7 +423,7 @@ function ClubLinkDropdown({
                 }}
               >
                 {club.avatarUrl ? (
-                  <img src={club.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                  <img loading="lazy" decoding="async" src={club.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                 ) : (
                   <div
                     className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
@@ -570,7 +570,7 @@ function HeroPanel({
             style={{ background: "rgba(255,255,255,0.15)" }}
           >
             {iconImg ? (
-              <img src={iconImg} alt="OTB" className="w-5 h-5 object-contain drop-shadow-sm" />
+              <img loading="lazy" decoding="async" src={iconImg} alt="OTB" className="w-5 h-5 object-contain drop-shadow-sm" />
             ) : (
               <Icon className="w-5 h-5 text-white" strokeWidth={1.8} />
             )}

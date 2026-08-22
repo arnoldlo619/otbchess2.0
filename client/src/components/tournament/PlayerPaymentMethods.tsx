@@ -66,7 +66,7 @@ export function PlayerPaymentMethods({
                 {method.qrUrl && <QrCode className={`h-3.5 w-3.5 ${muted}`} aria-label={`${method.label} QR available`} />}
               </div>
               {method.qrUrl && (
-                <img src={method.qrUrl} alt={`${method.label} payment QR code`} className="mt-2 h-20 w-20 rounded-lg border border-black/10 bg-white object-contain p-1" />
+                <img loading="lazy" decoding="async" src={method.qrUrl} alt={`${method.label} payment QR code`} className="mt-2 h-20 w-20 rounded-lg border border-black/10 bg-white object-contain p-1" />
               )}
               {method.url && (
                 preview ? (

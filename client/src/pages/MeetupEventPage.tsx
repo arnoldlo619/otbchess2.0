@@ -819,7 +819,7 @@ export default function MeetupEventPage() {
                           )}
                           {club.paymentQrUrl && (
                             <div className="flex justify-center pt-2">
-                              <img src={club.paymentQrUrl} alt="Payment QR code" className="w-36 h-36 rounded-xl border border-white/10 object-contain bg-white/5" />
+                              <img loading="lazy" decoding="async" src={club.paymentQrUrl} alt="Payment QR code" className="w-36 h-36 rounded-xl border border-white/10 object-contain bg-white/5" />
                             </div>
                           )}
                         </div>
@@ -848,6 +848,8 @@ export default function MeetupEventPage() {
                               >
                                 {rsvp.avatarUrl ? (
                                   <img
+                                    loading="lazy"
+                                    decoding="async"
                                     src={rsvp.avatarUrl}
                                     alt={rsvp.displayName}
                                     className="w-8 h-8 rounded-full object-cover flex-shrink-0 transition-transform duration-200 hover:scale-110"

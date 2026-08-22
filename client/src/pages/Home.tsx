@@ -667,6 +667,7 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
           }}
         >
           <img
+            decoding="async"
             src={src}
             alt={alt}
             className="w-full h-full object-cover object-center"
@@ -762,6 +763,8 @@ function PhoneLightbox({ src, alt, onClose }: { src: string; alt: string; onClos
           }}
         >
           <img
+            loading="lazy"
+            decoding="async"
             src={src}
             alt={alt}
             style={{
@@ -851,6 +854,7 @@ function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: st
       >
         {/* Screenshot image */}
         <img
+          decoding="async"
           src={src}
           alt={alt}
           className="absolute inset-0 w-full h-full"
@@ -1443,6 +1447,7 @@ function BentoCard({
       {screenshot && (
         <div className="relative overflow-hidden" style={{ aspectRatio: "16/9", flexShrink: 0 }}>
           <img
+            decoding="async"
             src={screenshot}
             alt={screenshotAlt ?? title}
             className={`w-full h-full object-cover object-top transition-transform duration-700 ease-out ${
@@ -1499,6 +1504,7 @@ function BentoCard({
         {cardImage && (
           <div className="relative overflow-hidden rounded-xl mt-2 flex-1" style={{ minHeight: "180px" }}>
             <img
+              decoding="async"
               src={cardImage}
               alt=""
               aria-hidden="true"
@@ -1711,6 +1717,7 @@ function Features() {
             isDark ? "border-white/[0.06]" : "border-[#ADBC9F]/30"
           }`} style={{ minWidth: 0 }}>
             <img
+              decoding="async"
               src="/manus-storage/player-cards-grid_60400ab2.png"
               alt="Player cards grid: Levy Rozman 1st and Magnus Carlsen 2nd, OTB!! Open 2026"
               className="block w-full h-full object-cover object-top"
@@ -1845,6 +1852,8 @@ function Showcase() {
             >
               {/* Screenshot image fills entire card */}
               <img
+                loading="lazy"
+                decoding="async"
                 src={feature.screenshot}
                 alt={feature.screenshotAlt}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
@@ -2026,7 +2035,7 @@ function PlayerDemo() {
                     <div className="flex items-center gap-3.5">
                       <div className="relative">
                         {profile.avatar ? (
-                          <img src={`/api/avatar-proxy?url=${encodeURIComponent(profile.avatar)}`} alt={profile.username} className="w-12 h-12 rounded-xl object-cover" crossOrigin="anonymous" style={{ boxShadow: isDark ? "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" : "0 0 0 2px rgba(61,107,71,0.2)" }} />
+                          <img loading="lazy" decoding="async" src={`/api/avatar-proxy?url=${encodeURIComponent(profile.avatar)}`} alt={profile.username} className="w-12 h-12 rounded-xl object-cover" crossOrigin="anonymous" style={{ boxShadow: isDark ? "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" : "0 0 0 2px rgba(61,107,71,0.2)" }} />
                         ) : (
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-base" style={{ background: "oklch(0.45 0.14 145)", boxShadow: "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" }}>
                             {profile.username[0].toUpperCase()}
@@ -2434,6 +2443,8 @@ function Footer() {
           <div>
             <div className="flex items-center gap-1 mb-4">
               <img
+                loading="lazy"
+                decoding="async"
                 src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
                 alt="OTB Chess"
                 className="h-9 w-auto object-contain drop-shadow-[0_0_6px_rgba(100,200,100,0.2)]"

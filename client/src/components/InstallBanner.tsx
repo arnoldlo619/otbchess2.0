@@ -68,6 +68,7 @@ export function InstallBanner() {
             `}
           >
             <img
+              decoding="async"
               src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png"
               alt="OTB Chess app icon"
               className="w-full h-full object-contain"
@@ -202,6 +203,8 @@ export function InstallBanner() {
                 {
                   icon: (
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png"
                       alt=""
                       className="w-4.5 h-4.5 object-contain rounded-md"

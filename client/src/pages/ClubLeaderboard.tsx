@@ -309,6 +309,8 @@ function PodiumCard({ club, metric, isDark, user }: PodiumCardProps) {
             >
               {club.avatarUrl ? (
                 <img
+                  loading="lazy"
+                  decoding="async"
                   src={club.avatarUrl}
                   alt={club.name}
                   className="w-full h-full object-cover"
@@ -495,6 +497,8 @@ function TableRow({ club, metric, isDark }: TableRowProps) {
       >
         {club.avatarUrl ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={club.avatarUrl}
             alt={club.name}
             className="w-full h-full object-cover"

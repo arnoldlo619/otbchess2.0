@@ -86,6 +86,8 @@ function SectionPodiumCard({
                 <div className="w-10 h-10 rounded-full overflow-hidden mb-1.5 border-2 border-white/20 flex-shrink-0">
                   {avatarUrl ? (
                     <img
+                      loading="lazy"
+                      decoding="async"
                       src={toProxiedAvatarUrl(avatarUrl) ?? avatarUrl}
                       alt={p.player.name}
                       className="w-full h-full object-cover"
@@ -248,6 +250,8 @@ function GlobalPodium({
               <div className="w-12 h-12 rounded-full overflow-hidden mb-2 border-2 border-white/20 flex-shrink-0">
                 {avatarUrl ? (
                   <img
+                    loading="lazy"
+                    decoding="async"
                     src={toProxiedAvatarUrl(avatarUrl) ?? avatarUrl}
                     alt={p.player.name}
                     className="w-full h-full object-cover"

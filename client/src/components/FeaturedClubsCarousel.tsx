@@ -89,6 +89,8 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
       >
         {club.bannerUrl ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={club.bannerUrl}
             alt=""
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
@@ -193,7 +195,7 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
           style={{ background: club.accentColor }}
         >
           {club.avatarUrl ? (
-            <img src={club.avatarUrl} alt="" className="w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={club.avatarUrl} alt="" className="w-full h-full object-cover" />
           ) : (
             initial
           )}
