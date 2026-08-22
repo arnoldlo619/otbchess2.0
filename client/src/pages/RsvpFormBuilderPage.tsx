@@ -414,7 +414,7 @@ export default function RsvpFormBuilderPage() {
         </div>
 
         {/* Tab nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav aria-label="Form builder sections" className="hidden md:flex items-center gap-1">
           {(["questions", "responses", "settings", "theme"] as const).map((t) => (
             <button
               key={t}

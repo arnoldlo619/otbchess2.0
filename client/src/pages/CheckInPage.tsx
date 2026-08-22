@@ -285,7 +285,7 @@ export default function CheckInPage() {
               )}
             </button>
             <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-            <nav className="flex flex-col items-center gap-1 flex-1">
+            <nav aria-label="Club dashboard navigation" className="flex flex-col items-center gap-1 flex-1">
               {sidebarTabs.map((ct) => {
                 const Icon = ct.icon;
                 const isActive = ct.id === "events";
@@ -617,6 +617,7 @@ export default function CheckInPage() {
 
       {/* ── MOBILE BOTTOM NAV ──────────────────────────────────────────────── */}
       <nav
+        aria-label="Club dashboard mobile navigation"
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
         style={{
           background: "oklch(0.13 0.04 145 / 0.97)",

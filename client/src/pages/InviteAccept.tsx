@@ -158,7 +158,7 @@ export default function InviteAccept() {
   if (inviteError) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.20 0.06 145)" }}>
-        <nav className="flex items-center px-6 py-4 border-b border-white/08">
+        <nav aria-label="Primary navigation" className="flex items-center px-6 py-4 border-b border-white/08">
           <NavLogo />
         </nav>
         <div className="flex-1 flex items-center justify-center px-4">
@@ -187,7 +187,7 @@ export default function InviteAccept() {
   if (accepted) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.20 0.06 145)" }}>
-        <nav className="flex items-center px-6 py-4 border-b border-white/08">
+        <nav aria-label="Primary navigation" className="flex items-center px-6 py-4 border-b border-white/08">
           <NavLogo />
         </nav>
         <div className="flex-1 flex items-center justify-center px-4">
@@ -209,7 +209,7 @@ export default function InviteAccept() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.20 0.06 145)" }}>
       {/* Nav */}
-      <nav className="flex items-center px-6 py-4 border-b border-white/08">
+      <nav aria-label="Primary navigation" className="flex items-center px-6 py-4 border-b border-white/08">
         <NavLogo />
       </nav>
 

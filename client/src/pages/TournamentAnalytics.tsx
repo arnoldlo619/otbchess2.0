@@ -596,6 +596,7 @@ export default function TournamentAnalytics() {
         }`}
       >
         <nav
+          aria-label="Tournament analytics navigation"
           className={`sticky top-0 z-50 border-b backdrop-blur-xl otb-header-safe ${
             isDark
               ? "bg-[oklch(0.20_0.06_145)]/80 border-white/10"
@@ -671,6 +672,7 @@ export default function TournamentAnalytics() {
     >
       {/* Nav */}
       <nav
+        aria-label="Tournament analytics navigation"
         className={`sticky top-0 z-50 border-b backdrop-blur-xl otb-header-safe ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/80 border-white/10"

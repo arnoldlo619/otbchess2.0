@@ -753,6 +753,7 @@ export default function Archive() {
     >
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
       <nav
+        aria-label="Archive navigation"
         className={`sticky top-0 z-40 border-b backdrop-blur-md otb-header-safe ${
           isDark
             ? "bg-[oklch(0.14_0.04_145)]/90 border-white/08"

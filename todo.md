@@ -7395,7 +7395,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Complex multi-surface overlays: account navigation, tournament wizard, club dashboard, and club profile
 - [x] All principal controls have accessible labels
 - [x] Focus order logical on all principal pages
-- [ ] Landmark regions on all pages (main, nav, header, footer)
+- [x] Landmark regions on all pages (main, nav, header, footer)
 - [x] Form labels on all inputs
 - [x] Table semantics (thead, th scope)
 - [x] Reduced-motion: no essential animation-only feedback

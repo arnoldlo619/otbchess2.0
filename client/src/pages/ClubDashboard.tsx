@@ -3659,7 +3659,7 @@ export default function ClubDashboard() {
           </div>
 
           {/* ── Main navigation ── */}
-          <nav className="flex flex-col gap-0.5 flex-1 justify-center" style={{ padding: sidebarEffectivelyCollapsed ? "0 8px" : "0 10px" }}>
+          <nav aria-label="Club dashboard navigation" className="flex flex-col gap-0.5 flex-1 justify-center" style={{ padding: sidebarEffectivelyCollapsed ? "0 8px" : "0 10px" }}>
             {clubTabs.filter(ct => !ct.ownerOnly || isOwnerOrDirector).map((ct) => {
               const Icon = ct.icon;
               const isActive = tab === ct.id;

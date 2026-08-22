@@ -258,7 +258,7 @@ export default function MeetupEventPage() {
           </div>
 
           {/* Nav items */}
-          <nav className="flex flex-col gap-0.5 flex-1 justify-center px-2">
+          <nav aria-label="Club dashboard navigation" className="flex flex-col gap-0.5 flex-1 justify-center px-2">
             {sidebarTabs.map((ct) => {
               const Icon = ct.icon;
               const isActive = ct.id === "events";
@@ -889,6 +889,7 @@ export default function MeetupEventPage() {
 
       {/* ── MOBILE BOTTOM NAV ──────────────────────────────────────────────── */}
       <nav
+        aria-label="Club dashboard mobile navigation"
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
         style={{ background: "oklch(0.13 0.04 145 / 0.97)", borderTop: "1px solid oklch(0.22 0.06 145)", backdropFilter: "blur(12px)" }}
       >

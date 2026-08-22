@@ -165,6 +165,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
 
   return (
     <nav
+      aria-label="Tournament sections"
       className={`sticky top-[56px] z-40 border-b transition-colors duration-300 ${
         isDark
           ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"

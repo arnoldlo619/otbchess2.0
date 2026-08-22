@@ -1538,7 +1538,7 @@ export default function ClubProfile() {
           </div>
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
-          <nav className="flex flex-col gap-0 flex-1 justify-center px-2">
+          <nav aria-label="Club navigation" className="flex flex-col gap-0 flex-1 justify-center px-2">
             {(["home", "feed", "events", "members", "leagues"] as const).map((t) => {
               const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {

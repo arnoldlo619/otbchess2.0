@@ -428,6 +428,7 @@ export default function TournamentOverview() {
     >
       {/* ── Nav bar ─────────────────────────────────────────────────────────── */}
       <nav
+        aria-label="Tournament overview navigation"
         className={`sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b ${
           isDark
             ? "bg-[#0D1F13]/95 border-white/08 backdrop-blur-md"

@@ -1308,7 +1308,7 @@ export default function LeagueDashboard() {
           <div className="w-9 h-px mb-1" style={{ background: isDark ? "oklch(0.28 0.05 145)" : "oklch(0.25 0.06 145)" }} />
 
           {/* Nav icons */}
-          <nav className="flex flex-col items-center gap-0.5 flex-1">
+          <nav aria-label="League dashboard navigation" className="flex flex-col items-center gap-0.5 flex-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
