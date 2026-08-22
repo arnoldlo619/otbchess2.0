@@ -6923,9 +6923,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] P1: Co-champion display in Director Tournament Complete card
 - [x] P1: Co-champion display in QuadsDirectorPanel section header badge
 - [x] P1: Result audit trail (ResultHistoryEntry[] in DirectorState)
-- [ ] P2: Player card labels — replace "Champion/1st of 16" with "Quad 1 Champion/2nd in Quad 2" etc.
-- [ ] P2: Mobile responsive — QuadsDirectorPanel touch targets 44px+, horizontal Quad tabs, sticky header
-- [ ] P2: Accessibility — semantic buttons, keyboard nav, focus indicators, ARIA labels, non-color states
+- [x] P2: Player card labels — replace "Champion/1st of 16" with "Quad 1 Champion/2nd in Quad 2" etc.
+- [x] P2: Mobile responsive — QuadsDirectorPanel touch targets 44px+, horizontal Quad tabs, sticky header
+- [x] P2: Accessibility — semantic buttons, keyboard nav, focus indicators, ARIA labels, non-color states
 - [x] P2: Unit tests — quads engine (seeding, standings, tiebreaks, co-champions, result correction) [Phase 6 — 57 tests in quadsPhase6.test.ts]
 - [x] P2: Player card labels — Quad placement badges (co-champion, 2nd in Quad 2, etc.)
 - [x] P2: Mobile responsive — 44px touch targets, overflow-x-auto round tabs, flex-shrink-0

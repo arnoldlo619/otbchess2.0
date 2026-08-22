@@ -1124,7 +1124,7 @@ export default function QuadsDirectorPanel({
                   type="button"
                   aria-expanded={exceptionTrayOpen}
                   onClick={() => setExceptionTrayOpen(!exceptionTrayOpen)}
-                  className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
+                  className="flex min-h-11 items-center gap-1.5 rounded-lg px-1 transition-opacity hover:opacity-80"
                   style={{ touchAction: "manipulation" }}
                 >
                   <AlertTriangle size={14} style={{ color: T.amber }} />
@@ -1184,7 +1184,7 @@ export default function QuadsDirectorPanel({
                 <button
                   type="button"
                   onClick={() => { setSwapMode(!swapMode); setSwapPlayerA(null); }}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
+                  className="min-h-11 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
                   style={{ background: swapMode ? T.swapHighlight : "transparent", color: swapMode ? T.swap : T.textMuted, border: `1px solid ${swapMode ? T.swapBorder : T.cardBorder}` }}
                 >
                   <ArrowLeftRight size={11} />
@@ -1207,7 +1207,7 @@ export default function QuadsDirectorPanel({
                     type="button"
                     onClick={() => { setSelectedSectionId(sections.find((s) => s.playerIds.includes(game.whiteId))?.id ?? null); setExceptionTrayOpen(false); setSelectedGameId(game.id); }}
                     className="text-xs font-semibold px-3 py-2 rounded-lg flex-shrink-0 transition-colors"
-                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}`, touchAction: "manipulation", minHeight: "36px" }}
+                    style={{ background: T.greenBg, color: T.green, border: `1px solid ${T.greenBorder}`, touchAction: "manipulation", minHeight: "44px" }}
                   >
                     Go to section
                   </button>
@@ -1225,8 +1225,8 @@ export default function QuadsDirectorPanel({
           style={{ background: T.card, borderColor: T.greenBorder, boxShadow: `0 0 0 1px ${T.greenBorder}` }}
         >
           {/* Workspace header */}
-          <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.03 145)" : "#fafbfc" }}>
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col items-stretch justify-between gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:px-5" style={{ borderColor: T.cardBorder, background: isDark ? "oklch(0.14 0.03 145)" : "#fafbfc" }}>
+            <div className="flex min-w-0 items-center gap-3">
               {/* Section icon */}
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                 style={{ background: `linear-gradient(135deg, oklch(0.22 0.08 145), oklch(0.18 0.05 145))`, border: `1.5px solid ${T.greenBorder}`, boxShadow: `0 4px 14px oklch(0.72 0.19 145 / 0.25)` }}>
@@ -1249,13 +1249,13 @@ export default function QuadsDirectorPanel({
                       className="text-sm font-extrabold tracking-tight rounded-lg px-2 py-0.5 outline-none w-36"
                       style={{ color: T.text, fontFamily: "'Clash Display', sans-serif", background: T.greenBg, border: `1.5px solid ${T.greenBorder}` }}
                     />
-                      <button onClick={cancelRename} className="w-9 h-9 flex items-center justify-center rounded-full" style={{ color: T.textMuted, touchAction: "manipulation" }}><X size={14} /></button>
+                      <button type="button" onClick={cancelRename} aria-label="Cancel section rename" className="w-11 h-11 flex items-center justify-center rounded-full" style={{ color: T.textMuted, touchAction: "manipulation" }}><X size={14} /></button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-extrabold tracking-tight" style={{ color: T.text, fontFamily: "'Clash Display', sans-serif" }}>{selectedSection.name}</span>
                     {onRenameSection && (
-                      <button onClick={() => startRename(selectedSection)} className="w-9 h-9 flex items-center justify-center rounded-md transition-opacity opacity-50 hover:opacity-100" style={{ color: T.textMuted, touchAction: "manipulation" }} title="Rename section"><Pencil size={12} /></button>
+                      <button type="button" onClick={() => startRename(selectedSection)} aria-label={`Rename ${selectedSection.name}`} className="w-11 h-11 flex items-center justify-center rounded-md transition-opacity opacity-60 hover:opacity-100" style={{ color: T.textMuted, touchAction: "manipulation" }} title="Rename section"><Pencil size={12} /></button>
                     )}
                   </div>
                 )}
@@ -1268,8 +1268,8 @@ export default function QuadsDirectorPanel({
             </div>
 
             {/* Round tabs + view toggle */}
-            <div className="flex items-center gap-2 flex-wrap justify-end">
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" role="tablist" aria-label="Round tabs">
+            <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:flex-wrap sm:justify-end sm:overflow-visible sm:pb-0">
+              <div className="flex shrink-0 items-center gap-1" role="tablist" aria-label="Round tabs">
                 {Array.from({ length: totalRounds }, (_, i) => i + 1).map((roundNum) => {
                   const isActive = (sectionRoundTab[selectedSection.id] ?? currentRound) === roundNum;
                   const sectionGames = gamesBySection.get(selectedSection.id) ?? [];
@@ -1280,7 +1280,7 @@ export default function QuadsDirectorPanel({
                     <button key={roundNum} type="button" role="tab" aria-selected={isActive}
                       aria-label={`Round ${roundNum}${roundComplete ? " — complete" : isCurrent ? " — in progress" : ""}`}
                       onClick={() => setSectionRoundTab((prev) => ({ ...prev, [selectedSection.id]: roundNum }))}
-                      className="relative px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
+                      className="relative min-h-11 px-3 py-2.5 rounded-lg text-xs font-bold transition-all flex-shrink-0"
                       style={{ background: isActive ? T.greenBg : "transparent", color: isActive ? T.green : T.textMuted, border: `1px solid ${isActive ? T.greenBorder : "transparent"}` }}
                     >
                       R{roundNum}
@@ -1290,22 +1290,22 @@ export default function QuadsDirectorPanel({
                   );
                 })}
               </div>
-              <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? "oklch(0.12 0.02 145)" : "#f1f5f9" }}>
-                  <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "pairings"} aria-label="Show boards view"
+              <div className="flex shrink-0 items-center gap-0.5 p-0.5 rounded-lg" role="group" aria-label="Section view" style={{ background: isDark ? "oklch(0.12 0.02 145)" : "#f1f5f9" }}>
+                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "pairings"} aria-label="Show boards view"
                   onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "pairings" }))}
-                  className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
+                  className="flex min-h-11 items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
                   style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "pairings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
                   <Swords size={10} />Boards
                 </button>
-                  <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "standings"} aria-label="Show standings table"
+                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "standings"} aria-label="Show standings table"
                   onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "standings" }))}
-                  className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
+                  className="flex min-h-11 items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
                   style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "standings" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
                   <BarChart3 size={10} />Table
                 </button>
-                  <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "crosstable"} aria-label="Show cross-table matrix"
+                <button type="button" aria-pressed={(sectionView[selectedSection.id] ?? "pairings") === "crosstable"} aria-label="Show cross-table matrix"
                   onClick={() => setSectionView((prev) => ({ ...prev, [selectedSection.id]: "crosstable" }))}
-                  className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
+                  className="flex min-h-11 items-center gap-1 px-3 py-2 rounded-md text-xs font-semibold transition-all"
                   style={{ background: (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? (isDark ? T.card : "#fff") : "transparent", color: (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? T.green : T.textDim, boxShadow: (sectionView[selectedSection.id] ?? "pairings") === "crosstable" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>
                   <Grid3X3 size={10} />Matrix
                 </button>
@@ -1322,7 +1322,7 @@ export default function QuadsDirectorPanel({
                   const isTarget = swapPlayerA ? !selectedSection.playerIds.includes(swapPlayerA) : false;
                   return (
                     <button key={pid} onClick={() => handlePlayerClick(pid)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.03] active:scale-95"
+                      className="min-h-11 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.03] active:scale-95"
                       style={{ background: isSelected ? T.swapHighlight : (isDark ? "oklch(0.18 0.02 145)" : "#fff"), border: `1.5px solid ${isSelected ? T.swapBorder : (isTarget ? T.greenBorder : T.cardBorder)}`, color: isSelected ? T.swap : T.text, boxShadow: isSelected ? `0 0 8px ${T.swapBorder}` : "0 1px 2px rgba(0,0,0,0.05)" }}>
                       {getPlayerName(players, pid)}
                       <span className="ml-1.5 opacity-50 font-mono">{getPlayerRating(players, pid)}</span>

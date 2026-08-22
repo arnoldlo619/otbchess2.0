@@ -85,14 +85,15 @@ export function ResultAuditTrail({
       </div>
 
       <ol className="divide-y divide-current/10">
-        {recentEntries.map((entry) => {
+        {recentEntries.map((entry, index) => {
           const whiteName = playerNames.get(entry.whiteId) ?? "White";
           const blackName = playerNames.get(entry.blackId) ?? "Black";
           const sectionName = entry.sectionId ? sectionNames.get(entry.sectionId) : undefined;
-          const actionLabel = entry.action === "undone" ? "Undid" : entry.action === "corrected" ? "Corrected" : "Recorded";
+          const action = entry.action ?? (entry.previousResult ? "corrected" : "recorded");
+          const actionLabel = action === "undone" ? "Undid" : action === "corrected" ? "Corrected" : "Recorded";
 
           return (
-            <li key={entry.id} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <li key={entry.id ?? `${entry.timestamp}-${entry.round}-${entry.board}-${index}`} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className={`text-xs font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
@@ -116,7 +117,7 @@ export function ResultAuditTrail({
               <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] ${isDark ? "text-white/40" : "text-[#6B7F72]"}`}>
                 <span className="inline-flex items-center gap-1">
                   <UserRoundCheck className="h-3 w-3" aria-hidden="true" />
-                  {entry.actorName}
+                  {entry.actorName?.trim() || "Tournament Director"}
                 </span>
                 <time dateTime={entry.timestamp} className="inline-flex items-center gap-1">
                   <Clock3 className="h-3 w-3" aria-hidden="true" />

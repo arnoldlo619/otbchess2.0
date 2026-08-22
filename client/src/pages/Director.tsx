@@ -2359,6 +2359,15 @@ export default function Director() {
     isElimBracketComplete,
     loadMockQuadsState,
   } = useDirectorState(tournamentId, resultActor);
+  const devQuadsScenarioLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || devQuadsScenarioLoadedRef.current) return;
+    const scenario = new URLSearchParams(window.location.search).get("mockQuads");
+    if (scenario !== "mid" && scenario !== "complete" && scenario !== "cochampion") return;
+    devQuadsScenarioLoadedRef.current = true;
+    loadMockQuadsState(scenario);
+  }, [loadMockQuadsState]);
   const tournamentStatusDisplay = getTournamentStatusDisplay(state);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =

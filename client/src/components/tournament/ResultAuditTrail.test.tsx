@@ -95,6 +95,25 @@ describe("ResultAuditTrail", () => {
   it("renders nothing before the first result entry", () => {
     expect(renderToStaticMarkup(<ResultAuditTrail entries={[]} players={players} isDark={false} />)).toBe("");
   });
+
+  it("gracefully renders result history saved before actor and action metadata existed", () => {
+    const legacyEntry = {
+      timestamp: "2026-08-21T12:00:00.000Z",
+      round: 1,
+      board: 1,
+      whiteId: "alice",
+      blackId: "bob",
+      previousResult: null,
+      newResult: "1-0" as const,
+    };
+    const html = renderToStaticMarkup(
+      <ResultAuditTrail entries={[legacyEntry]} players={players} sections={sections} isDark={false} />,
+    );
+
+    expect(html).toContain("Recorded 1–0");
+    expect(html).toContain("Tournament Director");
+    expect(html).toContain("Alice vs Bob");
+  });
 });
 
 describe("Director Quads result audit integration", () => {

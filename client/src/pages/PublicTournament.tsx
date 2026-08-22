@@ -1762,12 +1762,15 @@ export default function PublicTournament() {
         )}
 
         {/* Mobile Tabs */}
-        <div className={`flex gap-1.5 p-1.5 rounded-2xl sm:hidden ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#FBFADA]"}`}>
+        <div role="tablist" aria-label="Tournament view" className={`flex gap-1.5 p-1.5 rounded-2xl sm:hidden ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#FBFADA]"}`}>
           {(["pairings", "standings"] as Tab[]).map((tab) => (
             <button
               key={tab}
+              type="button"
+              role="tab"
+              aria-selected={tab === activeTab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all capitalize ${
+              className={`min-h-11 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all capitalize ${
                 tab === activeTab
                   ? "bg-[#436850] text-white shadow-md"
                   : isDark
@@ -1783,10 +1786,13 @@ export default function PublicTournament() {
         {/* Quads section selector — shared between pairings and standings tabs */}
         {isQuads && (
           <div className="mb-2">
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+            <div role="tablist" aria-label="Quad sections" className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
               <button
+                type="button"
+                role="tab"
+                aria-selected={activeQuadSection === "all"}
                 onClick={() => setActiveQuadSection("all")}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
+                className={`min-h-11 flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border ${
                   activeQuadSection === "all"
                     ? isDark
                       ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
@@ -1803,8 +1809,11 @@ export default function PublicTournament() {
                 return (
                   <button
                     key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
                     onClick={() => setActiveQuadSection(s.id)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    className={`min-h-11 flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
                       isActive
                         ? isDark
                           ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
@@ -1870,8 +1879,10 @@ export default function PublicTournament() {
                       }`}>
                         <span className="text-sm font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>{s.name}</span>
                         <button
+                          type="button"
+                          aria-label={`View ${s.name} standings`}
                           onClick={() => setActiveQuadSection(s.id)}
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                          className={`min-h-11 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
                             isDark ? "text-[#4CAF50] hover:bg-[#436850]/20" : "text-[#436850] hover:bg-[#436850]/08"
                           }`}
                         >
@@ -1881,7 +1892,9 @@ export default function PublicTournament() {
                       <div className="px-4 py-3 space-y-2">
                         {sectionRows.map((row) => (
                           <div key={row.playerId} className="flex items-center gap-2">
-                            <span className="text-xs font-bold w-5 text-muted-foreground">{row.rank === 1 ? "🏆" : `${row.rank}.`}</span>
+                            <span className="flex w-5 items-center justify-center text-xs font-bold text-muted-foreground">
+                              {row.rank === 1 ? <Trophy className="h-3.5 w-3.5" aria-label="Section champion" /> : `${row.rank}.`}
+                            </span>
                             <span className="flex-1 text-sm font-medium text-foreground truncate">{row.name}</span>
                             <span className="font-mono text-sm font-bold text-foreground">{row.points % 1 === 0 ? row.points : `${Math.floor(row.points)}½`}</span>
                             <span className="text-xs text-muted-foreground w-10 text-right">{(row.sonnebornBerger ?? 0).toFixed(1)} SB</span>

@@ -87,3 +87,15 @@ test("homepage stats show skeletons before resolving zero API counts to publishe
   await expect(page.getByText("Players Registered", { exact: true }).locator("..")).toContainText("550+");
   await expect(page.getByText("Chess Clubs", { exact: true }).locator("..")).toContainText("80+");
 });
+
+test("Quads Director controls remain accessible and contained on mobile and desktop", async ({ page }) => {
+  await page.goto("/tournament/otb-demo-2026/manage?mockQuads=mid", { waitUntil: "domcontentloaded" });
+  const roundTabs = page.getByRole("tablist", { name: "Round tabs" });
+  await expect(roundTabs).toBeVisible();
+  await expect(page.getByRole("group", { name: "Section view" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: /Round 1/i })).toHaveAttribute("aria-selected", /true|false/);
+
+  const roundOneBox = await page.getByRole("tab", { name: /Round 1/i }).boundingBox();
+  expect(roundOneBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  await expect.poll(async () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
+});

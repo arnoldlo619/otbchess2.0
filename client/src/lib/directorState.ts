@@ -58,11 +58,11 @@ export interface DirectorState {
 
 export interface ResultHistoryEntry {
   /** Stable entry identifier for rendering and support references. */
-  id: string;
+  id?: string;
   /** ISO timestamp */
   timestamp: string;
   /** Game identifier. */
-  gameId: string;
+  gameId?: string;
   /** Quad section identifier when applicable. */
   sectionId?: string;
   /** Round number */
@@ -78,11 +78,11 @@ export interface ResultHistoryEntry {
   /** New result */
   newResult: Result;
   /** Whether this entry recorded, corrected, or undid a result. */
-  action: "recorded" | "corrected" | "undone";
+  action?: "recorded" | "corrected" | "undone";
   /** Authenticated actor identifier when available. */
-  actorId: string | null;
+  actorId?: string | null;
   /** Human-readable actor label; never stores email addresses. */
-  actorName: string;
+  actorName?: string;
 }
 
 export interface ResultEntryActor {
