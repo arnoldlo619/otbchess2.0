@@ -91,10 +91,55 @@ import type { LichessProfile } from "@/hooks/useLichessProfile";
 
 import { authFetch } from "@/lib/apiFetch";
 import { decodeMetaParam, encodeMetaParam } from "@/lib/base64";
-/** Unified profile type covering both chess.com and Lichess */
-type UnifiedProfile = (ChessComProfile & { platform: "chesscom" }) | LichessProfile;
 type Platform = "chesscom" | "lichess";
+type ManualJoinProfile = {
+  username: string;
+  name?: string;
+  rapid: number;
+  blitz: number;
+  bullet: number;
+  classical?: number;
+  elo: number;
+  platform: Platform;
+  manualRating: true;
+  title?: string;
+  country?: string;
+  avatar?: string;
+  flairEmoji?: string;
+};
+/** Unified profile type covering provider profiles and a user-entered fallback rating. */
+type UnifiedProfile = ((ChessComProfile & { platform: "chesscom" }) | LichessProfile | ManualJoinProfile) & {
+  manualRating?: boolean;
+};
 type Step = "code" | "username" | "confirm" | "success";
+
+export function parseManualRating(value: string): number | null {
+  const rating = Number(value);
+  return Number.isInteger(rating) && rating >= 100 && rating <= 3500 ? rating : null;
+}
+
+export function isRateLimitError(message: string): boolean {
+  return /\b429\b|rate[ -]?limit|too many requests/i.test(message);
+}
+
+export function createManualJoinProfile(
+  username: string,
+  name: string,
+  rating: number,
+  platform: Platform,
+): ManualJoinProfile {
+  return {
+    username: username.trim(),
+    name: name.trim() || username.trim(),
+    rapid: rating,
+    blitz: rating,
+    bullet: rating,
+    classical: rating,
+    elo: rating,
+    platform,
+    manualRating: true,
+  };
+}
 
 function eloTier(elo: number) {
   if (elo >= 2500) return { label: "Grandmaster", color: "text-amber-700", bg: "bg-amber-50 border border-amber-200" };
@@ -112,9 +157,9 @@ function eloTierDark(elo: number) {
   return { label: "Beginner", color: "text-white/50", bg: "bg-white/05 border border-white/10" };
 }
 
-export type RegistrationIssue = "full" | "duplicate" | "closed" | "invalid" | "network";
+export type RegistrationIssue = "full" | "duplicate" | "closed" | "invalid" | "network" | "rate_limited";
 
-export function getRegistrationIssuePresentation(type: RegistrationIssue): {
+export function getRegistrationIssuePresentation(type: RegistrationIssue, retryAfterSeconds?: number): {
   title: string;
   message: string;
   tone: "amber" | "blue" | "red";
@@ -131,7 +176,12 @@ export function getRegistrationIssuePresentation(type: RegistrationIssue): {
   };
   if (type === "closed") return {
     title: "Registration Closed",
-    message: "This tournament has already started or finished. Ask the director for assistance.",
+    message: "This tournament has already started or finished. You can still follow pairings and results.",
+    tone: "amber",
+  };
+  if (type === "rate_limited") return {
+    title: "Too Many Attempts",
+    message: `Please wait ${Math.max(1, retryAfterSeconds ?? 60)} seconds, then try again. Your information is still here.`,
     tone: "amber",
   };
   if (type === "invalid") return {
@@ -148,7 +198,7 @@ export function getRegistrationIssuePresentation(type: RegistrationIssue): {
 
 type RegistrationSyncResult =
   | { success: true }
-  | { success: false; reason: RegistrationIssue };
+  | { success: false; reason: RegistrationIssue; retryAfterSeconds?: number };
 
 function mapAddPlayerIssue(reason: "duplicate" | "full" | "closed" | "unknown"): RegistrationIssue {
   return reason === "unknown" ? "invalid" : reason;
@@ -165,6 +215,14 @@ export async function postPlayerToServer(tournamentId: string, player: Player): 
     });
     if (response.ok) return { success: true };
     const payload = await response.json().catch(() => ({})) as { error?: string };
+    if (response.status === 429) {
+      const retryAfter = Number(response.headers.get("Retry-After"));
+      return {
+        success: false,
+        reason: "rate_limited",
+        retryAfterSeconds: Number.isFinite(retryAfter) ? Math.min(300, Math.max(1, retryAfter)) : 60,
+      };
+    }
     if (response.status === 409 && payload.error === "registration_closed") return { success: false, reason: "closed" };
     if (response.status === 409) return { success: false, reason: "duplicate" };
     if (response.status === 404) return { success: false, reason: "invalid" };
@@ -172,6 +230,54 @@ export async function postPlayerToServer(tournamentId: string, player: Player): 
   } catch {
     return { success: false, reason: "network" };
   }
+}
+
+function ManualRatingField({
+  value,
+  onChange,
+  inputClassName,
+  labelClassName,
+  mutedClassName,
+  providerLabel,
+  inputId,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  inputClassName: string;
+  labelClassName: string;
+  mutedClassName: string;
+  providerLabel: string;
+  inputId: string;
+}) {
+  const isInvalid = value.length > 0 && parseManualRating(value) === null;
+  const helpId = `${inputId}-help`;
+
+  return (
+    <div>
+      <label htmlFor={inputId} className={`mobile-section-label block mb-2 ${labelClassName}`}>
+        Manual pairing rating <span className="normal-case tracking-normal opacity-70">(optional)</span>
+      </label>
+      <input
+        id={inputId}
+        type="number"
+        inputMode="numeric"
+        min={100}
+        max={3500}
+        step={1}
+        value={value}
+        onChange={(event) => onChange(event.target.value.replace(/[^0-9]/g, "").slice(0, 4))}
+        placeholder="e.g. 1650"
+        aria-invalid={isInvalid}
+        aria-describedby={helpId}
+        className={`${inputClassName} text-base`}
+      />
+      <p id={helpId} className={`mt-1.5 text-xs ${isInvalid ? "text-red-500" : mutedClassName}`}>
+        {isInvalid
+          ? "Enter a whole-number rating from 100 to 3500."
+          : `Used only if ${providerLabel} cannot provide a rating.`}
+      </p>
+    </div>
+  );
 }
 
 // --- Step Progress Bar --------------------------------------------------------
@@ -511,6 +617,8 @@ export default function JoinPage() {
   const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
   const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState("");
+  const [manualRating, setManualRating] = useState("");
+  const [manualRatingUsed, setManualRatingUsed] = useState(false);
   const [platform, setPlatform] = useState<Platform>("chesscom");
 
   // Both hooks are always mounted; only the active one is called
@@ -808,6 +916,10 @@ export default function JoinPage() {
   async function handleUsernameSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!username.trim()) return;
+    if (manualRating.trim() && parseManualRating(manualRating) === null) {
+      setError("Enter a manual pairing rating from 100 to 3500.");
+      return;
+    }
     setError("");
     await active.lookup(username.trim());
     // advance handled via useEffect watching lookupStatus
@@ -823,25 +935,40 @@ export default function JoinPage() {
       const raw = active.profile;
       if (raw) {
         haptic(50); // short buzz — ELO found
+        setManualRatingUsed(false);
         setUnifiedProfile(raw as UnifiedProfile);
         advanceStep("confirm");
       }
     }
     if (lookupStatus === "not_found" || lookupStatus === "error") {
-      setError(lookupError);
+      const fallbackRating = parseManualRating(manualRating);
+      if (fallbackRating) {
+        setManualRatingUsed(true);
+        setUnifiedProfile(createManualJoinProfile(username, playerName, fallbackRating, platform));
+        setError("");
+        advanceStep("confirm");
+      } else {
+        if (isRateLimitError(lookupError)) showCapToast("rate_limited", 60);
+        setError(
+          isRateLimitError(lookupError)
+            ? "The profile provider is limiting requests. Wait 60 seconds or enter a manual pairing rating."
+            : `${lookupError || "Rating unavailable."} Enter a manual pairing rating to continue.`,
+        );
+      }
     }
-  }, [lookupStatus, step, active.profile, lookupError, advanceStep]);
+  }, [lookupStatus, step, active.profile, lookupError, manualRating, username, playerName, platform, advanceStep]);
 
   const [confirming, setConfirming] = useState(false);
   const qrRegistrationInFlightRef = useRef(false);
-  const [capToast, setCapToast] = useState<{ type: RegistrationIssue } | null>(null);
+  const [capToast, setCapToast] = useState<{ type: RegistrationIssue; retryAfterSeconds?: number } | null>(null);
 
-  function showCapToast(type: RegistrationIssue) {
-    setCapToast({ type });
-    setTimeout(() => setCapToast(null), 5000);
+  function showCapToast(type: RegistrationIssue, retryAfterSeconds?: number) {
+    setCapToast({ type, retryAfterSeconds });
+    setTimeout(() => setCapToast(null), type === "rate_limited" ? 8000 : 5000);
   }
 
-  const capToastPresentation = capToast ? getRegistrationIssuePresentation(capToast.type) : null;
+  const capToastPresentation = capToast ? getRegistrationIssuePresentation(capToast.type, capToast.retryAfterSeconds) : null;
+  const spectatorTournamentId = resolvedConfig?.id ?? embeddedMeta?.id ?? serverTournamentStatus?.tournamentId;
 
   // Inline auth handler — sign up or sign in before the chess.com username step
   async function handleAuthSubmit(e: React.FormEvent) {
@@ -892,6 +1019,10 @@ export default function JoinPage() {
     if (isTournamentClosed) { showCapToast("closed"); return; }
     if (isTournamentFull) { showCapToast("full"); return; }
     if (!username.trim()) { setError("Enter your chess.com username."); return; }
+    if (manualRating.trim() && parseManualRating(manualRating) === null) {
+      setError("Enter a manual pairing rating from 100 to 3500.");
+      return;
+    }
     setConfirming(true);
     setError("");
     await active.lookup(username.trim());
@@ -901,14 +1032,19 @@ export default function JoinPage() {
   // When QR mode lookup succeeds, auto-register and navigate to tournament
   useEffect(() => {
     if (!isQrMode || !confirming) return;
-    if (lookupStatus === "success") {
+    const fallbackRating = parseManualRating(manualRating);
+    const fallbackProfile = (lookupStatus === "not_found" || lookupStatus === "error") && fallbackRating
+      ? createManualJoinProfile(username, playerName, fallbackRating, platform)
+      : null;
+    if (lookupStatus === "success" || fallbackProfile) {
       if (qrRegistrationInFlightRef.current) return;
       qrRegistrationInFlightRef.current = true;
       void (async () => {
       try {
-      const raw = active.profile;
+      const raw = fallbackProfile ?? active.profile;
       if (!raw) return;
       const prof = raw as UnifiedProfile;
+      setManualRatingUsed(Boolean(fallbackProfile));
       setUnifiedProfile(prof);
       // Try registry first; fall back to embeddedMeta (bootstrapped from ?t= param)
       const config = resolveTournament(tournamentCode);
@@ -927,6 +1063,7 @@ export default function JoinPage() {
           platform: prof.platform,
           avatarUrl: prof.platform === "chesscom" ? (prof as ChessComProfile).avatar : undefined,
           flairEmoji: prof.platform === "lichess" ? (prof as LichessProfile).flairEmoji : undefined,
+          ...(prof.manualRating ? { manualPairingRating: prof.elo, pairingRating: prof.elo, ratingSource: "manual" as const } : {}),
           joinedAt: Date.now(),
         };
         const result = addPlayerToTournament(config.id, player);
@@ -940,7 +1077,7 @@ export default function JoinPage() {
         if (!sync.success) {
           removeJoinedPlayerFromTournament(config.id, player.id);
           setConfirming(false);
-          showCapToast(sync.reason);
+          showCapToast(sync.reason, sync.retryAfterSeconds);
           return;
         }
         saveRegistration({
@@ -973,6 +1110,7 @@ export default function JoinPage() {
             platform: prof.platform,
             avatarUrl: prof.platform === "chesscom" ? (prof as ChessComProfile).avatar : undefined,
             flairEmoji: prof.platform === "lichess" ? (prof as LichessProfile).flairEmoji : undefined,
+            ...(prof.manualRating ? { manualPairingRating: prof.elo, pairingRating: prof.elo, ratingSource: "manual" as const } : {}),
             joinedAt: Date.now(),
           };
           const result = addPlayerToTournament(bootstrapped.id, player);
@@ -985,7 +1123,7 @@ export default function JoinPage() {
           if (!sync.success) {
             removeJoinedPlayerFromTournament(bootstrapped.id, player.id);
             setConfirming(false);
-            showCapToast(sync.reason);
+            showCapToast(sync.reason, sync.retryAfterSeconds);
             return;
           }
           saveRegistration({
@@ -1013,9 +1151,14 @@ export default function JoinPage() {
       })();
     } else if (lookupStatus === "not_found" || lookupStatus === "error") {
       setConfirming(false);
-      setError(lookupError || "Username not found on chess.com.");
+      if (isRateLimitError(lookupError)) showCapToast("rate_limited", 60);
+      setError(
+        isRateLimitError(lookupError)
+          ? "The profile provider is limiting requests. Wait 60 seconds or enter a manual pairing rating."
+          : `${lookupError || "Rating unavailable."} Enter a manual pairing rating to continue.`,
+      );
     }
-  }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, navigate]);
+  }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, username, manualRating, platform, navigate]);
 
   async function handleConfirm() {
     if (isTournamentClosed) { showCapToast("closed"); return; }
@@ -1047,6 +1190,7 @@ export default function JoinPage() {
         platform: profile.platform,
         avatarUrl: profile.platform === "chesscom" ? (profile as ChessComProfile).avatar : undefined,
         flairEmoji: profile.platform === "lichess" ? (profile as LichessProfile).flairEmoji : undefined,
+        ...(profile.manualRating ? { manualPairingRating: profile.elo, pairingRating: profile.elo, ratingSource: "manual" as const } : {}),
         joinedAt: Date.now(),
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
@@ -1062,7 +1206,7 @@ export default function JoinPage() {
         if (!sync.success) {
           removeJoinedPlayerFromTournament(config.id, player.id);
           setConfirming(false);
-          showCapToast(sync.reason);
+          showCapToast(sync.reason, sync.retryAfterSeconds);
           return;
         }
       } else if (embeddedMeta?.id) {
@@ -1071,7 +1215,7 @@ export default function JoinPage() {
         const sync = await postPlayerToServer(embeddedMeta.id, player);
         if (!sync.success) {
           setConfirming(false);
-          showCapToast(sync.reason);
+          showCapToast(sync.reason, sync.retryAfterSeconds);
           return;
         }
       } else {
@@ -1189,10 +1333,18 @@ export default function JoinPage() {
             <p className="text-xs mt-0.5 opacity-80">
               {capToastPresentation.message}
             </p>
+            {capToast.type === "closed" && spectatorTournamentId && (
+              <Link
+                href={`/tournament/${spectatorTournamentId}`}
+                className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-current/25 px-3 text-xs font-bold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/50"
+              >
+                View pairings and results
+              </Link>
+            )}
           </div>
           <button
             onClick={() => setCapToast(null)}
-            className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity text-lg leading-none mt-0.5"
+            className="-mr-2 -mt-2 flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center text-lg leading-none opacity-60 transition-opacity hover:opacity-100"
             aria-label="Dismiss"
           >
             ×
@@ -1654,6 +1806,16 @@ export default function JoinPage() {
                   <p className={`text-xs mt-1.5 ${textMuted}`}>We'll pull your ELO for optimal pairings</p>
                 </div>
 
+                <ManualRatingField
+                  inputId="qr-manual-pairing-rating"
+                  value={manualRating}
+                  onChange={(value) => { setManualRating(value); setError(""); }}
+                  inputClassName={inputBase}
+                  labelClassName={labelCls}
+                  mutedClassName={textMuted}
+                  providerLabel="Chess.com"
+                />
+
                 {error && (
                   <div className={`flex items-start gap-2 text-sm px-3 py-2.5 rounded-xl border ${
                     isDark ? "bg-red-500/10 border-red-500/25 text-red-300" : "bg-red-50 border-red-200 text-red-700"
@@ -1758,6 +1920,16 @@ export default function JoinPage() {
                     </div>
                   )}
                 </div>
+
+                <ManualRatingField
+                  inputId="manual-flow-pairing-rating"
+                  value={manualRating}
+                  onChange={(value) => { setManualRating(value); setError(""); }}
+                  inputClassName={inputBase}
+                  labelClassName={labelCls}
+                  mutedClassName={textMuted}
+                  providerLabel={platform === "chesscom" ? "Chess.com" : "Lichess"}
+                />
               </div>
             </div>
           )}
@@ -1825,7 +1997,10 @@ export default function JoinPage() {
                         </span>
                       </div>
                       <p className={`mt-1 inline-flex items-center gap-1 text-xs ${textMuted}`}>
-                        <ShieldCheck className="h-3.5 w-3.5" /> Profile matched on {profile.platform === "lichess" ? "Lichess" : "Chess.com"}; not federation verification
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        {manualRatingUsed
+                          ? "Rating entered manually; not platform or federation verified"
+                          : <>Profile matched on {profile.platform === "lichess" ? "Lichess" : "Chess.com"}; not federation verification</>}
                       </p>
                     </div>
                   </div>
@@ -1834,7 +2009,11 @@ export default function JoinPage() {
                   <div>
                     <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
                     <div className="grid grid-cols-3 gap-2">
-                      {profile.platform === "lichess" ? (
+                      {manualRatingUsed ? (
+                        <div className="col-span-3">
+                          <EloStatBox label="Manual rating" target={profile.elo} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                        </div>
+                      ) : profile.platform === "lichess" ? (
                         <>
                           <EloStatBox label="Classical" target={(profile as LichessProfile).classical} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                           <EloStatBox label="Rapid" target={profile.rapid} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
@@ -1850,7 +2029,7 @@ export default function JoinPage() {
                     </div>
                     <div className={`mt-2 flex items-center justify-between rounded-xl px-3 py-2 text-xs ${isDark ? "bg-[#4CAF50]/08 text-white/70" : "bg-[#436850]/06 text-[#436850]"}`}>
                       <span>Pairing rating</span>
-                      <strong>{resolvedConfig?.ratingType === "blitz" ? "Blitz" : "Rapid"} · {pickRating(profile, resolvedConfig?.ratingType)}</strong>
+                      <strong>{manualRatingUsed ? "Manual" : resolvedConfig?.ratingType === "blitz" ? "Blitz" : "Rapid"} · {pickRating(profile, resolvedConfig?.ratingType)}</strong>
                     </div>
                   </div>
 

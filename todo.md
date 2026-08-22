@@ -7105,12 +7105,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 404: existing page extended with error variant system (?error= param)
 - [x] Invalid tournament code: NotFound variant with recovery path to /join
 - [x] Closed registration: NotFound variant with alternative action to /tournaments
-- [ ] Tournament already started: clear message + spectator link
+- [x] Tournament already started: clear message + spectator link
 - [x] Player already registered: existing capToast system handles this
 - [x] Username not found: NotFound variant with suggestion
-- [ ] Rating unavailable: graceful fallback (allow manual entry)
+- [x] Rating unavailable: graceful fallback (allow manual entry)
 - [x] Network failure: NotFound variant with retry button
-- [ ] Rate limiting: friendly message with wait time
+- [x] Rate limiting: friendly message with wait time
 
 ### G. Motion and Interaction
 - [x] Add prefers-reduced-motion respect to all animated elements (Phase 3 additions: EcosystemPathways hover, animate-spring-in, animate-slide-down-fade, pairing-text-glow, Framer Motion hint)

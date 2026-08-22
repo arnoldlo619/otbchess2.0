@@ -2,8 +2,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createManualJoinProfile,
   formatJoinDate,
   getRegistrationIssuePresentation,
+  isRateLimitError,
+  parseManualRating,
   postPlayerToServer,
   type RegistrationIssue,
 } from "../pages/Join";
@@ -42,10 +45,41 @@ describe("Join registration issue presentation", () => {
     ["closed", "Registration Closed"],
     ["invalid", "Tournament Not Found"],
     ["network", "Could Not Register"],
+    ["rate_limited", "Too Many Attempts"],
   ] as Array<[RegistrationIssue, string]>) ("presents %s failures distinctly", (issue, title) => {
     const presentation = getRegistrationIssuePresentation(issue);
     expect(presentation.title).toBe(title);
     expect(presentation.message.length).toBeGreaterThan(20);
+  });
+});
+
+describe("Join manual rating fallback", () => {
+  it("accepts only plausible whole-number chess ratings", () => {
+    expect(parseManualRating("1650")).toBe(1650);
+    expect(parseManualRating("99")).toBeNull();
+    expect(parseManualRating("3501")).toBeNull();
+    expect(parseManualRating("1650.5")).toBeNull();
+    expect(parseManualRating("")).toBeNull();
+  });
+
+  it("creates a platform-preserving manual profile without verification claims", () => {
+    expect(createManualJoinProfile("  alice  ", "Alice", 1700, "lichess")).toMatchObject({
+      username: "alice",
+      name: "Alice",
+      rapid: 1700,
+      blitz: 1700,
+      bullet: 1700,
+      classical: 1700,
+      elo: 1700,
+      platform: "lichess",
+      manualRating: true,
+    });
+  });
+
+  it("recognizes provider and HTTP rate-limit wording", () => {
+    expect(isRateLimitError("429 Too Many Requests")).toBe(true);
+    expect(isRateLimitError("Provider rate limit reached")).toBe(true);
+    expect(isRateLimitError("Username not found")).toBe(false);
   });
 });
 
@@ -99,6 +133,19 @@ describe("postPlayerToServer", () => {
   it("keeps network failures retryable instead of reporting false success", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     await expect(postPlayerToServer("open-event", player)).resolves.toEqual({ success: false, reason: "network" });
+  });
+
+  it("preserves an authoritative Retry-After duration for friendly wait guidance", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "rate_limited" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Retry-After": "17" },
+    })));
+    await expect(postPlayerToServer("busy-event", player)).resolves.toEqual({
+      success: false,
+      reason: "rate_limited",
+      retryAfterSeconds: 17,
+    });
+    expect(getRegistrationIssuePresentation("rate_limited", 17).message).toContain("17 seconds");
   });
 });
 
@@ -170,5 +217,23 @@ describe("Join reliability integration", () => {
     expect(joinSource.match(/animate-spring-in/g)?.length ?? 0).toBeGreaterThanOrEqual(5);
     expect(joinSource).toContain('key={`step4-${stepKey}`}');
     expect(joinSource).not.toContain("First opponent matched by ELO proximity");
+  });
+
+  it("allows manual pairing ratings only as an explicit provider fallback", () => {
+    expect(joinSource).toContain('inputId="qr-manual-pairing-rating"');
+    expect(joinSource).toContain('inputId="manual-flow-pairing-rating"');
+    expect(joinSource).toContain("Used only if ${providerLabel} cannot provide a rating.");
+    expect(joinSource).toContain("Rating entered manually; not platform or federation verified");
+    expect(joinSource).toContain('ratingSource: "manual" as const');
+    expect(joinSource).toContain("Enter a manual pairing rating from 100 to 3500.");
+  });
+
+  it("offers spectator recovery after registration closes and wait guidance after throttling", () => {
+    expect(joinSource).toContain("View pairings and results");
+    expect(joinSource).toContain("spectatorTournamentId");
+    expect(joinSource).toContain('href={`/tournament/${spectatorTournamentId}`}');
+    expect(joinSource).toContain("Please wait ${Math.max(1, retryAfterSeconds ?? 60)} seconds");
+    expect(joinSource).toContain("response.status === 429");
+    expect(joinSource).toContain("showCapToast(sync.reason, sync.retryAfterSeconds)");
   });
 });
