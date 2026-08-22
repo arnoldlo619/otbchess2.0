@@ -21,3 +21,7 @@ The League demo initially produced intermittent 2.7–3.2 second readings becaus
 ## Interpretation
 
 This is a **lab-equivalent warm-cache regression**, suitable for catching future route rendering and layout-stability regressions in the development environment. It is not a substitute for production field data or a throttled cold-load Lighthouse run. The production build remains resource-limited in the sandbox, so cold production budgets should be confirmed after the next publish through the live analytics or an external Lighthouse run.
+
+## Cached client-route transitions
+
+`e2e/cached-route-transitions.spec.ts` enforces a **500 ms router-commit budget** on representative Pricing-to-Join and Pricing-to-Home navigation at desktop and mobile widths. Each destination is first opened and returned from inside the same application document so the route component is present in the `React.lazy` cache. The measured second activation excludes pre-click scrolling, verifies the URL commit and destination content, and rejects any flash of the full-screen “Preparing the board” fallback. All four route/viewport checks pass.
