@@ -35,3 +35,7 @@ The result-feedback metric intentionally measures the actual state commit rather
 ## Font loading and FOIT resilience
 
 Both external font stylesheets request `display=swap`, and the document preconnects to Google Fonts, Google font binaries, and Fontshare before loading their CSS. Body, display, and monospace stacks retain immediate system or generic fallbacks. `fontLoadingStrategy.test.ts` protects these source policies, while `font-loading-fallback.spec.ts` blocks every external font provider and confirms the landing headline and primary action remain visible with non-zero geometry on desktop and mobile. This prevents external font latency or provider failure from making core content invisible.
+
+## Decorative animation main-thread budget
+
+`e2e/decorative-animation-performance.spec.ts` warms the animation-heavy landing route, confirms normal-motion animations are actively running, clears startup work, and observes Chromium `longtask` entries during a two-second sustained-motion window. Four repeated desktop/mobile checks produced **zero main-thread tasks over 50 ms**, so no visual motion reduction was required. Reduced-motion behavior remains covered separately by the principal reduced-motion suite.
