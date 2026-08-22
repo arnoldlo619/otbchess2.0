@@ -16,6 +16,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Maximize2, Copy, Check, Tv2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 
 // ─── Timer types (mirrors server TimerSnapshot) ───────────────────────────────
 interface TimerSnap {
@@ -191,6 +192,7 @@ interface SpectatorQRScreenProps {
   spectatorUrl: string;
   /** Tournament slug used to fetch timer state */
   tournamentId?: string;
+  tournamentStatus?: string;
 }
 
 export function SpectatorQRScreen({
@@ -199,6 +201,7 @@ export function SpectatorQRScreen({
   tournamentName,
   spectatorUrl,
   tournamentId,
+  tournamentStatus,
 }: SpectatorQRScreenProps) {
   const [copied, setCopied] = useState(false);
   const [timerSnap, setTimerSnap] = useState<TimerSnap | null>(null);
@@ -262,7 +265,15 @@ export function SpectatorQRScreen({
     setTimeout(() => setCopied(false), 2500);
   }
 
-  const showTimer = timerSnap && timerSnap.status !== "idle";
+  const statusDisplay = getTournamentStatusDisplay(tournamentStatus);
+  const showTimer = !statusDisplay.isComplete && timerSnap && timerSnap.status !== "idle";
+  const statusLabel = statusDisplay.isComplete
+    ? "TOURNAMENT COMPLETED"
+    : statusDisplay.isLive
+    ? "LIVE SPECTATOR VIEW"
+    : statusDisplay.label.toUpperCase();
+  const statusColor = statusDisplay.isComplete ? "#CBD5E1" : statusDisplay.isLive ? "#93C5FD" : "#FCD34D";
+  const statusBackground = statusDisplay.isComplete ? "rgba(148,163,184,0.14)" : statusDisplay.isLive ? "rgba(59,130,246,0.18)" : "rgba(245,158,11,0.14)";
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -312,22 +323,24 @@ export function SpectatorQRScreen({
       >
         {/* Left column: title + live badge + instructions */}
         <div className="flex flex-col items-center lg:items-start gap-5 lg:max-w-xs">
-          {/* Live badge */}
+          {/* Canonical lifecycle badge */}
           <div
             className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide"
-            style={{ background: "rgba(59,130,246,0.18)", color: "#93C5FD" }}
+            style={{ background: statusBackground, color: statusColor }}
           >
-            <span
-              className="w-2 h-2 rounded-full bg-blue-400"
-              style={{ animation: "pulse 1.5s ease-in-out infinite" }}
-            />
-            LIVE SPECTATOR VIEW
+            {statusDisplay.isLive && (
+              <span
+                className="w-2 h-2 rounded-full bg-blue-400"
+                style={{ animation: "pulse 1.5s ease-in-out infinite" }}
+              />
+            )}
+            {statusLabel}
           </div>
 
           {/* Tournament name */}
           <div>
             <p className="text-white/40 text-xs font-semibold uppercase tracking-[0.2em] mb-2">
-              Now watching
+              {statusDisplay.isComplete ? "Final results" : "Now watching"}
             </p>
             <h1
               className="text-white font-bold leading-tight text-3xl sm:text-4xl lg:text-5xl"
@@ -339,7 +352,9 @@ export function SpectatorQRScreen({
 
           {/* Instruction text */}
           <p className="text-white/40 text-sm sm:text-base leading-relaxed">
-            Scan the QR code to follow live standings, pairings, and results on your phone — no account needed.
+            {statusDisplay.isComplete
+              ? "Scan the QR code to view final standings, pairings, and results on your phone."
+              : "Scan the QR code to follow live standings, pairings, and results on your phone — no account needed."}
           </p>
 
           {/* URL display */}
@@ -418,9 +433,9 @@ export function SpectatorQRScreen({
             />
           ))}
 
-          {/* "Scan to watch live" label below QR */}
+          {/* Context-aware scan label below QR */}
           <p className="text-center text-white/30 text-xs font-semibold uppercase tracking-[0.2em] mt-4 select-none">
-            Scan to watch live
+            {statusDisplay.isComplete ? "Scan to view results" : "Scan to watch live"}
           </p>
         </div>
       </div>
@@ -428,7 +443,7 @@ export function SpectatorQRScreen({
       {/* ── Bottom branding strip ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-center gap-2 text-white/15 text-xs select-none py-4">
         <Tv2 className="w-3.5 h-3.5" />
-        <span>OTB Chess · Live Spectator View</span>
+        <span>OTB Chess · {statusDisplay.isComplete ? "Tournament Results" : "Spectator View"}</span>
       </div>
 
       </div>{/* end scrollable wrapper */}

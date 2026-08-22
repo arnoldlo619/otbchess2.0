@@ -43,6 +43,7 @@ import {
 } from "@/lib/archiveData";
 import { listTournaments, deleteTournament, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { exportStandingsCsv } from "@/lib/exportCsv";
@@ -422,10 +423,11 @@ function UserTournamentCard({
   const state = loadTournamentState(config.id);
   const standings = state ? computeStandings(state.players, state.rounds) : [];
   const winner = standings[0];
-  const statusLabel = state?.status === "completed" ? "Completed" : state?.status === "in_progress" ? "In Progress" : "Registration";
-  const statusColor = state?.status === "completed"
+  const statusDisplay = getTournamentStatusDisplay(state);
+  const statusLabel = statusDisplay.isPending ? "Registration" : statusDisplay.label;
+  const statusColor = statusDisplay.isComplete
     ? isDark ? "bg-[#436850]/20 text-[#4CAF50] border-[#436850]/30" : "bg-[#436850]/08 text-[#436850] border-[#436850]/20"
-    : state?.status === "in_progress"
+    : statusDisplay.isLive
     ? isDark ? "bg-amber-500/15 text-amber-400 border-amber-500/25" : "bg-amber-50 text-amber-700 border-amber-200"
     : isDark ? "bg-white/05 text-white/40 border-white/10" : "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]";
   const formatLabel = getTournamentFormatLabel(config.format, { fallback: "Unknown" });
@@ -462,7 +464,7 @@ function UserTournamentCard({
             <button className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               isDark ? "bg-[#436850]/20 text-[#4CAF50] hover:bg-[#436850]/30" : "bg-[#436850]/08 text-[#436850] hover:bg-[#436850]/15"
             }`}>
-              {state?.status === "registration" ? "Manage" : "View"}
+              {statusDisplay.isPending ? "Manage" : "View"}
             </button>
           </Link>
         </div>
@@ -488,7 +490,7 @@ function UserTournamentCard({
             isDark ? "bg-white/04 text-white/30" : "bg-[#FBFADA]/70 text-[#436850]"
           }`}>
             <Trophy className="w-3.5 h-3.5" />
-             {state?.status === "registration" ? "Waiting for players to register" : "No results yet"}
+             {statusDisplay.isPending ? "Waiting for players to register" : "No results yet"}
           </div>
         )}
       </div>
@@ -503,7 +505,7 @@ function UserTournamentCard({
         </Link>
         <Link href={`/tournament/${config.id}/report`} className="flex-1">
           <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-            state?.status === "completed"
+            statusDisplay.isComplete
               ? isDark
                 ? "bg-[#436850]/20 text-[#7ec89a] hover:bg-[#436850]/35"
                 : "bg-[#436850]/10 border border-[#436850]/30 text-[#3a5230] hover:bg-[#436850]/20"
@@ -514,7 +516,7 @@ function UserTournamentCard({
             <Trophy className="w-3.5 h-3.5" /> View Report
           </button>
         </Link>
-        {state?.status === "completed" && standings.length > 0 && (
+        {statusDisplay.isComplete && standings.length > 0 && (
           <button
             title="Download standings as CSV"
             onClick={() =>

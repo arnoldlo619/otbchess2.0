@@ -27,6 +27,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type {Player, Round, Result} from "@/lib/tournamentData";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 
 import { authFetch } from "@/lib/apiFetch";
 import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
@@ -108,7 +109,8 @@ function scoreFraction(pts: number): string {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, currentRound, totalRounds }: { status: string; currentRound: number; totalRounds: number }) {
-  if (status === "completed") {
+  const display = getTournamentStatusDisplay(status);
+  if (display.isComplete) {
     return (
       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground bg-muted border border-border px-3 py-1.5 rounded-full">
         <Trophy className="w-3.5 h-3.5" />
@@ -116,11 +118,11 @@ function StatusBadge({ status, currentRound, totalRounds }: { status: string; cu
       </span>
     );
   }
-  if (status === "in_progress" || status === "paused") {
+  if (display.isLive || display.label === "Paused") {
     return (
       <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        Live · Round {currentRound} of {totalRounds}
+        {display.isLive && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
+        {display.isLive ? `Live · Round ${currentRound} of ${totalRounds}` : display.label}
       </span>
     );
   }
@@ -507,6 +509,7 @@ function PairingsSection({
   followedPlayerId,
   isDark,
   sectionPlayerIds,
+  isTournamentComplete,
 }: {
   rounds: Round[];
   currentRound: number;
@@ -516,6 +519,7 @@ function PairingsSection({
   isDark: boolean;
   /** When set, only show games where at least one player is in this section */
   sectionPlayerIds?: Set<string>;
+  isTournamentComplete: boolean;
 }) {
   const [activeRound, setActiveRound] = useState(currentRound);
   const [boardSearch, setBoardSearch] = useState("");
@@ -639,7 +643,7 @@ function PairingsSection({
             const white = playerMap.get(game.whiteId);
             const black = playerMap.get(game.blackId);
             const isFollowed = followedPlayerId === game.whiteId || followedPlayerId === game.blackId;
-            const isLive = game.result === "*";
+            const isLive = !isTournamentComplete && game.result === "*";
 
             return (
               <div
@@ -1607,7 +1611,7 @@ export default function PublicTournament() {
   if (loading) return <LoadingSkeleton isDark={isDark} />;
   if (error || !data) return <ErrorState isDark={isDark} message={error ?? "Unknown error"} />;
 
-  const isCompleted = data.status === "completed";
+  const isCompleted = getTournamentStatusDisplay(data.status).isComplete;
 
   return (
     <div className={`min-h-screen ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
@@ -1814,6 +1818,7 @@ export default function PublicTournament() {
             players={data.players}
             followedPlayerId={followedPlayerId}
             isDark={isDark}
+            isTournamentComplete={isCompleted}
             sectionPlayerIds={
               isQuads && activeQuadSection !== "all"
                 ? new Set(quadSections.find(s => s.id === activeQuadSection)?.playerIds ?? [])

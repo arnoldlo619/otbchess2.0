@@ -34,6 +34,7 @@ import {
 import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 import { useAuthContext } from "@/context/AuthContext";
 import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
@@ -127,22 +128,23 @@ function ScorePill({ points }: { points: number }) {
 
 // ─── Live Pulse Indicator ─────────────────────────────────────────────────────
 function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number; totalRounds: number; status: string }) {
+  const display = getTournamentStatusDisplay(status);
   // Mutually exclusive states — never show Live + Completed simultaneously
-  if (status === "completed") {
+  if (display.isComplete) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">
         Complete
       </span>
     );
   }
-  if (status === "paused") {
+  if (display.label === "Paused") {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-400/25 text-amber-100 border border-amber-400/40">
         Paused
       </span>
     );
   }
-  if (status === "in_progress") {
+  if (display.isLive) {
     return (
       <span className="inline-flex items-center gap-2 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">
         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />

@@ -41,6 +41,7 @@ import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/compone
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { listTournamentsByClub, getTournamentConfig, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
 import {
@@ -4872,17 +4873,14 @@ function TournamentCard({
   const isSwissElim = tournament.format === "swiss_elim";
   const isRR = tournament.format === "roundrobin";
 
-  // Derive status from director state (TournamentConfig has no status field)
-  const tournStatus: "upcoming" | "active" | "completed" =
-    dirState?.status === "completed" ? "completed"
-    : dirState?.status === "in_progress" ? "active"
-    : "upcoming";
+  // Canonical lifecycle metadata gives completed state terminal precedence.
+  const statusDisplay = getTournamentStatusDisplay(dirState);
 
   const formatLabel = getTournamentFormatLabel(tournament.format, { fallback: "Unknown" });
 
   const statusColor =
-    tournStatus === "active" ? "text-green-500 bg-green-500/10 border-green-500/20"
-    : tournStatus === "completed" ? isDark ? "text-white/40 bg-white/5 border-white/10" : "text-[#436850]/60 bg-[#ADBC9F]/20 border-[#ADBC9F]/40"
+    statusDisplay.isLive ? "text-green-500 bg-green-500/10 border-green-500/20"
+    : statusDisplay.isComplete ? isDark ? "text-white/40 bg-white/5 border-white/10" : "text-[#436850]/60 bg-[#ADBC9F]/20 border-[#ADBC9F]/40"
     : isDark ? "text-amber-400 bg-amber-400/10 border-amber-400/20" : "text-amber-600 bg-amber-500/10 border-amber-500/20";
 
   return (
@@ -4894,13 +4892,13 @@ function TournamentCard({
       >
         {/* Format icon */}
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-          tournStatus === "active"
+          statusDisplay.isLive
             ? "bg-green-500/15"
             : isDark ? "bg-white/6" : "bg-[#FBFADA]/70"
         }`}>
-          {tournStatus === "active"
+          {statusDisplay.isLive
             ? <Zap className="w-5 h-5 text-green-500" strokeWidth={1.8} />
-            : tournStatus === "completed"
+            : statusDisplay.isComplete
             ? <CheckCircle2 className={`w-5 h-5 ${textMuted}`} strokeWidth={1.8} />
             : <Trophy className={`w-5 h-5`} style={{ color: accent }} strokeWidth={1.8} />
           }
@@ -4909,7 +4907,7 @@ function TournamentCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-sm font-semibold truncate ${textMain}`}>{tournament.name}</span>
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold border ${statusColor}`}>
-              {tournStatus === "active" ? "Live" : tournStatus === "completed" ? "Finished" : "Upcoming"}
+              {statusDisplay.isComplete ? "Completed" : statusDisplay.isLive ? "Live" : statusDisplay.isPending ? "Upcoming" : statusDisplay.label}
             </span>
           </div>
           <div className={`flex items-center gap-2 mt-0.5 text-xs ${textMuted} flex-wrap`}>

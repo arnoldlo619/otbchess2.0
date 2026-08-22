@@ -10,12 +10,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { X, Copy, Check, ExternalLink, Download, Tv2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 
 interface SpectatorShareModalProps {
   open: boolean;
   onClose: () => void;
   tournamentName: string;
   spectatorUrl: string;
+  tournamentStatus?: string;
 }
 
 export function SpectatorShareModal({
@@ -23,10 +25,12 @@ export function SpectatorShareModal({
   onClose,
   tournamentName,
   spectatorUrl,
+  tournamentStatus,
 }: SpectatorShareModalProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [copied, setCopied] = useState(false);
+  const statusDisplay = getTournamentStatusDisplay(tournamentStatus);
 
   if (!open) return null;
 
@@ -101,7 +105,7 @@ export function SpectatorShareModal({
                 }`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Watch Live
+                {statusDisplay.isComplete ? "View Results" : "Watch Live"}
               </p>
               <p
                 className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}
@@ -154,15 +158,15 @@ export function SpectatorShareModal({
             ))}
           </div>
 
-          {/* Live badge */}
+          {/* Canonical lifecycle badge */}
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#2196F3] animate-pulse" />
+            {statusDisplay.isLive && <span className="w-2 h-2 rounded-full bg-[#2196F3] animate-pulse" />}
             <p
               className={`text-xs font-semibold uppercase tracking-widest ${
                 isDark ? "text-[#2196F3]" : "text-[#1a6b8a]"
               }`}
             >
-              Live Spectator View
+              {statusDisplay.isComplete ? "Tournament Completed" : statusDisplay.isLive ? "Live Spectator View" : statusDisplay.label}
             </p>
           </div>
 
@@ -182,8 +186,9 @@ export function SpectatorShareModal({
                 isDark ? "text-white/60" : "text-[#436850]"
               }`}
             >
-              Share this QR code with coaches, parents, and spectators. The page
-              updates live as results are entered — no account or login required.
+              {statusDisplay.isComplete
+                ? "Share this QR code so coaches, parents, and spectators can view final standings, pairings, and results."
+                : "Share this QR code with coaches, parents, and spectators. The page updates live as results are entered — no account or login required."}
             </p>
           </div>
 

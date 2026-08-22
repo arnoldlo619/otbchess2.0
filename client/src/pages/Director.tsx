@@ -34,6 +34,7 @@ import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { getPlayerCountError, getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
@@ -2352,6 +2353,7 @@ export default function Director() {
     isElimBracketComplete,
     loadMockQuadsState,
   } = useDirectorState(tournamentId);
+  const tournamentStatusDisplay = getTournamentStatusDisplay(state);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
     useUndoResult(enterResult);
@@ -3552,7 +3554,7 @@ export default function Director() {
                       Not started
                     </span>
                   )}
-                  {childBrackets.some(b => b.status === "active") && (
+                  {tournamentStatusDisplay.isLive && childBrackets.some(b => b.status === "active") && (
                     <span className="flex items-center gap-1.5 text-[11px] font-semibold text-green-500">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60" />
@@ -3570,7 +3572,7 @@ export default function Director() {
                       key={b.tournamentId}
                       onClick={() => navigate(`/tournament/${b.tournamentId}/manage`)}
                       className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all active:scale-95 ${
-                        b.status === "active"
+                        tournamentStatusDisplay.isLive && b.status === "active"
                           ? isDark
                             ? "bg-green-500/15 border-green-500/30 text-green-300 hover:bg-green-500/20"
                             : "bg-green-50 border-green-300 text-green-700 hover:bg-green-100"
@@ -3585,7 +3587,7 @@ export default function Director() {
                       }`}>
                         {b.playerCount}p
                       </span>
-                      {b.status === "active" && (
+                      {tournamentStatusDisplay.isLive && b.status === "active" && (
                         <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60" />
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -3663,7 +3665,7 @@ export default function Director() {
                       {state.players.length}
                     </span>
                   )}
-                  {tab.id === "bracket" && state.elimPhase === "elimination" && (
+                  {tab.id === "bracket" && tournamentStatusDisplay.isLive && state.elimPhase === "elimination" && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       activeTab === "bracket"
                         ? isDark ? "bg-white/20 text-white" : "bg-[#436850]/10 text-[#436850]"
@@ -7100,6 +7102,7 @@ export default function Director() {
         onClose={() => setShowSpectatorShare(false)}
         tournamentName={state.tournamentName}
         spectatorUrl={spectatorUrl}
+        tournamentStatus={state.status}
       />
 
       {/* ── Spectator QR Screen (full-screen projection mode) ────────────────── */}
@@ -7111,6 +7114,7 @@ export default function Director() {
             tournamentName={state.tournamentName}
             spectatorUrl={spectatorUrl}
             tournamentId={state.tournamentId}
+            tournamentStatus={state.status}
           />
         </Suspense>
       )}

@@ -81,6 +81,16 @@ export type TournamentStatus =
   | "completed"
   | string;
 
+export type CanonicalTournamentStatus =
+  | "registration"
+  | "in_progress"
+  | "paused"
+  | "completed";
+
+type TournamentStatusSource =
+  | unknown
+  | { status?: unknown; elimPhase?: unknown };
+
 export interface StatusDisplay {
   label: string;
   isLive: boolean;
@@ -89,11 +99,33 @@ export interface StatusDisplay {
 }
 
 /**
+ * Resolves local and server lifecycle sources into one safe status. Completed
+ * is terminal and always wins, so stale in-progress state cannot render Live
+ * after finalization.
+ */
+export function getTournamentStatus(
+  ...sources: TournamentStatusSource[]
+): CanonicalTournamentStatus {
+  const statuses = sources.flatMap((source) => {
+    if (source && typeof source === "object") {
+      const candidate = source as { status?: unknown; elimPhase?: unknown };
+      return [candidate.status, candidate.elimPhase];
+    }
+    return [source];
+  });
+
+  if (statuses.includes("completed")) return "completed";
+  if (statuses.includes("paused")) return "paused";
+  if (statuses.includes("in_progress") || statuses.includes("elimination")) return "in_progress";
+  return "registration";
+}
+
+/**
  * Returns display metadata for a tournament status string.
  * Never returns isLive=true for a completed tournament.
  */
-export function getTournamentStatusDisplay(status: TournamentStatus): StatusDisplay {
-  switch (status) {
+export function getTournamentStatusDisplay(...sources: TournamentStatusSource[]): StatusDisplay {
+  switch (getTournamentStatus(...sources)) {
     case "completed":
       return { label: "Completed", isLive: false, isComplete: true, isPending: false };
     case "in_progress":

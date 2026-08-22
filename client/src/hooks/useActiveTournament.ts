@@ -19,6 +19,10 @@ import {
   resolveTournament,
 } from "@/lib/tournamentRegistry";
 import { getAllRegistrations } from "@/lib/registrationStore";
+import {
+  getTournamentStatus,
+  type CanonicalTournamentStatus,
+} from "@/lib/tournamentUtils";
 
 export interface ActiveTournamentInfo {
   /** Tournament slug, e.g. "spring-open-2026" */
@@ -30,7 +34,7 @@ export interface ActiveTournamentInfo {
   /** Whether the user is the director or a registered player */
   role: "director" | "participant";
   /** Tournament status derived from director state (if available) */
-  status: "registration" | "in_progress" | "paused" | "completed" | "unknown";
+  status: CanonicalTournamentStatus;
 }
 
 function readActiveTournament(): ActiveTournamentInfo | null {
@@ -46,23 +50,14 @@ function readActiveTournament(): ActiveTournamentInfo | null {
       if (!hasDirectorSession(t.id)) continue;
 
       // Try to read tournament status from director state
-      let status: ActiveTournamentInfo["status"] = "unknown";
+      let status: ActiveTournamentInfo["status"] = "registration";
       try {
         const raw = localStorage.getItem(`otb-director-state-v2-${t.id}`);
         if (raw) {
-          const parsed = JSON.parse(raw) as { status?: string };
-          const s = parsed.status;
-          if (
-            s === "registration" ||
-            s === "in_progress" ||
-            s === "paused" ||
-            s === "completed"
-          ) {
-            status = s;
-          }
+          status = getTournamentStatus(JSON.parse(raw));
         }
       } catch {
-        // ignore — status stays "unknown"
+        // Ignore malformed local state and keep the safe registration fallback.
       }
 
       // Skip completed tournaments — they don't need a "return" banner
@@ -91,20 +86,11 @@ function readActiveTournament(): ActiveTournamentInfo | null {
       const name = config?.name || reg.tournamentName || "Tournament";
 
       // Try to read status from director state (works if same device)
-      let status: ActiveTournamentInfo["status"] = "unknown";
+      let status: ActiveTournamentInfo["status"] = "registration";
       try {
         const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
         if (raw) {
-          const parsed = JSON.parse(raw) as { status?: string };
-          const s = parsed.status;
-          if (
-            s === "registration" ||
-            s === "in_progress" ||
-            s === "paused" ||
-            s === "completed"
-          ) {
-            status = s;
-          }
+          status = getTournamentStatus(JSON.parse(raw));
         }
       } catch {
         // ignore
