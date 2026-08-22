@@ -16,7 +16,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 
 const LOGO_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
+  "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
 
 interface MinimalTournamentNavProps {
   onSignInClick?: () => void;

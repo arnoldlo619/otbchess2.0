@@ -259,7 +259,7 @@ export default function LeagueDemo() {
             title="Back to home"
           >
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+              src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
               alt="OTB!!"
               className="w-8 h-8 object-contain"
             />

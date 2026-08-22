@@ -202,7 +202,7 @@ function Nav({
         {/* Logo navigates to landing page */}
         <Link href="/" className="flex items-center gap-1 group cursor-pointer">
           <img
-            src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+            src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
             alt="OTB Chess Home"
             className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
           />
@@ -1175,7 +1175,7 @@ function HowItWorks() {
       description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code. Players scan and register on the spot.",
       cta: "Host a Tournament",
       ctaHref: NAV_CTA_PRIMARY.path,
-      imageSrc: "/manus-storage/qr-screen_b1e19e90.webp",
+      imageSrc: "/manus-storage/qr-screen-720_e2bcd40f.webp",
       imageAlt: "Tournament QR Code screen",
       phoneLeft: true,
       mockupType: 'macbook' as const,
@@ -1189,7 +1189,7 @@ function HowItWorks() {
       ctaHref: "/join/OTB2026",
       imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
       imageAlt: "Player join form with chess.com username lookup",
-      imageSrc2: "/manus-storage/player-signup-confirm_b5b69600.webp",
+      imageSrc2: "/manus-storage/player-signup-confirm-600_8416caa0.webp",
       imageAlt2: "Player profile confirmation with chess.com ELO",
       phoneLeft: false,
     },
@@ -1200,7 +1200,7 @@ function HowItWorks() {
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
       cta: "View Live Demo",
       ctaHref: LIVE_TOURNAMENT_DEMO_PATH,
-      imageSrc: "/manus-storage/IMG_63952_5020b27c.jpg",
+      imageSrc: "/manus-storage/exit-gallery-600_9c924914.webp",
       imageAlt: "Player board assignment screen showing opponent and board number",
       imageSrc2: "/manus-storage/Screenshot2026-06-25at2.25.15AM_1efe6544.png",
       imageAlt2: "Live board pairings screen with player matchups and result entry",
@@ -1582,7 +1582,7 @@ function Features() {
             cta="View Live Demo"
             href="/league-demo"
             icon={<Trophy className="w-4 h-4" />}
-            screenshot="/manus-storage/league-bracket-v2_e04e38ae.png"
+            screenshot="/manus-storage/league-bracket-720_695d699b.webp"
             screenshotAlt="ChessOTB Club League Playoff Bracket: Quarterfinals through Champion"
             isDark={isDark}
             inView={inView}
@@ -2445,7 +2445,7 @@ function Footer() {
               <img
                 loading="lazy"
                 decoding="async"
-                src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+                src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
                 alt="OTB Chess"
                 className="h-9 w-auto object-contain drop-shadow-[0_0_6px_rgba(100,200,100,0.2)]"
               />
@@ -2584,7 +2584,7 @@ export default function Home() {
   const logoEl = (
     <Link href="/" className="flex items-center">
       <img
-        src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+        src="/manus-storage/chessotb-wordmark-320_e1731168.webp"
         alt="OTB Chess"
         className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
       />

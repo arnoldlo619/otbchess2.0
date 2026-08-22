@@ -427,7 +427,7 @@ export default function AuthModal({
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0">
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
                 alt="OTB Chess"
                 className="w-full h-full object-contain"
               />
