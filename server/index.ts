@@ -34,6 +34,7 @@ import { registerStorageProxy } from "./storageProxy.js";
 import { createPushRouter } from "./pushRoutes.js";
 import { createChessProxyRouter } from "./chessProxy.js";
 import { createPrepRouter } from "./prepRoutes.js";
+import { createClientErrorRouter } from "./clientErrorRoutes.js";
 import { validate, addPlayerSchema, saveStateSchema, analyticsEventSchema, broadcastSchema, timerUpdateSchema } from "./validation.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -562,6 +563,7 @@ export function createApp() {
   app.use("/api", createChessProxyRouter());
   // Push notification routes: /api/push/* (subscribe, notify, VAPID key)
   app.use("/api/push", createPushRouter());
+  app.use("/api/client-errors", createClientErrorRouter());
 
   // ── Platform stats: GET /api/platform/stats ─────────────────────────────
   // Returns real DB counts for the landing page stats bar. Cached 10 min in-memory.

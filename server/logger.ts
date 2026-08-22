@@ -9,9 +9,13 @@ export type LogContext = Record<string, unknown>;
 const SENSITIVE_KEY = /(authorization|cookie|password|passwd|secret|token|api[-_]?key|session|credential|clientsecret)/i;
 const EMAIL = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const BEARER = /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi;
+const INLINE_SECRET = /\b(password|passwd|secret|token|api[-_]?key|authorization|credential)\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi;
 
 function redactString(value: string): string {
-  return value.replace(EMAIL, "[REDACTED_EMAIL]").replace(BEARER, "Bearer [REDACTED]");
+  return value
+    .replace(EMAIL, "[REDACTED_EMAIL]")
+    .replace(BEARER, "Bearer [REDACTED]")
+    .replace(INLINE_SECRET, (_match, key: string) => `${key}=[REDACTED]`);
 }
 
 export function sanitizeLogValue(value: unknown, depth = 0, seen = new WeakSet<object>()): unknown {

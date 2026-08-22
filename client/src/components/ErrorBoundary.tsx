@@ -10,8 +10,9 @@
  * All other errors: show the standard error screen with a manual reload button.
  */
 import { cn } from "@/lib/utils";
+import { reportClientError } from "@/lib/clientErrorReporter";
 import { AlertTriangle, ExternalLink, Home, RefreshCw, Zap } from "lucide-react";
-import { Component, ReactNode } from "react";
+import { Component, type ErrorInfo, ReactNode } from "react";
 
 const SUPPORT_URL = "https://help.manus.im"; // swap for your own feedback URL if needed
 
@@ -77,10 +78,16 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error, isChunkError: chunkError, referenceId: createClientErrorReference() };
   }
 
-  componentDidCatch() {
+  componentDidCatch(error: Error, info: ErrorInfo) {
     // Clear the reload flag after a successful mount so future deploys can
     // trigger another auto-reload if needed.
     sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+    reportClientError({
+      eventType: "render_error",
+      error,
+      componentStack: info.componentStack ?? undefined,
+      referenceId: this.state.referenceId,
+    });
   }
 
   handleManualReload = () => {

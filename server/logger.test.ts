@@ -35,6 +35,19 @@ describe("structured server logger", () => {
     expect(serialized).toContain("[REDACTED]");
   });
 
+  it("redacts secret assignments embedded in free-text client errors", () => {
+    const sanitized = String(sanitizeLogValue(
+      "Failed player@example.com Bearer abc.secret password=hunter2 token:session-value api_key=key-123",
+    ));
+
+    expect(sanitized).not.toContain("player@example.com");
+    expect(sanitized).not.toContain("abc.secret");
+    expect(sanitized).not.toContain("hunter2");
+    expect(sanitized).not.toContain("session-value");
+    expect(sanitized).not.toContain("key-123");
+    expect(sanitized).toContain("password=[REDACTED]");
+  });
+
   it("normalizes existing bracket-prefixed calls without breaking them", () => {
     const output = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     logger.warn("[db] Query error:", new Error("connection failed"));

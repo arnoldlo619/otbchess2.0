@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
 import { ApiErrorNotifier } from "./components/ApiErrorNotifier";
+import { ClientErrorTelemetry } from "./components/ClientErrorTelemetry";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
 // Each page is split into its own JS chunk, dramatically reducing initial bundle
@@ -207,6 +208,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <ApiErrorNotifier />
+            <ClientErrorTelemetry />
             <Router />
             <InstallBanner />
           </TooltipProvider>

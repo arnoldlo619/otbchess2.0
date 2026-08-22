@@ -68,6 +68,20 @@ export const analyticsEventSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+// ── Client error telemetry ───────────────────────────────────────────────────
+export const clientErrorSchema = z.object({
+  eventType: z.enum(["render_error", "unhandled_error", "unhandled_rejection", "api_error"]),
+  message: z.string().min(1).max(500),
+  name: z.string().max(100).optional(),
+  stack: z.string().max(3_000).optional(),
+  componentStack: z.string().max(3_000).optional(),
+  path: z.string().min(1).max(500),
+  referenceId: z.string().max(100).optional(),
+  requestId: z.string().max(100).optional(),
+  status: z.number().int().min(0).max(599).optional(),
+  code: z.string().max(100).optional(),
+});
+
 // ── Prep analysis resolve ────────────────────────────────────────────────────
 export const prepResolveSchema = z.object({
   gameId: z.string().min(1).max(200),
