@@ -7412,7 +7412,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Cached client-route transitions do not flash the full-screen route loader
 - [ ] No main-thread blocking from decorative animation
 - [ ] Image optimization (lazy loading, correct sizes)
-- [ ] Font loading strategy (no FOIT)
+- [x] Font loading strategy (no FOIT)
 
 ### G. Functional Regression
 - [ ] All 5934 client tests pass

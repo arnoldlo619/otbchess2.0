@@ -31,3 +31,7 @@ This is a **lab-equivalent warm-cache regression**, suitable for catching future
 `e2e/principal-interaction-performance.spec.ts` establishes two complementary budgets at desktop and mobile widths. A real Pricing FAQ toggle is observed through Chromium Event Timing and must remain at or below the **200 ms INP-equivalent budget**. A real Quads Director draw result measures click-to-DOM-commit feedback and must remain at or below **100 ms**, after which the persisted `½–½` result is verified in the rendered board row. The eight repeated route/viewport checks pass.
 
 The result-feedback metric intentionally measures the actual state commit rather than animation-frame scheduling, which can vary under sandbox load even after React has completed the visible state update.
+
+## Font loading and FOIT resilience
+
+Both external font stylesheets request `display=swap`, and the document preconnects to Google Fonts, Google font binaries, and Fontshare before loading their CSS. Body, display, and monospace stacks retain immediate system or generic fallbacks. `fontLoadingStrategy.test.ts` protects these source policies, while `font-loading-fallback.spec.ts` blocks every external font provider and confirms the landing headline and primary action remain visible with non-zero geometry on desktop and mobile. This prevents external font latency or provider failure from making core content invisible.
