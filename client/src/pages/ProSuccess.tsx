@@ -117,11 +117,9 @@ export default function ProSuccess() {
               ))}
             </div>
 
-            <Link href="/">
-              <button className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold text-sm transition-colors">
-                Go to dashboard
-                <ArrowRight className="w-4 h-4" />
-              </button>
+            <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold text-sm transition-colors">
+              Go to dashboard
+              <ArrowRight className="w-4 h-4" />
             </Link>
 
             {/* Manage subscription */}

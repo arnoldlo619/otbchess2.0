@@ -133,9 +133,7 @@ export default function LeagueHistory() {
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0d1a0f]">
         <div className="text-center">
           <p className="text-red-400 mb-4">{error ?? "No data available"}</p>
-          <Link href={`/leagues/${leagueId}`}>
-            <button className="px-4 py-2 bg-[#436850] text-white rounded-lg">Back to League</button>
-          </Link>
+          <Link href={`/leagues/${leagueId}`} className="inline-flex px-4 py-2 bg-[#436850] text-white rounded-lg">Back to League</Link>
         </div>
       </div>
     );
@@ -178,10 +176,8 @@ export default function LeagueHistory() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0d1a0f]/30 via-transparent to-[#0d1a0f]" />
         {/* Back button */}
         <div className="absolute top-4 left-4">
-          <Link href={`/leagues/${leagueId}`}>
-            <button className="flex items-center gap-1.5 text-sm text-[#436850]/70 hover:text-white bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back to League
-            </button>
+          <Link href={`/leagues/${leagueId}`} className="flex items-center gap-1.5 text-sm text-[#436850]/70 hover:text-white bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back to League
           </Link>
         </div>
         {/* Season badge */}
@@ -562,10 +558,8 @@ export default function LeagueHistory() {
             </div>
 
             {/* Back to league */}
-            <Link href={`/leagues/${leagueId}`}>
-              <button className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#436850] hover:bg-[#4a8057] text-white text-sm font-medium rounded-xl transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Back to League Dashboard
-              </button>
+            <Link href={`/leagues/${leagueId}`} className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#436850] hover:bg-[#4a8057] text-white text-sm font-medium rounded-xl transition-colors">
+              <ArrowLeft className="w-4 h-4" /> Back to League Dashboard
             </Link>
           </aside>
 

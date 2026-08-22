@@ -133,14 +133,15 @@ export default function DirectorAccessPage() {
         <NavLogo />
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/join">
-            <button className={`text-sm font-medium px-3 py-1.5 rounded-xl transition-colors ${
+          <Link
+            href="/join"
+            className={`text-sm font-medium px-3 py-1.5 rounded-xl transition-colors ${
               isDark
                 ? "text-white/60 hover:text-white hover:bg-white/06"
                 : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
-            }`}>
-              Join as Player
-            </button>
+            }`}
+          >
+            Join as Player
           </Link>
         </div>
       </header>

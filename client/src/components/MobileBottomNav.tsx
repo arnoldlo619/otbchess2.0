@@ -128,36 +128,36 @@ export function MobileBottomNav() {
           const href = tab.name === "Profile" && isGuest ? "/profile" : tab.href;
 
           return (
-            <Link key={tab.name} href={href}>
-              <button
-                className={`flex flex-col items-center justify-center gap-0.5 w-16 h-12 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#436850] focus-visible:ring-offset-2 outline-none ${
-                  active
-                    ? isDark
-                      ? "text-[#7CF562]"
-                      : "text-[#436850]"
-                    : isDark
-                      ? "text-white/50 active:text-white/80"
-                      : "text-gray-400 active:text-gray-600"
-                }`}
-                aria-current={active ? "page" : undefined}
-              >
-                {/* Active indicator dot */}
-                {active && (
-                  <span
-                    className={`absolute top-1.5 w-1 h-1 rounded-full ${
-                      isDark ? "bg-[#7CF562]" : "bg-[#436850]"
-                    }`}
-                  />
-                )}
-                <Icon
-                  size={22}
-                  className="shrink-0"
-                  accentColor={active ? (isDark ? "#7CF562" : "#436850") : "currentColor"}
+            <Link
+              key={tab.name}
+              href={href}
+              className={`flex flex-col items-center justify-center gap-0.5 w-16 h-12 rounded-xl transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#436850] focus-visible:ring-offset-2 outline-none ${
+                active
+                  ? isDark
+                    ? "text-[#7CF562]"
+                    : "text-[#436850]"
+                  : isDark
+                    ? "text-white/50 active:text-white/80"
+                    : "text-gray-400 active:text-gray-600"
+              }`}
+              aria-current={active ? "page" : undefined}
+            >
+              {/* Active indicator dot */}
+              {active && (
+                <span
+                  className={`absolute top-1.5 w-1 h-1 rounded-full ${
+                    isDark ? "bg-[#7CF562]" : "bg-[#436850]"
+                  }`}
                 />
-                <span className="text-[10px] font-medium leading-none mt-0.5">
-                  {label}
-                </span>
-              </button>
+              )}
+              <Icon
+                size={22}
+                className="shrink-0"
+                accentColor={active ? (isDark ? "#7CF562" : "#436850") : "currentColor"}
+              />
+              <span className="text-[10px] font-medium leading-none mt-0.5">
+                {label}
+              </span>
             </Link>
           );
         })}

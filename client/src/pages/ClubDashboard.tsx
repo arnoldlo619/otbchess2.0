@@ -4251,14 +4251,19 @@ export default function ClubDashboard() {
                     const href = `/clubs/${club.id}/meetup/${ev.id}`;
                     const displayDateStr = card.displayDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                     return (
-                      <a
+                      <div
                         key={card.seriesId}
-                        href={href}
-                        className="block rounded-2xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/25 hover:scale-[1.01] hover:shadow-xl active:scale-[0.99] group"
+                        className="relative block rounded-2xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/25 hover:scale-[1.01] hover:shadow-xl active:scale-[0.99] group"
                         style={{ background: "oklch(0.16 0.05 145)", textDecoration: "none" }}
                       >
-                        <div className="h-1 transition-all group-hover:h-[3px]" style={{ background: accent }} />
-                        <div className="p-5">
+                        <a
+                          href={href}
+                          aria-label={`View ${ev.title}`}
+                          className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                          style={{ color: accent }}
+                        />
+                        <div className="relative z-10 h-1 pointer-events-none transition-all group-hover:h-[3px]" style={{ background: accent }} />
+                        <div className="relative z-10 p-5 pointer-events-none">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -4306,7 +4311,7 @@ export default function ClubDashboard() {
                               {isOwnerOrDirector && !card.isVirtual && (<>
                                 <button
                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditMeetupId(ev.id); }}
-                                  className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/15 active:scale-90"
+                                  className="pointer-events-auto w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/15 active:scale-90"
                                   style={{ color: "rgba(255,255,255,0.55)" }}
                                   title="Edit meetup"
                                 >
@@ -4314,7 +4319,7 @@ export default function ClubDashboard() {
                                 </button>
                                 <button
                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteMeetupId(ev.id); }}
-                                  className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 active:scale-90"
+                                  className="pointer-events-auto w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 active:scale-90"
                                   style={{ color: "rgba(255,100,100,0.7)" }}
                                   title="Delete meetup"
                                 >
@@ -4343,7 +4348,7 @@ export default function ClubDashboard() {
                             {isOwnerOrDirector && !card.isVirtual && (
                               <button
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRsvpPanel(ev.id); }}
-                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition hover:scale-105 active:scale-95"
+                                className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition hover:scale-105 active:scale-95"
                                 style={{ borderColor: "rgba(96,165,250,0.4)", color: "#60a5fa", background: "rgba(96,165,250,0.1)" }}
                               >
                                 <Users className="w-3.5 h-3.5" />
@@ -4352,7 +4357,7 @@ export default function ClubDashboard() {
                             )}
                           </div>
                         </div>
-                      </a>
+                      </div>
                     );
                   })}
                   {upcomingCards.length > 4 && (

@@ -1004,15 +1004,14 @@ export default function ReportPage() {
         {/* Single consolidated row */}
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
           {/* Back */}
-          <Link href={`/tournament/${tournamentId}/manage`}>
-            <button
-              title="Back to dashboard"
-              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
-                isDark ? "text-white/40 hover:text-white/80 hover:bg-white/06" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+          <Link
+            href={`/tournament/${tournamentId}/manage`}
+            title="Back to dashboard"
+            className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
+              isDark ? "text-white/40 hover:text-white/80 hover:bg-white/06" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
           </Link>
 
           {/* Logo */}

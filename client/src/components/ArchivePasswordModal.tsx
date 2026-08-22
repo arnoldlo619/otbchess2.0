@@ -83,15 +83,14 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
       aria-label="Archive password required"
     >
       {/* Back to home */}
-      <Link href="/">
-        <button
-          className={`absolute top-5 left-5 flex items-center gap-1.5 text-sm font-medium transition-colors ${
-            isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#12372A]"
-          }`}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </button>
+      <Link
+        href="/"
+        className={`absolute top-5 left-5 flex items-center gap-1.5 text-sm font-medium transition-colors ${
+          isDark ? "text-white/50 hover:text-white/80" : "text-[#436850] hover:text-[#12372A]"
+        }`}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Home
       </Link>
 
       {/* Card */}

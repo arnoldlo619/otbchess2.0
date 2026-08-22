@@ -1314,38 +1314,40 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     )}
-                    <a
-                      href={`/tournament/${t.id}/manage`}
-                      className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
+                    <div
+                      className={`flex items-center rounded-xl transition ${
                         isDark ? "bg-white/5 hover:bg-white/10" : "bg-[#FBFADA]/70 hover:bg-[#ADBC9F]/50"
                       } ${confirmDeleteId === t.id ? "opacity-0 pointer-events-none" : ""}`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="min-w-0">
-                          <p className={`text-sm font-medium ${text} truncate`}>{t.name}</p>
-                          <p className={`text-xs ${muted}`}>{t.format ?? "Swiss"}</p>
+                      <a
+                        href={`/tournament/${t.id}/manage`}
+                        className="flex min-w-0 flex-1 items-center justify-between px-4 py-3"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="min-w-0">
+                            <p className={`text-sm font-medium ${text} truncate`}>{t.name}</p>
+                            <p className={`text-xs ${muted}`}>{t.format ?? "Swiss"}</p>
+                          </div>
+                          <TournamentStatusPill status={t.status} />
                         </div>
-                        <TournamentStatusPill status={t.status} />
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        {t.isApi && (
-                          <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(t.id); }}
-                            aria-label="Delete tournament"
-                            className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
-                              isDark
-                                ? "text-white/30 hover:text-red-400 hover:bg-red-500/10"
-                                : "text-[#436850]/70 hover:text-red-500 hover:bg-red-50"
-                            } ${deletingId === t.id ? "opacity-100" : ""}`}
-                          >
-                            {deletingId === t.id
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              : <Trash2 className="w-3.5 h-3.5" />}
-                          </button>
-                        )}
                         <ExternalLink className={`w-3.5 h-3.5 ${muted}`} />
-                      </div>
-                    </a>
+                      </a>
+                      {t.isApi && (
+                        <button
+                          onClick={() => setConfirmDeleteId(t.id)}
+                          aria-label="Delete tournament"
+                          className={`mr-2 flex-shrink-0 p-2 rounded-lg opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all ${
+                            isDark
+                              ? "text-white/30 hover:text-red-400 hover:bg-red-500/10"
+                              : "text-[#436850]/70 hover:text-red-500 hover:bg-red-50"
+                          } ${deletingId === t.id ? "opacity-100" : ""}`}
+                        >
+                          {deletingId === t.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               {tournamentCount > 5 && (

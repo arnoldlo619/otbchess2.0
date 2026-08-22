@@ -4558,30 +4558,30 @@ export default function ClubProfile() {
                 { href: "/training", label: "Tools", icon: <OtbAcademy size={20} /> },
                 { href: "/profile", label: "Profile", icon: <OtbProfile size={20} /> },
               ] as const).map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <button
-                    onClick={() => setShowNavMenu(false)}
-                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
-                    style={{
-                      background: isDark ? "oklch(0.18 0.06 145)" : "oklch(0.92 0.03 145)",
-                      border: `1px solid ${isDark ? "oklch(0.26 0.07 145 / 0.6)" : "oklch(0.82 0.05 145 / 0.6)"}`,
-                    }}
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setShowNavMenu(false)}
+                  className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                  style={{
+                    background: isDark ? "oklch(0.18 0.06 145)" : "oklch(0.92 0.03 145)",
+                    border: `1px solid ${isDark ? "oklch(0.26 0.07 145 / 0.6)" : "oklch(0.82 0.05 145 / 0.6)"}`,
+                  }}
+                >
+                  <span style={{ color: isDark ? accent : "oklch(0.32 0.10 145)" }}>
+                    {item.icon}
+                  </span>
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: isDark ? "oklch(0.88 0.04 145)" : "oklch(0.18 0.06 145)" }}
                   >
-                    <span style={{ color: isDark ? accent : "oklch(0.32 0.10 145)" }}>
-                      {item.icon}
-                    </span>
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: isDark ? "oklch(0.88 0.04 145)" : "oklch(0.18 0.06 145)" }}
-                    >
-                      {item.label}
-                    </span>
-                    <ArrowRight
-                      size={14}
-                      className="ml-auto"
-                      style={{ color: isDark ? "oklch(0.40 0.06 145)" : "oklch(0.60 0.06 145)" }}
-                    />
-                  </button>
+                    {item.label}
+                  </span>
+                  <ArrowRight
+                    size={14}
+                    className="ml-auto"
+                    style={{ color: isDark ? "oklch(0.40 0.06 145)" : "oklch(0.60 0.06 145)" }}
+                  />
                 </Link>
               ))}
             </div>
