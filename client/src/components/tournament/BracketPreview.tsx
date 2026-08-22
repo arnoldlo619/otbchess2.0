@@ -306,11 +306,12 @@ function RoundRobinPreview({
       {/* Grid */}
       <div className="overflow-x-auto">
         <table style={{ borderCollapse: "separate", borderSpacing: 2 }}>
+          <caption className="sr-only">Round robin result matrix</caption>
           <thead>
             <tr>
-              <th style={{ width: cellSize, height: cellSize }} />
+              <th scope="col" aria-label="Player" style={{ width: cellSize, height: cellSize }} />
               {names.map((name, j) => (
-                <th key={j} style={{ width: cellSize, height: cellSize }}>
+                <th key={j} scope="col" aria-label={name} style={{ width: cellSize, height: cellSize }}>
                   <div
                     className="text-[8px] font-bold truncate text-center"
                     style={{ color: c.green, maxWidth: cellSize }}
@@ -325,14 +326,14 @@ function RoundRobinPreview({
             {names.map((rowName, i) => (
               <tr key={i}>
                 {/* Row header */}
-                <td>
+                <th scope="row" aria-label={rowName} className="font-normal">
                   <div
                     className="text-[8px] font-bold truncate text-right pr-1"
                     style={{ color: c.green, maxWidth: 36 }}
                   >
                     {rowName.slice(0, 3)}
                   </div>
-                </td>
+                </th>
                 {names.map((_, j) => {
                   const isDiag = i === j;
                   const key = i < j ? `${i}-${j}` : `${j}-${i}`;

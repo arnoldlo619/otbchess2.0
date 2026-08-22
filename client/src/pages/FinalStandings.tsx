@@ -736,6 +736,7 @@ export default function FinalStandings() {
               {/* Scrollable table wrapper */}
               <div className="overflow-x-auto -mx-0">
                 <table className="w-full min-w-[520px] border-collapse">
+                  <caption className="sr-only">Final tournament standings</caption>
                   {/* Header */}
                   <thead>
                     <tr className={`${thBg} border-b ${border}`}>
@@ -791,7 +792,7 @@ export default function FinalStandings() {
                             </td>
 
                             {/* Player */}
-                            <td className="px-2 py-3">
+                            <th scope="row" className="px-2 py-3 text-left font-normal">
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <PlayerAvatar
                                   username={row.player.username}
@@ -815,7 +816,7 @@ export default function FinalStandings() {
                                   </p>
                                 </div>
                               </div>
-                            </td>
+                            </th>
 
                             {/* Rating */}
                             <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${textMuted}`}>

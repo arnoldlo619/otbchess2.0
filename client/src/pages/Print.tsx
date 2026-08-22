@@ -428,6 +428,7 @@ function WallChart({
     <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
       <div className={`overflow-x-auto`}>
         <table className="w-full text-sm border-collapse">
+          <caption className="sr-only">Tournament wall chart</caption>
           <thead>
             <tr className={headerBg}>
               <th scope="col" className={`text-left px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} w-8`}>#</th>
@@ -436,6 +437,7 @@ function WallChart({
               {Array.from({ length: totalRounds }, (_, i) => i + 1).map((r) => (
                 <th
                   key={r}
+                  scope="col"
                   className={`text-center px-3 py-3 text-xs font-bold uppercase tracking-wider border-b ${borderColor} w-20 ${
                     r === currentRound
                       ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
@@ -470,7 +472,7 @@ function WallChart({
                   </td>
 
                   {/* Player */}
-                  <td className={`px-4 py-3 border-b ${borderColor}`}>
+                  <th scope="row" className={`px-4 py-3 border-b text-left font-normal ${borderColor}`}>
                     <div className="flex items-center gap-2">
                       <span className={`font-semibold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                         {player.name}
@@ -483,7 +485,7 @@ function WallChart({
                       <span className="text-xs">{FLAG_EMOJI[player.country]}</span>
                     </div>
                     <span className={`text-xs ${textMuted}`}>@{player.username}</span>
-                  </td>
+                  </th>
 
                   {/* ELO */}
                   <td className={`px-3 py-3 border-b ${borderColor} text-center`}>
@@ -578,11 +580,13 @@ function StandingsTable({ players, rounds, isDark, isQuads = false }: { players:
   return (
     <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
       <table className="w-full text-sm border-collapse">
+        <caption className="sr-only">Tournament standings</caption>
         <thead>
           <tr className={isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#FBFADA]"}>
             {["#", "Player", "ELO", "W", "D", "L", "Pts", isQuads ? "SB" : "Buchholz"].map((h) => (
               <th
                 key={h}
+                scope="col"
                 className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${textMuted} border-b ${borderColor} ${
                   h === "Player" ? "text-left" : "text-center"
                 }`}
@@ -602,7 +606,7 @@ function StandingsTable({ players, rounds, isDark, isQuads = false }: { players:
                   <span className={`text-xs font-bold ${textMuted}`}>{i + 1}</span>
                 )}
               </td>
-              <td className={`px-4 py-3 border-b ${borderColor}`}>
+              <th scope="row" className={`px-4 py-3 border-b text-left font-normal ${borderColor}`}>
                 <div className="flex items-center gap-2">
                   <span className={`font-semibold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                     {row.player.name}
@@ -615,7 +619,7 @@ function StandingsTable({ players, rounds, isDark, isQuads = false }: { players:
                   <span className="text-xs">{FLAG_EMOJI[row.player.country] ?? ""}</span>
                 </div>
                 <span className={`text-xs ${textMuted}`}>@{row.player.username}</span>
-              </td>
+              </th>
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
                 <span className={`text-xs font-mono font-bold ${
                   row.player.elo >= 2200 ? "text-purple-500"

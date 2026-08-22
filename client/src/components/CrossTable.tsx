@@ -207,27 +207,30 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
       <div className="overflow-x-auto" ref={tableRef}>
         <div className={`p-4 ${bg}`}>
           <table className="w-full border-collapse" style={{ minWidth: `${Math.max(480, players.length * 44 + 280)}px` }}>
+            <caption className="sr-only">Player cross-table results</caption>
             <thead className="sticky top-0 z-20">
               <tr className={`${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                 {/* Player column header — sticky left + top */}
-                <th className={`text-left pb-3 pr-4 text-xs font-semibold uppercase tracking-wider ${textMuted} w-[220px] sticky left-0 z-30 ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
+                <th scope="col" className={`text-left pb-3 pr-4 text-xs font-semibold uppercase tracking-wider ${textMuted} w-[220px] sticky left-0 z-30 ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Player
                 </th>
                 {/* Column numbers */}
                 {players.map((_, j) => (
                   <th
                     key={j}
+                    scope="col"
+                    aria-label={`Opponent ${j + 1}: ${players[j].name}`}
                     className={`pb-3 text-center text-xs font-bold w-11 ${isDark ? "text-white/35" : "text-[#436850]"} ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}
                   >
                     {j + 1}
                   </th>
                 ))}
                 {/* Score */}
-                <th className={`pb-3 pl-4 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
+                <th scope="col" className={`pb-3 pl-4 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Score
                 </th>
                 {/* Buchholz */}
-                <th className={`pb-3 pl-3 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
+                <th scope="col" className={`pb-3 pl-3 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Buch.
                 </th>
               </tr>
@@ -239,7 +242,7 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                   className={`group transition-colors ${rowHover}`}
                 >
                   {/* Rank + Player name — sticky */}
-                  <td className={`pr-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-[#ADBC9F]/70"} sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)] group-hover:bg-[oklch(0.24_0.06_145)]" : "bg-white group-hover:bg-[#FBFADA]/70"}`}>
+                  <th scope="row" className={`pr-4 py-1.5 border-b text-left font-normal ${isDark ? "border-white/04" : "border-[#ADBC9F]/70"} sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)] group-hover:bg-[oklch(0.24_0.06_145)]" : "bg-white group-hover:bg-[#FBFADA]/70"}`}>
                     <div className="flex items-center gap-2.5">
                       {/* Rank number */}
                       <span
@@ -271,7 +274,7 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                         <span className={`text-[11px] ${textMuted} tabular-nums`}>{player.elo} ELO</span>
                       </div>
                     </div>
-                  </td>
+                  </th>
 
                   {/* Result cells */}
                   {matrix[i].map((cell, j) => (

@@ -4958,6 +4958,7 @@ function TournamentCard({
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
+                      <caption className="sr-only">Tournament standings</caption>
                       <thead>
                         <tr className={`${textMuted}`}>
                           <th scope="col" className="text-left pb-2 pr-2 font-semibold w-6">#</th>
@@ -4980,10 +4981,10 @@ function TournamentCard({
                             <td className={`py-2 pr-2 font-bold ${
                               i === 0 ? "text-amber-400" : i === 1 ? isDark ? "text-white/60" : "text-gray-500" : i === 2 ? "text-amber-600" : textMuted
                             }`}>{row.rank}</td>
-                            <td className={`py-2 pr-2 font-medium ${textMain} max-w-[120px] truncate`}>
+                            <th scope="row" className={`py-2 pr-2 text-left font-medium ${textMain} max-w-[120px] truncate`}>
                               {i === 0 && <Star className="w-3 h-3 inline mr-1 text-amber-400" />}
                               {row.player.name}
-                            </td>
+                            </th>
                             <td className={`py-2 px-2 text-center font-bold`} style={{ color: accent }}>{row.points}</td>
                             <td className={`py-2 px-2 text-center text-emerald-400`}>{row.wins}</td>
                             <td className={`py-2 px-2 text-center ${textMuted}`}>{row.draws}</td>
@@ -5212,6 +5213,7 @@ function RoundRobinMatrix({
       <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${textMuted}`}>Cross Table</h4>
       <div className="overflow-x-auto">
         <table className="text-xs w-full">
+          <caption className="sr-only">Tournament player cross-table</caption>
           <thead>
             <tr>
               <th scope="col" className={`text-left pb-2 pr-3 font-semibold ${textMuted}`}>#</th>
@@ -5226,7 +5228,7 @@ function RoundRobinMatrix({
             {sorted.map((player, i) => (
               <tr key={player.id} className={`border-t ${isDark ? "border-white/5" : "border-gray-100"}`}>
                 <td className={`py-1.5 pr-3 font-bold ${textMuted}`}>{i + 1}</td>
-                <td className={`py-1.5 pr-3 font-medium ${textMain} max-w-[90px] truncate`}>{player.name}</td>
+                <th scope="row" className={`py-1.5 pr-3 text-left font-medium ${textMain} max-w-[90px] truncate`}>{player.name}</th>
                 {sorted.map((opponent) => {
                   const score = getScore(player.id, opponent.id);
                   const isSelf = player.id === opponent.id;
@@ -5449,6 +5451,7 @@ function LeagueCard({
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
+                    <caption className="sr-only">Club league standings</caption>
                     <thead>
                       <tr className={textMuted}>
                         <th scope="col" className="text-left pb-2 pr-1 font-semibold w-5">#</th>
@@ -5473,7 +5476,7 @@ function LeagueCard({
                                 <span className="ml-0.5">{movementIcon(row.movement)}</span>
                               </div>
                             </td>
-                            <td className="py-2 pr-2">
+                            <th scope="row" className="py-2 pr-2 text-left font-normal">
                               <div className="flex items-center gap-2">
                                 <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
                                   {row.avatarUrl
@@ -5491,7 +5494,7 @@ function LeagueCard({
                                   )}
                                 </div>
                               </div>
-                            </td>
+                            </th>
                             <td className="py-2 px-1 text-center text-emerald-400 font-semibold">{row.wins}</td>
                             <td className={`py-2 px-1 text-center font-semibold ${textMuted}`}>{row.draws}</td>
                             <td className="py-2 px-1 text-center text-red-400 font-semibold">{row.losses}</td>

@@ -646,12 +646,15 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
     <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       onMouseLeave={() => { setHoveredRow(null); setHoveredCol(null); }}>
       <table className="w-full border-collapse text-xs" style={{ minWidth: "320px" }}>
+        <caption className="sr-only">Quad player results</caption>
         <thead>
           <tr>
-            <th className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>#</th>
-            <th className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>Player</th>
+            <th scope="col" className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>#</th>
+            <th scope="col" className="text-left px-2 py-2.5 font-bold" style={{ color: T.textDim }}>Player</th>
             {orderedPlayers.map((p, i) => (
               <th key={p.id}
+                scope="col"
+                aria-label={`Opponent ${i + 1}: ${p.name}`}
                 className="text-center px-1 py-2.5 font-bold w-9 cursor-default transition-colors"
                 style={{
                   color: hoveredCol === i ? T.text : T.textDim,
@@ -661,7 +664,7 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
                 {i + 1}
               </th>
             ))}
-            <th className="text-center px-2 py-2.5 font-bold" style={{ color: T.green }}>Pts</th>
+            <th scope="col" className="text-center px-2 py-2.5 font-bold" style={{ color: T.green }}>Pts</th>
           </tr>
         </thead>
         <tbody>
@@ -679,13 +682,13 @@ function CrossTableView({ section, games, players, standings, isDark, T }: {
                   {rowIdx + 1}
                 </td>
                 {/* Player name cell */}
-                <td className="px-2 py-2.5 font-semibold transition-colors" style={{ color: T.text, maxWidth: "140px" }}>
+                <th scope="row" className="px-2 py-2.5 text-left font-semibold transition-colors" style={{ color: T.text, maxWidth: "140px" }}>
                   <div className="flex items-center gap-1.5">
                     {isWinner && <Trophy size={11} style={{ color: T.gold }} />}
                     <span className="text-sm truncate" style={{ color: isWinner ? T.gold : isHoveredRow ? T.text : T.text }}>{rowPlayer.name}</span>
                   </div>
                   <span className="text-xs font-mono" style={{ color: T.textDim, opacity: 0.65 }}>{rowPlayer.elo}</span>
-                </td>
+                </th>
                 {/* Result cells */}
                 {orderedPlayers.map((colPlayer, colIdx) => {
                   const val = getResult(rowPlayer.id, colPlayer.id);

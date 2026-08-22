@@ -527,11 +527,13 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
           >
             <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
               <table className="w-full text-xs border-collapse">
+                <caption className="sr-only">Imported player review</caption>
                 <thead>
                   <tr style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB" }}>
                     {["#", "Name", "Username", "ELO", "Action"].map((h) => (
                       <th
                         key={h}
+                        scope="col"
                         className="text-left px-3 py-2 font-semibold"
                         style={{
                           color: isDark ? "rgba(255,255,255,0.40)" : "#6B7280",
@@ -573,7 +575,7 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
                         </td>
 
                         {/* Name — show diff for update rows */}
-                        <td className="px-3 py-2 max-w-[110px]">
+                        <th scope="row" className="px-3 py-2 max-w-[110px] text-left font-normal">
                           {isUpdate && nameChanged ? (
                             <div className="flex flex-col gap-0.5">
                               <span className="line-through text-[10px]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>
@@ -588,7 +590,7 @@ function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
                               {row.name || <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
                             </span>
                           )}
-                        </td>
+                        </th>
 
                         {/* Username */}
                         <td className="px-3 py-2 font-mono truncate max-w-[90px]" style={{ color: isDark ? "rgba(255,255,255,0.65)" : "#374151" }}>

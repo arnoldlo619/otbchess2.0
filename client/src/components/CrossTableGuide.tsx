@@ -82,21 +82,22 @@ export function CrossTableGuide({ isDark }: Props) {
         </div>
         <div className="p-5 overflow-x-auto">
           <table className="w-full text-sm border-collapse">
+            <caption className="sr-only">Example player cross-table</caption>
             <thead>
               <tr className={thead}>
-                <th className={`${th} text-center`}>#</th>
-                <th className={`${th} text-left`}>Player</th>
+                <th scope="col" className={`${th} text-center`}>#</th>
+                <th scope="col" className={`${th} text-left`}>Player</th>
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <th key={n} className={`${th} text-center`}>{n}</th>
+                  <th key={n} scope="col" aria-label={`Opponent ${n}`} className={`${th} text-center`}>{n}</th>
                 ))}
-                <th className={`${th} text-center ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>Pts</th>
+                <th scope="col" className={`${th} text-center ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>Pts</th>
               </tr>
             </thead>
             <tbody>
               {players.map((row, i) => (
                 <tr key={i} className={tdBorder}>
                   <td className={`px-3 py-3 text-xs font-bold text-center ${isDark ? "text-white/30" : "text-[#436850]"}`}>{row.rank}</td>
-                  <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</td>
+                  <th scope="row" className={`px-3 py-3 text-left font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</th>
                   {row.results.map((cell, ci) => (
                     <td key={ci} className={`px-3 py-3 text-center font-bold tabular-nums ${cellColor(cell)}`}>
                       {cell ?? ""}
@@ -175,10 +176,11 @@ export function CrossTableGuide({ isDark }: Props) {
         <div className="p-5">
           <div className={innerTable}>
             <table className="w-full text-sm">
+              <caption className="sr-only">Example cross-table point calculations</caption>
               <thead>
                 <tr className={thead}>
                   {["Player", "Results in Row", "Calculation", "Pts"].map((h) => (
-                    <th key={h} className={`${th} ${h === "Pts" ? "text-center" : "text-left"}`}>{h}</th>
+                    <th key={h} scope="col" className={`${th} ${h === "Pts" ? "text-center" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -190,7 +192,7 @@ export function CrossTableGuide({ isDark }: Props) {
                   { name: "Grant H", results: "0, 0, 0, 0, ½, 0", calc: "0 × 1.0 + 1 × 0.5 = 0.5", pts: 0.5 },
                 ].map((row, i) => (
                   <tr key={i} className={tdBorder}>
-                    <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</td>
+                    <th scope="row" className={`px-3 py-3 text-left font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</th>
                     <td className={`px-3 py-3 font-mono text-xs ${muted}`}>{row.results}</td>
                     <td className={`px-3 py-3 font-mono text-xs ${muted}`}>{row.calc}</td>
                     <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>{row.pts}</td>

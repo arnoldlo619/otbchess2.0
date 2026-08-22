@@ -203,10 +203,11 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
         <div className="p-5">
           <div className={innerTable}>
             <table className="w-full text-sm">
+              <caption className="sr-only">Chess game result point values</caption>
               <thead>
                 <tr className={thead}>
                   {["Result", "Points Earned", "Example"].map((h) => (
-                    <th key={h} className={`${th} text-left`}>{h}</th>
+                    <th key={h} scope="col" className={`${th} text-left`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -235,7 +236,7 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
                   },
                 ].map((row, i) => (
                   <tr key={i} className={tdBorder}>
-                    <td className={`px-3 py-3 font-semibold ${row.color}`}>{row.result}</td>
+                    <th scope="row" className={`px-3 py-3 text-left font-semibold ${row.color}`}>{row.result}</th>
                     <td className={`px-3 py-3 font-mono font-bold text-base ${row.color}`}>{row.pts}</td>
                     <td className={`px-3 py-3 text-xs ${muted}`}>{row.example}</td>
                   </tr>
@@ -260,17 +261,18 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
         <div className="p-5">
           <div className={innerTable}>
             <table className="w-full text-sm">
+              <caption className="sr-only">Player wins, draws, and losses</caption>
               <thead>
                 <tr className={thead}>
                   {["Player", "Pts", "W", "D", "L", "Note"].map((h) => (
-                    <th key={h} className={`${th} ${h === "Player" || h === "Note" ? "text-left" : "text-center"}`}>{h}</th>
+                    <th key={h} scope="col" className={`${th} ${h === "Player" || h === "Note" ? "text-left" : "text-center"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {wdlRows.map((row, i) => (
                   <tr key={i} className={tdBorder}>
-                    <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</td>
+                    <th scope="row" className={`px-3 py-3 text-left font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</th>
                     <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`}>{fmt(row.pts)}</td>
                     <td className="px-3 py-3 text-center font-semibold tabular-nums text-emerald-500">{row.w}</td>
                     <td className="px-3 py-3 text-center font-semibold tabular-nums text-blue-500">{row.d}</td>
@@ -311,17 +313,18 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
             </p>
             <div className={innerTable}>
               <table className="w-full text-sm">
+                <caption className="sr-only">Buchholz tiebreak example</caption>
                 <thead>
                   <tr className={thead}>
                     {["Player", "Pts", "Opponents Faced", "Bch", "Rank"].map((h) => (
-                      <th key={h} className={`${th} ${h === "Player" || h === "Opponents Faced" ? "text-left" : "text-center"}`}>{h}</th>
+                      <th key={h} scope="col" className={`${th} ${h === "Player" || h === "Opponents Faced" ? "text-left" : "text-center"}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {bchRows.map((row, i) => (
                     <tr key={i} className={tdBorder}>
-                      <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</td>
+                      <th scope="row" className={`px-3 py-3 text-left font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.name}</th>
                       <td className={`px-3 py-3 text-center font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>{fmt(row.pts)}</td>
                       <td className={`px-3 py-3 text-xs ${muted}`}>{row.opps}</td>
                       <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-amber-400" : "text-amber-600"}`}>{row.bch}</td>
@@ -363,17 +366,18 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
             return (
               <div className={innerTable}>
                 <table className="w-full text-sm">
+                  <caption className="sr-only">Buchholz Cut-1 tiebreak example</caption>
                   <thead>
                     <tr className={thead}>
                       {["Player", "Bch", "Bch1", "Rank"].map((h) => (
-                        <th key={h} className={`${th} ${h === "Player" ? "text-left" : "text-center"}`}>{h}</th>
+                        <th key={h} scope="col" className={`${th} ${h === "Player" ? "text-left" : "text-center"}`}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {[p1, p2].map((row, i) => (
                       <tr key={i} className={tdBorder}>
-                        <td className={`px-3 py-3 font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.player.name}</td>
+                        <th scope="row" className={`px-3 py-3 text-left font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}>{row.player.name}</th>
                         <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-amber-400" : "text-amber-600"}`}>{fmt(row.buchholz)}</td>
                         <td className={`px-3 py-3 text-center font-bold tabular-nums ${isDark ? "text-orange-400" : "text-orange-600"}`}>{fmt(row.buchholzCut1)}</td>
                         <td className={`px-3 py-3 text-center font-bold ${i === 0 ? "text-emerald-500" : (isDark ? "text-white/40" : "text-[#436850]")}`}>#{row.rank}</td>
@@ -423,17 +427,18 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
           </p>
           <div className={innerTable}>
             <table className="w-full text-sm">
+              <caption className="sr-only">Sonneborn-Berger round contributions</caption>
               <thead>
                 <tr className={thead}>
                   {["Rnd", "Opponent", "Opp. Score", "Your Result", "SB Contribution"].map((h) => (
-                    <th key={h} className={`${th} ${h === "Opponent" ? "text-left" : "text-center"}`}>{h}</th>
+                    <th key={h} scope="col" className={`${th} ${h === "Opponent" ? "text-left" : "text-center"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {sbRows.map((row, i) => (
                   <tr key={i} className={tdBorder}>
-                    <td className={`px-3 py-3 text-center text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>{row.rnd}</td>
+                    <th scope="row" className={`px-3 py-3 text-center text-xs font-normal ${isDark ? "text-white/40" : "text-[#436850]"}`}>{row.rnd}</th>
                     <td className={`px-3 py-3 text-sm ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>{row.opp}</td>
                     <td className={`px-3 py-3 text-center font-mono font-bold ${isDark ? "text-white/70" : "text-[#12372A]/85"}`}>{row.oppScore}</td>
                     <td className={`px-3 py-3 text-center font-semibold ${row.color}`}>{row.result}</td>
@@ -441,9 +446,9 @@ export function TiebreakersGuide({ isDark, standings, rounds }: Props) {
                   </tr>
                 ))}
                 <tr className={`border-t-2 ${isDark ? "border-white/12" : "border-[#ADBC9F]"}`}>
-                  <td colSpan={4} className={`px-3 py-3 text-right font-bold text-sm ${muted}`}>
+                  <th scope="row" colSpan={4} className={`px-3 py-3 text-right font-bold text-sm ${muted}`}>
                     {sbPlayerName}'s SB Total{!isLive ? " (3 rounds shown)" : ""}
-                  </td>
+                  </th>
                   <td className="px-3 py-3 text-center font-bold text-lg text-purple-500">{sbTotal}</td>
                 </tr>
               </tbody>

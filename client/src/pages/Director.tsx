@@ -5506,7 +5506,7 @@ export default function Director() {
                               }`}>{i + 1}</td>
 
                               {/* Player */}
-                              <td className="px-3 py-2.5">
+                              <th scope="row" className="px-3 py-2.5 text-left font-normal">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <PlayerAvatar
                                     username={p.username}
@@ -5531,7 +5531,7 @@ export default function Director() {
                                     }`}>@{p.username}</span>
                                   </div>
                                 </div>
-                              </td>
+                              </th>
 
                               {/* Points */}
                               <td className={`px-3 py-2.5 text-sm font-black tabular-nums text-right ${
