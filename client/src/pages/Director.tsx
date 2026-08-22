@@ -31,11 +31,12 @@ import { encodeMetaParam } from "@/lib/base64";
 import { useAuthContext } from "@/context/AuthContext";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { ResultAuditTrail } from "@/components/tournament/ResultAuditTrail";
+import { DirectorLifecycleBand } from "@/components/tournament/DirectorLifecycleBand";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { getPlayerCountError, getTournamentFormatLabel } from "@/lib/formatRegistry";
-import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
+import { getTournamentStatusDisplay, selectDirectorLifecycleStatus } from "@/lib/tournamentUtils";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
@@ -2341,7 +2342,7 @@ export default function Director() {
     isRegistration,
     canStart,
     liveStandings,
-      lastSaved: _lastSaved,
+    lastSaved,
     addPlayer,
     addLatePlayer,
     updatePlayer,
@@ -2368,6 +2369,17 @@ export default function Director() {
     isElimBracketComplete,
     loadMockQuadsState,
   } = useDirectorState(tournamentId, resultActor);
+  const [finalizationStatus, setFinalizationStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const directorLifecycle = useMemo(() => selectDirectorLifecycleStatus({
+    status: state.status,
+    playerCount: state.players.length,
+    canStart,
+    currentRound: state.currentRound,
+    totalRounds: state.totalRounds,
+    allResultsIn,
+    canGenerateNext,
+    finalizationStatus,
+  }), [allResultsIn, canGenerateNext, canStart, finalizationStatus, state.currentRound, state.players.length, state.status, state.totalRounds]);
   const devQuadsScenarioLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -2414,6 +2426,27 @@ export default function Director() {
       }),
     }).catch(() => { /* non-critical */ });
   }, [user?.id, tournamentId, state.tournamentName]);
+
+  const publishFinalTournamentState = useCallback(async () => {
+    if (tournamentId === "otb-demo-2026") {
+      setFinalizationStatus("success");
+      return true;
+    }
+    setFinalizationStatus("pending");
+    try {
+      await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+        method: "POST",
+        body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
+      });
+      syncStatusToServer("completed");
+      setFinalizationStatus("success");
+      return true;
+    } catch (error) {
+      logger.error("[director] Failed to publish final tournament state", error);
+      setFinalizationStatus("error");
+      return false;
+    }
+  }, [state.players, state.tournamentName, syncStatusToServer, tournamentId]);
 
   const [resetConfirm, setResetConfirm] = useState(false);
   // Club event lookup — fetched when tournament has a clubId
@@ -2970,7 +3003,6 @@ export default function Director() {
     ) {
       autoCompletedRef.current = true;
       completeTournament();
-      syncStatusToServer("completed");
       const winner = liveStandings[0];
       const winnerName = winner?.player.name ?? "Unknown";
       // Push notification to all subscribers
@@ -3001,17 +3033,15 @@ export default function Director() {
           fmtLabel
         );
       }
-      // Broadcast tournament_ended SSE — this triggers auto-redirect on all player screens
-      const players = state.players;
-      const tournamentName = state.tournamentName;
-      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ players, tournamentName }),
-      }).catch(() => { /* fire-and-forget */ });
-      toast.success("🏆 Tournament complete! Redirecting to results…", { duration: 4000 });
-      // Navigate director to results page after a short delay
-      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+      void publishFinalTournamentState().then((published) => {
+        if (!published) {
+          autoCompletedRef.current = false;
+          toast.error("Results are saved locally. Retry finalization when the connection recovers.");
+          return;
+        }
+        toast.success("Tournament complete! Redirecting to results…", { duration: 4000 });
+        setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isElimBracketComplete, allResultsIn, state.status]);
@@ -3036,7 +3066,6 @@ export default function Director() {
     ) {
       autoCompletedSwissRef.current = true;
       completeTournament();
-      syncStatusToServer("completed");
       const winner = liveStandings[0];
       const winnerName = winner?.player.name ?? "Unknown";
       // Push notification to all subscribers
@@ -3067,17 +3096,15 @@ export default function Director() {
           fmtLabel
         );
       }
-      // Broadcast tournament_ended SSE — triggers auto-redirect on all participant screens
-      const players = state.players;
-      const tournamentName = state.tournamentName;
-      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ players, tournamentName }),
-      }).catch(() => { /* fire-and-forget */ });
-      toast.success("🏆 Tournament complete! Redirecting to results…", { duration: 4000 });
-      // Navigate director to results page after a short delay
-      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+      void publishFinalTournamentState().then((published) => {
+        if (!published) {
+          autoCompletedSwissRef.current = false;
+          toast.error("Results are saved locally. Retry finalization when the connection recovers.");
+          return;
+        }
+        toast.success("Tournament complete! Redirecting to results…", { duration: 4000 });
+        setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allResultsIn, state.currentRound, state.totalRounds, state.format, state.status]);
@@ -3118,7 +3145,6 @@ export default function Director() {
       const winnerLabel = championNames.length > 0 ? championNames.join(", ") : "Section champions";
 
       completeTournament();
-      syncStatusToServer("completed");
       broadcastTournamentComplete(winnerLabel);
 
       if (tournamentConfig?.clubId) {
@@ -3141,19 +3167,20 @@ export default function Director() {
         );
       }
 
-      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
-      }).catch(() => { /* fire-and-forget */ });
-
-      toast.success(
-        championNames.length > 1
-          ? `Tournament complete! ${championNames.length} section champions confirmed.`
-          : "Tournament complete! Section champion confirmed.",
-        { duration: 4000 },
-      );
-      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+      void publishFinalTournamentState().then((published) => {
+        if (!published) {
+          autoCompletedQuadsRef.current = false;
+          toast.error("Results are saved locally. Retry finalization when the connection recovers.");
+          return;
+        }
+        toast.success(
+          championNames.length > 1
+            ? `Tournament complete! ${championNames.length} section champions confirmed.`
+            : "Tournament complete! Section champion confirmed.",
+          { duration: 4000 },
+        );
+        setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allResultsIn, state.currentRound, state.totalRounds, state.format, state.status, state.quadSections]);
@@ -3442,6 +3469,17 @@ export default function Director() {
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
           <main className="flex-1 min-w-0 space-y-5">
+
+            <DirectorLifecycleBand
+              lifecycle={directorLifecycle}
+              lastSaved={lastSaved}
+              isDark={isDark}
+              onRetryFinalization={() => {
+                void publishFinalTournamentState().then((published) => {
+                  if (published) toast.success("Final results published.");
+                });
+              }}
+            />
 
             {/* ── Round Timer — mobile: above title; desktop: between title and tabs ── */}
             {!isRegistration && (
@@ -4237,7 +4275,7 @@ export default function Director() {
                                       <button
                                         onClick={() => setEditingPlayer(p)}
                                         style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
-                                        className={`flex items-center justify-center rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
+                                        className={`flex items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${
                                           isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
                                         }`}
                                         title="Edit player name / ELO"
@@ -4249,7 +4287,7 @@ export default function Director() {
                                       <button
                                         onClick={() => setPendingRemoveId(p.id)}
                                         style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
-                                        className={`flex items-center justify-center rounded-lg sm:opacity-0 sm:group-hover:opacity-100 transition-all ${
+                                        className={`flex items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${
                                           isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
                                         }`}
                                         title="Remove player"
@@ -4837,10 +4875,12 @@ export default function Director() {
                                 {/* Edit player button (in-progress) */}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setEditingPlayer(player); }}
-                                  className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                  style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                  className={`flex flex-shrink-0 items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${
                                     isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-[#ADBC9F]/50 text-[#436850]"
                                   }`}
                                   title="Edit player name / ELO"
+                                  aria-label={`Edit ${player.name}`}
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
@@ -4854,10 +4894,12 @@ export default function Director() {
                                         toast.success(`${player.name} removed — pairings regenerated`);
                                       }
                                     }}
-                                    className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                    style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                    className={`flex flex-shrink-0 items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${
                                       isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
                                     }`}
                                     title="Remove player & regenerate pairings"
+                                    aria-label={`Remove ${player.name} and regenerate Round 1 pairings`}
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
@@ -6180,12 +6222,13 @@ export default function Director() {
                                 assignBye(p.id);
                                 toast.success(`${p.name} assigned a bye (+½pt)`);
                               }}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all active:scale-95 opacity-0 group-hover:opacity-100 ${
+                              className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${
                                 isDark
                                   ? "bg-white/06 border-white/10 text-white/50 hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-400"
                                   : "bg-white border-[#ADBC9F] text-[#436850] hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600"
                               }`}
                               title="Give bye (+½pt)"
+                              aria-label={`Assign a bye to ${p.name}`}
                             >
                               <Coffee className="w-3 h-3" />
                               Bye
@@ -6533,7 +6576,6 @@ export default function Director() {
                     }}
                     onCompleteTournament={async () => {
                       completeTournament();
-                      syncStatusToServer("completed");
                       const winner = liveStandings[0];
                       const winnerName = winner?.player.name ?? "Unknown";
                       // Fire push notification to all subscribers
@@ -6566,13 +6608,11 @@ export default function Director() {
                           fmtLabel
                         );
                       }
-                      // Broadcast tournament_ended to server (send Player[] not StandingRow[])
-                      try {
-                        await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
-                          method: "POST",
-                          body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
-                        });
-                      } catch { /* ignore */ }
+                      const published = await publishFinalTournamentState();
+                      if (!published) {
+                        toast.error("Results are saved locally. Retry finalization from the status band.");
+                        return;
+                      }
                       toast.success("Tournament finalized!");
                       // Navigate to Final Standings page
                       setTimeout(() => navigate(`/tournament/${tournamentId}/overview`), 900);
@@ -7125,7 +7165,6 @@ export default function Director() {
                           onClick={async () => {
                             setShowEndConfirm(false);
                             completeTournament();
-                            syncStatusToServer("completed");
                             const winner = liveStandings[0];
                             const winnerName = winner?.player.name ?? "Unknown";
                             // Fire push notification to all subscribers
@@ -7158,13 +7197,10 @@ export default function Director() {
                                 fmtLabel2
                               );
                             }
-                            try {
-                              await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
-                                method: "POST",
-                                body: JSON.stringify({ players: standings, tournamentName: state.tournamentName }),
-                              });
-                            } catch {
-                              logger.error("[director] Failed to broadcast tournament_ended");
+                            const published = await publishFinalTournamentState();
+                            if (!published) {
+                              toast.error("Results are saved locally. Retry finalization from the status band.");
+                              return;
                             }
                             toast.success("Tournament finalized!");
                             setTimeout(() => navigate(`/tournament/${tournamentId}/overview`), 900);

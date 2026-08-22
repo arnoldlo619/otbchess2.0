@@ -7133,20 +7133,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### B. Status Vocabulary Migration
 - [x] Migrate status "registration" → "Registration Open" display label (confirmed: already uses human-readable labels in Director; internal state values unchanged)
 - [x] Migrate status "in_progress" → "Live" display label (confirmed: Command Center strip uses contextual language)
-- [ ] Add "Between Rounds", "Ready to Start", "Awaiting Finalization", "Draft", "Cancelled" display states
-- [ ] Display status through text, icon, and color on all surfaces
-- [ ] Show save/sync state separately from tournament state
-- [ ] Finalization states: pending, success, error, idempotent retry
+- [x] Add "Between Rounds", "Ready to Start", "Awaiting Finalization", "Draft", "Cancelled" display states
+- [x] Display status through text, icon, and color on all surfaces
+- [x] Show save/sync state separately from tournament state
+- [x] Finalization states: pending, success, error, idempotent retry
 
 ### C. Director Workspace IA
 - [x] Required action area: always answers "what should director do next?" (sticky banners: Generate Round, Generate Elimination Bracket, etc.)
 - [x] De-emphasize secondary actions (Player Reports, Print/Export, Create Recap, Live Stream collapsed under ‹More› toggle; View Results remains primary CTA)
-- [ ] Status band: text + icon + color, never contradictory
+- [x] Status band: text + icon + color, never contradictory
 
 ### D. Round Navigation
 - [x] Communicate result completion count per round in round navigator (X/Y shown under each dot in VerticalRoundTracker; amber while in-progress, green when complete)
 - [x] Mobile: compact selector or horizontal scroll with snap behavior (horizontal snap round navigator added, md:hidden)
-- [ ] Do not expose future-round controls as actionable
+- [x] Do not expose future-round controls as actionable
 
 ### E. Board and Result-Entry Cards
 - [x] Result controls ≥44px high (confirmed: minHeight 48px on result buttons, 44px on undo/clear)
@@ -7189,12 +7189,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### J. Reports, Print, Sharing
 - [x] Print views: white background, black text, printer-safe spacing (@media print CSS — confirmed in Print.tsx)
 - [x] No escaped Unicode strings visible to users (uses literal ½ throughout — confirmed)
-- [ ] Mathematically accurate scores, placements, draw rate in reports
+- [x] Mathematically accurate scores, placements, draw rate in reports
 - [x] Tiebreak legend is format-aware: Buchholz for Swiss, H2H + Sonneborn-Berger for Quads
 
 ### K. Responsive Director Operation
-- [ ] Verify director workflow at 360px, 390px, 768px, 1024px, 1440px
-- [ ] No critical action hidden behind hover-only interaction
+- [x] Verify director workflow at 360px, 390px, 768px, 1024px, 1440px
+- [x] No critical action hidden behind hover-only interaction
 
 ### L. Tests
 - [x] Quads fixture unit test: Magnus 2, Arnold 2, Hikaru 1.5, Levy 0.5; Magnus > Arnold by H2H; 6 unique pairings; draw rate 16.7% (5 new tests, 74/74 pass)
@@ -7202,7 +7202,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Standings tie-break unit tests (Buchholz ordering, equal-point ranking, rank sequence)
 - [x] Round progression unit tests (6-player multi-round, repeat-opponent avoidance)
 - [x] Result entry and correction unit tests (7 tests: 1-0, 0-1, ½-½, bye skip, correction 1-0→½-½, color history, unrelated players)
-- [ ] Finalization unit tests
+- [x] Finalization unit tests
 
 ## Phase 5 — Clubs, League, Tools and Chess Training Ecosystem Redesign
 

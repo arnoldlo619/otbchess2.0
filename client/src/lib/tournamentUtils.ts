@@ -137,3 +137,73 @@ export function getTournamentStatusDisplay(...sources: TournamentStatusSource[])
       return { label: "Registration Open", isLive: false, isComplete: false, isPending: true };
   }
 }
+
+export type DirectorLifecycleStatus =
+  | "draft"
+  | "registration"
+  | "ready_to_start"
+  | "live"
+  | "paused"
+  | "between_rounds"
+  | "awaiting_finalization"
+  | "finalizing"
+  | "finalization_error"
+  | "completed"
+  | "cancelled";
+
+export interface DirectorLifecycleInput {
+  status?: unknown;
+  playerCount: number;
+  canStart: boolean;
+  currentRound: number;
+  totalRounds: number;
+  allResultsIn: boolean;
+  canGenerateNext: boolean;
+  finalizationStatus?: "idle" | "pending" | "success" | "error";
+}
+
+export interface DirectorLifecycleDisplay {
+  status: DirectorLifecycleStatus;
+  label: string;
+  description: string;
+  tone: "neutral" | "info" | "success" | "warning" | "danger";
+}
+
+/**
+ * Canonical Director-facing lifecycle vocabulary. This is intentionally more
+ * specific than the public registration/live/completed status so the host can
+ * always see the next operational state without conflating it with save sync.
+ */
+export function selectDirectorLifecycleStatus(input: DirectorLifecycleInput): DirectorLifecycleDisplay {
+  if (input.status === "cancelled") {
+    return { status: "cancelled", label: "Cancelled", description: "This tournament is no longer active.", tone: "danger" };
+  }
+  if (input.finalizationStatus === "error") {
+    return { status: "finalization_error", label: "Finalization failed", description: "Results are saved locally. Retry publishing the final state.", tone: "danger" };
+  }
+  if (input.finalizationStatus === "pending") {
+    return { status: "finalizing", label: "Finalizing", description: "Publishing final results to players and spectators.", tone: "info" };
+  }
+  if (input.status === "completed" || input.finalizationStatus === "success") {
+    return { status: "completed", label: "Completed", description: "Final results are published.", tone: "success" };
+  }
+  if (input.status === "registration") {
+    if (input.playerCount === 0) {
+      return { status: "draft", label: "Draft", description: "Add players before opening tournament operations.", tone: "neutral" };
+    }
+    if (input.canStart) {
+      return { status: "ready_to_start", label: "Ready to Start", description: "The roster is ready. Generate Round 1 when players are seated.", tone: "success" };
+    }
+    return { status: "registration", label: "Registration Open", description: "Players can still join this tournament.", tone: "info" };
+  }
+  if (input.status === "paused") {
+    return { status: "paused", label: "Paused", description: `Round ${Math.max(1, input.currentRound)} is paused.`, tone: "warning" };
+  }
+  if (input.allResultsIn && input.currentRound >= input.totalRounds && input.totalRounds > 0) {
+    return { status: "awaiting_finalization", label: "Awaiting Finalization", description: "All final-round results are recorded.", tone: "warning" };
+  }
+  if (input.allResultsIn && input.canGenerateNext) {
+    return { status: "between_rounds", label: "Between Rounds", description: `Round ${input.currentRound} is complete. Generate the next round when ready.`, tone: "success" };
+  }
+  return { status: "live", label: "Live", description: `Round ${Math.max(1, input.currentRound)} is in progress.`, tone: "info" };
+}
