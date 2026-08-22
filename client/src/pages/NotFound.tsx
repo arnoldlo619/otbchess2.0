@@ -2,7 +2,7 @@ import { useLocation, useSearch } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
-import { Crown, ChevronLeft, Search, WifiOff, Lock, UserX, Hash } from "lucide-react";
+import { Crown, ChevronLeft, FileQuestion, Search, WifiOff, Lock, UserX, Hash } from "lucide-react";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
 // ─── Error variant definitions ────────────────────────────────────────────────
@@ -19,7 +19,7 @@ interface ErrorConfig {
   secondaryHref?: string;
 }
 
-function getErrorConfig(variant: ErrorVariant): ErrorConfig {
+export function getErrorConfig(variant: ErrorVariant): ErrorConfig {
   switch (variant) {
     case "invalid-code":
       return {
@@ -61,13 +61,13 @@ function getErrorConfig(variant: ErrorVariant): ErrorConfig {
         headline: "Something went wrong.",
         body: "We couldn't reach the server. Check your internet connection and try again. Your registration data is safe.",
         primaryLabel: "Retry",
-        primaryHref: typeof window !== "undefined" ? window.location.href : "/",
+        primaryHref: "__reload__",
         secondaryLabel: "Go Home",
         secondaryHref: "/",
       };
     default: // 404
       return {
-        icon: <span className="text-5xl select-none">♟</span>,
+        icon: <FileQuestion className="h-11 w-11 text-[#4CAF50]" aria-hidden="true" />,
         badge: "404 — Not Found",
         headline: "This board is empty.",
         body: "The page you're looking for doesn't exist or may have been moved. Check the URL or head back to the home page.",
@@ -100,6 +100,19 @@ export default function NotFound() {
 
   const config = getErrorConfig(variant);
 
+  function followRecoveryLink(href: string) {
+    if (href === "__reload__") {
+      window.location.reload();
+      return;
+    }
+    if (href === "__back__") {
+      if (window.history.length > 1) window.history.back();
+      else setLocation("/");
+      return;
+    }
+    setLocation(href);
+  }
+
   const badgeColor = {
     "404": isDark ? "bg-[#436850]/20 text-[#4CAF50]" : "bg-[#436850]/10 text-[#436850]",
     "invalid-code": isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700",
@@ -118,7 +131,7 @@ export default function NotFound() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col transition-colors duration-300 ${
+      className={`min-h-[100dvh] flex flex-col transition-colors duration-300 ${
         isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
       }`}
     >
@@ -175,8 +188,7 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => {
-                if (config.primaryHref === "__back__") window.history.back();
-                else setLocation(config.primaryHref);
+                followRecoveryLink(config.primaryHref);
               }}
               className="flex items-center justify-center gap-2 px-6 py-3 bg-[#436850] text-white text-sm font-semibold rounded-xl hover:bg-[#2A4A32] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg shadow-[#436850]/30"
               style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -188,8 +200,7 @@ export default function NotFound() {
               <SpinBorderButton
                 variant="glass"
                 onClick={() => {
-                  if (config.secondaryHref === "__back__") window.history.back();
-                  else setLocation(config.secondaryHref!);
+                  followRecoveryLink(config.secondaryHref!);
                 }}
               >
                 <ChevronLeft className="w-4 h-4" />

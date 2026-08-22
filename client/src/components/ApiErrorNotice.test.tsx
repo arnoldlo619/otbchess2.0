@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ApiErrorNotice } from "./ApiErrorNotice";
-import { ApiError } from "@/lib/apiFetch";
+import { ApiError, toApiError } from "@/lib/apiFetch";
 
 describe("ApiErrorNotice", () => {
   it("renders friendly server-error copy and a support reference", () => {
@@ -33,5 +33,17 @@ describe("ApiErrorNotice", () => {
     expect(html).not.toContain("stack");
     expect(html).not.toContain("database password");
   });
-});
 
+  it("presents aborted requests as retryable timeouts", () => {
+    const timeout = toApiError(new DOMException("Aborted", "AbortError"));
+    const html = renderToStaticMarkup(
+      <ApiErrorNotice error={timeout} onRetry={() => undefined} />,
+    );
+
+    expect(timeout.code).toBe("REQUEST_TIMEOUT");
+    expect(timeout.retryable).toBe(true);
+    expect(html).toContain("Connection interrupted");
+    expect(html).toContain("The request took too long. Please try again.");
+    expect(html).toContain("Retry");
+  });
+});

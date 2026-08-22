@@ -6560,7 +6560,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Fix Clubs pages: card contrast, nav labels/tooltips, empty states
 - [ ] Fix League demo: sidebar nav labels, table readability, color legend
 - [ ] Fix Training page: card contrast, font sizes, icon tooltips
-- [ ] Fix 404 page: clear explanation, navigation links
+- [x] Fix 404 page: clear explanation, navigation links
 - [ ] Fix Footer: contrast, font sizes, link grouping
 - [ ] Fix CTA sections: enlarge subtext, improve contrast
 - [ ] Add skip-to-content link and semantic landmarks
@@ -7337,7 +7337,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] No redirect loops
 - [ ] Blog/Journal routes valid
 - [ ] Training routes valid
-- [ ] Error pages (404, 500) render correctly
+- [x] Error pages (404, 500) render correctly
 
 ### B. Design System Compliance
 - [ ] Raw color audit (no unapproved hex/rgb outside token set)
@@ -7415,9 +7415,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### I. Resilience
 - [ ] Offline transition shows graceful error
-- [ ] API timeout shows retry option
-- [ ] Chess.com lookup failure shows clear error
-- [ ] Invalid slug shows 404 with recovery link
+- [x] API timeout shows retry option
+- [x] Chess.com lookup failure shows clear error
+- [x] Invalid slug shows 404 with recovery link
 - [ ] Duplicate registration blocked with clear message
 - [ ] Browser refresh during multi-step flows preserves state
 

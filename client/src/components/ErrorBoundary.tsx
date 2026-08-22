@@ -10,14 +10,14 @@
  * All other errors: show the standard error screen with a manual reload button.
  */
 import { cn } from "@/lib/utils";
-import { AlertTriangle, ExternalLink, RefreshCw, Zap } from "lucide-react";
+import { AlertTriangle, ExternalLink, Home, RefreshCw, Zap } from "lucide-react";
 import { Component, ReactNode } from "react";
 
 const SUPPORT_URL = "https://help.manus.im"; // swap for your own feedback URL if needed
 
-function buildReportUrl(error: Error | null): string {
+function buildReportUrl(error: Error | null, referenceId: string): string {
   const body = encodeURIComponent(
-    `**Page:** ${window.location.href}\n\n**Error:**\n\`\`\`\n${error?.stack ?? error?.message ?? "Unknown error"}\n\`\`\`\n\n**Steps to reproduce:**\n1. `
+    `**Page:** ${window.location.href}\n\n**Reference:** ${referenceId}\n\n**Error:**\n\`\`\`\n${error?.stack ?? error?.message ?? "Unknown error"}\n\`\`\`\n\n**Steps to reproduce:**\n1. `
   );
   return `${SUPPORT_URL}?subject=${encodeURIComponent("Bug report — ChessOTB")}&body=${body}`;
 }
@@ -29,9 +29,16 @@ interface State {
   hasError: boolean;
   error: Error | null;
   isChunkError: boolean;
+  referenceId: string;
 }
 
 const CHUNK_RELOAD_KEY = "otb_chunk_reload_attempted";
+
+export function createClientErrorReference(): string {
+  const time = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).slice(2, 7).toUpperCase();
+  return `UI-${time}-${random}`;
+}
 
 function isChunkLoadError(error: Error): boolean {
   const msg = error?.message ?? "";
@@ -49,7 +56,7 @@ function isChunkLoadError(error: Error): boolean {
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null, isChunkError: false };
+    this.state = { hasError: false, error: null, isChunkError: false, referenceId: "" };
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -63,11 +70,11 @@ class ErrorBoundary extends Component<Props, State> {
         // Hard reload bypasses service worker and browser cache
         window.location.reload();
         // Return a non-error state while reload is in progress
-        return { hasError: false, error: null, isChunkError: true };
+        return { hasError: false, error: null, isChunkError: true, referenceId: "" };
       }
     }
 
-    return { hasError: true, error, isChunkError: chunkError };
+    return { hasError: true, error, isChunkError: chunkError, referenceId: createClientErrorReference() };
   }
 
   componentDidCatch() {
@@ -171,9 +178,6 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     // ── Generic error ───────────────────────────────────────────────────────────────────
-    const errorMsg = this.state.error?.message ?? "Unknown error";
-    const errorStack = this.state.error?.stack ?? errorMsg;
-
     return (
       <div
         className="flex items-center justify-center min-h-screen p-6"
@@ -217,27 +221,27 @@ class ErrorBoundary extends Component<Props, State> {
               <h2 className="text-lg font-black" style={{ color: "oklch(0.96 0.02 145)" }}>
                 Something went wrong
               </h2>
-              <p className="text-sm mt-1" style={{ color: "oklch(0.58 0.06 145)" }}>
-                {errorMsg.length > 120 ? errorMsg.slice(0, 120) + "…" : errorMsg}
+              <p className="text-sm mt-1 leading-relaxed" style={{ color: "oklch(0.66 0.05 145)" }}>
+                The page hit an unexpected problem. Reload to continue, or return home if the issue persists.
               </p>
             </div>
           </div>
 
-          {/* Stack trace */}
+          {/* User-safe support reference. Technical details stay in the report URL. */}
           <div
-            className="rounded-xl p-4 overflow-auto max-h-48"
+            className="rounded-xl px-4 py-3"
             style={{ background: "oklch(0.13 0.04 145)", border: "1px solid oklch(0.25 0.06 145)" }}
           >
-            <pre
-              className="text-xs leading-relaxed whitespace-pre-wrap break-all"
-              style={{ color: "oklch(0.52 0.06 145)", fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}
-            >
-              {errorStack}
-            </pre>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "oklch(0.48 0.05 145)" }}>
+              Support reference
+            </p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: "oklch(0.72 0.06 145)", fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}>
+              {this.state.referenceId}
+            </p>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <button
               onClick={this.handleManualReload}
               className={cn(
@@ -249,7 +253,19 @@ class ErrorBoundary extends Component<Props, State> {
               Reload Page
             </button>
             <a
-              href={buildReportUrl(this.state.error)}
+              href="/"
+              className="flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.97] hover:brightness-110"
+              style={{
+                background: "oklch(0.22 0.06 145)",
+                color: "oklch(0.78 0.06 145)",
+                border: "1px solid oklch(0.32 0.08 145)",
+              }}
+            >
+              <Home className="w-4 h-4" />
+              Go Home
+            </a>
+            <a
+              href={buildReportUrl(this.state.error, this.state.referenceId)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.97] hover:brightness-110"
