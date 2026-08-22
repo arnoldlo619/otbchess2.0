@@ -7388,7 +7388,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Principal-route Axe baseline: zero critical/serious violations on 9 core routes at desktop and mobile widths
 - [ ] No keyboard trap in any modal or drawer
 - [x] All principal controls have accessible labels
-- [ ] Focus order logical on all principal pages
+- [x] Focus order logical on all principal pages
 - [ ] Landmark regions on all pages (main, nav, header, footer)
 - [x] Form labels on all inputs
 - [x] Table semantics (thead, th scope)
