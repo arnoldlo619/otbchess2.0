@@ -9,6 +9,7 @@ import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
 import { ApiErrorNotifier } from "./components/ApiErrorNotifier";
 import { ClientErrorTelemetry } from "./components/ClientErrorTelemetry";
+import { buildPreservedRedirect, buildTournamentCreateRedirect } from "./lib/routeRedirects";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
 // Each page is split into its own JS chunk, dramatically reducing initial bundle
@@ -80,6 +81,23 @@ const RsvpFormBuilderPage = lazy(() => import("./pages/RsvpFormBuilderPage"));
 
 function PageLoader() {
   return <OTBLoader fullPage label="Preparing the board" />;
+}
+
+function HardRedirect({
+  to,
+  tournamentCreate = false,
+}: {
+  to: string;
+  tournamentCreate?: boolean;
+}) {
+  useEffect(() => {
+    const target = tournamentCreate
+      ? buildTournamentCreateRedirect(window.location.search, window.location.hash)
+      : buildPreservedRedirect(to, window.location.search, window.location.hash);
+    window.location.replace(target);
+  }, [to, tournamentCreate]);
+
+  return <PageLoader />;
 }
 
 function Router() {
@@ -182,12 +200,10 @@ function Router() {
         <Route path={"/recap/:slug"} component={TournamentRecap} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/dashboard/tools/chessnut-bluetooth-test-lab"} component={ChessnutTestLab} />
-        {/* /tournaments/new — opens TournamentWizard (Home handles ?action=create) */}
-        <Route path={"/tournaments/new"} component={() => { if (typeof window !== "undefined") { window.location.replace("/?action=create"); } return null; }} />
-        {/* /create — redirect to /tournaments/new */}
-        <Route path={"/create"} component={() => { if (typeof window !== "undefined") { window.location.replace("/tournaments/new"); } return null; }} />
-        {/* /tools — redirect to /training */}
-        <Route path={"/tools"} component={() => { if (typeof window !== "undefined") { window.location.replace("/training"); } return null; }} />
+        {/* Canonical redirects preserve campaign/source query parameters. */}
+        <Route path={"/tournaments/new"} component={() => <HardRedirect to="/" tournamentCreate />} />
+        <Route path={"/create"} component={() => <HardRedirect to="/tournaments/new" />} />
+        <Route path={"/tools"} component={() => <HardRedirect to="/training" />} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

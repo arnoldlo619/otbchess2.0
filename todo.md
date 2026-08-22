@@ -7460,10 +7460,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## P0 Release-Recovery Sprint
 
-- [ ] P0-1a: Add /tournaments/new route (opens TournamentWizard)
-- [ ] P0-1b: Fix /create to redirect to /tournaments/new (preserve query params)
-- [ ] P0-1c: Add /tools route redirecting to /training
-- [ ] P0-1d: Remove admin password gate from /tournaments (Archive) public route; move admin gate to /admin/tournaments
+- [x] P0-1a: Add /tournaments/new route (opens TournamentWizard)
+- [x] P0-1b: Fix /create to redirect to /tournaments/new (preserve query params)
+- [x] P0-1c: Add /tools route redirecting to /training
+- [x] Superseded: /tournaments Archive is public and contains no admin password gate
 - [ ] P0-1e: Audit and fix all broken CTAs (Host Tournament, View Live Demo, Tools, footer links)
 - [ ] P0-2: Create canonical getTournamentFormatLabel() helper; fix all inline format ternaries missing quads case
 - [ ] P0-3: Create canonical getTournamentStatus() selector; ensure completed tournaments never show Live badge

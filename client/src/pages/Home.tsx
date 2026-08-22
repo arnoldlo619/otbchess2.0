@@ -27,6 +27,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { stripCreateAction } from "@/lib/routeRedirects";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 
 import AuthModal from "../components/AuthModal";
@@ -2523,8 +2524,8 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("action") === "create") {
       setWizardOpen(true);
-      // Clean the URL without reloading
-      window.history.replaceState({}, "", "/");
+      // Remove only the internal action flag while preserving source/campaign params.
+      window.history.replaceState({}, "", stripCreateAction(window.location.search, window.location.hash));
     }
   }, []);
 
