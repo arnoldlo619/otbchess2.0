@@ -3407,7 +3407,7 @@ export default function ClubDashboard() {
         />
       )}
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
-      <div className="flex h-[100dvh] overflow-hidden">
+      <div className="flex h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none">
         {/* ── LEFT SIDEBAR (desktop) — collapsible premium nav ── */}
         {/* Spacer: always 64px wide to reserve space in the flex row */}
         <div className="hidden lg:block flex-shrink-0" style={{ width: "64px", minWidth: "64px" }} />
@@ -3805,7 +3805,7 @@ export default function ClubDashboard() {
           })()}
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-[80px] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div ref={scrollContainerRef} className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
                 {/* ── CLUB BANNER ─────────────────────────────────────────── */}

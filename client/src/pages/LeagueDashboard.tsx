@@ -1278,7 +1278,7 @@ export default function LeagueDashboard() {
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
 
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
-      <div className="flex h-[100dvh] overflow-hidden">
+      <div className="flex h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none">
 
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
@@ -1691,7 +1691,7 @@ export default function LeagueDashboard() {
           )}
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
+          <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
             <div className="px-4 lg:px-6 py-4">
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}

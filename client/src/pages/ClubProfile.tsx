@@ -1471,7 +1471,7 @@ export default function ClubProfile() {
           <div className="absolute inset-0" style={{ background: "oklch(0.10 0.05 145 / 0.50)" }} />
         </div>
       )}
-      <div className="flex h-[100dvh] overflow-hidden">
+      <div className="flex h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none">
 
         {/* ── LEFT SIDEBAR — Partiful-style: icon rail expands to icon+label rows on hover ─── */}
         <aside
@@ -1615,7 +1615,7 @@ export default function ClubProfile() {
         <div className="flex-1 flex flex-col min-w-0">
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto pb-28 lg:pb-6">
+          <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
             {/* ── PADDED HEADER AREA ─────────────────────────────────────── */}
             <div className="px-4 lg:pl-[88px] lg:pr-8 xl:pl-[96px] xl:pr-12 pt-5 pb-0">
               <div className="max-w-5xl mx-auto">

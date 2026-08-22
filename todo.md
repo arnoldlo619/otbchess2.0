@@ -1546,14 +1546,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build /game/:gameId/analysis page layout (mobile stack, desktop two-column)
 
 ### Phase F: Video Sync
-- [ ] Implement timestamp mapping between moves and video
-- [ ] Build bidirectional sync (video→board, board→video)
-- [ ] Custom video player with ChessOTB design system
+- [x] Cancelled: Video Sync timestamp mapping removed from product scope
+- [x] Cancelled: Video-to-board bidirectional sync removed from product scope
+- [x] Cancelled: Custom Video Sync player removed from product scope
 
 ### Phase G: Correction Flow
-- [ ] Build CorrectionCard component (board + video frame + candidate moves)
-- [ ] Batch correction flow with progress indicator
-- [ ] Skip/accept AI guess functionality
+- [x] Cancelled: Video correction card removed with obsolete Video Sync workflow
+- [x] Cancelled: Batch video correction flow removed with obsolete Video Sync workflow
+- [x] Cancelled: Video AI-guess controls removed with obsolete Video Sync workflow
 
 ### Phase H: Navigation + Entry Points
 - [x] Add "Record Game" ("Analyze") entry point to main navigation (desktop + mobile)
@@ -1589,14 +1589,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Game Highlight Generator
 
-- [ ] Install node-canvas and chess-image-generator on server
-- [ ] Create server/highlightGenerator.ts: findCriticalMoment(), renderHighlightPNG()
-- [ ] Render 1080x1080 PNG: dark background, board position, eval bar, classification badge, player names, move annotation, ChessOTB.club branding
-- [ ] Add GET /api/games/:id/highlight endpoint (generates on demand, caches in S3)
-- [ ] Add "Share Highlight" button to GameAnalysis page (uses Web Share API with PNG)
-- [ ] Add "Download Highlight" button to GameAnalysis page
-- [ ] Show critical moment move highlighted in move list when highlight is generated
-- [ ] Write tests for findCriticalMoment logic
+- [x] Cancelled: Server image-generation dependencies no longer needed after Game Highlights removal
+- [x] Cancelled: Highlight generator removed from product scope
+- [x] Cancelled: 1080×1080 Game Highlight asset removed from product scope
+- [x] Cancelled: Game Highlight API endpoint removed from product scope
+- [x] Cancelled: Share Highlight action removed from product scope
+- [x] Cancelled: Download Highlight action removed from product scope
+- [x] Cancelled: Critical-moment highlight selection removed from product scope
+- [x] Cancelled: Highlight-generator tests no longer applicable after feature removal
 
 ## Game Highlight Generator
 
@@ -2874,29 +2874,29 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Goal 2 — Profile Page Enhancements
 
-- [ ] Add profile photo upload (base64 stored in localStorage via AuthContext)
+- [x] Add profile photo upload (base64 stored in localStorage via AuthContext)
 - [x] Add FIDE ID field to profile edit form
-- [ ] Add Lichess account link with verification badge
-- [ ] Add chess.com account link with verification badge
+- [x] Add Lichess account link with verification badge
+- [x] Add chess.com account link with verification badge
 - [x] Show linked accounts section with external profile links
 
 ## Goal 3 — Club Direct Messaging & Turn-Based Chess
 
-- [ ] Create `clubMessagingRegistry.ts` with DM thread types, message types, and chess game state
-- [ ] Build `/clubs/:id/messages` route and `ClubMessages` page
-- [ ] Member list sidebar with unread badge counts
-- [ ] Chat thread view with message bubbles and timestamps
-- [ ] "Challenge to Chess" button in DM thread that starts a turn-based chess game
-- [ ] Chess board component for turn-based game (FEN state, move input, result detection)
-- [ ] Add Messages nav item to ClubDashboard tab bar
+- [x] Create `clubMessagingRegistry.ts` with DM thread types, message types, and chess game state
+- [x] Build `/clubs/:id/messages` route and `ClubMessages` page
+- [x] Member list sidebar with unread badge counts
+- [x] Chat thread view with message bubbles and timestamps
+- [x] "Challenge to Chess" button in DM thread that starts a turn-based chess game
+- [x] Chess board component for turn-based game (FEN state, move input, result detection)
+- [x] Add Messages nav item to ClubDashboard tab bar
 
 ## Goal 4a — Club Host Tools & Buy-In Payments
 
-- [ ] Create `clubPaymentRegistry.ts` with buy-in tournament data model (Stripe-ready stub)
-- [ ] Add buy-in amount field to CreateEventModal in ClubDashboard
-- [ ] Build `TournamentBuyInPanel` in ClubDashboard: collected amount, participant list, payout allocation
-- [ ] Add engagement analytics section to ClubDashboard: member activity heatmap, RSVP trends, poll participation rates
-- [ ] Player of the Month highlight: auto-computed from club matchup records
+- [x] Superseded: club payment registry delivered, then replaced by personal Venmo/Cash App/PayPal host links
+- [x] Superseded: buy-in amount flow delivered, then replaced by host-managed personal payment links
+- [x] Superseded: TournamentBuyInPanel delivered, then replaced by host-managed personal payment methods
+- [x] Add engagement analytics section to ClubDashboard: member activity heatmap, RSVP trends, poll participation rates
+- [x] Player of the Month highlight: auto-computed from club matchup records
 
 ## Goal 4b — New Casual Event Types
 
@@ -2904,12 +2904,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Chess Speed Dating event: timed 5-min mini-games, rotating partners, social matching UI
 - [ ] Trivia Night event: question rounds, team scoring, live leaderboard
 - [ ] Puzzle Relay Race event: team-based puzzle solving, relay handoff, timer
-- [ ] Event type picker in CreateEventModal with icons and descriptions
+- [x] Event type picker in CreateEventModal with icons and descriptions
 - [ ] Event type badge on event cards
 
 ## Goal 5 — Discover Clubs Page with Trending Showcase Clubs
 
-- [ ] Research 5 real trending/notable chess clubs worldwide
+- [x] Research 5 real trending/notable chess clubs worldwide
 - [ ] Build `/clubs/discover` route and `DiscoverClubs` page
 - [ ] Create custom showcase profile pages for each of the 5 clubs
 - [ ] Add "Discover" link to MyClubs page and nav
@@ -3546,10 +3546,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Unit tests for confirmation prompt logic
 
 ## Feature: LNM Save & Exit
-- [ ] useLnmSave hook: debounced auto-save (30s), manual save, save status (idle/saving/saved/error), sessionStorage fallback
-- [ ] Save & Exit button in NotationModeOverlay control bar with save-status indicator (cloud icon)
-- [ ] Auto-save every 30s when LNM is active and has moves
-- [ ] Draft PGN recovery banner in Battle.tsx when returning to a room with unsaved draft
+- [x] Cancelled: useLnmSave hook removed with the obsolete Battle feature
+- [x] Cancelled: NotationModeOverlay Save & Exit removed with the obsolete Battle feature
+- [x] Cancelled: LNM auto-save removed with the obsolete Battle feature
+- [x] Cancelled: Battle draft recovery removed with the obsolete Battle feature
 - [x] Unit tests for useLnmSave debounce, status transitions, and recovery logic
 
 ## Feature: LNM Mid-Game Move Correction
@@ -3739,8 +3739,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update contact email to info@chessotb.club in footer (Home.tsx + Tournament.tsx)
 
 ## Bug Fix: Mobile Signed-In Avatar Dropdown (Home.tsx)
-- [ ] Fix Home.tsx signed-in user dropdown on mobile to show all nav links (Dashboard, Clubs, Battle, Analyze, My Profile, Sign Out)
-- [ ] Replace broken dropdown that only shows Sign Out with a proper slide-up sheet
+- [x] Fix Home.tsx signed-in user dropdown on mobile to show all nav links (Dashboard, Clubs, Battle, Analyze, My Profile, Sign Out)
+- [x] Replace broken dropdown that only shows Sign Out with a proper slide-up sheet
 
 ## Bug Fix: AvatarNavDropdown Mobile Portal
 - [x] Move AvatarNavDropdown mobile sheet to ReactDOM.createPortal at document.body to fix stacking context clipping on inner pages
@@ -3958,8 +3958,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update Add Player modal to display and store both ratings
 - [x] Update Director dashboard player list to show both ratings
 - [x] Add ELO rating selector (Rapid/Blitz) to tournament settings, defaulting to time control
-- [ ] Update Swiss pairing logic to use the selected rating type
-- [ ] Update standings display to show the active rating type
+- [x] Update Swiss pairing logic to use the selected rating type
+- [x] Update standings display to show the active rating type
 
 ## Nav Bar "Dashboard" → "Tournaments"
 - [x] Rename "Dashboard" to "Tournaments" in header nav
@@ -3990,7 +3990,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Share Results Modal Refactor
 - [x] Remove WhatsApp tab, keep only Email and QR Code tabs
 - [x] Email tab: per-player send button + bulk "Email All" with player card download link
-- [ ] Server-side email endpoint: personalized results email with report URL + player card link
+- [x] Server-side email endpoint: personalized results email with report URL + player card link
 - [ ] QR Code tab: QR linking to tournament results/report page
 
 ## SMTP Server-Side Email
@@ -4446,11 +4446,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Add Prep button to each board card in Director Console (standard boards)
 - [x] Add Prep button to each board card in Director Console (Double Swiss boards)
-- [ ] Prep button navigates to /prep/:opponentUsername pre-filled
-- [ ] Create saved_prep_reports DB table (userId, opponentUsername, reportData, savedAt)
-- [ ] Build POST /api/prep/save endpoint to save a report
-- [ ] Build GET /api/prep/saved endpoint to list saved reports for current user
-- [ ] Build DELETE /api/prep/saved/:id endpoint to delete a saved report
+- [x] Prep button navigates to /prep/:opponentUsername pre-filled
+- [x] Create saved_prep_reports DB table (userId, opponentUsername, reportData, savedAt)
+- [x] Build POST /api/prep/save endpoint to save a report
+- [x] Build GET /api/prep/saved endpoint to list saved reports for current user
+- [x] Build DELETE /api/prep/saved/:id endpoint to delete a saved report
 - [x] Add Save Report button to MatchupPrep page (visible when logged in and report loaded)
 - [x] Build Saved Prep panel/section accessible from the Analyze nav or MatchupPrep page
 - [x] Show saved reports as cards with opponent name, date, key stats, and delete option
@@ -4527,17 +4527,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Phase 16: Director Console — Elimination Bracket UI
 
-- [ ] Build EliminationBracketView component with full bracket tree layout
-- [ ] Show round labels (Round of 64, Round of 32, QF, SF, Final) per column
-- [ ] Render match cards with player names, seeds, and ELO
-- [ ] Show match result inline (1-0 / 0-1 / ½-½) with winner highlighted
-- [ ] Add result entry buttons on each pending match card
-- [ ] Add "Advance to Next Round" button after all matches in a round are complete
-- [ ] Handle bye matches (auto-advance, visually distinct)
-- [ ] Wire EliminationBracketView into Director Console tab system
-- [ ] Show bracket tab only when format is "elimination" or "swiss_elim"
-- [ ] Add Swiss→Elimination cutoff transition screen for swiss_elim format
-- [ ] Write tests for bracket rendering logic
+- [x] Build EliminationBracketView component with full bracket tree layout
+- [x] Show round labels (Round of 64, Round of 32, QF, SF, Final) per column
+- [x] Render match cards with player names, seeds, and ELO
+- [x] Show match result inline (1-0 / 0-1 / ½-½) with winner highlighted
+- [x] Add result entry buttons on each pending match card
+- [x] Add "Advance to Next Round" button after all matches in a round are complete
+- [x] Handle bye matches (auto-advance, visually distinct)
+- [x] Wire EliminationBracketView into Director Console tab system
+- [x] Show bracket tab only when format is "elimination" or "swiss_elim"
+- [x] Add Swiss→Elimination cutoff transition screen for swiss_elim format
+- [x] Write tests for bracket rendering logic
 
 ## Phase 16: Director Console Elimination Bracket UI
 
@@ -5622,11 +5622,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 16 Vitest tests pass, TypeScript 0 errors
 
 ## Refresh All Players Button — Director Players Tab
-- [ ] Add handleRefreshAllPlayers that re-fetches chess.com/Lichess data for every player
-- [ ] Show progress indicator (e.g. "Refreshing 12/47...") while running
-- [ ] Update player ELO, name, avatar, title after each successful fetch
-- [ ] Disable button while refresh is in progress
-- [ ] Write Vitest tests, TypeScript check, save checkpoint
+- [x] Add handleRefreshAllPlayers that re-fetches chess.com/Lichess data for every player
+- [x] Show progress indicator (e.g. "Refreshing 12/47...") while running
+- [x] Update player ELO, name, avatar, title after each successful fetch
+- [x] Disable button while refresh is in progress
+- [x] Write Vitest tests, TypeScript check, save checkpoint
 
 ## Chess.com Proxy Timeout Fix (Root Cause of 80/100 "Not Found")
 - [x] Diagnosed: fetchWithRetryServer had no AbortSignal.timeout — requests to chess.com for usernames with underscores/numbers hung indefinitely
@@ -5635,13 +5635,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 13 Vitest tests pass, TypeScript 0 errors
 
 ## MatchupPrep Redesign — 3-Tab Interface
-- [ ] Rewrite MatchupPrep with 3 tabs: Scout Report, Study Lines, Practice Board
-- [ ] Scout Report: compact opponent profile, weakness ranking, game plan summary
-- [ ] Study Lines: ranked prep lines with inline ChessLineViewer (interactive board)
-- [ ] Practice Board: wire in ChessPracticeBoard (SRS quiz with real chessboard)
-- [ ] Remove fluff: excessive badges, tags, filter categories
-- [ ] Clear 1-2-3 flow: Scout → Study → Practice
-- [ ] TypeScript 0 errors, Vitest tests, save checkpoint
+- [x] Rewrite MatchupPrep with 3 tabs: Scout Report, Study Lines, Practice Board
+- [x] Scout Report: compact opponent profile, weakness ranking, game plan summary
+- [x] Study Lines: ranked prep lines with inline ChessLineViewer (interactive board)
+- [x] Practice Board: wire in ChessPracticeBoard (SRS quiz with real chessboard)
+- [x] Remove fluff: excessive badges, tags, filter categories
+- [x] Clear 1-2-3 flow: Scout → Study → Practice
+- [x] TypeScript 0 errors, Vitest tests, save checkpoint
 
 ## MatchupPrep Redesign — 3-Tab Interface
 - [x] Rewrite MatchupPrep.tsx from 2041 lines to clean 3-tab design (Scout Report, Study Lines, Practice Board)
@@ -6107,15 +6107,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] tournamentEvents computed variable repurposed for unified Events tab
 
 ## Club Meetup Feature
-- [ ] Add "meetup" to ClubEvent eventType union; add checkedInUserIds field
-- [ ] Replace Standard Night button with Club Meetup button in CreateEventModal
-- [ ] Build ClubMeetupWizard: Title, Description, Date, Frequency, Location, Time
-- [ ] On submit: create seed event, generate recurring instances, post to feed, navigate to MeetupEventPage
-- [ ] Build MeetupEventPage (/clubs/:clubId/meetup/:eventId): details, RSVP list, invite members
-- [ ] Owner: "Show Check-in QR" button on event day (generates QR to /checkin/:eventId)
-- [ ] Build CheckInPage (/checkin/:eventId): public QR landing, check-in button, attendee list with chess.com ratings
-- [ ] Wire meetup events into Events tab Other Events section and club feed
-- [ ] Add route for /clubs/:id/meetup/:eventId and /checkin/:eventId in App.tsx
+- [x] Add "meetup" to ClubEvent eventType union; add checkedInUserIds field
+- [x] Replace Standard Night button with Club Meetup button in CreateEventModal
+- [x] Build ClubMeetupWizard: Title, Description, Date, Frequency, Location, Time
+- [x] On submit: create seed event, generate recurring instances, post to feed, navigate to MeetupEventPage
+- [x] Build MeetupEventPage (/clubs/:clubId/meetup/:eventId): details, RSVP list, invite members
+- [x] Owner: "Show Check-in QR" button on event day (generates QR to /checkin/:eventId)
+- [x] Build CheckInPage (/checkin/:eventId): public QR landing, check-in button, attendee list with chess.com ratings
+- [x] Wire meetup events into Events tab Other Events section and club feed
+- [x] Add route for /clubs/:id/meetup/:eventId and /checkin/:eventId in App.tsx
 
 ## Club Meetup Feature
 - [x] Replace "Standard Night" button in CreateEventModal with "Club Meetup" button
@@ -6714,23 +6714,23 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Cards and sections use full available width with consistent internal padding
 
 ## Quads Tournament Mode
-- [ ] Extend TournamentConfig.format union to include "quads"
-- [ ] Add quad-specific config fields (quadRatingSource, quadRemainderHandling, quadColorAssignment, quadTiebreakOrder)
-- [ ] Add sectionId field to Game interface
-- [ ] Build quads.ts engine module (generateQuadSections, sortPlayersForQuads, createFullQuads, createBottomSwissSection, generateQuadPairings, assignQuadColors, calculateQuadStandings, calculateSonnebornBerger, calculateDirectEncounter, validateQuadIntegrity)
-- [ ] Write comprehensive unit tests for quads engine (4-40 players)
-- [ ] Add "Quads" format option to TournamentWizard
-- [ ] Build host quad review/publish UI (section preview, manual drag-and-drop, publish pairings)
-- [ ] Build player-facing quads pairings and standings UI (section-based)
-- [ ] Implement Bottom Swiss fallback for remainder players
-- [ ] Integration testing and regression verification
+- [x] Extend TournamentConfig.format union to include "quads"
+- [x] Add quad-specific config fields (quadRatingSource, quadRemainderHandling, quadColorAssignment, quadTiebreakOrder)
+- [x] Add sectionId field to Game interface
+- [x] Build quads.ts engine module (generateQuadSections, sortPlayersForQuads, createFullQuads, createBottomSwissSection, generateQuadPairings, assignQuadColors, calculateQuadStandings, calculateSonnebornBerger, calculateDirectEncounter, validateQuadIntegrity)
+- [x] Write comprehensive unit tests for quads engine (4-40 players)
+- [x] Add "Quads" format option to TournamentWizard
+- [x] Build host quad review/publish UI (section preview, manual drag-and-drop, publish pairings)
+- [x] Build player-facing quads pairings and standings UI (section-based)
+- [x] Implement Bottom Swiss fallback for remainder players
+- [x] Integration testing and regression verification
 
 ## Mobile Responsiveness Fixes
 - [x] Replace h-screen with h-[100dvh] on ClubProfile, ClubDashboard, LeagueDashboard
 - [x] Add safe-area-inset-bottom to ClubDashboard and LeagueDashboard bottom navs
 - [x] Fix ClubProfile banner paddingLeft to be responsive (remove hardcoded 210px on mobile)
-- [ ] Increase content bottom padding on ClubDashboard and LeagueDashboard for safe area
-- [ ] Prevent horizontal overflow on mobile across all 3 pages
+- [x] Increase content bottom padding on ClubDashboard and LeagueDashboard for safe area
+- [x] Prevent horizontal overflow on mobile across all 3 pages
 
 ## Quad Prize Templates / Winner Recognition / Social Recap Assets (Jul 5 2026)
 - [x] SocialAssetGenerator: 8 built-in themes (Dark Forest, Midnight Blue, Royal Purple, Crimson, Gold, Slate, Light Clean, Neon)
