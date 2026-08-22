@@ -25,6 +25,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
@@ -1070,6 +1071,14 @@ function ModeSelect({
   onClose: () => void;
 }) {
   const [selectedMode, setSelectedMode] = useState<TournamentFormatMode | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   useEffect(() => {
     for (const preview of Object.values(FORMAT_PREVIEWS)) {
@@ -1088,6 +1097,11 @@ function ModeSelect({
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tournament-format-title"
+      tabIndex={-1}
       className="fixed inset-0 z-[200] flex flex-col overflow-y-auto"
       style={{
         background: isDark
@@ -1110,6 +1124,7 @@ function ModeSelect({
 
       {/* Close button — fixed position so it always floats above scrollable content */}
       <button
+        ref={closeButtonRef}
         onClick={onClose}
         className="fixed right-4 w-12 h-12 rounded-full flex items-center justify-center transition-colors"
         style={{
@@ -1139,6 +1154,7 @@ function ModeSelect({
         {/* Headline */}
         <div className="text-center">
           <h2
+            id="tournament-format-title"
             className="text-2xl sm:text-5xl font-black text-white leading-tight mb-2 sm:mb-3"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
@@ -1210,9 +1226,25 @@ function FormatPreview({
   onConfirm: () => void;
 }) {
   const preview = FORMAT_PREVIEWS[mode];
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const backButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose: onBack,
+    containerRef: dialogRef,
+    initialFocusRef: backButtonRef,
+  });
 
   return (
-    <div className="fixed inset-0 z-[200] overflow-y-auto bg-[#0b2514]" style={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}>
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tournament-format-preview-title"
+      tabIndex={-1}
+      className="fixed inset-0 z-[200] overflow-y-auto bg-[#0b2514]"
+      style={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-50"
@@ -1220,6 +1252,7 @@ function FormatPreview({
       />
       <div className="relative mx-auto flex min-h-full w-full max-w-4xl flex-col px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 sm:pb-12 sm:pt-8">
         <button
+          ref={backButtonRef}
           type="button"
           onClick={onBack}
           className="group inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7bdc91]"
@@ -1228,13 +1261,13 @@ function FormatPreview({
           Change format
         </button>
 
-        <main className="my-auto grid gap-5 py-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8 lg:py-12">
+        <div className="my-auto grid gap-5 py-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8 lg:py-12">
           <section className="overflow-hidden rounded-[22px] border border-white/10 bg-[#f5f0e6] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.32)] sm:rounded-[28px] sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-[4px] border border-[#2a5535] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#2a5535]">{preview.badge}</span>
               <span className="text-xs font-semibold tracking-wide text-[#2a5535]/50">FORMAT PREVIEW</span>
             </div>
-            <h2 className="mt-4 text-[34px] font-black leading-none tracking-[-0.05em] text-[#1a3a22] sm:text-[52px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <h2 id="tournament-format-preview-title" className="mt-4 text-[34px] font-black leading-none tracking-[-0.05em] text-[#1a3a22] sm:text-[52px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {preview.title}
             </h2>
             <p className="mt-3 max-w-[42ch] text-sm leading-relaxed text-[#2a5535]/68 sm:text-base">{preview.description}</p>
@@ -1265,7 +1298,7 @@ function FormatPreview({
               <p className="mt-3 text-center text-xs leading-relaxed text-white/45">You can change details in the next step.</p>
             </div>
           </section>
-        </main>
+        </div>
       </div>
     </div>
   );
@@ -4562,6 +4595,13 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   const { fireConfetti } = useConfetti();
   const [, navigate] = useLocation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const wizardDialogRef = useRef<HTMLDivElement>(null);
+  const returnToModeSelect = useCallback(() => setMode("select"), []);
+  useAccessibleOverlay({
+    open: open && mode !== "select",
+    onClose: returnToModeSelect,
+    containerRef: wizardDialogRef,
+  });
   useKeyboardScroll(scrollContainerRef, 24);
 
   // Owned clubs for the "Link to Club" dropdown
@@ -4804,13 +4844,6 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!open) return;
-      if (e.key === "Escape") {
-        if (mode === "select") {
-          if (previewMode) setPreviewMode(null);
-          else onClose();
-        }
-        else setMode("select");
-      }
       if (e.key === "Enter" && canAdvance && !(e.target instanceof HTMLTextAreaElement)) {
         handleNext();
       }
@@ -4895,6 +4928,11 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
   return createPortal(
     <div
+      ref={wizardDialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Create tournament configuration"
+      tabIndex={-1}
       className="fixed inset-0 z-[200] flex"
       style={{ background: isDark ? T.dBg : T.lBg, animation: "wizardFadeIn 0.3s ease both", overscrollBehavior: "contain", touchAction: "pan-y" }}
     >

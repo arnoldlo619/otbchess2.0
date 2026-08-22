@@ -37,6 +37,7 @@ import {
   FlaskConical,
   BookOpen,
   User,
+  X,
 } from "lucide-react";
 import { FeedIcon, ChessClockIcon } from "@/components/OtbIcons";
 import { Link, useLocation } from "wouter";
@@ -46,6 +47,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 import AuthModal from "@/components/AuthModal";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { useIsMobile } from "@/hooks/useMobile";
 
 import { authFetch } from "@/lib/apiFetch";
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -314,10 +317,21 @@ export function AvatarNavDropdown({
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [open, setOpen]   = useState(false);
+  const isMobile = useIsMobile();
+  const isGuest = !user || user.isGuest;
   const [location, navigateTo] = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
   const triggerRef        = useRef<HTMLButtonElement>(null);
   const avatarInputRef    = useRef<HTMLInputElement>(null);
+  const mobileSheetRef    = useRef<HTMLDivElement>(null);
+  const mobileCloseRef    = useRef<HTMLButtonElement>(null);
+  const closeMenu = useCallback(() => setOpen(false), []);
+  useAccessibleOverlay({
+    open: open && isMobile && !isGuest,
+    onClose: closeMenu,
+    containerRef: mobileSheetRef,
+    initialFocusRef: mobileCloseRef,
+  });
   const [avatarUploading, setAvatarUploading] = useState(false);
   // Portal position for sidebar variant — computed from trigger's bounding rect
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
@@ -416,6 +430,18 @@ export function AvatarNavDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  useEffect(() => {
+    if (!open || isMobile) return;
+    const handleDesktopEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeMenu();
+      window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+    };
+    document.addEventListener("keydown", handleDesktopEscape);
+    return () => document.removeEventListener("keydown", handleDesktopEscape);
+  }, [closeMenu, isMobile, open]);
+
   // Fetch rating history when dropdown opens (once per session)
   const fetchHistory = useCallback(async () => {
     if (historyLoaded || !user || user.isGuest) return;
@@ -467,8 +493,6 @@ export function AvatarNavDropdown({
   const hasSparkline = history.rapid.length >= 2 || history.blitz.length >= 2 || history.bullet.length >= 2;
 
   // On mobile, guests see the dedicated hamburger drawer instead of the avatar dropdown
-  const isGuest = !user || user.isGuest;
-
   // While the initial /api/auth/me check is in flight, show a neutral shimmer
   // so the nav doesn't flash the login button for already-authenticated users.
   if (authLoading) {
@@ -520,6 +544,7 @@ export function AvatarNavDropdown({
           ) : (
             /* Default pill trigger for guest */
             <button
+              ref={triggerRef}
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
@@ -729,6 +754,7 @@ export function AvatarNavDropdown({
           )}
           {/* Chevron — toggles dropdown */}
           <button
+            ref={triggerRef}
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
@@ -1307,6 +1333,7 @@ export function AvatarNavDropdown({
               />
               {/* Sheet */}
               <motion.div
+                ref={mobileSheetRef}
                 key="mobile-sheet"
                 initial={{ y: "100%" }}
                 animate={{ y: swipeDy }}
@@ -1316,6 +1343,10 @@ export function AvatarNavDropdown({
                   : { type: "spring", stiffness: 340, damping: 36 }
                 }
                 className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Account navigation"
+                tabIndex={-1}
                 style={{
                   background: isDark ? "oklch(0.15 0.06 145 / 0.98)" : "rgba(255,255,255,0.98)",
                   border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
@@ -1338,6 +1369,15 @@ export function AvatarNavDropdown({
                   style={{ background: isDark ? (swipeDy > 20 ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.18)") : (swipeDy > 20 ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.12)") }}
                 />
               </div>
+              <button
+                ref={mobileCloseRef}
+                type="button"
+                onClick={closeMenu}
+                aria-label="Close account navigation"
+                className={`absolute right-4 top-3 flex h-10 w-10 items-center justify-center rounded-xl ${isDark ? "bg-white/08 text-white/70" : "bg-black/05 text-[#436850]"}`}
+              >
+                <X className="h-4 w-4" />
+              </button>
 
               {/* User identity */}
               {user && !user.isGuest && (

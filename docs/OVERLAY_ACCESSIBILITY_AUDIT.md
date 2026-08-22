@@ -5,15 +5,15 @@
 
 ## Result
 
-The audit found **11 already compliant or invoker-only files** and **45 files that required modal or overlay classification work**. Shared stack-aware focus management now covers 40 of those files; the tiebreak explanation was correctly reclassified and fixed as a non-modal tooltip. Four complex files remain open.
+The audit found **11 already compliant or invoker-only files** and **45 files that required modal or overlay classification work**. Shared stack-aware focus management now covers all 44 files with true modal or drawer surfaces; the tiebreak explanation was correctly reclassified and fixed as a non-modal tooltip. The audited overlay backlog is complete.
 
 | Category | Count | Status |
 |---|---:|---|
 | Audited overlay-related files | 56 | Complete |
 | Already compliant/invoker-only | 11 | No change required |
-| Custom overlay files migrated | 40 | Complete |
+| Custom overlay files migrated | 44 | Complete |
 | Non-modal tooltip reclassified and corrected | 1 | Complete |
-| Remaining complex overlay files | 4 | Open |
+| Remaining overlay files | 0 | Complete |
 
 ## Principal overlays migrated
 
@@ -42,16 +42,18 @@ These surfaces use `client/src/hooks/useAccessibleOverlay.ts`, which is stack-aw
 
 `ArchivePasswordModal.tsx`, `InstallBanner.tsx`, `BroadcastConsole.tsx`, `BroadcastControl.tsx`, `ChessClock.tsx`, the remaining start confirmation in `Director.tsx`, the registration share sheet in `Join.tsx`, the mobile filter drawer in `MyClubs.tsx`, the stream sheet in `PlayerView.tsx`, and the quiz/PGN dialogs in `RepertoireBuilder.tsx`. `TiebreakTooltip.tsx` now uses `role="tooltip"` with `aria-describedby` rather than claiming modal-dialog semantics.
 
+## Complex multi-surface files completed
+
+`AvatarNavDropdown.tsx` now treats its mobile account surface as a modal sheet while retaining dismissible desktop popovers. `TournamentWizard.tsx` applies shared focus behavior to format selection, preview, and the main configuration workflow. `ClubDashboard.tsx` covers event creation/editing, confirmations, QR, transfer, battle, RSVP, member actions, and the mobile owner-tools drawer. `ClubProfile.tsx` covers create/edit/delete event, settings, and mobile navigation surfaces.
+
 ## Already compliant or invoker-only
 
 `AvatarCropModal.tsx`, `ManusDialog.tsx`, `ui/alert-dialog.tsx`, `ui/command.tsx`, `ui/dialog.tsx`, `ui/drawer.tsx`, `ui/sheet.tsx`, `ui/sidebar.tsx`, `Home.tsx`, `OpeningsAdmin.tsx`, and `VideoRecorder.tsx`.
 
 ## Remaining custom-overlay backlog
 
-The following files still require migration or a dedicated interaction audit before the global “No keyboard trap in any modal or drawer” checklist item can be closed:
+None. New custom overlays should use `useAccessibleOverlay` or the existing Radix dialog/sheet primitives and add regression coverage before release.
 
-`AvatarNavDropdown.tsx`, `TournamentWizard.tsx`, `ClubDashboard.tsx`, and `ClubProfile.tsx`.
-
-## Acceptance criteria for each remaining migration
+## Acceptance criteria for future overlays
 
 Each modal surface must expose dialog semantics and an accessible name, place initial focus inside itself, contain forward and reverse Tab navigation while open, dismiss with Escape when safe, restore focus to its opener, and retain a visible close or cancel route. Menus and non-modal popovers should use the corresponding accessible primitive rather than modal focus containment.

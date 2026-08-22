@@ -45,6 +45,10 @@ const migratedOverlays = [
   "client/src/pages/MyClubs.tsx",
   "client/src/pages/PlayerView.tsx",
   "client/src/pages/RepertoireBuilder.tsx",
+  "client/src/components/AvatarNavDropdown.tsx",
+  "client/src/components/TournamentWizard.tsx",
+  "client/src/pages/ClubDashboard.tsx",
+  "client/src/pages/ClubProfile.tsx",
 ];
 
 describe("principal custom overlay accessibility", () => {
@@ -94,5 +98,28 @@ describe("principal custom overlay accessibility", () => {
     expect(source).toContain('role="tooltip"');
     expect(source).toContain("aria-describedby={open ? tooltipId : undefined}");
     expect(source).not.toContain('aria-haspopup="dialog"');
+  });
+
+  it("covers every complex multi-surface file with the expected shared-hook count", () => {
+    const expectations = new Map<string, number>([
+      ["client/src/components/AvatarNavDropdown.tsx", 1],
+      ["client/src/components/TournamentWizard.tsx", 3],
+      ["client/src/pages/ClubDashboard.tsx", 10],
+      ["client/src/pages/ClubProfile.tsx", 5],
+    ]);
+
+    for (const [relativePath, minimumCount] of expectations) {
+      const source = readSource(relativePath);
+      expect(source.match(/useAccessibleOverlay\(\{/g)?.length ?? 0, relativePath).toBeGreaterThanOrEqual(minimumCount);
+    }
+  });
+
+  it("keeps non-modal account and club action menus dismissible with Escape", () => {
+    const avatarSource = readSource("client/src/components/AvatarNavDropdown.tsx");
+    const dashboardSource = readSource("client/src/pages/ClubDashboard.tsx");
+    expect(avatarSource).toContain('event.key !== "Escape"');
+    expect(avatarSource).toContain("triggerRef.current?.focus({ preventScroll: true })");
+    expect(dashboardSource).toContain('role="menu"');
+    expect(dashboardSource).toContain("data-member-menu-trigger");
   });
 });

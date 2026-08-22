@@ -7386,12 +7386,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Zero critical Axe violations
 - [ ] Zero serious Axe violations
 - [x] Principal-route Axe baseline: zero critical/serious violations on 9 core routes at desktop and mobile widths
-- [ ] No keyboard trap in any modal or drawer
+- [x] No keyboard trap in any modal or drawer
 - [x] Principal custom overlays: focus containment, Escape dismissal, and opener restoration
 - [x] Director operational overlays: shared focus containment, Escape dismissal, and opener restoration
 - [x] Participant/gameplay overlays: shared focus containment, Escape dismissal, and opener restoration
 - [x] Club creation/management overlays: shared focus containment, Escape dismissal, and opener restoration
 - [x] System and inline overlays: archive, install, broadcast, clock, sharing, filters, and repertoire
+- [x] Complex multi-surface overlays: account navigation, tournament wizard, club dashboard, and club profile
 - [x] All principal controls have accessible labels
 - [x] Focus order logical on all principal pages
 - [ ] Landmark regions on all pages (main, nav, header, footer)

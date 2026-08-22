@@ -10,12 +10,13 @@
  *   • Feed tab    — chronological activity stream
  */
 
-import React, {lazy, Suspense, useState, useEffect, useRef} from "react";
+import React, {lazy, Suspense, useState, useEffect, useRef, useCallback} from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import {
   getClub,
   getClubBySlug,
@@ -284,6 +285,7 @@ function RSVPButton({
   );
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -292,6 +294,18 @@ function RSVPButton({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setOpen(false);
+      window.requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open]);
 
   function choose(s: RSVPStatus) {
     upsertRSVP(eventId, clubId, userId, displayName, s, avatarUrl);
@@ -316,7 +330,11 @@ function RSVPButton({
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`${label} options`}
         className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all active:scale-95 ${bgClass}`}
       >
         {status === "going" && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -327,11 +345,14 @@ function RSVPButton({
 
       {open && (
         <div
+          role="menu"
+          aria-label="RSVP status"
           className="absolute right-0 top-full mt-1.5 z-50 rounded-2xl overflow-hidden shadow-2xl border border-white/10 min-w-[160px]"
           style={{ background: "oklch(0.16 0.04 240)" }}
         >
           {(["going", "maybe", "not_going"] as RSVPStatus[]).map((s) => (
             <button
+              role="menuitem"
               key={s}
               onClick={() => choose(s)}
               className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold transition-colors text-left ${
@@ -414,6 +435,16 @@ function EventCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const deleteDialogRef = useRef<HTMLDivElement>(null);
+  const deleteCancelRef = useRef<HTMLButtonElement>(null);
+  const closeDeleteConfirm = useCallback(() => setShowDeleteConfirm(false), []);
+  useAccessibleOverlay({
+    open: showDeleteConfirm,
+    onClose: closeDeleteConfirm,
+    containerRef: deleteDialogRef,
+    initialFocusRef: deleteCancelRef,
+  });
   const upcoming = isUpcoming(event);
   const counts = countRSVPs(event.id);
 
@@ -424,6 +455,18 @@ function EventCard({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleMenuEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setMenuOpen(false);
+      window.requestAnimationFrame(() => menuTriggerRef.current?.focus({ preventScroll: true }));
+    };
+    document.addEventListener("keydown", handleMenuEscape);
+    return () => document.removeEventListener("keydown", handleMenuEscape);
+  }, [menuOpen]);
 
   // Sync RSVPs from server on mount so counts are cross-device accurate
   useEffect(() => {
@@ -485,19 +528,25 @@ function EventCard({
         {isOwner && (
           <div className="absolute top-4 right-4" ref={menuRef}>
             <button
+              ref={menuTriggerRef}
               onClick={() => setMenuOpen((v) => !v)}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 hover:bg-white/20"
               style={{ background: "rgba(0,0,0,0.45)" }}
               aria-label="Event options"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
             >
               <MoreVertical className="w-4 h-4 text-white/80" />
             </button>
             {menuOpen && (
               <div
+                role="menu"
+                aria-label={`Options for ${event.title}`}
                 className="absolute right-0 top-full mt-1.5 z-50 rounded-2xl overflow-hidden shadow-2xl border border-white/10 min-w-[160px]"
                 style={{ background: "oklch(0.16 0.04 240)" }}
               >
                 <button
+                  role="menuitem"
                   onClick={() => { setMenuOpen(false); setShowEditModal(true); }}
                   className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/08 hover:text-white transition-colors text-left"
                 >
@@ -505,6 +554,7 @@ function EventCard({
                   Edit Event
                 </button>
                 <button
+                  role="menuitem"
                   onClick={() => { setMenuOpen(false); setShowDeleteConfirm(true); }}
                   className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors text-left"
                 >
@@ -690,8 +740,13 @@ function EventCard({
     {/* Delete confirmation dialog */}
     {showDeleteConfirm && (
       <div className="modal-overlay z-[200]">
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeDeleteConfirm} />
         <div
+          ref={deleteDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`delete-event-${event.id}-title`}
+          tabIndex={-1}
           className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4"
           style={{ background: "oklch(0.16 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
         >
@@ -700,7 +755,7 @@ function EventCard({
               <AlertTriangle className="w-5 h-5 text-red-400" />
             </div>
             <div>
-              <h3 className="text-white font-bold text-base">Delete Event</h3>
+              <h3 id={`delete-event-${event.id}-title`} className="text-white font-bold text-base">Delete Event</h3>
               <p className="text-white/40 text-xs mt-0.5">This cannot be undone</p>
             </div>
           </div>
@@ -709,7 +764,8 @@ function EventCard({
           </p>
           <div className="flex gap-3 pt-1">
             <button
-              onClick={() => setShowDeleteConfirm(false)}
+              ref={deleteCancelRef}
+              onClick={closeDeleteConfirm}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white transition-colors"
               style={{ background: "rgba(255,255,255,0.07)" }}
             >
@@ -802,6 +858,19 @@ function CreateEventModal({
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [accentColor, setAccentColor] = useState(clubAccent ?? "#4CAF50");
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+  });
+  useEffect(() => {
+    if (step !== "details") return;
+    window.requestAnimationFrame(() => titleInputRef.current?.focus({ preventScroll: true }));
+  }, [step]);
   const previewValid = coverImageUrl.startsWith("http");
 
   function submit(e: React.FormEvent) {
@@ -838,6 +907,11 @@ function CreateEventModal({
   if (step === "pick") {
     return (
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-club-event-title"
+        tabIndex={-1}
         className="fixed inset-0 z-[200] overflow-y-auto"
         style={{
           background: "linear-gradient(160deg, oklch(0.13 0.06 160) 0%, oklch(0.09 0.04 200) 100%)",
@@ -845,7 +919,9 @@ function CreateEventModal({
       >
         {/* Close button — fixed so it stays visible while scrolling */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
+          aria-label="Close create event"
           className="fixed top-5 right-5 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
           style={{ background: "rgba(255,255,255,0.08)" }}
           onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
@@ -866,6 +942,7 @@ function CreateEventModal({
                 style={{ height: 32, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
               />
               <h2
+                id="create-club-event-title"
                 className="text-3xl sm:text-4xl font-black text-white leading-tight"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
@@ -1082,6 +1159,11 @@ function CreateEventModal({
   // ── Step 2: Standard Night details form ───────────────────────────────────
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-club-event-details-title"
+      tabIndex={-1}
       className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
       style={{
         background: "linear-gradient(160deg, oklch(0.13 0.06 160) 0%, oklch(0.09 0.04 200) 100%)",
@@ -1089,7 +1171,9 @@ function CreateEventModal({
     >
       {/* Close */}
       <button
+        ref={closeButtonRef}
         onClick={onClose}
+        aria-label="Close create event"
         className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
         style={{ background: "rgba(255,255,255,0.08)" }}
         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
@@ -1113,7 +1197,7 @@ function CreateEventModal({
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: accentColor }}>
             <Calendar className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-2xl font-black text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h2>
+          <h2 id="create-club-event-details-title" className="text-2xl font-black text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h2>
           <p className="text-white/50 text-sm">Fill in the details for your club event</p>
         </div>
 
@@ -1130,7 +1214,7 @@ function CreateEventModal({
           {/* Title */}
           <div>
             <label className={labelCls}>Event Title *</label>
-            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} aria-label="Thursday Night Blitz" />
+            <input ref={titleInputRef} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} aria-label="Event title" />
           </div>
 
           {/* Date + Start + End */}
@@ -1241,6 +1325,14 @@ function EditEventModal({
   const [coverImageUrl, setCoverImageUrl] = useState(event.coverImageUrl ?? "");
   const [accentColor, setAccentColor] = useState(event.accentColor ?? clubAccent ?? "#4CAF50");
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: dialogRef,
+    initialFocusRef: titleInputRef,
+  });
 
   const previewValid = coverImageUrl.startsWith("http");
 
@@ -1273,6 +1365,11 @@ function EditEventModal({
     <div className="modal-overlay z-[200]">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-club-event-title"
+        tabIndex={-1}
         className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
         style={{ background: "oklch(0.14 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
       >
@@ -1285,9 +1382,9 @@ function EditEventModal({
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: accentColor }}>
               <Pencil className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-white font-bold text-lg">Edit Event</h2>
+            <h2 id="edit-club-event-title" className="text-white font-bold text-lg">Edit Event</h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/08 hover:bg-white/15 transition-colors">
+          <button onClick={onClose} aria-label="Close edit event" className="w-8 h-8 rounded-full flex items-center justify-center bg-white/08 hover:bg-white/15 transition-colors">
             <X className="w-4 h-4 text-white/60" />
           </button>
         </div>
@@ -1303,7 +1400,7 @@ function EditEventModal({
 
           <div>
             <label className={labelCls}>Event Title *</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} aria-label="Thursday Night Blitz" />
+            <input ref={titleInputRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} aria-label="Event title" />
           </div>
 
           <div>
@@ -2556,6 +2653,57 @@ export default function ClubDashboard() {
   const [pendingInvites, setPendingInvites] = useState<Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>>([]);
   const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
   const [showInvitePanel, setShowInvitePanel] = useState(false);
+  const joinQRDialogRef = useRef<HTMLDivElement>(null);
+  const deleteMeetupDialogRef = useRef<HTMLDivElement>(null);
+  const transferDialogRef = useRef<HTMLDivElement>(null);
+  const recordBattleDialogRef = useRef<HTMLDivElement>(null);
+  const removeMemberDialogRef = useRef<HTMLDivElement>(null);
+  const rsvpDialogRef = useRef<HTMLDivElement>(null);
+  const mobileMoreDialogRef = useRef<HTMLDivElement>(null);
+  const closeJoinQR = useCallback(() => setShowJoinQRModal(false), []);
+  const closeDeleteMeetup = useCallback(() => setDeleteMeetupId(null), []);
+  const closeTransfer = useCallback(() => {
+    setShowTransferModal(false);
+    setTransferConfirm(false);
+    setTransferTargetId(null);
+  }, []);
+  const closeRecordBattle = useCallback(() => setShowRecordBattle(false), []);
+  const closeRemoveMember = useCallback(() => {
+    setRemoveMemberId(null);
+    setRemoveMemberName("");
+  }, []);
+  const closeRsvpPanel = useCallback(() => setRsvpPanelEventId(null), []);
+  useAccessibleOverlay({ open: showJoinQRModal, onClose: closeJoinQR, containerRef: joinQRDialogRef });
+  useAccessibleOverlay({ open: Boolean(deleteMeetupId), onClose: closeDeleteMeetup, containerRef: deleteMeetupDialogRef });
+  useAccessibleOverlay({ open: showTransferModal, onClose: closeTransfer, containerRef: transferDialogRef });
+  useAccessibleOverlay({ open: showRecordBattle, onClose: closeRecordBattle, containerRef: recordBattleDialogRef });
+  useAccessibleOverlay({ open: Boolean(removeMemberId), onClose: closeRemoveMember, containerRef: removeMemberDialogRef });
+  useAccessibleOverlay({ open: Boolean(rsvpPanelEventId), onClose: closeRsvpPanel, containerRef: rsvpDialogRef });
+  useAccessibleOverlay({ open: mobileMoreOpen, onClose: closeMoreDrawer, containerRef: mobileMoreDialogRef });
+  useEffect(() => {
+    if (!memberMenuOpenId) return;
+    const openId = memberMenuOpenId;
+    const handlePointerDown = (event: MouseEvent) => {
+      const menuRoot = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-member-menu-root]");
+      if (menuRoot?.dataset.memberMenuRoot !== openId) setMemberMenuOpenId(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setMemberMenuOpenId(null);
+      window.requestAnimationFrame(() => {
+        const trigger = Array.from(document.querySelectorAll<HTMLElement>("[data-member-menu-trigger]"))
+          .find((element) => element.dataset.memberMenuTrigger === openId);
+        trigger?.focus({ preventScroll: true });
+      });
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [memberMenuOpenId]);
 
   // League state
   const [clubLeagues, setClubLeagues] = useState<Array<{
@@ -3706,14 +3854,19 @@ export default function ClubDashboard() {
             }
             return (
               <div
+                ref={joinQRDialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="club-join-qr-title"
+                tabIndex={-1}
                 className="fixed inset-0 z-[100] flex flex-col"
                 style={{ background: "oklch(0.14 0.07 145)" }}
-                onClick={() => setShowJoinQRModal(false)}
+                onClick={closeJoinQR}
               >
                 {/* Sticky top bar */}
                 <div className="flex-shrink-0 flex items-center justify-end px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
                   <button
-                    onClick={() => setShowJoinQRModal(false)}
+                    onClick={closeJoinQR}
                     aria-label="Close QR screen"
                     className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-90 touch-manipulation"
                   >
@@ -3729,6 +3882,7 @@ export default function ClubDashboard() {
                     <div>
                       <p className="text-white/40 text-sm font-semibold uppercase tracking-[0.2em] mb-1">Join the club</p>
                       <h1
+                        id="club-join-qr-title"
                         className="text-white text-2xl sm:text-4xl font-bold leading-tight"
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
                       >
@@ -4470,8 +4624,13 @@ export default function ClubDashboard() {
               const meetupToDelete = events.find(e => e.id === deleteMeetupId);
               return (
                 <div className="modal-overlay z-[200]">
-                  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setDeleteMeetupId(null)} />
+                  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeDeleteMeetup} />
                   <div
+                    ref={deleteMeetupDialogRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-meetup-title"
+                    tabIndex={-1}
                     className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4"
                     style={{ background: "oklch(0.16 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
                   >
@@ -4480,7 +4639,7 @@ export default function ClubDashboard() {
                         <AlertTriangle className="w-5 h-5 text-red-400" />
                       </div>
                       <div>
-                        <h3 className="text-white font-bold text-base">Delete Meetup</h3>
+                        <h3 id="delete-meetup-title" className="text-white font-bold text-base">Delete Meetup</h3>
                         <p className="text-white/40 text-xs mt-0.5">This cannot be undone</p>
                       </div>
                     </div>
@@ -4491,7 +4650,7 @@ export default function ClubDashboard() {
                     </p>
                     <div className="flex gap-3 pt-1">
                       <button
-                        onClick={() => setDeleteMeetupId(null)}
+                        onClick={closeDeleteMeetup}
                         className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white transition-colors"
                         style={{ background: "rgba(255,255,255,0.07)" }}
                       >
@@ -5145,9 +5304,13 @@ export default function ClubDashboard() {
                           )}
                           {/* ── Owner/Director member management menu ── */}
                           {isClubOwner && m.userId !== user?.id && m.role !== "owner" && (
-                            <div className="relative">
+                            <div className="relative" data-member-menu-root={m.userId}>
                               <button
                                 onClick={() => setMemberMenuOpenId(memberMenuOpenId === m.userId ? null : m.userId)}
+                                data-member-menu-trigger={m.userId}
+                                aria-haspopup="menu"
+                                aria-expanded={memberMenuOpenId === m.userId}
+                                aria-label={`Actions for ${m.displayName}`}
                                 className="flex items-center justify-center rounded-xl transition-colors hover:bg-white/10 active:scale-95"
                                 style={{ color: "rgba(255,255,255,0.35)", width: "44px", height: "44px", touchAction: "manipulation" }}
                                 title="Member actions"
@@ -5156,11 +5319,14 @@ export default function ClubDashboard() {
                               </button>
                               {memberMenuOpenId === m.userId && (
                                 <div
+                                  role="menu"
+                                  aria-label={`Actions for ${m.displayName}`}
                                   className="absolute right-0 top-full mt-1 w-44 rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden"
                                   style={{ background: "oklch(0.18 0.05 145)" }}
                                 >
                                   {m.role === "member" && (
                                     <button
+                                      role="menuitem"
                                       onClick={() => handleChangeRole(m.userId, "director")}
                                       disabled={changingRoleId === m.userId}
                                       className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/08 transition-colors"
@@ -5171,6 +5337,7 @@ export default function ClubDashboard() {
                                   )}
                                   {m.role === "director" && (
                                     <button
+                                      role="menuitem"
                                       onClick={() => handleChangeRole(m.userId, "member")}
                                       disabled={changingRoleId === m.userId}
                                       className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/08 transition-colors"
@@ -5181,6 +5348,7 @@ export default function ClubDashboard() {
                                   )}
                                   <div className="h-px bg-white/08 mx-2" />
                                   <button
+                                    role="menuitem"
                                     onClick={() => { setRemoveMemberId(m.userId); setRemoveMemberName(m.displayName); setMemberMenuOpenId(null); }}
                                     className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
                                   >
@@ -5244,10 +5412,15 @@ export default function ClubDashboard() {
             {/* Backdrop */}
             <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => { setShowTransferModal(false); setTransferConfirm(false); setTransferTargetId(null); }}
+              onClick={closeTransfer}
             />
             {/* Modal */}
             <div
+              ref={transferDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="transfer-club-ownership-title"
+              tabIndex={-1}
               className="relative w-full max-w-md rounded-3xl border border-white/10 overflow-hidden shadow-2xl"
               style={{ background: "oklch(0.13 0.05 145)" }}
             >
@@ -5258,10 +5431,11 @@ export default function ClubDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Crown className="w-4 h-4 text-amber-400" />
-                  <span className="text-white font-bold text-sm">Transfer Ownership</span>
+                  <span id="transfer-club-ownership-title" className="text-white font-bold text-sm">Transfer Ownership</span>
                 </div>
                 <button
-                  onClick={() => { setShowTransferModal(false); setTransferConfirm(false); setTransferTargetId(null); }}
+                  onClick={closeTransfer}
+                  aria-label="Close transfer ownership"
                   className="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -7478,14 +7652,22 @@ export default function ClubDashboard() {
       {/* ── Record Battle Modal ─────────────────────────────────────────── */}
       {showRecordBattle && club && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
-          <div className="w-full max-w-md rounded-2xl border border-white/10 p-6 space-y-5" style={{ background: "oklch(0.14 0.05 145)" }}>
+          <div
+            ref={recordBattleDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="record-club-battle-title"
+            tabIndex={-1}
+            className="w-full max-w-md rounded-2xl border border-white/10 p-6 space-y-5"
+            style={{ background: "oklch(0.14 0.05 145)" }}
+          >
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Swords className="w-5 h-5" style={{ color: accent }} />
-                <h2 className="text-white font-bold text-base">Record Battle</h2>
+                <h2 id="record-club-battle-title" className="text-white font-bold text-base">Record Battle</h2>
               </div>
-              <button onClick={() => setShowRecordBattle(false)} className="text-white/30 hover:text-white/70 transition">
+              <button onClick={closeRecordBattle} aria-label="Close record battle" className="text-white/30 hover:text-white/70 transition">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -7494,7 +7676,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">White</label>
               <select
-                aria-label="RbWhite"
+                aria-label="White player"
                 value={rbWhite}
                 onChange={(e) => { setRbWhite(e.target.value); if (e.target.value === rbBlack) setRbBlack(""); }}
                 className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
@@ -7511,7 +7693,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Black</label>
               <select
-                aria-label="RbBlack"
+                aria-label="Black player"
                 value={rbBlack}
                 onChange={(e) => setRbBlack(e.target.value)}
                 className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
@@ -7555,7 +7737,7 @@ export default function ClubDashboard() {
             <div>
               <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Date</label>
               <input
-                aria-label="RbDate"
+                aria-label="Battle date"
                 type="date"
                 value={rbDate}
                 onChange={(e) => setRbDate(e.target.value)}
@@ -7650,13 +7832,21 @@ export default function ClubDashboard() {
       {/* ── Remove Member Confirm Dialog ─────────────────────────────────── */}
       {removeMemberId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-          <div className="w-full max-w-sm rounded-3xl border border-white/10 p-6 space-y-4" style={{ background: "oklch(0.18 0.05 145)" }}>
+          <div
+            ref={removeMemberDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-club-member-title"
+            tabIndex={-1}
+            className="w-full max-w-sm rounded-3xl border border-white/10 p-6 space-y-4"
+            style={{ background: "oklch(0.18 0.05 145)" }}
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
                 <UserMinus className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-white font-bold">Remove Member</p>
+                <p id="remove-club-member-title" className="text-white font-bold">Remove Member</p>
                 <p className="text-white/40 text-xs">This action cannot be undone</p>
               </div>
             </div>
@@ -7665,7 +7855,7 @@ export default function ClubDashboard() {
             </p>
             <div className="flex gap-2 pt-1">
               <button
-                onClick={() => { setRemoveMemberId(null); setRemoveMemberName(""); }}
+                onClick={closeRemoveMember}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/15 text-white/60 hover:text-white transition-colors"
               >
                 Cancel
@@ -7686,13 +7876,21 @@ export default function ClubDashboard() {
         const panelEvent = events.find(e => e.id === rsvpPanelEventId);
         return (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-            <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col max-h-[90vh]" style={{ background: "oklch(0.18 0.05 145)" }}>
+            <div
+              ref={rsvpDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="club-rsvp-panel-title"
+              tabIndex={-1}
+              className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col max-h-[90vh]"
+              style={{ background: "oklch(0.18 0.05 145)" }}
+            >
               <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/08">
                 <div>
-                  <p className="text-white font-bold">{panelEvent?.title ?? "Event"}</p>
+                  <p id="club-rsvp-panel-title" className="text-white font-bold">{panelEvent?.title ?? "Event"}</p>
                   <p className="text-white/40 text-xs">{eventRsvpList.length} RSVPs · {eventCheckinList.length} Checked In</p>
                 </div>
-                <button onClick={() => setRsvpPanelEventId(null)} className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+                <button onClick={closeRsvpPanel} aria-label="Close RSVP management" className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -7807,6 +8005,11 @@ export default function ClubDashboard() {
           />
           {/* Drawer — slides up from bottom */}
           <div
+            ref={mobileMoreDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-owner-tools-title"
+            tabIndex={-1}
             className="lg:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden"
             style={{
               background: isDark ? "oklch(0.18 0.06 145 / 0.98)" : "rgba(12,26,16,0.98)",
@@ -7833,6 +8036,7 @@ export default function ClubDashboard() {
             </div>
             {/* Section label */}
             <p
+              id="club-owner-tools-title"
               className="text-[10px] font-bold uppercase tracking-widest text-center mb-3"
               style={{
                 color: "oklch(0.48 0.10 145)",

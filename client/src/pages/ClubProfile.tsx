@@ -7,12 +7,13 @@
  *   - Members roster with roles and stats
  *   - Tournament history with status badges
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import {
   getClub,
   getClubBySlug,
@@ -1002,6 +1003,26 @@ export default function ClubProfile() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingEvent, setDeletingEvent] = useState(false);
+  const createEventDialogRef = useRef<HTMLDivElement>(null);
+  const createEventTitleRef = useRef<HTMLInputElement>(null);
+  const settingsDialogRef = useRef<HTMLDivElement>(null);
+  const settingsCloseRef = useRef<HTMLButtonElement>(null);
+  const editEventDialogRef = useRef<HTMLDivElement>(null);
+  const editEventTitleRef = useRef<HTMLInputElement>(null);
+  const deleteEventDialogRef = useRef<HTMLDivElement>(null);
+  const deleteEventCancelRef = useRef<HTMLButtonElement>(null);
+  const navDialogRef = useRef<HTMLDivElement>(null);
+  const navCloseRef = useRef<HTMLButtonElement>(null);
+  const closeCreateEvent = useCallback(() => setShowCreateEvent(false), []);
+  const closeSettings = useCallback(() => setShowSettings(false), []);
+  const closeEditEvent = useCallback(() => setEditingEvent(null), []);
+  const closeDeleteEvent = useCallback(() => setConfirmDeleteId(null), []);
+  const closeNavMenu = useCallback(() => setShowNavMenu(false), []);
+  useAccessibleOverlay({ open: showCreateEvent, onClose: closeCreateEvent, containerRef: createEventDialogRef, initialFocusRef: createEventTitleRef });
+  useAccessibleOverlay({ open: showSettings && Boolean(club), onClose: closeSettings, containerRef: settingsDialogRef, initialFocusRef: settingsCloseRef });
+  useAccessibleOverlay({ open: Boolean(editingEvent), onClose: closeEditEvent, containerRef: editEventDialogRef, initialFocusRef: editEventTitleRef });
+  useAccessibleOverlay({ open: Boolean(confirmDeleteId), onClose: closeDeleteEvent, containerRef: deleteEventDialogRef, initialFocusRef: deleteEventCancelRef });
+  useAccessibleOverlay({ open: showNavMenu, onClose: closeNavMenu, containerRef: navDialogRef, initialFocusRef: navCloseRef });
   // RSVP hub state
   const [rsvpTick, setRsvpTick] = useState(0); // bumped after each RSVP toggle to force re-render
   const [expandedRsvpEventId, setExpandedRsvpEventId] = useState<string | null>(null); // which event's attendee drawer is open
@@ -2800,15 +2821,20 @@ export default function ClubProfile() {
               <div
                 className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
                 style={{ background: "rgba(0,0,0,0.6)" }}
-                onClick={() => setShowCreateEvent(false)}
+                onClick={closeCreateEvent}
               >
                 <div
+                  ref={createEventDialogRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="club-create-event-title"
+                  tabIndex={-1}
                   className={`w-full max-w-sm rounded-3xl border ${cardBorder} ${card} p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>New Event</h2>
-                    <button onClick={() => setShowCreateEvent(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
+                    <h2 id="club-create-event-title" className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>New Event</h2>
+                    <button onClick={closeCreateEvent} aria-label="Close create event" className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}>
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -2862,6 +2888,7 @@ export default function ClubProfile() {
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Title *</label>
                       <input
+                        ref={createEventTitleRef}
                         aria-label="Event Title"
                         type="text"
                         value={eventForm.title}
@@ -3700,22 +3727,30 @@ export default function ClubProfile() {
         <div
           className="modal-overlay z-50"
           style={{ background: "rgba(0,0,0,0.6)" }}
-          onClick={() => setShowSettings(false)}
+          onClick={closeSettings}
         >
           <div
+            ref={settingsDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-settings-title"
+            tabIndex={-1}
             className={`w-full max-w-sm rounded-3xl border ${cardBorder} ${card} p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <h2
+                id="club-settings-title"
                 className={`text-base font-bold ${textMain}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Club Settings
               </h2>
               <button
-                onClick={() => setShowSettings(false)}
+                ref={settingsCloseRef}
+                onClick={closeSettings}
+                aria-label="Close club settings"
                 className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-[#436850] hover:text-[#12372A] hover:bg-[#ADBC9F]/50"}`}
               >
                 <X className="w-4 h-4" />
@@ -4158,10 +4193,17 @@ export default function ClubProfile() {
       {/* ── Edit Event Modal ────────────────────────────────────────────── */}
       {editingEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-[#F0F5E8]" }`}>
+          <div
+            ref={editEventDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-edit-event-title"
+            tabIndex={-1}
+            className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-[#F0F5E8]" }`}
+          >
             <div className="flex items-center justify-between mb-5">
-              <h2 className={`text-lg font-bold ${textMain}`}>Edit Event</h2>
-              <button onClick={() => setEditingEvent(null)} className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/8 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"}`}>
+              <h2 id="club-edit-event-title" className={`text-lg font-bold ${textMain}`}>Edit Event</h2>
+              <button onClick={closeEditEvent} aria-label="Close edit event" className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/8 text-white/50" : "hover:bg-[#ADBC9F]/50 text-[#436850]"}`}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -4215,6 +4257,7 @@ export default function ClubProfile() {
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Event Title *</label>
                 <input
+                  ref={editEventTitleRef}
                   aria-label="Edit Event Title"
                   value={editForm.title}
                   onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
@@ -4384,20 +4427,28 @@ export default function ClubProfile() {
       {/* ── Delete Event Confirmation ────────────────────────────────────── */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
-          <div className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-[#F0F5E8]" }`}>
+          <div
+            ref={deleteEventDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-delete-event-title"
+            tabIndex={-1}
+            className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-[#F0F5E8]" }`}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ isDark ? "bg-red-500/15" : "bg-red-50" }`}>
                 <Trash2 className="w-5 h-5 text-red-500" />
               </div>
               <div>
-                <h2 className={`text-base font-bold ${textMain}`}>Delete Event</h2>
+                <h2 id="club-delete-event-title" className={`text-base font-bold ${textMain}`}>Delete Event</h2>
                 <p className={`text-xs ${textMuted}`}>This action cannot be undone.</p>
               </div>
             </div>
             <p className={`text-sm ${textMuted} mb-6`}>Are you sure you want to delete this event? All RSVPs and comments will also be removed.</p>
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmDeleteId(null)}
+                ref={deleteEventCancelRef}
+                onClick={closeDeleteEvent}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                   isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
                 }`}
@@ -4530,12 +4581,17 @@ export default function ClubProfile() {
       {showNavMenu && (
         <div
           className="lg:hidden fixed inset-0 z-50"
-          onClick={() => setShowNavMenu(false)}
+          onClick={closeNavMenu}
         >
           {/* Backdrop */}
           <div className="absolute inset-0" style={{ background: "oklch(0.05 0.02 145 / 0.75)", backdropFilter: "blur(4px)" }} />
           {/* Sheet */}
           <div
+            ref={navDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-mobile-nav-title"
+            tabIndex={-1}
             className="absolute bottom-0 left-0 right-0 rounded-t-3xl px-4 pt-3 pb-safe"
             style={{
               background: isDark ? "oklch(0.14 0.05 145)" : "oklch(0.97 0.02 145)",
@@ -4555,13 +4611,16 @@ export default function ClubProfile() {
             {/* Header */}
             <div className="flex items-center justify-between mb-4 px-1">
               <p
+                id="club-mobile-nav-title"
                 className="text-xs font-black uppercase tracking-[0.15em]"
                 style={{ color: isDark ? "oklch(0.45 0.08 145)" : "oklch(0.44 0.08 145)" }}
               >
                 Navigate to
               </p>
               <button
-                onClick={() => setShowNavMenu(false)}
+                ref={navCloseRef}
+                onClick={closeNavMenu}
+                aria-label="Close club navigation"
                 className="w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
                 style={{ background: isDark ? "oklch(0.22 0.06 145)" : "oklch(0.88 0.04 145)" }}
               >

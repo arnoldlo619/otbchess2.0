@@ -124,3 +124,19 @@ test("create-club gate contains focus, closes with Escape, and restores its Club
   await expect(dialog).toBeHidden();
   await expect(opener).toBeFocused();
 });
+
+test("tournament format wizard contains focus, closes with Escape, and restores its landing opener", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const opener = page.getByRole("button", { name: "Host Tournament", exact: true }).first();
+  await opener.focus();
+  await opener.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Create a Tournament" });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close wizard" })).toBeFocused();
+  await expectFocusContainment(dialog);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});
