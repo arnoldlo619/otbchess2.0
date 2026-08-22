@@ -1002,6 +1002,7 @@ function PlayerPerformanceCard({
   date,
   totalRounds,
   totalPlayers,
+  sectionName,
   isDark,
 }: {
   player: Player;
@@ -1013,6 +1014,7 @@ function PlayerPerformanceCard({
   date: string;
   totalRounds: number;
   totalPlayers: number;
+  sectionName?: string;
   isDark: boolean;
 }) {
   const standingRow = standings.find((r) => r.playerId === player.id);
@@ -1042,8 +1044,8 @@ function PlayerPerformanceCard({
   const getPerformanceLabel = () => {
     if (!standingRow) return null;
     const pct = standingRow.points / totalRounds;
-    if (rank === 1) return { text: "Champion", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" };
-    if (rank <= 3) return { text: "Podium Finish", color: "text-amber-600 bg-amber-500/08 border-amber-500/15" };
+    if (rank === 1) return { text: sectionName ? `${sectionName} Champion` : "Champion", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" };
+    if (rank <= 3) return { text: sectionName ? `${sectionName} Podium` : "Podium Finish", color: "text-amber-600 bg-amber-500/08 border-amber-500/15" };
     if (pct >= 0.75) return { text: "Strong Performance", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" };
     if (pct >= 0.5) return { text: "Solid Result", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" };
     return { text: "Well Played", color: "text-[#436850] bg-[#436850]/10 border-[#436850]/20" };
@@ -1178,6 +1180,10 @@ function PersonalRecap({
   onUnfollow: () => void;
   isDark: boolean;
 }) {
+  const playerSection = data.format === "quads"
+    ? data.quadSections?.find((section) => section.playerIds.includes(player.id))
+    : undefined;
+
   return (
     <div className="space-y-4">
       {/* Recap header */}
@@ -1220,7 +1226,8 @@ function PersonalRecap({
         venue={data.venue}
         date={data.date}
         totalRounds={data.totalRounds}
-        totalPlayers={data.players.length}
+        totalPlayers={playerSection?.playerIds.length ?? data.players.length}
+        sectionName={playerSection?.name}
         isDark={isDark}
       />
     </div>
@@ -1585,8 +1592,8 @@ export default function PublicTournament() {
   );
 
     // Standings are precomputed server-side — no client computation needed
-  const standings = data?.standings ?? [];
-  const quadSections = data?.quadSections ?? [];
+  const standings = useMemo(() => data?.standings ?? [], [data?.standings]);
+  const quadSections = useMemo(() => data?.quadSections ?? [], [data?.quadSections]);
   const isQuads = data?.format === "quads" && quadSections.length > 0;
   const [activeQuadSection, setActiveQuadSection] = useState<string>("all");
 
@@ -1600,6 +1607,21 @@ export default function PublicTournament() {
       .filter(r => playerIdSet.has(r.playerId))
       .map((r, i) => ({ ...r, rank: i + 1 }));
   }, [isQuads, activeQuadSection, standings, quadSections]);
+
+  const getPlayerSectionStandings = useCallback((playerId: string) => {
+    if (!isQuads) return standings;
+    const playerSection = quadSections.find((section) => section.playerIds.includes(playerId));
+    if (!playerSection) return standings;
+    const playerIdSet = new Set(playerSection.playerIds);
+    return standings
+      .filter((row) => playerIdSet.has(row.playerId))
+      .sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if ((b.sonnebornBerger ?? 0) !== (a.sonnebornBerger ?? 0)) return (b.sonnebornBerger ?? 0) - (a.sonnebornBerger ?? 0);
+        return b.elo - a.elo;
+      })
+      .map((row, index) => ({ ...row, rank: index + 1 }));
+  }, [isQuads, quadSections, standings]);
 
   const followedPlayer = useMemo(
     () => (followedPlayerId && data ? data.players.find((p) => p.id === followedPlayerId) ?? null : null),
@@ -1718,16 +1740,7 @@ export default function PublicTournament() {
             {isCompleted ? (
               <PersonalRecap
                 player={followedPlayer}
-                standings={(() => {
-                  // For Quads: scope standings to the player's section for accurate rank/totalPlayers
-                  if (!isQuads) return standings;
-                  const playerSection = quadSections.find(s => s.playerIds.includes(followedPlayer.id));
-                  if (!playerSection) return standings;
-                  const sectionSet = new Set(playerSection.playerIds);
-                  return standings
-                    .filter(r => sectionSet.has(r.playerId))
-                    .map((r, i) => ({ ...r, rank: i + 1 }));
-                })()}
+                standings={getPlayerSectionStandings(followedPlayer.id)}
                 rounds={data.rounds}
                 players={data.players}
                 data={data}
@@ -1737,7 +1750,7 @@ export default function PublicTournament() {
             ) : (
               <FollowedPlayerCard
                 player={followedPlayer}
-                standings={standings}
+                standings={getPlayerSectionStandings(followedPlayer.id)}
                 rounds={data.rounds}
                 currentRound={data.currentRound}
                 players={data.players}

@@ -21,7 +21,7 @@ import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDirectorState } from "@/lib/directorState";
-import type { QuadSection } from "@/lib/quads";
+import { calculateQuadStandings, getSectionWinners, type QuadSection } from "@/lib/quads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
@@ -3059,6 +3059,82 @@ export default function Director() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allResultsIn, state.currentRound, state.totalRounds, state.format, state.status]);
+
+  // ── Auto-end Quads after every section's final result is entered ───────────
+  // Quads have independent champions, so completion messaging and club-feed data
+  // must use section-local standings instead of the flattened global table.
+  const autoCompletedQuadsRef = useRef(false);
+  useEffect(() => {
+    const isQuads = state.format === "quads";
+    const sections = state.quadSections ?? [];
+    const isFinalRound = state.currentRound >= state.totalRounds && state.totalRounds > 0;
+    if (
+      isQuads &&
+      sections.length > 0 &&
+      isFinalRound &&
+      allResultsIn &&
+      state.status !== "completed" &&
+      state.status !== "registration" &&
+      tournamentId !== "otb-demo-2026" &&
+      !autoCompletedQuadsRef.current
+    ) {
+      autoCompletedQuadsRef.current = true;
+
+      const games = state.rounds.flatMap((round) => round.games);
+      const sectionChampionGroups = sections.map((section) => ({
+        section,
+        champions: getSectionWinners(calculateQuadStandings(section, games, state.players)),
+      }));
+      const championEntries = sectionChampionGroups.flatMap(({ section, champions }) =>
+        champions.map((champion) => ({
+          section,
+          champion,
+          player: state.players.find((player) => player.id === champion.playerId),
+        }))
+      ).filter((entry) => entry.player);
+      const championNames = championEntries.map((entry) => entry.player!.name);
+      const winnerLabel = championNames.length > 0 ? championNames.join(", ") : "Section champions";
+
+      completeTournament();
+      syncStatusToServer("completed");
+      broadcastTournamentComplete(winnerLabel);
+
+      if (tournamentConfig?.clubId) {
+        const podium = championEntries.slice(0, 3).map(({ player, champion }) => ({
+          rank: 1,
+          playerName: player!.name,
+          score: champion.score,
+          totalRounds: state.totalRounds,
+        }));
+        recordTournamentCompleted(
+          tournamentConfig.clubId,
+          state.tournamentName,
+          winnerLabel,
+          tournamentId,
+          championEntries[0]?.champion.score,
+          state.totalRounds,
+          podium,
+          state.players.length,
+          getDirectorFormatSummary("quads", state.totalRounds, state.players.length, sections.length),
+        );
+      }
+
+      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
+      }).catch(() => { /* fire-and-forget */ });
+
+      toast.success(
+        championNames.length > 1
+          ? `Tournament complete! ${championNames.length} section champions confirmed.`
+          : "Tournament complete! Section champion confirmed.",
+        { duration: 4000 },
+      );
+      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allResultsIn, state.currentRound, state.totalRounds, state.format, state.status, state.quadSections]);
 
   // Auto-navigate to bracket tab when swiss_elim transitions to elimination phase
   const prevElimPhaseRef = useRef<string | undefined>(undefined);
