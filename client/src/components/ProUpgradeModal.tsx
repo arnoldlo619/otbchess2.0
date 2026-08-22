@@ -15,7 +15,7 @@
  *   />
  */
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -36,6 +36,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 import { authFetch } from "@/lib/apiFetch";
 // ─── Feature comparison data ─────────────────────────────────────────────────
@@ -85,24 +86,24 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Close on Escape
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); },
-    [onClose]
-  );
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   useEffect(() => {
     if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
       setError(null);
     }
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [isOpen, handleKeyDown]);
+  }, [isOpen]);
 
   // ── Checkout handler ──────────────────────────────────────────────────────
   const handleCheckout = async () => {
@@ -163,10 +164,12 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth
 
           {/* Modal panel */}
           <motion.div
+            ref={overlayRef}
             key="pro-upgrade-modal"
             role="dialog"
             aria-modal="true"
             aria-label="Upgrade to Pro"
+            tabIndex={-1}
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -179,6 +182,7 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth
             >
               {/* Close button */}
               <button
+                ref={closeButtonRef}
                 onClick={onClose}
                 className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/60 hover:text-white transition-colors"
                 aria-label="Close"

@@ -21,6 +21,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Eye, EyeOff, Loader2, ChevronRight, CheckCircle2, Ghost } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
+import { useAccessibleOverlay } from "../hooks/useAccessibleOverlay";
 
 type Tab = "signin" | "signup" | "guest";
 
@@ -253,6 +254,12 @@ export default function AuthModal({
 
   const firstInputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: firstInputRef,
+  });
 
   const resetAll = useCallback(() => {
     // Restore saved email and Remember Me preference on reset so they persist across opens
@@ -288,14 +295,6 @@ export default function AuthModal({
     setSiErrors({}); setSuErrors({}); setGuestError(undefined);
     setTimeout(() => firstInputRef.current?.focus(), 80);
   };
-
-  // Escape to close
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, onClose]);
 
   // Track mousedown target so we only close when the full click starts AND ends on the backdrop
   const mousedownTargetRef = useRef<EventTarget | null>(null);

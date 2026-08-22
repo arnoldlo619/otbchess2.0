@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, ExternalLink, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 // ─── Country flag helper ──────────────────────────────────────────────────────
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -178,10 +179,17 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
   const [loadingElo, setLoadingElo] = useState(false);
   const [profileError, setProfileError] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const startYRef = useRef<number | null>(null);
   const [dragY, setDragY] = useState(0);
 
   const isOpen = !!player;
+  useAccessibleOverlay({
+    open: isOpen,
+    onClose,
+    containerRef: sheetRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   // Fetch chess.com data when player changes
   useEffect(() => {
@@ -238,13 +246,6 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
     startYRef.current = null;
   };
 
-  // Escape key
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
   if (!player) return null;
 
   const flag = COUNTRY_FLAGS[player.country?.toUpperCase() ?? ""] ?? "";
@@ -297,6 +298,10 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
       {/* Sheet */}
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${displayName} player profile`}
+        tabIndex={-1}
         className="fixed bottom-0 left-0 right-0 z-[91] rounded-t-[28px] overflow-hidden"
         style={{
           background: bgSheet,
@@ -318,6 +323,7 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
 
         {/* Close button */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
           style={{ background: isDark ? "oklch(0.22 0.05 145)" : "oklch(0.90 0.02 145)", color: textMuted }}

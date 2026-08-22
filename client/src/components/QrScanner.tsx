@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { X, Camera, AlertCircle } from "lucide-react";
+import { useAccessibleOverlay } from "../hooks/useAccessibleOverlay";
 
 interface QrScannerProps {
   onScan: (code: string) => void;
@@ -28,8 +29,16 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number>(0);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [error, setError] = useState<string>("");
   const [scanning, setScanning] = useState(false);
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   useEffect(() => {
     let active = true;
@@ -129,7 +138,15 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
   const textMuted = isDark ? "text-white/55" : "text-[#436850]";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "rgba(0,0,0,0.92)" }}>
+    <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Scan tournament QR code"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: "rgba(0,0,0,0.92)" }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-safe-top pt-5 pb-4">
         <div className="flex items-center gap-2.5">
@@ -137,6 +154,7 @@ export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps
           <span className="text-white font-semibold text-base">Scan QR Code</span>
         </div>
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           className="min-h-11 min-w-11 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform"
           aria-label="Close scanner"
