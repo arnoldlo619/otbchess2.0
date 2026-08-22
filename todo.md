@@ -7385,6 +7385,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### E. Accessibility
 - [ ] Zero critical Axe violations
 - [ ] Zero serious Axe violations
+- [x] Principal-route Axe baseline: zero critical/serious violations on 9 core routes at desktop and mobile widths
 - [ ] No keyboard trap in any modal or drawer
 - [x] All principal controls have accessible labels
 - [ ] Focus order logical on all principal pages

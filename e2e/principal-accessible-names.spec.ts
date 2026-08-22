@@ -90,7 +90,7 @@ test("Archive search and standings disclosures expose purpose and state", async 
   await expect(page.getByText(/^Archive$/i).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Search tournaments, clubs, and players" })).toBeVisible();
 
-  const disclosure = page.locator('button[aria-expanded]').first();
+  const disclosure = page.locator('[data-testid^="archive-standings-disclosure-"]').first();
   await expect(disclosure).toHaveAttribute("aria-expanded", "false");
   await expect(disclosure).toHaveAccessibleName(/^Show standings for /);
   await disclosure.click();

@@ -97,7 +97,7 @@ function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
 function TitleBadge({ title }: { title?: string }) {
   if (!title) return null;
   return (
-    <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 border border-[#436850]/20 px-1.5 py-0.5 rounded">
+    <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 border border-[#436850]/20 px-1.5 py-0.5 rounded dark:text-[#b7dfbd] dark:bg-[#9bd3a5]/10 dark:border-[#9bd3a5]/30">
       {title}
     </span>
   );
@@ -134,7 +134,7 @@ function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number
   // Mutually exclusive states — never show Live + Completed simultaneously
   if (display.isComplete) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">
+      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-black/25 text-white border border-white/40">
         Complete
       </span>
     );
@@ -148,7 +148,7 @@ function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number
   }
   if (display.isLive) {
     return (
-      <span className="inline-flex items-center gap-2 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">
+      <span className="inline-flex items-center gap-2 text-xs font-bold px-2.5 py-1 rounded-full bg-black/25 text-white border border-white/40">
         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
         Live · R{currentRound}/{totalRounds}
       </span>
@@ -180,6 +180,8 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
 
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
+            aria-label="Copy tournament link"
             onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
             className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
@@ -192,6 +194,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
           </button>
           <Link
             href={`/tournament/${tournamentId}/manage`}
+            aria-label="Open tournament director dashboard"
             className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#436850]/20"
@@ -1015,11 +1018,7 @@ function PerformanceSection({ players, rounds, currentRound, format, quadSection
                   }}
                 />
                 <span
-                  className="relative z-10 pl-2 text-xs font-mono font-bold text-white mix-blend-luminosity"
-                  style={{
-                    opacity: visible ? 1 : 0,
-                    transition: `opacity 400ms ease ${delay}`,
-                  }}
+                  className="relative z-10 ml-1 rounded-full bg-[#12372A] px-1.5 py-0.5 text-xs font-mono font-bold text-white"
                 >
                   {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                 </span>
@@ -1155,7 +1154,7 @@ function RoundProgressBar({ rounds, currentRound, isDark }: { rounds: Round[]; c
             style={{ width: `${pct}%` }}
           />
         </div>
-        <span className="text-xs text-white/70 font-mono flex-shrink-0">{done}/{total} boards</span>
+        <span className="text-xs text-white/90 font-mono flex-shrink-0">{done}/{total} boards</span>
       </div>
     </div>
   );
@@ -1720,6 +1719,8 @@ export default function TournamentPage() {
         centerSlot={
           <div className="flex items-center gap-1.5">
             <button
+              type="button"
+              aria-label="Copy tournament link"
               onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
               className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
                 isDark
@@ -1733,6 +1734,7 @@ export default function TournamentPage() {
             {isDirector && (
               <Link
                 href={`/tournament/${tournamentId}/manage`}
+                aria-label="Open tournament director dashboard"
                 className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
                   isDark
                     ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#436850]/20"
@@ -1746,6 +1748,14 @@ export default function TournamentPage() {
             {/* Push notification bell — only for real, in-progress tournaments */}
             {pushEnabled && pushStatus !== "unsupported" && (
               <button
+                type="button"
+                aria-label={
+                  pushStatus === "denied"
+                    ? "Round notifications blocked"
+                    : isPushSubscribed
+                    ? "Turn off round notifications"
+                    : "Turn on round notifications"
+                }
                 onClick={() => {
                   if (isPushSubscribed) {
                     pushUnsubscribe();

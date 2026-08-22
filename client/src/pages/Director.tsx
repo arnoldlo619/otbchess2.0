@@ -202,8 +202,8 @@ const _RESULT_OPTIONS: { value: Result; label: string; short: string }[] = [
 function resultBadgeClass(result: Result, isDark: boolean): string {
   if (result === "*") return isDark ? "bg-white/10 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]";
   if (result === "1-0") return "bg-emerald-100 text-emerald-700";
-  if (result === "0-1") return "bg-red-100 text-red-600";
-  return "bg-blue-100 text-blue-600";
+  if (result === "0-1") return "bg-red-100 text-red-700";
+  return "bg-blue-100 text-blue-700";
 }
 
 function pointsFor(result: Result, side: "white" | "black"): string {

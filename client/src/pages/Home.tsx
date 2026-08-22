@@ -1643,7 +1643,8 @@ function Features() {
         </div>
 
         {/* Row 3: Player Performance Reports full-width horizontal card */}
-        <div
+        <Link
+          href="/tournaments"
           className={`group relative rounded-2xl border cursor-pointer grid grid-cols-1 sm:grid-cols-[1fr_48%] transition-all duration-500 ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           } ${
@@ -1652,10 +1653,6 @@ function Features() {
               : "bg-white border-[#ADBC9F]/50 hover:border-[#436850]/30"
           }`}
           style={{ transitionDelay: "480ms" }}
-          onClick={() => { window.location.href = "/tournaments"; }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.href = "/tournaments"; } }}
           aria-label="Player Performance Reports: view tournament results"
         >
           {/* Left: text content */}
@@ -1705,17 +1702,16 @@ function Features() {
               </ul>
             </div>
             {/* CTA */}
-            <button
+            <span
               className={`w-full sm:w-auto self-start rounded-xl px-5 py-2.5 text-sm font-semibold tracking-wide border transition-all duration-200 active:scale-95 ${
                 isDark
                   ? "bg-[oklch(0.27_0.08_145)] hover:bg-[oklch(0.32_0.10_145)] text-[oklch(0.88_0.08_145)] border-[oklch(0.38_0.10_145)/0.5]"
                   : "bg-[#EEF5EE] hover:bg-[#436850] hover:text-white text-[#12372A] border-[#ADBC9F]/50"
               }`}
               style={{ minHeight: "44px" }}
-              onClick={(e) => { e.stopPropagation(); window.location.href = "/tournaments"; }}
             >
               View Player Reports →
-            </button>
+            </span>
           </div>
 
           {/* Right: player cards grid image in landscape that fills the column */}
@@ -1739,7 +1735,7 @@ function Features() {
               }}
             />
           </div>
-        </div>
+        </Link>
       </div>
     </section>
   );

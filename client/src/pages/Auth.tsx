@@ -299,6 +299,7 @@ export default function AuthPage() {
       {/* Back to home link */}
       <a
         href="/"
+        aria-label="Back to home"
         className="fixed top-4 left-4 z-10 flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium transition"
       >
         <ArrowLeft className="w-4 h-4" />

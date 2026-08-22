@@ -53,21 +53,21 @@ import { authFetch } from "@/lib/apiFetch";
 
 function titleColor(title: string | null) {
   switch (title) {
-    case "GM": return "bg-amber-500 text-white";
-    case "IM": return "bg-orange-500 text-white";
-    case "FM": return "bg-blue-500 text-white";
+    case "GM": return "bg-amber-800 text-white";
+    case "IM": return "bg-orange-700 text-white";
+    case "FM": return "bg-blue-700 text-white";
     case "NM": return "bg-[#436850] text-white";
-    case "CM": return "bg-purple-500 text-white";
+    case "CM": return "bg-purple-700 text-white";
     default: return "";
   }
 }
 
 function formatBadge(format: string) {
   switch (format) {
-    case "Swiss": return { color: "bg-[#436850]/10 text-[#436850] border-[#436850]/20", icon: "⚙" };
-    case "Round Robin": return { color: "bg-blue-50 text-blue-700 border-blue-200", icon: "⟳" };
-    case "Elimination": return { color: "bg-red-50 text-red-700 border-red-200", icon: "⚔" };
-    default: return { color: "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F]", icon: "•" };
+    case "Swiss": return { color: "bg-[#436850]/10 text-[#436850] border-[#436850]/20 dark:bg-[#9bd3a5]/10 dark:text-[#b7dfbd] dark:border-[#9bd3a5]/30", icon: "⚙" };
+    case "Round Robin": return { color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-300/10 dark:text-blue-200 dark:border-blue-300/30", icon: "⟳" };
+    case "Elimination": return { color: "bg-red-50 text-red-700 border-red-200 dark:bg-red-300/10 dark:text-red-200 dark:border-red-300/30", icon: "⚔" };
+    default: return { color: "bg-[#FBFADA]/70 text-[#436850] border-[#ADBC9F] dark:bg-white/10 dark:text-white/80 dark:border-white/20", icon: "•" };
   }
 }
 
@@ -255,6 +255,7 @@ function TournamentCard({
           {/* Expand toggle */}
           <button
             type="button"
+            data-testid={`archive-standings-disclosure-${tournament.id}`}
             aria-expanded={expanded}
             aria-label={`${expanded ? "Hide" : "Show"} standings for ${tournament.name}`}
             onClick={(event) => {
@@ -762,6 +763,7 @@ export default function Archive() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
+              aria-label="Back to home"
               className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
                 isDark ? "text-white/50 hover:text-white" : "text-[#436850] hover:text-[#12372A]"
               }`}
@@ -861,6 +863,9 @@ export default function Archive() {
 
             {/* Filter toggle */}
             <button
+              type="button"
+              aria-label={showFilters ? "Hide tournament filters" : "Show tournament filters"}
+              aria-expanded={showFilters}
               onClick={() => setShowFilters(!showFilters)}
               className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
                 showFilters || activeFilters > 0

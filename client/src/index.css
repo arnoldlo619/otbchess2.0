@@ -523,6 +523,18 @@
   box-shadow: none;
 }
 
+/* Keep secondary text muted without dropping below readable contrast on dark surfaces. */
+.dark .text-white\/15,
+.dark .text-white\/20,
+.dark .text-white\/25,
+.dark .text-white\/30,
+.dark .text-white\/35,
+.dark .text-white\/40,
+.dark .text-white\/45,
+.dark .text-white\/50 {
+  color: rgb(255 255 255 / 0.74) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .otb-skip-link {
     transition: none;
