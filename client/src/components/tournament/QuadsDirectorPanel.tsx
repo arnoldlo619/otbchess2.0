@@ -36,7 +36,6 @@ import {
   formatRatingRange,
   getSectionWinners,
 } from "../../lib/quads";
-import { computeStandings } from "../../lib/swiss";
 import { InstagramCarouselModal } from "../InstagramCarouselModal";
 import { PlayerAvatar } from "../PlayerAvatar";
 
@@ -73,6 +72,31 @@ function getPlayerName(players: Player[], id: string): string {
 
 function getPlayerRating(players: Player[], id: string): number {
   return players.find((p) => p.id === id)?.elo ?? 0;
+}
+
+function getQuadStandingRows(
+  section: QuadSection,
+  games: Game[],
+  players: Player[],
+): StandingRow[] {
+  return calculateQuadStandings(section, games, players).flatMap((standing) => {
+    const player = players.find((candidate) => candidate.id === standing.playerId);
+    if (!player) return [];
+    return [{
+      player,
+      rank: standing.finalRank,
+      points: standing.score,
+      buchholz: 0,
+      buchholzCut1: 0,
+      sonnebornBerger: standing.sonnebornBerger,
+      wins: standing.wins,
+      draws: standing.draws,
+      losses: standing.losses,
+      matchW: 0,
+      matchD: 0,
+      matchL: 0,
+    }];
+  });
 }
 
 function resultLabel(result: Result): string {
@@ -1053,7 +1077,7 @@ export default function QuadsDirectorPanel({
           const sectionPlayers = players.filter((p) => sec.playerIds.includes(p.id));
           const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
           const sectionRounds: Round[] = roundNums.map((rn) => ({ number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn) }));
-          const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
+          const rows = getQuadStandingRows(sec, sectionGames, sectionPlayers);
           return (
             <InstagramCarouselModal
               open={true} onClose={() => setCarouselSection(null)}
@@ -1394,7 +1418,7 @@ export default function QuadsDirectorPanel({
         const sectionPlayers = players.filter((p) => sec.playerIds.includes(p.id));
         const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
         const sectionRounds: Round[] = roundNums.map((rn) => ({ number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn) }));
-        const rows: StandingRow[] = computeStandings(sectionPlayers, sectionRounds);
+        const rows = getQuadStandingRows(sec, sectionGames, sectionPlayers);
         return (
           <InstagramCarouselModal
             open={true} onClose={() => setCarouselSection(null)}

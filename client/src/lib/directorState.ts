@@ -10,10 +10,10 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
-import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel } from "./swiss";
+import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel, type StandingRow } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
-import { generateQuadTournament, swapPlayersBetweenSections, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
+import { calculateQuadStandings, generateQuadTournament, swapPlayersBetweenSections, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
 import { generateMockQuadsTournament, generateCompletedMockQuadsTournament, generateCoChampionMockQuadsTournament } from "./mockQuadsData";
 import { isPlayerCountValid } from "./formatRegistry";
 
@@ -71,6 +71,46 @@ export interface ResultHistoryEntry {
   previousResult: Result | null;
   /** New result */
   newResult: Result;
+}
+
+export function computeTournamentLiveStandings(
+  players: Player[],
+  rounds: Round[],
+  format: DirectorState["format"],
+  quadSections?: QuadSection[],
+): StandingRow[] {
+  if (format !== "quads" || !quadSections?.length) {
+    return computeStandings(players, rounds);
+  }
+
+  const games = rounds.flatMap((round) => round.games);
+  return [...quadSections]
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+    .flatMap((section) => {
+      const sectionPlayers = players.filter((player) => section.playerIds.includes(player.id));
+      return calculateQuadStandings(section, games, sectionPlayers).flatMap((standing) => {
+        const player = sectionPlayers.find((candidate) => candidate.id === standing.playerId);
+        if (!player) return [];
+        return [{
+          player,
+          rank: standing.finalRank,
+          points: standing.score,
+          buchholz: 0,
+          buchholzCut1: 0,
+          sonnebornBerger: standing.sonnebornBerger,
+          wins: standing.wins,
+          draws: standing.draws,
+          losses: standing.losses,
+          matchW: 0,
+          matchD: 0,
+          matchL: 0,
+        }];
+      });
+    });
+}
+
+export function computeDirectorLiveStandings(state: DirectorState): StandingRow[] {
+  return computeTournamentLiveStandings(state.players, state.rounds, state.format, state.quadSections);
 }
 
 interface PersistedState {
@@ -548,13 +588,17 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         ? applyResultToPlayers(prev.players, { ...targetGame }, result)
         : prev.players;
 
-      // Update Buchholz scores live
-      const standings = computeStandings(players, rounds);
-      const buchholzMap = new Map(standings.map((s) => [s.player.id, s.buchholz]));
-      const playersWithBuchholz = players.map((p) => ({
-        ...p,
-        buchholz: buchholzMap.get(p.id) ?? p.buchholz,
-      }));
+      // Quads use section-local Sonneborn-Berger and must not inherit Swiss Buchholz.
+      const playersWithBuchholz = prev.format === "quads"
+        ? players.map((player) => ({ ...player, buchholz: 0 }))
+        : (() => {
+            const standings = computeStandings(players, rounds);
+            const buchholzMap = new Map(standings.map((standing) => [standing.player.id, standing.buchholz]));
+            return players.map((player) => ({
+              ...player,
+              buchholz: buchholzMap.get(player.id) ?? player.buchholz,
+            }));
+          })();
 
       // Mark round as completed if all results are in
       const currentRoundData = rounds.find((r) => r.number === prev.currentRound);
@@ -995,8 +1039,8 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const isRegistration = state.status === "registration";
   const canStart = isRegistration && isPlayerCountValid(state.format, state.players.length);
 
-  // Live standings with Buchholz tiebreaks from the Swiss engine
-  const liveStandings = computeStandings(state.players, state.rounds);
+  // Quads rank independently per section with SB; other formats use Swiss standings.
+  const liveStandings = computeDirectorLiveStandings(state);
 
   // ── Dev-only mock loader ──────────────────────────────────────────────────────
   const loadMockQuadsState = useCallback((scenario: "mid" | "complete" | "cochampion" = "mid") => {

@@ -7467,7 +7467,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] P0-1e: Audit and fix all broken CTAs (Host Tournament, View Live Demo, Tools, footer links)
 - [x] P0-2: Create canonical getTournamentFormatLabel() helper; fix all inline format ternaries missing quads case
 - [x] P0-3: Create canonical getTournamentStatus() selector; ensure completed tournaments never show Live badge
-- [ ] P0-4: Fix quads live standings to use calculateQuadStandings (not Swiss computeStandings); remove Buchholz label from QuadsDirectorPanel
+- [x] P0-4: Fix quads live standings to use calculateQuadStandings (not Swiss computeStandings); remove Buchholz label from QuadsDirectorPanel
 - [ ] P0-5: Fix draw rate formula in Report.tsx to use completedGames as denominator; fix generateResultsPdf to skip Buchholz page for quads
 - [ ] P0-6: Fix nested interactive elements in Pricing.tsx and other pages (Link wrapping button)
 - [ ] P0-7: Fix duplicate H1 in tournament report export cards (aria-hidden on export-only clones)

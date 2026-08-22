@@ -28,9 +28,11 @@ import {
   type Round,
 } from "@/lib/tournamentData";
 import {
+  computeTournamentLiveStandings,
   loadTournamentState,
   type DirectorState,
 } from "@/lib/directorState";
+import type { QuadSection } from "@/lib/quads";
 import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
@@ -808,11 +810,15 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
 }
 
 // ─── Standings Panel ──────────────────────────────────────────────────────────
-function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Player[]; rounds: Round[]; myPlayerId?: string; format?: string }) {
+function StandingsPanel({ players, rounds, myPlayerId, format, quadSections }: { players: Player[]; rounds: Round[]; myPlayerId?: string; format?: DirectorState["format"]; quadSections?: QuadSection[] }) {
   const isDoubleSwiss = format === "doubleswiss";
+  const isQuads = format === "quads";
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
+  const standingRows = useMemo(
+    () => computeTournamentLiveStandings(players, rounds, format ?? "swiss", quadSections),
+    [players, rounds, format, quadSections],
+  );
 
   const medalColor = (rank: number) => {
     if (rank === 1) return "text-amber-400";
@@ -839,14 +845,14 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
         <span className="text-center w-12">Pts</span>
         {isDoubleSwiss && <span className="text-right w-14">Match</span>}
         <span className="text-right w-14 inline-flex items-center justify-end gap-0.5">
-          Buch.
-          <TiebreakTooltip type="buchholz" position="above" />
+          {isQuads ? "SB" : "Buch."}
+          <TiebreakTooltip type={isQuads ? "sb" : "buchholz"} position="above" />
         </span>
       </div>
 
       {/* Player rows */}
       {standingRows.map((row, idx) => {
-        const rank = idx + 1;
+        const rank = isQuads ? row.rank : idx + 1;
         const isLeader = rank === 1;
 
         return (
@@ -908,9 +914,9 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
               </div>
             )}
 
-            {/* Buchholz */}
+            {/* Format-specific tiebreak */}
             <div className="w-14 text-right">
-              <span className="text-sm font-mono text-muted-foreground">{row.buchholz.toFixed(1)}</span>
+              <span className="text-sm font-mono text-muted-foreground">{(isQuads ? row.sonnebornBerger : row.buchholz).toFixed(1)}</span>
             </div>
           </div>
         );
@@ -918,17 +924,20 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
 
       {/* Legend */}
       <div className={`mt-2 px-4 py-3 rounded-xl text-xs text-muted-foreground border ${isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
-        Tiebreak order: <span className="font-semibold">Pts</span> → <span className="font-semibold">Buch.</span> → <span className="font-semibold">Rating</span> · Hover the <span className="font-mono font-bold">?</span> for details
+        Tiebreak order: <span className="font-semibold">Pts</span> → <span className="font-semibold">{isQuads ? "Direct encounter" : "Buch."}</span> → <span className="font-semibold">{isQuads ? "SB" : "Rating"}</span> · Hover the <span className="font-mono font-bold">?</span> for details
       </div>
     </div>
   );
 }
 
 // ─── Performance Bars ─────────────────────────────────────────────────────────
-function PerformanceSection({ players, rounds, currentRound }: { players: Player[]; rounds: Round[]; currentRound: number }) {
+function PerformanceSection({ players, rounds, currentRound, format, quadSections }: { players: Player[]; rounds: Round[]; currentRound: number; format?: DirectorState["format"]; quadSections?: QuadSection[] }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
+  const standingRows = useMemo(
+    () => computeTournamentLiveStandings(players, rounds, format ?? "swiss", quadSections),
+    [players, rounds, format, quadSections],
+  );
   const maxPoints = standingRows.length > 0 ? Math.max(...standingRows.map((r) => r.points)) : 1;
   const completedRounds = Math.max(1, currentRound - 1);
 
@@ -2054,7 +2063,7 @@ export default function TournamentPage() {
                 )
               )}
               {mobileTab === "standings" && (
-                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} />
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} quadSections={(displayState as DirectorState).quadSections} />
               )}
               {mobileTab === "players" && (
                 <div className="flex flex-col gap-3">
@@ -2125,7 +2134,7 @@ export default function TournamentPage() {
 
               {/* Right: Standings + Swiss summary — desktop only */}
               <div className="flex flex-col gap-5">
-                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} />
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} quadSections={(displayState as DirectorState).quadSections} />
                 {config?.format === "swiss_elim" && swissRounds > 0 && elimStartRound > 1 && displayState.rounds.some((r) => r.number >= elimStartRound) && (() => {
                   const swissRoundsOnly = displayState.rounds.filter((r) => r.number <= swissRounds);
                   const swissStandings = computeStandings(displayState.players, swissRoundsOnly);
@@ -2151,6 +2160,8 @@ export default function TournamentPage() {
                 players={displayState.players}
                 rounds={displayState.rounds}
                 currentRound={displayState.currentRound}
+                format={config?.format}
+                quadSections={(displayState as DirectorState).quadSections}
               />
             </div>
           </div>
