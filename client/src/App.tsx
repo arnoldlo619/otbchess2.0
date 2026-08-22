@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef } from "react";
 import { OTBLoader } from "@/components/OTBLoader";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { MotionConfig } from "framer-motion";
 import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -260,13 +261,15 @@ function App() {
           defaultTheme="dark"
           switchable
         >
-          <TooltipProvider>
-            <Toaster />
-            <ApiErrorNotifier />
-            <ClientErrorTelemetry />
-            <Router />
-            <InstallBanner />
-          </TooltipProvider>
+          <MotionConfig reducedMotion="user">
+            <TooltipProvider>
+              <Toaster />
+              <ApiErrorNotifier />
+              <ClientErrorTelemetry />
+              <Router />
+              <InstallBanner />
+            </TooltipProvider>
+          </MotionConfig>
         </ThemeProvider>
       </ErrorBoundary>
     </AuthProvider>

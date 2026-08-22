@@ -7392,7 +7392,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Landmark regions on all pages (main, nav, header, footer)
 - [x] Form labels on all inputs
 - [x] Table semantics (thead, th scope)
-- [ ] Reduced-motion: no essential animation-only feedback
+- [x] Reduced-motion: no essential animation-only feedback
 - [ ] WCAG AA contrast in both themes
 
 ### F. Performance

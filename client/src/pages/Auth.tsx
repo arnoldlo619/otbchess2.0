@@ -584,7 +584,7 @@ export default function AuthPage() {
                           Display name <span className="text-red-400">*</span>
                         </label>
                         <input
-                          aria-label="Auth Signup Name"
+                          aria-label="Display name"
                           ref={firstInputRef}
                           type="text"
                           value={suName}
@@ -600,7 +600,7 @@ export default function AuthPage() {
                           Email <span className="text-red-400">*</span>
                         </label>
                         <input
-                          aria-label="Auth Signup Email"
+                          aria-label="Email"
                           type="email"
                           value={suEmail}
                           onChange={(e) => { setSuEmail(e.target.value); setSuErrors((p) => ({ ...p, email: undefined })); }}

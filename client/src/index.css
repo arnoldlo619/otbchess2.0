@@ -2574,9 +2574,29 @@ select {
 /* Covers: EcosystemPathways card hover lift, bento card hover lift,            */
 /* animate-spring-in (Join flow), animate-slide-down-fade, pairing-text-glow   */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
   /* Ecosystem + bento card hover lifts */
   .group:hover {
     transform: none !important;
+  }
+
+  .card-chess,
+  .card-testimonial {
+    transition: none !important;
   }
 
   /* Join flow spring animation */

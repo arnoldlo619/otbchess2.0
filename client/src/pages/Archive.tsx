@@ -864,6 +864,7 @@ export default function Archive() {
             {/* Filter toggle */}
             <button
               type="button"
+              data-testid="archive-filter-toggle"
               aria-label={showFilters ? "Hide tournament filters" : "Show tournament filters"}
               aria-expanded={showFilters}
               onClick={() => setShowFilters(!showFilters)}
