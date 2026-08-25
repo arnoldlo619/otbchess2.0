@@ -10,6 +10,7 @@ import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
 import { ApiErrorNotifier } from "./components/ApiErrorNotifier";
 import { ClientErrorTelemetry } from "./components/ClientErrorTelemetry";
+import { OperationalTelemetry } from "./components/OperationalTelemetry";
 import { OfflineStatusBanner } from "./components/OfflineStatusBanner";
 import { buildPreservedRedirect, buildTournamentCreateRedirect } from "./lib/routeRedirects";
 
@@ -271,6 +272,7 @@ function App() {
               <Toaster />
               <ApiErrorNotifier />
               <ClientErrorTelemetry />
+              <OperationalTelemetry />
               <OfflineStatusBanner />
               <Router />
               <InstallBanner />

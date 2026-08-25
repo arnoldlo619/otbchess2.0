@@ -7458,8 +7458,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### K. Observability
 - [x] Frontend error logging verified (Sentry or equivalent)
 - [x] Failed API requests logged
-- [ ] Core Web Vitals reporting
-- [ ] SSE reconnect frequency monitored
+- [x] Core Web Vitals reporting
+- [x] SSE reconnect frequency monitored
+- [x] Report Web Vitals through a rate-limited, strictly validated endpoint with route-pattern-only context
+- [x] Instrument every production EventSource with privacy-safe disconnect, reconnect, and recovery telemetry
 - [x] No sensitive user data in logs
 
 ### L. CI Quality Gates

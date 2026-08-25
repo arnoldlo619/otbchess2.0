@@ -5,6 +5,7 @@
  */
 import { z } from "zod";
 import type { Request, Response, NextFunction } from "express";
+import { isOperationalRoutePattern } from "../shared/operationalTelemetry.js";
 
 // ── Reusable middleware factory ───────────────────────────────────────────────
 export function validate<T extends z.ZodTypeAny>(schema: T) {
@@ -81,6 +82,45 @@ export const clientErrorSchema = z.object({
   status: z.number().int().min(0).max(599).optional(),
   code: z.string().max(100).optional(),
 });
+
+// ── Client operational telemetry ─────────────────────────────────────────────
+const operationalPathSchema = z.string().min(1).max(200).refine(
+  isOperationalRoutePattern,
+  "Path must contain only approved route segments or :id placeholders",
+);
+const sseStreamSchema = z.enum([
+  "broadcast", "club", "live_boards", "tournament_events",
+  "tournament_live", "tournament_players", "other",
+]);
+export const operationalMetricSchema = z.discriminatedUnion("eventType", [
+  z.object({
+    eventType: z.literal("web_vital"),
+    path: operationalPathSchema,
+    metricName: z.enum(["CLS", "FCP", "INP", "LCP", "TTFB"]),
+    value: z.number().finite().min(0).max(10_000_000),
+    delta: z.number().finite().min(0).max(10_000_000),
+    rating: z.enum(["good", "needs-improvement", "poor"]),
+    navigationType: z.string().min(1).max(40),
+  }).strict(),
+  z.object({
+    eventType: z.literal("sse_connected"),
+    path: operationalPathSchema,
+    stream: sseStreamSchema,
+  }).strict(),
+  z.object({
+    eventType: z.literal("sse_disconnected"),
+    path: operationalPathSchema,
+    stream: sseStreamSchema,
+    attempts: z.number().int().min(1).max(100),
+  }).strict(),
+  z.object({
+    eventType: z.literal("sse_reconnected"),
+    path: operationalPathSchema,
+    stream: sseStreamSchema,
+    attempts: z.number().int().min(1).max(100),
+    disconnectedMs: z.number().int().min(0).max(3_600_000),
+  }).strict(),
+]);
 
 // ── Prep analysis resolve ────────────────────────────────────────────────────
 export const prepResolveSchema = z.object({

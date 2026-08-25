@@ -68,8 +68,8 @@ function normalizeArgs(args: unknown[]): { event: string; fields: LogContext } {
   };
 }
 
-function emit(level: LogLevel, baseContext: LogContext, args: unknown[]): void {
-  if (!isDev && (level === "debug" || level === "info")) return;
+function emit(level: LogLevel, baseContext: LogContext, args: unknown[], always = false): void {
+  if (!always && !isDev && (level === "debug" || level === "info")) return;
   const { event, fields } = normalizeArgs(args);
   const record = JSON.stringify({
     timestamp: new Date().toISOString(),
@@ -89,6 +89,7 @@ function createLogger(baseContext: LogContext = {}) {
     info: (...args: unknown[]) => emit("info", baseContext, args),
     warn: (...args: unknown[]) => emit("warn", baseContext, args),
     error: (...args: unknown[]) => emit("error", baseContext, args),
+    telemetry: (...args: unknown[]) => emit("info", baseContext, args, true),
     child: (context: LogContext) => createLogger({ ...baseContext, ...context }),
   } as const;
 }
