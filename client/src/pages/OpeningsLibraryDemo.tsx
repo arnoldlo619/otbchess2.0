@@ -382,6 +382,8 @@ export default function OpeningsLibraryDemo() {
               </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label="Filter openings"
+                aria-expanded={showFilters}
                 className={`p-2 rounded-lg border transition-all ${
                   showFilters || hasActiveFilters ? filterBtnActive : filterBtnInactive
                 }`}

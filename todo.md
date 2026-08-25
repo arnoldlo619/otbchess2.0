@@ -7422,7 +7422,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tournament: Public sync, reports, print, broadcast
 - [x] Community: Club discovery, public profile, creation, feed
 - [x] Community: Members, events, league navigation
-- [ ] Training: Tools hub, openings, matchup prep, repertoire
+- [x] Training: Tools hub, openings, matchup prep, repertoire
+- [x] Training tools hub: make every tool card keyboard-operable with native link semantics
+- [x] Openings demo: name the filter toggle and expose its expanded state
 - [ ] Marketing: Landing, pricing, journal, join, errors
 
 ### H. Data and State Correctness

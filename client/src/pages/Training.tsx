@@ -8,7 +8,7 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { AppNavBar } from "@/components/AppNavBar";
 import { BGPattern } from "@/components/ui/bg-pattern";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { ArrowRight, ExternalLink, Lock, FlaskConical } from "lucide-react";
 
 // ─── Tool Definitions ─────────────────────────────────────────────────────────
@@ -103,22 +103,16 @@ function ToolCard({
   isBeta?: boolean;
   compact?: boolean;
 }) {
-  const [, navigate] = useLocation();
-
-  const handleClick = () => {
-    if (tool.external) {
-      window.open(tool.href, "_blank", "noopener,noreferrer");
-    } else {
-      navigate(tool.href);
-    }
-  };
-
   const isHero = tool.size === "hero" && !compact;
   const isTall = tool.size === "tall" && !compact;
+  const CardLink = tool.external ? "a" : Link;
 
   return (
-    <div
-      onClick={handleClick}
+    <CardLink
+      href={tool.href}
+      target={tool.external ? "_blank" : undefined}
+      rel={tool.external ? "noopener noreferrer" : undefined}
+      aria-label={`${tool.title}: ${tool.cta}`}
       className={`group relative overflow-hidden rounded-2xl cursor-pointer ${
         isHero ? "col-span-2 row-span-1 min-h-[320px] sm:min-h-[360px]" :
         isTall ? "col-span-1 row-span-2 min-h-[320px]" :
@@ -132,14 +126,14 @@ function ToolCard({
         willChange: "transform",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px) scale(1.012)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = isDark
+        e.currentTarget.style.transform = "translateY(-4px) scale(1.012)";
+        e.currentTarget.style.boxShadow = isDark
           ? "0 16px 48px rgba(0,0,0,0.55), 0 0 0 1.5px rgba(91,154,106,0.38)"
           : "0 16px 40px rgba(67,104,80,0.18), 0 0 0 1.5px rgba(67,104,80,0.30)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.transform = "";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = isDark
+        e.currentTarget.style.transform = "";
+        e.currentTarget.style.boxShadow = isDark
           ? "0 2px 24px rgba(0,0,0,0.4)"
           : "0 2px 16px rgba(67,104,80,0.08)";
       }}
@@ -253,7 +247,7 @@ function ToolCard({
           </span>
         </div>
       </div>
-    </div>
+    </CardLink>
   );
 }
 
