@@ -7476,6 +7476,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] ESLint in active GitHub CI (0 errors)
 - [ ] Unit tests in active GitHub CI (all pass)
 - [ ] Production build succeeds
+- [x] Re-attempt the controlled local production build once and document the Vite transform-stage sandbox exit-143 limitation
 - [ ] Internal link validation in active GitHub CI
 - [ ] Add deterministic repository-wide literal internal-link validation to the active CI unit-test gate
 - [x] Performance budget check documented

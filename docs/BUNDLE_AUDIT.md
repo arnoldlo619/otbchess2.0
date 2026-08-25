@@ -38,6 +38,8 @@ The next low-risk candidates are interaction-only QR rendering in Club Dashboard
 
 A fresh Vite production measurement was attempted once with the project’s established **2300 MB V8 heap ceiling** after browser cleanup. The sandbox terminated the build during transforms with `SIGTERM`, matching the known resource limit from prior checkpoints. TypeScript and focused regressions pass; the successful artifact baseline above is therefore used for total/per-chunk evidence, while the current improvements are validated through source invariants and runtime route tests rather than a newly emitted bundle manifest.
 
+On 2026-08-25, one further controlled attempt released stale Chromium processes and used `NODE_OPTIONS=--max-old-space-size=3072`. It was again terminated with exit 143 during Vite `transforming...`, before the server bundle or final artifacts were emitted. This remains a sandbox resource limitation, not evidence of a TypeScript, lint, source-contract, or deterministic artifact-budget failure. The production-build checklist therefore remains open until the preserved GitHub CI workflow runs on a non-constrained runner.
+
 ## CI performance budgets
 
 The production-build job now runs `pnpm check:bundle-budget` immediately after `pnpm build`. The checker measures emitted artifacts recursively under `dist/public/assets`, uses deterministic level-9 gzip sizes for JavaScript, and fails when any ceiling is exceeded or expected JavaScript/CSS output is missing.
