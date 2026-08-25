@@ -16,10 +16,10 @@
   ],
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/117675823/J6FsDoRMH9x5xbUvpyzxyf",
-    "access_key_id": "ASIAZV3A2ECZLG5AUMWR",
-    "secret_access_key": "yTb7GEG5z2ZbxP5UK72dHqIqm+3H4gRpkEe0MIkD",
-    "session_token": "IQoJb3JpZ2luX2VjEN3//////////wEaCXVzLWVhc3QtMSJGMEQCIHyWkBkZXb5GhNIuD7staqNqo/AVY5S4/shk9mNHAdgIAiAbwsOGN7I04PAHoRWLuP8gsgV588UZhpLc+nywhz9x9SrtAwil//////////8BEAQaDDY2NTM4NjA5ODg2NiIMsmxQTUJPhiPAIieWKsEDXyPzoAh9ljjN3yi3n6xngWiLSR+6RPejl21jComhCGvapIlYJKT8+A0y6l+j68unMvlPuADRGYVAKjF+NTDVSg63vbtoapr2WOFam21ljsmaqoD6oACoIQ7vlOyWy1VF7Phk9uzoPDme8IKuzU1t5SVFiWu6Zw1VsoAD+NzaN3a+AorFJk0mzdeCcIQK/b6FatDNWqXkBlsLe4dP2Lf/Nw+dTMtOP7GWiZj9wnel7k74N1snD75NQHr0EmbVFW917QsW1W2/SC4M7wHwipBElGIf+zXY3rQbqyyQZjqyKT8m5fTuQ9BOvKvxDBy1d/iHHaLmA10JKjNMfCTJgR5J5c7ic3xHJSsl/DXjwD6DIHcb2HOLu3rJtL5uoKvLKHb7hiLc4vGj9r4hSx0lFBSkrRNHJjUVV7JWLzzG1LYrHZdywyatluwe4tQ+Eni+YNhaNyiCCF9iwPmwtw9/tNMcrWdALpiJfRCcQ+xljLN4LtwsLGAG30kbA3V7ylumm5+yY5MovTAW66o4JZFMI2uBHnaeTwGluHt/JpBOxgvxTwlfo4WZHQf7Nb93N4EGXXX+xXQUUb1z/o2QPNIw11rDiqEw8ISh1AY6ngEGgUvVqdUoXsQRlQ3n/oIewePADHhwwbRuuKLOasQtxLd7ph9qTJ0+UF1PrrBVaTU52d+ghMovUZ1om8B1QY1iNLtjOa0Y1yz9wsgv7TfiXjt1fVGuzJnhxa005c7y3UZG9KgDAS+6K/+dIwwVfNyMpjl2FeVCbhVcY5m6FWtlEC2rEWdGFjGUlepzIfJ2rLLRP7wpJS9tN+fCpi9QLg==",
-    "expiration": "2026-08-22T00:20:00.000Z",
+    "access_key_id": "ASIAZV3A2ECZEDWKZ3ZS",
+    "secret_access_key": "8FHsWdtPi7YywkianolUKEiRk5UfJhxynDWrEW1j",
+    "session_token": "IQoJb3JpZ2luX2VjEEMaCXVzLWVhc3QtMSJGMEQCIBldLyJ+ESWL7gbu1xAaWf2GeEh0rYJM+4qU+5lmyJInAiBDn9+FvQUyRHaFInZubz4bnpXMyR9fvR1cgC01IbC0kSrkAwgMEAQaDDY2NTM4NjA5ODg2NiIMTLW28/XLk/B/HZ7AKsED42eXgOYeQwwsVlC8i4qQyufgXZReSrzncGbKk0T3mc3PjBCRAzrNLrhXG3ZSVlOXujUaf4vfCkVQCkvu1q/sN+kwYkWs/+a+XK5taB8W5caY9Ku8+MkKpBue9FstlXAZ8HRuj/mppgxftiKex+lV387zNmHNxTTSduukq2AE2ptlhoYxDWE8TVdN1B+ghimycQ9HFjtXhVboHvaXR4Mg9D2RJC7AlAqq8DPG26QniV9eOvoah27Zi+tukEBs7Oe1d2aG4SIqhaCVpVJhjjTUljfu/ogj7pgfgNCFbAaAUIgJo5UUNZQcZE57w+v/VOT7euPAtmAd9rYKo9kIEeQRADQuIGn+xslIqY1TqEmtiRUsnhb346cL3jZ9/11uhXvPSpgXRJ/v8FEQd1IDq30FZAzjZRV+AKbSACwaBllJFmS/MWZoMLCnJGIJoJzLOy/5p45tIcz0fNnGRHAWGqlhFH1UedYhAVsIaxvJM/DeKlJoHQTBQAuwz/7W1n20F042bRQiy/l3A/okbg4xQowwSU1IWAkw5YeUa0Y4NIPRL+DrsBv3gXqA/H03LdhvqLnZexxYrzUiiqrGYN6tAaG8fdcwoMS31AY6ngFgMMHdSulHucVrsuwfUHQFYqhOjNhUr9aJWTRbH0MSmz07Qzwf/v62vMMbFAlEwwYYlcNhehoL1vZw/GVLWe21wsgIlVpczmZLIx7VLhhijAOYTIAmwu/n6JC8tEO0CInW3FiQoJhA8yMgI1xQ/UgCWAZn+lccTMpb8aC1aEvlSrGJgkKXglrlZCh4ghMpUwVyDYYAn8yCTk1hS3w+cg==",
+    "expiration": "2026-08-26T06:42:40.000Z",
     "backend": "GIT_BACKEND_S3"
   },
   "name": "otb-chess",

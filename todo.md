@@ -7415,7 +7415,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Font loading strategy (no FOIT)
 
 ### G. Functional Regression
-- [ ] All 5934 client tests pass
+- [x] All 6204 client tests pass
 - [ ] Tournament: Quick Start, Schedule, Quads, Swiss flows
 - [ ] Tournament: Registration, check-in, pairings, result entry
 - [ ] Tournament: Round progression, standings, finalization

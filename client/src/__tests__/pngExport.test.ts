@@ -97,6 +97,8 @@ describe("Fix: html2canvas removed from export paths", () => {
     "components/InstagramCarouselModal.tsx",
   ];
 
+  const htmlToImageFiles = filesToCheck.filter((file) => file !== "pages/GameAnalysis.tsx");
+
   for (const file of filesToCheck) {
     it(`${file} does not dynamically import html2canvas`, () => {
       const src = readSrc(file);
@@ -104,12 +106,22 @@ describe("Fix: html2canvas removed from export paths", () => {
       expect(src).not.toMatch(/import\s*\(\s*["']html2canvas["']\s*\)/);
     });
 
+  }
+
+  for (const file of htmlToImageFiles) {
     it(`${file} uses html-to-image instead`, () => {
       const src = readSrc(file);
       // Must use html-to-image
       expect(src).toContain("html-to-image");
     });
   }
+
+  it("pages/GameAnalysis.tsx uses the annotated PGN export path instead of a raster export", () => {
+    const src = readSrc("pages/GameAnalysis.tsx");
+    expect(src).toContain('from "@/lib/exportPgn"');
+    expect(src).toContain("buildAnnotatedPgn");
+    expect(src).toContain("downloadPgn");
+  });
 });
 
 // ── 4. Hidden export card uses fixed positioning (not sr-only) ────────────────
@@ -186,10 +198,12 @@ describe("Instagram Carousel export quality", () => {
 
 // ── 5. Avatar proxy CORS configuration ───────────────────────────────────────
 describe("Avatar proxy CORS configuration", () => {
-  it("server/index.ts avatar-proxy sets Access-Control-Allow-Origin: *", () => {
-    const src = readFileSync(resolve(ROOT, "server/index.ts"), "utf8");
-    expect(src).toContain("Access-Control-Allow-Origin");
-    expect(src).toContain('"*"');
+  it("server/chessProxy.ts restricts production CORS and permits wildcard only in development", () => {
+    const src = readFileSync(resolve(ROOT, "server/chessProxy.ts"), "utf8");
+    expect(src).toContain("PROXY_ALLOWED_ORIGINS");
+    expect(src).toContain('res.setHeader("Access-Control-Allow-Origin", origin)');
+    expect(src).toContain('process.env.NODE_ENV !== "production"');
+    expect(src).toContain('res.setHeader("Access-Control-Allow-Origin", "*")');
   });
 
   it("toProxiedAvatarUrl rewrites chess.com URLs to /api/avatar-proxy", () => {
@@ -206,18 +220,21 @@ describe("Avatar proxy CORS configuration", () => {
     expect(src).toContain("lichess1.org");
   });
 
-  it("server/index.ts avatar-proxy allowlist includes all chess.com and lichess domains", () => {
-    const src = readFileSync(resolve(ROOT, "server/index.ts"), "utf8");
-    // Find the app.get handler (not just the comment that mentions the path)
-    const handlerIdx = src.indexOf('app.get("/api/avatar-proxy"');
+  it("server/chessProxy.ts avatar-proxy allowlist includes all chess.com and lichess domains", () => {
+    const src = readFileSync(resolve(ROOT, "server/chessProxy.ts"), "utf8");
+    const handlerIdx = src.indexOf('router.get("/avatar-proxy"');
     expect(handlerIdx).toBeGreaterThan(0);
-    // The allowed-domains array is within the first 600 chars of the handler
-    const proxySection = src.slice(handlerIdx, handlerIdx + 600);
+    const proxySection = src.slice(handlerIdx, handlerIdx + 800);
     expect(proxySection).toContain("images.chess.com");
     // The actual CDN domain returned by chess.com API
     expect(proxySection).toContain("images.chesscomfiles.com");
     expect(proxySection).toContain("lichess.org");
     expect(proxySection).toContain("lichess1.org");
+  });
+
+  it("server/index.ts mounts the decomposed chess proxy router under /api", () => {
+    const src = readFileSync(resolve(ROOT, "server/index.ts"), "utf8");
+    expect(src).toContain('app.use("/api", createChessProxyRouter())');
   });
 
   it("Report.tsx hidden card uses toProxiedAvatarUrl for avatarUrl", () => {

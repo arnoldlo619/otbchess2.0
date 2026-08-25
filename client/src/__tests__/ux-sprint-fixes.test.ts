@@ -49,8 +49,8 @@ describe("formatRegistry — getFormatLabel", () => {
     expect(getFormatLabel("swiss_elim")).toBe("Swiss + Elimination");
   });
 
-  it("falls back to Swiss for unknown format", () => {
-    expect(getFormatLabel("unknown_format")).toBe("Swiss");
+  it("uses a neutral label for unknown formats instead of mislabeling them as Swiss", () => {
+    expect(getFormatLabel("unknown_format")).toBe("Tournament");
   });
 });
 
