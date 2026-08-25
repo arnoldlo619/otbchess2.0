@@ -8,7 +8,7 @@
 
 The current source is materially stronger than the August 21 platform audit. Security hardening, route decomposition, request-correlated error handling, Sentry integration, refresh recovery, Web Vitals, SSE reconnect telemetry, internal-link validation, and bundle-budget enforcement are now present and regression-tested.[1] [2] [3] The live production health endpoint is responding, but release safety is not determined by health alone.[4]
 
-The main blockers are operational rather than architectural. The currently published landing page still contains unverifiable testimonials, a hardcoded host rating, and inflated fallback platform counts. Those claims have been removed in the current source with regression coverage, but the corrected release candidate must be published and verified before any marketing resumes. The connected GitHub repository is also materially behind the current project and has no registered Actions workflow, so the local CI definition is not yet an active remote gate.[5]
+The main blockers are operational rather than architectural. The currently published landing page still contains unverifiable testimonials, a hardcoded host rating, and inflated fallback platform counts. Those claims have been removed in the current source with regression coverage, but the corrected release candidate must be published and verified before any marketing resumes. GitHub `main` now exactly matches the verified local sync commit, while the CI definition remains a preserved template because the connected GitHub App token cannot create workflow files.[2] [5]
 
 ## Release posture
 
@@ -49,7 +49,7 @@ No additional P0 product-functionality defect was proven in the audited tourname
 
 | ID | Finding | Risk | Required closure |
 |---|---|---|---|
-| P1-01 | The connected GitHub App token cannot create `.github/workflows/ci.yml`; GitHub rejected the workflow-preserving push. The CI definition is preserved under `docs/` for owner-authorized activation. | CI is documented but not active, so release provenance is incomplete. | Activate the preserved template through the GitHub web editor or reconnect a credential with workflow permission, then verify the workflow is registered. |
+| P1-01 | GitHub source parity is restored at commit `6636113a`, but the connected GitHub App token cannot create `.github/workflows/ci.yml`; GitHub rejected the workflow-preserving push. The CI definition is preserved under `docs/` for owner-authorized activation. | CI is documented but not active, so release provenance remains incomplete. | Activate the preserved template through the GitHub web editor or reconnect a credential with workflow permission, then verify the workflow is registered. |
 | P1-02 | The latest production build and new bundle-budget gate have not completed on the current remote SHA. | Source-level and focused tests cannot prove the deploy artifact compiles within budget. | Run the remote CI pipeline and require TypeScript, lint, link validation, unit tests, build, and bundle budget to pass. |
 | P1-03 | Stripe checkout, successful subscription webhook, cancellation webhook, and `/pro/success` polling remain unverified end to end in production. | Users could pay without entitlement updates or receive inconsistent membership state. | Keep paid acquisition disabled until all four production scenarios pass with test accounts and auditable Stripe events. |
 | P1-04 | No production-like load baseline exists for live tournament/SSE traffic. | Large promoted events may expose cold-start, connection, or database limits that functional tests do not measure. | Run a staged load test before advertising large events; define acceptable P95 latency, error rate, and SSE recovery targets. |
@@ -119,7 +119,7 @@ If an emergency requires reverting to a checkpoint older than this report, keep 
 
 ChessOTB is ready for **controlled free-beta onboarding after the current release candidate is published and smoke-tested**. The architecture and regression posture are sufficient for learning with a limited cohort. It is **not ready for broad paid acquisition** until GitHub/CI provenance, a current production build, Stripe lifecycle verification, and a load baseline are complete.
 
-This is a conditional operating decision, not a claim that every backlog item is complete. The immediate sequence is: publish the content-integrity release candidate, repair GitHub sync, obtain a green CI build on the same SHA, complete the post-publish smoke matrix, and then begin a small free-beta cohort.
+This is a conditional operating decision, not a claim that every backlog item is complete. The immediate sequence is: publish the content-integrity release candidate, activate the preserved GitHub workflow, obtain a green CI build on the same SHA, complete the post-publish smoke matrix, and then begin a small free-beta cohort.
 
 ## References
 
