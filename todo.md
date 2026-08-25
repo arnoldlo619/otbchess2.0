@@ -7420,8 +7420,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tournament: Registration, check-in, pairings, result entry
 - [x] Tournament: Round progression, standings, finalization
 - [x] Tournament: Public sync, reports, print, broadcast
-- [ ] Community: Club discovery, public profile, creation, feed
-- [ ] Community: Members, events, league navigation
+- [x] Community: Club discovery, public profile, creation, feed
+- [x] Community: Members, events, league navigation
 - [ ] Training: Tools hub, openings, matchup prep, repertoire
 - [ ] Marketing: Landing, pricing, journal, join, errors
 
