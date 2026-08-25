@@ -31,4 +31,14 @@ describe("production community and content integrity", () => {
     expect(uiSources).not.toMatch(/>\s*(?:Champion\s+)?TBD\s*</);
     expect(uiSources).not.toMatch(/\?\?\s*"TBD"/);
   });
+
+  it("reserves the initial Clubs layout and promotes only the first visible banner", () => {
+    const source = read("client/src/pages/MyClubs.tsx");
+
+    expect(source).toContain("const [discoverLoading, setDiscoverLoading] = useState(true);");
+    expect(source).toContain("const [initialClubsLoading, setInitialClubsLoading] = useState(true);");
+    expect(source).toContain('loading={priority ? "eager" : "lazy"}');
+    expect(source).toContain('fetchPriority={priority ? "high" : "auto"}');
+    expect(source).toContain("priority={index === 0}");
+  });
 });

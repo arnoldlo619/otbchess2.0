@@ -120,11 +120,13 @@ function ClubCard({
   isDark,
   toDashboard = false,
   isOwned = false,
+  priority = false,
 }: {
   club: Club;
   isDark: boolean;
   toDashboard?: boolean;
   isOwned?: boolean;
+  priority?: boolean;
 }) {
   const [, navigate] = useLocation();
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
@@ -151,7 +153,10 @@ function ClubCard({
                 src={club.bannerUrl}
                 alt=""
                 role="presentation"
-                loading="lazy"
+                loading={priority ? "eager" : "lazy"}
+                fetchPriority={priority ? "high" : "auto"}
+                width={720}
+                height={900}
                 className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
               />
@@ -799,7 +804,8 @@ export default function MyClubs() {
   const [cityFilter, setCityFilter] = useState<string>(() => new URLSearchParams(window.location.search).get("city") ?? "all");
 
   const [discoverClubs, setDiscoverClubs] = useState<Club[]>([]);
-  const [discoverLoading, setDiscoverLoading] = useState(false);
+  const [discoverLoading, setDiscoverLoading] = useState(true);
+  const [initialClubsLoading, setInitialClubsLoading] = useState(true);
   const [discoverTotal, setDiscoverTotal] = useState(0);
   const [discoverError, setDiscoverError] = useState(false);
   const [showWizard, setShowWizard] = useState(() =>
@@ -905,50 +911,54 @@ export default function MyClubs() {
 
   // ── Refresh clubs data ──────────────────────────────────────────────────────
   const refreshClubs = useCallback(async () => {
-    seedClubsIfEmpty();
-    seedClubEventsIfEmpty();
-    if (user) migrateLocalClubsToServer(user.id).catch(() => {});
+    try {
+      seedClubsIfEmpty();
+      seedClubEventsIfEmpty();
+      if (user) migrateLocalClubsToServer(user.id).catch(() => {});
 
-    const { clubs: serverClubs } = await apiListPublicClubs();
-    const localClubs = listAllClubs();
-    const serverIds = new Set(serverClubs.map((c: Club) => c.id));
-    const localOnly = localClubs.filter((c) => !serverIds.has(c.id));
-    const all = [...serverClubs, ...localOnly];
-    setAllClubs(all);
+      const { clubs: serverClubs } = await apiListPublicClubs();
+      const localClubs = listAllClubs();
+      const serverIds = new Set(serverClubs.map((c: Club) => c.id));
+      const localOnly = localClubs.filter((c) => !serverIds.has(c.id));
+      const all = [...serverClubs, ...localOnly];
+      setAllClubs(all);
 
-    if (user) {
-      let joined: Club[] = [];
-      try {
-        joined = await apiListMyClubs();
-        joined.forEach((c) => {
-          if (!listMyClubs(user.id).find((lc) => lc.id === c.id)) {
-            joinClub(c.id, { userId: user.id, displayName: user.displayName ?? "" });
-          }
-        });
-      } catch {
-        joined = listMyClubs(user.id);
-      }
-      setMyClubs(joined);
-      const joinedIds = new Set(joined.map((c) => c.id));
-      const followed = all.filter((c) => !joinedIds.has(c.id) && isFollowing(c.id, user.id));
-      setFollowedClubs(followed);
-
-      // Aggregate upcoming events
-      const relevantClubIds = [...joined.map((c) => c.id), ...followed.map((c) => c.id)];
-      const uniqueClubIds = Array.from(new Set(relevantClubIds));
-      const clubMap = new Map(all.map((c) => [c.id, c]));
-      const now = new Date().toISOString();
-      const events: EnrichedEvent[] = [];
-      for (const clubId of uniqueClubIds) {
-        const club = clubMap.get(clubId);
-        if (!club) continue;
-        const clubEvents = listClubEvents(clubId).filter((e) => e.isPublished && e.startAt >= now);
-        for (const ev of clubEvents) {
-          events.push({ ...ev, clubName: club.name, clubAccent: club.accentColor, isJoined: joinedIds.has(clubId) });
+      if (user) {
+        let joined: Club[] = [];
+        try {
+          joined = await apiListMyClubs();
+          joined.forEach((c) => {
+            if (!listMyClubs(user.id).find((lc) => lc.id === c.id)) {
+              joinClub(c.id, { userId: user.id, displayName: user.displayName ?? "" });
+            }
+          });
+        } catch {
+          joined = listMyClubs(user.id);
         }
+        setMyClubs(joined);
+        const joinedIds = new Set(joined.map((c) => c.id));
+        const followed = all.filter((c) => !joinedIds.has(c.id) && isFollowing(c.id, user.id));
+        setFollowedClubs(followed);
+
+        // Aggregate upcoming events
+        const relevantClubIds = [...joined.map((c) => c.id), ...followed.map((c) => c.id)];
+        const uniqueClubIds = Array.from(new Set(relevantClubIds));
+        const clubMap = new Map(all.map((c) => [c.id, c]));
+        const now = new Date().toISOString();
+        const events: EnrichedEvent[] = [];
+        for (const clubId of uniqueClubIds) {
+          const club = clubMap.get(clubId);
+          if (!club) continue;
+          const clubEvents = listClubEvents(clubId).filter((e) => e.isPublished && e.startAt >= now);
+          for (const ev of clubEvents) {
+            events.push({ ...ev, clubName: club.name, clubAccent: club.accentColor, isJoined: joinedIds.has(clubId) });
+          }
+        }
+        events.sort((a, b) => a.startAt.localeCompare(b.startAt));
+        setUpcomingEvents(events);
       }
-      events.sort((a, b) => a.startAt.localeCompare(b.startAt));
-      setUpcomingEvents(events);
+    } finally {
+      setInitialClubsLoading(false);
     }
   }, [user]);
 
@@ -1321,16 +1331,24 @@ export default function MyClubs() {
         {(activeTab === "discover" || !user) && (
           <>
             {/* Featured Clubs — editorial section (not carousel) */}
-            {!search.trim() && categoryFilter === "all" && locationFilter === "all" && featuredClubs.length > 0 && (
+            {!search.trim() && categoryFilter === "all" && locationFilter === "all" && (initialClubsLoading || featuredClubs.length > 0) && (
               <section>
                 <div className="flex items-center gap-2 mb-4">
                   <Zap className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>Featured</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {featuredClubs.map((club) => (
-                    <ClubCard key={club.id} club={club} isDark={isDark} />
-                  ))}
+                  {initialClubsLoading
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} aria-hidden="true" className="rounded-2xl overflow-hidden animate-pulse">
+                          <div className={`aspect-[4/5] rounded-2xl ${isDark ? "bg-white/6" : "bg-[#ADBC9F]/20"}`} />
+                          <div className={`mt-3 h-4 w-3/4 rounded-full ${isDark ? "bg-white/6" : "bg-[#ADBC9F]/20"}`} />
+                          <div className={`mt-2 h-3 w-1/2 rounded-full ${isDark ? "bg-white/4" : "bg-[#ADBC9F]/10"}`} />
+                        </div>
+                      ))
+                    : featuredClubs.map((club, index) => (
+                        <ClubCard key={club.id} club={club} isDark={isDark} priority={index === 0} />
+                      ))}
                 </div>
               </section>
             )}
@@ -1372,8 +1390,13 @@ export default function MyClubs() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                  {discoverClubs.map((club) => (
-                    <ClubCard key={club.id} club={club} isDark={isDark} />
+                  {discoverClubs.map((club, index) => (
+                    <ClubCard
+                      key={club.id}
+                      club={club}
+                      isDark={isDark}
+                      priority={featuredClubs.length === 0 && index === 0}
+                    />
                   ))}
                 </div>
               )}

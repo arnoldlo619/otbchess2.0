@@ -7413,6 +7413,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] No main-thread blocking from decorative animation
 - [x] Image optimization (principal routes: lazy loading, correct sizes)
 - [x] Font loading strategy (no FOIT)
+- [x] Reduce cold mobile Clubs discovery LCP by prioritizing the first visible club image and deferring below-fold media
+- [x] Migrate embedded public club banner/avatar data URLs to optimized permanent storage and keep the public clubs response below 100 KB
 
 ### G. Functional Regression
 - [x] All 6204 client tests pass
