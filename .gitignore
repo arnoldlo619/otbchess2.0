@@ -110,6 +110,7 @@ temp/
 uploads/
 .project-config.json
 .github/workflows/lint.yml
+.github/workflows/ci.yml
 
 # Large binary files — served via /manus-storage/ CDN proxy instead
 server/cv-models/

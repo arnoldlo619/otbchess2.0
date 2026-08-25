@@ -10,7 +10,7 @@ import {
 
 const projectRoot = join(import.meta.dirname, "..");
 const packageSource = readFileSync(join(projectRoot, "package.json"), "utf8");
-const workflowSource = readFileSync(join(projectRoot, ".github/workflows/ci.yml"), "utf8");
+const workflowSource = readFileSync(join(projectRoot, "docs/CI_WORKFLOW_TEMPLATE.yml"), "utf8");
 const auditSource = readFileSync(join(projectRoot, "docs/BUNDLE_AUDIT.md"), "utf8");
 
 const temporaryDirectories: string[] = [];

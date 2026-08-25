@@ -7475,6 +7475,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add deterministic repository-wide literal internal-link validation to the CI unit-test gate
 - [x] Performance budget check documented
 - [x] Enforce documented total-JS, largest-chunk, and CSS artifact budgets after the CI production build
+- [ ] Sync the verified source to GitHub, preserve the CI template, and document owner-authorized workflow activation
 
 ### M. Release Decision
 - [x] P0/P1/P2/P3 issue classification

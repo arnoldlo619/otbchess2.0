@@ -52,7 +52,6 @@ jobs:
       - name: Unit tests
         run: pnpm test -- --reporter=verbose
         env:
-          # Provide stub env vars so server-side tests don't fail on missing secrets
           DATABASE_URL: postgresql://test:test@localhost:5432/test
           JWT_SECRET: ci-test-secret-32-chars-minimum-ok
           BUILT_IN_FORGE_API_KEY: ci-stub

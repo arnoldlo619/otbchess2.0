@@ -28,7 +28,7 @@ The main blockers are operational rather than architectural. The currently publi
 | Unit regression baseline | The latest completed full client baseline records 6,204 passing tests; the repository currently contains 331 unit/integration test files.[1] | Strong, with focused post-baseline additions |
 | Browser regression | 24 Playwright specification files cover representative tournament, community, training, marketing, accessibility, resilience, performance, and telemetry flows.[1] | Strong for current stage |
 | Type safety and lint | TypeScript and zero-error lint are explicit CI gates and have passed across the recent checkpoint batches.[1] [2] | Strong |
-| Production build | A build job and post-build bundle budget exist, but the current release SHA has not completed that workflow on GitHub because the remote repository is stale and has no registered workflow.[2] [5] | Release gate |
+| Production build | A build job and post-build bundle budget are preserved as a CI template, but the current release SHA has not completed that workflow because the connected token cannot create GitHub workflow files.[2] [5] | Release gate |
 | Bundle control | Documented ceilings enforce 2.20 MiB total JS gzip, 210 KiB largest JS gzip, and 525 KiB largest raw CSS after a production build.[3] | Strong once CI runs remotely |
 | Security | Restricted CORS handling, parameterized Drizzle SQL fragments, server validation, Sentry, structured logs, request IDs, and a global error handler are present.[1] [6] | Good for controlled beta |
 | Resilience | Join, tournament creation, club creation, RSVP building, and Director result state have desktop/mobile refresh recovery; drafts exclude data URLs and clear only after authoritative success.[1] | Strong |
@@ -49,7 +49,7 @@ No additional P0 product-functionality defect was proven in the audited tourname
 
 | ID | Finding | Risk | Required closure |
 |---|---|---|---|
-| P1-01 | The connected GitHub `main` branch is dated July 17, 2026 and does not contain `.github/workflows`; no Actions workflow or run is registered. | Source recovery and CI provenance are weaker than the local project state. | Repair GitHub sync, confirm the current checkpoint is present on `main`, then verify the workflow is registered. |
+| P1-01 | The connected GitHub App token cannot create `.github/workflows/ci.yml`; GitHub rejected the workflow-preserving push. The CI definition is preserved under `docs/` for owner-authorized activation. | CI is documented but not active, so release provenance is incomplete. | Activate the preserved template through the GitHub web editor or reconnect a credential with workflow permission, then verify the workflow is registered. |
 | P1-02 | The latest production build and new bundle-budget gate have not completed on the current remote SHA. | Source-level and focused tests cannot prove the deploy artifact compiles within budget. | Run the remote CI pipeline and require TypeScript, lint, link validation, unit tests, build, and bundle budget to pass. |
 | P1-03 | Stripe checkout, successful subscription webhook, cancellation webhook, and `/pro/success` polling remain unverified end to end in production. | Users could pay without entitlement updates or receive inconsistent membership state. | Keep paid acquisition disabled until all four production scenarios pass with test accounts and auditable Stripe events. |
 | P1-04 | No production-like load baseline exists for live tournament/SSE traffic. | Large promoted events may expose cold-start, connection, or database limits that functional tests do not measure. | Run a staged load test before advertising large events; define acceptable P95 latency, error rate, and SSE recovery targets. |
@@ -79,7 +79,7 @@ No additional P0 product-functionality defect was proven in the audited tourname
 |---|---|
 | Release candidate | A recoverable checkpoint containing claim-integrity fixes, report, tests, and zero TypeScript errors. |
 | Content integrity | Source and desktop/mobile browser tests prove no testimonials, reviewer identities, star rating, or fallback count floors remain. |
-| CI provenance | GitHub `main` matches the release candidate and registers `.github/workflows/ci.yml`. |
+| CI provenance | GitHub `main` matches the release candidate, then an owner-authorized credential activates `.github/workflows/ci.yml` from the preserved template. |
 | CI result | TypeScript, ESLint, internal links, unit tests, production build, and bundle budgets all pass on the same SHA.[2] |
 | Environment | Required auth, email, storage, VAPID, analytics, Sentry, and Stripe secrets are present in production without exposing values. |
 | Database | No pending schema change exists for this release; confirm health and a read-only public stats query before publish. |
@@ -124,7 +124,7 @@ This is a conditional operating decision, not a claim that every backlog item is
 ## References
 
 [1]: ./todo.md "ChessOTB verified QA and backlog ledger"
-[2]: ./.github/workflows/ci.yml "ChessOTB continuous integration workflow"
+[2]: ./docs/CI_WORKFLOW_TEMPLATE.yml "Preserved ChessOTB continuous integration workflow template"
 [3]: ./docs/BUNDLE_AUDIT.md "ChessOTB bundle audit and performance budgets"
 [4]: https://chessotb.club/api/health "ChessOTB production health endpoint"
 [5]: https://github.com/arnoldlo619/otbchess2.0 "Connected ChessOTB GitHub repository"
