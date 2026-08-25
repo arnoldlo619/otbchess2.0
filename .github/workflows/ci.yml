@@ -46,6 +46,9 @@ jobs:
       - name: ESLint
         run: pnpm lint
 
+      - name: Internal link validation
+        run: pnpm test:links
+
       - name: Unit tests
         run: pnpm test -- --reporter=verbose
         env:

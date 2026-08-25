@@ -7463,11 +7463,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] No sensitive user data in logs
 
 ### L. CI Quality Gates
-- [ ] TypeScript check in CI (0 errors)
-- [ ] ESLint in CI (0 errors)
-- [ ] Unit tests in CI (all pass)
+- [x] TypeScript check in CI (0 errors)
+- [x] ESLint in CI (0 errors)
+- [x] Unit tests in CI (all pass)
 - [ ] Production build succeeds
-- [ ] Internal link validation
+- [x] Internal link validation
+- [x] Add deterministic repository-wide literal internal-link validation to the CI unit-test gate
 - [ ] Performance budget check documented
 
 ### M. Release Decision

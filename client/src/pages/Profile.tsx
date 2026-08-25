@@ -1374,15 +1374,6 @@ export default function ProfilePage() {
               <span className="otb-icon"><BattleIcon size={16} /></span>
               <h2 className={`text-base font-bold ${text}`}>Battle History</h2>
             </div>
-            <a
-              href="/battle/history"
-              className={`flex items-center gap-1 text-xs font-medium transition ${
-                isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#436850]/70 hover:text-[#436850]"
-              }`}
-            >
-              View all
-              <ExternalLink className="w-3 h-3" />
-            </a>
           </div>
 
           {/* Win/Loss/Draw summary + win-rate bar */}
@@ -1437,14 +1428,14 @@ export default function ProfilePage() {
               <span className="otb-icon opacity-30"><BattleIcon size={32} /></span>
               <p className="text-sm text-center">No battles yet.<br />Challenge someone to a 1v1 battle!</p>
               <a
-                href="/battle"
+                href="/clubs"
                 className={`mt-1 text-xs px-4 py-2 rounded-xl font-medium transition ${
                   isDark
                     ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25"
                     : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
                 }`}
               >
-                Start a Battle
+                Open Clubs
               </a>
             </div>
           ) : (

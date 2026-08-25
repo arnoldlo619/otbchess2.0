@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -9,6 +9,7 @@ const homeSource = readFileSync(resolve(projectRoot, "client/src/pages/Home.tsx"
 const pricingSource = readFileSync(resolve(projectRoot, "client/src/pages/Pricing.tsx"), "utf8");
 const joinSource = readFileSync(resolve(projectRoot, "client/src/pages/Join.tsx"), "utf8");
 const inventory = readFileSync(resolve(projectRoot, "docs/ROUTE_INVENTORY.md"), "utf8");
+const clientSourceRoot = resolve(projectRoot, "client/src");
 
 const routePaths = Array.from(appSource.matchAll(/<Route path=\{"([^"]+)"\}/g), (match) => match[1]);
 
@@ -27,6 +28,26 @@ function literalInternalDestinations(source: string): string[] {
     (match) => match[1],
   );
   return Array.from(new Set(values)).sort();
+}
+
+function listClientSourceFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "__tests__") return [];
+      return listClientSourceFiles(path);
+    }
+    if (!/\.(?:ts|tsx)$/.test(entry.name) || /\.(?:test|spec)\.(?:ts|tsx)$/.test(entry.name)) return [];
+    return [path];
+  });
+}
+
+function isRouterDestination(destination: string): boolean {
+  const pathname = destination.split(/[?#]/, 1)[0];
+  if (!pathname || pathname === "/") return true;
+  if (/^\/(?:api|manus-storage|uploads|__manus__)(?:\/|$)/.test(pathname)) return false;
+  if (/\.[A-Za-z0-9]+$/.test(pathname)) return false;
+  return true;
 }
 
 describe("canonical route inventory", () => {
@@ -61,6 +82,17 @@ describe("canonical route inventory", () => {
   ])("maps literal internal destinations from %s to registered routes", (_label, source) => {
     const destinations = literalInternalDestinations(source);
     const stale = destinations.filter((destination) => !routePatternMatches(destination));
+    expect(stale).toEqual([]);
+  });
+
+  it("maps every literal client-side route destination to a registered application route", () => {
+    const stale = listClientSourceFiles(clientSourceRoot).flatMap((file) => {
+      const source = readFileSync(file, "utf8");
+      return literalInternalDestinations(source)
+        .filter(isRouterDestination)
+        .filter((destination) => !routePatternMatches(destination))
+        .map((destination) => `${file.slice(projectRoot.length + 1)} -> ${destination}`);
+    });
     expect(stale).toEqual([]);
   });
 
