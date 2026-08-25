@@ -1236,6 +1236,12 @@ export default function ClubProfile() {
     };
   }, [club?.id, club?.name, club?.description, club?.bannerUrl, club?.avatarUrl, club?.memberCount]);
 
+  // Membership aliases must stay above the loading return so ClubProfile keeps
+  // its hook ordering stable before and after club data arrives.
+  const _myMembership = myMembershipEarly;
+  const isOwner = isOwnerEarly;
+  const isDirector = isDirectorEarly;
+
   if (!club) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center gap-6 px-6 ${isDark ? "bg-[#0d1a0f]" : "bg-[#FBFADA]"}`}>
@@ -1274,12 +1280,6 @@ export default function ClubProfile() {
       </div>
     );
   }
-
-  // Membership flags (aliases of the pre-return derivations for readability below)
-  const _myMembership = myMembershipEarly;
-  const isOwner = isOwnerEarly;
-  const isDirector = isDirectorEarly;
-  // onlineCount already declared above (before the early return)
 
   const handleJoin = async () => {
     if (!user) {

@@ -7490,6 +7490,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Deployment checklist
 - [x] Rollback plan
 
+### N. Manual Event Payment Confirmation
+- [x] Add owner/director-only manual RSVP payment states without storing payment proof, transaction IDs, or amounts
+- [x] Persist confirmation actor and time server-side while keeping payment status private from public RSVP views
+- [x] Add an event attendee-drawer control for owners/directors and regression coverage for authorization, privacy, and state transitions
+
 ## P0 Release-Recovery Sprint
 
 - [x] P0-1a: Add /tournaments/new route (opens TournamentWizard)
@@ -7782,7 +7787,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Design personal payment-link data model and owner configuration UX
 - [x] Implement owner payment-link configuration in club settings and event/tournament creation
 - [x] Build player-facing payment prompt on event and tournament pages
-- [ ] Add owner payment-status tracking and manual confirmation controls
+- [x] Add owner payment-status tracking and manual confirmation controls
 - [x] Add regression coverage and verify end-to-end payment-link experience
 
 ## Tournament Format Card Redesign

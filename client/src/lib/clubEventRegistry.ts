@@ -14,6 +14,14 @@ import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type RSVPStatus = "going" | "not_going" | "maybe";
+export type ManualPaymentStatus = "untracked" | "pending" | "confirmed" | "waived";
+
+export interface ClubEventRsvpPayment {
+  userId: string;
+  paymentStatus: ManualPaymentStatus;
+  paymentUpdatedAt: string | null;
+  paymentUpdatedBy: string | null;
+}
 
 export interface ClubEvent {
   id: string;
@@ -431,6 +439,35 @@ export async function syncRSVPsFromServer(clubId: string, eventId: string): Prom
   } catch {
     return getEventRSVPs(eventId);
   }
+}
+
+/**
+ * Load private manual-payment states for an event. The server limits this to
+ * club owners and directors; public RSVP responses never include payment data.
+ */
+export async function fetchRsvpPaymentStatuses(clubId: string, eventId: string): Promise<ClubEventRsvpPayment[]> {
+  const res = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvps/payment-statuses`);
+  if (!res.ok) throw new Error("Unable to load private payment statuses");
+  return res.json() as Promise<ClubEventRsvpPayment[]>;
+}
+
+/**
+ * Record a host's manual payment decision. This deliberately carries no
+ * receipt, provider identifier, transaction reference, or amount.
+ */
+export async function updateRsvpPaymentStatus(
+  clubId: string,
+  eventId: string,
+  userId: string,
+  paymentStatus: ManualPaymentStatus,
+): Promise<ClubEventRsvpPayment> {
+  const res = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvps/${userId}/payment-status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paymentStatus }),
+  });
+  if (!res.ok) throw new Error("Unable to update private payment status");
+  return res.json() as Promise<ClubEventRsvpPayment>;
 }
 
 // ── Comments API ──────────────────────────────────────────────────────────────

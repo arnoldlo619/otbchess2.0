@@ -1287,6 +1287,79 @@ clubsRouter.get("/:id/events/:eventId/rsvps", async (req: Request, res: Response
   }
 });
 
+/** GET /api/clubs/:id/events/:eventId/rsvps/payment-statuses — owner/director-only private manual status view */
+clubsRouter.get("/:id/events/:eventId/rsvps/payment-statuses", authMiddleware, async (req: Request, res: Response) => {
+  const { id, eventId } = req.params;
+  const userId = (req as any).userId as string;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    const isManager = club.ownerId === userId || membership?.role === "owner" || membership?.role === "director";
+    if (!isManager) { res.status(403).json({ error: "Owner or director access required" }); return; }
+    const [event] = await db.select({ id: clubEvents.id }).from(clubEvents)
+      .where(and(eq(clubEvents.id, eventId), eq(clubEvents.clubId, id)));
+    if (!event) { res.status(404).json({ error: "Event not found" }); return; }
+    const rows = await db.select({
+      userId: clubEventRsvps.userId,
+      paymentStatus: clubEventRsvps.paymentStatus,
+      paymentUpdatedAt: clubEventRsvps.paymentUpdatedAt,
+      paymentUpdatedBy: clubEventRsvps.paymentUpdatedBy,
+    }).from(clubEventRsvps).where(and(eq(clubEventRsvps.clubId, id), eq(clubEventRsvps.eventId, eventId)));
+    res.json(rows.map((row) => ({
+      ...row,
+      paymentUpdatedAt: row.paymentUpdatedAt instanceof Date ? row.paymentUpdatedAt.toISOString() : row.paymentUpdatedAt ? String(row.paymentUpdatedAt) : null,
+    })));
+  } catch (err) {
+    logger.error("[clubs] GET private RSVP payment statuses error:", err);
+    res.status(500).json({ error: "Failed to fetch payment statuses" });
+  }
+});
+
+/** PATCH /api/clubs/:id/events/:eventId/rsvps/:rsvpUserId/payment-status — owner/director-only manual confirmation */
+clubsRouter.patch("/:id/events/:eventId/rsvps/:rsvpUserId/payment-status", authMiddleware, async (req: Request, res: Response) => {
+  const { id, eventId, rsvpUserId } = req.params;
+  const userId = (req as any).userId as string;
+  const { paymentStatus } = req.body as { paymentStatus?: string };
+  const allowedStatuses = ["untracked", "pending", "confirmed", "waived"] as const;
+  if (!paymentStatus || !allowedStatuses.includes(paymentStatus as typeof allowedStatuses[number])) {
+    res.status(400).json({ error: "paymentStatus must be untracked | pending | confirmed | waived" });
+    return;
+  }
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    const isManager = club.ownerId === userId || membership?.role === "owner" || membership?.role === "director";
+    if (!isManager) { res.status(403).json({ error: "Owner or director access required" }); return; }
+    const [existing] = await db.select().from(clubEventRsvps).where(and(
+      eq(clubEventRsvps.clubId, id),
+      eq(clubEventRsvps.eventId, eventId),
+      eq(clubEventRsvps.userId, rsvpUserId),
+    ));
+    if (!existing) { res.status(404).json({ error: "RSVP not found" }); return; }
+    const paymentUpdatedAt = new Date();
+    await db.update(clubEventRsvps).set({
+      paymentStatus,
+      paymentUpdatedAt,
+      paymentUpdatedBy: userId,
+    }).where(eq(clubEventRsvps.id, existing.id));
+    res.json({
+      userId: rsvpUserId,
+      paymentStatus,
+      paymentUpdatedAt: paymentUpdatedAt.toISOString(),
+      paymentUpdatedBy: userId,
+    });
+  } catch (err) {
+    logger.error("[clubs] PATCH private RSVP payment status error:", err);
+    res.status(500).json({ error: "Failed to update payment status" });
+  }
+});
+
 /** POST /api/clubs/:id/events/:eventId/rsvps — upsert the caller's RSVP */
 clubsRouter.post("/:id/events/:eventId/rsvps", authMiddleware, async (req: Request, res: Response) => {
   const { id, eventId } = req.params;

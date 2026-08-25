@@ -1249,6 +1249,10 @@ export const clubEventRsvps = mysqlTable(
     displayName: varchar("display_name", { length: 100 }).notNull().default(""),
     avatarUrl: text("avatar_url"),
     status: varchar("status", { length: 20 }).notNull().default("going"),
+    // Owner/director confirmation workflow only. No payment proof, provider ID, or amount is stored.
+    paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("untracked"),
+    paymentUpdatedAt: timestamp("payment_updated_at"),
+    paymentUpdatedBy: varchar("payment_updated_by", { length: 64 }),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({

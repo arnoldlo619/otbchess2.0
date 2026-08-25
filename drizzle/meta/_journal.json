@@ -92,6 +92,13 @@
       "when": 1787206809911,
       "tag": "0012_lame_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1787700321844,
+      "tag": "0013_light_sue_storm",
+      "breakpoints": true
     }
   ]
 }

@@ -35,6 +35,8 @@ import {
   countRSVPs,
   upsertRSVP,
   syncRSVPsFromServer,
+  fetchRsvpPaymentStatuses,
+  updateRsvpPaymentStatus,
   getEventComments,
   postComment,
   deleteComment,
@@ -45,6 +47,8 @@ import {
   type ClubEvent,
   type ClubEventRSVP,
   type ClubEventComment,
+  type ClubEventRsvpPayment,
+  type ManualPaymentStatus,
   type RSVPStatus,
 } from "@/lib/clubEventRegistry";
 import {
@@ -2538,6 +2542,8 @@ export default function ClubDashboard() {
   const [rsvpPanelEventId, setRsvpPanelEventId] = useState<string | null>(null);
   const [eventRsvpList, setEventRsvpList] = useState<ClubEventRSVP[]>([]);
   const [eventCheckinList, setEventCheckinList] = useState<Array<{id:string;userId:string;displayName:string;avatarUrl:string|null;checkedInAt:string}>>([]);
+  const [rsvpPaymentStatuses, setRsvpPaymentStatuses] = useState<Record<string, ClubEventRsvpPayment>>({});
+  const [rsvpPaymentUpdateKey, setRsvpPaymentUpdateKey] = useState<string | null>(null);
   const [rsvpPanelLoading, setRsvpPanelLoading] = useState(false);
   const [walkInName, setWalkInName] = useState("");
   const [addingWalkIn, setAddingWalkIn] = useState(false);
@@ -3223,18 +3229,34 @@ export default function ClubDashboard() {
     setRsvpPanelEventId(eventId);
     setRsvpPanelLoading(true);
     try {
-      const [rsvpRes, checkinRes] = await Promise.all([
+      const [rsvpRes, checkinRes, paymentRows] = await Promise.all([
         authFetch(`/api/clubs/${club.id}/events/${eventId}/rsvps`),
         authFetch(`/api/clubs/${club.id}/events/${eventId}/checkins`),
+        fetchRsvpPaymentStatuses(club.id, eventId).catch(() => []),
       ]);
       const rsvpData = rsvpRes.ok ? await rsvpRes.json() : [];
       const checkinData = checkinRes.ok ? await checkinRes.json() : [];
       setEventRsvpList(Array.isArray(rsvpData) ? rsvpData : []);
       setEventCheckinList(Array.isArray(checkinData) ? checkinData : []);
+      setRsvpPaymentStatuses(Object.fromEntries(paymentRows.map((row) => [row.userId, row])));
     } catch {
       toast.error("Failed to load RSVP data");
     } finally {
       setRsvpPanelLoading(false);
+    }
+  }
+  async function handleRsvpPaymentStatus(eventId: string, userId: string, paymentStatus: ManualPaymentStatus) {
+    if (!club) return;
+    const key = `${eventId}:${userId}`;
+    setRsvpPaymentUpdateKey(key);
+    try {
+      const updated = await updateRsvpPaymentStatus(club.id, eventId, userId, paymentStatus);
+      setRsvpPaymentStatuses((previous) => ({ ...previous, [userId]: updated }));
+      toast.success(paymentStatus === "confirmed" ? "Payment marked confirmed." : "Payment status updated.");
+    } catch {
+      toast.error("Payment status could not be updated.");
+    } finally {
+      setRsvpPaymentUpdateKey(null);
     }
   }
   async function handleAdminCheckin(eventId: string, userId: string, displayName: string, avatarUrl?: string | null) {
@@ -7880,12 +7902,15 @@ export default function ClubDashboard() {
                   <>
                     <div>
                       <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">RSVPs ({eventRsvpList.length})</h4>
+                      <p className="mb-2 text-[10px] text-white/35">Manual payment status only. Receipts, provider references, and amounts are not stored.</p>
                       {eventRsvpList.length === 0 ? (
                         <p className="text-white/30 text-sm">No RSVPs yet</p>
                       ) : (
                         <div className="space-y-1.5">
                           {eventRsvpList.map(rsvp => {
                             const isCheckedIn = eventCheckinList.some(c => c.userId === rsvp.userId);
+                            const paymentStatus = rsvpPaymentStatuses[rsvp.userId]?.paymentStatus ?? "untracked";
+                            const paymentKey = `${rsvpPanelEventId}:${rsvp.userId}`;
                             return (
                               <div key={rsvp.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/06" style={{ background: "oklch(0.14 0.04 240)" }}>
                                 <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-xs font-bold text-white/60">
@@ -7895,6 +7920,18 @@ export default function ClubDashboard() {
                                   <p className="text-white text-sm font-medium truncate">{rsvp.displayName ?? rsvp.userId}</p>
                                   {isCheckedIn && <p className="text-emerald-400 text-xs">Checked in</p>}
                                 </div>
+                                <select
+                                  aria-label={`Payment status for ${rsvp.displayName ?? rsvp.userId}`}
+                                  value={paymentStatus}
+                                  disabled={rsvpPaymentUpdateKey === paymentKey}
+                                  onChange={(changeEvent) => { void handleRsvpPaymentStatus(rsvpPanelEventId, rsvp.userId, changeEvent.target.value as ManualPaymentStatus); }}
+                                  className="h-8 max-w-[118px] rounded-lg border border-white/10 bg-black/20 px-1.5 text-[10px] font-semibold text-white/80 outline-none focus:ring-2 focus:ring-[#4CAF50]/60 disabled:opacity-50"
+                                >
+                                  <option value="untracked">Not tracked</option>
+                                  <option value="pending">Pending</option>
+                                  <option value="confirmed">Confirmed</option>
+                                  <option value="waived">Waived</option>
+                                </select>
                                 {!isCheckedIn ? (
                                   <button
                                     onClick={() => handleAdminCheckin(rsvpPanelEventId, rsvp.userId, rsvp.displayName ?? rsvp.userId, null)}
