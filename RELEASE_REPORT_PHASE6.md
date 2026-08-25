@@ -1,4 +1,6 @@
 # ChessOTB.club — Phase 6 Release Readiness Report
+> **Superseded:** This historical Phase 6 report is replaced by [RELEASE_DECISION_2026-08-25.md](./RELEASE_DECISION_2026-08-25.md). Do not use its test counts or release verdict for the current build.
+
 **Date:** 2026-07-16  
 **Build:** Phase 6 QA Completion  
 **Verdict: ✅ GO — Conditional on P1 items below**

@@ -46,7 +46,6 @@ import {
   Clock as _Clock,
   CheckCircle2 as _CheckCircle2,
   ArrowRight,
-  Star,
   Shield,
   Globe,
   Home as _HomeIcon,
@@ -82,7 +81,7 @@ import { DynamicSquare } from "@/components/ui/dynamic-square";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
 import { PatternText } from "@/components/ui/pattern-text";
-import { normalizePlatformStats, PLATFORM_STATS_FLOORS } from "@/lib/platformStats";
+import { normalizePlatformStats } from "@/lib/platformStats";
 
 const LIVE_TOURNAMENT_DEMO_PATH = "/tournament/otb-demo-2026/manage";
 
@@ -564,9 +563,6 @@ function StatItem({
 
 function StatsBar() {
   const { ref, inView } = useInView();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  // Floor values shown while loading or on API failure. Never show false zeros.
   const [liveCounts, setLiveCounts] = useState<{ tournaments: number; players: number; clubs: number } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   useEffect(() => {
@@ -577,17 +573,14 @@ function StatsBar() {
           setLiveCounts(normalizePlatformStats(data));
         }
       })
-      .catch(() => { /* silently keep floor values */ })
+      .catch(() => { /* The neutral unavailable state is rendered below. */ })
       .finally(() => setStatsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const counts = liveCounts ?? PLATFORM_STATS_FLOORS;
-  const stats: { target: number; suffix: string; decimals: number; label: string; demo?: boolean }[] = [
-    { target: counts.tournaments, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
-    { target: counts.players, suffix: "+", decimals: 0, label: "Players Registered" },
-    { target: counts.clubs, suffix: "+", decimals: 0, label: "Chess Clubs" },
-    { target: 4.9, suffix: "★", decimals: 1, label: "Avg. Host Rating", demo: true },
-  ];
+  const stats: { target: number; suffix: string; decimals: number; label: string }[] = liveCounts ? [
+    { target: liveCounts.tournaments, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
+    { target: liveCounts.players, suffix: "+", decimals: 0, label: "Players Registered" },
+    { target: liveCounts.clubs, suffix: "+", decimals: 0, label: "Chess Clubs" },
+  ] : [];
   return (
     <section
       ref={ref}
@@ -601,15 +594,15 @@ function StatsBar() {
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
 
       <div className="container relative z-10 py-6 sm:py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-6 sm:gap-8">
           {statsLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
+            ? Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} data-testid="platform-stats-loading" className="flex flex-col items-center gap-2">
                   <div className="h-10 w-24 rounded-lg bg-white/20 animate-pulse" />
                   <div className="h-3 w-28 rounded bg-white/15 animate-pulse" />
                 </div>
               ))
-            : stats.map((stat, i) => (
+            : liveCounts ? stats.map((stat, i) => (
                 <div
                   key={stat.label}
                   className={`stat-item text-center relative ${
@@ -626,13 +619,12 @@ function StatsBar() {
                     active={inView}
                     large
                   />
-                  {stat.demo && (
-                    <span className="absolute -top-1 -right-1 text-[9px] font-bold uppercase tracking-wider bg-white/20 text-white/70 px-1.5 py-0.5 rounded-full">
-                      Beta
-                    </span>
-                  )}
                 </div>
-              ))
+              )) : (
+                <p role="status" className="sm:col-span-3 text-center text-sm font-medium text-white/80">
+                  Live platform activity is temporarily unavailable.
+                </p>
+              )
           }
         </div>
 
@@ -2298,60 +2290,6 @@ function PlayerDemo() {
   );
 }
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
-function Testimonials() {
-  const { ref, inView } = useInView();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
-  const testimonials = [
-    { quote: "We ran a 24-player Swiss last Saturday. I shared the QR code, players scanned and registered in under 2 minutes, and Round 1 pairings were ready before everyone had even sat down. Genuinely the smoothest tournament I've ever directed.", author: "Marcus T.", role: "Club President, NYC Chess Society", elo: "1842" },
-    { quote: "The ELO pull from chess.com eliminated every rating dispute we used to have. One player tried to claim a higher rating. I just showed him the screen. Done. No spreadsheets, no arguments, no drama.", author: "Aisha K.", role: "Tournament Director, London Chess Club", elo: "2105" },
-    { quote: "Our club night went from 45 minutes of setup chaos to 8 minutes flat. 32 players, 5 rounds of Swiss, live standings on the projector. People were checking standings between moves. We're not going back to paper.", author: "Rafael M.", role: "Organizer, São Paulo Open Chess", elo: "1654" },
-  ];
-
-  return (
-    <section id="testimonials" className="py-12 sm:py-16 lg:py-24 transition-colors duration-500 bg-background" ref={ref}>
-      <div className="container">
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"}`}
-            style={{ animationFillMode: "forwards" }}>
-            From the Community
-          </p>
-          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
-            Clubs that made the move.
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <div
-              key={t.author}
-              className={`card-chess card-testimonial p-6 ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-              style={{ animationDelay: `${200 + i * 120}ms`, animationFillMode: "forwards" }}
-            >
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, j) => (
-                  <Star key={j} className={`w-4 h-4 ${isDark ? "fill-[oklch(0.65_0.14_145)] text-[oklch(0.65_0.14_145)]" : "fill-[#436850] text-[#436850]"}`} />
-                ))}
-              </div>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-6 italic">"{t.quote}"</p>
-              <div className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-white/10" : "border-[#ADBC9F]"}`}>
-                <div>
-                  <p className="font-semibold text-foreground text-sm">{t.author}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
-                </div>
-                <span className="tag-elo">{t.elo}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── CTA Section ─────────────────────────────────────────────────────────────
 function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { ref, inView } = useInView();
@@ -2645,7 +2583,6 @@ export default function Home() {
       <HowItWorks />
       <Features />
       <PlayerDemo />
-      <Testimonials />
       <CTASection onCreateTournament={openTournamentWizard} />
       <Footer />
       <TournamentWizard open={wizardOpen} onClose={closeTournamentWizard} />

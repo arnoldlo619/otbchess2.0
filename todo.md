@@ -7451,6 +7451,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] No Swiss language in Quads contexts
 - [ ] No placeholder text in production UI
 - [ ] No fictional claims presented as verified
+- [x] Remove unverifiable landing-page testimonials and the hardcoded 4.9 host-rating claim
+- [x] Remove hardcoded platform-stat floors so landing counters display only live database counts
 - [ ] Consistent capitalization and punctuation
 - [ ] Clear button labels (no "Click here")
 - [ ] Concise empty/error states
@@ -7475,11 +7477,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Enforce documented total-JS, largest-chunk, and CSS artifact budgets after the CI production build
 
 ### M. Release Decision
-- [ ] P0/P1/P2/P3 issue classification
-- [ ] Production-readiness report
-- [ ] GO/NO-GO recommendation with evidence
-- [ ] Deployment checklist
-- [ ] Rollback plan
+- [x] P0/P1/P2/P3 issue classification
+- [x] Production-readiness report
+- [x] GO/NO-GO recommendation with evidence
+- [x] Deployment checklist
+- [x] Rollback plan
 
 ## P0 Release-Recovery Sprint
 
