@@ -7425,7 +7425,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Training: Tools hub, openings, matchup prep, repertoire
 - [x] Training tools hub: make every tool card keyboard-operable with native link semantics
 - [x] Openings demo: name the filter toggle and expose its expanded state
-- [ ] Marketing: Landing, pricing, journal, join, errors
+- [x] Marketing: Landing, pricing, journal, join, errors
 
 ### H. Data and State Correctness
 - [ ] Half-point scores (0.5) preserved correctly
