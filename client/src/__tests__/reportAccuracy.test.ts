@@ -5,6 +5,7 @@ import {
   buildStandingsHeaders,
   buildStandingsRows,
   isQuadsPdfFormat,
+  usesBuchholzPdfTiebreak,
 } from "@/lib/generateResultsPdf";
 import { calculateCompletedGameDrawRate } from "@/lib/reportMetrics";
 import type { Player, Round } from "@/lib/tournamentData";
@@ -47,10 +48,21 @@ describe("report accuracy", () => {
     expect(buildStandingsRows([player], false)[0]).not.toContain("3.5");
   });
 
-  it("preserves Buchholz in non-Quads PDF standings", () => {
+  it("preserves Buchholz only for Swiss-system PDF standings", () => {
     expect(isQuadsPdfFormat("Swiss")).toBe(false);
+    expect(usesBuchholzPdfTiebreak("Swiss")).toBe(true);
+    expect(usesBuchholzPdfTiebreak("Swiss + Elimination")).toBe(true);
+    expect(usesBuchholzPdfTiebreak("Double Swiss")).toBe(true);
     expect(buildStandingsHeaders()).toContain("Buch.");
     expect(buildStandingsRows([player])[0]).toContain("3.5");
+  });
+
+  it("never gives unknown or non-Swiss formats Buchholz labels", () => {
+    expect(usesBuchholzPdfTiebreak()).toBe(false);
+    expect(usesBuchholzPdfTiebreak("legacy-format")).toBe(false);
+    expect(usesBuchholzPdfTiebreak("Round Robin")).toBe(false);
+    expect(usesBuchholzPdfTiebreak("Elimination")).toBe(false);
+    expect(usesBuchholzPdfTiebreak("Quads · 3R")).toBe(false);
   });
 
   it("guards Swiss scoring and pairing pages in both PDF generators", () => {
@@ -58,8 +70,8 @@ describe("report accuracy", () => {
       resolve(import.meta.dirname, "../lib/generateResultsPdf.ts"),
       "utf8",
     );
-    expect(source.match(/if \(!isQuads\) \{/g)).toHaveLength(2);
-    expect(source.match(/buildStandingsHeaders\(!isQuads\)/g)).toHaveLength(2);
-    expect(source.match(/buildStandingsRows\(sortedPlayers, !isQuads\)/g)).toHaveLength(2);
+    expect(source.match(/if \(includeBuchholz\) \{/g)).toHaveLength(2);
+    expect(source.match(/buildStandingsHeaders\(includeBuchholz\)/g)).toHaveLength(2);
+    expect(source.match(/buildStandingsRows\(sortedPlayers, includeBuchholz\)/g)).toHaveLength(2);
   });
 });

@@ -7428,11 +7428,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Marketing: Landing, pricing, journal, join, errors
 
 ### H. Data and State Correctness
-- [ ] Half-point scores (0.5) preserved correctly
-- [ ] Tie-break labels match format (Swiss vs Quads)
-- [ ] No loading errors shown as factual zeros
-- [ ] Demo data clearly labeled
-- [ ] Status consistent across director/public/player views
+- [x] Half-point scores (0.5) preserved correctly
+- [x] Tie-break labels match format (Swiss vs Quads)
+- [x] No loading errors shown as factual zeros
+- [x] Demo data clearly labeled
+- [x] Status consistent across director/public/player views
 
 ### I. Resilience
 - [ ] Offline transition shows graceful error

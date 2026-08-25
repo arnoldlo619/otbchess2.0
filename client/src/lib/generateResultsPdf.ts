@@ -88,6 +88,16 @@ export function isQuadsPdfFormat(format?: string): boolean {
   return format?.trim().toLowerCase().startsWith("quads") ?? false;
 }
 
+/** Buchholz is specific to Swiss-system formats; unknown formats stay neutral. */
+export function usesBuchholzPdfTiebreak(format?: string): boolean {
+  if (!format) return false;
+  const normalized = format.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return normalized === "swiss"
+    || normalized.startsWith("swiss_")
+    || normalized === "doubleswiss"
+    || normalized.startsWith("double_swiss");
+}
+
 export function buildStandingsHeaders(includeBuchholz = true): string[] {
   const headers = ["#", "Player", "ELO", "Pts", "W", "D", "L"];
   return includeBuchholz ? [...headers, "Buch."] : headers;
@@ -517,7 +527,7 @@ export interface PdfOptions {
 }
 
 export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
-  const isQuads = isQuadsPdfFormat(opts.format);
+  const includeBuchholz = usesBuchholzPdfTiebreak(opts.format);
   // Dynamic imports keep jsPDF + autoTable out of the initial bundle
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -530,7 +540,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
     location = "",
     timeControl = "",
     totalRounds,
-    format = "Swiss",
+    format = "",
     players,
     rounds,
     clubName,
@@ -580,11 +590,11 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   cursorY += 4;
 
   const sortedPlayers = getStandings(players);
-  const standingsRows = buildStandingsRows(sortedPlayers, !isQuads);
+  const standingsRows = buildStandingsRows(sortedPlayers, includeBuchholz);
 
   autoTable(doc, {
     startY: cursorY,
-    head: [buildStandingsHeaders(!isQuads)],
+    head: [buildStandingsHeaders(includeBuchholz)],
     body: standingsRows,
     margin: { left: margin, right: margin },
     styles: { fontSize: 8.5, cellPadding: 2.8, font: "helvetica", textColor: TEXT_DARK },
@@ -695,8 +705,8 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
     },
   });
 
-  if (!isQuads) {
-    // Quads use section-local SB/direct encounter tiebreaks, not Swiss Buchholz.
+  if (includeBuchholz) {
+    // Only Swiss-system formats use Buchholz and Swiss pairing guidance.
     addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
     addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
   }
@@ -721,7 +731,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
  * server-side emails via the SMTP system.
  */
 export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string> {
-  const isQuads = isQuadsPdfFormat(opts.format);
+  const includeBuchholz = usesBuchholzPdfTiebreak(opts.format);
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
@@ -733,7 +743,7 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
     location = "",
     timeControl = "",
     totalRounds,
-    format = "Swiss",
+    format = "",
     players,
     rounds,
     clubName,
@@ -776,11 +786,11 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
   cursorY += 4;
 
   const sortedPlayers = getStandings(players);
-  const standingsRows = buildStandingsRows(sortedPlayers, !isQuads);
+  const standingsRows = buildStandingsRows(sortedPlayers, includeBuchholz);
 
   autoTable(doc, {
     startY: cursorY,
-    head: [buildStandingsHeaders(!isQuads)],
+    head: [buildStandingsHeaders(includeBuchholz)],
     body: standingsRows,
     margin: { left: margin, right: margin },
     styles: { fontSize: 9, cellPadding: 3, font: "helvetica", textColor: TEXT_DARK },
@@ -846,8 +856,8 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
     },
   });
 
-  if (!isQuads) {
-    // Quads use section-local SB/direct encounter tiebreaks, not Swiss Buchholz.
+  if (includeBuchholz) {
+    // Only Swiss-system formats use Buchholz and Swiss pairing guidance.
     addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
     addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
   }
