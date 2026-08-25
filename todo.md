@@ -7416,10 +7416,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ### G. Functional Regression
 - [x] All 6204 client tests pass
-- [ ] Tournament: Quick Start, Schedule, Quads, Swiss flows
-- [ ] Tournament: Registration, check-in, pairings, result entry
-- [ ] Tournament: Round progression, standings, finalization
-- [ ] Tournament: Public sync, reports, print, broadcast
+- [x] Tournament: Quick Start, Schedule, Quads, Swiss flows
+- [x] Tournament: Registration, check-in, pairings, result entry
+- [x] Tournament: Round progression, standings, finalization
+- [x] Tournament: Public sync, reports, print, broadcast
 - [ ] Community: Club discovery, public profile, creation, feed
 - [ ] Community: Members, events, league navigation
 - [ ] Training: Tools hub, openings, matchup prep, repertoire
