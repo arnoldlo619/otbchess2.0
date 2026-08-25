@@ -70,7 +70,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { CreateClubWizard } from "@/components/CreateClubWizard";
+import { CREATE_CLUB_WIZARD_ACTIVE_KEY, CreateClubWizard } from "@/components/CreateClubWizard";
 import { CreateClubAuthGate } from "@/components/CreateClubAuthGate";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
@@ -802,12 +802,22 @@ export default function MyClubs() {
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverTotal, setDiscoverTotal] = useState(0);
   const [discoverError, setDiscoverError] = useState(false);
-  const [showWizard, setShowWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(() =>
+    typeof window !== "undefined" && window.sessionStorage.getItem(CREATE_CLUB_WIZARD_ACTIVE_KEY) === "1"
+  );
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [rsvpRefresh, setRsvpRefresh] = useState(0);
   const [locationTree, setLocationTree] = useState<Array<{ code: string; name: string; cities: string[] }>>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openCreateClubWizard = useCallback(() => {
+    try { window.sessionStorage.setItem(CREATE_CLUB_WIZARD_ACTIVE_KEY, "1"); } catch { /* storage may be unavailable */ }
+    setShowWizard(true);
+  }, []);
+  const closeCreateClubWizard = useCallback(() => {
+    try { window.sessionStorage.removeItem(CREATE_CLUB_WIZARD_ACTIVE_KEY); } catch { /* storage may be unavailable */ }
+    setShowWizard(false);
+  }, []);
 
   // Active filter count for mobile badge
   const activeFilterCount = useMemo(() => {
@@ -974,7 +984,7 @@ export default function MyClubs() {
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
             <button
-              onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
+              onClick={() => user ? openCreateClubWizard() : setShowAuthGate(true)}
               aria-label="Create Club"
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 isDark
@@ -1375,7 +1385,7 @@ export default function MyClubs() {
                 className={`rounded-2xl border border-dashed p-8 text-center cursor-pointer transition-all group ${
                   isDark ? "border-white/12 hover:border-[#4CAF50]/50" : "border-[#ADBC9F] hover:border-[#436850]/50"
                 }`}
-                onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
+                onClick={() => user ? openCreateClubWizard() : setShowAuthGate(true)}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 transition-colors ${
                   isDark ? "bg-white/5 group-hover:bg-[#4CAF50]/10" : "bg-[#ADBC9F]/20 group-hover:bg-[#436850]/8"
@@ -1415,15 +1425,15 @@ export default function MyClubs() {
 
       {/* Create Club Wizard */}
       {showWizard && (
-        <CreateClubWizard onClose={() => setShowWizard(false)} />
+        <CreateClubWizard onClose={closeCreateClubWizard} />
       )}
 
       {/* Auth Gate */}
       {showAuthGate && (
         <CreateClubAuthGate
           onClose={() => setShowAuthGate(false)}
-          onAuthenticated={() => { setShowAuthGate(false); setShowWizard(true); }}
-          onPreview={() => { setShowAuthGate(false); setShowWizard(true); }}
+          onAuthenticated={() => { setShowAuthGate(false); openCreateClubWizard(); }}
+          onPreview={() => { setShowAuthGate(false); openCreateClubWizard(); }}
         />
       )}
     </div>

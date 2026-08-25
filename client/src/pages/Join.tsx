@@ -92,6 +92,7 @@ import type { LichessProfile } from "@/hooks/useLichessProfile";
 
 import { authFetch } from "@/lib/apiFetch";
 import { decodeMetaParam, encodeMetaParam } from "@/lib/base64";
+import { clearDraft, readDraft, writeDraft } from "@/lib/draftStorage";
 type Platform = "chesscom" | "lichess";
 type ManualJoinProfile = {
   username: string;
@@ -113,6 +114,21 @@ type UnifiedProfile = ((ChessComProfile & { platform: "chesscom" }) | LichessPro
   manualRating?: boolean;
 };
 type Step = "code" | "username" | "confirm" | "success";
+
+interface JoinDraft {
+  step: "code" | "username";
+  tournamentCode: string;
+  playerName: string;
+  username: string;
+  manualRating: string;
+  platform: Platform;
+  phone: string;
+  email: string;
+}
+
+export function joinDraftKey(code?: string): string {
+  return `otb-join-draft-v1:${code || "manual"}`;
+}
 
 export function parseManualRating(value: string): number | null {
   const rating = Number(value);
@@ -522,6 +538,13 @@ export default function JoinPage() {
   const urlUsername = (() => {
     try { return new URLSearchParams(search ?? "").get("u") ?? ""; } catch { return ""; }
   })();
+  const currentJoinDraftKey = joinDraftKey(urlCode);
+  const initialJoinDraftRef = useRef<JoinDraft | null | undefined>(undefined);
+  if (initialJoinDraftRef.current === undefined && typeof window !== "undefined") {
+    const stored = readDraft<JoinDraft>(currentJoinDraftKey, window.sessionStorage);
+    initialJoinDraftRef.current = stored && (!urlCode || stored.tournamentCode === urlCode) ? stored : null;
+  }
+  const initialJoinDraft = initialJoinDraftRef.current ?? null;
 
   // If the URL carries embedded metadata, bootstrap the registry on this device
   // so resolveTournament() works even without the director's localStorage.
@@ -628,13 +651,13 @@ export default function JoinPage() {
     return urlCode ? Boolean(resolveTournament(urlCode)) : false;
   });
 
-  const [step, setStep] = useState<Step>(urlCode ? "username" : "code");
-  const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
-  const [playerName, setPlayerName] = useState("");
-  const [username, setUsername] = useState("");
-  const [manualRating, setManualRating] = useState("");
+  const [step, setStep] = useState<Step>(() => urlCode ? "username" : initialJoinDraft?.step ?? "code");
+  const [tournamentCode, setTournamentCode] = useState(() => urlCode ?? initialJoinDraft?.tournamentCode ?? "");
+  const [playerName, setPlayerName] = useState(() => initialJoinDraft?.playerName ?? "");
+  const [username, setUsername] = useState(() => initialJoinDraft?.username ?? "");
+  const [manualRating, setManualRating] = useState(() => initialJoinDraft?.manualRating ?? "");
   const [manualRatingUsed, setManualRatingUsed] = useState(false);
-  const [platform, setPlatform] = useState<Platform>("chesscom");
+  const [platform, setPlatform] = useState<Platform>(() => initialJoinDraft?.platform ?? "chesscom");
 
   // Both hooks are always mounted; only the active one is called
   const chesscom = useChessComProfile();
@@ -653,8 +676,8 @@ export default function JoinPage() {
   const [showShare, setShowShare] = useState(false);
   const [showQrScanner, setShowQrScanner] = useState(false);
   const [stepKey, setStepKey] = useState(0); // force re-mount for animation
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState(() => initialJoinDraft?.phone ?? "");
+  const [email, setEmail] = useState(() => initialJoinDraft?.email ?? "");
   const [, navigate] = useLocation();
   // QR mode: code came from URL — show single-screen streamlined join form
   const isQrMode = Boolean(urlCode);
@@ -678,6 +701,20 @@ export default function JoinPage() {
   const nameRef = useRef<HTMLInputElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (step === "success") return;
+    writeDraft<JoinDraft>(currentJoinDraftKey, {
+      step: step === "code" ? "code" : "username",
+      tournamentCode,
+      playerName,
+      username,
+      manualRating,
+      platform,
+      phone,
+      email,
+    }, window.sessionStorage);
+  }, [currentJoinDraftKey, step, tournamentCode, playerName, username, manualRating, platform, phone, email]);
 
   // Swipe-right to go back (native iOS/Android feel)
   const [swipeProgress, _setSwipeProgress] = useState(0); // kept for the existing edge indicator
@@ -1151,6 +1188,7 @@ export default function JoinPage() {
           });
           setConfirming(false);
           haptic([50, 60, 80]); // double-pulse — QR join success (embedded)
+          clearDraft(currentJoinDraftKey, window.sessionStorage);
           navigate(`/tournament/${bootstrapped.id}/play?username=${encodeURIComponent(prof.username)}&name=${encodeURIComponent(playerName.trim() || prof.name || prof.username)}`);
         } else {
           setConfirming(false);
@@ -1173,7 +1211,7 @@ export default function JoinPage() {
           : `${lookupError || "Rating unavailable."} Enter a manual pairing rating to continue.`,
       );
     }
-  }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, username, manualRating, platform, navigate]);
+  }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, username, manualRating, platform, navigate, currentJoinDraftKey]);
 
   async function handleConfirm() {
     if (isTournamentClosed) { showCapToast("closed"); return; }
@@ -1251,6 +1289,7 @@ export default function JoinPage() {
       });
       setExistingReg(getRegistration(tournamentCode));
     }
+    clearDraft(currentJoinDraftKey, window.sessionStorage);
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
     haptic([40, 50, 100]); // double-pulse — registration confirmed

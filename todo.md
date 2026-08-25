@@ -7435,12 +7435,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Status consistent across director/public/player views
 
 ### I. Resilience
-- [ ] Offline transition shows graceful error
+- [x] Offline transition shows graceful error
 - [x] API timeout shows retry option
 - [x] Chess.com lookup failure shows clear error
 - [x] Invalid slug shows 404 with recovery link
 - [x] Duplicate registration blocked with clear message
-- [ ] Browser refresh during multi-step flows preserves state
+- [x] Browser refresh during multi-step flows preserves state
+- [x] Persist only safe Join, tournament, and club draft fields; exclude uploaded data URLs and clear drafts after authoritative success
+- [x] Recover event-scoped RSVP builder edits after refresh or failed save, without persisting header-image data URLs
+- [x] Verify Director result-entry state survives refresh through the existing versioned local persistence path
 
 ### J. Content QA
 - [ ] Consistent "ChessOTB.club" naming throughout

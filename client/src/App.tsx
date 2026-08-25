@@ -10,6 +10,7 @@ import { InstallBanner } from "./components/InstallBanner";
 import { AuthProvider } from "./context/AuthContext";
 import { ApiErrorNotifier } from "./components/ApiErrorNotifier";
 import { ClientErrorTelemetry } from "./components/ClientErrorTelemetry";
+import { OfflineStatusBanner } from "./components/OfflineStatusBanner";
 import { buildPreservedRedirect, buildTournamentCreateRedirect } from "./lib/routeRedirects";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
@@ -270,6 +271,7 @@ function App() {
               <Toaster />
               <ApiErrorNotifier />
               <ClientErrorTelemetry />
+              <OfflineStatusBanner />
               <Router />
               <InstallBanner />
             </TooltipProvider>

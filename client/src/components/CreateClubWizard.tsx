@@ -28,6 +28,7 @@ import { ClubBackgroundPicker } from "@/components/ClubBackgroundPicker";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 import {
   X,
   ChevronLeft,
@@ -114,6 +115,21 @@ const DEFAULT_DATA: WizardData = {
   avatarUrl: null,
   backgroundImage: null,
 };
+
+export const CREATE_CLUB_WIZARD_ACTIVE_KEY = "otb-create-club-wizard-active-v1";
+export const CREATE_CLUB_WIZARD_DRAFT_KEY = "otb-create-club-wizard-draft-v1";
+
+interface CreateClubWizardDraft {
+  step: number;
+  data: WizardData;
+}
+
+function sanitizeCreateClubDraftData(data: WizardData): WizardData {
+  return {
+    ...data,
+    avatarUrl: sanitizeDraftUrl(data.avatarUrl),
+  };
+}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -310,8 +326,9 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState<WizardData>(DEFAULT_DATA);
+  const initialDraftRef = useRef(readDraft<CreateClubWizardDraft>(CREATE_CLUB_WIZARD_DRAFT_KEY));
+  const [step, setStep] = useState(() => initialDraftRef.current?.step ?? 1);
+  const [data, setData] = useState<WizardData>(() => sanitizeCreateClubDraftData(initialDraftRef.current?.data ?? DEFAULT_DATA));
   const [error, setError] = useState<string | null>(null);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [animating, setAnimating] = useState(false);
@@ -334,6 +351,14 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   useEffect(() => {
     setTimeout(() => nameRef.current?.focus(), 100);
   }, []);
+
+  useEffect(() => {
+    if (createdClubId || step >= TOTAL_STEPS) return;
+    writeDraft<CreateClubWizardDraft>(CREATE_CLUB_WIZARD_DRAFT_KEY, {
+      step,
+      data: sanitizeCreateClubDraftData(data),
+    });
+  }, [createdClubId, step, data]);
 
   // Preserve Enter-based step navigation. Escape is handled by the shared overlay.
   const handleKeyDown = useCallback(
@@ -438,6 +463,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
 
         setCreatedClubId(serverClub.id);
         setCreatedClubSlug((serverClub as { id: string; slug?: string }).slug ?? null);
+        clearDraft(CREATE_CLUB_WIZARD_DRAFT_KEY);
         setCreating(false);
       } catch (err) {
         logger.error("[CreateClubWizard] handleNext error:", err);

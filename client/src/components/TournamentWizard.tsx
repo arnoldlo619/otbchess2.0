@@ -80,9 +80,22 @@ import { apiListMyClubs } from "@/lib/clubsApi";
 import type { Club } from "@/lib/clubRegistry";
 import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
 import { DEFAULT_PAYMENT_METHOD_ORDER, hasValidPaymentLinks, normalizePaymentMethodOrder, validatePaymentLinks, type PaymentMethod } from "@/lib/paymentLinks";
+import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
+
+export const TOURNAMENT_WIZARD_ACTIVE_KEY = "otb-tournament-wizard-active-v1";
+export function tournamentWizardDraftKey(initialClubId?: string | null): string {
+  return `otb-tournament-wizard-draft-v1:${initialClubId ?? "standalone"}`;
+}
+
+interface TournamentWizardDraft {
+  mode: WizardMode;
+  previewMode: TournamentFormatMode | null;
+  step: number;
+  data: WizardData;
+}
 
 interface WizardData {
   name: string;
@@ -130,6 +143,16 @@ interface WizardData {
   paymentInstructions: string;
   /** Host-controlled display order for direct payment methods. */
   paymentMethodOrder: PaymentMethod[];
+}
+
+function sanitizeTournamentDraftData(data: WizardData): WizardData {
+  return {
+    ...data,
+    coverImageUrl: sanitizeDraftUrl(data.coverImageUrl) ?? "",
+    paymentVenmoQrUrl: sanitizeDraftUrl(data.paymentVenmoQrUrl) ?? "",
+    paymentCashappQrUrl: sanitizeDraftUrl(data.paymentCashappQrUrl) ?? "",
+    paymentPaypalQrUrl: sanitizeDraftUrl(data.paymentPaypalQrUrl) ?? "",
+  };
 }
 
 function todayIso(): string {
@@ -4592,6 +4615,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     inviteCode: nanoid(8).toUpperCase(),
     directorCode: generateDirectorCode(),
   });
+  const draftReadyRef = useRef(false);
+  const draftKey = tournamentWizardDraftKey(initialClubId);
   const { fireConfetti } = useConfetti();
   const [, navigate] = useLocation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -4619,20 +4644,22 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       .finally(() => setLoadingClubs(false));
   }, [open, user]);
 
-  // Reset on open + body scroll lock
+  // Restore an unfinished draft on open + body scroll lock.
   useEffect(() => {
     if (open) {
-      setMode("select");
-      setPreviewMode(null);
-      setStep(0);
+      const draft = readDraft<TournamentWizardDraft>(draftKey);
+      setMode(draft?.mode ?? "select");
+      setPreviewMode(draft?.previewMode ?? null);
+      setStep(draft?.step ?? 0);
       setDirection(1);
-      setData({
+      setData(draft?.data ? sanitizeTournamentDraftData(draft.data) : {
         ...DEFAULT_DATA,
         inviteCode: nanoid(8).toUpperCase(),
         directorCode: generateDirectorCode(),
         clubId: initialClubId ?? null,
         clubName: initialClubName ?? null,
       });
+      draftReadyRef.current = true;
       // Prevent background scroll on iOS/Android while wizard is open.
       // iOS Safari requires position:fixed + capturing the current scrollY to
       // avoid the page jumping back to top when the lock is released.
@@ -4654,7 +4681,17 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         window.scrollTo(0, scrollY);
       };
     }
-  }, [open, initialClubId, initialClubName]);
+  }, [open, initialClubId, initialClubName, draftKey]);
+
+  useEffect(() => {
+    if (!open || !draftReadyRef.current) return;
+    writeDraft<TournamentWizardDraft>(draftKey, {
+      mode,
+      previewMode,
+      step,
+      data: sanitizeTournamentDraftData(data),
+    });
+  }, [open, draftKey, mode, previewMode, step, data]);
 
   // When entering quickstart mode, auto-fill today's date
   const handleSelectMode = (m: "quickstart" | "schedule" | "large_event" | "brackets" | "quads") => {
@@ -4799,10 +4836,11 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     const slug = makeSlug(data.name, data.date);
     // registerTournamentNow may have already been called; registerTournament is idempotent.
     registerTournamentNow();
+    clearDraft(draftKey);
     // Pass the tournament id and name back so callers (e.g. ClubProfile) can post feed events.
     onClose(slug, data.name);
     navigate(`/tournament/${slug}/manage`);
-  }, [data, onClose, navigate, registerTournamentNow]);
+  }, [data, draftKey, onClose, navigate, registerTournamentNow]);
 
   const handleNext = useCallback(() => {
     if (mode === "select") return;

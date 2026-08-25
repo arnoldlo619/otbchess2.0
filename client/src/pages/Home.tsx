@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { TournamentWizard } from "@/components/TournamentWizard";
+import { TOURNAMENT_WIZARD_ACTIVE_KEY, TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { stripCreateAction } from "@/lib/routeRedirects";
@@ -2485,7 +2485,9 @@ function Footer() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
-  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(() =>
+    typeof window !== "undefined" && window.sessionStorage.getItem(TOURNAMENT_WIZARD_ACTIVE_KEY) === "1"
+  );
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { theme } = useTheme();
@@ -2510,6 +2512,14 @@ export default function Home() {
   })();
   // Active tab state synced with AnimeNavBar via IntersectionObserver.
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
+  const openTournamentWizard = useCallback(() => {
+    try { window.sessionStorage.setItem(TOURNAMENT_WIZARD_ACTIVE_KEY, "1"); } catch { /* storage may be unavailable */ }
+    setWizardOpen(true);
+  }, []);
+  const closeTournamentWizard = useCallback(() => {
+    try { window.sessionStorage.removeItem(TOURNAMENT_WIZARD_ACTIVE_KEY); } catch { /* storage may be unavailable */ }
+    setWizardOpen(false);
+  }, []);
 
   // SEO
   usePageMeta({
@@ -2522,11 +2532,11 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("action") === "create") {
-      setWizardOpen(true);
+      openTournamentWizard();
       // Remove only the internal action flag while preserving source/campaign params.
       window.history.replaceState({}, "", stripCreateAction(window.location.search, window.location.hash));
     }
-  }, []);
+  }, [openTournamentWizard]);
 
   // ── Dashboard smart routing ──────────────────────────────────────────────────────────────────────────────────────────
   // Priority: 1. Active (non-completed) directed tournament → /tournament/:id/manage
@@ -2630,15 +2640,15 @@ export default function Home() {
           isDark={isDark}
         />
       )}
-      <Hero onCreateTournament={() => setWizardOpen(true)} />
+      <Hero onCreateTournament={openTournamentWizard} />
       <StatsBar />
       <HowItWorks />
       <Features />
       <PlayerDemo />
       <Testimonials />
-      <CTASection onCreateTournament={() => setWizardOpen(true)} />
+      <CTASection onCreateTournament={openTournamentWizard} />
       <Footer />
-      <TournamentWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
+      <TournamentWizard open={wizardOpen} onClose={closeTournamentWizard} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark={isDark} />
       <ProUpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
 

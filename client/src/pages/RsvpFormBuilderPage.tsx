@@ -54,7 +54,7 @@ import {
   ToggleLeft,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
-import { useAuthContext } from "@/context/AuthContext";
+import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -97,6 +97,23 @@ interface FormResponse {
   answers: Array<{ questionId: string; questionLabel: string; answer: string | string[] }>;
 }
 
+interface RsvpBuilderDraft {
+  form: RsvpFormData;
+  serverUpdatedAt: string;
+  clientUpdatedAt: number;
+}
+
+export function rsvpBuilderDraftKey(clubId: string, eventId: string): string {
+  return `otb-rsvp-builder-draft-v1:${clubId}:${eventId}`;
+}
+
+function sanitizeRsvpBuilderDraftForm(form: RsvpFormData): RsvpFormData {
+  return {
+    ...form,
+    header_image: sanitizeDraftUrl(form.header_image),
+  };
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const QUESTION_TYPE_META: Record<QuestionType, { label: string; icon: React.ReactNode; description: string }> = {
   text:     { label: "Short Answer",    icon: <AlignLeft className="w-4 h-4" />,     description: "Single line text" },
@@ -127,17 +144,20 @@ function makeQuestion(type: QuestionType = "radio"): FormQuestion {
 export default function RsvpFormBuilderPage() {
   const { clubId, eventId } = useParams<{ clubId: string; eventId: string }>();
   const [, navigate] = useLocation();
-  const { user } = useAuthContext();
+  const draftKey = rsvpBuilderDraftKey(clubId, eventId);
 
   const [tab, setTab] = useState<"questions" | "responses" | "settings" | "theme">("questions");
   const [form, setForm] = useState<RsvpFormData | null>(null);
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "unsaved" | "saving" | "recovered" | "error">("saved");
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveRevision = useRef(0);
+  const latestFormRef = useRef<RsvpFormData | null>(null);
+  const serverUpdatedAtRef = useRef("");
 
   // ── DnD sensors ───────────────────────────────────────────────────────────
   const dndSensors = useSensors(
@@ -148,14 +168,31 @@ export default function RsvpFormBuilderPage() {
   // ── Load form ──────────────────────────────────────────────────────────────
   const loadForm = useCallback(async () => {
     setLoading(true);
+    const localDraft = readDraft<RsvpBuilderDraft>(draftKey);
     try {
       const res = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvp-form`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json() as { form: RsvpFormData; responses: FormResponse[] };
-        setForm(data.form);
+        const remoteUpdatedAt = Date.parse(data.form.updatedAt);
+        const shouldRecoverLocal = Boolean(localDraft && (
+          localDraft.serverUpdatedAt === data.form.updatedAt
+          || !Number.isFinite(remoteUpdatedAt)
+          || localDraft.clientUpdatedAt > remoteUpdatedAt
+        ));
+        const nextForm = shouldRecoverLocal && localDraft
+          ? sanitizeRsvpBuilderDraftForm(localDraft.form)
+          : data.form;
+        if (localDraft && !shouldRecoverLocal) clearDraft(draftKey);
+        serverUpdatedAtRef.current = data.form.updatedAt;
+        latestFormRef.current = nextForm;
+        setForm(nextForm);
         setResponses(data.responses ?? []);
-        if (data.form.questions.length > 0) {
-          setActiveQuestionId(data.form.questions[0].id);
+        if (nextForm.questions.length > 0) {
+          setActiveQuestionId(nextForm.questions[0].id);
+        }
+        if (shouldRecoverLocal) {
+          setSaveStatus("recovered");
+          toast.info("Recovered unsaved changes");
         }
       } else if (res.status === 404) {
         // Create a blank form
@@ -171,20 +208,49 @@ export default function RsvpFormBuilderPage() {
         });
         if (createRes.ok) {
           const created = await createRes.json() as { form: RsvpFormData };
+          serverUpdatedAtRef.current = created.form.updatedAt;
+          latestFormRef.current = created.form;
           setForm(created.form);
           setActiveQuestionId(created.form.questions[0]?.id ?? null);
         }
+      } else if (localDraft) {
+        const recovered = sanitizeRsvpBuilderDraftForm(localDraft.form);
+        serverUpdatedAtRef.current = localDraft.serverUpdatedAt;
+        latestFormRef.current = recovered;
+        setForm(recovered);
+        setActiveQuestionId(recovered.questions[0]?.id ?? null);
+        setSaveStatus("error");
+        toast.info("Recovered unsaved changes. Reconnect to sync them.");
+      } else {
+        toast.error("Failed to load form");
       }
     } catch {
-      toast.error("Failed to load form");
+      if (localDraft) {
+        const recovered = sanitizeRsvpBuilderDraftForm(localDraft.form);
+        serverUpdatedAtRef.current = localDraft.serverUpdatedAt;
+        latestFormRef.current = recovered;
+        setForm(recovered);
+        setActiveQuestionId(recovered.questions[0]?.id ?? null);
+        setSaveStatus("error");
+        toast.info("Recovered unsaved changes. Reconnect to sync them.");
+      } else {
+        toast.error("Failed to load form");
+      }
     }
     setLoading(false);
-  }, [clubId, eventId]);
+  }, [clubId, draftKey, eventId]);
 
   useEffect(() => { void loadForm(); }, [loadForm]);
 
   // ── Auto-save ──────────────────────────────────────────────────────────────
   const scheduleSave = useCallback((updatedForm: RsvpFormData) => {
+    latestFormRef.current = updatedForm;
+    const revision = ++saveRevision.current;
+    writeDraft<RsvpBuilderDraft>(draftKey, {
+      form: sanitizeRsvpBuilderDraftForm(updatedForm),
+      serverUpdatedAt: serverUpdatedAtRef.current || updatedForm.updatedAt,
+      clientUpdatedAt: Date.now(),
+    });
     setSaveStatus("unsaved");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
@@ -208,7 +274,19 @@ export default function RsvpFormBuilderPage() {
           }),
         });
         if (res.ok) {
-          setSaveStatus("saved");
+          const saved = await res.json().catch(() => null) as { form?: RsvpFormData } | null;
+          serverUpdatedAtRef.current = saved?.form?.updatedAt || serverUpdatedAtRef.current || updatedForm.updatedAt;
+          if (revision === saveRevision.current) {
+            clearDraft(draftKey);
+            setSaveStatus("saved");
+          } else if (latestFormRef.current) {
+            writeDraft<RsvpBuilderDraft>(draftKey, {
+              form: sanitizeRsvpBuilderDraftForm(latestFormRef.current),
+              serverUpdatedAt: serverUpdatedAtRef.current,
+              clientUpdatedAt: Date.now(),
+            });
+            setSaveStatus("unsaved");
+          }
         } else {
           setSaveStatus("error");
         }
@@ -216,7 +294,7 @@ export default function RsvpFormBuilderPage() {
         setSaveStatus("error");
       }
     }, 1200);
-  }, [clubId, eventId]);
+  }, [clubId, draftKey, eventId]);
 
   function updateForm(patch: Partial<RsvpFormData>) {
     if (!form) return;
@@ -405,9 +483,12 @@ export default function RsvpFormBuilderPage() {
             {saveStatus === "unsaved" && (
               <span className="text-amber-400/60 text-xs">Unsaved changes</span>
             )}
+            {saveStatus === "recovered" && (
+              <span className="text-amber-300/70 text-xs">Recovered locally</span>
+            )}
             {saveStatus === "error" && (
-              <span className="flex items-center gap-1 text-red-400/70 text-xs">
-                <AlertCircle className="w-3 h-3" /> Save failed
+              <span className="flex items-center gap-1 text-amber-300/70 text-xs">
+                <AlertCircle className="w-3 h-3" /> Saved locally · sync failed
               </span>
             )}
           </div>
