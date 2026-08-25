@@ -2,7 +2,7 @@
  * Auth — Dedicated sign-in / sign-up / guest page
  *
  * Layout: SignIn6 two-panel design remixed with OTB Chess design system
- *  - Left panel (md+): deep forest green, chess-board pattern, OTB logo, tagline, social proof
+ *  - Left panel (md+): deep forest green, chess-board pattern, OTB logo, and product purpose
  *  - Right panel: Sign In / Sign Up / Guest tabs, Google OAuth, full form logic
  *  - Mobile: left panel collapses to a compact branded top bar
  *
@@ -115,14 +115,6 @@ function GoogleIcon() {
     </svg>
   );
 }
-
-/* ── Social proof avatars ──────────────────────────── */
-const PROOF_AVATARS = [
-  { initials: "MC", src: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&facepad=2&w=80&h=80&q=80" },
-  { initials: "AK", src: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&facepad=2&w=80&h=80&q=80" },
-  { initials: "LR", src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&facepad=2&w=80&h=80&q=80" },
-  { initials: "DS", src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&facepad=2&w=80&h=80&q=80" },
-];
 
 /* ── Main page ─────────────────────────────────────── */
 export default function AuthPage() {
@@ -354,29 +346,6 @@ export default function AuthPage() {
               </p>
             </div>
 
-            {/* Social proof */}
-            <div className="relative mt-8 flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {PROOF_AVATARS.map((p) => (
-                  <div
-                    key={p.initials}
-                    className="w-7 h-7 rounded-full ring-2 ring-[oklch(0.20_0.06_145)] overflow-hidden bg-[oklch(0.30_0.08_145)] flex items-center justify-center text-[10px] font-semibold text-white/70"
-                  >
-                    <img
-                      loading="lazy"
-                      decoding="async"
-                      src={p.src}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <span className="text-sm text-white/60">
-                Join 700+ OTB players
-              </span>
-            </div>
           </div>
 
           {/* ── Right panel ── */}

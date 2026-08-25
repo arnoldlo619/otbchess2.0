@@ -7453,6 +7453,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] No fictional claims presented as verified
 - [x] Remove unverifiable landing-page testimonials and the hardcoded 4.9 host-rating claim
 - [x] Remove hardcoded platform-stat floors so landing counters display only live database counts
+- [x] Remove Auth stock-avatar social proof and the hardcoded `Join 700+ OTB players` claim
 - [ ] Consistent capitalization and punctuation
 - [ ] Clear button labels (no "Click here")
 - [ ] Concise empty/error states

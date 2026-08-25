@@ -11,7 +11,7 @@
  * 5. Features
  * 6. Showcase
  * 7. Player ELO Demo
- * 8. Testimonials
+ * 8. Conversion CTA
  * 9. CTA
  * 10. Footer
  */
