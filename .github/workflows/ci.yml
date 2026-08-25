@@ -98,3 +98,6 @@ jobs:
           NODE_ENV: production
           VITE_APP_TITLE: ChessOTB.club
           VITE_APP_ID: otb-chess
+
+      - name: Enforce bundle performance budget
+        run: pnpm check:bundle-budget

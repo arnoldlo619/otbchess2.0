@@ -37,3 +37,15 @@ The next low-risk candidates are interaction-only QR rendering in Club Dashboard
 ## Build constraint
 
 A fresh Vite production measurement was attempted once with the project’s established **2300 MB V8 heap ceiling** after browser cleanup. The sandbox terminated the build during transforms with `SIGTERM`, matching the known resource limit from prior checkpoints. TypeScript and focused regressions pass; the successful artifact baseline above is therefore used for total/per-chunk evidence, while the current improvements are validated through source invariants and runtime route tests rather than a newly emitted bundle manifest.
+
+## CI performance budgets
+
+The production-build job now runs `pnpm check:bundle-budget` immediately after `pnpm build`. The checker measures emitted artifacts recursively under `dist/public/assets`, uses deterministic level-9 gzip sizes for JavaScript, and fails when any ceiling is exceeded or expected JavaScript/CSS output is missing.
+
+| Budget | Measured baseline | CI ceiling | Headroom |
+|---|---:|---:|---:|
+| Total JavaScript across all route/feature chunks, gzip | 1.87 MiB | 2.20 MiB | 17.6% |
+| Largest JavaScript chunk, gzip | 179.9 KiB | 210 KiB | 16.7% |
+| Largest CSS asset, raw | 476.5 KiB | 525 KiB | 10.2% |
+
+These are **all-artifact regression ceilings**, not first-load transfer claims. They deliberately leave bounded headroom above the latest successful artifact baseline while still blocking accidental eager imports, oversized shared dependencies, or uncontrolled CSS growth. A limit should increase only with a fresh artifact measurement, an updated table, and a documented reason that deferral or code splitting is not appropriate.
