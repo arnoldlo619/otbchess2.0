@@ -4991,7 +4991,7 @@ function TournamentCard({
           <div className={`flex items-center gap-2 mt-0.5 text-xs ${textMuted} flex-wrap`}>
             <span className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              {tournament.date ? new Date(tournament.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBD"}
+              {tournament.date ? new Date(tournament.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date not set"}
             </span>
             <span className={`px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/8 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
               {formatLabel}

@@ -707,7 +707,7 @@ export default function FinalStandings() {
                         <span className="text-lg">🥉</span>
                       </div>
                       <p className={`text-xs font-semibold text-center ${textMuted}`}>3rd Place</p>
-                      <p className={`text-[10px] ${textMuted}`}>TBD</p>
+                      <p className={`text-[10px] ${textMuted}`}>Awaiting result</p>
                       <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-16 ${
                         isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"
                       }`}>

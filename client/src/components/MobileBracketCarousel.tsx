@@ -343,7 +343,7 @@ function ChampionSlide({
       ) : (
         <div className="text-center">
           <p className={`text-lg font-bold mb-1 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-            Champion TBD
+            Champion pending
           </p>
           <p className={`text-sm ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
             Complete the final match to crown the winner.

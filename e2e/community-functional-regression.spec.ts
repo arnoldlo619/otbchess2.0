@@ -5,7 +5,7 @@ const publicClubPath = "/clubs/national-city-chess-club";
 test("club discovery search opens a verified public club profile", async ({ page }) => {
   await page.goto("/clubs", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Discover Chess Clubs" })).toBeVisible();
-  await expect(page.getByText("23 clubs", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^\d+ clubs?$/, { exact: true }).first()).toBeVisible();
 
   const search = page.getByRole("textbox", { name: "Search by name, location, or category" });
   await search.fill("National City");

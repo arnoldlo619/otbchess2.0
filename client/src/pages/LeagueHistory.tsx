@@ -216,7 +216,7 @@ export default function LeagueHistory() {
               { label: "Players", value: league.maxPlayers, icon: <Users className="w-4 h-4" /> },
               { label: "Rounds", value: league.totalWeeks, icon: <Swords className="w-4 h-4" /> },
               { label: "Total Matches", value: seasonStats.totalMatches, icon: <Shield className="w-4 h-4" /> },
-              { label: "Champion", value: champion?.displayName ?? "TBD", icon: <Crown className="w-4 h-4" /> },
+              { label: "Champion", value: champion?.displayName ?? "Awaiting result", icon: <Crown className="w-4 h-4" /> },
             ].map((stat) => (
               <div key={stat.label} className="flex flex-col gap-0.5">
                 <span className="text-xs text-[#436850] dark:text-[#436850] flex items-center gap-1">

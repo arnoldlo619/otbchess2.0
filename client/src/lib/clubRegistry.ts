@@ -456,7 +456,10 @@ export function clearClubRegistry(): void {
 }
 
 // ── Mock seed data ────────────────────────────────────────────────────────────
-// Seeded once on first load so the discovery page is never empty.
+// Legacy payload retained temporarily so existing browsers can identify and
+// remove records created by older releases. Production seeding stays disabled.
+
+const ENABLE_LEGACY_DEMO_SEEDING = false;
 
 const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" | "foundedAt">[] = [
   {
@@ -774,7 +777,7 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
   // Charlotte Chess Center
   [
-    { tournamentId: "ccc-sunday-quads-apr-2026", name: "Sunday Action Quads April", date: "2026-04-06", format: "Swiss", playerCount: 0, rounds: 3, status: "upcoming" },
+    { tournamentId: "ccc-sunday-quads-apr-2026", name: "Sunday Action Quads April", date: "2026-04-06", format: "Quads", playerCount: 0, rounds: 3, status: "upcoming" },
     { tournamentId: "ccc-adult-casual-apr-2026", name: "Monday Adult Casual April", date: "2026-04-07", format: "Swiss", playerCount: 0, rounds: 4, status: "upcoming" },
     { tournamentId: "ccc-open-2026", name: "CCC Spring Open 2026", date: "2026-03-29", format: "Swiss", playerCount: 88, rounds: 6, status: "completed", winnerName: "FM Eric Yuhan Li" },
     { tournamentId: "ccc-youth-2025", name: "Youth Championship 2025", date: "2025-11-23", format: "Swiss", playerCount: 64, rounds: 6, status: "completed", winnerName: "Aiden Park" },
@@ -786,6 +789,25 @@ const SEED_KEY = "otb-clubs-seeded-v7";
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {
   try {
+    if (!ENABLE_LEGACY_DEMO_SEEDING) {
+      const legacyClubIds = new Set(
+        loadClubs()
+          .filter((club) => club.id.startsWith("seed-club-"))
+          .map((club) => club.id),
+      );
+
+      saveClubs(loadClubs().filter((club) => !legacyClubIds.has(club.id)));
+      saveMembers(loadMembers().filter((member) =>
+        !legacyClubIds.has(member.clubId)
+        && !member.userId.startsWith("seed-m")
+        && !member.userId.startsWith("demo_"),
+      ));
+      saveClubTournaments(loadClubTournaments().filter((tournament) => !legacyClubIds.has(tournament.clubId)));
+      saveFollows(loadFollows().filter((follow) => !legacyClubIds.has(follow.clubId)));
+      localStorage.removeItem(SEED_KEY);
+      return;
+    }
+
     if (localStorage.getItem(SEED_KEY)) return;
     const existingClubs = loadClubs();
     if (existingClubs.length > 0) {
@@ -865,6 +887,8 @@ const DEMO_CHESS_PLAYERS: Array<{
  * Returns the number of newly added members.
  */
 export function seedDemoMembersToClub(clubId: string): number {
+  if (!ENABLE_LEGACY_DEMO_SEEDING) return 0;
+
   const members = loadMembers();
   const newMembers: ClubMember[] = [];
 

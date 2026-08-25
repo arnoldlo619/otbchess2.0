@@ -24,7 +24,6 @@ import {
   isMember,
   updateClub,
   seedClubsIfEmpty,
-  seedDemoMembersToClub,
   type Club,
   type ClubMember,
 } from "@/lib/clubRegistry";
@@ -5214,26 +5213,6 @@ export default function ClubDashboard() {
               style={{ height: "44px" }}
               />
             </div>
-
-            {/* ── Seed demo members (owner only) ──────────────────────────── */}
-            {isOwnerOrDirector && (
-              <button
-                onClick={() => {
-                  if (!club) return;
-                  const added = seedDemoMembersToClub(club.id);
-                  setMembers(getClubMembers(club.id));
-                  if (added > 0) {
-                    toast.success(`Added ${added} demo members to ${club.name}`);
-                  } else {
-                    toast.info("Demo members already added");
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-dashed border-[#4CAF50]/40 text-[#4CAF50]/70 hover:text-[#4CAF50] hover:border-[#4CAF50]/70 hover:bg-[#4CAF50]/05 transition-all"
-              >
-                <Users className="w-4 h-4" />
-                Add Demo Members (Magnus Carlsen, Hikaru, Firouzja + 15 more)
-              </button>
-            )}
 
             {/* Owner / directors first */}
             {["owner", "director", "member"].map((role) => {

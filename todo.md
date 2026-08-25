@@ -7448,12 +7448,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### J. Content QA
 - [ ] Consistent "ChessOTB.club" naming throughout
 - [ ] Consistent "OTB!!" usage
-- [ ] No Swiss language in Quads contexts
+- [x] No Swiss language in Quads contexts
 - [ ] No placeholder text in production UI
-- [ ] No fictional claims presented as verified
+- [x] No fictional claims presented as verified
 - [x] Remove unverifiable landing-page testimonials and the hardcoded 4.9 host-rating claim
 - [x] Remove hardcoded platform-stat floors so landing counters display only live database counts
 - [x] Remove Auth stock-avatar social proof and the hardcoded `Join 700+ OTB players` claim
+- [x] Remove fabricated production clubs, members, tournaments, events, RSVPs, announcements, and the owner-facing demo-member injector
+- [x] Migrate legacy browser state by deleting only `seed-club-*`, `seed-m*`, and `demo_*` records while preserving real local clubs and activity
 - [ ] Consistent capitalization and punctuation
 - [ ] Clear button labels (no "Click here")
 - [ ] Concise empty/error states

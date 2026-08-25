@@ -396,7 +396,7 @@ function ChampionCard({
         </div>
       ) : (
         <p className={`text-[10px] font-semibold text-center ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
-          Champion TBD
+          Champion pending
         </p>
       )}
     </div>

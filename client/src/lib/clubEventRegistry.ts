@@ -477,12 +477,32 @@ export function deleteComment(commentId: string): void {
 // ── Seed data ─────────────────────────────────────────────────────────────────
 
 const SEED_KEY = "otb-club-events-seeded-v1";
+const ENABLE_LEGACY_DEMO_SEEDING = false;
 
 const SEED_ACCENTS = ["#4CAF50", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#06B6D4"];
 
 /** Seed demo events for the first few clubs if not already done. */
 export function seedClubEventsIfEmpty(): void {
   try {
+    if (!ENABLE_LEGACY_DEMO_SEEDING) {
+      const events = loadEvents();
+      const legacyEventIds = new Set(
+        events
+          .filter((event) => event.clubId.startsWith("seed-club-"))
+          .map((event) => event.id),
+      );
+
+      saveEvents(events.filter((event) => !legacyEventIds.has(event.id)));
+      saveRSVPs(loadRSVPs().filter((rsvp) =>
+        !rsvp.clubId.startsWith("seed-club-") && !legacyEventIds.has(rsvp.eventId),
+      ));
+      saveComments(loadComments().filter((comment) =>
+        !comment.clubId.startsWith("seed-club-") && !legacyEventIds.has(comment.eventId),
+      ));
+      localStorage.removeItem(SEED_KEY);
+      return;
+    }
+
     if (localStorage.getItem(SEED_KEY)) return;
 
     // Grab existing clubs from localStorage
