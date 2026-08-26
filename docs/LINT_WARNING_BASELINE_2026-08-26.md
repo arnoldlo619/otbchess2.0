@@ -36,6 +36,8 @@ The Chess provider proxy now uses Express request/response types for its CORS an
 
 The broadcast service now removes stale payload fields and narrows its optional creator attribution shape to Express request compatibility. Live move validation and bridge delivery payloads are unchanged; focused lint is **zero warnings and zero errors**, with a source contract for the boundary.
 
+The quads prize-template helpers now explicitly mark their unused dispatcher context parameter while retaining the stable two-argument template-call contract. Focused lint is **zero warnings and zero errors**, and all 17 quads lifecycle regressions pass.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

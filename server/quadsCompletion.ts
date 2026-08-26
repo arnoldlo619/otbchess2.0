@@ -186,8 +186,8 @@ export function generatePrizeTemplate(
   }
 }
 
-function templateWinnerEachQuad(sections: QuadSection[], tournamentId: string): PrizeSlot[] {
-  return sections.map((s, i) => ({
+function templateWinnerEachQuad(sections: QuadSection[], _tournamentId: string): PrizeSlot[] {
+  return sections.map((s) => ({
     id: nanoid(),
     sectionId: s.id,
     sectionName: s.name,
@@ -200,7 +200,7 @@ function templateWinnerEachQuad(sections: QuadSection[], tournamentId: string): 
   }));
 }
 
-function templateTopSectionWeighted(sections: QuadSection[], tournamentId: string): PrizeSlot[] {
+function templateTopSectionWeighted(sections: QuadSection[], _tournamentId: string): PrizeSlot[] {
   const prizes: PrizeSlot[] = [];
   sections.forEach((s, i) => {
     const value = i === 0 ? "$40" : i === 1 ? "$25" : i === 2 ? "$15" : "";
@@ -220,7 +220,7 @@ function templateTopSectionWeighted(sections: QuadSection[], tournamentId: strin
   return prizes;
 }
 
-function templateEverySectionEqual(sections: QuadSection[], tournamentId: string): PrizeSlot[] {
+function templateEverySectionEqual(sections: QuadSection[], _tournamentId: string): PrizeSlot[] {
   return sections.map((s) => ({
     id: nanoid(),
     sectionId: s.id,
@@ -234,7 +234,7 @@ function templateEverySectionEqual(sections: QuadSection[], tournamentId: string
   }));
 }
 
-function templateQuad1PodiumPlusWinners(sections: QuadSection[], tournamentId: string): PrizeSlot[] {
+function templateQuad1PodiumPlusWinners(sections: QuadSection[], _tournamentId: string): PrizeSlot[] {
   const prizes: PrizeSlot[] = [];
   sections.forEach((s, i) => {
     if (i === 0) {
