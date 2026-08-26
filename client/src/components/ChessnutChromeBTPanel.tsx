@@ -28,10 +28,8 @@ import {
   ChevronUp,
   Copy,
   Check,
-  Download,
   FlaskConical,
   Wrench,
-  Zap,
   Circle,
   XCircle,
   Info,
@@ -157,7 +155,7 @@ interface ChessnutChromeBTPanelProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 export function ChessnutChromeBTPanel({
   broadcastId,
-  currentFen,
+  currentFen: _currentFen,
   onMoveAccepted,
   onSwitchToManual,
   isDark = true,
@@ -738,7 +736,7 @@ function DiagnosticsGrid({
 }
 
 function ServiceCard({
-  svc, isDark, textMuted, textPrimary, bgMuted, borderMuted
+  svc, isDark, textMuted, textPrimary: _textPrimary, bgMuted, borderMuted
 }: {
   svc: DiagnosticService;
   isDark: boolean;
