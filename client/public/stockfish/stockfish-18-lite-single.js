@@ -1,5 +1,5 @@
 /* OTB Chess: WASM loaded from /manus-storage/ to keep deployment bundle small */
-if(typeof self!=="undefined"){self.__sfWasmUrl="/manus-storage/stockfish-18-lite-single_e330fec3.wasm";}
+if(typeof self!=="undefined"){self.__sfWasmUrl="/manus-storage/stockfish-18-lite-single_0c19ffd3.wasm";}
 /*!
  * Stockfish.js 18 (c) 2026, Chess.com, LLC
  * https://github.com/nmrugg/stockfish.js

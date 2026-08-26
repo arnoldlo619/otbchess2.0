@@ -157,5 +157,8 @@ The repository-wide `pnpm lint` command now reports **496 warnings and zero erro
 > This is a typed-maintainability backlog, not an active release failure: the green remote CI run treats lint errors as blocking and warnings as advisory. The next remediation pass should group warnings by domain and replace `any` with validated narrow types rather than suppressing the rule globally.
 
 ## Guardrails
-
 The active CI workflow remains responsible for TypeScript, ESLint, deterministic unit/integration tests, production build, and bundle-budget enforcement. No lint severity was relaxed, no rules were disabled, and the public UI behavior was preserved.
+
+## Repertoire Builder Completion
+
+Repertoire Builder now exposes the published opening catalog as a dedicated Library workspace. It searches opening families, defaults to the active repertoire color, presents main lines, sidelines, gambits, traps, and practical metadata, and merges canonical line PGN into the user tree without overwriting existing branches. Focused lint is **zero warnings and zero errors**, with regression coverage for catalog loading, line retrieval, and auto-saved tree merging.

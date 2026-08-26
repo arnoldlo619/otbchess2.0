@@ -24,6 +24,7 @@ import { useRoute, useLocation } from "wouter";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { MoveTreePanel } from "@/components/MoveTreePanel";
 import { OTBLoader } from "@/components/OTBLoader";
+import { OpeningLibraryPanel } from "@/components/repertoire/OpeningLibraryPanel";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -47,6 +48,7 @@ import {
   MessageSquare,
   Pencil,
   GitBranch,
+  Sparkles,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -755,7 +757,7 @@ export default function RepertoireBuilder() {
   // ── Right panel tab ────────────────────────────────────────────────────────
   // "explorer" = Lichess explorer + coverage + repertoire moves
   // "tree"     = Full variation tree panel
-  const [rightTab, setRightTab] = useState<"explorer" | "tree">("explorer");
+  const [rightTab, setRightTab] = useState<"explorer" | "tree" | "library">("explorer");
 
   // ── Dynamic board sizing ────────────────────────────────────────────────────
   // Measures the left column height and computes the optimal board pixel size
@@ -801,7 +803,7 @@ export default function RepertoireBuilder() {
     };
   }, [loading]);
 
-  const { ready: sfReady, evaluate, evaluateMultiPV, stop: sfStop, isMultiThreaded, threadCount } = useStockfish();
+  const { ready: sfReady, evaluate: _evaluate, evaluateMultiPV, stop: sfStop, isMultiThreaded, threadCount } = useStockfish();
 
   const chess = useMemo(() => new Chess(currentFen), [currentFen]);
   const currentPath = useMemo(() => buildPath(moveTree, currentFen), [moveTree, currentFen]);
@@ -1508,6 +1510,33 @@ export default function RepertoireBuilder() {
     setPgnImportError(null);
   }, [pgnImportPreview, pgnImportMode, moveTree, autoSave]);
 
+  const importCuratedLine = useCallback((line: { pgn: string; title: string; eco: string; moveCount: number }) => {
+    try {
+      const importedTree = importFromPgn(line.pgn);
+      const nextTree = JSON.parse(JSON.stringify(moveTree)) as MoveNode;
+      const mergeInto = (target: MoveNode, source: MoveNode) => {
+        for (const srcChild of source.children) {
+          const existing = target.children.find((child) => child.fen === srcChild.fen);
+          if (existing) {
+            if (!existing.comment && srcChild.comment) existing.comment = srcChild.comment;
+            mergeInto(existing, srcChild);
+          } else {
+            target.children.push(JSON.parse(JSON.stringify(srcChild)) as MoveNode);
+          }
+        }
+      };
+      mergeInto(nextTree, importedTree);
+      setMoveTree(nextTree);
+      setCurrentFen(STARTING_FEN);
+      setLastMove(null);
+      autoSave(nextTree);
+      setRightTab("tree");
+      toast.success(`${line.title} added to your repertoire`, { description: `${line.eco} · ${line.moveCount} ply merged without overwriting your existing lines.` });
+    } catch {
+      toast.error("This curated line could not be merged. Your repertoire was not changed.");
+    }
+  }, [autoSave, moveTree]);
+
   // ── Determine which explorer moves are in the repertoire ────────────────────────────────────
   const repertoireFens = useMemo(() => {
     const fens = new Set<string>();
@@ -2212,6 +2241,22 @@ export default function RepertoireBuilder() {
                     </span>
                   )}
                 </button>
+                <button
+                  onClick={() => setRightTab("library")}
+                  className={[
+                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors duration-150",
+                    rightTab === "library"
+                      ? isDark
+                        ? "border-emerald-400 text-emerald-300"
+                        : "border-emerald-600 text-emerald-700"
+                      : isDark
+                      ? "border-transparent text-white/40 hover:text-white/70"
+                      : "border-transparent text-[#436850] hover:text-[#436850]",
+                  ].join(" ")}
+                >
+                  <Sparkles size={14} />
+                  Library
+                </button>
                 {/* Turn info — pushed right */}
                 {rightTab === "explorer" && (
                   <span className={`ml-auto text-xs pb-2 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
@@ -2484,6 +2529,10 @@ export default function RepertoireBuilder() {
                 onNavigate={(fen) => { navigateTo(fen); }}
                 isDark={isDark}
               />
+            )}
+
+            {rightTab === "library" && (
+              <OpeningLibraryPanel repertoireColor={color} isDark={isDark} onImportLine={importCuratedLine} />
             )}
 
             {/* ── Explorer Tab content ── */}

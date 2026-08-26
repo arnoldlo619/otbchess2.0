@@ -38,14 +38,17 @@ export interface PVLine {
 /** Detect if SharedArrayBuffer is available (required for multi-threaded WASM) */
 function isSharedArrayBufferAvailable(): boolean {
   try {
-    return typeof SharedArrayBuffer !== "undefined";
+    return typeof SharedArrayBuffer !== "undefined" && globalThis.crossOriginIsolated === true;
   } catch {
     return false;
   }
 }
 
 const SF_MULTI_URL = "/stockfish/stockfish-18-lite.js";
-const SF_SINGLE_URL = "/stockfish/stockfish-18-lite-single.js";
+// The Stockfish browser worker reads its WASM location from the worker URL hash.
+// Without this explicit value it derives a missing sibling `.wasm` file and receives
+// the development server's HTML fallback instead of WebAssembly bytes.
+const SF_SINGLE_URL = "/stockfish/stockfish-18-lite-single.js#/manus-storage/stockfish-18-lite-single_0c19ffd3.wasm,worker";
 
 /** Number of threads to use — cap at 4 to avoid overwhelming mobile devices */
 function getThreadCount(): number {
