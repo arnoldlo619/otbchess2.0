@@ -7386,6 +7386,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Zero critical Axe violations
 - [ ] Zero serious Axe violations
 - [x] Principal-route Axe baseline: zero critical/serious violations across dark/light themes at desktop and mobile widths
+- [x] Make Clubs creation and club-media upload controls native keyboard-operable buttons with regression coverage
 - [x] No keyboard trap in any modal or drawer
 - [x] Principal custom overlays: focus containment, Escape dismissal, and opener restoration
 - [x] Director operational overlays: shared focus containment, Escape dismissal, and opener restoration
@@ -7501,6 +7502,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add owner/director-only manual RSVP payment states without storing payment proof, transaction IDs, or amounts
 - [x] Persist confirmation actor and time server-side while keeping payment status private from public RSVP views
 - [x] Add an event attendee-drawer control for owners/directors and regression coverage for authorization, privacy, and state transitions
+
+### O. Stripe Paid Membership Lifecycle
+- [ ] Add local contracts for Stripe checkout metadata, webhook entitlement transitions, raw-body registration, and Pro-success polling
+- [ ] Identify the owner action required to claim the Stripe test sandbox and complete live test-account verification
+- [ ] Stripe sandbox and all paid-flow verification deferred at owner request; do not claim or test until explicitly resumed
 
 ## P0 Release-Recovery Sprint
 

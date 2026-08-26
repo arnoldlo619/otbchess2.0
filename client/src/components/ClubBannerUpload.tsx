@@ -150,20 +150,13 @@ export function ClubBannerUpload({
   return (
     <div className="space-y-2">
       {/* Banner preview / drop zone — 16:5 aspect ratio */}
-      <div
-        className={`relative w-full overflow-hidden rounded-2xl cursor-pointer group transition-all duration-200 ring-2 ${ringColor}`}
-        style={{ paddingBottom: "31.25%" /* 5/16 = 31.25% */ }}
-        onClick={() => inputRef.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        role="button"
-        aria-label="Upload club banner"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
-      >
-        {/* Inner absolutely-positioned content */}
-        <div className="absolute inset-0">
+      <div className="relative group">
+        <div
+          className={`relative w-full overflow-hidden rounded-2xl cursor-pointer transition-all duration-200 ring-2 ${ringColor}`}
+          style={{ paddingBottom: "31.25%" /* 5/16 = 31.25% */ }}
+        >
+          {/* Inner absolutely-positioned content */}
+          <div className="absolute inset-0">
           {value ? (
             <img
               src={value}
@@ -210,19 +203,33 @@ export function ClubBannerUpload({
             )}
           </div>
 
-          {/* Remove button */}
-          {value && !processing && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onChange(null); setError(null); }}
-              className="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
-              aria-label="Remove banner"
-            >
-              <X className="w-3 h-3" />
-              Remove
-            </button>
-          )}
+          </div>
         </div>
+
+        <button
+          type="button"
+          className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4CAF50]/60"
+          onClick={() => inputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          aria-label="Upload club banner"
+        >
+          <span className="sr-only">Upload club banner</span>
+        </button>
+
+        {/* Remove button — sibling avoids nested interactive controls */}
+        {value && !processing && (
+          <button
+            type="button"
+            onClick={() => { onChange(null); setError(null); }}
+            className="absolute top-2 right-2 z-20 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
+            aria-label="Remove banner"
+          >
+            <X className="w-3 h-3" />
+            Remove
+          </button>
+        )}
       </div>
 
       {/* Label row */}

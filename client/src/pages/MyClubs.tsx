@@ -59,7 +59,6 @@ import {
   BellOff,
   UserPlus,
   CalendarDays,
-  Clock,
   CheckCircle2,
   Circle,
   MinusCircle,
@@ -673,9 +672,14 @@ function MobileFilterDrawer({
   const selectedLoc = locationTree.find((l) => l.code === locationFilter);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <button
+        type="button"
+        aria-label="Close club filters"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
       {/* Drawer */}
       <div
         ref={dialogRef}
@@ -683,10 +687,9 @@ function MobileFilterDrawer({
         aria-modal="true"
         aria-labelledby="club-filter-drawer-title"
         tabIndex={-1}
-        className={`relative w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 pb-8 max-h-[80vh] overflow-y-auto ${
+        className={`relative z-10 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 pb-8 max-h-[80vh] overflow-y-auto ${
           isDark ? "bg-[#1a2e1d]" : "bg-white"
         }`}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h2 id="club-filter-drawer-title" className={`text-lg font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
@@ -783,7 +786,7 @@ function MobileFilterDrawer({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyClubs() {
-  const [, navigate] = useLocation();
+  useLocation();
   const { user } = useAuthContext();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -1404,8 +1407,10 @@ export default function MyClubs() {
 
             {/* Create Club CTA */}
             <section>
-              <div
-                className={`rounded-2xl border border-dashed p-8 text-center cursor-pointer transition-all group ${
+              <button
+                type="button"
+                aria-label="Start a new club"
+                className={`w-full rounded-2xl border border-dashed p-8 text-center cursor-pointer transition-all group bg-transparent ${
                   isDark ? "border-white/12 hover:border-[#4CAF50]/50" : "border-[#ADBC9F] hover:border-[#436850]/50"
                 }`}
                 onClick={() => user ? openCreateClubWizard() : setShowAuthGate(true)}
@@ -1424,7 +1429,7 @@ export default function MyClubs() {
                 <p className={`text-xs ${textMuted}`}>
                   Create a club for your chess community, school team, or local group
                 </p>
-              </div>
+              </button>
             </section>
           </>
         )}

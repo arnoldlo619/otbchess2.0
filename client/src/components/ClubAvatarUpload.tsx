@@ -151,20 +151,12 @@ export function ClubAvatarUpload({
   return (
     <div className="flex flex-col items-center gap-3">
       {/* Avatar preview / drop zone */}
-      <div
-        className={`relative cursor-pointer group transition-all duration-200 ring-2 ${ringColor} rounded-2xl overflow-hidden`}
-        style={{ width: size, height: size }}
-        onClick={() => inputRef.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        role="button"
-        aria-label="Upload club avatar"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
-      >
-        {/* Image or initials placeholder */}
-        {value ? (
+      <div className="relative group" style={{ width: size, height: size }}>
+        <div
+          className={`relative w-full h-full cursor-pointer transition-all duration-200 ring-2 ${ringColor} rounded-2xl overflow-hidden`}
+        >
+          {/* Image or initials placeholder */}
+          {value ? (
           <img
             src={value}
             alt="Club avatar"
@@ -206,15 +198,29 @@ export function ClubAvatarUpload({
           )}
         </div>
 
-        {/* Remove button — only when an image is set */}
+        </div>
+
+        <button
+          type="button"
+          className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4CAF50]/60"
+          onClick={() => inputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          aria-label="Upload club avatar"
+        >
+          <span className="sr-only">Upload club avatar</span>
+        </button>
+
+        {/* Remove button — sibling avoids nested interactive controls */}
         {value && !processing && (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onChange(null); setError(null); }}
-            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
+            onClick={() => { onChange(null); setError(null); }}
+            className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
             aria-label="Remove avatar"
           >
-            <X className="w-3 h-3 text-white" />
+            <X className="w-3.5 h-3.5 text-white" />
           </button>
         )}
       </div>

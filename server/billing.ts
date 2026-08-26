@@ -38,6 +38,40 @@ function getPriceId(plan: string): string | null {
 // ─── Auth request type helper ─────────────────────────────────────────────────
 type AuthedRequest = import("express").Request & { userId: string; isGuest: boolean };
 
+type BillingUser = { id: string; email: string | null };
+
+export function buildCheckoutSessionParams(
+  plan: "monthly" | "annual",
+  priceId: string,
+  origin: string,
+  user: BillingUser,
+): Stripe.Checkout.SessionCreateParams {
+  return {
+    mode: "subscription",
+    line_items: [{ price: priceId, quantity: 1 }],
+    customer_email: user.email ?? undefined,
+    client_reference_id: user.id,
+    success_url: `${origin}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/`,
+    metadata: { userId: user.id, plan },
+    allow_promotion_codes: true,
+    subscription_data: {
+      metadata: { userId: user.id, plan },
+    },
+  };
+}
+
+export function extractStripeUserId(
+  value: Pick<Stripe.Checkout.Session, "client_reference_id" | "metadata"> | Pick<Stripe.Subscription, "metadata">,
+): string | null {
+  if ("client_reference_id" in value && typeof value.client_reference_id === "string" && value.client_reference_id.length > 0) {
+    return value.client_reference_id;
+  }
+
+  const metadataUserId = value.metadata?.userId;
+  return typeof metadataUserId === "string" && metadataUserId.length > 0 ? metadataUserId : null;
+}
+
 // ─── Router factory ───────────────────────────────────────────────────────────
 export function createBillingRouter(): Router {
   const router = Router();
@@ -74,19 +108,9 @@ export function createBillingRouter(): Router {
 
       const origin = req.headers.origin ?? `https://${req.headers.host}`;
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
-        line_items: [{ price: priceId, quantity: 1 }],
-        customer_email: user.email ?? undefined,
-        client_reference_id: user.id,
-        success_url: `${origin}/pro/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/`,
-        metadata: { userId: user.id },
-        allow_promotion_codes: true,
-        subscription_data: {
-          metadata: { userId: user.id },
-        },
-      });
+      const session = await stripe.checkout.sessions.create(
+        buildCheckoutSessionParams(plan as "monthly" | "annual", priceId, origin, user),
+      );
 
       return res.json({ url: session.url });
     } catch (err) {
@@ -159,9 +183,7 @@ export function createBillingRouter(): Router {
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object as Stripe.Checkout.Session;
-          const userId =
-            session.client_reference_id ??
-            (session.metadata as Record<string, string>)?.userId;
+          const userId = extractStripeUserId(session);
           const customerId = session.customer as string | null;
 
           if (userId) {
@@ -179,7 +201,7 @@ export function createBillingRouter(): Router {
 
         case "customer.subscription.deleted": {
           const sub = event.data.object as Stripe.Subscription;
-          const userId = (sub.metadata as Record<string, string>)?.userId;
+          const userId = extractStripeUserId(sub);
           if (userId) {
             await db
               .update(users)

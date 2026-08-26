@@ -41,4 +41,17 @@ describe("production community and content integrity", () => {
     expect(source).toContain('fetchPriority={priority ? "high" : "auto"}');
     expect(source).toContain("priority={index === 0}");
   });
+
+  it("uses native buttons for Clubs creation and media-upload activation", () => {
+    const clubsSource = read("client/src/pages/MyClubs.tsx");
+    const bannerSource = read("client/src/components/ClubBannerUpload.tsx");
+    const avatarSource = read("client/src/components/ClubAvatarUpload.tsx");
+
+    expect(clubsSource).toContain('aria-label="Start a new club"');
+    expect(clubsSource).toMatch(/<button[\s\S]*?aria-label="Start a new club"/);
+    expect(bannerSource).toContain('aria-label="Upload club banner"');
+    expect(avatarSource).toContain('aria-label="Upload club avatar"');
+    expect(bannerSource).not.toContain('role="button"');
+    expect(avatarSource).not.toContain('role="button"');
+  });
 });
