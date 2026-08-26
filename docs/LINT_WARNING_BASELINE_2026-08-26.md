@@ -24,6 +24,8 @@ The private preparation-analysis pattern detector now accepts only the analyzed 
 
 The push subscription rate limiter now types its key-generator request as Express `Request`, preserving the established privacy-safe IP normalization while removing its isolated explicit-`any` annotation. Focused lint is **zero warnings and zero errors**, and TypeScript passes.
 
+The Google OAuth callback unit suite no longer imports unused Vitest mocking hooks. Focused lint is **zero warnings and zero errors**, and all eight account-creation, matching, and account-linking regressions pass.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

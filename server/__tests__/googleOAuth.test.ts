@@ -10,7 +10,7 @@
  *
  * We mock fetch() and the DB to avoid real network calls.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // ── Helpers mirroring the callback logic ─────────────────────────────────────
 
