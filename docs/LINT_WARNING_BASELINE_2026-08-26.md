@@ -48,6 +48,8 @@ The league authorization helper now narrows the `userId` set by shared authentic
 
 League season-start rating fetches now use a narrow Chess.com response shape while retaining the established rapid, blitz, bullet, then daily rating precedence. Focused lint preserves three pre-existing typed-boundary warnings with zero errors, and a source contract covers the response boundary.
 
+League week finalization now derives its database parameter and match rows from the shared database factory rather than explicit `any` annotations. Completion and week-advance behavior are unchanged; focused lint has one remaining legacy typed-boundary warning with zero errors, and a source contract covers the function.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

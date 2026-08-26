@@ -50,6 +50,7 @@ function pushErrorDetails(error: unknown): { statusCode?: number; message?: stri
 }
 
 type ChessComRatingStats = Record<string, { last?: { rating?: number } } | undefined>;
+type Database = Awaited<ReturnType<typeof getDb>>;
 
 /** Send a push notification to all subscribed commissioner endpoints for a league */
 async function notifyCommissioner(leagueId: string, title: string, body: string, url: string) {
@@ -755,12 +756,12 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", requireAuth, async (req
 });
 
 // Helper: check if all matches in a week are completed and advance if so
-async function finalizeWeekIfComplete(db: any, leagueId: string, weekNumber: number, weekId: number, justCompletedMatchId: number) {
+async function finalizeWeekIfComplete(db: Database, leagueId: string, weekNumber: number, weekId: number, justCompletedMatchId: number) {
   const weekMatches = await db
     .select()
     .from(leagueMatches)
     .where(and(eq(leagueMatches.leagueId, leagueId), eq(leagueMatches.weekNumber, weekNumber)));
-  const weekComplete = weekMatches.every((m: any) => m.id === justCompletedMatchId || m.resultStatus === "completed");
+  const weekComplete = weekMatches.every((match) => match.id === justCompletedMatchId || match.resultStatus === "completed");
   if (weekComplete) {
     await db.update(leagueWeeks).set({ isComplete: 1 }).where(eq(leagueWeeks.id, weekId));
     const leagueRow = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
