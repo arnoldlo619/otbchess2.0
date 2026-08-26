@@ -8,7 +8,7 @@
  *   POST /api/tournament/:id/send-results-email — send personalized results emails
  */
 
-import { Router } from "express";
+import { Router, type Request, type RequestHandler, type Response } from "express";
 import nodemailer from "nodemailer";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 import { getDb } from "./db.js";
@@ -18,6 +18,16 @@ import { requireFullAuth } from "./auth.js";
 import { logger } from "./logger.js";
 
 export const emailRouter = Router();
+
+type AuthenticatedRequest = Request & { userId: string };
+
+function withAuthenticatedUser(
+  handler: (req: AuthenticatedRequest, res: Response) => Promise<unknown>,
+): RequestHandler {
+  return (req, res, next) => {
+    void handler(req as AuthenticatedRequest, res).catch(next);
+  };
+}
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -47,7 +57,7 @@ function decrypt(ciphertext: string): string {
 }
 
 // ─── PUT /api/email/smtp-config ───────────────────────────────────────────────
-emailRouter.put("/smtp-config", requireFullAuth, async (req: any, res: any) => {
+emailRouter.put("/smtp-config", requireFullAuth, withAuthenticatedUser(async (req, res) => {
   try {
     const { host, port, secure, smtpUser, smtpPass, fromName, fromEmail } = req.body;
     if (!host || !smtpUser || !smtpPass || !fromEmail) {
@@ -87,10 +97,10 @@ emailRouter.put("/smtp-config", requireFullAuth, async (req: any, res: any) => {
     logger.error("[email] PUT smtp-config error:", err);
     res.status(500).json({ error: "Failed to save SMTP config" });
   }
-});
+}));
 
 // ─── GET /api/email/smtp-config ───────────────────────────────────────────────
-emailRouter.get("/smtp-config", requireFullAuth, async (req: any, res: any) => {
+emailRouter.get("/smtp-config", requireFullAuth, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
     const rows = await db
@@ -116,10 +126,10 @@ emailRouter.get("/smtp-config", requireFullAuth, async (req: any, res: any) => {
     logger.error("[email] GET smtp-config error:", err);
     res.status(500).json({ error: "Failed to fetch SMTP config" });
   }
-});
+}));
 
 // ─── POST /api/email/test-smtp ────────────────────────────────────────────────
-emailRouter.post("/test-smtp", requireFullAuth, async (req: any, res: any) => {
+emailRouter.post("/test-smtp", requireFullAuth, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
     const rows = await db
@@ -166,11 +176,11 @@ emailRouter.post("/test-smtp", requireFullAuth, async (req: any, res: any) => {
     logger.error("[email] test-smtp error:", err);
     res.status(400).json({ error: errorMessage(err, "SMTP connection failed") });
   }
-});
+}));
 
 // ─── POST /api/tournament/:id/send-results-email ─────────────────────────────
 // Body: { players: Array<{ name, email, rank, points, wdl, reportUrl, cardUrl }> }
-emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (req: any, res: any) => {
+emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
     const rows = await db
@@ -286,4 +296,4 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
     logger.error("[email] send-results-email error:", err);
     res.status(500).json({ error: errorMessage(err, "Failed to send emails") });
   }
-});
+}));
