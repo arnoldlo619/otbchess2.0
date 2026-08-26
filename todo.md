@@ -7493,6 +7493,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Scope active CI unit/integration tests to Vitest directories and exclude Playwright E2E specifications
 - [x] Exclude live SMTP and Lichess credential probes from deterministic CI while retaining them for separately authorized integration checks
 - [x] Resolve the high-signal active-CI accessibility and unused-code warning cluster; document the remaining typed-warning baseline
+- [x] OTB rating engine: remove the redundant explicit-any from canonical host-submission lookup and protect inferred schema typing with a focused contract
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

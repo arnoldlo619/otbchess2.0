@@ -14,6 +14,8 @@ The OTB game service has removed its remaining untyped error, request, database-
 
 The SMTP results-email route now converts caught failures through one `unknown`-safe message extractor, so client error responses and per-recipient failures never read arbitrary error payloads. Its remaining eight advisory warnings are limited to the route’s legacy Express `req`/`res` annotations and are tracked separately from this completed error-safety boundary.
 
+The OTB rating engine now relies on Drizzle’s inferred game-submission row type when selecting the host’s canonical result, removing its isolated explicit-`any` boundary without changing rating behavior. Focused lint is **zero warnings and zero errors**, with a source contract protecting the inferred selection path.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

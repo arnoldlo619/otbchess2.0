@@ -291,7 +291,7 @@ export async function processConfirmedGameRating(
   if (submissions.length < 2) return null;
 
   // Both should agree — take the host's submission as canonical
-  const hostSub = submissions.find((s: any) => s.submittedByUserId === session.hostUserId);
+  const hostSub = submissions.find((submission) => submission.submittedByUserId === session.hostUserId);
   if (!hostSub) return null;
   const confirmedResult = hostSub.submittedResult as GameResult;
   if (confirmedResult === "cancelled") return null;
