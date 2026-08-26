@@ -44,6 +44,7 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
   const [, navigate] = useLocation();
   const [joined, setJoined] = useState(() => !!(user && isMember(club.id, user.id)));
   const [joining, setJoining] = useState(false);
+  const [bannerFailed, setBannerFailed] = useState(false);
   const initial = club.name.charAt(0).toUpperCase();
 
   const handleJoin = (e: React.MouseEvent) => {
@@ -82,19 +83,19 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
         className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(76,175,80,0.08)]"
         style={{
           // Default: dark base for the micro-grid pattern
-          background: club.bannerUrl
+          background: club.bannerUrl && !bannerFailed
             ? undefined
             : `linear-gradient(135deg, rgba(10,45,20,0.96), rgba(2,12,6,0.98))`,
         }}
       >
-        {club.bannerUrl ? (
+        {club.bannerUrl && !bannerFailed ? (
           <img
             loading="lazy"
             decoding="async"
             src={club.bannerUrl}
             alt=""
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            onError={() => setBannerFailed(true)}
           />
         ) : (
           <>
