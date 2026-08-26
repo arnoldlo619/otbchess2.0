@@ -7483,6 +7483,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Enforce documented total-JS, largest-chunk, and CSS artifact budgets after the active CI production build
 - [x] Sync the verified source to GitHub, preserve the CI template, and document owner-authorized workflow activation
 - [ ] Activate `docs/CI_WORKFLOW_TEMPLATE.yml` as `.github/workflows/ci.yml` with owner-authorized workflow permission and obtain a green run
+- [ ] Remove duplicate pnpm version configuration from GitHub Actions and rerun the activated CI workflow
+- [ ] Scope active CI unit/integration tests to Vitest directories and exclude Playwright E2E specifications
+- [ ] Exclude live SMTP and Lichess credential probes from deterministic CI while retaining them for separately authorized integration checks
 
 ### M. Release Decision
 - [x] P0/P1/P2/P3 issue classification
