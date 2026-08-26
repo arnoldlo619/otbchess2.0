@@ -887,19 +887,11 @@ export default function QuadsDirectorPanel({
   }, [sections, gamesBySection, currentRound]);
 
   // Global metrics
-  const totalGames = games.length;
-  const completedGames = games.filter((g) => g.result !== "*").length;
   const allComplete = sections.length > 0 && sections.every((s) => (sectionStatus.get(s.id)?.pct ?? 0) === 100);
   const currentRoundGames = games.filter((g) => g.round === currentRound);
   const currentRoundCompleted = currentRoundGames.filter((g) => g.result !== "*").length;
   const currentRoundTotal = currentRoundGames.length;
   const currentRoundComplete = currentRoundTotal > 0 && currentRoundCompleted === currentRoundTotal;
-
-  // Sections needing attention (have pending games in current round)
-  const sectionsNeedingAttention = sections.filter((s) => {
-    const st = sectionStatus.get(s.id)!;
-    return st.currentCompleted < st.currentTotal;
-  });
 
   // Exception tray: missing results in current round
   const missingResults = currentRoundGames.filter((g) => g.result === "*" && g.blackId !== "BYE");
@@ -1002,12 +994,7 @@ export default function QuadsDirectorPanel({
         {/* Per-section champion cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {sections.map((section) => {
-            const sectionGames = gamesBySection.get(section.id) ?? [];
             const sectionPlayers = players.filter((p) => section.playerIds.includes(p.id));
-            const roundNums = Array.from(new Set(sectionGames.map((g) => g.round))).sort((a, b) => a - b);
-            const sectionRounds: Round[] = roundNums.map((rn) => ({
-              number: rn, status: "completed" as const, games: sectionGames.filter((g) => g.round === rn),
-            }));
             // Use calculateQuadStandings (SB + H2H tiebreaks) — NOT the Swiss engine
             const standings = standingsBySection.get(section.id) ?? [];
             const winners = getSectionWinners(standings);
