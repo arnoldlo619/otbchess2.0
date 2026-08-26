@@ -100,6 +100,8 @@ The V3 Matchup Prep scout report no longer imports unused icons or its obsolete 
 
 Final Standings no longer carries unused game typing, medal presentation data, or an inactive elimination label helper. Focused lint is **zero warnings and zero errors**, with placement calculations unchanged.
 
+The Chessnut board panel no longer imports unused calibration or piece-map symbols, and its inactive appearance prop is explicitly marked unused. Focused lint is **zero warnings and zero errors**, with connection and live-board behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

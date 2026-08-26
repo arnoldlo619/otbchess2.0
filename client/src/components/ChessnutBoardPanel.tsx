@@ -46,8 +46,7 @@ import {
   type MismatchInfo,
   type EngineLog,
 } from "@/lib/chessnut/ChessnutBoardEngine";
-import type { CalibrationProfile } from "@/lib/chessnut/chessnutPieceMap";
-import { PIECE_TO_FEN, FEN_TO_PIECE, STARTING_POSITION_MAP } from "@/lib/chessnut/chessnutPieceMap";
+import { PIECE_TO_FEN } from "@/lib/chessnut/chessnutPieceMap";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface ChessnutBoardPanelProps {
@@ -657,7 +656,7 @@ const PIECE_UNICODE: Record<string, string> = {
   k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟",
 };
 
-function LiveBoardGrid({ squareMap, currentFen, isDark }: LiveBoardGridProps) {
+function LiveBoardGrid({ squareMap, currentFen, isDark: _isDark }: LiveBoardGridProps) {
   const digitalMap = fenToSquareMap(currentFen);
 
   // Build 8×8 grid from rank 8 down to rank 1, file a to h

@@ -7536,6 +7536,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Registration modal: replace direct avatar fallback DOM mutation with React-managed initials fallback
 - [x] V3 Matchup Prep scout report: remove obsolete unused icons and AI summary import without changing report content
 - [x] Final Standings: remove unused game typing, medal data, and elimination label helper without changing placement calculations
+- [x] Chessnut board panel: remove unused calibration/piece-map imports and mark inactive appearance prop without changing connection behavior
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
