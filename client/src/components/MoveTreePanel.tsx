@@ -10,7 +10,7 @@
  *   - Annotation glyphs (!, ?, !!, ??, !?, ?!) shown inline
  *   - ECO badge shown on the first node that has one
  */
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect } from "react";
 import { GitBranch } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────

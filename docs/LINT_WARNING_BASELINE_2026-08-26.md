@@ -134,6 +134,8 @@ Create Club Wizard explicitly marks the inactive socials-step appearance prop as
 
 Game Result modal now handles submission failures as `unknown` and retains a safe network-error fallback. Focused lint is **zero warnings and zero errors**, with result submission behavior unchanged.
 
+Move Tree Panel no longer imports an unused callback hook. Focused lint is **zero warnings and zero errors**, with variation navigation unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
