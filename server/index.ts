@@ -1446,7 +1446,8 @@ export function createApp() {
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
     try {
       const db = await getDb();
-      const userId = (req as any).userId as string;
+      const userId = (req as Request & { userId?: string }).userId;
+      if (!userId) return res.status(401).json({ error: "Not authenticated" });
       const utRows = await db
         .select()
         .from(userTournaments)
@@ -1470,7 +1471,8 @@ export function createApp() {
     if (typeof isPublic !== "boolean") return res.status(400).json({ error: "isPublic must be boolean" });
     try {
       const db = await getDb();
-      const userId = (req as any).userId as string;
+      const userId = (req as Request & { userId?: string }).userId;
+      if (!userId) return res.status(401).json({ error: "Not authenticated" });
       // Verify ownership
       const utRows = await db
         .select()

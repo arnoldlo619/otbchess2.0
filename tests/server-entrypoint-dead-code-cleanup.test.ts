@@ -28,4 +28,8 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("players?: Array<{ username?: string }>;");
     expect(source).not.toContain("map((p: any) => (p.username ?? \"\").toLowerCase())");
   });
+
+  it("uses typed shared authentication for public visibility ownership routes", () => {
+    expect(source.match(/const userId = \(req as Request & \{ userId\?: string \}\)\.userId;/g)).toHaveLength(3);
+  });
 });
