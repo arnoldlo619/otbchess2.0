@@ -10,6 +10,8 @@ The landing Home page has removed verified unreachable imports, lightbox state, 
 
 Broadcast Control has removed 26 focused warnings by deleting confirmed dead imports/state and using established chess-square types. Its SSE events now pass through a pure guarded parser that rejects malformed payloads and unsupported lifecycle values before state updates; focused lint is **zero warnings and zero errors**, with two parser regression tests.
 
+The OTB game service has removed its remaining untyped error, request, database-record, and update-data boundaries. Authenticated routes now use typed request bodies plus an explicit user guard, all caught failures are `unknown`, and database selections/updates use inferred schema types. Focused lint is **zero warnings and zero errors**, with two source contracts preserving these boundaries.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

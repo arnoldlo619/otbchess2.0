@@ -11,7 +11,7 @@
  * - GET    /ratings/:userId  Get user's OTB ratings
  * - GET    /leaderboard/:category  Get leaderboard
  */
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { nanoid } from "nanoid";
 import crypto from "crypto";
 import { eq, and, or, desc, gte, sql } from "drizzle-orm";
@@ -29,18 +29,41 @@ import {
 import {
   determineRatingCategory,
   processConfirmedGameRating,
-  getOrCreatePlayerRating,
-  type RatingCategory,
   type RatingUpdate,
 } from "./otbRating.js";
 
 const router = Router();
 
+type AuthenticatedRequest<TBody = Record<string, never>> = Request<Record<string, string>, unknown, TBody> & {
+  user?: { id: string };
+};
+
+function authenticatedUserId<TBody>(req: AuthenticatedRequest<TBody>): string {
+  const userId = req.user?.id;
+  if (!userId) throw new Error("Authenticated user missing after requireAuth");
+  return userId;
+}
+
+interface CreateGameBody {
+  baseMinutes: number;
+  incrementSeconds?: number;
+  isRated?: boolean;
+}
+
+interface UpdateGameStatusBody {
+  status: string;
+  activeClockDeviceId?: string;
+}
+
+interface SubmitGameResultBody {
+  result: string;
+}
+
 // ─── POST / — Create a new game session ──────────────────────────────────────
-router.post("/", requireAuth, async (req: any, res) => {
+router.post("/", requireAuth, async (req: AuthenticatedRequest<CreateGameBody>, res) => {
   try {
     const db = await getDb();
-    const userId = req.user.id;
+    const userId = authenticatedUserId(req);
     const { baseMinutes, incrementSeconds = 0, isRated = true } = req.body;
 
     if (!baseMinutes || baseMinutes < 1 || baseMinutes > 60) {
@@ -91,17 +114,17 @@ router.post("/", requireAuth, async (req: any, res) => {
       hostDisplayName: hostUser[0].displayName,
       status: "pending_opponent",
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_create_failed", { error: err });
     return res.status(500).json({ error: "Failed to create game session" });
   }
 });
 
 // ─── GET /my/active — Get user's active sessions ─────────────────────────────
-router.get("/my/active", requireAuth, async (req: any, res) => {
+router.get("/my/active", requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const db = await getDb();
-    const userId = req.user.id;
+    const userId = authenticatedUserId(req);
 
     const sessions = await db
       .select()
@@ -116,7 +139,7 @@ router.get("/my/active", requireAuth, async (req: any, res) => {
       .limit(10);
 
     return res.json(sessions);
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_active_list_failed", { error: err });
     return res.status(500).json({ error: "Failed to get sessions" });
   }
@@ -137,7 +160,7 @@ router.get("/:id", async (req, res) => {
     }
 
     // Also get result submissions if game is in results phase
-    let submissions: any[] = [];
+    let submissions: Array<typeof gameResultSubmissions.$inferSelect> = [];
     if (["awaiting_results", "result_confirmed", "result_disputed"].includes(session[0].status)) {
       submissions = await db
         .select()
@@ -157,17 +180,17 @@ router.get("/:id", async (req, res) => {
     }
 
     return res.json({ ...session[0], submissions, ratedGame });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_get_failed", { error: err });
     return res.status(500).json({ error: "Failed to get session" });
   }
 });
 
 // ─── POST /join/:token — Opponent joins via QR token ─────────────────────────
-router.post("/join/:token", requireAuth, async (req: any, res) => {
+router.post("/join/:token", requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const db = await getDb();
-    const userId = req.user.id;
+    const userId = authenticatedUserId(req);
     const { token } = req.params;
 
     // Find session by QR token
@@ -232,17 +255,17 @@ router.post("/join/:token", requireAuth, async (req: any, res) => {
       opponentChesscomUsername: opponentUser[0].chesscomUsername || null,
       status: "opponent_joined",
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_join_failed", { error: err });
     return res.status(500).json({ error: "Failed to join game" });
   }
 });
 
 // ─── PATCH /:id/status — Update session status ──────────────────────────────
-router.patch("/:id/status", requireAuth, async (req: any, res) => {
+router.patch("/:id/status", requireAuth, async (req: AuthenticatedRequest<UpdateGameStatusBody>, res) => {
   try {
     const db = await getDb();
-    const userId = req.user.id;
+    const userId = authenticatedUserId(req);
     const { status, activeClockDeviceId } = req.body;
 
     const sessions = await db
@@ -275,7 +298,10 @@ router.patch("/:id/status", requireAuth, async (req: any, res) => {
       return res.status(400).json({ error: `Cannot transition from ${session.status} to ${status}` });
     }
 
-    const updateData: any = { status, updatedAt: new Date() };
+    const updateData: Pick<typeof gameSessions.$inferInsert, "status" | "updatedAt" | "activeClockDeviceId"> = {
+      status,
+      updatedAt: new Date(),
+    };
     if (activeClockDeviceId) {
       updateData.activeClockDeviceId = activeClockDeviceId;
     }
@@ -286,17 +312,17 @@ router.patch("/:id/status", requireAuth, async (req: any, res) => {
       .where(eq(gameSessions.id, session.id));
 
     return res.json({ ...session, ...updateData });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_status_update_failed", { error: err });
     return res.status(500).json({ error: "Failed to update status" });
   }
 });
 
 // ─── POST /:id/result — Submit game result ───────────────────────────────────
-router.post("/:id/result", requireAuth, async (req: any, res) => {
+router.post("/:id/result", requireAuth, async (req: AuthenticatedRequest<SubmitGameResultBody>, res) => {
   try {
     const db = await getDb();
-    const userId = req.user.id;
+    const userId = authenticatedUserId(req);
     const { result } = req.body; // "i_won" | "i_lost" | "draw" | "cancelled"
 
     if (!["i_won", "i_lost", "draw", "cancelled"].includes(result)) {
@@ -413,7 +439,7 @@ router.post("/:id/result", requireAuth, async (req: any, res) => {
         message: "Result mismatch detected. Both players must report the same result to register this game. Please confirm the correct result.",
       });
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_result_submit_failed", { error: err });
     return res.status(500).json({ error: "Failed to submit result" });
   }
@@ -460,7 +486,7 @@ router.get("/ratings/:userId", async (req, res) => {
       rapid: formatRating(rapidRating),
       history,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_ratings_get_failed", { error: err });
     return res.status(500).json({ error: "Failed to get ratings" });
   }
@@ -517,7 +543,7 @@ router.get("/leaderboard/:category", async (req, res) => {
     }
 
     return res.json(leaderboard);
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("otb_game_leaderboard_get_failed", { error: err });
     return res.status(500).json({ error: "Failed to get leaderboard" });
   }
