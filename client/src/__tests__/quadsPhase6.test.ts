@@ -466,7 +466,6 @@ describe("Pairing integrity — generateQuadTournament", () => {
   function checkSection(
     section: QuadSection,
     games: Game[],
-    playerCount = 4
   ) {
     const sectionGames = games.filter((g) => g.sectionId === section.id && g.blackId !== "BYE");
     const playerIds = section.playerIds;
@@ -503,7 +502,7 @@ describe("Pairing integrity — generateQuadTournament", () => {
   it("4 players: 3 rounds, each player plays once per round, faces all 3 opponents", () => {
     const { sections, games } = runIntegrityCheck(4);
     expect(sections).toHaveLength(1);
-    checkSection(sections[0], games, 4);
+    checkSection(sections[0], games);
   });
 
   it("8 players: 2 sections of 4, each section has correct pairing integrity", () => {
@@ -511,7 +510,7 @@ describe("Pairing integrity — generateQuadTournament", () => {
     expect(sections).toHaveLength(2);
     for (const section of sections) {
       expect(section.playerIds).toHaveLength(4);
-      checkSection(section, games, 4);
+      checkSection(section, games);
     }
   });
 
@@ -520,7 +519,7 @@ describe("Pairing integrity — generateQuadTournament", () => {
     expect(sections).toHaveLength(4);
     for (const section of sections) {
       expect(section.playerIds).toHaveLength(4);
-      checkSection(section, games, 4);
+      checkSection(section, games);
     }
   });
 

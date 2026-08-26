@@ -296,19 +296,6 @@ export default function AuthModal({
     setTimeout(() => firstInputRef.current?.focus(), 80);
   };
 
-  // Track mousedown target so we only close when the full click starts AND ends on the backdrop
-  const mousedownTargetRef = useRef<EventTarget | null>(null);
-  const handleOverlayMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    mousedownTargetRef.current = e.target;
-  };
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only close if both mousedown and mouseup landed on the overlay itself (not the card)
-    if (e.target === overlayRef.current && mousedownTargetRef.current === overlayRef.current) {
-      onClose();
-    }
-    mousedownTargetRef.current = null;
-  };
-
   if (!isOpen) return null;
 
   /* ── Sign In submit ── */
@@ -409,15 +396,19 @@ export default function AuthModal({
       role="dialog"
       aria-modal="true"
       aria-label="Authentication"
-      onMouseDown={handleOverlayMouseDown}
-      onClick={handleOverlayClick}
     >
-      {/* Backdrop — purely visual, pointer-events-none so overlay handles all clicks */}
+      <button
+        type="button"
+        aria-label="Close authentication dialog"
+        className="fixed inset-0 cursor-default"
+        onClick={onClose}
+      />
+      {/* Backdrop is visual; the dedicated button above supplies accessible dismissal. */}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-none" />
 
       {/* Modal card — bottom-sheet on xs (≤480px), centered dialog on sm+ */}
       <div
-        className={`modal-card max-w-md rounded-3xl border shadow-2xl ${bg} ${border}`}
+        className={`modal-card relative z-10 max-w-md rounded-3xl border shadow-2xl ${bg} ${border}`}
         style={{ marginTop: "max(1rem, 8vh)", marginBottom: "max(1rem, 8vh)" }}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}

@@ -19,9 +19,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard,
-  Building2,
-  GraduationCap,
   Crown,
   LogOut,
   LogIn,
@@ -32,7 +29,6 @@ import {
   Timer,
   Camera,
   Shield,
-  Trophy,
   Wrench,
   FlaskConical,
   BookOpen,

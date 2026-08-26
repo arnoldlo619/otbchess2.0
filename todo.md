@@ -7486,6 +7486,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove duplicate pnpm version configuration from GitHub Actions and rerun the activated CI workflow
 - [x] Scope active CI unit/integration tests to Vitest directories and exclude Playwright E2E specifications
 - [x] Exclude live SMTP and Lichess credential probes from deterministic CI while retaining them for separately authorized integration checks
+- [x] Resolve the high-signal active-CI accessibility and unused-code warning cluster; document the remaining typed-warning baseline
 
 ### M. Release Decision
 - [x] P0/P1/P2/P3 issue classification

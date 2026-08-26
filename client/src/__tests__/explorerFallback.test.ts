@@ -75,7 +75,7 @@ describe("Explorer Fallback DB — Position Structure", () => {
   const positions = Object.entries(db.positions);
 
   it("all positions have required fields", () => {
-    for (const [key, pos] of positions.slice(0, 100)) {
+    for (const [, pos] of positions.slice(0, 100)) {
       expect(typeof pos.white).toBe("number");
       expect(typeof pos.draws).toBe("number");
       expect(typeof pos.black).toBe("number");

@@ -24,9 +24,8 @@ import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/to
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
 import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
-import { TrainingDropdown } from "@/components/TrainingDropdown";
 import { LeagueDropdown } from "@/components/LeagueDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { MobileNavDrawer } from "@/components/MobileNavDrawer";
@@ -59,8 +58,6 @@ function getDashboardUrl(): string {
   return "/join";
 }
 
-interface MyLeague { id: string; name: string; status: string; currentWeek: number; totalWeeks: number; }
-
 function getDashboardTooltip(): string | undefined {
   const allTournaments = listTournaments();
   const directed = allTournaments.find((t) => hasDirectorSession(t.id));
@@ -86,17 +83,6 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   const { user, logout } = useAuthContext();
   const [activeTab, setActiveTab] = useState(defaultActive);
   const activeTournament = useActiveTournament();
-
-  // Fetch user's leagues to compute smart League nav URL
-  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
-  const isGuest2 = !user || user.isGuest;
-  useEffect(() => {
-    if (isGuest2) { setMyLeagues([]); return; }
-    fetch("/api/leagues/mine", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: MyLeague[]) => setMyLeagues(Array.isArray(data) ? data : []))
-      .catch(() => setMyLeagues([]));
-  }, [isGuest2]);
 
   // League header button always goes to the feature overview page (/league).
   // The dropdown lets users jump directly to their personal league dashboards.

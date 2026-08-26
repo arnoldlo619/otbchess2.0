@@ -5,9 +5,6 @@
  * - buildFullOpeningTree
  */
 import { describe, it, expect } from "vitest";
-import {
-  buildPrepReport,
-} from "../../server/prepEngine";
 
 // We test the new functions indirectly through buildPrepReport since they're
 // called internally. We also test the interfaces are correctly populated.

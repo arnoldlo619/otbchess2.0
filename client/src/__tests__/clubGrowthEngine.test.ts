@@ -3,7 +3,7 @@
  * Covers: analytics API shape, member segments, seasons CRUD, recap generator logic,
  * message templates, Growth tab state, and schema table presence.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

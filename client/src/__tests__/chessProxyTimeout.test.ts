@@ -11,11 +11,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ─── Helpers replicated from server/index.ts for unit testing ────────────────
 
-interface FetchWithRetryOptions {
-  maxRetries?: number;
-  timeoutMs?: number;
-}
-
 async function fetchWithRetryServer(
   url: string,
   options: RequestInit,
