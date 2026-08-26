@@ -1061,11 +1061,32 @@ function ParallaxStep({
   );
 }
 
+interface LandingStep {
+  number: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  cta: string;
+  ctaHref: string;
+  imageSrc: string;
+  imageAlt: string;
+  imageSrc2?: string;
+  imageAlt2?: string;
+  objectPosition?: string;
+  objectPosition2?: string;
+  objectFit?: string;
+  objectFit2?: string;
+  phoneLeft: boolean;
+  mockupType?: "phone" | "macbook";
+  caption1?: string;
+  caption2?: string;
+}
+
 function HowItWorks() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const steps = [
+  const steps: LandingStep[] = [
     {
       number: "01",
       icon: <Trophy className="w-3 h-3" />,
@@ -1076,7 +1097,7 @@ function HowItWorks() {
       imageSrc: "/manus-storage/qr-screen-720_e2bcd40f.webp",
       imageAlt: "Tournament QR Code screen",
       phoneLeft: true,
-      mockupType: 'macbook' as const,
+      mockupType: "macbook",
     },
     {
       number: "02",
@@ -1144,21 +1165,21 @@ function HowItWorks() {
             icon={step.icon}
             title={step.title}
             description={step.description}
-            cta={(step as any).cta}
-            ctaHref={(step as any).ctaHref}
+            cta={step.cta}
+            ctaHref={step.ctaHref}
             imageSrc={step.imageSrc}
             imageAlt={step.imageAlt}
-            imageSrc2={(step as any).imageSrc2}
-            imageAlt2={(step as any).imageAlt2}
-            objectPosition={(step as any).objectPosition}
-            objectPosition2={(step as any).objectPosition2}
-            objectFit={(step as any).objectFit}
-            objectFit2={(step as any).objectFit2}
+            imageSrc2={step.imageSrc2}
+            imageAlt2={step.imageAlt2}
+            objectPosition={step.objectPosition}
+            objectPosition2={step.objectPosition2}
+            objectFit={step.objectFit}
+            objectFit2={step.objectFit2}
             phoneLeft={step.phoneLeft}
             isDark={isDark}
             mockupType={step.mockupType}
-            caption1={(step as any).caption1}
-            caption2={(step as any).caption2}
+            caption1={step.caption1}
+            caption2={step.caption2}
           />
         ))}
       </div>

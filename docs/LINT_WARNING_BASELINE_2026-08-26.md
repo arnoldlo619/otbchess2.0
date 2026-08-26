@@ -6,7 +6,7 @@ The first active GitHub Actions run surfaced a small, high-signal warning cluste
 
 The Chess.com provider has also removed its three `no-explicit-any` boundaries. Archive, monthly-game, player, and fixture data now enter through `unknown` and are normalized with narrow record, string, and finite-number guards. Two dedicated malformed/valid payload tests and 38 existing fixture tests preserve the provider contract.
 
-The landing Home page has removed verified unreachable imports, lightbox state, and three local sections that were not mounted by the active composition. Its focused lint baseline fell from 24 warnings to 10 `no-explicit-any` warnings, with zero errors; mobile landing visual QA and landing source contracts passed.
+The landing Home page has removed verified unreachable imports, lightbox state, and three local sections that were not mounted by the active composition. Its remaining How It Works casts now use a narrow `LandingStep` model, so its focused lint baseline is **zero warnings and zero errors**; mobile landing visual QA and landing source contracts passed.
 
 ## Remaining Baseline
 
