@@ -401,10 +401,7 @@ async function analyzeGame(
  * Detect patterns across multiple analyzed games.
  * Returns structured EnginePatterns for use in the prep report.
  */
-function detectPatterns(
-  gameResults: GameAnalysisResult[],
-  totalGamesAnalyzed: number
-): EnginePatterns {
+function detectPatterns(gameResults: GameAnalysisResult[]): EnginePatterns {
   const patterns: EnginePattern[] = [];
 
   if (gameResults.length === 0) {
@@ -665,7 +662,7 @@ export async function runEngineAnalysis(
     }
   }
 
-  const enginePatterns = detectPatterns(gameResults, games.length);
+  const enginePatterns = detectPatterns(gameResults);
 
   // Persist pattern summaries to DB (fire-and-forget)
   try {
