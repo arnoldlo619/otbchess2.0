@@ -7497,6 +7497,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Preparation fixture suite: remove the unused repeated-move quarantine binding while retaining full fixture regression coverage
 - [x] Preparation insight engine: remove the unused opening-family helper import and preserve fixture-suite behavior
 - [x] Preparation analysis engine: remove the unused private pattern-detector game-count argument and preserve fixture-suite behavior
+- [x] Push notification routing: type the subscription limiter request callback without changing IP normalization behavior
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

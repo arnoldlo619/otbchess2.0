@@ -5,7 +5,7 @@
  * all notification broadcast endpoints (round pairings, results,
  * timer warnings, bracket live, tournament complete).
  */
-import { Router } from "express";
+import { Router, type Request } from "express";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
@@ -70,7 +70,7 @@ async function broadcastPush(
 const pushSubscribeLimiter = rateLimit({
   windowMs: 60_000,
   max: 30,
-  keyGenerator: (req: any) => ipKeyGenerator(req.ip ?? ""),
+  keyGenerator: (req: Request) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many push subscribe requests. Please try again later." },
   skip: () => process.env.NODE_ENV !== "production",
 });
