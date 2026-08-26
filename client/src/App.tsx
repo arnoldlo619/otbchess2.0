@@ -70,8 +70,6 @@ const BroadcastControl = lazy(() => import("./pages/BroadcastControl"));
 const BroadcastConsole = lazy(() => import("./pages/BroadcastConsole"));
 const LiveBoard = lazy(() => import("./pages/LiveBoard"));
 const VenueDisplay = lazy(() => import("./pages/VenueDisplay"));
-const ChessnutTestLab = lazy(() => import("./pages/ChessnutTestLab"));
-const ConnectBoard = lazy(() => import("./pages/ConnectBoard"));
 const GameJoin = lazy(() => import("./pages/GameJoin"));
 const OtbLeaderboard = lazy(() => import("./pages/OtbLeaderboard"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -206,7 +204,6 @@ function Router() {
         <Route path={"/join-club/:clubId"} component={JoinClub} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/tournament/:id/broadcast-console"} component={BroadcastConsole} />
-        <Route path={"/tournament/:id/connect-board"} component={ConnectBoard} />
         <Route path={"/tournament/:id/broadcast/:boardNumber"} component={BroadcastControl} />
         <Route path={"/live/board/:slug/display"} component={VenueDisplay} />
         <Route path={"/live/board/:slug"} component={LiveBoard} />
@@ -245,7 +242,6 @@ function Router() {
         <Route path={"/blog"} component={Blog} />
         <Route path={"/recap/:slug"} component={TournamentRecap} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
-        <Route path={"/dashboard/tools/chessnut-bluetooth-test-lab"} component={ChessnutTestLab} />
         {/* Canonical redirects preserve campaign/source query parameters. */}
         <Route path={"/tournaments/new"} component={() => <HardRedirect to="/" tournamentCreate />} />
         <Route path={"/create"} component={() => <HardRedirect to="/tournaments/new" />} />

@@ -30,7 +30,6 @@ import {
   Camera,
   Shield,
   Wrench,
-  FlaskConical,
   BookOpen,
   User,
   X,
@@ -1106,27 +1105,6 @@ export function AvatarNavDropdown({
                     </div>
                   </div>
 
-                  {/* Chessnut Bluetooth Test Lab */}
-                  <Link
-                    href="/dashboard/tools/chessnut-bluetooth-test-lab"
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                      isDark
-                        ? "text-blue-300 hover:bg-blue-500/10"
-                        : "text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    <FlaskConical className="w-4 h-4 flex-shrink-0" />
-                    <div className="flex flex-col min-w-0">
-                      <span>Chessnut BT Test Lab</span>
-                      <span className={`text-[10px] font-normal truncate ${
-                        isDark ? "text-white/35" : "text-[#436850]"
-                      }`}>BLE diagnostics &amp; validation</span>
-                    </div>
-                    <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600"
-                    }`}>BETA</span>
-                  </Link>
                 </>
               )}
               {user && !user.isPro && !user.isGuest && !user.isStaff && (
@@ -1475,27 +1453,6 @@ export function AvatarNavDropdown({
                     <Wrench className="w-3 h-3" />
                     Tools
                   </p>
-                  <Link
-                    href="/dashboard/tools/chessnut-bluetooth-test-lab"
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${
-                      isDark ? "text-blue-300 hover:bg-blue-500/10" : "text-blue-600 hover:bg-blue-50"
-                    }`}
-                    style={{ border: "1px solid transparent" }}
-                  >
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? "rgba(59,130,246,0.1)" : "rgba(59,130,246,0.08)" }}>
-                      <FlaskConical className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span>Chessnut BT Test Lab</span>
-                      <span className={`text-[10px] font-normal ${
-                        isDark ? "text-white/35" : "text-[#436850]"
-                      }`}>BLE diagnostics &amp; validation</span>
-                    </div>
-                    <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                      isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600"
-                    }`}>BETA</span>
-                  </Link>
                 </div>
               )}
 

@@ -86,6 +86,8 @@ Protected tournament recap persistence now derives its input from the recap sche
 
 Tournament analytics metadata is now parsed as `unknown` and narrowed to string fields before aggregation, removing the final entrypoint explicit-`any` boundary without changing analytics metrics. Focused lint for `server/index.ts` is **zero warnings and zero errors**, with an expanded 11-contract regression suite.
 
+The Chessnut beta has been fully retired: device routes, navigation links, operator panels, Web Bluetooth adapters, board decoding/engine code, bridge endpoints, source modes, and dedicated tests are removed. Manual and PGN broadcast input remain; focused lint is **zero warnings and zero errors**, and a retirement contract guards the removed routes and API surfaces.
+
 The Matchup Prep walkthrough no longer carries unused visual constants or animation deltas, and its retained transition state is marked intentionally unread. Focused lint is reduced from five warnings to one warning, isolated to a dormant `AnimatedBoard` implementation that requires a dedicated product decision before removal.
 
 The Quads director panel no longer computes unused summary, attention, or completion-card round data. Focused lint is reduced from nine warnings to five warnings, isolated to dormant icon/progress UI and callback shapes that require a dedicated UI decision before removal.

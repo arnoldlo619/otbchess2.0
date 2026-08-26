@@ -1,6 +1,6 @@
 export const OPERATIONAL_ROUTE_SEGMENTS = [
   "404", "admin", "analysis", "analytics", "auth", "board", "blog", "broadcast",
-  "broadcast-console", "builder", "checkin", "clubs", "clock", "connect-board", "create",
+  "broadcast-console", "builder", "checkin", "clubs", "clock", "create",
   "dashboard", "demo", "director-access", "display", "game", "games", "history", "home", "invite",
   "join", "join-club", "league", "league-demo", "leagues", "live", "manage", "meetup", "messages",
   "new", "openings", "otb", "overview", "play", "prep", "pricing", "print", "pro", "profile", "recap",

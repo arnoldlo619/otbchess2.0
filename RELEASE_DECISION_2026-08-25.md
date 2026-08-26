@@ -58,7 +58,7 @@ No additional P0 product-functionality defect was proven in the audited tourname
 
 | ID | Finding | Treatment |
 |---|---|---|
-| P2-01 | `ChessnutProAdapter.tsx` still documents incomplete vendor BLE parsing/notification behavior. | Keep the integration explicitly beta and preserve manual move entry; do not market automatic Chessnut Pro support as complete. |
+| P2-01 | **Resolved.** The Chessnut beta feature, its device routes, browser adapters, operator controls, diagnostics, bridge API endpoints, and dedicated tests were retired. | Manual and PGN broadcast input remain the supported paths. |
 | P2-02 | Large modules remain, including `server/index.ts`, Director, and Club Dashboard. | Continue extraction by domain while preserving route and browser regressions; this is a maintainability risk, not a launch blocker. |
 | P2-03 | Global content/design checklist items remain open, including labels, contrast, capitalization, placeholder review, and League demo polish. | Close route by route during beta. Do not claim platform-wide completion until audited. |
 | P2-04 | Autoscale cold-start and sustained-event behavior have observability but not a passing measured capacity envelope. Reserved hosting was evaluated and declined after the initial latency baseline. | Monitor the beta cohort and preserve the 1.5-second p95 gate before any high-concurrency promotion. |

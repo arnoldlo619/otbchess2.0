@@ -17,12 +17,10 @@ import {
   Radio, Settings, ChevronLeft, Zap, AlertTriangle,
   Monitor, SkipBack,
   Upload, RefreshCw, FlipVertical,
-  Square, Cpu
+  Square
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { QRCodeSVG } from "qrcode.react";
-import { ChessnutProPanel } from "@/components/ChessnutProPanel";
-import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
 import { OTBLoader } from "@/components/OTBLoader";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { parseBroadcastEvent, type Broadcast } from "@/lib/broadcastEvent";
@@ -626,23 +624,6 @@ export default function BroadcastControl() {
             {demoMode && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">DEMO</span>}
           </div>
           <div className="flex items-center gap-3">
-            {/* Bridge Token — always visible for easy CLI copy */}
-            {broadcast.bridgeToken && (
-              <div className="flex items-center gap-1.5 bg-white/05 border border-white/10 rounded-lg px-2.5 py-1.5 group">
-                <Cpu className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-[10px] text-white/40 font-medium hidden sm:inline">Bridge Token</span>
-                <code className="text-[10px] font-mono text-emerald-300/80 max-w-[120px] truncate">
-                  {broadcast.bridgeToken}
-                </code>
-                <button
-                  onClick={() => copyToClipboard(broadcast.bridgeToken!, "Bridge Token")}
-                  title="Copy bridge token"
-                  className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-emerald-400 transition-colors"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-            )}
             <StatusBadge status={broadcast.status} syncState={syncState} />
           </div>
         </div>
@@ -743,7 +724,7 @@ export default function BroadcastControl() {
           <div className="rounded-xl border border-white/08 bg-[oklch(0.14_0.04_145)] p-4 space-y-3">
             <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider">Input Source</h3>
             <div className="space-y-1.5">
-              {(["manual", "chessnut_pro_beta", "chessnut_chrome_bluetooth", "pgn_import"] as const).map(src => (
+              {(["manual", "pgn_import"] as const).map(src => (
                 <button
                   key={src}
                   disabled={broadcast.inputSource === src}
@@ -760,8 +741,6 @@ export default function BroadcastControl() {
                       // Server returns the full updated broadcast object
                       setBroadcast(data);
                       toast.success(
-                        src === "chessnut_pro_beta" ? "Switched to Chessnut Pro — bridge token ready" :
-                        src === "chessnut_chrome_bluetooth" ? "Switched to Chrome Bluetooth — connect your board" :
                         src === "pgn_import" ? "Switched to PGN Import mode" :
                         "Switched to Manual Input"
                       );
@@ -776,23 +755,10 @@ export default function BroadcastControl() {
                   }`}
                 >
                   {src === "manual" && "⌨️ Manual Input"}
-                  {src === "chessnut_pro_beta" && "♟ Chessnut Pro (Beta)"}
-                  {src === "chessnut_chrome_bluetooth" && "🔵 Chrome Bluetooth (Direct)"}
                   {src === "pgn_import" && "📄 PGN Import"}
                 </button>
               ))}
             </div>
-            {broadcast.inputSource === "chessnut_pro_beta" && broadcast.bridgeToken && (
-              <div className="mt-2 p-2 rounded-lg bg-white/03 border border-white/05">
-                <div className="text-[10px] text-white/30 mb-1">Bridge Token</div>
-                <div className="flex items-center gap-2">
-                  <code className="text-[10px] text-white/50 truncate flex-1">{broadcast.bridgeToken}</code>
-                  <button onClick={() => copyToClipboard(broadcast.bridgeToken!, "Token")} className="p-1 rounded hover:bg-white/05">
-                    <Copy className="w-3 h-3 text-white/40" />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -928,55 +894,6 @@ export default function BroadcastControl() {
               </div>
             )}
           </div>
-
-          {/* Chessnut Pro Bridge Panel */}
-          {broadcast.inputSource === "chessnut_pro_beta" && (
-            <ChessnutProPanel
-              broadcastId={broadcast.id}
-              bridgeToken={broadcast.bridgeToken}
-              bridgeStatus={broadcast.bridgeStatus ?? "not_configured"}
-              bridgeDeviceName={broadcast.bridgeDeviceName ?? null}
-              bridgeLastSeenAt={broadcast.bridgeLastSeenAt ?? null}
-              bridgeErrorMessage={broadcast.bridgeErrorMessage ?? null}
-              onTokenRegenerated={(newToken) => {
-                setBroadcast(prev => prev ? { ...prev, bridgeToken: newToken } : prev);
-                toast.success("Bridge token regenerated");
-              }}
-            />
-          )}
-
-          {/* Chessnut Pro — Chrome Web Bluetooth (Direct) Panel */}
-          {broadcast.inputSource === "chessnut_chrome_bluetooth" && (
-            <ChessnutChromeBTPanel
-              broadcastId={broadcast.id}
-              currentFen={chess.fen()}
-              onMoveAccepted={(san, uci, fenBefore, fenAfter) => {
-                // Apply move to local chess state and sync with server
-                try {
-                  chess.load(fenBefore);
-                  chess.move(san);
-                  setFen(chess.fen());
-                } catch { /* ignore local apply error */ }
-                submitMove(san, uci, fenBefore, fenAfter);
-              }}
-              onSwitchToManual={async () => {
-                try {
-                  const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ source: "manual" }),
-                  });
-                  if (!res.ok) throw new Error(await res.text());
-                  const data = await res.json();
-                  // Server returns the full updated broadcast object
-                  setBroadcast(data);
-                  toast.success("Switched to Manual Input");
-                } catch {
-                  toast.error("Failed to switch input source");
-                }
-              }}
-            />
-          )}
 
           {/* Display Links */}
           <div className="rounded-xl border border-white/08 bg-[oklch(0.14_0.04_145)] p-4 space-y-2">

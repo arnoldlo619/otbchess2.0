@@ -18,20 +18,11 @@ import { Router, type Request as ExpressRequest } from "express";
 import { nanoid } from "nanoid";
 import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "./db.js";
-import { liveBroadcasts, liveMoves, liveBridgeSessions } from "../shared/schema.js";
+import { liveBroadcasts, liveMoves } from "../shared/schema.js";
 import type { ServerResponse } from "http";
-import { Chess } from "chess.js";
-import crypto from "crypto";
 import { logger } from "./logger.js";
 
 // ─── In-memory bridge log ring buffer (last 100 entries per broadcast) ────────
-const bridgeLogs = new Map<string, Array<{ ts: number; level: string; msg: string }>>();
-function addBridgeLog(broadcastId: string, level: "info" | "warn" | "error", msg: string) {
-  if (!bridgeLogs.has(broadcastId)) bridgeLogs.set(broadcastId, []);
-  const buf = bridgeLogs.get(broadcastId)!;
-  buf.push({ ts: Date.now(), level, msg });
-  if (buf.length > 100) buf.shift();
-}
 
 const router = Router();
 
@@ -412,231 +403,6 @@ router.patch("/:id/display-settings", async (req, res) => {
   }
 });
 
-// ─── POST /api/broadcasts/:id/bridge-move ────────────────────────────────────
-// Secure endpoint for Chessnut Pro bridge to submit moves using a token.
-// Performs full server-side chess.js validation — the client FEN is verified
-// against the server's current position so desync is detected immediately.
-router.post("/:id/bridge-move", async (req, res) => {
-  try {
-    const db = await getDb();
-    const { token, san, uci, fenBefore, deviceName } = req.body as Record<string, string>;
-    if (!token || !san) {
-      return res.status(400).json({ error: "token and san are required" });
-    }
-
-    const [broadcast] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
-    if (!broadcast) return res.status(404).json({ error: "Broadcast not found" });
-
-    // Token validation — support both raw token and SHA-256 hash
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const tokenValid = broadcast.bridgeToken === token || broadcast.bridgeTokenHash === tokenHash;
-    if (!tokenValid || broadcast.bridgeTokenRevoked) {
-      addBridgeLog(req.params.id, "error", `Rejected move: invalid or revoked token`);
-      return res.status(403).json({ error: "Invalid or revoked bridge token" });
-    }
-
-    if (broadcast.status === "finished") {
-      return res.status(400).json({ error: "Broadcast has ended" });
-    }
-
-    // ── Server-side chess.js validation ──────────────────────────────────────
-    const chess = new Chess();
-    try {
-      chess.load(broadcast.currentFen);
-    } catch {
-      addBridgeLog(req.params.id, "error", `Cannot load current FEN: ${broadcast.currentFen}`);
-      return res.status(500).json({ error: "Server position is invalid" });
-    }
-
-    // Detect desync: client's fenBefore should match server's currentFen
-    if (fenBefore && fenBefore !== broadcast.currentFen) {
-      addBridgeLog(req.params.id, "warn", `Desync detected — client fenBefore differs from server FEN`);
-      fanOut(req.params.id, "bridge_desync", { clientFen: fenBefore, serverFen: broadcast.currentFen });
-      return res.status(409).json({ error: "Position desync", serverFen: broadcast.currentFen });
-    }
-
-    // Attempt the move via chess.js
-    let moveResult;
-    try {
-      moveResult = chess.move(san) ?? chess.move({ from: uci?.slice(0, 2), to: uci?.slice(2, 4), promotion: uci?.slice(4) || undefined });
-    } catch {
-      moveResult = null;
-    }
-
-    if (!moveResult) {
-      addBridgeLog(req.params.id, "error", `Illegal move rejected: ${san} (${uci}) from ${broadcast.currentFen}`);
-      return res.status(400).json({ error: `Illegal move: ${san}`, serverFen: broadcast.currentFen });
-    }
-
-    const validatedFenAfter = chess.fen();
-    const validatedSan = moveResult.san;
-    const validatedUci = `${moveResult.from}${moveResult.to}${moveResult.promotion ?? ""}`;
-    const newSide = validatedFenAfter.split(" ")[1] ?? "w";
-    const ply = broadcast.moveNumber + 1;
-    const moveId = nanoid(36).slice(0, 36);
-
-    await db.insert(liveMoves).values({
-      id: moveId,
-      broadcastId: req.params.id,
-      ply,
-      san: validatedSan,
-      uci: validatedUci,
-      fenBefore: broadcast.currentFen,
-      fenAfter: validatedFenAfter,
-      source: "chessnut_pro_beta",
-      createdAt: new Date(),
-    });
-
-    // Rebuild PGN
-    const allMoves = await db.select().from(liveMoves).where(eq(liveMoves.broadcastId, req.params.id)).orderBy(liveMoves.ply);
-    let pgn = "";
-    for (let i = 0; i < allMoves.length; i++) {
-      const m = allMoves[i];
-      const moveNum = Math.ceil((i + 1) / 2);
-      if (i % 2 === 0) pgn += `${moveNum}. `;
-      pgn += `${m.san} `;
-    }
-    pgn = pgn.trim();
-
-    // Update bridge status and last-seen
-    await db.update(liveBroadcasts).set({
-      currentFen: validatedFenAfter,
-      pgn,
-      lastMoveSan: validatedSan,
-      lastMoveUci: validatedUci,
-      moveNumber: ply,
-      sideToMove: newSide,
-      status: broadcast.status === "ready" ? "live" : broadcast.status,
-      bridgeStatus: "connected",
-      bridgeDeviceName: deviceName ?? broadcast.bridgeDeviceName,
-      bridgeLastSeenAt: new Date(),
-      bridgeErrorMessage: null,
-      updatedAt: new Date(),
-    }).where(eq(liveBroadcasts.id, req.params.id));
-
-    addBridgeLog(req.params.id, "info", `Move accepted: ${validatedSan} (ply ${ply})`);
-    const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
-    fanOut(req.params.id, "move_played", { san: validatedSan, uci: validatedUci, fenAfter: validatedFenAfter, pgn, moveNumber: ply, sideToMove: newSide, source: "chessnut_pro_beta", broadcast: updated });
-    res.json({ ok: true, san: validatedSan, uci: validatedUci, fenAfter: validatedFenAfter, broadcast: updated });
-  } catch (err) {
-    logger.error("broadcast_bridge_move_failed", { error: err });
-    res.status(500).json({ error: "Failed to submit bridge move" });
-  }
-});
-
-// ─── POST /api/broadcasts/:id/bridge-heartbeat ───────────────────────────────
-// Bridge CLI pings this every 10s to report connection status.
-router.post("/:id/bridge-heartbeat", async (req, res) => {
-  try {
-    const db = await getDb();
-    const { token, status = "connected", deviceName, connectionType, bridgeVersion, error } = req.body as Record<string, string>;
-    if (!token) return res.status(400).json({ error: "token is required" });
-
-    const [broadcast] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
-    if (!broadcast) return res.status(404).json({ error: "Broadcast not found" });
-
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const tokenValid = broadcast.bridgeToken === token || broadcast.bridgeTokenHash === tokenHash;
-    if (!tokenValid || broadcast.bridgeTokenRevoked) {
-      return res.status(403).json({ error: "Invalid or revoked bridge token" });
-    }
-
-    const now = new Date();
-    // Upsert bridge session record
-    const [existingSession] = await db.select().from(liveBridgeSessions).where(eq(liveBridgeSessions.broadcastId, req.params.id)).limit(1);
-    if (existingSession) {
-      await db.update(liveBridgeSessions).set({
-        status,
-        deviceName: deviceName ?? existingSession.deviceName,
-        connectionType: connectionType ?? existingSession.connectionType,
-        bridgeVersion: bridgeVersion ?? existingSession.bridgeVersion,
-        lastSeenAt: now,
-        lastError: error ?? null,
-        updatedAt: now,
-      }).where(eq(liveBridgeSessions.broadcastId, req.params.id));
-    } else {
-      await db.insert(liveBridgeSessions).values({
-        id: nanoid(36).slice(0, 36),
-        broadcastId: req.params.id,
-        status,
-        deviceName: deviceName ?? null,
-        connectionType: connectionType ?? null,
-        bridgeVersion: bridgeVersion ?? null,
-        lastSeenAt: now,
-        lastError: error ?? null,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    // Update broadcast bridge fields
-    await db.update(liveBroadcasts).set({
-      bridgeStatus: status,
-      bridgeDeviceName: deviceName ?? broadcast.bridgeDeviceName,
-      bridgeConnectionType: connectionType ?? broadcast.bridgeConnectionType,
-      bridgeLastSeenAt: now,
-      bridgeErrorMessage: error ?? null,
-      updatedAt: now,
-    }).where(eq(liveBroadcasts.id, req.params.id));
-
-    if (error) addBridgeLog(req.params.id, "error", `Heartbeat error: ${error}`);
-    else addBridgeLog(req.params.id, "info", `Heartbeat: ${status}${deviceName ? ` (${deviceName})` : ""}`);
-
-    fanOut(req.params.id, "bridge_status", { status, deviceName, connectionType, bridgeVersion, lastSeenAt: now.toISOString() });
-    res.json({ ok: true });
-  } catch (err) {
-    logger.error("broadcast_bridge_heartbeat_failed", { error: err });
-    res.status(500).json({ error: "Failed to record heartbeat" });
-  }
-});
-
-// ─── POST /api/broadcasts/:id/token-revoke ───────────────────────────────────
-router.post("/:id/token-revoke", async (req, res) => {
-  try {
-    const db = await getDb();
-    const [broadcast] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
-    if (!broadcast) return res.status(404).json({ error: "Not found" });
-    await db.update(liveBroadcasts).set({ bridgeTokenRevoked: 1, bridgeStatus: "not_configured", updatedAt: new Date() }).where(eq(liveBroadcasts.id, req.params.id));
-    addBridgeLog(req.params.id, "warn", "Bridge token revoked by operator");
-    fanOut(req.params.id, "bridge_token_revoked", {});
-    res.json({ ok: true });
-  } catch (err) {
-    logger.error("broadcast_token_revoke_failed", { error: err });
-    res.status(500).json({ error: "Failed to revoke token" });
-  }
-});
-
-// ─── POST /api/broadcasts/:id/token-regenerate ───────────────────────────────
-router.post("/:id/token-regenerate", async (req, res) => {
-  try {
-    const db = await getDb();
-    const [broadcast] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
-    if (!broadcast) return res.status(404).json({ error: "Not found" });
-    const newToken = nanoid(48);
-    const newHash = crypto.createHash("sha256").update(newToken).digest("hex");
-    await db.update(liveBroadcasts).set({
-      bridgeToken: newToken,
-      bridgeTokenHash: newHash,
-      bridgeTokenRevoked: 0,
-      bridgeStatus: "not_configured",
-      updatedAt: new Date(),
-    }).where(eq(liveBroadcasts.id, req.params.id));
-    addBridgeLog(req.params.id, "info", "Bridge token regenerated by operator");
-    fanOut(req.params.id, "bridge_token_regenerated", { token: newToken });
-    const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
-    res.json({ ok: true, token: newToken, broadcast: updated });
-  } catch (err) {
-    logger.error("broadcast_token_regenerate_failed", { error: err });
-    res.status(500).json({ error: "Failed to regenerate token" });
-  }
-});
-
-// ─── GET /api/broadcasts/:id/bridge-logs ─────────────────────────────────────
-router.get("/:id/bridge-logs", async (req, res) => {
-  const logs = bridgeLogs.get(req.params.id) ?? [];
-  res.json(logs);
-});
-
 // ─── PATCH /api/broadcasts/:id/correction ────────────────────────────────────
 // Correction: set FEN + note, insert correction move record.
 router.patch("/:id/correction", async (req, res) => {
@@ -846,12 +612,11 @@ router.patch("/:id/clock", async (req, res) => {
 });
 
 // ─── PATCH /api/broadcasts/:id/input-source ─────────────────────────────────
-// Switch the input source (manual / chessnut_pro_beta / pgn_import).
-// When switching to chessnut_pro_beta, auto-generate a bridge token if none exists.
+// Switch the retained broadcast input source (manual / pgn_import).
 router.patch("/:id/input-source", async (req, res) => {
   try {
     const { source } = req.body as { source: string };
-    const validSources = ["manual", "chessnut_pro_beta", "pgn_import", "chessnut_chrome_bluetooth"];
+    const validSources = ["manual", "pgn_import"];
     if (!validSources.includes(source)) {
       return res.status(400).json({ error: "Invalid input source" });
     }
@@ -864,21 +629,14 @@ router.patch("/:id/input-source", async (req, res) => {
       .limit(1);
     if (!broadcast) return res.status(404).json({ error: "Broadcast not found" });
 
-    // When switching to Chessnut Pro, ensure a bridge token exists
-    let bridgeToken = broadcast.bridgeToken;
-    if (source === "chessnut_pro_beta" && !bridgeToken) {
-      bridgeToken = crypto.randomUUID().replace(/-/g, "");
-    }
-
     const updateFields: Record<string, unknown> = { inputSource: source };
-    if (bridgeToken !== broadcast.bridgeToken) updateFields.bridgeToken = bridgeToken;
 
     await db
       .update(liveBroadcasts)
       .set(updateFields)
       .where(eq(liveBroadcasts.id, req.params.id));
 
-    fanOut(req.params.id, "input_source_changed", { source, bridgeToken });
+    fanOut(req.params.id, "input_source_changed", { source });
 
     // Return the full updated broadcast so the client can replace its local state
     const [updated] = await db

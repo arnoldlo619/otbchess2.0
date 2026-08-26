@@ -24,7 +24,6 @@ const HIDDEN_ROUTES = [
   "/tournament/*/clock",
   "/tournament/*/broadcast-console",
   "/tournament/*/broadcast/",
-  "/tournament/*/connect-board",
   "/live/board/",
   "/record/camera",
   "/print",

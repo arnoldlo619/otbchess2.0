@@ -4,7 +4,7 @@
  *
  * A calm, operational control room for managing Board 1 live broadcasts.
  * Includes: Status Bar, Setup Checklist, Board Control (with Live Operator Mode),
- * Venue Display Monitor, Bridge/Manual Status, Broadcast Logs, Post-Game Export.
+ * Venue Display Monitor, Manual Status, Broadcast Logs, Post-Game Export.
  */
 import BarLoader from "@/components/ui/bar-loader";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -21,11 +21,9 @@ import {
   ChevronDown, ChevronUp, Activity, FileText, Share2,
   LifeBuoy, ListChecks, Maximize2, Minimize2, Send,
   RotateCw, AlertCircle, Info, XCircle, Check, ArrowLeftRight,
-  Cpu, Plug, Keyboard, Bluetooth
+  Cpu, Keyboard
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
-import { ChessnutBoardPanel } from "@/components/ChessnutBoardPanel";
 import { QRCodeSVG } from "qrcode.react";
 import { OTBLoader } from "@/components/OTBLoader";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
@@ -41,15 +39,10 @@ interface Broadcast {
   whitePlayerElo?: number | null;
   blackPlayerElo?: number | null;
   status: "ready" | "live" | "paused" | "finished" | "error";
-  inputSource: "manual" | "chessnut_pro_beta" | "chessnut_chrome_bluetooth" | "pgn_import";
+  inputSource: "manual" | "pgn_import";
   displayMode: "standard" | "minimal" | "overlay" | "board_only";
   displaySettings?: Record<string, unknown> | null;
   tournamentName?: string | null;
-  bridgeToken?: string | null;
-  bridgeStatus?: string | null;
-  bridgeDeviceName?: string | null;
-  bridgeLastSeenAt?: string | null;
-  bridgeErrorMessage?: string | null;
   currentFen: string;
   pgn: string;
   lastMoveSan?: string | null;
@@ -829,8 +822,6 @@ export default function BroadcastConsole() {
     { id: "demo_tested", label: "Demo move tested", description: "Ran a demo move to verify the pipeline" },
     { id: "undo_tested", label: "Undo tested", description: "Confirmed undo works correctly" },
     { id: "pgn_tested", label: "PGN export tested", description: "Downloaded or copied PGN successfully" },
-    { id: "bridge_token", label: "Bridge token generated", description: "If using Chessnut Pro Beta", status: broadcast?.bridgeToken ? "complete" : "incomplete" },
-    { id: "bridge_heartbeat", label: "Bridge heartbeat detected", description: "If using Chessnut Pro Beta", status: broadcast?.bridgeStatus === "connected" ? "complete" : "incomplete" },
     { id: "fallback_operator", label: "Manual fallback operator assigned", description: "Someone ready to enter moves manually" },
     { id: "internet", label: "Internet connection confirmed", description: "Stable connection verified" },
     { id: "hotspot", label: "Backup hotspot available", description: "Mobile hotspot as fallback" },
@@ -1037,7 +1028,7 @@ export default function BroadcastConsole() {
           {/* Row 2: Quick info chips */}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50">
-              Input: {broadcast.inputSource === "manual" ? "Manual" : broadcast.inputSource === "chessnut_pro_beta" ? "Chessnut Pro" : broadcast.inputSource === "chessnut_chrome_bluetooth" ? "Chrome BT" : "PGN"}
+              Input: {broadcast.inputSource === "manual" ? "Manual" : "PGN"}
             </span>
             <span className={`text-[10px] px-2 py-0.5 rounded-full border ${displayConnected && !displayStale ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"}`}>
               {displayConnected && !displayStale ? "Display connected" : "Display not detected"}
@@ -1325,86 +1316,6 @@ export default function BroadcastConsole() {
                   <span>Manual Input</span>
                   {broadcast?.inputSource === "manual" && <span className="ml-auto text-[9px] bg-[#4CAF50]/20 text-[#4CAF50] px-1.5 py-0.5 rounded-full">ACTIVE</span>}
                 </button>
-                {/* Chessnut Pro Beta */}
-                <button
-                  onClick={async () => {
-                    if (!broadcast || broadcast.inputSource === "chessnut_pro_beta") return;
-                    try {
-                      const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ source: "chessnut_pro_beta" }),
-                      });
-                      if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Chessnut Pro (Beta)"); addLog("bridge", "info", "Input source: Chessnut Pro Beta"); }
-                    } catch { toast.error("Failed to switch input source"); }
-                  }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
-                    broadcast?.inputSource === "chessnut_pro_beta"
-                      ? "bg-blue-500/15 border-blue-500/40 text-blue-400"
-                      : "border-white/10 text-white/50 hover:bg-white/5 hover:text-white/70"
-                  }`}
-                >
-                  <Plug className="w-3.5 h-3.5 shrink-0" />
-                  <span>Chessnut Pro (Beta)</span>
-                  {broadcast?.inputSource === "chessnut_pro_beta" && <span className="ml-auto text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">ACTIVE</span>}
-                  {broadcast?.inputSource !== "chessnut_pro_beta" && <span className="ml-auto text-[9px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded-full">BLE</span>}
-                </button>
-                {/* Chrome Web Bluetooth (Direct) */}
-                <button
-                  onClick={async () => {
-                    if (!broadcast || broadcast.inputSource === "chessnut_chrome_bluetooth") return;
-                    try {
-                      const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ source: "chessnut_chrome_bluetooth" }),
-                      });
-                      if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Chrome Bluetooth (Direct)"); addLog("bridge", "info", "Input source: Chrome Web Bluetooth"); }
-                    } catch { toast.error("Failed to switch input source"); }
-                  }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
-                    broadcast?.inputSource === "chessnut_chrome_bluetooth"
-                      ? "bg-purple-500/15 border-purple-500/40 text-purple-300"
-                      : "border-white/10 text-white/50 hover:bg-white/5 hover:text-white/70"
-                  }`}
-                >
-                  <Bluetooth className="w-3.5 h-3.5 shrink-0" />
-                  <span>Chrome Bluetooth (Direct)</span>
-                  {broadcast?.inputSource === "chessnut_chrome_bluetooth" && <span className="ml-auto text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-full">ACTIVE</span>}
-                  {broadcast?.inputSource !== "chessnut_chrome_bluetooth" && <span className="ml-auto text-[9px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded-full">WEB BT</span>}
-                </button>
-                {/* Chrome BT Panel — inline when active */}
-                {broadcast?.inputSource === "chessnut_chrome_bluetooth" && (
-                  <div className="mt-2">
-                    <ChessnutBoardPanel
-                      broadcastId={broadcast.id}
-                      currentFen={fen}
-                      onMoveAccepted={submitMove}
-                      onSwitchToManual={async () => {
-                        try {
-                          const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ source: "manual" }),
-                          });
-                          if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Manual Mode"); }
-                        } catch { toast.error("Failed to switch"); }
-                      }}
-                      isDark={isDark}
-                    />
-                  </div>
-                )}
-                {/* Show bridge status if Chessnut Pro is active */}
-                {broadcast?.inputSource === "chessnut_pro_beta" && (
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] ${
-                    broadcast.bridgeStatus === "connected" ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400" : "bg-amber-500/8 border-amber-500/20 text-amber-400"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      broadcast.bridgeStatus === "connected" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-                    }`} />
-                    {broadcast.bridgeStatus === "connected" ? `Bridge connected — ${broadcast.bridgeDeviceName ?? "Chessnut Pro"}` : "Bridge not connected — run bridge.mjs"}
-                  </div>
-                )}
               </div>
               {/* Display Links */}
               <div className="rounded-xl border border-white/8 bg-[oklch(0.14_0.04_145)] p-4 space-y-2">
@@ -1542,12 +1453,6 @@ export default function BroadcastConsole() {
             <div className="space-y-3">
               {[
                 {
-                  title: "Chessnut bridge disconnects",
-                  steps: ["Display stays on last valid position.", "Switch to Manual Mode.", "Continue entering moves manually."],
-                  action: "Switch to Manual",
-                  actionFn: () => { toast.success("Manual Mode active"); addLog("bridge", "warning", "Switched to Manual Mode"); },
-                },
-                {
                   title: "Operator entered wrong move",
                   steps: ["Click Undo to remove the last move.", "Enter the correct move.", "Confirm the display updated."],
                   action: "Undo Last Move",
@@ -1564,12 +1469,6 @@ export default function BroadcastConsole() {
                   steps: ["Pause the broadcast if needed.", "Use the physical scoresheet.", "Resume and backfill PGN when connection returns."],
                   action: "Pause Broadcast",
                   actionFn: () => updateStatus("paused"),
-                },
-                {
-                  title: "Physical board and digital board desync",
-                  steps: ["Pause Chessnut Pro Beta.", "Switch to Manual Mode.", "Set FEN or undo to correct position.", "Resume manually."],
-                  action: "Undo Last Move",
-                  actionFn: handleUndo,
                 },
                 {
                   title: "Game ends",

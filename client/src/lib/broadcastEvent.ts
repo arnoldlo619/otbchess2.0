@@ -8,15 +8,10 @@ export interface Broadcast {
   whitePlayerElo?: number | null;
   blackPlayerElo?: number | null;
   status: "ready" | "live" | "paused" | "finished" | "error";
-  inputSource: "manual" | "chessnut_pro_beta" | "chessnut_chrome_bluetooth" | "pgn_import";
+  inputSource: "manual" | "pgn_import";
   displayMode: "standard" | "minimal" | "overlay";
   displaySettings?: Record<string, unknown> | null;
   tournamentName?: string | null;
-  bridgeToken?: string | null;
-  bridgeStatus?: string | null;
-  bridgeDeviceName?: string | null;
-  bridgeLastSeenAt?: string | null;
-  bridgeErrorMessage?: string | null;
   currentFen: string;
   pgn: string;
   lastMoveSan?: string | null;
@@ -28,7 +23,7 @@ export interface Broadcast {
 }
 
 const BROADCAST_STATUSES = new Set<Broadcast["status"]>(["ready", "live", "paused", "finished", "error"]);
-const BROADCAST_INPUT_SOURCES = new Set<Broadcast["inputSource"]>(["manual", "chessnut_pro_beta", "chessnut_chrome_bluetooth", "pgn_import"]);
+const BROADCAST_INPUT_SOURCES = new Set<Broadcast["inputSource"]>(["manual", "pgn_import"]);
 const BROADCAST_DISPLAY_MODES = new Set<Broadcast["displayMode"]>(["standard", "minimal", "overlay"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
