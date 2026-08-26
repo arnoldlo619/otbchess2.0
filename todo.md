@@ -7494,6 +7494,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Exclude live SMTP and Lichess credential probes from deterministic CI while retaining them for separately authorized integration checks
 - [x] Resolve the high-signal active-CI accessibility and unused-code warning cluster; document the remaining typed-warning baseline
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
+- [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 
 ### M. Release Decision
 - [x] P0/P1/P2/P3 issue classification

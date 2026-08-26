@@ -37,7 +37,6 @@ import {
   Trophy,
   Users,
   Zap,
-  ChevronRight,
   Menu,
   X,
   Crown,
@@ -47,7 +46,6 @@ import {
   CheckCircle2 as _CheckCircle2,
   ArrowRight,
   Shield,
-  Globe,
   Home as _HomeIcon,
   Building2,
   Video as _Video,
@@ -57,10 +55,7 @@ import {
   Ghost,
   LayoutDashboard,
   BookOpen,
-  Search,
-  TrendingUp,
   Brain,
-  Link2,
   GraduationCap,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
@@ -74,10 +69,8 @@ import {
 } from "@/lib/navRegistry";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { MobileNavDrawer } from "@/components/MobileNavDrawer";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { AnnouncementBanner } from "@/components/ui/announcement-banner";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
-import { DynamicSquare } from "@/components/ui/dynamic-square";
 import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
 import { PatternText } from "@/components/ui/pattern-text";
@@ -703,94 +696,9 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
   );
 }
 
-// ─── Phone Lightbox Modal ──────────────────────────────────────────────────
-function PhoneLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handleKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(12px)" }}
-      onClick={onClose}
-    >
-      {/* Close button */}
-      <button
-        className="absolute top-5 right-5 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors duration-200"
-        onClick={onClose}
-        aria-label="Close lightbox"
-      >
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M2 2L16 16M16 2L2 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </button>
-
-      {/* Screenshot in phone frame */}
-      <div
-        className="relative flex items-center justify-center"
-        style={{ maxHeight: "90vh", maxWidth: "min(420px, 90vw)" }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Subtle glow behind the modal phone */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            inset: -16,
-            borderRadius: 70,
-            boxShadow: "0 0 60px 16px oklch(0.65 0.18 145 / 0.28), 0 0 120px 32px oklch(0.55 0.14 145 / 0.14)",
-          }}
-        />
-        {/* Phone shell */}
-        <div
-          style={{
-            width: "min(380px, 88vw)",
-            aspectRatio: "320 / 650",
-            borderRadius: 50,
-            border: "10px solid #1c1c1e",
-            boxShadow: "0 0 0 1px #3a3a3a, 0 40px 120px rgba(0,0,0,0.9)",
-            background: "#0a0a0a",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          <img
-            loading="lazy"
-            decoding="async"
-            src={src}
-            alt={alt}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              objectPosition: "center top",
-              display: "block",
-            }}
-            draggable={false}
-          />
-        </div>
-        {/* Caption */}
-        <p
-          className="absolute -bottom-8 left-0 right-0 text-center text-white/50 text-xs tracking-wide"
-        >
-          {alt} · Click outside or press Esc to close
-        </p>
-      </div>
-    </div>
-  );
-}
-
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
 function IPhoneMockup({ src, alt, isDark, objectPosition, objectFit }: { src: string; alt: string; isDark: boolean; objectPosition?: string; objectFit?: string }) {
   const [hovered, setHovered] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const handleClose = useCallback(() => setLightboxOpen(false), []);
   // Responsive sizing: clamp between 220px (small mobile) and 320px (desktop)
   // Height maintains the 320:650 (≈1:2.03) aspect ratio
   return (
@@ -972,8 +880,6 @@ function ParallaxStep({
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useMotionInView(sectionRef, { once: true, amount: 0.10 });
-  const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]";
-  const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#436850]/10";
 
   // MacBook step: side-by-side layout
   if (mockupType === 'macbook') {
@@ -1255,106 +1161,6 @@ function HowItWorks() {
             caption2={(step as any).caption2}
           />
         ))}
-      </div>
-    </section>
-  );
-}
-
-// ─── Ecosystem Pathways ─────────────────────────────────────────────────────
-function EcosystemPathways() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const { ref, inView } = useInView();
-
-  const pathways = [
-    {
-      icon: <Trophy className="w-5 h-5" />,
-      label: "Tournaments",
-      description: "Host Swiss or round-robin events with automatic pairings and live standings.",
-      href: "/tournaments",
-      cta: "Browse Tournaments",
-    },
-    {
-      icon: <Users className="w-5 h-5" />,
-      label: "Clubs",
-      description: "Build your club's home base for members, events, history, and leaderboards.",
-      href: "/clubs",
-      cta: "Explore Clubs",
-    },
-    {
-      icon: <BarChart3 className="w-5 h-5" />,
-      label: "League",
-      description: "Run a season-long club league with cumulative standings and tiebreaks.",
-      href: "/league",
-      cta: "View League",
-    },
-    {
-      icon: <Swords className="w-5 h-5" />,
-      label: "Match Prep Tools",
-      description: "Openings library, opponent analysis, and matchup prep in one place.",
-      href: "/training",
-      cta: "Open Tools",
-    },
-  ];
-
-  return (
-    <section
-      className={`py-14 sm:py-20 transition-colors duration-500 ${
-        isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F0F5E8]"
-      }`}
-      ref={ref}
-    >
-      <div className="container">
-        <div className={`text-center mb-10 transition-all duration-700 ${
-          inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-        }`}>
-          <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${
-            isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#436850]"
-          }`}>Platform</p>
-          <h2
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            Everything in one ecosystem.
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {pathways.map((p, i) => (
-            <a
-              key={p.label}
-              href={p.href}
-              className={`group flex flex-col gap-4 p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
-                isDark
-                  ? "bg-white/[0.04] border-white/[0.08] hover:border-[oklch(0.65_0.14_145)]/40 hover:bg-white/[0.07]"
-                  : "bg-white border-[#ADBC9F]/50 hover:border-[#436850]/40 hover:shadow-md"
-              } ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-              }`}
-              style={{ transitionDelay: `${i * 60}ms`, animationFillMode: "forwards" }}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/10 text-[#436850]"
-              }`}>
-                {p.icon}
-              </div>
-              <div className="flex-1">
-                <p className={`text-sm font-bold mb-1 ${
-                  isDark ? "text-white" : "text-[#12372A]"
-                }`}>{p.label}</p>
-                <p className={`text-xs leading-relaxed ${
-                  isDark ? "text-white/50" : "text-[#436850]/70"
-                }`}>{p.description}</p>
-              </div>
-              <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors duration-200 ${
-                isDark
-                  ? "text-[oklch(0.65_0.14_145)] group-hover:text-[oklch(0.75_0.16_145)]"
-                  : "text-[#436850] group-hover:text-[#12372A]"
-              }`}>
-                {p.cta} <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </a>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -1732,169 +1538,6 @@ function Features() {
     </section>
   );
 }
-// ─── Features CTA Banner ─────────────────────────────────────────────────────
-
-// Showcase: Contra Labs-style 2×2 Image-Dominant Feature Grid
-
-const SHOWCASE_FEATURES = [
-  {
-    id: "tournaments",
-    tag: "Swiss + Elim Format",
-    title: "Run a\nTournament",
-    description: "Swiss pairings, live standings, and elimination brackets from one director dashboard.",
-    href: NAV_CTA_PRIMARY.path,
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
-    screenshotAlt: "Swiss Tournament Director Dashboard",
-  },
-  {
-    id: "league",
-    tag: "Chess Club League",
-    title: "Host a\nLeague",
-    description: "Weekly matchups and a season champion incentivize your members to show up every week.",
-    href: "/league",
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
-    screenshotAlt: "Chess Club League Dashboard",
-  },
-  {
-    id: "rated-game",
-    tag: "OTB Rated Games",
-    title: "Club OTB\nRating",
-    description: "Earn a real over-the-board ELO that updates automatically after every rated club game.",
-    href: "/clock?register=true",
-    screenshot: "/manus-storage/otb-rated-game-carousel_ed800e01.webp",
-    screenshotAlt: "OTB Rated Game with QR code on chess clock",
-  },
-  {
-    id: "prep",
-    tag: "Matchup Prep",
-    title: "Build OTB\nRepertoire",
-    description: "Scout any chess.com player's openings, problem lines, and blunder patterns before you sit down.",
-    href: "/prep",
-    screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ldjNZgAdszCUXLEl.webp",
-    screenshotAlt: "Scout Report showing opponent weaknesses",
-  },
-];
-
-function Showcase() {
-  const { ref, inView } = useInView();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const [, navigate] = useLocation();
-
-  // Section background: muted sage in light mode and deep forest in dark mode, Contra Labs style.
-  const sectionBg = isDark
-    ? "bg-[oklch(0.16_0.05_145)]"
-    : "bg-[oklch(0.92_0.03_160)]";
-
-  // Card background: dark teal (both modes, image-dominant)
-  const cardBg = isDark
-    ? "bg-[oklch(0.22_0.06_170)]"
-    : "bg-[oklch(0.35_0.06_170)]";
-
-  return (
-    <section
-      id="for-clubs"
-      className={`py-12 sm:py-16 lg:py-24 overflow-hidden transition-colors duration-500 ${sectionBg}`}
-      ref={ref}
-    >
-      <div className="container max-w-6xl">
-
-        {/* Section header: left-aligned editorial serif */}
-        <div className={`mb-8 sm:mb-12 mx-auto max-w-lg text-center transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <h2
-            className={`text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight mb-3 sm:mb-4 ${
-              isDark ? "text-white" : "text-[#12372A]"
-            }`}
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            Explore the OTB
-            <br />
-            Chess ecosystem
-          </h2>
-          <p className={`text-base leading-relaxed ${
-            isDark ? "text-white/60" : "text-[#436850]"
-          }`}>
-            Four tools power your over-the-board chess experience, from hosting tournaments to scouting your next opponent.
-          </p>
-        </div>
-
-        {/* ── 2×2 Card Grid ── */}
-        <div className="grid sm:grid-cols-2 gap-3">
-          {SHOWCASE_FEATURES.map((feature, i) => (
-            <div
-              key={feature.id}
-              className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ${
-                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              } ${cardBg}`}
-              style={{
-                transitionDelay: `${(i + 1) * 100}ms`,
-                aspectRatio: "4/3",
-              }}
-              onClick={() => {
-                if (feature.href.startsWith("/")) navigate(feature.href);
-                else window.open(feature.href, "_blank", "noopener");
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (feature.href.startsWith("/")) navigate(feature.href);
-                  else window.open(feature.href, "_blank", "noopener");
-                }
-              }}
-              aria-label={`${feature.tag}: ${feature.title.replace("\n", " ")}`}
-            >
-              {/* Screenshot image fills entire card */}
-              <img
-                loading="lazy"
-                decoding="async"
-                src={feature.screenshot}
-                alt={feature.screenshotAlt}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-              />
-
-              {/* Gradient scrim is stronger at bottom for text readability */}
-              <div
-                className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                style={{
-                  background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)",
-                }}
-              />
-
-              {/* Hover overlay with subtle green tint */}
-              <div className="absolute inset-0 bg-[oklch(0.45_0.14_145)]/0 group-hover:bg-[oklch(0.45_0.14_145)]/10 transition-colors duration-300 pointer-events-none" />
-
-              {/* Tag label removed for minimalist look */}
-
-              {/* Title and description in a bottom-left overlay */}
-              <div className="absolute bottom-5 left-5 right-14 z-10">
-                <h3
-                  className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-white leading-tight mb-2"
-                  style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
-                >
-                  {feature.title}
-                </h3>
-                {feature.description && (
-                  <p className="text-[13px] text-white/70 leading-snug">
-                    {feature.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Arrow hint in the bottom-right, appears on hover */}
-              <div className="absolute bottom-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <ArrowRight className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── Player Card Demo ─────────────────────────────────────────────────────────
 function PlayerDemo() {
   const { ref, inView } = useInView();
