@@ -2300,16 +2300,17 @@ function getRaceRoom(code: string): RaceRoomState {
   });
 
   // POST /api/player/achievements — Batch create achievements (host only)
-  app.post("/api/player/achievements", requireAuth, async (req: any, res) => {
+  app.post("/api/player/achievements", requireAuth, async (req, res) => {
     try {
       const db = await getDb();
       const { playerAchievements } = await import("../shared/schema.js");
       const { nanoid } = await import("nanoid");
-      const { achievements } = req.body;
+      type AchievementInput = Omit<typeof playerAchievements.$inferInsert, "id" | "earnedAt">;
+      const { achievements } = req.body as { achievements?: AchievementInput[] };
       if (!Array.isArray(achievements) || achievements.length === 0) {
         return res.status(400).json({ error: "achievements array is required" });
       }
-      const values = achievements.map((a: any) => ({
+      const values = achievements.map((a) => ({
         id: nanoid(12),
         playerId: a.playerId,
         tournamentId: a.tournamentId,

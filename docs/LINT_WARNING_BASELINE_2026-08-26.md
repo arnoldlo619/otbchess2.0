@@ -80,6 +80,8 @@ Broadcast settings now use the `userId` established by shared authentication mid
 
 Public snapshot construction now consumes schema-typed player and round arrays through the exported snapshot input contract rather than explicit array casts. Existing snapshot generation and ETag behavior remain intact; focused lint preserves four remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the typed input boundary.
 
+Protected achievement batch creation now derives its input from the player-achievement schema rather than explicit request and callback `any` annotations. Existing batch validation and achievement persistence remain intact; focused lint preserves two remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the input boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

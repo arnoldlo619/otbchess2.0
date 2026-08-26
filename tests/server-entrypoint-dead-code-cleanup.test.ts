@@ -49,4 +49,9 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("rounds?: BuildSnapshotInput[\"rounds\"];");
     expect(source).not.toContain("players: (s.players ?? []) as any[]");
   });
+
+  it("uses schema-derived inputs for protected achievement batches", () => {
+    expect(source).toContain("type AchievementInput = Omit<typeof playerAchievements.$inferInsert, \"id\" | \"earnedAt\">;");
+    expect(source).not.toContain("app.post(\"/api/player/achievements\", requireAuth, async (req: any, res)");
+  });
 });
