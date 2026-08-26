@@ -76,11 +76,12 @@ export function SpectatorShareModal({
   return (
     <div
       className="modal-overlay z-50"
-      onClick={onClose}
     >
       {/* Backdrop */}
-      <div
-        className={`fixed inset-0 ${isDark ? "bg-black/70" : "bg-black/40"} backdrop-blur-sm`}
+      <button
+        type="button"
+        className={`fixed inset-0 cursor-default ${isDark ? "bg-black/70" : "bg-black/40"} backdrop-blur-sm`}
+        aria-label="Close spectator share dialog"
         onClick={onClose}
       />
 
@@ -97,7 +98,6 @@ export function SpectatorShareModal({
             : "bg-white border-[#ADBC9F]/70"
         }`}
         style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Teal/blue accent bar — visually distinct from the green join QR */}
         <div className="h-1 bg-gradient-to-r from-[#1a6b8a] via-[#2196F3] to-[#1a6b8a]" />

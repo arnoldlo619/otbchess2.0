@@ -7558,6 +7558,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Player Profile Sheet: stabilize Chess.com fetch dependencies without changing profile data behavior
 - [x] QR modal: replace non-semantic backdrop handlers with a semantic close control
 - [x] Share Results projection: remove non-semantic full-screen dialog click handler while retaining explicit exit control
+- [x] Spectator Share modal: replace non-semantic backdrop handlers with a semantic close control
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
