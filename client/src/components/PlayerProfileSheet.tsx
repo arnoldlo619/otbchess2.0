@@ -191,17 +191,20 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
     initialFocusRef: closeButtonRef,
   });
 
+  const playerUsername = player?.username;
+  const playerPlatform = player?.platform;
+
   // Fetch chess.com data when player changes
   useEffect(() => {
-    if (!player) {
+    if (!playerUsername) {
       setChessProfile(null);
       setEloHistory(null);
       setProfileError(false);
       return;
     }
-    if (player.platform === "lichess") return; // lichess handled differently
+    if (playerPlatform === "lichess") return; // lichess handled differently
 
-    const username = player.username;
+    const username = playerUsername;
     setLoadingProfile(true);
     setLoadingElo(true);
     setProfileError(false);
@@ -221,7 +224,7 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
       .then((data: EloHistory) => setEloHistory(data))
       .catch(() => {/* non-fatal */})
       .finally(() => setLoadingElo(false));
-  }, [player?.username]);
+  }, [playerPlatform, playerUsername]);
 
   // Close on backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
