@@ -68,10 +68,14 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
   return (
     <div
       className="modal-overlay z-50"
-      onClick={onClose}
     >
       {/* Backdrop */}
-      <div className={`fixed inset-0 ${isDark ? "bg-black/70" : "bg-black/40"} backdrop-blur-sm`} onClick={onClose} />
+      <button
+        type="button"
+        className={`fixed inset-0 cursor-default ${isDark ? "bg-black/70" : "bg-black/40"} backdrop-blur-sm`}
+        aria-label="Close QR code dialog"
+        onClick={onClose}
+      />
 
       {/* Modal */}
       <div
@@ -84,7 +88,6 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
           isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-[#ADBC9F]/70"
         }`}
         style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Green accent bar */}
         <div className="h-1 bg-gradient-to-r from-[#436850] via-[#4CAF50] to-[#436850]" />
