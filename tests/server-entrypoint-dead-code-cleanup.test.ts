@@ -12,4 +12,9 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).not.toContain("const pushSubscribeLimiter = rateLimit(");
     expect(source).not.toContain("gameSessions } from \"../shared/schema.js\"");
   });
+
+  it("uses the shared auth middleware userId contract for tournament analytics ownership", () => {
+    expect(source).toContain("const userId = (req as Request & { userId?: string }).userId;");
+    expect(source).toContain("if (!userId) return res.status(401).json({ error: \"Not authenticated\" });");
+  });
 });

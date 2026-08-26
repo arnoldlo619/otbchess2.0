@@ -1,5 +1,6 @@
 import "./sentry.js"; // Must be first — initializes Sentry before any other module
 import express from "express";
+import type { Request } from "express";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import path from "path";
@@ -1073,7 +1074,8 @@ export function createApp() {
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
     try {
       const db = await getDb();
-      const userId = (req as any).userId as string;
+      const userId = (req as Request & { userId?: string }).userId;
+      if (!userId) return res.status(401).json({ error: "Not authenticated" });
       // Verify ownership
       const utRows = await db
         .select()

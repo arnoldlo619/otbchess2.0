@@ -66,6 +66,8 @@ Club event, feed, RSVP, payment-status, and check-in actions now use the shared 
 
 The server entrypoint no longer retains an unused legacy Lichess proxy, duplicate legacy rate-limit declarations, or a stale game-session schema import. Mounted delegated routes retain their own active router-level controls; focused lint preserves fifteen remaining typed-boundary warnings with zero errors, and a source contract protects the cleanup.
 
+Tournament analytics ownership checks now narrow the `userId` established by shared authentication middleware instead of relying on an explicit request `any` cast. Unauthorized requests retain a clear 401 response; focused lint preserves fourteen remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the route.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
