@@ -1828,17 +1828,19 @@ export function createApp() {
   });
 
   // PUT /api/tournament/:id/broadcast — save broadcast settings (host only)
-  app.put("/api/tournament/:id/broadcast", requireAuth, validate(broadcastSchema), async (req: any, res) => {
+  app.put("/api/tournament/:id/broadcast", requireAuth, validate(broadcastSchema), async (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
     const { broadcastEnabled, broadcastUrl, broadcastProvider, featuredBoardNumber, broadcastTitle, broadcastStatus } = req.body;
+    const userId = (req as Request & { userId?: string }).userId;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     try {
       const db = await getDb();
       // Verify ownership
       const utRows = await db
         .select()
         .from(userTournaments)
-        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, req.user.id)))
+        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, userId)))
         .limit(1);
       if (utRows.length === 0) return res.status(403).json({ error: "Not authorized" });
 
@@ -1847,7 +1849,7 @@ export function createApp() {
         .select({ tournamentId: tournamentBroadcastSettings.tournamentId })
         .from(tournamentBroadcastSettings)
         .where(eq(tournamentBroadcastSettings.tournamentId, id));
-      const values = {
+      const values: typeof tournamentBroadcastSettings.$inferInsert = {
         tournamentId: id,
         broadcastEnabled: broadcastEnabled ? 1 : 0,
         broadcastUrl: broadcastUrl || null,
@@ -1860,7 +1862,7 @@ export function createApp() {
       if (existing.length > 0) {
         await db.update(tournamentBroadcastSettings).set(values).where(eq(tournamentBroadcastSettings.tournamentId, id));
       } else {
-        await db.insert(tournamentBroadcastSettings).values(values as any);
+        await db.insert(tournamentBroadcastSettings).values(values);
       }
       // Invalidate public snapshot so viewers see broadcast immediately
       invalidateSnapshotCache(id);

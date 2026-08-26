@@ -37,4 +37,10 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("app.delete(\"/api/tournament/:id\", requireAuth, async (req, res) =>");
     expect(source).not.toContain("app.delete(\"/api/tournament/:id\", requireAuth, async (req: any, res)");
   });
+
+  it("uses shared authentication and schema-derived data for broadcast settings", () => {
+    expect(source).toContain("const values: typeof tournamentBroadcastSettings.$inferInsert = {");
+    expect(source).not.toContain("eq(userTournaments.userId, req.user.id)");
+    expect(source).not.toContain("values(values as any)");
+  });
 });
