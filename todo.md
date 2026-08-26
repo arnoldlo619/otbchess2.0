@@ -6,6 +6,7 @@
 - [x] Club Albums: Build a responsive social timeline with album covers, photo grids, captions, dates, and empty/loading/error states
 - [x] Club Albums: Add an accessible full-screen photo viewer with keyboard and mobile navigation
 - [x] Club Albums: Add behavioral API, image preparation, rendered UI, permission, upload, edit/delete, and automated responsive regression coverage
+- [x] Club Albums: Remove the requested empty-state camera icon from the public Album panel
 
 - [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
 

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Camera,
   ChevronLeft,
   ChevronRight,
   ImagePlus,
@@ -454,10 +453,7 @@ export function ClubAlbumTab({
 
       {!loading && !loadError && albums.length === 0 && (
         <div className={`rounded-3xl border px-6 py-14 text-center ${surface}`}>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: `${accent}18`, color: accent }}>
-            <Camera className="h-7 w-7" aria-hidden="true" />
-          </div>
-          <h3 className="mt-4 text-lg font-bold tracking-normal" style={{ fontFamily: "Inter, sans-serif", wordSpacing: "0.12em" }}>No albums yet</h3>
+          <h3 className="text-lg font-bold tracking-normal" style={{ fontFamily: "Inter, sans-serif", wordSpacing: "0.12em" }}>No albums yet</h3>
           <p className={`mx-auto mt-1 max-w-sm text-sm leading-relaxed ${muted}`}>
             {canManage ? "Create the first album to share tournament nights, club meetups, and community moments." : "Event photos and club memories will appear here when the club shares them."}
           </p>
