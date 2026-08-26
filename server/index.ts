@@ -1713,10 +1713,11 @@ export function createApp() {
   // ── Tournament: DELETE /api/tournament/:id ────────────────────────────────
   // Permanently deletes a tournament (owner-only).
   // Cascades: removes tournament_state, tournament_players, and userTournaments row.
-  app.delete("/api/tournament/:id", requireAuth, async (req: any, res) => {
+  app.delete("/api/tournament/:id", requireAuth, async (req, res) => {
     const { id } = req.params;
-    const userId = req.userId as string;
+    const userId = (req as Request & { userId?: string }).userId;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     try {
       const db = await getDb();
       const utRows = await db

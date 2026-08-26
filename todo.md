@@ -7523,6 +7523,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tournament analytics: narrow persisted attendance state to typed player and round fields while retaining walk-in and no-show calculations
 - [x] Tournament analytics: narrow repeat-event state to typed player usernames while retaining returning-player calculations
 - [x] Public tournament visibility: type shared authenticated user access while retaining owner-only read and update protections
+- [x] Tournament deletion: type shared authenticated user access while retaining existing owner-only safeguards
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

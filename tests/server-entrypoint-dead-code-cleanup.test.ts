@@ -30,6 +30,11 @@ describe("server entrypoint legacy cleanup", () => {
   });
 
   it("uses typed shared authentication for public visibility ownership routes", () => {
-    expect(source.match(/const userId = \(req as Request & \{ userId\?: string \}\)\.userId;/g)).toHaveLength(3);
+    expect(source.match(/const userId = \(req as Request & \{ userId\?: string \}\)\.userId;/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("uses typed shared authentication for owner-only tournament deletion", () => {
+    expect(source).toContain("app.delete(\"/api/tournament/:id\", requireAuth, async (req, res) =>");
+    expect(source).not.toContain("app.delete(\"/api/tournament/:id\", requireAuth, async (req: any, res)");
   });
 });

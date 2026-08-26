@@ -74,6 +74,8 @@ Repeat-event growth analytics now parses only player usernames from current and 
 
 Public tournament visibility reads and updates now narrow the `userId` established by shared authentication middleware rather than using explicit request casts. Existing 401 and owner-only protections remain intact; focused lint preserves nine remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the ownership routes.
 
+Owner-only tournament deletion now narrows the `userId` established by shared authentication middleware instead of annotating the route request as `any`. Existing missing-auth, missing-tournament, and ownership protections remain intact; focused lint preserves eight remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the deletion route.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
