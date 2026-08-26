@@ -7514,6 +7514,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] League settings updates: use schema-derived typed update data while retaining commissioner validation and authorization
 - [x] Repertoire Builder: type protected CRUD handlers through a full-auth-compatible userId wrapper while retaining ownership and Pro-limit rules
 - [x] Bracket mutations: type authenticated route user IDs and config updates while retaining ownership, reassign, and spawn behavior
+- [x] Saved preparation reports: align CRUD route authentication with the shared requireAuth userId contract and add regression coverage
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

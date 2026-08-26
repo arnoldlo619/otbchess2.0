@@ -5,7 +5,7 @@
  * analysis workspace resolution, Lichess game enrichment,
  * saved prep reports CRUD, and coach insight LLM endpoint.
  */
-import { Router } from "express";
+import { Router, type Request, type RequestHandler, type Response } from "express";
 import { eq, and, or, desc } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
@@ -26,6 +26,16 @@ import { requireAuth } from "./auth.js";
 
 // ── Prep cache TTL ───────────────────────────────────────────────────────────
 const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+type AuthenticatedRequest = Request & { userId: string };
+
+function withAuthenticatedUser(
+  handler: (req: AuthenticatedRequest, res: Response) => Promise<unknown>,
+): RequestHandler {
+  return (req, res, next) => {
+    void handler(req as AuthenticatedRequest, res).catch(next);
+  };
+}
 
 // ── In-memory analysis report bridge ─────────────────────────────────────────
 const PREP_ANALYSIS_MEMORY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -391,10 +401,9 @@ export function createPrepRouter(): Router {
   });
 
   // POST /saved — save a prep report
-  router.post("/saved", requireAuth, validate(prepSaveSchema), async (req: any, res) => {
+  router.post("/saved", requireAuth, validate(prepSaveSchema), withAuthenticatedUser(async (req, res) => {
     try {
-      const userId = req.user?.id;
-      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
+      const { userId } = req;
       const { opponentUsername, opponentName, winRate, gamesAnalyzed, prepLinesCount, reportJson } = req.body;
       if (!opponentUsername || !reportJson) {
         res.status(400).json({ error: "opponentUsername and reportJson are required" }); return;
@@ -426,13 +435,12 @@ export function createPrepRouter(): Router {
       logger.error("[saved-prep] save error:", err);
       res.status(500).json({ error: "Failed to save prep report" });
     }
-  });
+  }));
 
   // GET /saved — list saved reports
-  router.get("/saved", requireAuth, async (req: any, res) => {
+  router.get("/saved", requireAuth, withAuthenticatedUser(async (req, res) => {
     try {
-      const userId = req.user?.id;
-      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
+      const { userId } = req;
       const db = await getDb();
       const rows = await db.select({
         id: savedPrepReports.id, opponentUsername: savedPrepReports.opponentUsername,
@@ -446,14 +454,13 @@ export function createPrepRouter(): Router {
       logger.error("[saved-prep] list error:", err);
       res.status(500).json({ error: "Failed to fetch saved reports" });
     }
-  });
+  }));
 
   // GET /saved/:id — get full report
-  router.get("/saved/:id", requireAuth, async (req: any, res) => {
+  router.get("/saved/:id", requireAuth, withAuthenticatedUser(async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const { userId } = req;
       const id = parseInt(req.params.id, 10);
-      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
       if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
       const db = await getDb();
       const [row] = await db.select().from(savedPrepReports)
@@ -468,14 +475,13 @@ export function createPrepRouter(): Router {
       logger.error("[saved-prep] get error:", err);
       res.status(500).json({ error: "Failed to fetch saved report" });
     }
-  });
+  }));
 
   // DELETE /saved/:id
-  router.delete("/saved/:id", requireAuth, async (req: any, res) => {
+  router.delete("/saved/:id", requireAuth, withAuthenticatedUser(async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const { userId } = req;
       const id = parseInt(req.params.id, 10);
-      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
       if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
       const db = await getDb();
       await db.delete(savedPrepReports)
@@ -485,7 +491,7 @@ export function createPrepRouter(): Router {
       logger.error("[saved-prep] delete error:", err);
       res.status(500).json({ error: "Failed to delete saved report" });
     }
-  });
+  }));
 
   // POST /coach-insight — LLM-powered coaching insight
   router.post("/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), validate(coachInsightSchema), async (req: any, res) => {
