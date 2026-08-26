@@ -122,6 +122,8 @@ Club Settings now narrows category updates through a guarded `ClubCategory` unio
 
 Featured Clubs now uses React-managed state for failed banner images rather than mutating image DOM styles directly, preserving the visual fallback. One explicit image-error accessibility warning remains for later component-level refactoring; it is not suppressed.
 
+Dashboard Dropdown no longer imports an unused React state hook. Focused lint is **zero warnings and zero errors**, with navigation behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

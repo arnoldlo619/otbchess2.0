@@ -7,7 +7,6 @@
  *   3. Footer: New Tournament
  */
 
-import { useState } from "react";
 import { Shield, User, Plus, ChevronRight, Trophy, Pause, Clock } from "lucide-react";
 import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/tournamentRegistry";
 import { getAllRegistrations } from "@/lib/registrationStore";
