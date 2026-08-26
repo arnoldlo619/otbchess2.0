@@ -12,6 +12,8 @@ Broadcast Control has removed 26 focused warnings by deleting confirmed dead imp
 
 The OTB game service has removed its remaining untyped error, request, database-record, and update-data boundaries. Authenticated routes now use typed request bodies plus an explicit user guard, all caught failures are `unknown`, and database selections/updates use inferred schema types. Focused lint is **zero warnings and zero errors**, with two source contracts preserving these boundaries.
 
+The SMTP results-email route now converts caught failures through one `unknown`-safe message extractor, so client error responses and per-recipient failures never read arbitrary error payloads. Its remaining eight advisory warnings are limited to the route’s legacy Express `req`/`res` annotations and are tracked separately from this completed error-safety boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

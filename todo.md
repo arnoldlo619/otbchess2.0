@@ -7498,6 +7498,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
 - [x] Replace Broadcast Control unsafe event and board casts with narrow types, remove dead imports/state, and add regression coverage
 - [x] Replace OTB game-service untyped error boundaries with unknown-safe logging and regression coverage
+- [x] Replace SMTP route untyped error-message access with guarded unknown-safe extraction and regression coverage
 
 ### M. Release Decision
 - [x] P0/P1/P2/P3 issue classification

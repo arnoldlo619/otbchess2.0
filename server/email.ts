@@ -19,6 +19,10 @@ import { logger } from "./logger.js";
 
 export const emailRouter = Router();
 
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 // ─── Encryption helpers ───────────────────────────────────────────────────────
 // AES-256-CBC using the JWT_SECRET as the key material (first 32 bytes of SHA-256 hash)
 
@@ -158,9 +162,9 @@ emailRouter.post("/test-smtp", requireFullAuth, async (req: any, res: any) => {
     });
 
     res.json({ ok: true, message: `Test email sent to ${cfg.fromEmail}` });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("[email] test-smtp error:", err);
-    res.status(400).json({ error: err.message ?? "SMTP connection failed" });
+    res.status(400).json({ error: errorMessage(err, "SMTP connection failed") });
   }
 });
 
@@ -270,16 +274,16 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
           attachments,
         });
         results.push({ email: p.email, status: "sent" });
-      } catch (err: any) {
-        results.push({ email: p.email, status: "failed", error: err.message });
+      } catch (err: unknown) {
+        results.push({ email: p.email, status: "failed", error: errorMessage(err, "Email delivery failed") });
       }
     }
 
     const sent = results.filter((r) => r.status === "sent").length;
     const failed = results.filter((r) => r.status === "failed").length;
     res.json({ ok: true, sent, failed, results });
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error("[email] send-results-email error:", err);
-    res.status(500).json({ error: err.message ?? "Failed to send emails" });
+    res.status(500).json({ error: errorMessage(err, "Failed to send emails") });
   }
 });
