@@ -128,16 +128,20 @@ export function ContactOwnerModal({
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.65)" }}
-      onClick={onClose}
     >
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Close contact owner dialog"
+        onClick={onClose}
+      />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="contact-owner-title"
         tabIndex={-1}
-        className={`w-full max-w-md rounded-3xl border ${cardBorder} ${card} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
-        onClick={(e) => e.stopPropagation()}
+        className={`relative z-10 w-full max-w-md rounded-3xl border ${cardBorder} ${card} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
