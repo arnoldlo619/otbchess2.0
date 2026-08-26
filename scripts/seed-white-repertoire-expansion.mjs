@@ -35,6 +35,7 @@ const systems = [
     difficulty: "intermediate",
     playCharacter: "positional",
     themes: ["central-control", "piece-activity", "positional-squeeze"],
+    limit: 20,
     matcher: (name) => name.startsWith("Catalan Opening"),
   },
   {
@@ -72,6 +73,30 @@ const systems = [
     playCharacter: "universal",
     themes: ["central-control", "piece-activity", "queenside-space"],
     matcher: (name) => name.startsWith("Ruy Lopez") && /^(Ruy Lopez$|Ruy Lopez: (Berlin Defense|Closed|Exchange Variation|Open|Marshall Attack|Morphy Defense|Steinitz Defense))/.test(name),
+  },
+  {
+    slug: "ponziani-opening",
+    name: "Ponziani Opening",
+    eco: "C44",
+    startingMoves: "1. e4 e5 2. Nf3 Nc6 3. c3",
+    summary: "An active 1.e4 surprise weapon that challenges Black's centre and creates early initiative.",
+    description: "A practical Ponziani collection with canonical countergambit, Jaenisch, Romanishin, and Spanish branches.",
+    difficulty: "intermediate",
+    playCharacter: "tactical",
+    themes: ["central-break", "initiative", "surprise-weapon"],
+    matcher: (name) => name.startsWith("Ponziani Opening") && /^(Ponziani Opening$|Ponziani Opening: (Ponziani Countergambit|Jaenisch Counterattack|Romanishin Variation|Spanish Variation|Vukovic Gambit))/.test(name),
+  },
+  {
+    slug: "trompowsky-attack",
+    name: "Trompowsky Attack",
+    eco: "A45",
+    startingMoves: "1. d4 Nf6 2. Bg5",
+    summary: "A direct queen-pawn system that develops with purpose and challenges Black's knight immediately.",
+    description: "A practical Trompowsky collection with canonical classical, edge, poisoned-pawn, and Raptor branches.",
+    difficulty: "intermediate",
+    playCharacter: "universal",
+    themes: ["piece-activity", "initiative", "unbalanced-structure"],
+    matcher: (name) => name.startsWith("Trompowsky Attack") && /^(Trompowsky Attack$|Trompowsky Attack: (Classical Defense|Edge Variation|Poisoned Pawn Variation|Raptor Variation))/.test(name),
   },
 ];
 
@@ -139,7 +164,7 @@ for (const [systemIndex, system] of systems.entries()) {
 
   const uniqueRows = [...new Map(rows.filter((row) => system.matcher(row.name)).map((row) => [row.pgn, row])).values()]
     .sort((left, right) => plyCount(left.pgn) - plyCount(right.pgn))
-    .slice(0, 12);
+    .slice(0, system.limit ?? 12);
 
   for (const [lineIndex, row] of uniqueRows.entries()) {
     const lineSlug = `${system.slug}-reference-${sourceSlug(row.eco)}-${lineIndex + 1}`;
@@ -179,7 +204,7 @@ for (const [systemIndex, system] of systems.entries()) {
 }
 
 const [[summary]] = await connection.execute(
-  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez')"
+  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez','ponziani-opening','trompowsky-attack')"
 );
 console.log(`White expansion complete: ${summary.openings} systems, ${summary.total_lines} published lines`);
 await connection.end();

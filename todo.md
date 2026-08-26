@@ -7565,6 +7565,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit and complete the Repertoire Builder end to end with premium user workflows and extensive curated opening-line coverage
 - [x] Expand the Repertoire Builder with reviewed White repertoire systems before additional Black-defense content
 - [x] White repertoire follow-up: fill the Ruy Lopez catalog gap with source-backed core branches and duplicate-safe seeding
+- [x] Expand the White library with source-backed Ponziani, Trompowsky, and deeper Catalan canonical branches
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

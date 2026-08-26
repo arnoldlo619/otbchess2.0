@@ -6,7 +6,7 @@
  */
 import { createConnection } from "mysql2/promise";
 
-const slugs = ["english-opening", "catalan-opening", "kings-indian-attack", "reti-opening", "ruy-lopez"];
+const slugs = ["english-opening", "catalan-opening", "kings-indian-attack", "reti-opening", "ruy-lopez", "ponziani-opening", "trompowsky-attack"];
 const connection = await createConnection(process.env.DATABASE_URL);
 
 for (const slug of slugs) {
