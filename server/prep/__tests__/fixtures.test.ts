@@ -204,7 +204,7 @@ describe("corrupt PGNs → quarantine", () => {
 
   it("corrupt_repeated_move.pgn → excluded (too short, never reaches chess.js)", () => {
     const pgn = readFileSync(join(FX, "raw_pgn/corrupt_repeated_move.pgn"), "utf-8");
-    const { parsed, quarantined } = parseGames([makeGame(pgn)], "testplayer", OPTS);
+    const { parsed } = parseGames([makeGame(pgn)], "testplayer", OPTS);
     expect(parsed.length).toBe(0);
   });
 
