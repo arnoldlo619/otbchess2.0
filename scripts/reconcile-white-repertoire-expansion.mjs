@@ -6,7 +6,7 @@
  */
 import { createConnection } from "mysql2/promise";
 
-const slugs = ["english-opening", "catalan-opening", "kings-indian-attack", "reti-opening", "ruy-lopez", "ponziani-opening", "trompowsky-attack", "scandinavian-defense"];
+const slugs = ["english-opening", "catalan-opening", "kings-indian-attack", "reti-opening", "ruy-lopez", "ponziani-opening", "trompowsky-attack", "scandinavian-defense", "sicilian-defense", "kings-indian-defense"];
 const connection = await createConnection(process.env.DATABASE_URL);
 
 for (const slug of slugs) {
@@ -51,6 +51,12 @@ for (const slug of slugs) {
         parents.slice(1).map((parent) => parent.id)
       );
     }
+    // Historical catalog rows can predate color-aware seeding. Keep every
+    // published canonical line aligned with the retained opening's orientation.
+    await connection.execute(
+      "UPDATE opening_lines ol JOIN openings o ON o.id = ol.opening_id SET ol.color = o.color WHERE ol.opening_id = ? AND ol.is_published = 1 AND ol.color <> o.color",
+      [canonicalParentId]
+    );
     const [[count]] = await connection.execute(
       "SELECT COUNT(*) AS total FROM opening_lines WHERE opening_id = ? AND is_published = 1",
       [canonicalParentId]

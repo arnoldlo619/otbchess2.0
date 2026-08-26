@@ -111,6 +111,34 @@ const systems = [
     themes: ["central-challenge", "active-development", "practical-defense"],
     matcher: (name) => name.startsWith("Scandinavian Defense") && /^(Scandinavian Defense$|Scandinavian Defense: (Main Line|Modern Variation|Portuguese Gambit|Icelandic-Palme Gambit|Gubinsky-Melts Defense|Classical Variation|Bronstein Variation))/.test(name),
   },
+  {
+    slug: "sicilian-defense",
+    name: "Sicilian Defense",
+    eco: "B20-B99",
+    color: "black",
+    startingMoves: "1. e4 c5",
+    summary: "A dynamic counterattacking answer to 1.e4 with practical systems for every style of Black player.",
+    description: "A practical Sicilian collection covering Najdorf, Classical, Dragon, Scheveningen, Taimanov, Kan, Accelerated Dragon, and closed-structure branches.",
+    difficulty: "intermediate",
+    playCharacter: "dynamic",
+    themes: ["counterplay", "queenside-space", "asymmetric-structure"],
+    limit: 18,
+    matcher: (name) => name.startsWith("Sicilian Defense") && /^(Sicilian Defense$|Sicilian Defense: (Najdorf Variation|Classical Variation|Dragon Variation|Scheveningen Variation|Taimanov Variation|Kan Variation|Accelerated Dragon|Closed Variation))/.test(name),
+  },
+  {
+    slug: "kings-indian-defense",
+    name: "King's Indian Defense",
+    eco: "E60-E99",
+    color: "black",
+    startingMoves: "1. d4 Nf6 2. c4 g6 3. Nc3 Bg7",
+    summary: "A flexible hypermodern defense that accepts space before striking back with focused kingside and central counterplay.",
+    description: "A practical King's Indian collection covering Classical, Fianchetto, Averbakh, Makogonov, Sämisch, and main-line branches.",
+    difficulty: "intermediate",
+    playCharacter: "dynamic",
+    themes: ["kingside-counterplay", "central-break", "asymmetric-structure"],
+    limit: 18,
+    matcher: (name) => name.startsWith("King's Indian Defense") && /^(King's Indian Defense$|King's Indian Defense: (Normal Variation|Classical Variation|Fianchetto Variation|Averbakh Variation|Makogonov Variation|Sämisch Variation|Karpov System))/.test(name),
+  },
 ];
 
 function sourceSlug(value) {
@@ -217,8 +245,8 @@ for (const [systemIndex, system] of systems.entries()) {
 }
 
 const [[summary]] = await connection.execute(
-  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez','ponziani-opening','trompowsky-attack','scandinavian-defense')"
+  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez','ponziani-opening','trompowsky-attack','scandinavian-defense','sicilian-defense','kings-indian-defense')"
 );
-console.log(`White expansion complete: ${summary.openings} systems, ${summary.total_lines} published lines`);
+console.log(`Repertoire expansion complete: ${summary.openings} systems, ${summary.total_lines} published lines`);
 await connection.end();
 process.exit(0);

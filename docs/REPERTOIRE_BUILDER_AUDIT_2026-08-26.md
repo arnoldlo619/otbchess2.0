@@ -40,3 +40,9 @@ The next requested White batch adds the **Ponziani Opening** with 11 canonical r
 ## Modern Scandinavian Black repertoire
 
 The Black repertoire now begins with a practical **Scandinavian Defense** collection. The catalog retains 24 canonical published B01 lines, all tagged black, covering the modern `...Nf6` move order, Portuguese and Icelandic-Palme gambit ideas, `...Qd6`, `...Qa5`, classical, Bronstein, and main-line branches. The extended seed is color-aware, so parent and line metadata preserve Black orientation while continuing to use the same CC0 source and duplicate-safe reconciliation process.
+
+## Sicilian Defense and King's Indian Defense Black repertoire
+
+The next reviewed Black batch adds 18 selected, practical CC0-attributed canonical source rows for each requested family. The **Sicilian Defense** seed focuses on named Najdorf, Classical, Dragon, Scheveningen, Taimanov, Kan, Accelerated Dragon, and closed-structure branches; the catalog currently retains 51 unique published Sicilian lines, including prior curated material. The **King's Indian Defense** seed focuses on Normal, Classical, Fianchetto, Averbakh, Makogonov, Sämisch, Karpov, and main-line branches; it currently retains 28 unique published lines, including prior curated material.
+
+The reconciliation workflow now idempotently aligns every published catalog line's color metadata with its retained opening parent. This corrects historical Sicilian rows without modifying user repertoire trees, annotations, line PGNs, or source attribution, and makes the correct Black orientation reproducible on future seed/reconciliation runs.

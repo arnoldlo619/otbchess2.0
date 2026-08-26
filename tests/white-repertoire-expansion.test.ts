@@ -6,7 +6,7 @@ const reconcile = readFileSync(new URL("../scripts/reconcile-white-repertoire-ex
 
 describe("White repertoire catalog expansion", () => {
   it("adds the four reviewed White systems from an authoritative named-opening source", () => {
-    for (const slug of ["english-opening", "catalan-opening", "kings-indian-attack", "reti-opening", "ruy-lopez", "ponziani-opening", "trompowsky-attack", "scandinavian-defense"]) {
+    for (const slug of ["english-opening", "catalan-opening", "kings-indian-attack", "reti-opening", "ruy-lopez", "ponziani-opening", "trompowsky-attack", "scandinavian-defense", "sicilian-defense", "kings-indian-defense"]) {
       expect(seed).toContain(`slug: "${slug}"`);
     }
     expect(seed).toContain("limit: 20");
@@ -24,6 +24,9 @@ describe("White repertoire catalog expansion", () => {
     expect(reconcile).toContain('"ponziani-opening"');
     expect(reconcile).toContain('"trompowsky-attack"');
     expect(reconcile).toContain('"scandinavian-defense"');
+    expect(reconcile).toContain('"sicilian-defense"');
+    expect(reconcile).toContain('"kings-indian-defense"');
+    expect(reconcile).toContain("SET ol.color = o.color");
   });
 
   it("keeps imported canonical references user-safe and publishes them to the library", () => {
