@@ -395,9 +395,8 @@ function PrizeSlotCard({
 
   return (
     <div
-      className="flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all hover:opacity-90"
+      className="relative flex items-center justify-between p-2 rounded-lg transition-all hover:opacity-90"
       style={{ background: "oklch(0.20 0.03 145)" }}
-      onClick={onStartEdit}
     >
       <div className="flex items-center gap-2">
         <TypeIcon size={13} style={{ color: "oklch(0.75 0.15 85)" }} />
@@ -424,6 +423,14 @@ function PrizeSlotCard({
           </span>
         )}
       </div>
+      <button
+        type="button"
+        aria-label={`Edit prize template ${prize.prizeTitle}`}
+        className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]/70"
+        onClick={onStartEdit}
+      >
+        <span className="sr-only">Edit prize template {prize.prizeTitle}</span>
+      </button>
     </div>
   );
 }

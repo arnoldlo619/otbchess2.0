@@ -13,7 +13,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "wouter";
-import { Trophy, ArrowLeft, BarChart3, ChevronDown } from "lucide-react";
+import { Trophy, ArrowLeft, BarChart3 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
@@ -92,9 +92,6 @@ function SectionPodiumCard({
                       src={toProxiedAvatarUrl(avatarUrl) ?? avatarUrl}
                       alt={p.player.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
                     />
                   ) : (
                     <div
@@ -253,12 +250,9 @@ function GlobalPodium({
                   <img
                     loading="lazy"
                     decoding="async"
-                    src={toProxiedAvatarUrl(avatarUrl) ?? avatarUrl}
-                    alt={p.player.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
+                      src={toProxiedAvatarUrl(avatarUrl) ?? avatarUrl}
+                      alt={p.player.name}
+                      className="w-full h-full object-cover"
                   />
                 ) : (
                   <div
@@ -360,7 +354,6 @@ export default function TournamentOverview() {
     : [];
 
   // ── Avatars ─────────────────────────────────────────────────────────────────
-  const allUsernames = performances.map((p) => p.player.username);
   const usernamesNeedingFetch = performances
     .filter((p) => !p.player.avatarUrl)
     .map((p) => p.player.username);
@@ -543,8 +536,7 @@ export default function TournamentOverview() {
             return (
               <div
                 key={perf.player.id}
-                className="cursor-pointer"
-                onClick={() => setExpandedPerf(perf)}
+                className="relative"
               >
                 <PlayerStatsCard
                   ref={(el) => {
@@ -558,6 +550,14 @@ export default function TournamentOverview() {
                   accentColor={accent}
                   clubName={config?.clubName ?? undefined}
                 />
+                <button
+                  type="button"
+                  aria-label={`Open player report for ${perf.player.name}`}
+                  className="absolute inset-0 rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4CAF50]/70"
+                  onClick={() => setExpandedPerf(perf)}
+                >
+                  <span className="sr-only">Open player report for {perf.player.name}</span>
+                </button>
               </div>
             );
           })}
