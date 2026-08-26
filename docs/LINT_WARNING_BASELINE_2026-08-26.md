@@ -86,6 +86,8 @@ Protected tournament recap persistence now derives its input from the recap sche
 
 Tournament analytics metadata is now parsed as `unknown` and narrowed to string fields before aggregation, removing the final entrypoint explicit-`any` boundary without changing analytics metrics. Focused lint for `server/index.ts` is **zero warnings and zero errors**, with an expanded 11-contract regression suite.
 
+The Matchup Prep walkthrough no longer carries unused visual constants or animation deltas, and its retained transition state is marked intentionally unread. Focused lint is reduced from five warnings to one warning, isolated to a dormant `AnimatedBoard` implementation that requires a dedicated product decision before removal.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

@@ -258,8 +258,6 @@ function EvalBar({ score, isDark, flipped }: EvalBarProps) {
   // White advantage = 1 - score (if opponent is Black, score=0.7 means Black wins → white losing)
   // We'll treat score as "active side advantage" and just show it as a gradient
 
-  const TOTAL_HEIGHT = 416; // matches board max height in px (visual reference)
-
   // Convert score to a 0–100 percentage where 0=white winning, 100=black winning
   // score=0.5 → 50% (equal)
   // score=0.7 → 70% (opponent doing well, shown as black advantage if opponent=black)
@@ -406,9 +404,6 @@ function AnimatedBoard({ fen, prevFen, flipped, isDark, lastMove, selectedSquare
         fromY = prevDisplayRow * CELL + CELL / 2 + 1;
         shouldAnimate = true;
       }
-
-      const deltaX = x - fromX;
-      const deltaY = y - fromY;
 
       elements.push(
         <text
@@ -748,7 +743,7 @@ export function ForecastWalkthrough({
 
   // Track previous FEN for piece animation
   const prevFenRef = useRef<string>(new Chess().fen());
-  const [prevFen, setPrevFen] = useState<string>(new Chess().fen());
+  const [_prevFen, setPrevFen] = useState<string>(new Chess().fen());
 
   // Interactive board state
   const [boardSelectedSq, setBoardSelectedSq] = useState<string | null>(null);
