@@ -12,6 +12,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:ci": "vitest run --config vitest.ci.config.ts --reporter=verbose",
     "test:links": "vitest run client/src/__tests__/routeInventoryAudit.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

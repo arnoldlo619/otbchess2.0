@@ -48,7 +48,7 @@ jobs:
         run: pnpm test:links
 
       - name: Unit tests
-        run: pnpm test -- --reporter=verbose
+        run: pnpm test:ci
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
           JWT_SECRET: ci-test-secret-32-chars-minimum-ok

@@ -5,13 +5,14 @@
  * postprocess_board from cv_worker.py and runs individual test cases.
  */
 import { describe, it, expect } from "vitest";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import path from "path";
 
 const HARNESS = path.resolve(__dirname, "postprocess_harness.py");
+const PYTHON_EXECUTABLE = process.env.PYTHON ?? "python3";
 
 function runTest(testName: string): any {
-  const result = execSync(`python3.11 ${HARNESS} ${testName}`, {
+  const result = execFileSync(PYTHON_EXECUTABLE, [HARNESS, testName], {
     encoding: "utf-8",
     timeout: 10000,
     cwd: path.resolve(__dirname, ".."),

@@ -23,9 +23,10 @@ describe("remaining P0 release recovery contracts", () => {
     expect(carouselSource).toMatch(/aria-hidden="true"\s+inert/);
   });
 
-  it("keeps the zero-flash skeleton and published statistics floors wired into Home", () => {
+  it("keeps the zero-flash skeleton and live-count-only statistics wired into Home", () => {
     expect(homeSource).toContain('data-testid="platform-stats-loading"');
     expect(homeSource).toContain("normalizePlatformStats(data)");
-    expect(homeSource).toContain("liveCounts ?? PLATFORM_STATS_FLOORS");
+    expect(homeSource).toContain("Live platform activity is temporarily unavailable.");
+    expect(homeSource).not.toContain("PLATFORM_STATS_FLOORS");
   });
 });
