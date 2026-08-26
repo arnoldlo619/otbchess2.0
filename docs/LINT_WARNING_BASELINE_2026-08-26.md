@@ -70,6 +70,8 @@ Tournament analytics ownership checks now narrow the `userId` established by sha
 
 Tournament attendance analytics now parses only the persisted player and round fields it consumes, removing explicit `any` collections without altering walk-in or no-show calculations. Focused lint preserves twelve remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the narrow state shape.
 
+Repeat-event growth analytics now parses only player usernames from current and historical tournament state, removing an explicit callback `any` without altering returning-player calculations. Focused lint preserves eleven remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the narrow state shape.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

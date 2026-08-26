@@ -23,4 +23,9 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("startedAt?: number;");
     expect(source).not.toContain("const players: any[] = state.players ?? [];");
   });
+
+  it("uses typed player usernames for repeat-event growth analytics", () => {
+    expect(source).toContain("players?: Array<{ username?: string }>;");
+    expect(source).not.toContain("map((p: any) => (p.username ?? \"\").toLowerCase())");
+  });
 });

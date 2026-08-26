@@ -1368,9 +1368,11 @@ export function createApp() {
       let repeatEventGrowth = { newPlayers: 0, returningPlayers: 0, repeatRate: 0, multiEventPlayers: 0 };
       if (stateRows.length && stateRows[0].stateJson) {
         try {
-          const state = JSON.parse(stateRows[0].stateJson);
+          const state = JSON.parse(stateRows[0].stateJson) as {
+            players?: Array<{ username?: string }>;
+          };
           const currentUsernames = new Set<string>(
-            (state.players ?? []).map((p: any) => (p.username ?? "").toLowerCase()).filter(Boolean)
+            (state.players ?? []).map((p) => (p.username ?? "").toLowerCase()).filter(Boolean)
           );
           const seenInPast = new Set<string>();
           const allUserTmts2 = await db.select().from(userTournaments)
@@ -1381,7 +1383,9 @@ export function createApp() {
               .from(tournamentState).where(eq(tournamentState.tournamentId, ut.tournamentId)).limit(1);
             if (psr2.length && psr2[0].stateJson) {
               try {
-                const s = JSON.parse(psr2[0].stateJson);
+                const s = JSON.parse(psr2[0].stateJson) as {
+                  players?: Array<{ username?: string }>;
+                };
                 for (const p of s.players ?? []) {
                   const u = (p.username ?? "").toLowerCase();
                   if (u && currentUsernames.has(u)) seenInPast.add(u);
