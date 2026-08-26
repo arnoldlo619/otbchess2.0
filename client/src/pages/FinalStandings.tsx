@@ -21,7 +21,7 @@ import {Trophy, ArrowLeft, Share2, Instagram, LayoutGrid} from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { useTheme } from "@/contexts/ThemeContext";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
-import type { Player, Round, Game } from "@/lib/tournamentData";
+import type { Player, Round } from "@/lib/tournamentData";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
@@ -41,10 +41,6 @@ interface TournamentMeta {
   swissRounds?: number;
   elimCutoff?: number;
 }
-
-// ─── Medal helpers ────────────────────────────────────────────────────────────
-
-const RANK_MEDAL: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 function rankColor(rank: number, isDark: boolean): string {
   if (rank === 1) return "text-amber-400";
@@ -391,17 +387,6 @@ function Skeleton({ isDark }: { isDark: boolean }) {
       </div>
     </div>
   );
-}
-
-// ─── Elim round label helper ─────────────────────────────────────────────────
-
-function elimRoundLabel(gamesInRound: number): string {
-  if (gamesInRound === 1) return "Final";
-  if (gamesInRound === 2) return "Semi-Finals";
-  if (gamesInRound === 4) return "Quarter-Finals";
-  if (gamesInRound === 8) return "Round of 16";
-  if (gamesInRound === 16) return "Round of 32";
-  return `Round of ${gamesInRound * 2}`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
