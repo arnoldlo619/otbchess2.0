@@ -134,46 +134,51 @@ export default function RsvpFormAnalytics({ clubId, eventId, accentColor = "#4CA
     <div
       className="rounded-2xl overflow-hidden transition-all duration-300"
       style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
-    >
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-5 py-4 cursor-pointer select-none"
-        style={{ borderBottom: expanded ? "1px solid rgba(255,255,255,0.07)" : "none" }}
-        onClick={() => setExpanded((v) => !v)}
       >
-        <div className="flex items-center gap-3">
-          <div
+        {/* Header */}
+      <div
+        className="flex items-center justify-between gap-2 px-5 py-4"
+        style={{ borderBottom: expanded ? "1px solid rgba(255,255,255,0.07)" : "none" }}
+      >
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls="rsvp-form-analytics-content"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex flex-1 min-w-0 items-center gap-3 text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]/70"
+        >
+          <span
             className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: `${accentColor}22` }}
           >
             <ClipboardList className="w-4 h-4" style={{ color: accentColor }} />
-          </div>
-          <div>
-            <div className="text-white text-sm font-bold">{form.title}</div>
-            <div className="text-white/40 text-xs flex items-center gap-2 mt-0.5">
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-white text-sm font-bold">{form.title}</span>
+            <span className="mt-0.5 flex items-center gap-2 text-white/40 text-xs">
               <Users className="w-3 h-3" />
               {responses.length} response{responses.length !== 1 ? "s" : ""}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); void load(true); }}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/70 transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          </button>
+            </span>
+          </span>
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-white/30" />
+            <ChevronUp className="w-4 h-4 flex-shrink-0 text-white/30" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-white/30" />
+            <ChevronDown className="w-4 h-4 flex-shrink-0 text-white/30" />
           )}
-        </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => { void load(true); }}
+          className="p-1.5 rounded-lg text-white/30 hover:text-white/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]/70"
+          aria-label="Refresh RSVP analytics"
+          title="Refresh"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+        </button>
       </div>
 
       {expanded && (
-        <div className="px-5 py-4 space-y-5">
+        <div id="rsvp-form-analytics-content" className="px-5 py-4 space-y-5">
           {/* Share link */}
           <div>
             <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2">Shareable Link</p>

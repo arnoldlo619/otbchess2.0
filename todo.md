@@ -7387,6 +7387,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Zero serious Axe violations
 - [x] Principal-route Axe baseline: zero critical/serious violations across dark/light themes at desktop and mobile widths
 - [x] Make Clubs creation and club-media upload controls native keyboard-operable buttons with regression coverage
+- [x] Make RSVP form-builder and analytics collapse headers native keyboard-operable controls with regression coverage
 - [x] No keyboard trap in any modal or drawer
 - [x] Principal custom overlays: focus containment, Escape dismissal, and opener restoration
 - [x] Director operational overlays: shared focus containment, Escape dismissal, and opener restoration

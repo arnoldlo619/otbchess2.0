@@ -186,31 +186,34 @@ export default function RsvpFormBuilder({ clubId, eventId }: Props) {
     <div
       className="rounded-2xl overflow-hidden transition-all duration-300"
       style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
-    >
-      {/* Header */}
-      <div
-        className="flex items-center gap-3 px-5 py-4 cursor-pointer select-none"
-        style={{ borderBottom: collapsed ? "none" : "1px solid rgba(255,255,255,0.07)" }}
+      >
+        {/* Header */}
+      <button
+        type="button"
+        aria-expanded={!collapsed}
+        aria-controls="rsvp-form-builder-content"
         onClick={() => setCollapsed((v) => !v)}
+        className="flex w-full items-center gap-3 px-5 py-4 text-left select-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]/70"
+        style={{ borderBottom: collapsed ? "none" : "1px solid rgba(255,255,255,0.07)" }}
       >
         <ClipboardList className="w-4 h-4 flex-shrink-0" style={{ color: "oklch(0.65 0.14 145)" }} />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white text-sm font-bold">RSVP Form Survey</h3>
+        <span className="flex-1 min-w-0">
+          <span className="block text-white text-sm font-bold">RSVP Form Survey</span>
           {form?.isPublished === 1 ? (
-            <span className="text-[11px] font-semibold" style={{ color: "oklch(0.65 0.14 145)" }}>
+            <span className="block text-[11px] font-semibold" style={{ color: "oklch(0.65 0.14 145)" }}>
               Published · {form ? `${form.questions.length} question${form.questions.length !== 1 ? "s" : ""}` : ""}
             </span>
           ) : (
-            <span className="text-[11px] text-white/40">
+            <span className="block text-[11px] text-white/40">
               {form ? "Draft — not yet published" : "No form yet — create one below"}
             </span>
           )}
-        </div>
+        </span>
         {collapsed ? <ChevronDown className="w-4 h-4 text-white/30" /> : <ChevronUp className="w-4 h-4 text-white/30" />}
-      </div>
+      </button>
 
       {!collapsed && (
-        <div className="px-5 py-4 space-y-4">
+        <div id="rsvp-form-builder-content" className="px-5 py-4 space-y-4">
           {/* Shareable link (when published) */}
           {form?.isPublished === 1 && shareUrl && (
             <div
