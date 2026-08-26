@@ -7473,6 +7473,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] SSE reconnect frequency monitored
 - [x] Report Web Vitals through a rate-limited, strictly validated endpoint with route-pattern-only context
 - [x] Instrument every production EventSource with privacy-safe disconnect, reconnect, and recovery telemetry
+- [x] Expose a privacy-safe rounded application-duration Server-Timing header for public latency diagnosis
 - [x] No sensitive user data in logs
 
 ### L. CI Quality Gates

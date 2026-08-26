@@ -17,6 +17,39 @@ export const requestCorrelation: RequestHandler = (req, res, next) => {
   request.requestId = requestId;
   request.requestStartedAt = Date.now();
   res.setHeader("X-Request-ID", requestId);
+
+  const addPublicServerTiming = () => {
+    if (req.method !== "GET" && req.method !== "HEAD") return;
+    if (res.headersSent) return;
+    const durationMs = Date.now() - (request.requestStartedAt ?? Date.now());
+    const roundedDurationMs = Math.round(durationMs * 10) / 10;
+    res.setHeader("Server-Timing", `app;dur=${roundedDurationMs}`);
+  };
+
+  const originalWriteHead = res.writeHead;
+  if (typeof originalWriteHead === "function") {
+    res.writeHead = ((...args: Parameters<typeof originalWriteHead>) => {
+      addPublicServerTiming();
+      return originalWriteHead.apply(res, args);
+    }) as typeof res.writeHead;
+  }
+
+  const originalWrite = res.write;
+  if (typeof originalWrite === "function") {
+    res.write = ((...args: Parameters<typeof originalWrite>) => {
+      addPublicServerTiming();
+      return originalWrite.apply(res, args);
+    }) as typeof res.write;
+  }
+
+  const originalEnd = res.end;
+  if (typeof originalEnd === "function") {
+    res.end = ((...args: Parameters<typeof originalEnd>) => {
+      addPublicServerTiming();
+      return originalEnd.apply(res, args);
+    }) as typeof res.end;
+  }
+
   res.once("finish", () => {
     const durationMs = Date.now() - (request.requestStartedAt ?? Date.now());
     const context = {

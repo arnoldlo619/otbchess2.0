@@ -18,7 +18,7 @@ All sampled HTTP responses returned status 200. All five SSE connections returne
 
 ## Next Safe Step
 
-Local timing isolated the application from the published-path latency: repeated localhost requests returned 6–20 ms TTFB, while repeated production requests remained 2.0–3.7 seconds TTFB. The owner evaluated Reserved hosting and elected to retain Autoscale. No hosting change or repeat production load run will occur without new authorization.
+Local timing isolated the application from the published-path latency: repeated localhost requests returned 6–20 ms TTFB, while repeated production requests remained 2.0–3.7 seconds TTFB. The owner evaluated Reserved hosting and elected to retain Autoscale. Public GET and HEAD responses now expose a rounded `Server-Timing: app;dur=…` header with no path, user, query, or request identifier. Comparing that application duration with published TTFB will distinguish application time from deployment-path overhead during controlled beta. No hosting change or repeat production load run will occur without new authorization.
 
 Keep the capacity release block active. During controlled beta, collect route-level production timing and preserve the same 1.5-second p95 and 1% error-rate thresholds for any future authorized baseline so results remain comparable.
 

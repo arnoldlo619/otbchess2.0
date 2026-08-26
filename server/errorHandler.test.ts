@@ -54,4 +54,41 @@ describe("global Express error handler", () => {
       status: 503,
     }));
   });
+
+  it("adds only a rounded application-duration timing header to public reads", () => {
+    const listeners = new Map<string, () => void>();
+    const setHeader = vi.fn();
+    const end = vi.fn();
+    const request = { method: "GET", path: "/api/clubs" };
+    const response = {
+      headersSent: false,
+      statusCode: 200,
+      setHeader,
+      once: vi.fn((event: string, handler: () => void) => listeners.set(event, handler)),
+      end,
+    };
+
+    requestCorrelation(request as never, response as never, vi.fn());
+    (response.end as () => void)();
+
+    expect(setHeader).toHaveBeenCalledWith("Server-Timing", expect.stringMatching(/^app;dur=\d+(\.\d)?$/));
+    expect(setHeader.mock.calls.flat().join(" ")).not.toContain("/api/clubs");
+  });
+
+  it("does not add server timing to mutations", () => {
+    const setHeader = vi.fn();
+    const request = { method: "POST", path: "/api/clubs" };
+    const response = {
+      headersSent: false,
+      statusCode: 201,
+      setHeader,
+      once: vi.fn(),
+      end: vi.fn(),
+    };
+
+    requestCorrelation(request as never, response as never, vi.fn());
+    (response.end as () => void)();
+
+    expect(setHeader).not.toHaveBeenCalledWith("Server-Timing", expect.any(String));
+  });
 });
