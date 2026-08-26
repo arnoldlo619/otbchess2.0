@@ -94,6 +94,8 @@ The registration modal no longer retains unused player aliases, time-control sta
 
 Registration modal session creation now guards caught failures as `unknown` and retains a clear fallback message for QR and direct head-to-head flows. Focused lint is reduced to one warning, isolated to the existing avatar fallback accessibility boundary.
 
+The registration modal avatar fallback is now React-managed rather than mutating DOM markup directly, preserving initials when an avatar fails. One explicit image-error accessibility warning remains for later component-level refactoring; it is not suppressed.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

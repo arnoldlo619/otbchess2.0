@@ -237,6 +237,7 @@ export function RegisterGameModal({
     isWhite: boolean;
   }) {
     const proxied = toProxiedAvatarUrl(`https://www.chess.com/member/${info.username}`) ?? "";
+    const [avatarFailed, setAvatarFailed] = useState(false);
     return (
       <div
         className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl transition-all ${
@@ -247,16 +248,18 @@ export function RegisterGameModal({
       >
         {/* Avatar */}
         <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 flex items-center justify-center bg-white/10">
-          <img
-            src={proxied}
-            alt={info.username}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-              (e.target as HTMLImageElement).parentElement!.innerHTML =
-                `<span class="text-white font-bold text-xl uppercase">${info.username.charAt(0)}</span>`;
-            }}
-          />
+          {proxied && !avatarFailed ? (
+            <img
+              src={proxied}
+              alt={info.username}
+              className="w-full h-full object-cover"
+              onError={() => setAvatarFailed(true)}
+            />
+          ) : (
+            <span className="text-white font-bold text-xl uppercase" aria-label={`${info.username} avatar fallback`}>
+              {info.username.charAt(0)}
+            </span>
+          )}
         </div>
         {/* Username */}
         <p className="text-white font-bold text-sm text-center truncate w-full leading-tight">
