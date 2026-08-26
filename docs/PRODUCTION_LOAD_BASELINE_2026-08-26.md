@@ -18,7 +18,9 @@ All sampled HTTP responses returned status 200. All five SSE connections returne
 
 ## Next Safe Step
 
-Add route-level timing around the public Clubs and tournament reads, identify the slowest dependency, and repeat the identical staged plan only after a focused latency fix. Keep the 1.5-second p95 and 1% error-rate thresholds unchanged so the next result is comparable.
+Local timing isolated the application from the published-path latency: repeated localhost requests returned 6–20 ms TTFB, while repeated production requests remained 2.0–3.7 seconds TTFB. The owner evaluated Reserved hosting and elected to retain Autoscale. No hosting change or repeat production load run will occur without new authorization.
+
+Keep the capacity release block active. During controlled beta, collect route-level production timing and preserve the same 1.5-second p95 and 1% error-rate thresholds for any future authorized baseline so results remain comparable.
 
 ## References
 
