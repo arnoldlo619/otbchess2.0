@@ -108,6 +108,8 @@ Quads section and pairing generation no longer computes unused rating, borrowing
 
 Connect Board now memoizes its navigation board context, removing callback churn, and no longer retains unused toast or adapter-state bindings. Focused lint is **zero warnings and zero errors**, with the Bluetooth pairing flow unchanged.
 
+Opening Detail demo no longer carries unused auth state, play icon, aggregated line data, or an inactive difficulty badge implementation. Focused lint is **zero warnings and zero errors**, with demo preview and upgrade behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

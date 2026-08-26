@@ -14,11 +14,10 @@ import { Chessboard } from "react-chessboard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
-import { useAuth } from "@/hooks/useAuth";
 import {
   ArrowLeft, BookOpen, ChevronRight, Lock,
-  Star, AlertTriangle, Circle, Play,
-  Sparkles, Crown, Shield, Target, Swords,
+  Star, AlertTriangle, Circle,
+  Sparkles,
 } from "lucide-react";
 import { DEMO_OPENING_DETAIL, type DemoLineCard } from "@/data/openingsDemo";
 
@@ -43,20 +42,6 @@ function StatBar({ label, value, max = 100, isDark }: { label: string; value: nu
         <div className="h-full rounded-full bg-emerald-500/60 transition-all duration-500" style={{ width: `${pct}%` }} />
       </div>
     </div>
-  );
-}
-
-// ── Difficulty Badge ──────────────────────────────────────────────────────────
-function DifficultyBadge({ difficulty }: { difficulty: string }) {
-  const colors = DIFFICULTY_COLORS[difficulty] ?? DIFFICULTY_COLORS.intermediate;
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${colors.bg} ${colors.text} ${colors.border}`}>
-      {difficulty === "beginner" && <Shield className="w-3 h-3" />}
-      {difficulty === "intermediate" && <Target className="w-3 h-3" />}
-      {difficulty === "advanced" && <Swords className="w-3 h-3" />}
-      {difficulty === "expert" && <Crown className="w-3 h-3" />}
-      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-    </span>
   );
 }
 
@@ -169,13 +154,10 @@ export default function OpeningDetailDemo() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [, navigate] = useLocation();
-  const { user } = useAuth();
   const onExitDemo = () => navigate("/openings");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const opening = DEMO_OPENING_DETAIL;
-  const allLines = opening.chapters.flatMap((c) => c.lines);
-
   // First 2 lines are visible in demo; the rest are locked
   const FREE_LINES = 2;
 
