@@ -461,7 +461,6 @@ function QRCodePanel({
           tabIndex={-1}
           className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
           style={{ background: "linear-gradient(145deg, #0f2d1a 0%, #1a3d25 60%, #0d2518 100%)" }}
-          onClick={() => setProjecting(false)}
         >
           <button
             ref={projectionCloseRef}
