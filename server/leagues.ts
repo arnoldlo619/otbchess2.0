@@ -40,6 +40,15 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
+function pushErrorDetails(error: unknown): { statusCode?: number; message?: string } {
+  if (!error || typeof error !== "object") return {};
+  const candidate = error as { statusCode?: unknown; message?: unknown };
+  return {
+    statusCode: typeof candidate.statusCode === "number" ? candidate.statusCode : undefined,
+    message: typeof candidate.message === "string" ? candidate.message : undefined,
+  };
+}
+
 /** Send a push notification to all subscribed commissioner endpoints for a league */
 async function notifyCommissioner(leagueId: string, title: string, body: string, url: string) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
@@ -56,10 +65,10 @@ async function notifyCommissioner(leagueId: string, title: string, body: string,
           { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
           payload
         );
-      } catch (err: any) {
-        const code = err?.statusCode;
+      } catch (err: unknown) {
+        const { statusCode: code, message } = pushErrorDetails(err);
         if (code === 410 || code === 404) staleIds.push(row.id);
-        else logger.warn("[league-push] Send failed:", err?.message);
+        else logger.warn("[league-push] Send failed:", message ?? "Unknown notification error");
       }
     }));
     if (staleIds.length) {
@@ -1553,10 +1562,10 @@ async function notifyPlayerPush(
           { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
           payloadStr
         );
-      } catch (err: any) {
-        const code = err?.statusCode;
+      } catch (err: unknown) {
+        const { statusCode: code, message } = pushErrorDetails(err);
         if (code === 410 || code === 404) staleIds.push(row.id);
-        else logger.warn("[league-push] Player notify failed:", err?.message);
+        else logger.warn("[league-push] Player notify failed:", message ?? "Unknown notification error");
       }
     }));
     if (staleIds.length) {

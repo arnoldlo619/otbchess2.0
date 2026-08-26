@@ -42,6 +42,8 @@ Bracket child-tournament creation no longer reads and parses an unused parent st
 
 League discovery no longer imports an unused preparation cache symbol or executes an unused bulk club query. It retains explicit iteration over authorized club identifiers; focused lint preserves seven pre-existing typed-boundary warnings with zero errors, and a source contract covers the retained discovery path.
 
+League commissioner and player push-notification paths now narrow provider failures from `unknown` before stale-subscription cleanup or warning logs. Both preserve 404/410 subscription removal; focused lint preserves five pre-existing typed-boundary warnings with zero errors, and a regression contract covers the guarded notification boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
