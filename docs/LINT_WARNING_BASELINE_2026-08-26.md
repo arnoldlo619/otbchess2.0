@@ -44,6 +44,8 @@ League discovery no longer imports an unused preparation cache symbol or execute
 
 League commissioner and player push-notification paths now narrow provider failures from `unknown` before stale-subscription cleanup or warning logs. Both preserve 404/410 subscription removal; focused lint preserves five pre-existing typed-boundary warnings with zero errors, and a regression contract covers the guarded notification boundary.
 
+The league authorization helper now narrows the `userId` set by shared authentication middleware without an explicit-`any` request cast. Unauthorized responses are unchanged; focused lint preserves four pre-existing typed-boundary warnings with zero errors, and a source contract covers the helper.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

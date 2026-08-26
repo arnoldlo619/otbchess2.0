@@ -7508,6 +7508,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Bracket child tournaments: remove the unused parent-state read while retaining parent public-visibility inheritance
 - [x] League discovery: remove unused preparation-cache import and redundant bulk club lookup while retaining authorized club iteration
 - [x] League push notifications: replace provider error any boundaries with guarded unknown handling while preserving stale-subscription cleanup
+- [x] League authorization: type the shared middleware userId lookup in the request helper without changing unauthorized outcomes
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

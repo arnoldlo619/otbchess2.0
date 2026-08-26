@@ -86,7 +86,7 @@ export const leaguesRouter = Router();
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
 function getUser(req: Request, res: Response): string | null {
-  const userId = (req as any).userId as string | undefined;
+  const userId = (req as Request & { userId?: string }).userId;
   if (!userId) {
     res.status(401).json({ error: "Authentication required" });
     return null;
