@@ -9,15 +9,13 @@
  * Step 3: Connect   — one-click Chrome Web Bluetooth connect
  * Done:   Sync      — confirm board is synced and redirect to console
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import {
   Bluetooth, CheckCircle2, ChevronRight, ArrowLeft,
   Wifi, Zap, Monitor, AlertTriangle, RefreshCw, ExternalLink
 } from "lucide-react";
-import { toast } from "sonner";
 import { ChessnutWebBluetoothAdapter } from "@/lib/ChessnutWebBluetoothAdapter";
-import type { AdapterState } from "@/lib/ChessnutWebBluetoothAdapter";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type WizardStep = "power-on" | "pair" | "connect" | "done" | "error";
@@ -92,10 +90,12 @@ export default function ConnectBoard() {
   const blackPlayer = params.get("black") ?? "Black";
   const tournamentName = params.get("name") ?? "Tournament";
 
-  const boardInfo: BoardInfo = { boardNumber, broadcastId, whitePlayer, blackPlayer, tournamentName };
+  const boardInfo = useMemo<BoardInfo>(
+    () => ({ boardNumber, broadcastId, whitePlayer, blackPlayer, tournamentName }),
+    [boardNumber, broadcastId, whitePlayer, blackPlayer, tournamentName],
+  );
 
   const [step, setStep] = useState<WizardStep>("power-on");
-  const [adapterState, setAdapterState] = useState<AdapterState | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [deviceName, setDeviceName] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -155,7 +155,6 @@ export default function ConnectBoard() {
 
       // Subscribe to status changes
       adapter.onStatusChange((state) => {
-        setAdapterState(state);
         if (state.status === "connected") {
           setDeviceName(state.deviceName ?? "Chessnut Pro");
           setConnecting(false);
