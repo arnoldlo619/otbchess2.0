@@ -64,6 +64,8 @@ SMTP configuration, test, and results-delivery routes now use a local full-auth-
 
 Club event, feed, RSVP, payment-status, and check-in actions now use the shared authenticated user helper; event, feed, season, and announcement inputs use schema-derived request shapes. Existing authorization, club membership, manual payment-status privacy, and content-creation behavior remain intact; focused lint is **zero warnings and zero errors**, with focused route contracts.
 
+The server entrypoint no longer retains an unused legacy Lichess proxy, duplicate legacy rate-limit declarations, or a stale game-session schema import. Mounted delegated routes retain their own active router-level controls; focused lint preserves fifteen remaining typed-boundary warnings with zero errors, and a source contract protects the cleanup.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

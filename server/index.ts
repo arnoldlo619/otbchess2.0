@@ -10,7 +10,7 @@ import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, userTournaments, tournamentAnalytics, chessPlayerCache, tournamentBroadcastSettings, dbClubs, gameSessions } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, userTournaments, tournamentAnalytics, chessPlayerCache, tournamentBroadcastSettings, dbClubs } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -334,26 +334,6 @@ async function proxyChessCom(username: string): Promise<{ status: number; body: 
 
   return { status: 200, body: { profile: profileData, stats: statsData } };
 }
-async function proxyLichess(username: string): Promise<{ status: number; body: unknown }> {
-  const key = username.toLowerCase().trim();
-  const headers = {
-    "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
-    "Accept": "application/json",
-  };
-
-  const res = await fetch(`https://lichess.org/api/user/${key}`, { headers, signal: AbortSignal.timeout(8000) });
-
-  if (res.status === 404) {
-    return { status: 404, body: { error: "not_found" } };
-  }
-  if (!res.ok) {
-    return { status: res.status, body: { error: `lichess returned ${res.status}` } };
-  }
-
-  const data = await res.json();
-  return { status: 200, body: data };
-}
-
 // ─── Build the Express app (exported for Vite dev middleware) ─────────────────
 // ─── Rate Limiters ──────────────────────────────────────────────────────────
 
@@ -367,40 +347,6 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many requests — please slow down." },
-  skip: () => process.env.NODE_ENV !== "production",
-});
-
-// Chess.com / Lichess proxy: 150 lookups per minute per IP.
-// Raised from 10 → 150 to support bulk RSVP uploads (100+ players per tournament).
-const chessProxyLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 150,  // Supports bulk RSVP uploads of 100+ players (each lookup = 1 proxy call)
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
-  message: { error: "Too many player lookups — please wait a moment." },
-  skip: () => process.env.NODE_ENV !== "production",
-});
-
-// Matchup prep: 5 lookups per minute per IP (heavy API calls to chess.com)
-const prepLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
-  message: { error: "Too many prep requests — please wait a moment." },
-  skip: () => process.env.NODE_ENV !== "production",
-});
-
-// Push subscribe: 30 per minute per IP (players subscribe once per tournament)
-const pushSubscribeLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
-  message: { error: "Too many requests — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
 
