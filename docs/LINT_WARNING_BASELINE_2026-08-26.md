@@ -50,6 +50,8 @@ League season-start rating fetches now use a narrow Chess.com response shape whi
 
 League week finalization now derives its database parameter and match rows from the shared database factory rather than explicit `any` annotations. Completion and week-advance behavior are unchanged; focused lint has one remaining legacy typed-boundary warning with zero errors, and a source contract covers the function.
 
+League settings updates now use the schema-derived insert shape rather than an explicit-`any` database cast. The existing commissioner authorization and field validation rules remain intact; focused lint is **zero warnings and zero errors**, with a source contract for the typed update boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

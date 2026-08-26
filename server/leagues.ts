@@ -1379,7 +1379,7 @@ leaguesRouter.patch("/:leagueId/settings", requireAuth, async (req: Request, res
       description?: string;
     };
 
-    const updateData: Record<string, unknown> = {};
+    const updateData: Partial<typeof leagues.$inferInsert> = {};
     if (name !== undefined) {
       const trimmed = name.trim();
       if (!trimmed || trimmed.length > 100) return res.status(400).json({ error: "Name must be 1\u2013100 characters" });
@@ -1403,7 +1403,7 @@ leaguesRouter.patch("/:leagueId/settings", requireAuth, async (req: Request, res
       return res.status(400).json({ error: "No valid fields to update" });
     }
 
-    await db.update(leagues).set(updateData as any).where(eq(leagues.id, leagueId));
+    await db.update(leagues).set(updateData).where(eq(leagues.id, leagueId));
     const [updated] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
     res.json({ success: true, league: updated });
   } catch (err) {
