@@ -8,7 +8,7 @@
 
 The current source is materially stronger than the August 21 platform audit. Security hardening, route decomposition, request-correlated error handling, Sentry integration, refresh recovery, Web Vitals, SSE reconnect telemetry, internal-link validation, and bundle-budget enforcement are now present and regression-tested.[1] [2] [3] The live production health endpoint is responding, but release safety is not determined by health alone.[4]
 
-The main blockers are operational rather than architectural. The currently published landing page still contains unverifiable testimonials, a hardcoded host rating, and inflated fallback platform counts. Those claims have been removed in the current source with regression coverage, but the corrected release candidate must be published and verified before any marketing resumes. GitHub `main` now exactly matches the verified local sync commit, while the CI definition remains a preserved template because the connected GitHub App token cannot create workflow files.[2] [5]
+The main blockers are operational rather than architectural. The currently published landing page still contains unverifiable testimonials, a hardcoded host rating, and inflated fallback platform counts. Those claims have been removed in the current source with regression coverage, but the corrected release candidate must be published and verified before any marketing resumes. GitHub `main` now carries the active workflow, and the verified remote run passed TypeScript, ESLint, internal-link validation, 6,770 deterministic unit/integration tests, the production build, and the bundle budget on August 26, 2026.[2] [10]
 
 ## Release posture
 
@@ -16,7 +16,7 @@ The main blockers are operational rather than architectural. The currently publi
 |---|---|---|
 | Internal QA and founder testing | **GO** | Use the current release-candidate checkpoint and keep production writes controlled. |
 | Small free-beta cohort | **CONDITIONAL GO** | Publish the claim-integrity fix, complete the smoke checklist, and monitor error, Web Vitals, and SSE telemetry. |
-| Broad public marketing | **NO-GO** | First close P0-01 and P1-01/P1-02 so production content and build provenance are verifiable. |
+| Broad public marketing | **NO-GO** | First close P0-01 and P1-03/P1-04 so production content, paid-flow behavior, and capacity are verifiable. |
 | Paid Pro membership launch | **NO-GO** | First complete the full Stripe checkout, webhook, cancellation, and success-page production flow. |
 | Large-event or high-concurrency promotion | **NO-GO** | First establish a production-like load baseline and confirm Autoscale latency/error behavior. |
 
@@ -25,11 +25,11 @@ The main blockers are operational rather than architectural. The currently publi
 | Area | Current evidence | Assessment |
 |---|---|---|
 | Application routing | 72 route declarations and 64 lazy page modules in `App.tsx`; canonical route and internal-link contracts run in CI.[1] | Strong |
-| Unit regression baseline | The latest completed full client baseline records 6,204 passing tests; the repository currently contains 331 unit/integration test files.[1] | Strong, with focused post-baseline additions |
+| Unit regression baseline | The activated CI run completed 335 deterministic unit/integration files and 6,770 tests; browser E2E and live credential probes remain deliberately separate.[10] | Strong |
 | Browser regression | 24 Playwright specification files cover representative tournament, community, training, marketing, accessibility, resilience, performance, and telemetry flows.[1] | Strong for current stage |
 | Type safety and lint | TypeScript and zero-error lint are explicit CI gates and have passed across the recent checkpoint batches.[1] [2] | Strong |
-| Production build | A build job and post-build bundle budget are preserved as a CI template, but the current release SHA has not completed that workflow because the connected token cannot create GitHub workflow files. One controlled local attempt on 2026-08-25, after releasing stale Chromium processes with a 3 GiB V8 ceiling, was sandbox-terminated with exit 143 during Vite transforms before artifact output.[2] [5] | Release gate |
-| Bundle control | Documented ceilings enforce 2.20 MiB total JS gzip, 210 KiB largest JS gzip, and 525 KiB largest raw CSS after a production build.[3] | Strong once CI runs remotely |
+| Production build | The activated remote CI build completed successfully in 55 seconds, including post-build bundle-budget enforcement. The local sandbox limitation remains documented but no longer blocks artifact verification.[3] [10] | Strong |
+| Bundle control | Documented ceilings enforce 2.20 MiB total JS gzip, 210 KiB largest JS gzip, and 525 KiB largest raw CSS after a production build; the current remote run passed them.[3] [10] | Strong |
 | Security | Restricted CORS handling, parameterized Drizzle SQL fragments, server validation, Sentry, structured logs, request IDs, and a global error handler are present.[1] [6] | Good for controlled beta |
 | Resilience | Join, tournament creation, club creation, RSVP building, and Director result state have desktop/mobile refresh recovery; drafts exclude data URLs and clear only after authoritative success.[1] | Strong |
 | Observability | Client/server error capture, route-pattern-only Web Vitals, and all-EventSource disconnect/recovery telemetry are rate-limited and strictly validated.[7] [8] | Strong |
@@ -49,8 +49,8 @@ No additional P0 product-functionality defect was proven in the audited tourname
 
 | ID | Finding | Risk | Required closure |
 |---|---|---|---|
-| P1-01 | GitHub source parity is restored at commit `6636113a`, but the connected GitHub App token cannot create `.github/workflows/ci.yml`; GitHub rejected the workflow-preserving push. The CI definition is preserved under `docs/` for owner-authorized activation. | CI is documented but not active, so release provenance remains incomplete. | Activate the preserved template through the GitHub web editor or reconnect a credential with workflow permission, then verify the workflow is registered. |
-| P1-02 | The latest production build and new bundle-budget gate have not completed on the current remote SHA. | Source-level and focused tests cannot prove the deploy artifact compiles within budget. | Run the remote CI pipeline and require TypeScript, lint, link validation, unit tests, build, and bundle budget to pass. |
+| P1-01 | **Resolved.** The owner-authorized browser commit activated `.github/workflows/ci.yml`; run `32916972360` completed successfully. | GitHub App workflow-write permission remains intentionally unavailable, but CI is now active. | Maintain the preserved template and use an owner-authorized workflow change when CI definition updates are necessary.[10] |
+| P1-02 | **Resolved.** The current remote SHA completed the production build and bundle-budget gate successfully. | The local Vite sandbox remains resource-constrained, but remote artifact verification is active. | Require each future `main` SHA to retain a green CI run before release.[10] |
 | P1-03 | Stripe checkout, successful subscription webhook, cancellation webhook, and `/pro/success` polling remain unverified end to end in production. | Users could pay without entitlement updates or receive inconsistent membership state. | Keep paid acquisition disabled until all four production scenarios pass with test accounts and auditable Stripe events. |
 | P1-04 | No production-like load baseline exists for live tournament/SSE traffic. | Large promoted events may expose cold-start, connection, or database limits that functional tests do not measure. | Run a staged load test before advertising large events; define acceptable P95 latency, error rate, and SSE recovery targets. |
 
@@ -79,10 +79,10 @@ No additional P0 product-functionality defect was proven in the audited tourname
 |---|---|
 | Release candidate | A recoverable checkpoint containing claim-integrity fixes, report, tests, and zero TypeScript errors. |
 | Content integrity | Source and desktop/mobile browser tests prove no testimonials, reviewer identities, star rating, or fallback count floors remain. |
-| CI provenance | GitHub `main` matches the release candidate, then an owner-authorized credential activates `.github/workflows/ci.yml` from the preserved template. |
-| CI result | TypeScript, ESLint, internal links, unit tests, production build, and bundle budgets all pass on the same SHA.[2] |
+| CI provenance | GitHub `main` contains the active `.github/workflows/ci.yml`; its preserved template remains documented for restricted-token recovery. |
+| CI result | Run `32916972360` passed TypeScript, ESLint, internal links, 6,770 deterministic unit/integration tests, the production build, and bundle budgets on the same SHA.[10] |
 | Environment | Required auth, email, storage, VAPID, analytics, Sentry, and Stripe secrets are present in production without exposing values. |
-| Database | No pending schema change exists for this release; confirm health and a read-only public stats query before publish. |
+| Database | The additive RSVP manual-payment migration is applied. Confirm health, a read-only public stats query, and the three privacy-safe payment columns before publish. |
 | Monetization mode | If P1-03 is open, keep paid acquisition and Pro checkout promotion disabled. |
 
 ### Immediately after publishing
@@ -103,7 +103,7 @@ Use a small beta cohort. Review health, structured errors, Web Vitals ratings, S
 
 ## Rollback plan
 
-This release contains no database migration, so rollback is code-only unless a separate production action changes data. The safest rollback target for future releases is the content-integrity release candidate represented by this report’s checkpoint, not an older checkpoint that reintroduces unverifiable landing claims.
+This release includes an additive, nullable RSVP manual-payment migration. A code rollback may leave the three payment-status columns in place safely; do not drop columns during an incident. The safest rollback target for future releases is the content-integrity release candidate represented by this report’s checkpoint, not an older checkpoint that reintroduces unverifiable landing claims.
 
 | Step | Action | Verification |
 |---|---|---|
@@ -117,9 +117,9 @@ If an emergency requires reverting to a checkpoint older than this report, keep 
 
 ## Final recommendation
 
-ChessOTB is ready for **controlled free-beta onboarding after the current release candidate is published and smoke-tested**. The architecture and regression posture are sufficient for learning with a limited cohort. It is **not ready for broad paid acquisition** until GitHub/CI provenance, a current production build, Stripe lifecycle verification, and a load baseline are complete.
+ChessOTB is ready for **controlled free-beta onboarding after the current release candidate is published and smoke-tested**. The architecture and regression posture are sufficient for learning with a limited cohort. It is **not ready for broad paid acquisition** until the published content-integrity correction, Stripe lifecycle verification, and a load baseline are complete.
 
-This is a conditional operating decision, not a claim that every backlog item is complete. The immediate sequence is: publish the content-integrity release candidate, activate the preserved GitHub workflow, obtain a green CI build on the same SHA, complete the post-publish smoke matrix, and then begin a small free-beta cohort.
+This is a conditional operating decision, not a claim that every backlog item is complete. The immediate sequence is: publish the content-integrity release candidate, complete the post-publish smoke matrix, and then begin a small free-beta cohort.
 
 ## References
 
@@ -132,3 +132,4 @@ This is a conditional operating decision, not a claim that every backlog item is
 [7]: ./client/src/lib/operationalTelemetry.ts "Privacy-safe client operational telemetry"
 [8]: ./server/operationalMetricsRoutes.ts "Rate-limited operational metrics endpoint"
 [9]: ./tests/landing-social-proof-integrity.test.ts "Landing social-proof and platform-stat integrity contract"
+[10]: https://github.com/arnoldlo619/otbchess2.0/actions/runs/32916972360 "GitHub Actions Quality Gates run 32916972360"

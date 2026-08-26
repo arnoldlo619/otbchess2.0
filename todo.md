@@ -7472,20 +7472,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] No sensitive user data in logs
 
 ### L. CI Quality Gates
-- [ ] TypeScript check in active GitHub CI (0 errors)
-- [ ] ESLint in active GitHub CI (0 errors)
-- [ ] Unit tests in active GitHub CI (all pass)
-- [ ] Production build succeeds
+- [x] TypeScript check in active GitHub CI (0 errors)
+- [x] ESLint in active GitHub CI (0 errors)
+- [x] Unit tests in active GitHub CI (all pass)
+- [x] Production build succeeds
 - [x] Re-attempt the controlled local production build once and document the Vite transform-stage sandbox exit-143 limitation
-- [ ] Internal link validation in active GitHub CI
-- [ ] Add deterministic repository-wide literal internal-link validation to the active CI unit-test gate
+- [x] Internal link validation in active GitHub CI
+- [x] Add deterministic repository-wide literal internal-link validation to the active CI unit-test gate
 - [x] Performance budget check documented
-- [ ] Enforce documented total-JS, largest-chunk, and CSS artifact budgets after the active CI production build
+- [x] Enforce documented total-JS, largest-chunk, and CSS artifact budgets after the active CI production build
 - [x] Sync the verified source to GitHub, preserve the CI template, and document owner-authorized workflow activation
-- [ ] Activate `docs/CI_WORKFLOW_TEMPLATE.yml` as `.github/workflows/ci.yml` with owner-authorized workflow permission and obtain a green run
-- [ ] Remove duplicate pnpm version configuration from GitHub Actions and rerun the activated CI workflow
-- [ ] Scope active CI unit/integration tests to Vitest directories and exclude Playwright E2E specifications
-- [ ] Exclude live SMTP and Lichess credential probes from deterministic CI while retaining them for separately authorized integration checks
+- [x] Activate `docs/CI_WORKFLOW_TEMPLATE.yml` as `.github/workflows/ci.yml` with owner-authorized workflow permission and obtain a green run
+- [x] Remove duplicate pnpm version configuration from GitHub Actions and rerun the activated CI workflow
+- [x] Scope active CI unit/integration tests to Vitest directories and exclude Playwright E2E specifications
+- [x] Exclude live SMTP and Lichess credential probes from deterministic CI while retaining them for separately authorized integration checks
 
 ### M. Release Decision
 - [x] P0/P1/P2/P3 issue classification
