@@ -40,6 +40,8 @@ The quads prize-template helpers now explicitly mark their unused dispatcher con
 
 Bracket child-tournament creation no longer reads and parses an unused parent state record. It retains the required parent visibility inheritance; focused lint preserves seven pre-existing typed-boundary warnings with zero errors, and a source contract covers the retained visibility path.
 
+League discovery no longer imports an unused preparation cache symbol or executes an unused bulk club query. It retains explicit iteration over authorized club identifiers; focused lint preserves seven pre-existing typed-boundary warnings with zero errors, and a source contract covers the retained discovery path.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

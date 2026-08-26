@@ -24,7 +24,6 @@ import {
   dbClubMembers,
   dbClubs,
   users,
-  prepCache,
 } from "../shared/schema.js";
 import { buildPrepReport as _buildPrepReport, prewarmPrepCacheForPairings } from "./prepEngine.js";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
@@ -329,15 +328,7 @@ leaguesRouter.get("/mine-as-commissioner", requireAuth, async (req: Request, res
       );
     if (!memberRows.length) return res.json([]);
     const clubIds = Array.from(new Set(memberRows.map((m) => m.clubId)));
-    const clubRows = await db
-      .select()
-      .from(dbClubs)
-      .where(
-        clubIds.length === 1
-          ? eq(dbClubs.id, clubIds[0])
-          : sql`${dbClubs.id} IN (${sql.raw(clubIds.map(() => '?').join(','))})`.mapWith(String)
-      );
-    // Drizzle doesn't support dynamic IN easily, so use a loop
+    // Fetch leagues per eligible club to keep the authorization filter explicit.
     const result = [];
     for (const cid of clubIds) {
       const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, cid)).limit(1);
