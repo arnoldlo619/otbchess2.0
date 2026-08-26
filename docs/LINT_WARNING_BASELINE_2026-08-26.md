@@ -110,6 +110,8 @@ Connect Board now memoizes its navigation board context, removing callback churn
 
 Opening Detail demo no longer carries unused auth state, play icon, aggregated line data, or an inactive difficulty badge implementation. Focused lint is **zero warnings and zero errors**, with demo preview and upgrade behavior unchanged.
 
+Profile no longer carries unused trophy, swords, or users icons, and achievement badges now use the exported badge union type rather than an explicit `any` cast. Focused lint is **zero warnings and zero errors**, with profile presentation unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

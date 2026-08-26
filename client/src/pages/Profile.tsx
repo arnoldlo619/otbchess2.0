@@ -15,14 +15,12 @@ import {
   Check,
   X,
   ExternalLink,
-  Trophy,
   LogOut,
   Loader2,
   ChevronLeft,
   Shield,
   Trash2,
   AlertTriangle,
-  Swords,
   Camera,
   Link2,
   TrendingUp,
@@ -39,12 +37,12 @@ import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
 import type { Club } from "../lib/clubRegistry";
 import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
-import { Users, Settings as _Settings, Crown, PlusCircle } from "lucide-react";
+import { Settings as _Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
 import { TournamentsIcon, BattleIcon, MembersIcon, ProfileIcon } from "@/components/OtbIcons";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
-import { AchievementBadgeGrid } from "@/components/tournament/AchievementBadge";
+import { AchievementBadgeGrid, type AchievementType } from "@/components/tournament/AchievementBadge";
 import { OTBLoader } from "@/components/OTBLoader";
 import { ApiErrorNotice } from "@/components/ApiErrorNotice";
 // ── PasswordField helper ─────────────────────────────────────────────────────
@@ -737,7 +735,7 @@ export default function ProfilePage() {
               </div>
               <AchievementBadgeGrid
                 achievements={achievements.map((a) => ({
-                  type: a.achievementType as any,
+                  type: a.achievementType as AchievementType,
                   tournamentName: a.tournamentName || "",
                   earned: a.earnedAt ? new Date(a.earnedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "",
                 }))}
