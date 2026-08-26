@@ -467,19 +467,9 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
       return res.status(400).json({ error: "No brackets defined" });
     }
 
-    // Get the parent tournament state for shared config
-    let parentState: Record<string, any> = {};
+    // Inherit the parent tournament's public visibility setting.
     let parentIsPublic = 0;
     if (group.parentTournamentId) {
-      const [stateRow] = await db
-        .select()
-        .from(tournamentState)
-        .where(eq(tournamentState.tournamentId, group.parentTournamentId))
-        .limit(1);
-      if (stateRow?.stateJson) {
-        parentState = JSON.parse(stateRow.stateJson);
-      }
-      // Inherit parent's public visibility setting
       const [parentTournament] = await db
         .select({ isPublic: userTournaments.isPublic })
         .from(userTournaments)
