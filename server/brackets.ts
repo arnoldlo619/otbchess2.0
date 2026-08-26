@@ -13,7 +13,7 @@
  *   GET  /:id/brackets           — list child bracket-tournaments for a group
  */
 
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import { getDb } from "./db.js";
 import {
   bracketGroups,
@@ -29,6 +29,16 @@ import { requireAuth as authMiddleware } from "./auth.js";
 import { logger } from "./logger.js";
 
 const router = Router();
+
+type AuthenticatedRequest = Request & { userId: string };
+
+function withAuthenticatedUser(
+  handler: (req: AuthenticatedRequest, res: Response) => Promise<unknown>,
+): RequestHandler {
+  return (req, res, next) => {
+    void handler(req as AuthenticatedRequest, res).catch(next);
+  };
+}
 
 // ─── Helper: Parse brackets JSON safely ──────────────────────────────────────
 function parseBrackets(json: string): BracketDefinition[] {
@@ -106,10 +116,10 @@ function suggestBracketSplits(
 }
 
 // ─── POST / — Create a bracket group ────────────────────────────────────────
-router.post("/", authMiddleware, async (req: Request, res: Response) => {
+router.post("/", authMiddleware, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req as any).userId;
+    const { userId } = req;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const {
@@ -165,7 +175,7 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
     logger.error("[brackets] Create error:", err);
     res.status(500).json({ error: "Failed to create bracket group" });
   }
-});
+}));
 
 // ─── GET /:id — Get a bracket group ─────────────────────────────────────────
 router.get("/:id", async (req: Request, res: Response) => {
@@ -190,10 +200,10 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 // ─── PATCH /:id — Update bracket group config ───────────────────────────────
-router.patch("/:id", authMiddleware, async (req: Request, res: Response) => {
+router.patch("/:id", authMiddleware, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req as any).userId;
+    const { userId } = req;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -203,7 +213,7 @@ router.patch("/:id", authMiddleware, async (req: Request, res: Response) => {
     if (!group) return res.status(404).json({ error: "Bracket group not found" });
     if (group.userId !== userId) return res.status(403).json({ error: "Forbidden" });
 
-    const updates: Record<string, any> = {};
+    const updates: Partial<typeof bracketGroups.$inferInsert> = {};
     if (req.body.name) updates.name = req.body.name;
     if (req.body.venue !== undefined) updates.venue = req.body.venue;
     if (req.body.date !== undefined) updates.date = req.body.date;
@@ -229,13 +239,13 @@ router.patch("/:id", authMiddleware, async (req: Request, res: Response) => {
     logger.error("[brackets] Update error:", err);
     res.status(500).json({ error: "Failed to update bracket group" });
   }
-});
+}));
 
 // ─── DELETE /:id — Delete a bracket group ────────────────────────────────────
-router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
+router.delete("/:id", authMiddleware, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req as any).userId;
+    const { userId } = req;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -258,7 +268,7 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) => {
     logger.error("[brackets] Delete error:", err);
     res.status(500).json({ error: "Failed to delete bracket group" });
   }
-});
+}));
 
 // ─── POST /:id/suggest — Suggest optimal bracket splits ─────────────────────
 router.post("/:id/suggest", authMiddleware, async (req: Request, res: Response) => {
@@ -316,10 +326,10 @@ router.post("/:id/suggest", authMiddleware, async (req: Request, res: Response) 
 });
 
 // ─── POST /:id/auto-sort — Auto-sort players into brackets ──────────────────
-router.post("/:id/auto-sort", authMiddleware, async (req: Request, res: Response) => {
+router.post("/:id/auto-sort", authMiddleware, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req as any).userId;
+    const { userId } = req;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -385,13 +395,13 @@ router.post("/:id/auto-sort", authMiddleware, async (req: Request, res: Response
     logger.error("[brackets] Auto-sort error:", err);
     res.status(500).json({ error: "Failed to auto-sort players" });
   }
-});
+}));
 
 // ─── POST /:id/reassign — Manually reassign a player ────────────────────────
-router.post("/:id/reassign", authMiddleware, async (req: Request, res: Response) => {
+router.post("/:id/reassign", authMiddleware, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req as any).userId;
+    const { userId } = req;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -446,13 +456,13 @@ router.post("/:id/reassign", authMiddleware, async (req: Request, res: Response)
     logger.error("[brackets] Reassign error:", err);
     res.status(500).json({ error: "Failed to reassign player" });
   }
-});
+}));
 
 // ─── POST /:id/spawn — Spawn child bracket-tournaments ──────────────────────
-router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) => {
+router.post("/:id/spawn", authMiddleware, withAuthenticatedUser(async (req, res) => {
   try {
     const db = await getDb();
-    const userId = (req as any).userId;
+    const { userId } = req;
     const [group] = await db
       .select()
       .from(bracketGroups)
@@ -615,7 +625,7 @@ router.post("/:id/spawn", authMiddleware, async (req: Request, res: Response) =>
     logger.error("[brackets] Spawn error:", err);
     res.status(500).json({ error: "Failed to spawn bracket tournaments" });
   }
-});
+}));
 
 // ─── GET /:id/brackets — List child bracket-tournaments ─────────────────────
 router.get("/:id/brackets", async (req: Request, res: Response) => {
