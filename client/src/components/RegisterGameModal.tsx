@@ -132,8 +132,8 @@ export function RegisterGameModal({
       setSessionId(data.id);
       setQrToken(data.qrToken);
       setStep("waiting");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create game session");
     } finally {
       setLoading(false);
     }
@@ -167,8 +167,8 @@ export function RegisterGameModal({
       const data = await res.json();
       if (onGameReady) onGameReady(data.id);
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create game session");
     } finally {
       setLoading(false);
     }

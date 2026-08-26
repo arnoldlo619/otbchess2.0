@@ -92,6 +92,8 @@ The Quads director panel no longer computes unused summary, attention, or comple
 
 The registration modal no longer retains unused player aliases, time-control state, or an unused player-card side binding. Focused lint is reduced from seven warnings to three warnings, isolated to error-boundary and avatar-fallback accessibility work for a dedicated pass.
 
+Registration modal session creation now guards caught failures as `unknown` and retains a clear fallback message for QR and direct head-to-head flows. Focused lint is reduced to one warning, isolated to the existing avatar fallback accessibility boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

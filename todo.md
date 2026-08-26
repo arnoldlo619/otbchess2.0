@@ -7532,6 +7532,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Matchup Prep walkthrough: remove unused visual constants and preserve previous-position transition bookkeeping without behavior changes
 - [x] Quads director panel: remove inactive summary and completion-card calculations without changing standings or winner rendering
 - [x] Registration modal: remove unused player aliases, time-control state, and player-card side binding without changing session flows
+- [x] Registration modal: guard QR and direct-session creation errors as unknown while preserving clear fallback messaging
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
