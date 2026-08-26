@@ -7456,6 +7456,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Consistent "OTB!!" usage
 - [x] No Swiss language in Quads contexts
 - [ ] No placeholder text in production UI
+- [x] Replace visible N/A rating fallbacks with explicit unavailable-state copy in the live profile and exported prep report
 - [x] No fictional claims presented as verified
 - [x] Remove unverifiable landing-page testimonials and the hardcoded 4.9 host-rating claim
 - [x] Remove hardcoded platform-stat floors so landing counters display only live database counts

@@ -258,7 +258,7 @@ export function PrepExportCard({ report, myColor, cardRef }: PrepExportCardProps
             {[
               ["Games analyzed", parsedGames],
               ["Data grade", grade],
-              ["Avg rating", avgRating ?? "N/A"],
+              ["Avg rating", avgRating ?? "Not available"],
               ["Window", `${report.dataQuality.window.from} – ${report.dataQuality.window.to}`],
             ].map(([label, value]) => (
               <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
