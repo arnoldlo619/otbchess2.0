@@ -1210,7 +1210,7 @@ function Step5Share({
 // ── Step 5: Socials & Schedule ────────────────────────────────────────────────
 
 function Step5Socials({
-  data, patch, isDark, inputBg, textMain: _textMain, textMuted, labelCls, divider,
+  data, patch, isDark: _isDark, inputBg, textMain: _textMain, textMuted, labelCls, divider,
 }: {
   data: WizardData;
   patch: (f: Partial<WizardData>) => void;
