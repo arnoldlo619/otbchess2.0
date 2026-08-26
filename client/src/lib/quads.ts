@@ -188,7 +188,6 @@ export function generateQuadSections(
 ): QuadSection[] {
   const sorted = sortPlayersForQuads(players, settings);
   const n = sorted.length;
-  const { ratingSource, ratingType = "rapid" } = settings;
 
   // Special cases: fewer than 4 players
   if (n < 4) {
@@ -215,8 +214,6 @@ export function generateQuadSections(
   } else {
     // Create full quads for the top players, then handle remainder
     const fullQuadCount = Math.floor(n / 4) - 1; // Reserve last quad for borrowing
-    const borrowCount = 4 - remainder; // How many to borrow from last full quad
-
     // Full quads (all except the last one which gets borrowed from)
     for (let i = 0; i < fullQuadCount * 4; i += 4) {
       const quadPlayers = sorted.slice(i, i + 4);
@@ -292,8 +289,6 @@ export function generateQuadPairings(
     seedToId[seed] = playerId;
   }
 
-  let gameCounter = 0;
-
   for (let round = 0; round < 3; round++) {
     const roundPairings = QUAD_PAIRING_TABLE[round];
 
@@ -319,7 +314,6 @@ export function generateQuadPairings(
         result: "*" as Result,
         sectionId: section.id,
       });
-      gameCounter++;
     }
 
     // Update board offset for next round
@@ -342,8 +336,6 @@ export function generateBottomSwissPairings(
 
   const games: Game[] = [];
   const sectionPlayers = players.filter((p) => section.playerIds.includes(p.id));
-  const n = sectionPlayers.length;
-
   // Simple round-robin for 3 rounds if n <= 7
   // For the first round: pair top vs bottom (Swiss R1 style)
   const scores: Record<string, number> = {};

@@ -104,6 +104,8 @@ The Chessnut board panel no longer imports unused calibration or piece-map symbo
 
 The Chrome Bluetooth panel no longer carries unused download/zap icons, and its inactive board and diagnostics appearance props are explicitly marked unused. Focused lint is **zero warnings and zero errors**, with device connection and diagnostics behavior unchanged.
 
+Quads section and pairing generation no longer computes unused rating, borrowing, game-counter, or player-count values. Focused lint is **zero warnings and zero errors**, with section construction and board-pairing behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
