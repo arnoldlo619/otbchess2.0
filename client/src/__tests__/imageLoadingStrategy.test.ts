@@ -22,6 +22,7 @@ describe("image loading strategy", () => {
       "client/src/pages/BlogPost.tsx",
       "client/src/pages/LeagueHistory.tsx",
       "client/src/components/TournamentWizard.tsx",
+      "client/src/components/club/ClubAlbumTab.tsx",
     ];
 
     const optimized = files.flatMap((file) => imgTags(read(file)))

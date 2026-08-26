@@ -220,8 +220,9 @@ import Silk from "@/components/Silk";
 import { GreenWaves } from "@/components/GreenWaves";
 import { NeonNebula } from "@/components/ui/neon-nebula";
 import { SILK_DEFAULTS, CLUB_BACKGROUND_TEMPLATES, GREEN_WAVES_BG_VALUE } from "@/components/ClubBackgroundPicker";
-import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
+import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, AlbumIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
+import { ClubAlbumTab } from "@/components/club/ClubAlbumTab";
 const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
 const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
 const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
@@ -2497,7 +2498,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "overview" | "events" | "members" | "feed" | "battles" | "leagues" | "settings"; // battles kept for internal use; tournaments merged into events
+type Tab = "overview" | "events" | "members" | "feed" | "album" | "battles" | "leagues" | "settings"; // battles kept for internal use; tournaments merged into events
 type SettingsSubTab = "analytics" | "payments" | "profile" | "join" | "danger";
 
 export default function ClubDashboard() {
@@ -3469,6 +3470,7 @@ export default function ClubDashboard() {
     { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true },
     { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true },
     { id: "feed", label: "Feed", icon: OtbFeedIcon },
+    { id: "album", label: "Album", icon: AlbumIcon },
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
     { id: "members", label: "Members", icon: MembersIcon },
     // battles tab removed - now a sub-tab of Feed
@@ -5764,6 +5766,19 @@ export default function ClubDashboard() {
                 </div>
               );
             })()}
+
+        {/* ── ALBUM TAB ──────────────────────────────────────────────────── */}
+        {tab === "album" && (
+          <ClubAlbumTab
+            clubId={club.id}
+            clubName={club.name}
+            clubAvatarUrl={club.avatarUrl}
+            canManage={Boolean(isOwnerOrDirector)}
+            currentUserName={user?.displayName ?? club.ownerName}
+            accent={accent}
+            isDark={isDark}
+          />
+        )}
 
         {/* ── FEED TAB ───────────────────────────────────────────────────── */}
         {tab === "feed" && (

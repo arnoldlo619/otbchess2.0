@@ -40,6 +40,8 @@ import {
   leagueInvites,
   rsvpForms,
   rsvpFormResponses,
+  clubAlbums,
+  clubAlbumPhotos,
 } from "../shared/schema";
 import { eq, and, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -49,6 +51,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { logger } from "./logger.js";
+import { storageGetSignedUrl, storagePut } from "./storage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2215,5 +2218,357 @@ clubsRouter.get("/:id/events/:eventId/rsvp-form/responses", authMiddleware, asyn
   } catch (err) {
     logger.error("[clubs] GET /:id/events/:eventId/rsvp-form/responses error:", err);
     res.status(500).json({ error: "Failed to fetch responses" });
+  }
+});
+
+// ── Club Albums ───────────────────────────────────────────────────────────────
+
+async function resolveClubForAlbums(idOrSlug: string) {
+  const db = await getDb();
+  const [club] = await db
+    .select()
+    .from(dbClubs)
+    .where(or(eq(dbClubs.id, idOrSlug), eq(dbClubs.slug, idOrSlug)))
+    .limit(1);
+  return { db, club };
+}
+
+async function canManageClubAlbums(clubId: string, ownerId: string, userId: string) {
+  if (ownerId === userId) return true;
+  const db = await getDb();
+  const [membership] = await db
+    .select({ role: dbClubMembers.role })
+    .from(dbClubMembers)
+    .where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)))
+    .limit(1);
+  return membership?.role === "director";
+}
+
+function albumDate(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+clubsRouter.get("/:id/albums", async (req: Request, res: Response) => {
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club || club.isPublic !== 1) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+
+    const albums = await db
+      .select()
+      .from(clubAlbums)
+      .where(and(eq(clubAlbums.clubId, club.id), eq(clubAlbums.isPublished, 1)))
+      .orderBy(desc(clubAlbums.eventDate), desc(clubAlbums.createdAt));
+    const photos = await db
+      .select()
+      .from(clubAlbumPhotos)
+      .where(eq(clubAlbumPhotos.clubId, club.id))
+      .orderBy(clubAlbumPhotos.sortOrder, clubAlbumPhotos.createdAt);
+    const photosByAlbum = new Map<string, typeof photos>();
+    for (const photo of photos) {
+      const current = photosByAlbum.get(photo.albumId) ?? [];
+      current.push(photo);
+      photosByAlbum.set(photo.albumId, current);
+    }
+
+    res.json({
+      albums: albums.map((album) => ({
+        id: album.id,
+        clubId: album.clubId,
+        title: album.title,
+        description: album.description ?? null,
+        eventDate: album.eventDate ?? null,
+        createdByName: album.createdByName,
+        createdAt: albumDate(album.createdAt),
+        updatedAt: albumDate(album.updatedAt),
+        photos: (photosByAlbum.get(album.id) ?? []).map((photo) => ({
+          id: photo.id,
+          albumId: photo.albumId,
+          url: `/api/clubs/${club.id}/albums/${album.id}/photos/${photo.id}/file`,
+          caption: photo.caption ?? null,
+          altText: photo.altText ?? null,
+          width: photo.width ?? null,
+          height: photo.height ?? null,
+          sortOrder: photo.sortOrder,
+          createdAt: albumDate(photo.createdAt),
+        })),
+      })),
+    });
+  } catch (error) {
+    logger.error("club_albums_list_failed", { clubId: req.params.id, error });
+    res.status(500).json({ error: "Failed to load club albums" });
+  }
+});
+
+clubsRouter.get("/:id/albums/:albumId/photos/:photoId/file", async (req: Request, res: Response) => {
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club || club.isPublic !== 1) {
+      res.status(404).send("Photo not found");
+      return;
+    }
+    const [photo] = await db
+      .select({ storageKey: clubAlbumPhotos.storageKey })
+      .from(clubAlbumPhotos)
+      .where(and(
+        eq(clubAlbumPhotos.id, req.params.photoId),
+        eq(clubAlbumPhotos.albumId, req.params.albumId),
+        eq(clubAlbumPhotos.clubId, club.id)
+      ))
+      .limit(1);
+    if (!photo) {
+      res.status(404).send("Photo not found");
+      return;
+    }
+
+    res.set("Cache-Control", "no-store");
+    res.redirect(307, await storageGetSignedUrl(photo.storageKey));
+  } catch (error) {
+    logger.error("club_album_photo_read_failed", { clubId: req.params.id, albumId: req.params.albumId, photoId: req.params.photoId, error });
+    res.status(502).send("Photo is temporarily unavailable");
+  }
+});
+
+clubsRouter.post("/:id/albums", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (!(await canManageClubAlbums(club.id, club.ownerId, userId))) {
+      res.status(403).json({ error: "Only club owners and directors can create albums" });
+      return;
+    }
+
+    const { title, description, eventDate, createdByName } = req.body as {
+      title?: string;
+      description?: string;
+      eventDate?: string;
+      createdByName?: string;
+    };
+    const cleanTitle = title?.trim();
+    const cleanDescription = description?.trim() || null;
+    const cleanEventDate = eventDate?.trim() || null;
+    if (!cleanTitle || cleanTitle.length > 120) {
+      res.status(400).json({ error: "Album title must be between 1 and 120 characters" });
+      return;
+    }
+    if (cleanDescription && cleanDescription.length > 2000) {
+      res.status(400).json({ error: "Album description must be 2,000 characters or fewer" });
+      return;
+    }
+    if (cleanEventDate && !/^\d{4}-\d{2}-\d{2}$/.test(cleanEventDate)) {
+      res.status(400).json({ error: "Event date must use YYYY-MM-DD format" });
+      return;
+    }
+
+    const id = nanoid(24);
+    await db.insert(clubAlbums).values({
+      id,
+      clubId: club.id,
+      title: cleanTitle,
+      description: cleanDescription,
+      eventDate: cleanEventDate,
+      createdById: userId,
+      createdByName: createdByName?.trim().slice(0, 100) || club.ownerName,
+      isPublished: 1,
+    });
+    res.status(201).json({ id });
+  } catch (error) {
+    logger.error("club_album_create_failed", { clubId: req.params.id, error });
+    res.status(500).json({ error: "Failed to create album" });
+  }
+});
+
+clubsRouter.patch("/:id/albums/:albumId", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (!(await canManageClubAlbums(club.id, club.ownerId, userId))) {
+      res.status(403).json({ error: "Only club owners and directors can edit albums" });
+      return;
+    }
+    const [album] = await db.select().from(clubAlbums).where(and(eq(clubAlbums.id, req.params.albumId), eq(clubAlbums.clubId, club.id))).limit(1);
+    if (!album) {
+      res.status(404).json({ error: "Album not found" });
+      return;
+    }
+
+    const { title, description, eventDate } = req.body as { title?: string; description?: string; eventDate?: string };
+    const cleanTitle = title?.trim();
+    const cleanDescription = description?.trim() || null;
+    const cleanEventDate = eventDate?.trim() || null;
+    if (!cleanTitle || cleanTitle.length > 120) {
+      res.status(400).json({ error: "Album title must be between 1 and 120 characters" });
+      return;
+    }
+    if (cleanDescription && cleanDescription.length > 2000) {
+      res.status(400).json({ error: "Album description must be 2,000 characters or fewer" });
+      return;
+    }
+    if (cleanEventDate && !/^\d{4}-\d{2}-\d{2}$/.test(cleanEventDate)) {
+      res.status(400).json({ error: "Event date must use YYYY-MM-DD format" });
+      return;
+    }
+
+    await db.update(clubAlbums).set({
+      title: cleanTitle,
+      description: cleanDescription,
+      eventDate: cleanEventDate,
+      updatedAt: new Date(),
+    }).where(eq(clubAlbums.id, album.id));
+    res.json({ success: true });
+  } catch (error) {
+    logger.error("club_album_update_failed", { clubId: req.params.id, albumId: req.params.albumId, error });
+    res.status(500).json({ error: "Failed to update album" });
+  }
+});
+
+const albumPhotoJsonParser = express.json({ limit: "10mb" });
+clubsRouter.post("/:id/albums/:albumId/photos", requireFullAuth, albumPhotoJsonParser, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (!(await canManageClubAlbums(club.id, club.ownerId, userId))) {
+      res.status(403).json({ error: "Only club owners and directors can upload album photos" });
+      return;
+    }
+    const [album] = await db.select().from(clubAlbums).where(and(eq(clubAlbums.id, req.params.albumId), eq(clubAlbums.clubId, club.id))).limit(1);
+    if (!album) {
+      res.status(404).json({ error: "Album not found" });
+      return;
+    }
+
+    const { dataUrl, caption, altText, width, height } = req.body as {
+      dataUrl?: string;
+      caption?: string;
+      altText?: string;
+      width?: number;
+      height?: number;
+    };
+    const match = dataUrl?.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) {
+      res.status(400).json({ error: "Upload a JPEG, PNG, or WebP image" });
+      return;
+    }
+    const bytes = Buffer.from(match[2], "base64");
+    if (bytes.length === 0 || bytes.length > 6 * 1024 * 1024) {
+      res.status(413).json({ error: "Each album photo must be 6 MB or smaller" });
+      return;
+    }
+    const cleanCaption = caption?.trim() || null;
+    const cleanAltText = altText?.trim() || null;
+    if (cleanCaption && cleanCaption.length > 500) {
+      res.status(400).json({ error: "Photo caption must be 500 characters or fewer" });
+      return;
+    }
+    if (cleanAltText && cleanAltText.length > 300) {
+      res.status(400).json({ error: "Photo description must be 300 characters or fewer" });
+      return;
+    }
+
+    const mimeType = match[1];
+    const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1];
+    const photoId = nanoid(24);
+    const { key, url } = await storagePut(`club-albums/${club.id}/${album.id}/${photoId}.${extension}`, bytes, mimeType);
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)` })
+      .from(clubAlbumPhotos)
+      .where(eq(clubAlbumPhotos.albumId, album.id));
+    await db.insert(clubAlbumPhotos).values({
+      id: photoId,
+      albumId: album.id,
+      clubId: club.id,
+      storageKey: key,
+      url,
+      caption: cleanCaption,
+      altText: cleanAltText,
+      width: Number.isInteger(width) && width! > 0 ? width : null,
+      height: Number.isInteger(height) && height! > 0 ? height : null,
+      sortOrder: Number(total ?? 0),
+      createdById: userId,
+    });
+    res.status(201).json({
+      photo: {
+        id: photoId,
+        albumId: album.id,
+        url: `/api/clubs/${club.id}/albums/${album.id}/photos/${photoId}/file`,
+        caption: cleanCaption,
+        altText: cleanAltText,
+        width: Number.isInteger(width) && width! > 0 ? width : null,
+        height: Number.isInteger(height) && height! > 0 ? height : null,
+        sortOrder: Number(total ?? 0),
+      },
+    });
+  } catch (error) {
+    logger.error("club_album_photo_upload_failed", { clubId: req.params.id, albumId: req.params.albumId, error });
+    res.status(500).json({ error: "Failed to upload album photo" });
+  }
+});
+
+clubsRouter.delete("/:id/albums/:albumId/photos/:photoId", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (!(await canManageClubAlbums(club.id, club.ownerId, userId))) {
+      res.status(403).json({ error: "Only club owners and directors can remove album photos" });
+      return;
+    }
+    await db.delete(clubAlbumPhotos).where(and(
+      eq(clubAlbumPhotos.id, req.params.photoId),
+      eq(clubAlbumPhotos.albumId, req.params.albumId),
+      eq(clubAlbumPhotos.clubId, club.id)
+    ));
+    res.json({ success: true });
+  } catch (error) {
+    logger.error("club_album_photo_delete_failed", { clubId: req.params.id, albumId: req.params.albumId, photoId: req.params.photoId, error });
+    res.status(500).json({ error: "Failed to remove album photo" });
+  }
+});
+
+clubsRouter.delete("/:id/albums/:albumId", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { db, club } = await resolveClubForAlbums(req.params.id);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (!(await canManageClubAlbums(club.id, club.ownerId, userId))) {
+      res.status(403).json({ error: "Only club owners and directors can delete albums" });
+      return;
+    }
+    const [album] = await db.select({ id: clubAlbums.id }).from(clubAlbums).where(and(eq(clubAlbums.id, req.params.albumId), eq(clubAlbums.clubId, club.id))).limit(1);
+    if (!album) {
+      res.status(404).json({ error: "Album not found" });
+      return;
+    }
+    await db.delete(clubAlbumPhotos).where(eq(clubAlbumPhotos.albumId, album.id));
+    await db.delete(clubAlbums).where(eq(clubAlbums.id, album.id));
+    res.json({ success: true });
+  } catch (error) {
+    logger.error("club_album_delete_failed", { clubId: req.params.id, albumId: req.params.albumId, error });
+    res.status(500).json({ error: "Failed to delete album" });
   }
 });

@@ -1,5 +1,12 @@
 # OTB Chess — Project TODO
 
+- [x] Club Albums: Add a public Album tab to club navigation and profile surfaces
+- [x] Club Albums: Add owner-authorized album creation, editing, deletion, and event-photo uploads, with database-checked media URLs that revoke access on deletion
+- [x] Club Albums: Persist album metadata in the database and photo files in managed object storage
+- [x] Club Albums: Build a responsive social timeline with album covers, photo grids, captions, dates, and empty/loading/error states
+- [x] Club Albums: Add an accessible full-screen photo viewer with keyboard and mobile navigation
+- [x] Club Albums: Add behavioral API, image preparation, rendered UI, permission, upload, edit/delete, and automated responsive regression coverage
+
 - [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
 
 ## Current Sprint — Error UX and Server Decomposition

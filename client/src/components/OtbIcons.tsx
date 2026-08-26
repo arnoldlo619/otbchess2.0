@@ -130,6 +130,33 @@ export function MembersIcon({ size = 20, accentColor, className, style, ...rest 
 }
 
 /**
+ * AlbumIcon — Stacked photographs with a chess-board accent square
+ * Replaces: Images / Gallery (Club Album tab)
+ */
+export function AlbumIcon({ size = 20, accentColor, className, style, ...rest }: OtbIconProps) {
+  return (
+    <svg {...defaults(size)} className={className} style={style} {...rest}>
+      <rect x="5" y="3" width="16" height="14" rx="2" stroke="currentColor" />
+      <path stroke="currentColor" d="m7 15 4-4 3 3 2-2 3 3" />
+      <circle
+        cx="16.5"
+        cy="7.5"
+        r="1.5"
+        stroke={accentColor ?? "currentColor"}
+        strokeOpacity={accentColor ? 1 : 0.6}
+        fill={accentColor ?? "currentColor"}
+        fillOpacity={accentColor ? 0.18 : 0.08}
+      />
+      <path
+        stroke={accentColor ?? "currentColor"}
+        strokeOpacity={accentColor ? 1 : 0.55}
+        d="M3 7v12a2 2 0 0 0 2 2h12"
+      />
+    </svg>
+  );
+}
+
+/**
  * TournamentsIcon — Chess king crown / trophy hybrid
  * Replaces: Trophy (Tournaments tab)
  */
@@ -599,6 +626,7 @@ export {
   FeedIcon as OtbFeed,
   EventsIcon as OtbEvents,
   MembersIcon as OtbMembers,
+  AlbumIcon as OtbAlbum,
   TournamentsIcon as OtbTournaments,
   LeaguesIcon as OtbLeagues,
   ClubsIcon as OtbClubs,

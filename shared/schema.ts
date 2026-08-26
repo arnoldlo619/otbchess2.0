@@ -805,6 +805,55 @@ export const dbClubMembers = mysqlTable(
 export type DbClubMemberRow = typeof dbClubMembers.$inferSelect;
 export type NewDbClubMemberRow = typeof dbClubMembers.$inferInsert;
 
+// ── Club Albums ───────────────────────────────────────────────────────────────
+// Public event-photo collections owned by a club. Image bytes live in managed
+// object storage; the database keeps only album metadata and storage references.
+export const clubAlbums = mysqlTable(
+  "club_albums",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    title: varchar("title", { length: 120 }).notNull(),
+    description: text("description"),
+    eventDate: varchar("event_date", { length: 10 }),
+    createdById: varchar("created_by_id", { length: 64 }).notNull(),
+    createdByName: varchar("created_by_name", { length: 100 }).notNull().default(""),
+    isPublished: tinyint("is_published").notNull().default(1),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    clubCreatedIdx: index("ca_club_created_idx").on(table.clubId, table.createdAt),
+    clubPublishedIdx: index("ca_club_published_idx").on(table.clubId, table.isPublished),
+  })
+);
+export type ClubAlbumRow = typeof clubAlbums.$inferSelect;
+export type NewClubAlbumRow = typeof clubAlbums.$inferInsert;
+
+export const clubAlbumPhotos = mysqlTable(
+  "club_album_photos",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    albumId: varchar("album_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    storageKey: text("storage_key").notNull(),
+    url: text("url").notNull(),
+    caption: varchar("caption", { length: 500 }),
+    altText: varchar("alt_text", { length: 300 }),
+    width: int("width"),
+    height: int("height"),
+    sortOrder: int("sort_order").notNull().default(0),
+    createdById: varchar("created_by_id", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    albumSortIdx: index("cap_album_sort_idx").on(table.albumId, table.sortOrder),
+    clubIdx: index("cap_club_idx").on(table.clubId),
+  })
+);
+export type ClubAlbumPhotoRow = typeof clubAlbumPhotos.$inferSelect;
+export type NewClubAlbumPhotoRow = typeof clubAlbumPhotos.$inferInsert;
+
 // Fantasy Chess League Tables
 export const leagues = mysqlTable('leagues', {
   id: varchar('id', { length: 64 }).primaryKey(),

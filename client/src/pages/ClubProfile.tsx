@@ -147,6 +147,7 @@ import {
   FeedIcon as OtbFeed,
   EventsIcon as OtbEvents,
   MembersIcon as OtbMembers,
+  AlbumIcon as OtbAlbum,
   TournamentsIcon as OtbTournaments,
   LeaguesIcon as OtbLeagues,
   HomeIcon as OtbHome,
@@ -166,6 +167,7 @@ import { ClubHero } from "@/components/club/ClubHero";
 import { ClubTabs } from "@/components/club/ClubTabs";
 import { ClubPromoModal } from "@/components/club/ClubPromoModal";
 import { ClubQRProjectionModal } from "@/components/club/ClubQRProjectionModal";
+import { ClubAlbumTab } from "@/components/club/ClubAlbumTab";
 import { ShaderBackground } from "@/components/ui/shader-r";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -895,12 +897,12 @@ export default function ClubProfile() {
   const isDark = theme === "dark";
 
   // Read optional ?tab= query param for deep-linking (e.g. from League Dashboard champion banner)
-  type ClubTabId = "home" | "feed" | "events" | "members" | "leagues";
+  type ClubTabId = "home" | "feed" | "events" | "members" | "album" | "leagues";
   const initialTab: ClubTabId = (() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
     const p = new URLSearchParams(search);
     const t = p.get("tab");
-    const valid: ClubTabId[] = ["home", "events", "members", "feed", "leagues"];
+    const valid: ClubTabId[] = ["home", "events", "members", "feed", "album", "leagues"];
     return valid.includes(t as ClubTabId) ? (t as ClubTabId) : "home";
   })();
 
@@ -1539,13 +1541,14 @@ export default function ClubProfile() {
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
           <nav aria-label="Club navigation" className="flex flex-col gap-0 flex-1 justify-center px-2">
-            {(["home", "feed", "events", "members", "leagues"] as const).map((t) => {
+            {(["home", "feed", "events", "members", "album", "leagues"] as const).map((t) => {
               const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {
                 home: <OtbHome size={22} accentColor={isActive ? accent : undefined} />,
                 feed: <OtbFeed size={22} accentColor={isActive ? accent : undefined} />,
                 events: <OtbEvents size={22} accentColor={isActive ? accent : undefined} />,
                 members: <OtbMembers size={22} accentColor={isActive ? accent : undefined} />,
+                album: <OtbAlbum size={22} accentColor={isActive ? accent : undefined} />,
                 leagues: <OtbLeagues size={22} accentColor={isActive ? accent : undefined} />,
                 about: <Info size={22} color={isActive ? accent : undefined} />,
               };
@@ -1554,6 +1557,7 @@ export default function ClubProfile() {
                 feed: "Feed",
                 events: "Events",
                 members: "Members",
+                album: "Album",
                 leagues: "Leagues",
                 about: "About",
               };
@@ -3219,6 +3223,18 @@ export default function ClubProfile() {
         )}
 
         {/* ── Leagues tab ──────────────────────────────────────────────────── */}
+        {activeTab === "album" && (
+          <ClubAlbumTab
+            clubId={club.id}
+            clubName={club.name}
+            clubAvatarUrl={club.avatarUrl}
+            canManage={isOwner || isDirector}
+            currentUserName={user?.displayName ?? club.ownerName}
+            accent={accent}
+            isDark={isDark}
+          />
+        )}
+
         {activeTab === "leagues" && (
           !joined ? (
             <div className={`rounded-3xl border ${cardBorder} ${card} p-8 flex flex-col items-center text-center gap-3`}>
@@ -4514,14 +4530,15 @@ export default function ClubProfile() {
         }}
       >
         <div className="flex items-center px-1">
-          {/* Club section tabs — 5 tabs */}
-          {(["home", "feed", "events", "members", "leagues"] as const).map((t) => {
+          {/* Club section tabs */}
+          {(["home", "feed", "events", "members", "album", "leagues"] as const).map((t) => {
             const isTabActive = activeTab === t;
             const iconMap: Record<string, React.ReactNode> = {
               home: <OtbHome size={18} accentColor={isTabActive ? accent : undefined} />,
               feed: <OtbFeed size={18} accentColor={isTabActive ? accent : undefined} />,
               events: <OtbEvents size={18} accentColor={isTabActive ? accent : undefined} />,
               members: <OtbMembers size={18} accentColor={isTabActive ? accent : undefined} />,
+              album: <OtbAlbum size={18} accentColor={isTabActive ? accent : undefined} />,
               leagues: <OtbLeagues size={18} accentColor={isTabActive ? accent : undefined} />,
             };
             return (

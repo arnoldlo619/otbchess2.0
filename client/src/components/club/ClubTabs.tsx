@@ -1,17 +1,18 @@
 /**
  * ClubTabs — Premium horizontal tab bar for the club profile page.
- * Five tabs: Home | Feed | Events | Members | Leagues
+ * Club profile navigation: Home | Feed | Events | Members | Album | Leagues
  */
 import React from "react";
 import {
   FeedIcon,
   EventsIcon,
   MembersIcon,
+  AlbumIcon,
   LeaguesIcon,
   HomeIcon,
 } from "@/components/OtbIcons";
 
-export type ClubTab = "home" | "feed" | "events" | "members" | "leagues";
+export type ClubTab = "home" | "feed" | "events" | "members" | "album" | "leagues";
 
 interface TabConfig {
   id: ClubTab;
@@ -35,6 +36,7 @@ export function ClubTabs({ activeTab, onChange, seenTabs, badges, accent, isDark
     { id: "feed",    label: "Feed",    icon: FeedIcon },
     { id: "events",  label: "Events",  icon: EventsIcon },
     { id: "members", label: "Members", icon: MembersIcon },
+    { id: "album",   label: "Album",   icon: AlbumIcon },
     { id: "leagues", label: "Leagues", icon: LeaguesIcon },
   ];
 
