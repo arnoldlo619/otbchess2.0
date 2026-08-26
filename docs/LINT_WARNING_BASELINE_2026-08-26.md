@@ -52,6 +52,8 @@ League week finalization now derives its database parameter and match rows from 
 
 League settings updates now use the schema-derived insert shape rather than an explicit-`any` database cast. The existing commissioner authorization and field validation rules remain intact; focused lint is **zero warnings and zero errors**, with a source contract for the typed update boundary.
 
+Repertoire Builder protected CRUD routes now use a local Express-compatible authenticated request wrapper instead of explicit-`any` request annotations. The existing full-auth middleware, ownership filters, and free-user repertoire limit remain intact; focused lint is **zero warnings and zero errors**, with focused contracts for the protected boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

@@ -13,7 +13,7 @@
  *   PUT    /api/repertoire-builder/:id            — update repertoire (name, color, moveTree)
  *   DELETE /api/repertoire-builder/:id            — delete repertoire
  */
-import { Router } from "express";
+import { Router, type Request, type RequestHandler, type Response } from "express";
 import { nanoid } from "nanoid";
 import { eq, and, desc } from "drizzle-orm";
 import { readFileSync, existsSync } from "fs";
@@ -25,6 +25,16 @@ import { requireFullAuth } from "./auth.js";
 import { logger } from "./logger.js";
 
 const FREE_REPERTOIRE_LIMIT = 1;
+
+type AuthenticatedRequest = Request & { userId: string };
+
+function withAuthenticatedUser(
+  handler: (req: AuthenticatedRequest, res: Response) => Promise<unknown>,
+): RequestHandler {
+  return (req, res, next) => {
+    void handler(req as AuthenticatedRequest, res).catch(next);
+  };
+}
 
 // ── Load fallback explorer database at module startup ─────────────────────────
 // This is a static JSON file built from our 158 seeded opening lines.
@@ -256,7 +266,7 @@ export function createRepertoireBuilderRouter(): Router {
   }
 
   // ── GET / — list user's repertoires ────────────────────────────────────────
-  router.get("/", async (req: any, res) => {
+  router.get("/", withAuthenticatedUser(async (req, res) => {
     try {
       const db = await getDb();
       const rows = await db
@@ -283,10 +293,10 @@ export function createRepertoireBuilderRouter(): Router {
       logger.error("[repertoire-builder] list error:", err);
       return res.status(500).json({ error: "Failed to list repertoires" });
     }
-  });
+  }));
 
   // ── GET /:id — get single repertoire ───────────────────────────────────────
-  router.get("/:id", async (req: any, res) => {
+  router.get("/:id", withAuthenticatedUser(async (req, res) => {
     try {
       const db = await getDb();
       const [row] = await db
@@ -305,10 +315,10 @@ export function createRepertoireBuilderRouter(): Router {
       logger.error("[repertoire-builder] get error:", err);
       return res.status(500).json({ error: "Failed to get repertoire" });
     }
-  });
+  }));
 
   // ── POST / — create new repertoire ─────────────────────────────────────────
-  router.post("/", async (req: any, res) => {
+  router.post("/", withAuthenticatedUser(async (req, res) => {
     try {
       const { name, color = "white" } = req.body as { name?: string; color?: string };
       if (!name || !name.trim()) {
@@ -371,10 +381,10 @@ export function createRepertoireBuilderRouter(): Router {
       logger.error("[repertoire-builder] create error:", err);
       return res.status(500).json({ error: "Failed to create repertoire" });
     }
-  });
+  }));
 
   // ── PUT /:id — update repertoire ───────────────────────────────────────────
-  router.put("/:id", async (req: any, res) => {
+  router.put("/:id", withAuthenticatedUser(async (req, res) => {
     try {
       const { name, color, moveTree } = req.body as {
         name?: string;
@@ -415,10 +425,10 @@ export function createRepertoireBuilderRouter(): Router {
       logger.error("[repertoire-builder] update error:", err);
       return res.status(500).json({ error: "Failed to update repertoire" });
     }
-  });
+  }));
 
   // ── DELETE /:id — delete repertoire ────────────────────────────────────────
-  router.delete("/:id", async (req: any, res) => {
+  router.delete("/:id", withAuthenticatedUser(async (req, res) => {
     try {
       const db = await getDb();
       const [existing] = await db
@@ -439,7 +449,7 @@ export function createRepertoireBuilderRouter(): Router {
       logger.error("[repertoire-builder] delete error:", err);
       return res.status(500).json({ error: "Failed to delete repertoire" });
     }
-  });
+  }));
 
   return router;
 }
