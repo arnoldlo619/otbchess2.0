@@ -49,8 +49,6 @@ export function RegisterGameModal({
 }: RegisterGameModalProps) {
   const { user } = useAuthContext();
   const bothKnown = !!(player1?.username && player2?.username);
-  const p1 = player1 ?? undefined;
-  const p2 = player2 ?? undefined;
 
   const [step, setStep] = useState<ModalStep>(() => bothKnown ? "headtohead" : "configure");
   const [isRated, setIsRated] = useState(true);
@@ -60,7 +58,6 @@ export function RegisterGameModal({
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [opponentName, setOpponentName] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [timeControlCategory, setTimeControlCategory] = useState<string>("");
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   useAccessibleOverlay({
@@ -134,7 +131,6 @@ export function RegisterGameModal({
       const data = await res.json();
       setSessionId(data.id);
       setQrToken(data.qrToken);
-      setTimeControlCategory(data.timeControlCategory);
       setStep("waiting");
     } catch (err: any) {
       setError(err.message);
@@ -233,7 +229,7 @@ export function RegisterGameModal({
   // ── Avatar helper ──────────────────────────────────────────────────────────
   function PlayerCard({
     info,
-    side,
+    side: _side,
     isWhite,
   }: {
     info: PlayerInfo;

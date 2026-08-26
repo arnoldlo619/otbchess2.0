@@ -90,6 +90,8 @@ The Matchup Prep walkthrough no longer carries unused visual constants or animat
 
 The Quads director panel no longer computes unused summary, attention, or completion-card round data. Focused lint is reduced from nine warnings to five warnings, isolated to dormant icon/progress UI and callback shapes that require a dedicated UI decision before removal.
 
+The registration modal no longer retains unused player aliases, time-control state, or an unused player-card side binding. Focused lint is reduced from seven warnings to three warnings, isolated to error-boundary and avatar-fallback accessibility work for a dedicated pass.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
