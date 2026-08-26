@@ -26,6 +26,8 @@ The push subscription rate limiter now types its key-generator request as Expres
 
 The Google OAuth callback unit suite no longer imports unused Vitest mocking hooks. Focused lint is **zero warnings and zero errors**, and all eight account-creation, matching, and account-linking regressions pass.
 
+Club-battle creation and bulk-import routes now treat database failures as `unknown` and identify duplicate entries through a guarded helper. The established idempotent-import response behavior remains intact; focused lint is **zero warnings and zero errors**, with a source contract for the guarded boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

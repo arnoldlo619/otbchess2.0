@@ -20,6 +20,13 @@ import { getDb } from "./db.js";
 import { clubBattles, type NewClubBattleRow } from "../shared/schema.js";
 import { logger } from "./logger.js";
 
+function isDuplicateEntryError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; message?: unknown };
+  return candidate.code === "ER_DUP_ENTRY"
+    || (typeof candidate.message === "string" && candidate.message.includes("Duplicate"));
+}
+
 const router = Router({ mergeParams: true });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -84,9 +91,9 @@ router.post("/", async (req, res) => {
     };
     await db.insert(clubBattles).values(row);
     return res.status(201).json(row);
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Duplicate key — battle already exists (idempotent import)
-    if (err?.code === "ER_DUP_ENTRY" || String(err?.message).includes("Duplicate")) {
+    if (isDuplicateEntryError(err)) {
       return res.status(200).json({ id: req.body.id, skipped: true });
     }
     logger.error("[club-battles] POST /", err);
@@ -139,8 +146,8 @@ router.post("/bulk", async (req, res) => {
       };
       await db.insert(clubBattles).values(row);
       inserted++;
-    } catch (err: any) {
-      if (err?.code === "ER_DUP_ENTRY" || String(err?.message).includes("Duplicate")) {
+    } catch (err: unknown) {
+      if (isDuplicateEntryError(err)) {
         skipped++;
       } else {
         logger.error("[club-battles] bulk insert error for", b.id, err);
