@@ -2214,15 +2214,23 @@ function getRaceRoom(code: string): RaceRoomState {
   });
 
   // POST /api/recap — Create or update a tournament recap (host only)
-  app.post("/api/recap", requireAuth, async (req: any, res) => {
+  app.post("/api/recap", requireAuth, async (req, res) => {
     try {
       const db = await getDb();
       const { tournamentRecaps } = await import("../shared/schema.js");
       const { nanoid } = await import("nanoid");
-      const body = req.body;
+      const body = req.body as Partial<typeof tournamentRecaps.$inferInsert>;
+      const userId = (req as Request & { userId?: string }).userId;
+      if (!userId) return res.status(401).json({ error: "Not authenticated" });
       if (!body.tournamentId) {
         return res.status(400).json({ error: "tournamentId is required" });
       }
+      const owner = await db
+        .select({ userId: userTournaments.userId })
+        .from(userTournaments)
+        .where(and(eq(userTournaments.tournamentId, body.tournamentId), eq(userTournaments.userId, userId)))
+        .limit(1);
+      if (owner.length === 0) return res.status(403).json({ error: "Not the tournament owner" });
       // Check if recap already exists for this tournament
       const existing = await db
         .select()

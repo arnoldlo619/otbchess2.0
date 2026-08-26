@@ -54,4 +54,10 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("type AchievementInput = Omit<typeof playerAchievements.$inferInsert, \"id\" | \"earnedAt\">;");
     expect(source).not.toContain("app.post(\"/api/player/achievements\", requireAuth, async (req: any, res)");
   });
+
+  it("enforces tournament ownership for protected recap persistence", () => {
+    expect(source).toContain("const body = req.body as Partial<typeof tournamentRecaps.$inferInsert>;");
+    expect(source).toContain("if (owner.length === 0) return res.status(403).json({ error: \"Not the tournament owner\" });");
+    expect(source).not.toContain("app.post(\"/api/recap\", requireAuth, async (req: any, res)");
+  });
 });
