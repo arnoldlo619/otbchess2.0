@@ -45,7 +45,6 @@ export function ClubShareModal({
     : `Join ${clubName} on ChessOTB.club`;
 
   const [copied, setCopied] = useState(false);
-  const qrRef = useRef<SVGSVGElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   useAccessibleOverlay({

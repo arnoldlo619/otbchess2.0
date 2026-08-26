@@ -126,6 +126,8 @@ Dashboard Dropdown no longer imports an unused React state hook. Focused lint is
 
 Edit Player modal now uses a semantic close control for backdrop dismissal instead of an interaction handler on the dialog container. Focused lint is **zero warnings and zero errors**, with modal dismissal behavior unchanged.
 
+Club Share modal no longer retains an unused QR reference. Focused lint is **zero warnings and zero errors**, with sharing behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

@@ -7549,6 +7549,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Featured Clubs: replace failed banner DOM mutation with React-managed fallback state
 - [x] Dashboard Dropdown: remove unused React state import without changing navigation behavior
 - [x] Edit Player modal: replace dialog-container backdrop click handling with a semantic close control
+- [x] Club Share modal: remove unused QR reference without changing sharing behavior
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
