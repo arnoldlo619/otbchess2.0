@@ -268,16 +268,20 @@ export function PairingSwapModal({
     <div
       className="fixed inset-0 z-[300] flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Close pairing swap dialog"
+        onClick={handleClose}
+      />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Swap round ${roundNumber} board assignments`}
         tabIndex={-1}
-        className={`w-full max-w-lg rounded-2xl border shadow-2xl flex flex-col max-h-[90vh] ${surface}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`relative z-10 w-full max-w-lg rounded-2xl border shadow-2xl flex flex-col max-h-[90vh] ${surface}`}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-5 py-4 border-b flex-shrink-0 ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>

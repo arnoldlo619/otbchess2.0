@@ -136,6 +136,8 @@ Game Result modal now handles submission failures as `unknown` and retains a saf
 
 Move Tree Panel no longer imports an unused callback hook. Focused lint is **zero warnings and zero errors**, with variation navigation unchanged.
 
+Pairing Swap modal now uses a semantic close control for backdrop dismissal instead of interaction handlers on non-interactive modal containers. Focused lint is **zero warnings and zero errors**, with pairing-swap dismissal behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
