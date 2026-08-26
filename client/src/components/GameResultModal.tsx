@@ -80,9 +80,9 @@ export function GameResultModal({
         // Waiting for opponent to confirm
         setSubmitState("submitted");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSubmitState("error");
-      setError(err.message || "Network error");
+      setError(err instanceof Error && err.message ? err.message : "Network error");
     }
   }, [user, sessionId]);
 

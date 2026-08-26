@@ -7552,6 +7552,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Club Share modal: remove unused QR reference without changing sharing behavior
 - [x] Contact Owner modal: replace non-semantic backdrop handlers with a semantic close control
 - [x] Create Club Wizard: mark inactive socials-step appearance prop without changing club setup behavior
+- [x] Game Result modal: guard submission failures as unknown while preserving safe network-error feedback
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
