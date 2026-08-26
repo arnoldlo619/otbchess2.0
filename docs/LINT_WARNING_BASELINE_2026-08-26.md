@@ -78,6 +78,8 @@ Owner-only tournament deletion now narrows the `userId` established by shared au
 
 Broadcast settings now use the `userId` established by shared authentication middleware and a schema-derived upsert payload rather than stale request-user access and an explicit insert cast. Existing ownership checks and public snapshot invalidation remain intact; focused lint preserves six remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the route.
 
+Public snapshot construction now consumes schema-typed player and round arrays through the exported snapshot input contract rather than explicit array casts. Existing snapshot generation and ETag behavior remain intact; focused lint preserves four remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the typed input boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

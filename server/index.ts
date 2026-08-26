@@ -14,6 +14,7 @@ import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState, userTournaments, tournamentAnalytics, chessPlayerCache, tournamentBroadcastSettings, dbClubs } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
+import type { BuildSnapshotInput } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
 import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
 import clubBattlesRouter from "./clubBattles.js";
@@ -995,8 +996,8 @@ export function createApp() {
           totalRounds?: number;
           tournamentName?: string;
           format?: string;
-          players?: Array<Record<string, unknown>>;
-          rounds?: Array<{ number: number; games: Array<Record<string, unknown>> }>;
+          players?: BuildSnapshotInput["players"];
+          rounds?: BuildSnapshotInput["rounds"];
           quadSections?: Array<{ id: string; name: string; type: string; playerIds: string[] }>;
         };
         const snapshot = buildSnapshot({
@@ -1008,8 +1009,8 @@ export function createApp() {
           format: s.format ?? (ut as Record<string, unknown>).format as string ?? "swiss",
           venue: (ut as Record<string, unknown>).venue as string ?? "",
           date: (ut as Record<string, unknown>).date as string ?? "",
-          players: (s.players ?? []) as any[],
-          rounds: (s.rounds ?? []) as any[],
+          players: s.players ?? [],
+          rounds: s.rounds ?? [],
           quadSections: s.quadSections,
           updatedAt: stateRows[0].updatedAt?.toISOString?.() ?? new Date().toISOString(),
         });

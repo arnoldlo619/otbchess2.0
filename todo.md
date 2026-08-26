@@ -7525,6 +7525,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Public tournament visibility: type shared authenticated user access while retaining owner-only read and update protections
 - [x] Tournament deletion: type shared authenticated user access while retaining existing owner-only safeguards
 - [x] Broadcast settings: type shared authenticated ownership and schema-derived upsert data while retaining snapshot invalidation
+- [x] Public snapshots: use the exported snapshot input contract for persisted player and round arrays without changing ETag behavior
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

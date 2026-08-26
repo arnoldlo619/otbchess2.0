@@ -43,4 +43,10 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).not.toContain("eq(userTournaments.userId, req.user.id)");
     expect(source).not.toContain("values(values as any)");
   });
+
+  it("uses the public snapshot input contract for persisted player and round arrays", () => {
+    expect(source).toContain("players?: BuildSnapshotInput[\"players\"];");
+    expect(source).toContain("rounds?: BuildSnapshotInput[\"rounds\"];");
+    expect(source).not.toContain("players: (s.players ?? []) as any[]");
+  });
 });
