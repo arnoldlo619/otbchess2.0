@@ -112,6 +112,8 @@ Opening Detail demo no longer carries unused auth state, play icon, aggregated l
 
 Profile no longer carries unused trophy, swords, or users icons, and achievement badges now use the exported badge union type rather than an explicit `any` cast. Focused lint is **zero warnings and zero errors**, with profile presentation unchanged.
 
+RSVP form builder no longer imports unused configuration icons. Focused lint is reduced from four warnings to one warning, isolated to the existing drag-and-drop accessibility boundary for a dedicated interaction pass.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

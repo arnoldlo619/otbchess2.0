@@ -43,15 +43,12 @@ import {
   ChevronDown,
   Hash,
   BarChart2,
-  Settings2,
   ClipboardList,
   Copy,
   ExternalLink,
   Save,
   Loader2,
   AlertCircle,
-  Type,
-  ToggleLeft,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
