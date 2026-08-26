@@ -14,6 +14,7 @@ import React, {lazy, Suspense, useState, useEffect, useRef, useCallback} from "r
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { BorderBeam } from "@/components/ui/border-beam";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
@@ -2589,6 +2590,7 @@ export default function ClubDashboard() {
   const [showAllUpcomingTmts, setShowAllUpcomingTmts] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
+  const [announcementComposerFocused, setAnnouncementComposerFocused] = useState(false);
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   // Post-type composer
@@ -5780,28 +5782,45 @@ export default function ClubDashboard() {
 
 
                 {/* Announcement composer */}
-                  <form onSubmit={submitAnnouncement} className="p-4 flex gap-3 items-start">
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 mt-0.5">
-                      <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={40} className="w-full h-full object-cover" />
+                  <form onSubmit={submitAnnouncement} className="flex items-start gap-3 p-4">
+                    <div className="mt-0.5 h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                      <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={40} className="h-full w-full object-cover" />
                     </div>
-                    <div className="flex-1 flex flex-col gap-2">
-                      <input
-                        aria-label="Post an announcement"
-                        value={announcementText}
-                        onChange={(e) => setAnnouncementText(e.target.value)}
-                        placeholder="Post an announcement to the club…"
-                        maxLength={500}
-                        className="w-full bg-transparent text-white text-[15px] placeholder-white/30 outline-none leading-relaxed"
-                        style={{ minHeight: "40px" }}
-                      />
-                      <div className="flex items-center justify-end">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                      <label className="sr-only" htmlFor="club-announcement-composer">Post an announcement</label>
+                      <div className="relative rounded-[14px] p-px" style={{ background: announcementComposerFocused ? `${accent}66` : "rgba(255,255,255,0.12)" }}>
+                        {announcementComposerFocused && (
+                          <BorderBeam
+                            size={150}
+                            duration={9}
+                            colorFrom={accent}
+                            colorTo="#9de6a3"
+                            className="motion-reduce:hidden opacity-80"
+                          />
+                        )}
+                        <input
+                          id="club-announcement-composer"
+                          aria-describedby="club-announcement-count"
+                          value={announcementText}
+                          onChange={(e) => setAnnouncementText(e.target.value)}
+                          onFocus={() => setAnnouncementComposerFocused(true)}
+                          onBlur={() => setAnnouncementComposerFocused(false)}
+                          placeholder="Share an update with your club…"
+                          maxLength={500}
+                          className="relative z-10 h-11 w-full rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-[#4CAF50]/70"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span id="club-announcement-count" className="text-[11px] tabular-nums text-white/35" aria-live="polite">
+                          {announcementText.length}/500
+                        </span>
                         <button
                           type="submit"
                           disabled={!announcementText.trim() || postingAnnouncement}
-                          className="flex items-center gap-1.5 px-4 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
-                          style={{ background: accent, height: "36px", touchAction: "manipulation" }}
+                          className="flex h-9 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
+                          style={{ background: accent, touchAction: "manipulation" }}
                         >
-                          <Megaphone className="w-3.5 h-3.5" />
+                          <Megaphone className="h-3.5 w-3.5" />
                           Post
                         </button>
                       </div>

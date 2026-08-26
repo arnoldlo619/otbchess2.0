@@ -1,5 +1,7 @@
 # OTB Chess — Project TODO
 
+- [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
+
 ## Current Sprint — Error UX and Server Decomposition
 
 - [x] Frontend resilience: Gracefully present structured API and global Express error responses with actionable, non-technical messaging
