@@ -4,7 +4,7 @@
 // confidence tiers). All other behavior is identical to the reference.
 
 import type { Color, FetchOpts, Insight, ParsedGame } from "../../shared/prepTypes.js";
-import { buildFacts, familyOf, forecast, grp, sample } from "./facts.js";
+import { buildFacts, forecast, grp, sample } from "./facts.js";
 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);

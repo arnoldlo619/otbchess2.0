@@ -18,6 +18,8 @@ The OTB rating engine now relies on Drizzle’s inferred game-submission row typ
 
 The preparation fixture suite now removes an unused quarantine counter binding while preserving its repeated-move exclusion assertion. Focused lint is **zero warnings and zero errors**, and all 38 preparation fixture tests pass.
 
+The preparation insight engine no longer imports its unused opening-family helper. Focused lint is **zero warnings and zero errors**, and all 38 preparation fixture tests continue to pass without changing generated analysis behavior.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
