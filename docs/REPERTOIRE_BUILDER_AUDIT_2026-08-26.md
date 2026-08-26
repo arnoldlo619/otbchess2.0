@@ -25,5 +25,10 @@ During browser validation, Stockfish attempted to derive a missing local WASM si
 The Library uses the existing published openings API and stored line PGNs. It does not invent chess moves, evaluations, or training claims. The Lichess opening-name dataset may be used only as the documented CC0 factual naming/ECO enrichment source; editorial explanations remain ChessOTB-controlled.
 
 ## Remaining Follow-up
-
 The next content phase should use the existing importer tooling to expand the curated database deliberately by opening family and level, with sourced PGN, reviewed move trees, and explicit starter/must-know/trap labels. The UI is now ready to surface that expanded content immediately.
+
+## First White Repertoire Expansion
+
+The first reviewed expansion adds the **English Opening**, **Catalan Opening**, **King's Indian Attack**, and **Réti Opening** to the published White library. It contributes **44 canonical named lines**: 12 English, 12 Catalan, 8 King's Indian Attack, and 12 Réti. Every imported line retains its ECO code, exact PGN, derived final FEN, and CC0 attribution to the [Lichess chess-openings dataset](https://github.com/lichess-org/chess-openings).
+
+The new idempotent seed and reconciliation scripts reuse existing source rows and consolidate duplicate families or lines while preserving any repertoire-line references. This keeps the library reliable even where the deployed database has not enforced the logical slug uniqueness expected by the application schema.

@@ -160,5 +160,6 @@ The repository-wide `pnpm lint` command now reports **496 warnings and zero erro
 The active CI workflow remains responsible for TypeScript, ESLint, deterministic unit/integration tests, production build, and bundle-budget enforcement. No lint severity was relaxed, no rules were disabled, and the public UI behavior was preserved.
 
 ## Repertoire Builder Completion
-
 Repertoire Builder now exposes the published opening catalog as a dedicated Library workspace. It searches opening families, defaults to the active repertoire color, presents main lines, sidelines, gambits, traps, and practical metadata, and merges canonical line PGN into the user tree without overwriting existing branches. Focused lint is **zero warnings and zero errors**, with regression coverage for catalog loading, line retrieval, and auto-saved tree merging.
+
+The first White repertoire expansion adds 44 source-backed canonical lines across the English, Catalan, King's Indian Attack, and Réti systems. The idempotent seed and reconciliation scripts preserve one opening family and one source line per slug, and focused lint is **zero warnings and zero errors**.
