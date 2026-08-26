@@ -32,6 +32,8 @@ Club invitation creation and acceptance now read the `userId` established by the
 
 The quads lifecycle regression suite now removes stale fixture bindings while retaining all 17 section-isolation, tiebreak, lifecycle, and roster-mutation assertions. Focused lint is **zero warnings and zero errors**, and the full quads regression suite passes.
 
+The Chess provider proxy now uses Express request/response types for its CORS and rate-limit boundaries, preserving the established allowed-origin policy and privacy-safe IP normalization. Focused lint is **zero warnings and zero errors**, with a source contract for those boundaries.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

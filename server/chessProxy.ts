@@ -4,7 +4,7 @@
  * Handles chess.com player lookup, game analysis, ELO history,
  * lichess player/games proxy, avatar proxy (CORS-safe), and font proxy.
  */
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { logger } from "./logger.js";
 
@@ -14,7 +14,7 @@ const PROXY_ALLOWED_ORIGINS = new Set([
   "https://www.chessotb.club",
   "https://otbchess.manus.space",
 ]);
-function setProxyCors(req: any, res: any) {
+function setProxyCors(req: Request, res: Response) {
   const origin = req.headers.origin as string | undefined;
   if (origin && PROXY_ALLOWED_ORIGINS.has(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -66,7 +66,7 @@ async function proxyLichess(username: string) {
 const chessProxyLimiter = rateLimit({
   windowMs: 60_000,
   max: 60,
-  keyGenerator: (req: any) => ipKeyGenerator(req.ip ?? ""),
+  keyGenerator: (req: Request) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many player lookups — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
