@@ -7503,6 +7503,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Club invitation actions: align authenticated user lookup with the shared requireAuth userId contract and add regression coverage
 - [x] Quads lifecycle regression suite: remove stale unused fixtures while retaining section, tiebreak, and roster-mutation coverage
 - [x] Chess provider proxy: type CORS and rate-limit request boundaries while preserving origin and IP-key behavior
+- [x] Broadcast service: remove stale payload fields and type optional creator attribution without changing live event delivery
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

@@ -14,7 +14,7 @@
  *  GET    /api/broadcasts/:id/events          — SSE stream for realtime updates
  */
 
-import { Router } from "express";
+import { Router, type Request as ExpressRequest } from "express";
 import { nanoid } from "nanoid";
 import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "./db.js";
@@ -34,6 +34,8 @@ function addBridgeLog(broadcastId: string, level: "info" | "warn" | "error", msg
 }
 
 const router = Router();
+
+type BroadcastCreatorRequest = ExpressRequest & { user?: { id?: string } };
 
 // ─── SSE Registry ─────────────────────────────────────────────────────────────
 // Maps broadcastId → Set of active SSE response objects.
@@ -99,7 +101,7 @@ router.post("/", async (req, res) => {
       moveNumber: 0,
       sideToMove: "w",
       publicSlug,
-      createdBy: (req as any).user?.id ?? null,
+      createdBy: (req as BroadcastCreatorRequest).user?.id ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -195,7 +197,6 @@ router.post("/:id/moves", async (req, res) => {
       fenBefore,
       fenAfter,
       pgn,
-      moveNumber,
       sideToMove,
       source = "manual",
     } = req.body as Record<string, unknown>;
@@ -418,7 +419,7 @@ router.patch("/:id/display-settings", async (req, res) => {
 router.post("/:id/bridge-move", async (req, res) => {
   try {
     const db = await getDb();
-    const { token, san, uci, fenBefore, fenAfter, deviceName, bridgeVersion } = req.body as Record<string, string>;
+    const { token, san, uci, fenBefore, deviceName } = req.body as Record<string, string>;
     if (!token || !san) {
       return res.status(400).json({ error: "token and san are required" });
     }
