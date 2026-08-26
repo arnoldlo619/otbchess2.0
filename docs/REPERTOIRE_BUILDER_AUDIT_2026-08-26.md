@@ -36,3 +36,7 @@ The new idempotent seed and reconciliation scripts reuse existing source rows an
 The next reviewed White batch closes the catalog’s only high-popularity empty-system gap: the **Ruy Lopez** now has 18 canonical published reference lines, including the Berlin, Closed, Exchange, Open, Marshall, and Steinitz branches. It uses the same CC0 source, idempotent seed, reconciliation, and user-safe import workflow as the initial batch.
 
 The next requested White batch adds the **Ponziani Opening** with 11 canonical reference lines and the **Trompowsky Attack** with 9. It also expands the **Catalan Opening** from 12 to 20 canonical lines, including Open, Closed, and deeper main-line structures. Every line remains directly sourced from the CC0 Lichess opening dataset, attributed in the catalog, and protected by the same duplicate-safe seeding and reconciliation workflow.
+
+## Modern Scandinavian Black repertoire
+
+The Black repertoire now begins with a practical **Scandinavian Defense** collection. The catalog retains 24 canonical published B01 lines, all tagged black, covering the modern `...Nf6` move order, Portuguese and Icelandic-Palme gambit ideas, `...Qd6`, `...Qa5`, classical, Bronstein, and main-line branches. The extended seed is color-aware, so parent and line metadata preserve Black orientation while continuing to use the same CC0 source and duplicate-safe reconciliation process.

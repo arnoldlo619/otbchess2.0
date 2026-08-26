@@ -98,6 +98,19 @@ const systems = [
     themes: ["piece-activity", "initiative", "unbalanced-structure"],
     matcher: (name) => name.startsWith("Trompowsky Attack") && /^(Trompowsky Attack$|Trompowsky Attack: (Classical Defense|Edge Variation|Poisoned Pawn Variation|Raptor Variation))/.test(name),
   },
+  {
+    slug: "scandinavian-defense",
+    name: "Scandinavian Defense",
+    eco: "B01",
+    color: "black",
+    startingMoves: "1. e4 d5",
+    summary: "A direct answer to 1.e4 that offers clear structures, early central challenge, and practical modern choices.",
+    description: "A practical modern Scandinavian collection with canonical Qa5, Qd6, Modern, Portuguese, Icelandic, and main-line branches.",
+    difficulty: "intermediate",
+    playCharacter: "universal",
+    themes: ["central-challenge", "active-development", "practical-defense"],
+    matcher: (name) => name.startsWith("Scandinavian Defense") && /^(Scandinavian Defense$|Scandinavian Defense: (Main Line|Modern Variation|Portuguese Gambit|Icelandic-Palme Gambit|Gubinsky-Melts Defense|Classical Variation|Bronstein Variation))/.test(name),
+  },
 ];
 
 function sourceSlug(value) {
@@ -147,7 +160,7 @@ for (const [systemIndex, system] of systems.entries()) {
       summary, difficulty, popularity, play_character, themes, line_count,
       sort_order, is_published, is_featured, starter_friendly,
       estimated_line_count, trap_potential, strategic_complexity, author_name
-    ) VALUES (?, ?, ?, ?, 'white', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
       name = VALUES(name), eco = VALUES(eco), starting_moves = VALUES(starting_moves),
       starting_fen = VALUES(starting_fen), description = VALUES(description),
@@ -155,7 +168,7 @@ for (const [systemIndex, system] of systems.entries()) {
       play_character = VALUES(play_character), themes = VALUES(themes),
       is_published = 1, author_name = VALUES(author_name)`,
     [
-      openingId, system.name, system.slug, system.eco, system.startingMoves,
+      openingId, system.name, system.slug, system.eco, system.color ?? "white", system.startingMoves,
       startingFen, system.description, system.summary, system.difficulty, 70,
       system.playCharacter, JSON.stringify(system.themes), 0, 320 + systemIndex * 10,
       system.difficulty === "beginner" ? 1 : 0, 10, 45, 60, "Lichess chess-openings (CC0)",
@@ -177,7 +190,7 @@ for (const [systemIndex, system] of systems.entries()) {
         difficulty, commonness, priority, is_must_know, is_trap, line_type, color,
         strategic_summary, hint_text, punishment_idea, pawn_structure, themes,
         sort_order, is_published, author_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 50, ?, 0, 0, ?, 'white', ?, ?, NULL, NULL, ?, ?, 1, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 50, ?, 0, 0, ?, ?, ?, ?, NULL, NULL, ?, ?, 1, ?)
       ON DUPLICATE KEY UPDATE
         title = VALUES(title), eco = VALUES(eco), pgn = VALUES(pgn),
         final_fen = VALUES(final_fen), ply_count = VALUES(ply_count),
@@ -188,7 +201,7 @@ for (const [systemIndex, system] of systems.entries()) {
         lineId, openingId, row.name, lineSlug, row.eco, row.pgn,
         finalFen(row.pgn), plyCount(row.pgn),
         "Canonical named sequence from the Lichess chess-openings dataset. Use the board and engine panel to decide whether this position fits your personal repertoire.",
-        system.difficulty, 65, isGambit ? "gambit" : "main",
+        system.difficulty, 65, isGambit ? "gambit" : "main", system.color ?? "white",
         "Reference sequence for this named White repertoire branch.",
         "Play the canonical sequence, then use the explorer and engine to compare practical continuations.",
         JSON.stringify(system.themes), (lineIndex + 1) * 10, "Lichess chess-openings (CC0)",
@@ -204,7 +217,7 @@ for (const [systemIndex, system] of systems.entries()) {
 }
 
 const [[summary]] = await connection.execute(
-  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez','ponziani-opening','trompowsky-attack')"
+  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez','ponziani-opening','trompowsky-attack','scandinavian-defense')"
 );
 console.log(`White expansion complete: ${summary.openings} systems, ${summary.total_lines} published lines`);
 await connection.end();
