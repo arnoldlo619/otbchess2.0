@@ -46,6 +46,8 @@ League commissioner and player push-notification paths now narrow provider failu
 
 The league authorization helper now narrows the `userId` set by shared authentication middleware without an explicit-`any` request cast. Unauthorized responses are unchanged; focused lint preserves four pre-existing typed-boundary warnings with zero errors, and a source contract covers the helper.
 
+League season-start rating fetches now use a narrow Chess.com response shape while retaining the established rapid, blitz, bullet, then daily rating precedence. Focused lint preserves three pre-existing typed-boundary warnings with zero errors, and a source contract covers the response boundary.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

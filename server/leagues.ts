@@ -49,6 +49,8 @@ function pushErrorDetails(error: unknown): { statusCode?: number; message?: stri
   };
 }
 
+type ChessComRatingStats = Record<string, { last?: { rating?: number } } | undefined>;
+
 /** Send a push notification to all subscribed commissioner endpoints for a league */
 async function notifyCommissioner(leagueId: string, title: string, body: string, url: string) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
@@ -476,7 +478,7 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
           headers: { "User-Agent": "ChessOTB/1.0 (contact: support@chessotb.club)" },
         });
         if (statsRes.ok) {
-          const stats = await statsRes.json() as Record<string, any>;
+          const stats = await statsRes.json() as ChessComRatingStats;
           // Prefer rapid → blitz → bullet → daily rating
           const rapid = stats?.chess_rapid?.last?.rating;
           const blitz = stats?.chess_blitz?.last?.rating;
