@@ -15,7 +15,7 @@
  */
 
 import { useState, useMemo, useRef } from "react";
-import { X, Swords, ChevronRight, Users, Trophy, ArrowRight } from "lucide-react";
+import { X, Swords, Users, Trophy, ArrowRight } from "lucide-react";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import type { StandingRow } from "@/lib/swiss";
 import { suggestElimCutoff } from "@/lib/swiss";

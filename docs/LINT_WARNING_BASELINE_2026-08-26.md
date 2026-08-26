@@ -146,6 +146,8 @@ Share Results QR projection no longer uses a non-semantic click handler on its f
 
 Spectator Share modal now uses a semantic close control for backdrop dismissal and no longer retains redundant dialog click propagation handling. Focused lint is **zero warnings and zero errors**, with modal dismissal behavior unchanged.
 
+Swiss Phase Summary no longer imports an unused chevron icon. Focused lint is **zero warnings and zero errors**, with bracket summary behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
