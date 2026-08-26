@@ -193,11 +193,15 @@ export function EditPlayerModal({
       tabIndex={-1}
       className="fixed inset-0 z-[300] flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        aria-label="Close player editor"
+        onClick={onClose}
+      />
       <div
-        className={`w-full max-w-md rounded-2xl border shadow-2xl ${surface}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`relative z-10 w-full max-w-md rounded-2xl border shadow-2xl ${surface}`}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
