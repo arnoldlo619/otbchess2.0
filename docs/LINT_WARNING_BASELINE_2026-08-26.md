@@ -118,6 +118,8 @@ Matchup Prep now explicitly marks its default-on V3 toggle setter as inactive. F
 
 Club Meetup Wizard no longer imports an unused feed helper. Focused lint is **zero warnings and zero errors**, with event creation behavior unchanged.
 
+Club Settings now narrows category updates through a guarded `ClubCategory` union rather than an explicit `any` cast. Focused lint is **zero warnings and zero errors**, with existing settings save behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

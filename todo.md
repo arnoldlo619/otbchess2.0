@@ -7545,6 +7545,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] RSVP form builder: remove unused configuration icons without changing form-builder behavior
 - [x] Matchup Prep: mark the retained default-on V3 toggle setter intentionally inactive without changing report selection behavior
 - [x] Club Meetup Wizard: remove unused feed helper import without changing event creation behavior
+- [x] Club Settings: guard category updates through the ClubCategory union without changing settings save behavior
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

@@ -8,7 +8,7 @@ import { ClubAvatarUpload } from "./ClubAvatarUpload";
 import { ClubBannerUpload } from "./ClubBannerUpload";
 import { ClubBackgroundPicker, type SilkSettings } from "./ClubBackgroundPicker";
 import { toast } from "sonner";
-import type { Club } from "@/lib/clubRegistry";
+import type { Club, ClubCategory } from "@/lib/clubRegistry";
 import { authFetch } from "@/lib/apiFetch";
 
 // ── Preset accent swatches ────────────────────────────────────────────────────
@@ -49,6 +49,19 @@ const ACCENT_PRESETS = [
   { hex: "#c0c0c0", label: "Platinum" },
   { hex: "#ffffff", label: "White" },
 ];
+
+const CLUB_CATEGORIES = new Set<ClubCategory>([
+  "club",
+  "school",
+  "university",
+  "online",
+  "community",
+  "professional",
+]);
+
+function isClubCategory(value: string): value is ClubCategory {
+  return CLUB_CATEGORIES.has(value as ClubCategory);
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 /** Returns black or white depending on which has better contrast against `hex` */
@@ -204,7 +217,7 @@ export function ClubSettingsPanel({ club, accent, isDark, onClubChange }: ClubSe
         description: description.trim() || undefined,
         location: location.trim() || undefined,
         country: country.trim() || undefined,
-        category: (category as any) || undefined,
+        category: isClubCategory(category) ? category : undefined,
         isPublic,
         website: website.trim() || undefined,
         instagram: instagram.trim() || undefined,
