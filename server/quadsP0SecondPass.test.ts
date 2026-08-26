@@ -145,7 +145,6 @@ describe("P0-2: Sonneborn-Berger tiebreak", () => {
     const state = makeState(PLAYERS_8, ROUNDS_8, SECTIONS_8);
     const snap = buildSnapshot(state as any);
     const sectionA = snap.quadSections![0].standings;
-    const sectionAIds = new Set(["p1", "p2", "p3", "p4"]);
     // Max possible SB for section A = 3+2+1+0 = 6
     sectionA.forEach((row: any) => {
       expect(row.sonnebornBerger).toBeLessThanOrEqual(6);
@@ -214,14 +213,12 @@ describe("P0-10: Ninth-player roster mutation (regression)", () => {
     expect(totalInSections).toBe(8);
   });
 
-  it("A player added after sections are formed has no games (orphan detection)", () => {
-    const ninthPlayer = makePlayer("p9", "Magnus", 0, 0, 0, 0, Date.now());
-    const players9 = [...PLAYERS_8, ninthPlayer];
-    const state = makeState(players9, ROUNDS_8, SECTIONS_8, "completed");
+  it("A future roster player identifier has no scheduled games (orphan detection)", () => {
+    const futurePlayerId = "p9";
     
     // Verify p9 has no games in any round
     const allGameIds = ROUNDS_8.flatMap(r => r.games.flatMap(g => [g.whiteId, g.blackId]));
-    expect(allGameIds.includes("p9")).toBe(false);
+    expect(allGameIds.includes(futurePlayerId)).toBe(false);
   });
 });
 

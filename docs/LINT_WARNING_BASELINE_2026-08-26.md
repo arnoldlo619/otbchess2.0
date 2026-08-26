@@ -30,6 +30,8 @@ Club-battle creation and bulk-import routes now treat database failures as `unkn
 
 Club invitation creation and acceptance now read the `userId` established by the shared authentication middleware rather than an unrelated legacy request-user shape. This restores the intended authenticated action contract; focused lint is **zero warnings and zero errors**, with a regression contract covering both invitation paths.
 
+The quads lifecycle regression suite now removes stale fixture bindings while retaining all 17 section-isolation, tiebreak, lifecycle, and roster-mutation assertions. Focused lint is **zero warnings and zero errors**, and the full quads regression suite passes.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

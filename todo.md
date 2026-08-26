@@ -7501,6 +7501,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Google OAuth callback tests: remove unused Vitest imports while preserving sign-in and account-linking regression coverage
 - [x] Club battle imports: replace duplicate-entry error any boundaries with guarded unknown handling and regression coverage
 - [x] Club invitation actions: align authenticated user lookup with the shared requireAuth userId contract and add regression coverage
+- [x] Quads lifecycle regression suite: remove stale unused fixtures while retaining section, tiebreak, and roster-mutation coverage
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint
