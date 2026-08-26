@@ -1106,33 +1106,38 @@ export function createApp() {
         eventCounts[event.eventType] = (eventCounts[event.eventType] ?? 0) + 1;
 
         // Parse metadata
-        let meta: Record<string, any> = {};
+        let meta: Record<string, unknown> = {};
         if (event.metadata) {
-          try { meta = JSON.parse(event.metadata); } catch { /* silent */ }
+          try {
+            const parsed: unknown = JSON.parse(event.metadata);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+              meta = parsed as Record<string, unknown>;
+            }
+          } catch { /* silent */ }
         }
 
         // Track unique IPs from page views
-        if (event.eventType === "page_view" && meta.ip) {
+        if (event.eventType === "page_view" && typeof meta.ip === "string") {
           uniqueIps.add(meta.ip);
         }
 
         // Track email captures
-        if (event.eventType === "email_capture" && meta.email) {
+        if (event.eventType === "email_capture" && typeof meta.email === "string") {
           emailsCaptured.push(meta.email);
         }
 
         // Track CTA clicks by type
-        if (event.eventType === "cta_click" && meta.cta) {
+        if (event.eventType === "cta_click" && typeof meta.cta === "string") {
           ctaClicks[meta.cta] = (ctaClicks[meta.cta] ?? 0) + 1;
         }
 
         // Track search queries
-        if (event.eventType === "search" && meta.playerName) {
+        if (event.eventType === "search" && typeof meta.playerName === "string") {
           searchQueries.push(meta.playerName);
         }
 
         // Track followed players
-        if (event.eventType === "follow" && meta.playerId) {
+        if (event.eventType === "follow" && typeof meta.playerId === "string") {
           followedPlayers.push(meta.playerId);
         }
 

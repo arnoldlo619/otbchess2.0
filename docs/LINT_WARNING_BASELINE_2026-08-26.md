@@ -84,6 +84,8 @@ Protected achievement batch creation now derives its input from the player-achie
 
 Protected tournament recap persistence now derives its input from the recap schema and verifies the authenticated caller owns the referenced tournament before update or creation. Existing draft/published recap behavior remains intact; focused lint preserves one remaining typed-boundary warning with zero errors, and the entrypoint contract covers the ownership gate.
 
+Tournament analytics metadata is now parsed as `unknown` and narrowed to string fields before aggregation, removing the final entrypoint explicit-`any` boundary without changing analytics metrics. Focused lint for `server/index.ts` is **zero warnings and zero errors**, with an expanded 11-contract regression suite.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

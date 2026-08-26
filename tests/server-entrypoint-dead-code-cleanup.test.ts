@@ -60,4 +60,10 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("if (owner.length === 0) return res.status(403).json({ error: \"Not the tournament owner\" });");
     expect(source).not.toContain("app.post(\"/api/recap\", requireAuth, async (req: any, res)");
   });
+
+  it("guards analytics metadata before using aggregated string fields", () => {
+    expect(source).toContain("let meta: Record<string, unknown> = {};");
+    expect(source).toContain("typeof meta.cta === \"string\"");
+    expect(source).not.toContain("let meta: Record<string, any> = {};");
+  });
 });
