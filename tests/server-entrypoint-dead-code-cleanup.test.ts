@@ -17,4 +17,10 @@ describe("server entrypoint legacy cleanup", () => {
     expect(source).toContain("const userId = (req as Request & { userId?: string }).userId;");
     expect(source).toContain("if (!userId) return res.status(401).json({ error: \"Not authenticated\" });");
   });
+
+  it("uses a narrow persisted tournament state contract for attendance analytics", () => {
+    expect(source).toContain("players?: Array<{ id: string; joinedAt?: number }>;");
+    expect(source).toContain("startedAt?: number;");
+    expect(source).not.toContain("const players: any[] = state.players ?? [];");
+  });
 });

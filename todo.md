@@ -7520,6 +7520,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Club service: type authenticated event, feed, RSVP, payment-status, check-in, season, and announcement boundaries without changing authorization behavior
 - [x] Server entrypoint: remove confirmed unused legacy proxy, limiter declarations, and schema import without altering mounted route behavior
 - [x] Tournament analytics: type the shared authenticated user boundary for owner-only analytics reads
+- [x] Tournament analytics: narrow persisted attendance state to typed player and round fields while retaining walk-in and no-show calculations
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

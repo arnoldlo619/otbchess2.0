@@ -1260,9 +1260,19 @@ export function createApp() {
       };
       if (stateRows.length && stateRows[0].stateJson) {
         try {
-          const state = JSON.parse(stateRows[0].stateJson);
-          const players: any[] = state.players ?? [];
-          const rounds: any[] = state.rounds ?? [];
+          const state = JSON.parse(stateRows[0].stateJson) as {
+            players?: Array<{ id: string; joinedAt?: number }>;
+            rounds?: Array<{
+              games?: Array<{
+                startedAt?: number;
+                result?: string;
+                whiteId?: string;
+                blackId?: string;
+              }>;
+            }>;
+          };
+          const players = state.players ?? [];
+          const rounds = state.rounds ?? [];
           // Determine round 1 start time from first game timestamp
           let round1StartMs: number | null = null;
           if (rounds.length > 0) {

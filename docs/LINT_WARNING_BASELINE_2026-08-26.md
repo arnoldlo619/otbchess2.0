@@ -68,6 +68,8 @@ The server entrypoint no longer retains an unused legacy Lichess proxy, duplicat
 
 Tournament analytics ownership checks now narrow the `userId` established by shared authentication middleware instead of relying on an explicit request `any` cast. Unauthorized requests retain a clear 401 response; focused lint preserves fourteen remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the route.
 
+Tournament attendance analytics now parses only the persisted player and round fields it consumes, removing explicit `any` collections without altering walk-in or no-show calculations. Focused lint preserves twelve remaining typed-boundary warnings with zero errors, and the entrypoint contract covers the narrow state shape.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.
