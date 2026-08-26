@@ -61,6 +61,18 @@ const systems = [
     themes: ["central-control", "piece-activity", "positional-squeeze"],
     matcher: (name) => name.startsWith("Réti Opening") && /^(Réti Opening$|Réti Opening: (Advance Variation|Réti Accepted|Anglo-Slav Variation))/.test(name),
   },
+  {
+    slug: "ruy-lopez",
+    name: "Ruy Lopez",
+    eco: "C60-C99",
+    startingMoves: "1. e4 e5 2. Nf3 Nc6 3. Bb5",
+    summary: "A cornerstone 1.e4 opening that builds enduring central pressure and supports both strategic and tactical play.",
+    description: "A practical Ruy Lopez collection with canonical Berlin, Closed, Exchange, Open, Marshall, and Steinitz reference branches.",
+    difficulty: "intermediate",
+    playCharacter: "universal",
+    themes: ["central-control", "piece-activity", "queenside-space"],
+    matcher: (name) => name.startsWith("Ruy Lopez") && /^(Ruy Lopez$|Ruy Lopez: (Berlin Defense|Closed|Exchange Variation|Open|Marshall Attack|Morphy Defense|Steinitz Defense))/.test(name),
+  },
 ];
 
 function sourceSlug(value) {
@@ -167,7 +179,7 @@ for (const [systemIndex, system] of systems.entries()) {
 }
 
 const [[summary]] = await connection.execute(
-  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening')"
+  "SELECT COUNT(*) AS openings, SUM(line_count) AS total_lines FROM openings WHERE slug IN ('english-opening','catalan-opening','kings-indian-attack','reti-opening','ruy-lopez')"
 );
 console.log(`White expansion complete: ${summary.openings} systems, ${summary.total_lines} published lines`);
 await connection.end();
