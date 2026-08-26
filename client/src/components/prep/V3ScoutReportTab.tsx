@@ -12,14 +12,13 @@
 import { useState, useMemo } from "react";
 import { Chess } from "chess.js";
 import {
-  BookOpen, TrendingDown, TrendingUp, Zap, Target,
+  TrendingDown, TrendingUp, Zap,
   ChevronDown, ChevronRight, GitBranch, CheckSquare, AlertCircle,
   Shield, Crosshair, Activity, Eye, Telescope,
 } from "lucide-react";
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { InsightCard } from "./InsightCard";
 import { DataQualityBanner } from "./DataQualityBanner";
-import { ScoutAISummary } from "./ScoutAISummary";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 import { PopulationContextCard } from "./PopulationContextCard";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
