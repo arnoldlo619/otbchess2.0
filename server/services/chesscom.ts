@@ -29,18 +29,40 @@ function ccResult(w: string, b: string): RawGame["result"] {
   return "*";
 }
 
-function normalizeChesscom(g: any): RawGame {
+type JsonRecord = Record<string, unknown>;
+
+function asRecord(value: unknown): JsonRecord {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as JsonRecord
+    : {};
+}
+
+function readString(value: unknown, fallback: string): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function readNumber(value: unknown, fallback: number | null): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function normalizeChesscom(payload: unknown): RawGame {
+  const game = asRecord(payload);
+  const white = asRecord(game.white);
+  const black = asRecord(game.black);
+  const whiteResult = readString(white.result, "?");
+  const blackResult = readString(black.result, "?");
+
   return {
     provider: "chesscom",
-    url: g.url ?? "",
-    rated: !!g.rated,
-    rules: g.rules ?? "chess",
-    timeClass: g.time_class ?? "unknown",
-    endTime: g.end_time ?? 0,
-    white: { name: g.white?.username ?? "?", rating: g.white?.rating ?? null, result: g.white?.result ?? "?" },
-    black: { name: g.black?.username ?? "?", rating: g.black?.rating ?? null, result: g.black?.result ?? "?" },
-    result: ccResult(g.white?.result ?? "", g.black?.result ?? ""),
-    sans: pgnToSans(g.pgn ?? ""),
+    url: readString(game.url, ""),
+    rated: game.rated === true,
+    rules: readString(game.rules, "chess"),
+    timeClass: readString(game.time_class, "unknown"),
+    endTime: readNumber(game.end_time, 0) ?? 0,
+    white: { name: readString(white.username, "?"), rating: readNumber(white.rating, null), result: whiteResult },
+    black: { name: readString(black.username, "?"), rating: readNumber(black.rating, null), result: blackResult },
+    result: ccResult(whiteResult, blackResult),
+    sans: pgnToSans(readString(game.pgn, "")),
   };
 }
 
@@ -71,7 +93,11 @@ export async function fetchChesscom(username: string, o: FetchOpts): Promise<Raw
   if (archRes.status === 429) throw new Error(`UpstreamRateLimited: chess.com`);
   if (!archRes.ok) throw new Error(`Upstream${archRes.status}`);
 
-  const months: string[] = (await archRes.json()).archives?.slice(-o.months).reverse() ?? [];
+  const archivesPayload = asRecord(await archRes.json());
+  const archives = Array.isArray(archivesPayload.archives)
+    ? archivesPayload.archives.filter((archive): archive is string => typeof archive === "string")
+    : [];
+  const months = archives.slice(-o.months).reverse();
   if (!months.length) throw new Error(`NoRecentGames: ${username}`);
 
   const out: RawGame[] = [];
@@ -79,9 +105,10 @@ export async function fetchChesscom(username: string, o: FetchOpts): Promise<Raw
     if (out.length >= o.maxGames) break;
     const res = await fetchWithRetry(url, { headers: { "User-Agent": UA } });
     if (!res.ok) continue;
-    const data = await res.json();
-    for (const g of ((data.games ?? []) as any[]).reverse()) {
-      out.push(normalizeChesscom(g));
+    const monthPayload = asRecord(await res.json());
+    const games = Array.isArray(monthPayload.games) ? monthPayload.games : [];
+    for (const game of [...games].reverse()) {
+      out.push(normalizeChesscom(game));
       if (out.length >= o.maxGames) break;
     }
   }
@@ -90,6 +117,6 @@ export async function fetchChesscom(username: string, o: FetchOpts): Promise<Raw
 }
 
 /** Load chess.com fixture JSON (array of raw chess.com game objects) */
-export function loadChesscomFixture(games: any[]): RawGame[] {
+export function loadChesscomFixture(games: unknown[]): RawGame[] {
   return games.map(normalizeChesscom);
 }
