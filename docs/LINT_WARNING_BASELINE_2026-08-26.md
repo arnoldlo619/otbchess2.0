@@ -28,6 +28,8 @@ The Google OAuth callback unit suite no longer imports unused Vitest mocking hoo
 
 Club-battle creation and bulk-import routes now treat database failures as `unknown` and identify duplicate entries through a guarded helper. The established idempotent-import response behavior remains intact; focused lint is **zero warnings and zero errors**, with a source contract for the guarded boundary.
 
+Club invitation creation and acceptance now read the `userId` established by the shared authentication middleware rather than an unrelated legacy request-user shape. This restores the intended authenticated action contract; focused lint is **zero warnings and zero errors**, with a regression contract covering both invitation paths.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

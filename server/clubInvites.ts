@@ -10,7 +10,7 @@
  *   POST   /api/invite/:token/accept           — accept invite (authenticated user)
  */
 
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "./db.js";
@@ -18,6 +18,12 @@ import { requireAuth } from "./auth.js";
 import { clubInvites } from "../shared/schema.js";
 
 const router = Router({ mergeParams: true });
+
+type AuthenticatedRequest = Request & { userId?: string };
+
+function authenticatedUserId(req: AuthenticatedRequest): string | null {
+  return req.userId ?? null;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -36,7 +42,7 @@ function inviteExpiresAt(): Date {
 // response body. In production, an email would be sent here.
 router.post("/", requireAuth, async (req, res) => {
   const { clubId } = req.params as { clubId: string };
-  const userId = (req as any).user?.id as string | undefined;
+  const userId = authenticatedUserId(req);
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   const { email } = req.body as { email?: string };
@@ -156,7 +162,7 @@ export function createInviteRouter() {
   // POST /api/invite/:token/accept — authenticated user accepts the invite
   r.post("/:token/accept", requireAuth, async (req, res) => {
     const { token } = req.params;
-    const userId = (req as any).user?.id as string | undefined;
+    const userId = authenticatedUserId(req);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const db = await getDb();
