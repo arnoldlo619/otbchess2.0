@@ -116,6 +116,8 @@ RSVP form builder no longer imports unused configuration icons. Focused lint is 
 
 Matchup Prep now explicitly marks its default-on V3 toggle setter as inactive. Focused lint is reduced from three warnings to two warnings, isolated to dormant opening-row and loading-state components that require a dedicated product decision before removal.
 
+Club Meetup Wizard no longer imports an unused feed helper. Focused lint is **zero warnings and zero errors**, with event creation behavior unchanged.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

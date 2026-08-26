@@ -11,7 +11,6 @@ import {
   createRecurringEvents,
   type ClubEvent,
 } from "../lib/clubEventRegistry";
-import { addFeedEvent } from "../lib/clubFeedRegistry";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 
 interface Props {
