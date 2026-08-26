@@ -58,6 +58,8 @@ Bracket mutation routes now use a local Express-compatible authenticated request
 
 Saved preparation report CRUD routes now read the `userId` established by shared authentication middleware instead of a stale request-user shape. This restores the intended authenticated save, list, read, and delete contract; focused lint preserves three unrelated typed-boundary warnings with zero errors, and a source contract covers every saved-report route.
 
+Preparation routes now use a typed rate-limit request key, the inferred saved-report insert ID, and the existing authenticated request wrapper for coach insight. Input validation, rate limits, and LLM response handling remain intact; focused lint is **zero warnings and zero errors**, with expanded route contracts covering the typed boundaries.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

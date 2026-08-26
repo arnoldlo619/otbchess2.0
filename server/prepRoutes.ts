@@ -105,7 +105,7 @@ async function getCachedOrBuildPrepReport(
 const prepLimiter = rateLimit({
   windowMs: 60_000,
   max: 30,
-  keyGenerator: (req: any) => ipKeyGenerator(req.ip ?? ""),
+  keyGenerator: (req: Request) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many prep requests — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
@@ -429,7 +429,7 @@ export function createPrepRouter(): Router {
           gamesAnalyzed: gamesAnalyzed ?? null, prepLinesCount: prepLinesCount ?? null,
           reportJson: typeof reportJson === "string" ? reportJson : JSON.stringify(reportJson),
         });
-        res.json({ id: (result as any).insertId, updated: false });
+        res.json({ id: result.insertId, updated: false });
       }
     } catch (err) {
       logger.error("[saved-prep] save error:", err);
@@ -494,7 +494,7 @@ export function createPrepRouter(): Router {
   }));
 
   // POST /coach-insight — LLM-powered coaching insight
-  router.post("/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), validate(coachInsightSchema), async (req: any, res) => {
+  router.post("/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), validate(coachInsightSchema), withAuthenticatedUser(async (req, res) => {
     try {
       const { promptJson } = req.body;
       if (!promptJson || typeof promptJson !== "string") {
@@ -542,7 +542,7 @@ export function createPrepRouter(): Router {
       logger.error("[coach-insight] error:", err);
       res.status(500).json({ error: "Failed to generate coach insight" });
     }
-  });
+  }));
 
   return router;
 }
