@@ -52,7 +52,7 @@ No additional P0 product-functionality defect was proven in the audited tourname
 | P1-01 | **Resolved.** The owner-authorized browser commit activated `.github/workflows/ci.yml`; run `32916972360` completed successfully. | GitHub App workflow-write permission remains intentionally unavailable, but CI is now active. | Maintain the preserved template and use an owner-authorized workflow change when CI definition updates are necessary.[10] |
 | P1-02 | **Resolved.** The current remote SHA completed the production build and bundle-budget gate successfully. | The local Vite sandbox remains resource-constrained, but remote artifact verification is active. | Require each future `main` SHA to retain a green CI run before release.[10] |
 | P1-03 | Stripe checkout, successful subscription webhook, cancellation webhook, and `/pro/success` polling remain unverified end to end in production. | Users could pay without entitlement updates or receive inconsistent membership state. | Keep paid acquisition disabled until all four production scenarios pass with test accounts and auditable Stripe events. |
-| P1-04 | No production-like load baseline exists for live tournament/SSE traffic. | Large promoted events may expose cold-start, connection, or database limits that functional tests do not measure. | Run a staged load test before advertising large events; define acceptable P95 latency, error rate, and SSE recovery targets. |
+| P1-04 | The authorized read-only production baseline stopped during its 5-user warm-up: all 24 HTTP requests and five SSE connections succeeded, but HTTP p95 was 2,838 ms, exceeding the 1,500 ms stop threshold. The 15- and 30-user stages were correctly not run. | Capacity at marketing scale remains unproven; the current public read path does not meet the stated latency gate. | Diagnose the 5-user p95 with route-level server timing, improve the slow public reads, then repeat the same staged plan before large-event promotion.[11] |
 
 ### P2: address during controlled beta
 
@@ -117,7 +117,7 @@ If an emergency requires reverting to a checkpoint older than this report, keep 
 
 ## Final recommendation
 
-ChessOTB is ready for **controlled free-beta onboarding after the current release candidate is published and smoke-tested**. The architecture and regression posture are sufficient for learning with a limited cohort. It is **not ready for broad paid acquisition** until the published content-integrity correction, Stripe lifecycle verification, and a load baseline are complete.
+ChessOTB is ready for **controlled free-beta onboarding after the current release candidate is published and smoke-tested**. The architecture and regression posture are sufficient for learning with a limited cohort. It is **not ready for broad paid acquisition** until the published content-integrity correction, Stripe lifecycle verification, and a passing load baseline are complete.
 
 This is a conditional operating decision, not a claim that every backlog item is complete. The immediate sequence is: publish the content-integrity release candidate, complete the post-publish smoke matrix, and then begin a small free-beta cohort.
 
@@ -133,3 +133,4 @@ This is a conditional operating decision, not a claim that every backlog item is
 [8]: ./server/operationalMetricsRoutes.ts "Rate-limited operational metrics endpoint"
 [9]: ./tests/landing-social-proof-integrity.test.ts "Landing social-proof and platform-stat integrity contract"
 [10]: https://github.com/arnoldlo619/otbchess2.0/actions/runs/32916972360 "GitHub Actions Quality Gates run 32916972360"
+[11]: ./docs/PRODUCTION_LOAD_BASELINE_2026-08-26.md "Authorized staged production load baseline"
