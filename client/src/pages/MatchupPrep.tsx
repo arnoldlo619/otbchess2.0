@@ -278,7 +278,7 @@ export default function MatchupPrep() {
 
   // V3 schema toggle + provider
   type Provider = "chesscom" | "lichess";
-  const [useV3, setUseV3] = useState(true); // V3 on by default
+  const [useV3, _setUseV3] = useState(true); // V3 on by default
   const [provider, setProvider] = useState<Provider>("chesscom");
   const [reportV3, setReportV3] = useState<ScoutReportV3 | null>(null);
 
