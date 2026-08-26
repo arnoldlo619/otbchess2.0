@@ -7517,6 +7517,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Saved preparation reports: align CRUD route authentication with the shared requireAuth userId contract and add regression coverage
 - [x] Preparation routes: type rate-limit, saved-report insert, and coach insight boundaries while retaining validation and request limits
 - [x] SMTP routes: type all full-auth SMTP request boundaries while retaining user scoping and safe delivery error handling
+- [x] Club service: type authenticated event, feed, RSVP, payment-status, check-in, season, and announcement boundaries without changing authorization behavior
 - [x] Replace untyped Chess.com provider payload handling with narrow validated types and regression coverage
 - [x] Remove confirmed unused Home-page imports, state, and unreachable local components without changing landing content
 - [x] Replace remaining Home How It Works any casts with a narrow typed step model and zero-warning lint

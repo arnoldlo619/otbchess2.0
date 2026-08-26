@@ -62,6 +62,8 @@ Preparation routes now use a typed rate-limit request key, the inferred saved-re
 
 SMTP configuration, test, and results-delivery routes now use a local full-auth-compatible request wrapper instead of legacy explicit request/response `any` annotations. User-scoped configuration access and unknown-safe delivery errors remain intact; focused lint is **zero warnings and zero errors**, with focused route and error-safety contracts.
 
+Club event, feed, RSVP, payment-status, and check-in actions now use the shared authenticated user helper; event, feed, season, and announcement inputs use schema-derived request shapes. Existing authorization, club membership, manual payment-status privacy, and content-creation behavior remain intact; focused lint is **zero warnings and zero errors**, with focused route contracts.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

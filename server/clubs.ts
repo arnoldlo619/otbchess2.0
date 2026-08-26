@@ -86,7 +86,7 @@ function broadcastClubEvent(
 
 /** Read req.userId set by authMiddleware — returns it or sends 401 and returns null. */
 function getUserId(req: Request, res: Response): string | null {
-  const userId = (req as any).userId as string | undefined;
+  const userId = (req as Request & { userId?: string }).userId;
   if (!userId) {
     res.status(401).json({ error: "Authentication required" });
     return null;
@@ -1120,7 +1120,8 @@ clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
 /** POST /api/clubs/:id/events — create a club event */
 clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
     const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
@@ -1130,7 +1131,7 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
     const isOwner = club.ownerId === userId;
     const isDirector = membership?.role === "director" || membership?.role === "owner";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can create events" }); return; }
-    const body = req.body as any;
+    const body = req.body as typeof clubEvents.$inferInsert;
     const eventId = body.id ?? nanoid(16);
     await db.insert(clubEvents).values({
       id: eventId, clubId: id, title: body.title,
@@ -1165,7 +1166,8 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
 /** DELETE /api/clubs/:id/events/:eventId */
 clubsRouter.delete("/:id/events/:eventId", authMiddleware, async (req: Request, res: Response) => {
   const { id, eventId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
     const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
@@ -1209,7 +1211,8 @@ clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
 /** POST /api/clubs/:id/feed — create a feed post */
 clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
     const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
@@ -1218,7 +1221,7 @@ clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response
       .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
     const isOwner = club.ownerId === userId;
     if (!isOwner && !membership) { res.status(403).json({ error: "Must be a club member to post" }); return; }
-    const body = req.body as any;
+    const body = req.body as typeof clubFeed.$inferInsert;
     const feedId = body.id ?? nanoid(16);
     await db.insert(clubFeed).values({
       id: feedId, clubId: id, type: body.type,
@@ -1242,7 +1245,8 @@ clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response
 /** DELETE /api/clubs/:id/feed/:feedId */
 clubsRouter.delete("/:id/feed/:feedId", authMiddleware, async (req: Request, res: Response) => {
   const { id, feedId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
     const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
@@ -1290,7 +1294,8 @@ clubsRouter.get("/:id/events/:eventId/rsvps", async (req: Request, res: Response
 /** GET /api/clubs/:id/events/:eventId/rsvps/payment-statuses — owner/director-only private manual status view */
 clubsRouter.get("/:id/events/:eventId/rsvps/payment-statuses", authMiddleware, async (req: Request, res: Response) => {
   const { id, eventId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
     const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
@@ -1321,7 +1326,8 @@ clubsRouter.get("/:id/events/:eventId/rsvps/payment-statuses", authMiddleware, a
 /** PATCH /api/clubs/:id/events/:eventId/rsvps/:rsvpUserId/payment-status — owner/director-only manual confirmation */
 clubsRouter.patch("/:id/events/:eventId/rsvps/:rsvpUserId/payment-status", authMiddleware, async (req: Request, res: Response) => {
   const { id, eventId, rsvpUserId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   const { paymentStatus } = req.body as { paymentStatus?: string };
   const allowedStatuses = ["untracked", "pending", "confirmed", "waived"] as const;
   if (!paymentStatus || !allowedStatuses.includes(paymentStatus as typeof allowedStatuses[number])) {
@@ -1363,7 +1369,8 @@ clubsRouter.patch("/:id/events/:eventId/rsvps/:rsvpUserId/payment-status", authM
 /** POST /api/clubs/:id/events/:eventId/rsvps — upsert the caller's RSVP */
 clubsRouter.post("/:id/events/:eventId/rsvps", authMiddleware, async (req: Request, res: Response) => {
   const { id, eventId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   const { status, displayName, avatarUrl } = req.body as {
     status: "going" | "maybe" | "not_going";
     displayName?: string;
@@ -1410,7 +1417,8 @@ clubsRouter.post("/:id/events/:eventId/rsvps", authMiddleware, async (req: Reque
 /** DELETE /api/clubs/:id/events/:eventId/rsvps — remove the caller's RSVP */
 clubsRouter.delete("/:id/events/:eventId/rsvps", authMiddleware, async (req: Request, res: Response) => {
   const { id: _clubId, eventId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
     const { clubEventRsvps } = await import("../shared/schema.js");
@@ -1428,7 +1436,8 @@ clubsRouter.delete("/:id/events/:eventId/rsvps", authMiddleware, async (req: Req
 /** POST /api/clubs/:id/events/:eventId/checkin — record a check-in for the caller */
 clubsRouter.post("/:id/events/:eventId/checkin", authMiddleware, async (req: Request, res: Response) => {
   const { eventId } = req.params;
-  const userId = (req as any).userId as string;
+  const userId = getUserId(req, res);
+  if (!userId) return;
   const { displayName, avatarUrl, chesscomUsername, clubId } = req.body as {
     displayName?: string;
     avatarUrl?: string | null;
@@ -1750,7 +1759,7 @@ clubsRouter.get("/:id/seasons", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
     const { id } = req.params;
-    const { clubSeasons, clubSeasonStandings } = await import("../shared/schema.js");
+    const { clubSeasons } = await import("../shared/schema.js");
     const seasons = await db.select().from(clubSeasons)
       .where(eq(clubSeasons.clubId, id))
       .orderBy(desc(clubSeasons.createdAt));
@@ -1782,7 +1791,7 @@ clubsRouter.post("/:id/seasons", requireFullAuth, async (req: Request, res: Resp
       res.status(403).json({ error: "Owner/director only" }); return;
     }
     const { clubSeasons } = await import("../shared/schema.js");
-    const body = req.body as any;
+    const body = req.body as typeof clubSeasons.$inferInsert;
     const seasonId = nanoid(16);
     await db.insert(clubSeasons).values({
       id: seasonId,
@@ -1854,7 +1863,7 @@ clubsRouter.post("/:id/announcements", requireFullAuth, async (req: Request, res
       res.status(403).json({ error: "Owner/director only" }); return;
     }
     const { clubAnnouncements } = await import("../shared/schema.js");
-    const body = req.body as any;
+    const body = req.body as typeof clubAnnouncements.$inferInsert;
     const annId = nanoid(16);
     await db.insert(clubAnnouncements).values({
       id: annId,
