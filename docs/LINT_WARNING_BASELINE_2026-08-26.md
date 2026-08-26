@@ -8,6 +8,8 @@ The Chess.com provider has also removed its three `no-explicit-any` boundaries. 
 
 The landing Home page has removed verified unreachable imports, lightbox state, and three local sections that were not mounted by the active composition. Its remaining How It Works casts now use a narrow `LandingStep` model, so its focused lint baseline is **zero warnings and zero errors**; mobile landing visual QA and landing source contracts passed.
 
+Broadcast Control has removed 26 focused warnings by deleting confirmed dead imports/state and using established chess-square types. Its SSE events now pass through a pure guarded parser that rejects malformed payloads and unsupported lifecycle values before state updates; focused lint is **zero warnings and zero errors**, with two parser regression tests.
+
 ## Remaining Baseline
 
 The repository-wide `pnpm lint` command now reports **496 warnings and zero errors**, reduced from 509 warnings before this cleanup. The remaining warnings are predominantly legacy `@typescript-eslint/no-explicit-any` findings across server integrations and historical test fixtures, plus a smaller number of unused variables and stale lint-disable directives.

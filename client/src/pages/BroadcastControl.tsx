@@ -7,18 +7,17 @@
  *  Center: Interactive chessboard, turn indicator, SAN input
  *  Right:  Move list, PGN tools, correction tools, display links
  */
-import BarLoader from "@/components/ui/bar-loader";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
-import { Chess } from "chess.js";
+import { Chess, type Square as ChessSquare } from "chess.js";
 import { Chessboard, type SquareHandlerArgs, type PieceDropHandlerArgs } from "react-chessboard";
 import { toast } from "sonner";
 import {
-  Play, Pause, RotateCcw, Copy, Download, ExternalLink,
+  Play, Pause, Copy, Download,
   Radio, Settings, ChevronLeft, Zap, AlertTriangle,
-  CheckCircle2, Clock, Monitor, QrCode, SkipBack, SkipForward,
-  Upload, Trash2, RefreshCw, Eye, EyeOff, FlipVertical,
-  Square, FileText, Wifi, WifiOff, Shield, Cpu
+  Monitor, SkipBack,
+  Upload, RefreshCw, FlipVertical,
+  Square, Cpu
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { QRCodeSVG } from "qrcode.react";
@@ -26,37 +25,9 @@ import { ChessnutProPanel } from "@/components/ChessnutProPanel";
 import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
 import { OTBLoader } from "@/components/OTBLoader";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { parseBroadcastEvent, type Broadcast } from "@/lib/broadcastEvent";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Broadcast {
-  id: string;
-  tournamentId: string;
-  roundNumber: number;
-  boardNumber: number;
-  whitePlayerName: string;
-  blackPlayerName: string;
-  whitePlayerElo?: number | null;
-  blackPlayerElo?: number | null;
-  status: "ready" | "live" | "paused" | "finished" | "error";
-  inputSource: "manual" | "chessnut_pro_beta" | "chessnut_chrome_bluetooth" | "pgn_import";
-  displayMode: "standard" | "minimal" | "overlay";
-  displaySettings?: Record<string, unknown> | null;
-  tournamentName?: string | null;
-  bridgeToken?: string | null;
-  bridgeStatus?: string | null;
-  bridgeDeviceName?: string | null;
-  bridgeLastSeenAt?: string | null;
-  bridgeErrorMessage?: string | null;
-  currentFen: string;
-  pgn: string;
-  lastMoveSan?: string | null;
-  lastMoveUci?: string | null;
-  moveNumber: number;
-  sideToMove: "w" | "b";
-  result?: string | null;
-  publicSlug: string;
-}
-
 type SyncState = "idle" | "syncing" | "saved" | "error";
 
 // ─── Demo PGN ────────────────────────────────────────────────────────────────
@@ -135,8 +106,7 @@ function ConfirmDialog({ open, title, message, onConfirm, onCancel }: {
 export default function BroadcastControl() {
   const { id: tournamentId, boardNumber: boardNumberParam } = useParams<{ id: string; boardNumber: string }>();
   const [, navigate] = useLocation();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  useTheme();
   const boardNumber = parseInt(boardNumberParam ?? "1", 10);
 
   // ─── Pre-fill data from Director query params ──────────────────────────────
@@ -160,7 +130,6 @@ export default function BroadcastControl() {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [legalMoves, setLegalMoves] = useState<string[]>([]);
   const [sanInput, setSanInput] = useState("");
-  const [fenInput, setFenInput] = useState("");
   const [boardFlipped, setBoardFlipped] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("idle");
   const [submitting, setSubmitting] = useState(false);
@@ -181,7 +150,7 @@ export default function BroadcastControl() {
 
   // Demo mode
   const [demoMode, setDemoMode] = useState(false);
-  const [demoPlaying, setDemoPlaying] = useState(false);
+  const [, setDemoPlaying] = useState(false);
   const demoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Display settings
@@ -229,8 +198,8 @@ export default function BroadcastControl() {
         chess.load(created.currentFen);
         setFen(created.currentFen);
       }
-    } catch (err) {
-      console.error("Failed to fetch broadcast", err);
+    } catch (error) {
+      console.error("Failed to fetch broadcast", error);
       toast.error("Failed to load broadcast");
     } finally {
       setLoading(false);
@@ -243,49 +212,30 @@ export default function BroadcastControl() {
   useEffect(() => {
     if (!broadcast?.id) return;
     const es = new EventSource(`/api/broadcasts/${broadcast.id}/events`);
-    es.addEventListener("move_played", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.broadcast) {
-          setBroadcast(data.broadcast);
-          chess.load(data.broadcast.currentFen);
-          setFen(data.broadcast.currentFen);
-        }
-      } catch { /* ignore */ }
-    });
-    es.addEventListener("move_undone", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.broadcast) {
-          setBroadcast(data.broadcast);
-          chess.load(data.broadcast.currentFen);
-          setFen(data.broadcast.currentFen);
-        }
-      } catch { /* ignore */ }
-    });
-    es.addEventListener("status_changed", (e) => {
-      try { const data = JSON.parse(e.data); if (data.broadcast) setBroadcast(data.broadcast); } catch { /* ignore */ }
-    });
-    es.addEventListener("position_corrected", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.broadcast) {
-          setBroadcast(data.broadcast);
-          chess.load(data.broadcast.currentFen);
-          setFen(data.broadcast.currentFen);
-        }
-      } catch { /* ignore */ }
-    });
-    es.addEventListener("broadcast_reset", (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.broadcast) {
-          setBroadcast(data.broadcast);
-          chess.reset();
-          setFen(chess.fen());
-        }
-      } catch { /* ignore */ }
-    });
+    const readBroadcast = (event: Event) => event instanceof MessageEvent ? parseBroadcastEvent(event.data) : null;
+    const applyPosition = (event: Event) => {
+      const nextBroadcast = readBroadcast(event);
+      if (!nextBroadcast) return;
+      setBroadcast(nextBroadcast);
+      chess.load(nextBroadcast.currentFen);
+      setFen(nextBroadcast.currentFen);
+    };
+    const applyStatus = (event: Event) => {
+      const nextBroadcast = readBroadcast(event);
+      if (nextBroadcast) setBroadcast(nextBroadcast);
+    };
+    const applyReset = (event: Event) => {
+      const nextBroadcast = readBroadcast(event);
+      if (!nextBroadcast) return;
+      setBroadcast(nextBroadcast);
+      chess.reset();
+      setFen(chess.fen());
+    };
+    es.addEventListener("move_played", applyPosition);
+    es.addEventListener("move_undone", applyPosition);
+    es.addEventListener("status_changed", applyStatus);
+    es.addEventListener("position_corrected", applyPosition);
+    es.addEventListener("broadcast_reset", applyReset);
     return () => es.close();
   }, [broadcast?.id, chess]);
 
@@ -343,22 +293,24 @@ export default function BroadcastControl() {
         setLegalMoves([]);
         submitMove(move.san, move.from + move.to + (move.promotion ?? ""), fenBefore, fenAfter);
       } else {
-        const piece = chess.get(square as any);
+        const chessSquare = square as ChessSquare;
+        const piece = chess.get(chessSquare);
         if (piece && piece.color === chess.turn()) {
           setSelectedSquare(square);
-          const moves = chess.moves({ square: square as any, verbose: true });
-          setLegalMoves(moves.map((m: any) => m.to));
+          const moves = chess.moves({ square: chessSquare, verbose: true });
+          setLegalMoves(moves.map((move) => move.to));
         } else {
           setSelectedSquare(null);
           setLegalMoves([]);
         }
       }
     } else {
-      const piece = chess.get(square as any);
+      const chessSquare = square as ChessSquare;
+      const piece = chess.get(chessSquare);
       if (piece && piece.color === chess.turn()) {
         setSelectedSquare(square);
-        const moves = chess.moves({ square: square as any, verbose: true });
-        setLegalMoves(moves.map((m: any) => m.to));
+        const moves = chess.moves({ square: chessSquare, verbose: true });
+        setLegalMoves(moves.map((move) => move.to));
       }
     }
   }
@@ -574,7 +526,7 @@ export default function BroadcastControl() {
       styles[selectedSquare] = { background: "rgba(255, 200, 0, 0.45)", borderRadius: "4px" };
     }
     for (const sq of legalMoves) {
-      const piece = chess.get(sq as any);
+      const piece = chess.get(sq as ChessSquare);
       if (piece) {
         styles[sq] = { background: "radial-gradient(circle, transparent 55%, rgba(76,175,80,0.5) 55%)", borderRadius: "50%" };
       } else {
@@ -813,7 +765,7 @@ export default function BroadcastControl() {
                         src === "pgn_import" ? "Switched to PGN Import mode" :
                         "Switched to Manual Input"
                       );
-                    } catch (err) {
+                    } catch {
                       toast.error("Failed to switch input source");
                     }
                   }}
