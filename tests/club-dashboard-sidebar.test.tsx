@@ -116,5 +116,7 @@ describe("ClubDashboardSidebar", () => {
     expect(sidebar).toContain("flex flex-1 flex-col justify-center gap-5");
     expect(sidebar).toContain("active && expanded");
     expect(sidebar).toContain('width: expanded ? "calc(100% - 4px)" : "42px"');
+    expect(sidebar).toContain("transition-[width,box-shadow]");
+    expect(sidebar).toContain("motion-reduce:transition-none");
   });
 });

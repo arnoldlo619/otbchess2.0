@@ -19,6 +19,9 @@
 - [x] Club Dashboard: Center the navigation stack vertically in both compact and expanded sidebar states
 - [x] Club Dashboard: Resize and offset active navigation controls so they sit precisely within the sidebar border geometry
 - [x] Club Dashboard: Re-verify expanded hover, compact, keyboard, and mobile sidebar geometry after the correction
+- [x] Club Dashboard: Refine compact-to-expanded sidebar width, label, and control transitions into one premium motion sequence
+- [x] Club Dashboard: Validate pointer, keyboard, reduced-motion, and mobile behavior after the sidebar motion refinement
+- [x] Club Dashboard: Re-run narrow mobile QA and verify reduced-motion-safe expansion behavior after the motion refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests

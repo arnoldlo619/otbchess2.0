@@ -67,7 +67,7 @@ export function ClubDashboardSidebar({
         onClick={() => onSelect(item.id)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="group/nav-item relative flex items-center rounded-xl border text-left outline-none transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group/nav-item relative flex items-center rounded-xl border text-left outline-none transition-[width,height,margin,padding,gap,background-color,border-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
@@ -99,8 +99,13 @@ export function ClubDashboardSidebar({
           <Icon size={19} strokeWidth={active ? 2 : 1.65} />
         </span>
         <span
-          className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em] transition-opacity duration-150 motion-reduce:transition-none"
-          style={{ opacity: expanded ? 1 : 0, pointerEvents: "none" }}
+          className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+          style={{
+            opacity: expanded ? 1 : 0,
+            transform: expanded ? "translateX(0)" : "translateX(-5px)",
+            transitionDelay: expanded ? "95ms" : "0ms",
+            pointerEvents: "none",
+          }}
           aria-hidden={!expanded}
         >
           {item.label}
@@ -142,7 +147,7 @@ export function ClubDashboardSidebar({
     return (
       <div className={expanded ? "space-y-1.5" : "space-y-1"}>
         {expanded && (
-          <div className="h-5 overflow-hidden px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35 transition-opacity duration-150 motion-reduce:transition-none">
+          <div className="h-5 overflow-hidden px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none">
             {label}
           </div>
         )}
@@ -158,7 +163,7 @@ export function ClubDashboardSidebar({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <aside
       aria-label="Club dashboard sidebar"
-      className="absolute inset-y-0 left-0 z-50 hidden flex-col overflow-hidden border-r shadow-none transition-[width,box-shadow] duration-200 ease-out motion-reduce:transition-none lg:flex"
+      className="absolute inset-y-0 left-0 z-50 hidden flex-col overflow-hidden border-r shadow-none transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:flex"
       onMouseEnter={() => onPointerExpandedChange(true)}
       onMouseLeave={() => onPointerExpandedChange(false)}
       onFocusCapture={() => onFocusExpandedChange(true)}
@@ -186,8 +191,8 @@ export function ClubDashboardSidebar({
             )}
           </button>
           <div
-            className="min-w-0 flex-1 overflow-hidden pl-3 transition-opacity duration-150 motion-reduce:transition-none"
-            style={{ opacity: expanded ? 1 : 0 }}
+            className="min-w-0 flex-1 overflow-hidden pl-3 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+            style={{ opacity: expanded ? 1 : 0, transform: expanded ? "translateX(0)" : "translateX(-6px)", transitionDelay: expanded ? "90ms" : "0ms" }}
             aria-hidden={!expanded}
           >
             <p className="truncate text-sm font-bold tracking-[-0.015em] text-white">{clubName}</p>
