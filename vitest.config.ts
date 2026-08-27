@@ -11,6 +11,7 @@ export default defineConfig({
       "**/node_modules/**",
       "**/dist/**",
       "**/uploads/**",
+      "e2e/**/*.spec.ts",
       // These tests require Python cv2 (OpenCV) which is not available in CI
       "tests/temporal-smoothing.test.ts",
       "tests/manual-corners.test.ts",

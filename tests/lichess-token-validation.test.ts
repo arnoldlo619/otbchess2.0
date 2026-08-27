@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+const itWithLiveConnector = process.env.RUN_LIVE_CONNECTOR_TESTS === "true" ? it : it.skip;
+
 describe("Lichess server token", () => {
-  it("authenticates to the lightweight official account endpoint", async () => {
+  itWithLiveConnector("authenticates to the lightweight official account endpoint", async () => {
     const token = process.env.LICHESS_API_TOKEN?.trim();
     expect(token, "LICHESS_API_TOKEN must be configured server-side").toBeTruthy();
     const response = await fetch("https://lichess.org/api/account", {

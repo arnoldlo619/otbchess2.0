@@ -526,7 +526,8 @@ export function ClubAlbumTab({
                 <p className="text-sm font-semibold text-white/85">Photos {editingAlbum ? <span className="font-normal text-white/35">(add more)</span> : null}</p>
                 <p className="mt-1 text-xs text-white/45">JPEG, PNG, or WebP. Up to {MAX_FILES_PER_BATCH} photos per batch. Images are optimized before upload.</p>
               </div>
-              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(event) => void handleFiles(event.target.files)} />
+              <label htmlFor="club-album-files" className="sr-only">Event photos</label>
+              <input id="club-album-files" ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(event) => void handleFiles(event.target.files)} />
               <button type="button" onClick={() => fileInputRef.current?.click()} disabled={preparingFiles || saving} className="flex min-h-24 w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.025] px-4 text-sm font-semibold text-white/65 transition-colors hover:border-[#4CAF50]/50 hover:bg-[#4CAF50]/5 hover:text-white disabled:opacity-50">
                 {preparingFiles ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <ImagePlus className="h-5 w-5" aria-hidden="true" />}
                 {preparingFiles ? "Preparing photos…" : "Choose event photos"}

@@ -42,6 +42,13 @@
 - [x] Matchup Prep: Collapse generated search controls into a compact update row without mutating the immutable completed snapshot
 - [x] Matchup Prep: Invalidate pre-structured-action report caches so live Scout Briefs use the current evidence policy
 - [ ] Matchup Prep: Obtain authoritative CI production-build evidence after local Vite build exhausts the sandbox 1 GB Node heap
+- [x] CI unblock: Repair the existing SMTP transport test failure without weakening delivery behavior
+- [x] CI unblock: Reconcile the landing punctuation integrity test with the approved public copy
+- [x] CI unblock: Repair the Lichess token route test without relaxing provider authentication safeguards
+- [x] CI unblock: Preserve unavailable-safe Matchup Prep export copy in the production copy contract
+- [x] CI unblock: Reconcile Club Album form-label tests with the shipped accessible labels
+- [x] CI unblock: Repair RSVP rate-limit coverage while preserving abuse protection
+- [ ] CI unblock: Run the full suite and obtain a green GitHub production build for the Matchup Prep launch assessment
 - [x] Matchup Prep: Add and validate default-collapsed evidence disclosures with aria-expanded semantics in the Scout Brief report
 - [x] Matchup Prep: Add focused UI regression coverage proving evidence details stay collapsed by default and expand accessibly when opened
 - [x] Matchup Prep: Add a rendered Scout Brief evidence test for collapsed default, accessible expand, and accessible collapse states

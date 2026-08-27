@@ -1732,7 +1732,7 @@ function PlayerDemo() {
                         className="text-3xl font-black leading-none"
                         style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#2d5a35" }}
                       >
-                        {profile.rapid || profile.blitz || profile.bullet || "—"}
+                        {profile.rapid || profile.blitz || profile.bullet || "Not available"}
                       </div>
                       <div className="text-[10px] font-semibold uppercase tracking-widest mt-1" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>
                         {profile.rapid || profile.blitz || profile.bullet ? "Rapid ELO" : "No rating available"}

@@ -1,6 +1,6 @@
 /**
  * Tests for the RSVP upload rate-limit resilience:
- * 1. Server-side chessProxyLimiter allows 150 req/min (up from 10)
+ * 1. Server-side chessProxyLimiter restricts provider lookups to 60 req/min
  * 2. Client-side fetchWithRetry retries on 429/503 with backoff
  * 3. Batch size reduced to 2 with 800ms inter-batch delay
  * 4. Error messages distinguish "not found" from "rate limited"
@@ -10,7 +10,7 @@ import fs from "fs";
 import path from "path";
 
 const serverSrc = fs.readFileSync(
-  path.resolve(__dirname, "../../../server/index.ts"),
+  path.resolve(__dirname, "../../../server/chessProxy.ts"),
   "utf-8"
 );
 const uploadRSVPSrc = fs.readFileSync(
@@ -23,15 +23,14 @@ const addPlayerSrc = fs.readFileSync(
 );
 
 describe("Server: chessProxyLimiter", () => {
-  it("allows 150 requests per minute to support bulk RSVP uploads", () => {
+  it("limits provider lookups to 60 requests per minute", () => {
     // Find the chessProxyLimiter block
     const limiterMatch = serverSrc.match(
       /const chessProxyLimiter[\s\S]*?max:\s*(\d+)/
     );
     expect(limiterMatch).not.toBeNull();
     const maxVal = parseInt(limiterMatch![1], 10);
-    expect(maxVal).toBeGreaterThanOrEqual(100);
-    expect(maxVal).toBe(150);
+    expect(maxVal).toBe(60);
   });
 
   it("uses 60-second window", () => {
