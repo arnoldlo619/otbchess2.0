@@ -80,3 +80,5 @@ The legacy V2 report remains untouched unless removal is required to prevent the
 |---|---|---|
 | MP-01–MP-17 | Passed in deterministic and focused browser/live smoke coverage | Immutable snapshot, cache schema `launch-2`, legal position tree, exact provider responses, export projection, and inert board preview tests. |
 | MP-18 | Partial | Dark desktop and 375px mobile checks passed. Light mode and the remaining required widths require final visual capture. |
+
+The authoritative GitHub workflow for checkpoint `4f088f06` completed with TypeScript, ESLint, and internal-link validation passing. Its unit-test job remained blocked by four unrelated existing suites, so the dependent Production Build job was skipped. This confirms that the local client-build memory limit has not yet been independently cleared by CI.
