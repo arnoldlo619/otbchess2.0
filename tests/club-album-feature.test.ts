@@ -88,7 +88,7 @@ describe("Club Album product experience contracts", () => {
     expect(profile).toContain('activeTab === "album"');
     expect(profile.match(/"home", "feed", "events", "members", "album", "leagues"/g)?.length).toBeGreaterThanOrEqual(2);
     expect(dashboard).toContain('| "album" |');
-    expect(dashboard).toContain('{ id: "album", label: "Album", icon: AlbumIcon }');
+    expect(dashboard).toContain('{ id: "album", label: "Album", icon: AlbumIcon, group: "workspace" }');
     expect(dashboard).toContain('tab === "album"');
     expect(tabs).toContain('{ id: "album",   label: "Album",   icon: AlbumIcon }');
   });

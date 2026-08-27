@@ -199,8 +199,6 @@ import {
   Lightbulb,
   MoreHorizontal,
   ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
   FileText,
   Info,
 } from "lucide-react";
@@ -223,6 +221,7 @@ import { SILK_DEFAULTS, CLUB_BACKGROUND_TEMPLATES, GREEN_WAVES_BG_VALUE } from "
 import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, AlbumIcon, LeaguesIcon, DashboardIcon, QrShareIcon, RatingIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
 import { TabTransition } from "@/components/TabTransition";
 import { ClubAlbumTab } from "@/components/club/ClubAlbumTab";
+import { ClubDashboardSidebar } from "@/components/club/ClubDashboardSidebar";
 const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
 const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
 const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
@@ -2514,15 +2513,22 @@ export default function ClubDashboard() {
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
   // ── Sidebar collapse state (persisted per club) ─────────────────────────────
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("club-sidebar-collapsed") !== "0";
+    } catch {
+      return true;
+    }
+  });
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
   const toggleSidebar = () => setSidebarCollapsed(prev => {
     const next = !prev;
     try { localStorage.setItem(`club-sidebar-collapsed`, next ? "1" : "0"); } catch { /* ignore */ }
     return next;
   });
   // Effective collapsed state: collapsed only if collapsed AND not hovered
-  const sidebarEffectivelyCollapsed = sidebarCollapsed && !sidebarHovered;
+  const sidebarTemporarilyExpanded = sidebarHovered || sidebarKeyboardExpanded;
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("profile");
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
   const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
@@ -3466,13 +3472,13 @@ export default function ClubDashboard() {
     }
   }
 
-    const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
-    { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true },
-    { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true },
-    { id: "feed", label: "Feed", icon: OtbFeedIcon },
-    { id: "album", label: "Album", icon: AlbumIcon },
-    { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
-    { id: "members", label: "Members", icon: MembersIcon },
+    const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean; group: "workspace" | "manage" }[] = [
+    { id: "overview", label: "Overview", icon: DashboardIcon, ownerOnly: true, group: "workspace" },
+    { id: "feed", label: "Feed", icon: OtbFeedIcon, group: "workspace" },
+    { id: "album", label: "Album", icon: AlbumIcon, group: "workspace" },
+    { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined, group: "workspace" },
+    { id: "members", label: "Members", icon: MembersIcon, group: "workspace" },
+    { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true, group: "manage" },
     // battles tab removed - now a sub-tab of Feed
     // leagues consolidated into Events sub-tab filter
   ];
@@ -3595,182 +3601,24 @@ export default function ClubDashboard() {
       )}
       {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
       <div className="flex h-[100dvh] w-full max-w-full overflow-hidden overscroll-x-none">
-        {/* ── LEFT SIDEBAR (desktop) — collapsible premium nav ── */}
-        {/* Spacer: always 64px wide to reserve space in the flex row */}
-        <div className="hidden lg:block flex-shrink-0" style={{ width: "64px", minWidth: "64px" }} />
-        <aside
-          className="hidden lg:flex flex-col flex-shrink-0 h-full"
-          onMouseEnter={() => setSidebarHovered(true)}
-          onMouseLeave={() => setSidebarHovered(false)}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: sidebarEffectivelyCollapsed ? "64px" : "240px",
-            background: sidebarBg ?? "oklch(0.12 0.02 145)",
-            borderRight: `1px solid ${navBorder}`,
-            backdropFilter: sidebarBg ? "blur(16px)" : undefined,
-            overflow: "hidden",
-            zIndex: 50,
-            transition: "width 220ms cubic-bezier(0.4,0,0.2,1), box-shadow 220ms ease",
-            boxShadow: sidebarHovered ? "4px 0 24px rgba(0,0,0,0.35)" : "none",
-          }}
-        >
-          {/* ── Top: Club identity + collapse toggle ── */}
-          <div
-            className="flex-shrink-0"
-            style={{
-              padding: sidebarEffectivelyCollapsed ? "16px 0 12px" : "20px 16px 14px",
-              transition: "padding 220ms cubic-bezier(0.4,0,0.2,1)",
-            }}
-          >
-            {/* Club identity row */}
-            <div className="flex items-center" style={{ gap: sidebarEffectivelyCollapsed ? 0 : 12 }}>
-              {/* Avatar — always visible, centered when collapsed */}
-              <button
-                onClick={() => navigate("/clubs")}
-                title="Back to Clubs"
-                className="flex-shrink-0 group/avatar"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                  maxWidth: sidebarEffectivelyCollapsed ? "64px" : "44px",
-                  background: "transparent",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  transition: "max-width 220ms cubic-bezier(0.4,0,0.2,1)",
-                }}
-              >
-                {club.avatarUrl ? (
-                  <img
-                    src={club.avatarUrl}
-                    alt={club.name}
-                    className="rounded-xl object-cover"
-                    style={{
-                      width: "44px",
-                      height: "44px",
-                      border: "1.5px solid rgba(255,255,255,0.12)",
-                      boxShadow: `0 2px 12px ${accent}33`,
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="rounded-xl flex items-center justify-center"
-                    style={{
-                      width: "44px",
-                      height: "44px",
-                      background: `${accent}22`,
-                      border: `1.5px solid ${accent}55`,
-                      boxShadow: `0 2px 12px ${accent}33`,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span className="text-base font-bold" style={{ color: accent }}>
-                      {club.name?.charAt(0)?.toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </button>
-
-
-            </div>
-
-
-          </div>
-
-          {/* ── Main navigation ── */}
-          <nav aria-label="Club dashboard navigation" className="flex flex-col gap-0.5 flex-1 justify-center" style={{ padding: sidebarEffectivelyCollapsed ? "0 8px" : "0 10px" }}>
-            {clubTabs.filter(ct => !ct.ownerOnly || isOwnerOrDirector).map((ct) => {
-              const Icon = ct.icon;
-              const isActive = tab === ct.id;
-              return (
-                <button
-                  key={ct.id}
-                  onClick={() => setTab(ct.id)}
-                  className="group/navbtn relative flex items-center rounded-lg text-left w-full"
-                  title={sidebarEffectivelyCollapsed ? ct.label : undefined}
-                  style={{
-                    height: "36px",
-                    gap: sidebarEffectivelyCollapsed ? 0 : "10px",
-                    paddingLeft: sidebarEffectivelyCollapsed ? 0 : "10px",
-                    paddingRight: sidebarEffectivelyCollapsed ? 0 : "10px",
-                    justifyContent: sidebarEffectivelyCollapsed ? "center" : "flex-start",
-                    background: isActive ? "rgba(124,245,98,0.10)" : "transparent",
-                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
-                    transition: "background 150ms ease, color 150ms ease, padding 220ms cubic-bezier(0.4,0,0.2,1), gap 220ms cubic-bezier(0.4,0,0.2,1)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                      e.currentTarget.style.color = "rgba(255,255,255,0.85)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "rgba(255,255,255,0.55)";
-                    }
-                  }}
-                  aria-label={ct.label}
-                >
-                  {/* Active indicator bar */}
-                  {isActive && (
-                    <span
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full"
-                      style={{ height: "18px", background: "#7cf562" }}
-                    />
-                  )}
-                  <span
-                    className="relative flex-shrink-0 flex items-center justify-center"
-                    style={{ width: "20px", color: isActive ? "#7cf562" : "inherit" }}
-                  >
-                    <Icon size={18} strokeWidth={isActive ? 2.2 : 1.7} />
-                  </span>
-                  {/* Label — fades out when collapsed */}
-                  <span
-                    className="text-[13px] font-medium"
-                    style={{
-                      color: "inherit",
-                      fontFamily: "'Inter', sans-serif",
-                      opacity: sidebarEffectivelyCollapsed ? 0 : 1,
-                      width: sidebarEffectivelyCollapsed ? 0 : "auto",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      transition: "opacity 160ms ease, width 220ms cubic-bezier(0.4,0,0.2,1)",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    {ct.label}
-                  </span>
-                  {/* Badge — hide when collapsed */}
-                  {(ct.badge ?? 0) > 0 && !sidebarEffectivelyCollapsed && (
-                    <span
-                      className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}
-                    >
-                      {(ct.badge ?? 0) > 9 ? "9+" : ct.badge}
-                    </span>
-                  )}
-                  {/* Collapsed badge dot */}
-                  {(ct.badge ?? 0) > 0 && sidebarEffectivelyCollapsed && (
-                    <span
-                      className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                      style={{ background: "#f87171" }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-
-          </nav>
-
-
-        </aside>
+        {/* Desktop Club Dashboard navigation. Compact by default; hover, focus, or pin reveals labels. */}
+        <div className="hidden w-[72px] min-w-[72px] flex-shrink-0 lg:block" />
+        <ClubDashboardSidebar
+          clubName={club.name}
+          clubAvatarUrl={club.avatarUrl}
+          accent={accent}
+          background={sidebarBg ?? "oklch(0.115 0.025 145)"}
+          borderColor={navBorder}
+          items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
+          activeId={tab}
+          collapsed={sidebarCollapsed}
+          temporarilyExpanded={sidebarTemporarilyExpanded}
+          onPointerExpandedChange={setSidebarHovered}
+          onFocusExpandedChange={setSidebarKeyboardExpanded}
+          onToggleCollapsed={toggleSidebar}
+          onSelect={(nextTab) => setTab(nextTab as Tab)}
+          onBackToClubs={() => navigate("/clubs")}
+        />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
