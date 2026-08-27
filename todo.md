@@ -34,8 +34,10 @@
 - [x] Matchup Prep: Prove color-correct primary actions for tendency, response, weakness, strength, and deviation cases
 - [x] Matchup Prep: Redesign the report around a concise three-action Scout Brief with collapsed evidence
 - [x] Matchup Prep: Align image and PDF exports with the immutable visible report snapshot
-- [ ] Matchup Prep: Complete MP-01 through MP-18 deterministic, live-account, accessibility, responsive, build, and visual QA
+- [x] Matchup Prep: Complete MP-01 through MP-18 deterministic, live-account, accessibility, responsive, build, and visual QA
 - [x] Matchup Prep: Document NOT LAUNCH-READY status with exact remaining blockers
+- [x] Matchup Prep: Document LAUNCH-READY Standard workflow status after green authoritative CI and final appearance QA
+- [x] Matchup Prep: Complete and record a finished light-mode Matchup Prep report capture before declaring MP-18 complete
 - [x] Matchup Prep: Correct compressed empty-state heading word spacing found during visual QA
 - [x] Matchup Prep: Align Strong, Usable, Limited, and Stale freshness thresholds exactly with the launch acceptance policy
 - [x] Matchup Prep: Require structured, evidence-backed legal Scout Brief actions and withhold non-concrete primary recommendations

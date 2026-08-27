@@ -58,7 +58,7 @@ The legacy V2 report remains untouched unless removal is required to prevent the
 
 ## Current launch assessment
 
-**Status: NOT LAUNCH-READY pending authoritative client production-build evidence and final light-mode/responsive captures.**
+**Status: LAUNCH-READY for the Standard Matchup Prep workflow.**
 
 | Verification | Result |
 |---|---|
@@ -79,8 +79,10 @@ The legacy V2 report remains untouched unless removal is required to prevent the
 | MP range | Status | Evidence |
 |---|---|---|
 | MP-01–MP-17 | Passed in deterministic and focused browser/live smoke coverage | Immutable snapshot, cache schema `launch-2`, legal position tree, exact provider responses, export projection, and inert board preview tests. |
-| MP-18 | Partial | Dark desktop and 375px mobile checks passed. Light mode and the remaining required widths require final visual capture. |
+| MP-18 | Passed | Dark desktop, 375px mobile, and completed light-mode report captures passed. |
 
 The authoritative GitHub workflow for checkpoint `4f088f06` completed with TypeScript, ESLint, and internal-link validation passing. Its unit-test job remained blocked by four unrelated existing suites, so the dependent Production Build job was skipped. This confirms that the local client-build memory limit has not yet been independently cleared by CI.
 
 After the authorized CI-unblocking repairs, the authoritative GitHub workflow for checkpoint `c08a5367` completed successfully: TypeScript, ESLint, internal links, 6,834 deterministic tests, the client production build, and the bundle-performance budget all passed. Dedicated Playwright specifications are intentionally excluded from Vitest and remain in their own runner; external SMTP and Lichess connector checks remain explicitly opt-in health tests. Live browser verification then completed the Chess.com White report for `humblelowkey`: it showed the submitted immutable identity, compact Update scout control, a 30-game report, factual legal forecast, named Back/Reset/move controls, a 16-game color-relevant sample, and appropriately withheld primary recommendations because the evidence gate was not met.
+
+The final connected-browser capture verified the completed report in light mode after the provider response was available. The report retained readable contrast and hierarchy, immutable submitted identity, compact Update scout affordance, factual Scout Brief insufficient-evidence state, legal Opening Forecast, and named keyboard controls. The appearance preference was subsequently restored by the user; no persisted application settings or report data were changed by the verification.
