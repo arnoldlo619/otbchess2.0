@@ -13,6 +13,20 @@
 - [x] Club Dashboard: Add focused sidebar regression coverage and complete desktop/mobile visual QA
 - [x] Club Dashboard: Remove the redundant All clubs footer action and keep the club logo as the single back-to-clubs affordance
 
+- [ ] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
+- [ ] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
+- [ ] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
+- [ ] Matchup Prep: Introduce immutable DraftScoutRequest, ActiveScoutRequest, and ScoutReportSnapshot identities
+- [ ] Matchup Prep: Encode and restore provider, username, color, and format while isolating caches and stale responses
+- [ ] Matchup Prep: Limit Standard scouting to the 30 most recent eligible Rapid, Blitz, and Bullet games and remove Deep
+- [ ] Matchup Prep: Rebuild Opening Forecast from legal position-based move trees with correct player ownership and attribution
+- [ ] Matchup Prep: Remove unsupported evaluation UI, premature opening labels, and the independent opponent-color selector
+- [ ] Matchup Prep: Centralize evidence eligibility, freshness, confidence, denominators, deduplication, and color-correct actions
+- [ ] Matchup Prep: Redesign the report around a concise three-action Scout Brief with collapsed evidence
+- [ ] Matchup Prep: Align image and PDF exports with the immutable visible report snapshot
+- [ ] Matchup Prep: Complete MP-01 through MP-18 deterministic, live-account, accessibility, responsive, build, and visual QA
+- [ ] Matchup Prep: Document LAUNCH-READY or NOT LAUNCH-READY status with exact remaining blockers
+
 - [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
 
 ## Current Sprint — Error UX and Server Decomposition
