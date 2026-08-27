@@ -16,6 +16,10 @@
 - [x] Club Dashboard: Refine compact sidebar icon buttons and active indicator into a restrained premium interaction treatment
 - [x] Club Dashboard: Validate centered compact rail, expanded sidebar, keyboard focus, and mobile dashboard navigation
 - [x] Club Dashboard: Re-run mobile dashboard navigation regression and narrow-viewport QA after the compact-rail refinement
+- [x] Club Dashboard: Center the navigation stack vertically in both compact and expanded sidebar states
+- [x] Club Dashboard: Resize and offset active navigation controls so they sit precisely within the sidebar border geometry
+- [x] Club Dashboard: Re-verify expanded hover, compact, keyboard, and mobile sidebar geometry after the correction
+- [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures

@@ -67,17 +67,19 @@ export function ClubDashboardSidebar({
         onClick={() => onSelect(item.id)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="group/nav-item relative flex h-11 items-center rounded-[14px] border text-left outline-none transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group/nav-item relative flex items-center rounded-xl border text-left outline-none transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
           paddingInline: expanded ? "12px" : 0,
-          width: expanded ? "100%" : "44px",
-          alignSelf: expanded ? "stretch" : "center",
+          width: expanded ? "calc(100% - 4px)" : "42px",
+          height: "42px",
+          alignSelf: "center",
+          marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
-          background: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : "transparent",
-          borderColor: active ? `color-mix(in srgb, ${accent} 26%, transparent)` : "transparent",
-          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, white), 0 3px 10px rgba(0,0,0,0.12)` : "none",
+          background: active ? `color-mix(in srgb, ${accent} 12%, #07140c)` : "transparent",
+          borderColor: active ? `color-mix(in srgb, ${accent} 32%, transparent)` : "transparent",
+          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, white)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
@@ -208,7 +210,7 @@ export function ClubDashboardSidebar({
 
       <nav
         aria-label="Club dashboard navigation"
-        className={`flex-1 overflow-y-auto px-3 py-5 ${expanded ? "space-y-5" : "flex flex-col justify-center gap-2"}`}
+        className="flex flex-1 flex-col justify-center gap-5 overflow-y-auto px-3 py-5"
       >
         {renderGroup("Workspace", workspaceItems)}
         {renderGroup("Manage", manageItems)}
