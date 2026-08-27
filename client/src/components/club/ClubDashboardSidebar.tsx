@@ -67,23 +67,25 @@ export function ClubDashboardSidebar({
         onClick={() => onSelect(item.id)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="group/nav-item relative flex h-11 w-full items-center rounded-xl border text-left outline-none transition-colors duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group/nav-item relative flex h-11 items-center rounded-[14px] border text-left outline-none transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
           paddingInline: expanded ? "12px" : 0,
+          width: expanded ? "100%" : "44px",
+          alignSelf: expanded ? "stretch" : "center",
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
-          background: active ? `color-mix(in srgb, ${accent} 11%, transparent)` : "transparent",
-          borderColor: active ? `color-mix(in srgb, ${accent} 20%, transparent)` : "transparent",
-          boxShadow: active ? "inset 0 1px 0 rgba(255,255,255,0.035)" : "none",
+          background: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : "transparent",
+          borderColor: active ? `color-mix(in srgb, ${accent} 26%, transparent)` : "transparent",
+          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, white), 0 3px 10px rgba(0,0,0,0.12)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
       >
-        {active && (
+        {active && expanded && (
           <span
             aria-hidden="true"
-            className="absolute left-0 top-2.5 h-6 w-0.5 rounded-r-full"
+            className="absolute left-0 top-3 h-5 w-0.5 rounded-r-full"
             style={{ background: accent }}
           />
         )}
@@ -136,14 +138,12 @@ export function ClubDashboardSidebar({
   function renderGroup(label: string, groupItems: ClubDashboardSidebarItem[]) {
     if (groupItems.length === 0) return null;
     return (
-      <div className="space-y-1.5">
-        <div
-          className="h-5 overflow-hidden px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35 transition-opacity duration-150 motion-reduce:transition-none"
-          style={{ opacity: expanded ? 1 : 0 }}
-          aria-hidden={!expanded}
-        >
-          {label}
-        </div>
+      <div className={expanded ? "space-y-1.5" : "space-y-1"}>
+        {expanded && (
+          <div className="h-5 overflow-hidden px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35 transition-opacity duration-150 motion-reduce:transition-none">
+            {label}
+          </div>
+        )}
         <div className="space-y-1">{groupItems.map(renderItem)}</div>
       </div>
     );
@@ -206,7 +206,10 @@ export function ClubDashboardSidebar({
         </div>
       </div>
 
-      <nav aria-label="Club dashboard navigation" className="flex-1 space-y-5 overflow-y-auto px-3 py-5">
+      <nav
+        aria-label="Club dashboard navigation"
+        className={`flex-1 overflow-y-auto px-3 py-5 ${expanded ? "space-y-5" : "flex flex-col justify-center gap-2"}`}
+      >
         {renderGroup("Workspace", workspaceItems)}
         {renderGroup("Manage", manageItems)}
       </nav>

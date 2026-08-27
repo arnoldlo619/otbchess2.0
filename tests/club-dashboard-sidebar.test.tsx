@@ -56,6 +56,7 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.getByLabelText("12 upcoming").textContent).toBe("9+");
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "All clubs" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Feed" }).style.width).toBe("44px");
   });
 
   it("renders workspace and manage groups in the expanded 264px panel", () => {
@@ -112,5 +113,7 @@ describe("ClubDashboardSidebar", () => {
 
     expect(sidebar).not.toMatch(/\p{Extended_Pictographic}/u);
     expect(sidebar).not.toContain("All clubs");
+    expect(sidebar).toContain("justify-center");
+    expect(sidebar).toContain("active && expanded");
   });
 });

@@ -12,6 +12,10 @@
 - [x] Club Dashboard: Preserve accessible keyboard, tooltip, hover-expansion, mobile navigation, and reduced-motion behavior
 - [x] Club Dashboard: Add focused sidebar regression coverage and complete desktop/mobile visual QA
 - [x] Club Dashboard: Remove the redundant All clubs footer action and keep the club logo as the single back-to-clubs affordance
+- [x] Club Dashboard: Center the minimized sidebar navigation stack vertically within the usable rail
+- [x] Club Dashboard: Refine compact sidebar icon buttons and active indicator into a restrained premium interaction treatment
+- [x] Club Dashboard: Validate centered compact rail, expanded sidebar, keyboard focus, and mobile dashboard navigation
+- [x] Club Dashboard: Re-run mobile dashboard navigation regression and narrow-viewport QA after the compact-rail refinement
 
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
