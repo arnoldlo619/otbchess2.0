@@ -5,6 +5,7 @@
 
 import type { Color, FetchOpts, Insight, ParsedGame } from "../../shared/prepTypes.js";
 import { buildFacts, forecast, grp, sample } from "./facts.js";
+import { confidenceForEvidence, effectiveEvidenceSample } from "./evidencePolicy.js";
 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
@@ -26,24 +27,15 @@ export function wilson(
    effective-n calculation for confidence tier assignment only (not for score/CI).
    This makes fresh data promote confidence faster while keeping stats honest.
 ----------------------------------------------------------------------------- */
-const NINETY_DAYS_S = 90 * 24 * 3600;
-
 export function effectiveN(games: ParsedGame[], nowS?: number): number {
-  const now = nowS ?? Math.floor(Date.now() / 1000);
-  return games.reduce((sum, g) => {
-    const age = now - g.endTime;
-    return sum + (age <= NINETY_DAYS_S ? 1.5 : 1);
-  }, 0);
+  return effectiveEvidenceSample(games, nowS);
 }
 
 export function confidence(
   games: ParsedGame[],
   width: number
 ): Insight["confidence"] {
-  const en = effectiveN(games);
-  if (en >= 12 && width <= 0.30) return "high";
-  if (en >= 6) return "medium";
-  return "low";
+  return confidenceForEvidence(games, width);
 }
 
 /* ---------------- Deviation points -------------------------------------------- */
@@ -153,8 +145,8 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
         : `A plurality of their White games begin 1.${mv}. Prepare for it but budget time for their other openings too.`,
       recommendation: {
         action: g.n / byColor.white.length >= 0.7
-          ? `Prepare one reliable defense to 1.${mv} and rehearse it to move 8–10.`
-          : `Prepare your main defense to 1.${mv} (their most frequent choice) and have a secondary plan for their alternatives.`,
+          ? `As Black, rehearse your first four replies to 1.${mv} in Repertoire Builder.`
+          : `As Black, prioritize a legal line against 1.${mv}, then review one alternative first move.`,
       },
       confidence: confidence(gs, w.width),
       sampleSize: g.n,
@@ -195,8 +187,8 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
         : `Their most frequent reply to 1.${first} (${pct(g.n / total)} of games). Prepare for 1...${reply} but be ready for alternatives.`,
       recommendation: {
         action: isWeak
-          ? `Open 1.${first} and prepare your main line against 1...${reply} to move 10; their record says the pressure point is real.`
-          : `Know your setup against 1...${reply} after 1.${first}; expect it ${pct(g.n / total)} of the time.`,
+          ? `With White, choose 1.${first} and rehearse your response to 1...${reply}; this reply underperforms in their sample.`
+          : `With White, choose 1.${first} and prepare your next move after 1...${reply}; it appeared in ${g.n} of ${total} games.`,
       },
       confidence: confidence(gs, w.width),
       sampleSize: g.n,
@@ -229,7 +221,7 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
           },
           interpretation: `A repeatable structure where their results drop well below their own level — the highest-value prep target in this report.`,
           recommendation: {
-            action: `Steer the game toward ${name} structures when you have the ${c === "white" ? "Black" : "White"} pieces; rehearse the first 10 moves of your chosen line.`,
+            action: `With ${c === "white" ? "Black" : "White"}, select a legal repertoire line that reaches ${name} and rehearse its first four replies.`,
           },
           confidence: confidence(gs, w.width),
           sampleSize: g.n,
@@ -266,49 +258,6 @@ export function synthesize(parsed: ParsedGame[], o: FetchOpts): Insight[] {
       const ins = deviationInsight(c, name, gs, windowMeta);
       if (ins) out.push(ins);
     }
-  }
-
-  // 5) Behavior insight
-  const avgMoves = parsed.reduce((s, g) => s + g.fullMoves, 0) / parsed.length;
-  const losses = parsed.filter(g => g.scoutedScore === 0);
-  const timeouts = losses.filter(g =>
-    (g.scoutedColor === "white" ? g.white.result : g.black.result) === "timeout"
-  ).length;
-
-  if (losses.length >= 5) {
-    const phase = { opening: 0, middlegame: 0, endgame: 0 };
-    for (const g of losses) {
-      const fm = g.fullMoves;
-      phase[fm <= 15 ? "opening" : fm <= 34 ? "middlegame" : "endgame"]++;
-    }
-    const top = (Object.entries(phase).sort((a, b) => b[1] - a[1]))[0] as [string, number];
-    const wi = wilson(top[1], losses.length);
-    out.push({
-      id: "beh:phases",
-      kind: "behavior",
-      color: "white",
-      role: "plays",
-      claim: `Their games average ${avgMoves.toFixed(0)} moves; ${top[1]} of ${losses.length} losses (${pct(top[1] / losses.length)}) end in the ${top[0]} (by game length), ${timeouts} on time.`,
-      evidence: {
-        stat: `losses by phase — opening ${phase.opening}, middlegame ${phase.middlegame}, endgame ${phase.endgame}; timeouts ${timeouts}`,
-        games: sample(losses),
-        window: windowMeta,
-      },
-      interpretation:
-        top[0] === "endgame"
-          ? `They survive the opening but convertible endings are where they lose — length favors you.`
-          : top[0] === "opening"
-          ? `A meaningful share of losses end early — prepared lines carry extra weight in this matchup.`
-          : `Most losses are decided in the middlegame fight rather than in preparation or technique phases.`,
-      recommendation: {
-        action:
-          top[0] === "endgame"
-            ? `Keep tension and steer toward simplified positions when better; avoid bailing out into early draws.`
-            : `Budget your prep time toward the phase where their losses cluster (${top[0]}).`,
-      },
-      confidence: confidence(losses, wi.width),
-      sampleSize: losses.length,
-    });
   }
 
   return out;

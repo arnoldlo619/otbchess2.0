@@ -4,18 +4,17 @@
  * Each entry stores not just the username but also the platform, color perspective,
  * and filter settings — so restoring a recent report restores the exact context.
  *
- * Storage: `otb_recently_scouted_v2` (new key to avoid collision with old string[] format)
+ * Storage: `otb_recently_scouted_v3` invalidates legacy depth and incomplete identity entries.
  */
 
-const STORAGE_KEY = "otb_recently_scouted_v2";
+const STORAGE_KEY = "otb_recently_scouted_v3";
 export const MAX_ENTRIES = 5;
 
  export interface RecentScoutEntry {
    username: string;
    provider: "chesscom" | "lichess";
-   myColor: "white" | "black" | "not_sure";
+   myColor: "white" | "black";
    tcFilter: "all" | "rapid" | "blitz" | "bullet";
-   gameCount: "50" | "100";
    /** ISO timestamp of when this entry was added */
    scoutedAt: string;
  }

@@ -5,6 +5,7 @@
 import { Chess } from "chess.js";
 import type {
   AnalysisSnapshotGame,
+  ActiveScoutRequest,
   CachedPrepAnalysisReport,
   Color,
   FetchOpts,
@@ -17,8 +18,9 @@ import type {
 import { parseGames } from "./parseGames.js";
 import { synthesize, buildForecasts } from "./insightEngine.js";
 import { runGuards } from "./guards.js";
+import { buildScoutBrief, classifyFreshness, headlineInsightEligible } from "./evidencePolicy.js";
 
-export const ENGINE_VERSION = "3.1.0";
+export const ENGINE_VERSION = "4.0.0-launch.1";
 
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
 
@@ -26,9 +28,14 @@ export function buildReport(
   provider: Provider,
   username: string,
   raw: RawGame[],
-  o: FetchOpts
+  o: FetchOpts,
+  myColor: Color = "white",
 ): ScoutReportV3 {
-  const { parsed, excluded, quarantined } = parseGames(raw, username, o);
+  const parsedResult = parseGames(raw, username, o);
+  const parsed = [...parsedResult.parsed]
+    .sort((a, b) => b.endTime - a.endTime)
+    .slice(0, Math.min(30, o.maxGames));
+  const { excluded, quarantined } = parsedResult;
 
   if (!parsed.length) {
     throw new Error(
@@ -39,7 +46,7 @@ export function buildReport(
   const insightsAll = synthesize(parsed, o);
   const { kept, reasons } = runGuards(insightsAll);
 
-  const headlineOK = (i: Insight) => i.sampleSize >= 8 && i.confidence !== "low";
+  const headlineOK = (i: Insight) => headlineInsightEligible(i, freshness);
   const byKind = (k: Insight["kind"]) => kept.filter(i => i.kind === k);
   const ids = (a: Insight[]) => a.map(i => i.id);
 
@@ -70,20 +77,18 @@ export function buildReport(
   for (const k of Object.keys(tcs)) tcs[k].score = tcs[k].score / tcs[k].games;
 
   const usable = parsed.length;
-  // Grade considers both volume and recency: recent games (last 90 days) count more
-  const nowS = Math.floor(Date.now() / 1000);
-  const NINETY_DAYS_S = 90 * 24 * 3600;
-  const recentCount = parsed.filter(g => (nowS - g.endTime) <= NINETY_DAYS_S).length;
+  const freshness = classifyFreshness(parsed);
   const grade: ScoutReportV3["dataQuality"]["grade"] =
-    (usable >= 40 && recentCount >= 10) ? "A" :
-    (usable >= 20 && recentCount >= 5) ? "B" :
-    usable >= 10 ? "C" : "D";
+    freshness === "strong" ? "A" :
+    freshness === "usable" ? "B" :
+    freshness === "limited" ? "C" : "D";
 
   const notes: string[] = Object.entries(excluded).map(
     ([k, v]) => `${v} game(s) excluded: ${k.replace(/_/g, " ")}`
   );
   if (quarantined > 0) notes.push(`${quarantined} game(s) quarantined (illegal move sequence)`);
-  if (grade === "D") notes.push("Thin data: fewer than 15 usable games. Insights below are directional only.");
+  if (freshness === "limited") notes.push("Limited evidence: primary findings require at least 8 games with adequate recency and date spread.");
+  if (freshness === "stale") notes.push("Stale evidence: the newest eligible game is more than 365 days old, so primary recommendations are withheld.");
 
   const ratedCount = parsed.filter(g => g.rated).length;
   const ratedShare = usable ? ratedCount / usable : 0;
@@ -118,6 +123,7 @@ export function buildReport(
   ];
 
   const forecasts = buildForecasts(parsed);
+  const scoutBrief = buildScoutBrief(kept, myColor, freshness);
 
   return {
     version: 3,
@@ -141,10 +147,12 @@ export function buildReport(
         to: dateOf(Math.max(...parsed.map(g => g.endTime))),
       },
       grade,
+      freshness,
       notes,
     },
     openingForecast: forecasts,
     insights: kept,
+    scoutBrief,
     sections: {
       matchupSummary: ids([...tendencies, ...responses].filter(headlineOK)),
       strengths: ids(strengths.filter(headlineOK)),
@@ -161,6 +169,7 @@ export function buildReport(
       reasons,
     },
     generatedAt: new Date().toISOString(),
+    freshness,
   };
 }
 
@@ -198,9 +207,9 @@ export function buildCachedPrepAnalysisReport(
   raw: RawGame[],
   options: FetchOpts,
   reportCacheKey: string,
-  submittedMyColor: Color,
+  activeRequest: ActiveScoutRequest,
 ): CachedPrepAnalysisReport {
-  const report = buildReport(provider, username, raw, options);
+  const report = buildReport(provider, username, raw, options, activeRequest.myColor);
   const { parsed } = parseGames(raw, username, options);
   const evidenceUrls = new Set(report.insights.flatMap(insight => insight.evidence.games.map(game => game.url)));
   const legalPathMap = new Map<string, string[]>();
@@ -230,11 +239,11 @@ export function buildCachedPrepAnalysisReport(
     .map(game => game.sourceGameKey);
 
   const createdAt = report.generatedAt;
-  report.reportSnapshot = { id: reportCacheKey, myColor: submittedMyColor, createdAt };
+  report.reportSnapshot = { id: reportCacheKey, activeRequest, createdAt };
   const analysisSnapshot: PrepAnalysisSnapshot = {
     schemaVersion: 1,
     reportCacheKey,
-    submittedMyColor,
+    submittedMyColor: activeRequest.myColor,
     createdAt,
     evidenceGameKeys,
     sourceGames,

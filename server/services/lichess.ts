@@ -1,5 +1,7 @@
 // Lichess game export provider and shared upstream request scheduler.
 import type { RawGame, FetchOpts } from "../../shared/prepTypes.js";
+import { SCOUT_PROVIDER_PAGE_SIZE } from "../../shared/scoutRequest.js";
+import { parseGames } from "../prep/parseGames.js";
 
 const UA = "ChessOTB.club scouting v3 (contact: admin@chessotb.club)";
 const MIN_429_COOLDOWN_MS = 60_000;
@@ -96,13 +98,30 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Prom
 
 export async function fetchLichess(username: string, options: FetchOpts): Promise<RawGame[]> {
   const perf = options.timeClasses.join(",");
-  const url = `https://lichess.org/api/games/user/${username}?max=${options.maxGames}&rated=${options.ratedOnly}&perfType=${perf}&moves=true&opening=false`;
-  const response = await fetchWithRetry(url, { headers: { Accept: "application/x-ndjson" } });
-  if (response.status === 404) throw new Error(`PlayerNotFound: ${username}`);
-  if (!response.ok) throw new Error(`Upstream${response.status}`);
-  const lines = (await response.text()).trim().split("\n").filter(Boolean);
-  if (!lines.length) throw new Error(`NoRecentGames: ${username}`);
-  return lines.map(line => normalizeLichess(JSON.parse(line) as LichessApiGame));
+  const out: RawGame[] = [];
+  let until: number | null = null;
+
+  while (true) {
+    const pagination = until === null ? "" : `&until=${until}`;
+    const url = `https://lichess.org/api/games/user/${username}?max=${SCOUT_PROVIDER_PAGE_SIZE}&rated=${options.ratedOnly}&perfType=${perf}&moves=true&opening=false${pagination}`;
+    const response = await fetchWithRetry(url, { headers: { Accept: "application/x-ndjson" } });
+    if (response.status === 404) throw new Error(`PlayerNotFound: ${username}`);
+    if (!response.ok) throw new Error(`Upstream${response.status}`);
+    const lines = (await response.text()).trim().split("\n").filter(Boolean);
+    if (!lines.length) break;
+    const page = lines.map(line => normalizeLichess(JSON.parse(line) as LichessApiGame));
+    out.push(...page);
+    if (parseGames(out, username, options).parsed.length >= options.maxGames) break;
+    if (page.length < SCOUT_PROVIDER_PAGE_SIZE) break;
+    const oldestMillis = Math.min(...page.map(game => game.endTime * 1000).filter(Number.isFinite));
+    if (!Number.isFinite(oldestMillis) || oldestMillis <= 0) break;
+    const nextUntil = oldestMillis - 1;
+    if (until !== null && nextUntil >= until) break;
+    until = nextUntil;
+  }
+
+  if (!out.length) throw new Error(`NoRecentGames: ${username}`);
+  return out;
 }
 
 export function loadLichessFixture(ndjson: string): RawGame[] {

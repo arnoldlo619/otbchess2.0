@@ -4,6 +4,35 @@
 
 export type Provider = "chesscom" | "lichess";
 export type Color = "white" | "black";
+export type ScoutFormat = "rapid" | "blitz" | "bullet";
+export type ScoutFormatFilter = ScoutFormat | "all";
+export type ScoutMode = "standard";
+export type ScoutFreshness = "strong" | "usable" | "limited" | "stale";
+
+export interface DraftScoutRequest {
+  platform: Provider;
+  displayUsername: string;
+  myColor: Color;
+  format: ScoutFormatFilter;
+}
+
+export interface ActiveScoutRequest {
+  platform: Provider;
+  normalizedUsername: string;
+  displayUsername: string;
+  myColor: Color;
+  formats: ScoutFormat[];
+  mode: ScoutMode;
+  maxGames: 30;
+  schemaVersion: string;
+  requestedAt: string;
+}
+
+export interface ScoutReportSnapshot {
+  id: string;
+  activeRequest: ActiveScoutRequest;
+  createdAt: string;
+}
 
 /** Normalized game: both providers converge to this before parsing. */
 export interface RawGame {
@@ -54,10 +83,33 @@ export interface Insight {
   ply?: number;              // deviation points only (0-indexed)
 }
 
+export interface ScoutAction {
+  id: string;
+  sourceInsightId: string;
+  kind: Insight["kind"];
+  type: "expect" | "prepare" | "target" | "practice";
+  opponentColor: Color;
+  colorPerspective: Color;
+  finding: string;
+  title: string;
+  action: { label: string; legalLine?: string[]; source: "recentEvidence" | "explorerReference" };
+  whyItMatters: string;
+  confidence: Insight["confidence"];
+  evidence: Insight["evidence"] & { relevantGames: number; parentGames?: number; sourceGameIds: string[] };
+}
+
 export interface ForecastBranch {
   moveSan: string;
   /** Canonical game path through this move, retained solely for legal board/analysis previews. */
   previewPath?: string[];
+  /** Exact actor at this position from the submitted user's perspective. */
+  actor?: "user" | "opponent";
+  moveUci?: string;
+  resultingFen?: string;
+  moveNumber?: number;
+  sideToMove?: Color;
+  parentGames?: number;
+  sourceGameIds?: string[];
   count: number;
   pct: number;
   score: number;
@@ -90,10 +142,12 @@ export interface ScoutReportV3 {
     ratedShare: number;
     window: { from: string; to: string };
     grade: "A" | "B" | "C" | "D";
+    freshness?: ScoutFreshness;
     notes: string[];
   };
   openingForecast: Record<Color, ForecastBranch[]>;
   insights: Insight[];
+  scoutBrief?: ScoutAction[];
   sections: {
     matchupSummary: string[];
     strengths: string[];
@@ -107,8 +161,9 @@ export interface ScoutReportV3 {
   };
   guardLog: { droppedInsights: number; reasons: Record<string, number> };
   generatedAt: string;
-  /** Public identifier and submitted perspective for an immutable cached report. */
-  reportSnapshot?: { id: string; myColor: Color; createdAt: string };
+  /** Public identifier and complete submitted identity for an immutable report. */
+  reportSnapshot?: ScoutReportSnapshot;
+  freshness?: ScoutFreshness;
   /** Third independent evidence layer. Never changes recentEvidence denominators. */
   populationReferences?: PopulationReference[];
 }
@@ -152,16 +207,16 @@ export interface PopulationReference {
 
 /** Options for fetching and filtering games */
 export interface FetchOpts {
-  maxGames: number;       // default 100
-  months: number;         // chess.com archives lookback, default 6
-  timeClasses: string[];  // ["rapid","blitz"]
+  maxGames: number;       // Standard scouting is capped at 30 eligible games
+  months: number;         // provider archive lookback
+  timeClasses: string[];  // rapid, blitz, and/or bullet
   ratedOnly: boolean;     // default true
 }
 
 export const DEFAULT_FETCH_OPTS: FetchOpts = {
-  maxGames: 100,
-  months: 6,
-  timeClasses: ["rapid", "blitz"],
+  maxGames: 30,
+  months: 24,
+  timeClasses: ["rapid", "blitz", "bullet"],
   ratedOnly: true,
 };
 

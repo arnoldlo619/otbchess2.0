@@ -10,16 +10,18 @@ describe("Matchup Prep submit action", () => {
     expect(source).not.toMatch(/>\s*aria-label="Scout opponent"\s*\{/);
   });
 
-  it("uses the explicitly active provider in V3 report requests", () => {
-    expect(source).toContain("const providerQuery = `provider=${activeProvider}`");
-    expect(source).toContain("providerOverride ?? provider");
+  it("uses the submitted immutable provider in V3 report requests", () => {
+    expect(source).toContain("const query = scoutRequestSearchParams(request)");
+    expect(source).toContain("request.platform");
+    expect(source).not.toContain("providerOverride ?? provider");
   });
 
   it("does not let duplicate route-submit requests overwrite the active Chess.com response", () => {
     expect(source).toContain("const reportRequestIdRef = useRef(0)");
     expect(source).toContain("const requestId = ++reportRequestIdRef.current");
     expect(source).toContain("if (requestId !== reportRequestIdRef.current) return;");
-    expect(source).toContain("const sameRoute = params.username?.toLowerCase() === u.toLowerCase() && routeProvider === provider");
+    expect(source).toContain("const route = scoutRequestRoute(request)");
+    expect(source).toContain("const sameRoute = `${window.location.pathname}${window.location.search}` === route");
   });
 
   it("uses a tactile primary-action treatment with accessible loading state", () => {

@@ -3,6 +3,7 @@
 // Retry/User-Agent behavior preserved; returns same RawGame shape as lichess.ts.
 
 import type { RawGame, FetchOpts } from "../../shared/prepTypes.js";
+import { parseGames } from "../prep/parseGames.js";
 
 const UA = "ChessOTB.club scouting v3 (contact: admin@chessotb.club)";
 
@@ -97,20 +98,19 @@ export async function fetchChesscom(username: string, o: FetchOpts): Promise<Raw
   const archives = Array.isArray(archivesPayload.archives)
     ? archivesPayload.archives.filter((archive): archive is string => typeof archive === "string")
     : [];
-  const months = archives.slice(-o.months).reverse();
+  const months = [...archives].reverse();
   if (!months.length) throw new Error(`NoRecentGames: ${username}`);
 
   const out: RawGame[] = [];
   for (const url of months) {
-    if (out.length >= o.maxGames) break;
     const res = await fetchWithRetry(url, { headers: { "User-Agent": UA } });
     if (!res.ok) continue;
     const monthPayload = asRecord(await res.json());
     const games = Array.isArray(monthPayload.games) ? monthPayload.games : [];
     for (const game of [...games].reverse()) {
       out.push(normalizeChesscom(game));
-      if (out.length >= o.maxGames) break;
     }
+    if (parseGames(out, username, o).parsed.length >= o.maxGames) break;
   }
   if (!out.length) throw new Error(`NoRecentGames: ${username}`);
   return out;

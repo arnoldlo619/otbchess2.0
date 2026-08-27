@@ -1,26 +1,11 @@
-/**
- * V3ScoutReportTab — renders ScoutReportV3 in a premium progressive-disclosure layout.
- *
- * Structure:
- * 1. Prep Snapshot — top 3 highest-value insights above the fold
- * 2. Opening Forecast — nested move trees with conditional denominators
- * 3. Game Plan — "If You Have White" / "If You Have Black" with resolved insights
- * 4. All Insights — filterable cards with full detail
- * 5. Prep Checklist — actionable items with progress tracking
- * 6. Evidence & Methodology — collapsed data quality + guard log
- */
-import { useState, useMemo } from "react";
 import { Chess } from "chess.js";
-import {
-  TrendingDown, TrendingUp, Zap,
-  ChevronDown, ChevronRight, GitBranch, CheckSquare, AlertCircle,
-  Shield, Crosshair, Activity, Eye, Telescope,
-} from "lucide-react";
-import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
-import { InsightCard } from "./InsightCard";
-import { DataQualityBanner } from "./DataQualityBanner";
+import { useState } from "react";
+import { AlertCircle, ChevronRight, Crosshair, Database, ShieldCheck } from "lucide-react";
+
+import type { ScoutAction, ScoutReportV3 } from "../../../../shared/prepTypes";
+import { projectScoutReport } from "../../../../shared/scoutReportProjection";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
-import { PopulationContextCard } from "./PopulationContextCard";
+import { DataQualityBanner } from "./DataQualityBanner";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
 
 type Tokens = {
@@ -33,6 +18,13 @@ type Tokens = {
   monoBlock: string;
   [key: string]: string;
 };
+
+interface Props {
+  report: ScoutReportV3;
+  isDark: boolean;
+  t: Tokens;
+  reportCacheKey?: string;
+}
 
 function canonicalUciPathFromSanLine(line: string): string[] | null {
   const chess = new Chess();
@@ -50,424 +42,154 @@ function canonicalUciPathFromSanLine(line: string): string[] | null {
   return path.length > 0 ? path : null;
 }
 
-interface Props {
-  report: ScoutReportV3;
-  isDark: boolean;
-  t: Tokens;
-  myColor?: "white" | "black" | "not_sure";
-  reportCacheKey?: string;
+function displayConfidence(value: string): string {
+  return value.replace("_", " ").replace(/^./, letter => letter.toUpperCase());
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function resolveInsights(ids: string[], allInsights: Insight[]): Insight[] {
-  const map = new Map(allInsights.map(i => [i.id, i]));
-  return ids.map(id => map.get(id)).filter(Boolean) as Insight[];
-}
-
-// ── Prep Snapshot ─────────────────────────────────────────────────────────────
-
-function PrepSnapshot({
-  insights,
+function ScoutBriefCard({
+  action,
+  index,
+  analysisHref,
   isDark,
   t,
 }: {
-  insights: Insight[];
+  action: ScoutAction;
+  index: number;
+  analysisHref: string | null;
   isDark: boolean;
   t: Tokens;
 }) {
-  if (insights.length === 0) return null;
-
-  // Pick top 3: prioritize weaknesses, then deviation points, then tendencies
-  const priority: Insight["kind"][] = ["weakness", "deviation_point", "opening_tendency", "response_pattern", "strength", "behavior"];
-  const sorted = [...insights].sort((a, b) => {
-    const ai = priority.indexOf(a.kind);
-    const bi = priority.indexOf(b.kind);
-    if (ai !== bi) return ai - bi;
-    return b.sampleSize - a.sampleSize;
-  });
-  const top3 = sorted.slice(0, 3);
-
-  const kindIcon: Record<string, React.ReactNode> = {
-    weakness: <TrendingDown className="w-3.5 h-3.5 text-red-400" />,
-    strength: <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />,
-    deviation_point: <GitBranch className="w-3.5 h-3.5 text-purple-400" />,
-    opening_tendency: <Crosshair className="w-3.5 h-3.5 text-blue-400" />,
-    response_pattern: <Zap className="w-3.5 h-3.5 text-amber-400" />,
-    behavior: <Activity className="w-3.5 h-3.5 text-orange-400" />,
-  };
-
   return (
-    <div className={`${t.card} p-4 sm:p-5`}>
-      <div className="flex items-center gap-2 mb-4">
-        <Telescope className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-bold text-sm ${t.textPrimary}`}>Prep Snapshot</h3>
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#436850]/20 text-[#5B9A6A]" : "bg-[#436850]/08 text-[#436850]"}`}>
-          Top findings
-        </span>
+    <article className={`rounded-2xl border p-4 sm:p-5 ${isDark ? "border-[#25342a] bg-[#101b12]" : "border-[#cdd8c6] bg-white"}`}>
+      <div className="flex items-center justify-between gap-3">
+        <span className={`text-[10px] font-bold uppercase tracking-[0.14em] ${isDark ? "text-[#8dcc9b]" : "text-[#315640]"}`}>Action {index + 1}</span>
+        <span className={`text-[11px] font-semibold ${t.textTertiary}`}>{displayConfidence(action.confidence)} · n={action.evidence.relevantGames}</span>
       </div>
-      <div className="space-y-3">
-        {top3.map((ins) => (
-          <div
-            key={ins.id}
-            className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50" : "bg-[#f8faf5] border border-[#ADBC9F]/40"}`}
-          >
-            <span className="mt-0.5 shrink-0">{kindIcon[ins.kind] ?? <AlertCircle className="w-3.5 h-3.5" />}</span>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-semibold leading-snug mb-1 ${t.textPrimary}`}>{ins.claim}</p>
-              <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{ins.recommendation.action}</p>
-            </div>
-            <span className={`shrink-0 text-[10px] font-medium ${t.textTertiary}`}>n={ins.sampleSize}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// OpeningForecastSection is replaced by ForecastWalkthrough (board-first interactive redesign)
-
-// ── Game Plan Section ─────────────────────────────────────────────────────────
-
-function GamePlanSection({
-  title,
-  icon,
-  insights,
-  isDark,
-  t,
-  analysisHrefForInsight,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  insights: Insight[];
-  isDark: boolean;
-  t: Tokens;
-  analysisHrefForInsight?: (insight: Insight) => string | null;
-}) {
-  const [expanded, setExpanded] = useState(true);
-  if (insights.length === 0) return null;
-
-  return (
-    <div className={`${t.card} p-4 sm:p-5`}>
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center gap-2 mb-3 text-left"
-        aria-expanded={expanded}
-      >
-        <span className={isDark ? "text-[#5B9A6A]" : "text-[#436850]"}>{icon}</span>
-        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>{title}</h3>
-        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
-          {insights.length}
-        </span>
-        {expanded
-          ? <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
-          : <ChevronRight className={`w-3.5 h-3.5 ${t.textTertiary}`} />
-        }
-      </button>
-      {expanded && (
-        <div className="space-y-2">
-          {insights.map((ins) => (
-            <div
-              key={ins.id}
-              id={`game-plan-${ins.id}`}
-              className={`flex items-start gap-2.5 p-2.5 rounded-xl ${isDark ? "bg-[#0d1a0f]/40 border border-[#1e2e22]/30" : "bg-[#f8faf5]/80 border border-[#ADBC9F]/25"}`}
-            >
-              <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${
-                ins.kind === "weakness" ? "bg-red-400" :
-                ins.kind === "strength" ? "bg-emerald-400" :
-                isDark ? "bg-[#5B9A6A]" : "bg-[#436850]"
-              }`} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-xs font-medium leading-relaxed ${t.textPrimary}`}>
-                  {ins.recommendation.action}
-                </p>
-                <p className={`text-[11px] mt-0.5 ${t.textTertiary}`}>
-                  {ins.kind === "weakness" ? "Exploit" : ins.kind === "strength" ? "Avoid" : "Prepare"} · n={ins.sampleSize} · {ins.confidence}
-                </p>
-                {analysisHrefForInsight?.(ins) && (
-                  <a
-                    href={analysisHrefForInsight(ins) ?? undefined}
-                    className={`inline-flex mt-2 items-center rounded-md px-2 py-1 text-[10px] font-semibold transition-colors ${isDark ? "bg-[#436850]/20 text-[#8dcc9b] hover:bg-[#436850]/35" : "bg-[#436850]/10 text-[#315640] hover:bg-[#436850]/20"}`}
-                  >
-                    Analyze line
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+      <h3 className={`mt-3 text-base font-bold leading-tight ${t.textPrimary}`}>{action.title}</h3>
+      <p className={`mt-2 text-sm font-medium leading-relaxed ${t.textPrimary}`}>{action.action.label}</p>
+      <p className={`mt-3 text-xs leading-relaxed ${t.textSecondary}`}>{action.whyItMatters}</p>
+      {analysisHref && (
+        <a
+          href={analysisHref}
+          className={`mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B9A6A] ${isDark ? "bg-[#436850]/20 text-[#a7d8b1] hover:bg-[#436850]/30" : "bg-[#e8f0e5] text-[#23482f] hover:bg-[#dce9d8]"}`}
+        >
+          Analyze this line <ChevronRight aria-hidden="true" className="h-4 w-4" />
+        </a>
       )}
-    </div>
+    </article>
   );
 }
 
-// ── Prep Checklist ────────────────────────────────────────────────────────────
-
-function PrepChecklist({
-  items,
-  isDark,
-  t,
-}: {
-  items: { text: string; insightId: string }[];
-  isDark: boolean;
-  t: Tokens;
-}) {
-  const [checked, setChecked] = useState<Set<string>>(() => new Set());
-  if (items.length === 0) return null;
-
-  const toggle = (id: string) => {
-    setChecked(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const doneCount = items.filter(i => checked.has(i.insightId)).length;
-
-  return (
-    <div className={`${t.card} p-4 sm:p-5`}>
-      <div className="flex items-center gap-2 mb-3">
-        <CheckSquare className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#436850]"}`} />
-        <h3 className={`font-semibold text-sm flex-1 ${t.textPrimary}`}>Prep Checklist</h3>
-        <span className={`text-[10px] font-bold ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-          {doneCount}/{items.length}
-        </span>
-      </div>
-      {/* Progress bar */}
-      <div className={`h-1 rounded-full mb-3 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]/40"}`}>
-        <div
-          className="h-full rounded-full bg-[#436850] transition-all duration-300"
-          style={{ width: `${items.length ? (doneCount / items.length) * 100 : 0}%` }}
-        />
-      </div>
-      <ul className="space-y-2">
-        {items.map((item) => {
-          const done = checked.has(item.insightId);
-          return (
-            <li key={item.insightId}>
-              <button
-                onClick={() => toggle(item.insightId)}
-                className={`w-full flex items-start gap-2.5 text-left text-xs leading-relaxed transition-opacity ${done ? "opacity-50" : ""}`}
-              >
-                <span className={`mt-0.5 shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                  done
-                    ? "bg-[#436850] border-[#436850]"
-                    : isDark ? "border-[#2e4a34]" : "border-[#ADBC9F]"
-                }`}>
-                  {done && <span className="text-white text-[9px] font-bold">✓</span>}
-                </span>
-                <span className={`${done ? "line-through" : ""} ${t.textSecondary}`}>{item.text}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-// ── Evidence & Methodology (collapsed) ───────────────────────────────────────
-
-function EvidenceSection({
-  report,
-  isDark,
-  t,
-}: {
-  report: ScoutReportV3;
-  isDark: boolean;
-  t: Tokens;
-}) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <div className={`${t.card} overflow-hidden`}>
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className={`w-full flex items-center gap-2 p-4 sm:p-5 text-left ${isDark ? "hover:bg-white/[0.02]" : "hover:bg-[#FBFADA]/50"}`}
-        aria-expanded={expanded}
-      >
-        <Eye className={`w-4 h-4 ${t.textTertiary}`} />
-        <h3 className={`font-semibold text-sm flex-1 ${t.textTertiary}`}>Evidence & Methodology</h3>
-        {expanded
-          ? <ChevronDown className={`w-3.5 h-3.5 ${t.textTertiary}`} />
-          : <ChevronRight className={`w-3.5 h-3.5 ${t.textTertiary}`} />
-        }
-      </button>
-      {expanded && (
-        <div className={`px-4 sm:px-5 pb-4 sm:pb-5 space-y-3 border-t ${t.divider}`}>
-          <DataQualityBanner dataQuality={report.dataQuality} isDark={isDark} />
-          {report.guardLog.droppedInsights > 0 && (
-            <div className={`text-xs ${t.textTertiary}`}>
-              <p className="font-semibold mb-1">Quality Gates</p>
-              <p>{report.guardLog.droppedInsights} insight(s) dropped by guards:</p>
-              <ul className="mt-1 space-y-0.5">
-                {Object.entries(report.guardLog.reasons).map(([reason, count]) => (
-                  <li key={reason}>· {reason.replace(/_/g, " ")}: {count}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <div className={`text-[11px] ${t.textTertiary}`}>
-            <p>Engine v{report.engineVersion} · Generated {new Date(report.generatedAt).toLocaleString()}</p>
-            <p className="mt-1">
-              Confidence is computed via Wilson 95% interval. Insights require n≥6 and baseline delta ≥12pp to qualify.
-              Headline sections require n≥8 and confidence ≥ medium. All move sequences are validated with chess.js.
-            </p>
-          </div>
+export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+  if (!report.reportSnapshot) {
+    return (
+      <div className={`${t.card} flex items-start gap-3 p-5`} role="status">
+        <AlertCircle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+        <div>
+          <h2 className={`text-sm font-bold ${t.textPrimary}`}>Update this report</h2>
+          <p className={`mt-1 text-sm ${t.textSecondary}`}>This saved report predates immutable scouting snapshots. Run the scout again before using its recommendations or exports.</p>
         </div>
-      )}
-    </div>
-  );
-}
+      </div>
+    );
+  }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
-export function V3ScoutReportTab({ report, isDark, t, myColor = "not_sure", reportCacheKey }: Props) {
-  const s = report.sections;
-
-  // Resolve section IDs to actual insight objects
-  const allInsights = report.insights;
-  const weaknessInsights = useMemo(
-    () => resolveInsights(s.weaknesses, allInsights),
-    [s.weaknesses, allInsights],
-  );
-
-  // Apply color filter based on myColor (opponent's color is opposite of user's color)
-  const filteredInsights = useMemo(() => {
-    if (myColor === "not_sure") return allInsights;
-    // When user plays White, opponent plays Black — show insights about opponent's Black games
-    const opponentColor = myColor === "white" ? "black" : "white";
-    return allInsights.filter(ins => ins.color === opponentColor);
-  }, [allInsights, myColor]);
-
-  // Resolve game plan sections
-  const ifWhiteInsights = useMemo(() => resolveInsights(s.ifYouHaveWhite, allInsights), [s.ifYouHaveWhite, allInsights]);
-  const ifBlackInsights = useMemo(() => resolveInsights(s.ifYouHaveBlack, allInsights), [s.ifYouHaveBlack, allInsights]);
-  const analysisHrefForInsight = (insight: Insight): string | null => {
-    if (!reportCacheKey || !insight.recommendation.line?.san) return null;
-    const canonicalUciPath = canonicalUciPathFromSanLine(insight.recommendation.line.san);
+  const view = projectScoutReport(report);
+  const request = view.snapshot.activeRequest;
+  const opponentColor = request.myColor === "white" ? "black" : "white";
+  const opponentRecord = report.opponent.record[opponentColor];
+  const opponentGames = opponentRecord.w + opponentRecord.d + opponentRecord.l;
+  const supportingFacts = report.insights
+    .filter(insight => insight.color === opponentColor && insight.sampleSize >= 6)
+    .filter(insight => !new Set(view.actions.map(action => action.sourceInsightId)).has(insight.id));
+  const analysisHrefForAction = (action: ScoutAction): string | null => {
+    if (!reportCacheKey || !action.action.legalLine?.length) return null;
+    const canonicalUciPath = canonicalUciPathFromSanLine(action.action.legalLine.join(" "));
     return canonicalUciPath ? buildPositionAnalysisUrl({
       reportCacheKey,
       canonicalUciPath,
-      evidenceClaimId: insight.id,
-      returnPath: `${window.location.pathname}${window.location.search}#game-plan-${insight.id}`,
+      evidenceClaimId: action.sourceInsightId,
+      returnPath: `${window.location.pathname}${window.location.search}#scout-brief`,
     }) : null;
   };
 
-  // Insight filter for the "All Insights" section
-  const [insightFilter, setInsightFilter] = useState<"all" | "weakness" | "strength" | "deviation_point" | "behavior" | "opening_tendency" | "response_pattern">("all");
-
-  const displayedInsights = useMemo(() => {
-    const base = insightFilter === "all" ? filteredInsights : filteredInsights.filter(i => i.kind === insightFilter);
-    return base;
-  }, [filteredInsights, insightFilter]);
-
-  const filterOptions: { id: typeof insightFilter; label: string; icon: React.ReactNode }[] = [
-    { id: "all",              label: "All",          icon: <Zap className="w-3 h-3" /> },
-    { id: "weakness",         label: "Weaknesses",   icon: <TrendingDown className="w-3 h-3" /> },
-    { id: "strength",         label: "Strengths",    icon: <TrendingUp className="w-3 h-3" /> },
-    { id: "opening_tendency", label: "Openings",     icon: <Crosshair className="w-3 h-3" /> },
-    { id: "deviation_point",  label: "Deviations",   icon: <GitBranch className="w-3 h-3" /> },
-    { id: "response_pattern", label: "Responses",    icon: <Shield className="w-3 h-3" /> },
-    { id: "behavior",         label: "Behavior",     icon: <AlertCircle className="w-3 h-3" /> },
-  ];
+  const contextLine = view.formatBreakdown.filter(item => item.games > 0).map(item => `${item.games} ${item.format}`).join(" · ") || "No eligible format breakdown";
 
   return (
     <div className="space-y-4">
+      <section id="scout-brief" className={`${t.card} p-4 sm:p-5`} aria-labelledby="scout-brief-title">
+        <header className="flex flex-wrap items-start gap-3 border-b border-current/10 pb-4">
+          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isDark ? "bg-[#436850]/15 text-[#8dcc9b]" : "bg-[#e8f0e5] text-[#315640]"}`}>
+            <Crosshair aria-hidden="true" className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 id="scout-brief-title" className={`text-lg font-bold tracking-tight ${t.textPrimary}`}>Scout Brief</h2>
+            <p className={`mt-1 text-sm ${t.textSecondary}`}>The highest-value actions supported by this exact report snapshot.</p>
+          </div>
+          <div className="text-right">
+            <p className={`text-xs font-semibold ${t.textPrimary}`}>You play {request.myColor === "white" ? "White" : "Black"}</p>
+            <p className={`mt-1 text-[11px] ${t.textTertiary}`}>{view.gamesAnalyzed} games · {displayConfidence(view.freshness)} evidence</p>
+          </div>
+        </header>
 
-      {/* Prep Snapshot — top 3 above the fold */}
-      <PrepSnapshot insights={filteredInsights} isDark={isDark} t={t} />
+        <div className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border px-3 py-2.5 text-xs ${isDark ? "border-[#25342a] bg-black/10" : "border-[#d8e1d3] bg-[#f7faf5]"}`}>
+          <ShieldCheck aria-hidden="true" className={`h-4 w-4 ${isDark ? "text-[#8dcc9b]" : "text-[#315640]"}`} />
+          <span className={`font-semibold ${t.textPrimary}`}>{report.opponent.username} as {opponentColor === "white" ? "White" : "Black"}</span>
+          <span className={t.textTertiary}>{opponentGames >= 8 ? `${opponentGames} eligible games` : "Insufficient evidence for primary recommendations"}</span>
+          <span className={t.textTertiary}>{contextLine}</span>
+        </div>
 
-      <PopulationContextCard references={report.populationReferences} isDark={isDark} />
+        {view.actions.length > 0 ? (
+          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            {view.actions.map((action, index) => (
+              <ScoutBriefCard key={action.id} action={action} index={index} analysisHref={analysisHrefForAction(action)} isDark={isDark} t={t} />
+            ))}
+          </div>
+        ) : (
+          <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-[#25342a] bg-[#101b12]" : "border-[#cdd8c6] bg-white"}`}>
+            <h3 className={`text-sm font-bold ${t.textPrimary}`}>Insufficient evidence for a primary recommendation</h3>
+            <p className={`mt-1 text-sm leading-relaxed ${t.textSecondary}`}>This report did not meet the minimum sample, recency, and confidence gates. The Opening Forecast can still show factual move counts where available.</p>
+          </div>
+        )}
+      </section>
 
-      {/* 3. Opening Forecast — board-first interactive walkthrough */}
       <ForecastWalkthrough
         openingForecast={report.openingForecast}
-        myColor={myColor}
+        myColor={request.myColor}
         isDark={isDark}
         t={t}
         opponentUsername={report.opponent.username}
-        weaknessInsights={weaknessInsights}
-        analysisHrefForUciPath={reportCacheKey ? (canonicalUciPath) => buildPositionAnalysisUrl({
+        analysisHrefForUciPath={reportCacheKey ? canonicalUciPath => buildPositionAnalysisUrl({
           reportCacheKey,
           canonicalUciPath,
           returnPath: `${window.location.pathname}${window.location.search}#opening-forecast`,
         }) : undefined}
       />
 
-      {/* 4. Game Plan — If You Have White / Black */}
-      {myColor !== "black" && ifWhiteInsights.length > 0 && (
-        <GamePlanSection
-          title="If You Have White"
-          icon={<Crosshair className="w-4 h-4" />}
-          insights={ifWhiteInsights}
-          isDark={isDark}
-          t={t}
-          analysisHrefForInsight={analysisHrefForInsight}
-        />
-      )}
-      {myColor !== "white" && ifBlackInsights.length > 0 && (
-        <GamePlanSection
-          title="If You Have Black"
-          icon={<Shield className="w-4 h-4" />}
-          insights={ifBlackInsights}
-          isDark={isDark}
-          t={t}
-          analysisHrefForInsight={analysisHrefForInsight}
-        />
-      )}
-
-      {/* 5. All Insights — filterable */}
-      {filteredInsights.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Detailed Insights</h3>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/50 text-[#436850]"}`}>
-              {filteredInsights.length}
-            </span>
-          </div>
-
-          {/* Filter bar */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {filterOptions.map(opt => {
-              const count = opt.id === "all"
-                ? filteredInsights.length
-                : filteredInsights.filter(i => i.kind === opt.id).length;
-              if (count === 0 && opt.id !== "all") return null;
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => setInsightFilter(opt.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
-                    insightFilter === opt.id
-                      ? "bg-[#436850] text-white"
-                      : isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70 text-white/40 hover:text-white/70" : "bg-white border border-[#ADBC9F]/80 text-[#436850] hover:text-[#12372A]"
-                  }`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                  <span className="opacity-60">({count})</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Insight cards */}
-          <div className="space-y-3">
-            {displayedInsights.map((insight, i) => (
-              <InsightCard key={insight.id} insight={insight} index={i} isDark={isDark} reportCacheKey={reportCacheKey} />
-            ))}
-          </div>
+      <details className={`${t.card} group overflow-hidden`} open={evidenceOpen} onToggle={event => setEvidenceOpen(event.currentTarget.open)}>
+        <summary aria-expanded={evidenceOpen} className={`flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5B9A6A] sm:px-5 ${isDark ? "hover:bg-white/[0.025]" : "hover:bg-[#f7faf5]"}`}>
+          <Database aria-hidden="true" className={`h-4 w-4 ${t.textTertiary}`} />
+          <span className={`flex-1 text-sm font-semibold ${t.textPrimary}`}>Evidence summary</span>
+          <span className={`text-[11px] ${t.textTertiary}`}>{supportingFacts.length} supporting fact{supportingFacts.length === 1 ? "" : "s"}</span>
+          <ChevronRight aria-hidden="true" className={`h-4 w-4 transition-transform group-open:rotate-90 ${t.textTertiary}`} />
+        </summary>
+        <div className={`border-t px-4 py-4 sm:px-5 ${t.divider}`}>
+          <DataQualityBanner dataQuality={report.dataQuality} isDark={isDark} />
+          {supportingFacts.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {supportingFacts.map(fact => (
+                <li key={fact.id} className={`rounded-xl border p-3 text-xs ${isDark ? "border-[#25342a] bg-black/10" : "border-[#d8e1d3] bg-[#f7faf5]"}`}>
+                  <p className={`font-semibold leading-relaxed ${t.textPrimary}`}>{fact.claim}</p>
+                  <p className={`mt-1 ${t.textTertiary}`}>{fact.evidence.stat} · {displayConfidence(fact.confidence)} confidence</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className={`mt-4 text-[11px] leading-relaxed ${t.textTertiary}`}>
+            Recommendations require at least 8 eligible games. Samples of 6–7 remain supporting detail only. Stale evidence never becomes a primary recommendation.
+          </p>
         </div>
-      )}
-
-      {/* 6. Prep Checklist */}
-      <PrepChecklist items={s.prepChecklist} isDark={isDark} t={t} />
-
-      {/* 7. Evidence & Methodology (collapsed) */}
-      <EvidenceSection report={report} isDark={isDark} t={t} />
+      </details>
     </div>
   );
 }

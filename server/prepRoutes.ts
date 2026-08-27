@@ -21,7 +21,12 @@ import { fetchLichess } from "./services/lichess.js";
 import { derivePopulationCandidates } from "./population/candidates.js";
 import { resolvePopulationReference } from "./population/resolver.js";
 import { registerTrackedPopulationPosition } from "./population/tracked.js";
-import type { AnalysisLaunchSubject, CachedPrepAnalysisReport, Color, FetchOpts, PrepErrorPayload } from "../shared/prepTypes.js";
+import type { AnalysisLaunchSubject, CachedPrepAnalysisReport, FetchOpts, PrepErrorPayload } from "../shared/prepTypes.js";
+import {
+  SCOUT_ARCHIVE_MONTHS,
+  activeScoutRequestFromQuery,
+  scoutRequestCacheKey,
+} from "../shared/scoutRequest.js";
 import { requireAuth } from "./auth.js";
 
 // ── Prep cache TTL ───────────────────────────────────────────────────────────
@@ -125,20 +130,13 @@ export function createPrepRouter(): Router {
     // V3 path (?schema=3)
     if (req.query.schema === "3") {
       try {
-        const normalised = username.toLowerCase().trim();
-        const maxGames = Math.min(parseInt(req.query.games as string) || 100, 100);
-        const tcParam = (req.query.tc as string) || "all";
-        const timeClasses: string[] =
-          tcParam === "rapid" ? ["rapid"] :
-          tcParam === "blitz" ? ["blitz"] :
-          tcParam === "bullet" ? ["bullet"] :
-          ["rapid", "blitz", "bullet"];
-        const provider = (req.query.provider as string) === "lichess" ? "lichess" : "chesscom";
+        const activeRequest = activeScoutRequestFromQuery(username, req.query as Record<string, string | string[] | undefined>);
+        const normalised = activeRequest.normalizedUsername;
+        const maxGames = activeRequest.maxGames;
+        const timeClasses = activeRequest.formats;
+        const provider = activeRequest.platform;
         const forceRefresh = req.query.refresh === "true";
-        const submittedMyColor: Color = req.query.myColor === "black" ? "black" : "white";
-
-        const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
-        const cacheKey = `v3:${provider}:${normalised}:${tcKey}:g${maxGames}:c${submittedMyColor}`;
+        const cacheKey = scoutRequestCacheKey(activeRequest);
 
         if (!forceRefresh) {
           try {
@@ -158,12 +156,12 @@ export function createPrepRouter(): Router {
           } catch { /* non-fatal */ }
         }
 
-        const fetchOpts: FetchOpts = { maxGames, months: 6, timeClasses, ratedOnly: true };
+        const fetchOpts: FetchOpts = { maxGames, months: SCOUT_ARCHIVE_MONTHS, timeClasses, ratedOnly: true };
         const raw = provider === "lichess"
           ? await fetchLichess(normalised, fetchOpts)
           : await fetchChesscom(normalised, fetchOpts);
 
-        const cachedReport = buildCachedPrepAnalysisReport(provider, normalised, raw, fetchOpts, cacheKey, submittedMyColor);
+        const cachedReport = buildCachedPrepAnalysisReport(provider, normalised, raw, fetchOpts, cacheKey, activeRequest);
         const report = cachedReport.report;
         if (provider === "lichess") {
           const [candidate] = derivePopulationCandidates(raw, normalised, fetchOpts);
@@ -192,7 +190,7 @@ export function createPrepRouter(): Router {
         if (msg.startsWith("PlayerNotFound:")) {
           res.status(404).json({ error: "not_found", message: `Player "${username}" was not found on the selected provider.` } as PrepErrorPayload);
         } else if (msg.startsWith("NoRecentGames:")) {
-          res.status(404).json({ error: "no_recent_games", message: `No rated rapid/blitz games found for "${username}" in the last 6 months.` } as PrepErrorPayload);
+          res.status(404).json({ error: "no_recent_games", message: `No eligible Rapid, Blitz, or Bullet games found for "${username}".` } as PrepErrorPayload);
         } else if (msg.startsWith("NoUsableGames:")) {
           res.status(422).json({ error: "all_filtered", message: `All games for "${username}" were filtered out (unrated, wrong time control, or corrupt).` } as PrepErrorPayload);
         } else if (msg.startsWith("UpstreamRateLimited:")) {

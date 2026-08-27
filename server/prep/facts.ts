@@ -2,6 +2,7 @@
 // Ported from reference/src/engine.ts (buildFacts section) — identical behavior.
 
 import type { Color, ParsedGame } from "../../shared/prepTypes.js";
+import { buildPositionTree } from "./positionTree.js";
 
 export interface Group {
   games: ParsedGame[];
@@ -88,61 +89,5 @@ export function forecast(
   color: Color,
   maxDepth = 6
 ): import("../../shared/prepTypes.js").ForecastBranch[] {
-  const build = (
-    gs: ParsedGame[],
-    ply: number,
-    depth: number
-  ): import("../../shared/prepTypes.js").ForecastBranch[] => {
-    if (depth >= maxDepth || gs.length < 3) return [];
-    const buckets = new Map<string, ParsedGame[]>();
-    for (const g of gs) {
-      const s = g.plies[ply]?.san;
-      if (s) {
-        const existing = buckets.get(s);
-        if (existing) existing.push(g);
-        else buckets.set(s, [g]);
-      }
-    }
-    return Array.from(buckets.entries())
-      .filter(([, v]) => v.length >= 2)
-      .sort((a, b) => b[1].length - a[1].length)
-      .slice(0, 3)
-      .map(([san, v]) => {
-        // Black-side root moves begin at ply 1, so moveSan alone is not a legal
-        // board path. Preserve one canonical game prefix for UI hover previews.
-        const previewPath = v[0]?.plies
-          .slice(0, ply + 1)
-          .map((move) => move.san) ?? [];
-        // Find the most common opening name in this bucket for the label
-        const nameCounts = new Map<string, number>();
-        for (const g of v) {
-          if (g.opening.bookExitPly >= 2) {
-            const n = g.opening.name.split(":")[0].trim();
-            nameCounts.set(n, (nameCounts.get(n) ?? 0) + 1);
-          }
-        }
-        let label: string | undefined;
-        let maxCount = 0;
-        for (const [n, c] of Array.from(nameCounts.entries())) {
-          if (c > maxCount) { label = n; maxCount = c; }
-        }
-        const wins = v.filter((g: ParsedGame) => g.scoutedScore === 1).length;
-        const draws = v.filter((g: ParsedGame) => g.scoutedScore === 0.5).length;
-        const losses = v.filter((g: ParsedGame) => g.scoutedScore === 0).length;
-        return {
-          moveSan: san,
-          previewPath,
-          count: v.length,
-          pct: v.length / gs.length,
-          score: v.reduce((s: number, g: ParsedGame) => s + g.scoutedScore, 0) / v.length,
-          wins,
-          draws,
-          losses,
-          label: maxCount >= 2 ? label : undefined,
-          children: build(v, ply + 1, depth + 1),
-        };
-      });
-  };
-  // Start at ply 0 for White (their moves), ply 1 for Black (their moves)
-  return build(games, color === "white" ? 0 : 1, 0);
+  return buildPositionTree(games, color, maxDepth);
 }

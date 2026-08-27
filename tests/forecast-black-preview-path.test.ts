@@ -24,10 +24,10 @@ function blackGame(): ParsedGame {
 }
 
 describe("black-side Opening Forecast previews", () => {
-  it("retains the first White move before a black root response", () => {
+  it("starts from White's legal first move before the opponent's Black response", () => {
     const branches = forecast([blackGame(), blackGame(), blackGame()], "black");
 
-    expect(branches[0]?.moveSan).toBe("d5");
-    expect(branches[0]?.previewPath).toEqual(["e4", "d5"]);
+    expect(branches[0]).toMatchObject({ moveSan: "e4", actor: "user", previewPath: ["e4"] });
+    expect(branches[0]?.children[0]).toMatchObject({ moveSan: "d5", actor: "opponent", previewPath: ["e4", "d5"] });
   });
 });

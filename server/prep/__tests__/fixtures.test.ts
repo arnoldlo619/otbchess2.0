@@ -39,7 +39,10 @@ describe("fixture_e: cleanplayer", () => {
 
   it("version is 3", () => expect(report.version).toBe(3));
   it("engineVersion matches", () => expect(report.engineVersion).toBe(ENGINE_VERSION));
-  it("grade A, B, or C (100 games; C accepted for historical fixture data with no recent games)", () => expect(["A", "B", "C"]).toContain(report.dataQuality.grade));
+  it("uses the explicit stale grade for historical fixtures", () => {
+    expect(report.dataQuality.grade).toBe("D");
+    expect(report.dataQuality.freshness).toBe("stale");
+  });
   it("has insights", () => expect(report.insights.length).toBeGreaterThan(0));
   it("no banned phrases", () => expect(noBannedPhrases(report.insights)).toBe(true));
   it("all insights have 6 required fields", () => expect(allHave6Fields(report.insights)).toBe(true));
@@ -149,7 +152,7 @@ describe("fixture_d: thinaccount (7 games → grade D)", () => {
   it("thin-data note present or NoUsableGames", () => {
     try {
       const report = buildReport("chesscom", "thinaccount", raw, OPTS);
-      expect(report.dataQuality.notes.some(n => /[Tt]hin/.test(n))).toBe(true);
+      expect(report.dataQuality.notes.some(n => /[Ll]imited evidence|[Ss]tale evidence/.test(n))).toBe(true);
     } catch (e: any) {
       expect(e.message).toMatch(/NoUsableGames/);
     }

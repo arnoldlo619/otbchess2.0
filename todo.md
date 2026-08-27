@@ -13,19 +13,38 @@
 - [x] Club Dashboard: Add focused sidebar regression coverage and complete desktop/mobile visual QA
 - [x] Club Dashboard: Remove the redundant All clubs footer action and keep the club logo as the single back-to-clubs affordance
 
-- [ ] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
-- [ ] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
-- [ ] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
-- [ ] Matchup Prep: Introduce immutable DraftScoutRequest, ActiveScoutRequest, and ScoutReportSnapshot identities
-- [ ] Matchup Prep: Encode and restore provider, username, color, and format while isolating caches and stale responses
-- [ ] Matchup Prep: Limit Standard scouting to the 30 most recent eligible Rapid, Blitz, and Bullet games and remove Deep
-- [ ] Matchup Prep: Rebuild Opening Forecast from legal position-based move trees with correct player ownership and attribution
-- [ ] Matchup Prep: Remove unsupported evaluation UI, premature opening labels, and the independent opponent-color selector
-- [ ] Matchup Prep: Centralize evidence eligibility, freshness, confidence, denominators, deduplication, and color-correct actions
-- [ ] Matchup Prep: Redesign the report around a concise three-action Scout Brief with collapsed evidence
-- [ ] Matchup Prep: Align image and PDF exports with the immutable visible report snapshot
+- [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
+- [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
+- [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
+- [x] Matchup Prep: Reproduce Black-root continuation mislabeling after selecting a reply such as ...e5
+- [x] Matchup Prep: Reproduce Lichess/Chess.com route, reload, and same-name history identity mismatches
+- [x] Matchup Prep: Reproduce the current Standard and Deep visible-report equivalence before removing Deep
+- [x] Matchup Prep: Re-run the red regression command cleanly and record exact expected failures without shell-command noise
+- [x] Matchup Prep: Introduce immutable DraftScoutRequest, ActiveScoutRequest, and ScoutReportSnapshot identities
+- [x] Matchup Prep: Encode and restore provider, username, color, and format while isolating caches and stale responses
+- [x] Matchup Prep: Limit Standard scouting to the 30 most recent eligible Rapid, Blitz, and Bullet games and remove Deep
+- [x] Matchup Prep: Rebuild Opening Forecast from legal position-based move trees with correct player ownership and attribution
+- [x] Matchup Prep: Remove unsupported evaluation UI, premature opening labels, and the independent opponent-color selector
+- [x] Matchup Prep: Centralize evidence eligibility, freshness, confidence, denominators, deduplication, and color-correct actions
+- [x] Matchup Prep: Backfill provider fetching until 30 eligible rated Rapid, Blitz, or Bullet games are available after filtering
+- [x] Matchup Prep: Prove filtered recent games are skipped while later eligible games fill the Standard 30-game cap
+- [x] Matchup Prep: Continue Chess.com and Lichess history pagination until 30 eligible games are parsed or provider history is exhausted
+- [x] Matchup Prep: Prove both providers backfill past more than 120 filtered recent candidates before selecting the 30 most recent eligible games
+- [x] Matchup Prep: Unify confidence and denominator policy with centralized evidence eligibility
+- [x] Matchup Prep: Prove color-correct primary actions for tendency, response, weakness, strength, and deviation cases
+- [x] Matchup Prep: Redesign the report around a concise three-action Scout Brief with collapsed evidence
+- [x] Matchup Prep: Align image and PDF exports with the immutable visible report snapshot
 - [ ] Matchup Prep: Complete MP-01 through MP-18 deterministic, live-account, accessibility, responsive, build, and visual QA
-- [ ] Matchup Prep: Document LAUNCH-READY or NOT LAUNCH-READY status with exact remaining blockers
+- [x] Matchup Prep: Document NOT LAUNCH-READY status with exact remaining blockers
+- [x] Matchup Prep: Correct compressed empty-state heading word spacing found during visual QA
+- [x] Matchup Prep: Align Strong, Usable, Limited, and Stale freshness thresholds exactly with the launch acceptance policy
+- [x] Matchup Prep: Require structured, evidence-backed legal Scout Brief actions and withhold non-concrete primary recommendations
+- [x] Matchup Prep: Collapse generated search controls into a compact update row without mutating the immutable completed snapshot
+- [x] Matchup Prep: Invalidate pre-structured-action report caches so live Scout Briefs use the current evidence policy
+- [ ] Matchup Prep: Obtain authoritative CI production-build evidence after local Vite build exhausts the sandbox 1 GB Node heap
+- [x] Matchup Prep: Add and validate default-collapsed evidence disclosures with aria-expanded semantics in the Scout Brief report
+- [ ] Matchup Prep: Add focused UI regression coverage proving evidence details stay collapsed by default and expand accessibly when opened
+- [x] Matchup Prep: Add a rendered Scout Brief evidence test for collapsed default, accessible expand, and accessible collapse states
 
 - [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
 
