@@ -27,6 +27,8 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
   const view = projectScoutReport(report);
   const request = view.snapshot.activeRequest;
   const generated = new Date(view.snapshot.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const avgRating = view.opponent.avgRating;
+  const summaryStats = [["Avg rating", avgRating ?? "Not available"]] as const;
 
   return (
     <div
@@ -76,6 +78,12 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
           <div key={item.format} style={{ flex: 1 }}>
             <p style={{ margin: 0, color: COLORS.tertiary, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.format}</p>
             <p style={{ margin: "4px 0 0", color: COLORS.secondary, fontSize: 13, fontWeight: 700 }}>{item.games} games</p>
+          </div>
+        ))}
+        {summaryStats.map(([label, value]) => (
+          <div key={label} style={{ flex: 1 }}>
+            <p style={{ margin: 0, color: COLORS.tertiary, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</p>
+            <p style={{ margin: "4px 0 0", color: COLORS.secondary, fontSize: 13, fontWeight: 700 }}>{value}</p>
           </div>
         ))}
       </section>

@@ -43,7 +43,7 @@
 - [x] Matchup Prep: Invalidate pre-structured-action report caches so live Scout Briefs use the current evidence policy
 - [ ] Matchup Prep: Obtain authoritative CI production-build evidence after local Vite build exhausts the sandbox 1 GB Node heap
 - [x] Matchup Prep: Add and validate default-collapsed evidence disclosures with aria-expanded semantics in the Scout Brief report
-- [ ] Matchup Prep: Add focused UI regression coverage proving evidence details stay collapsed by default and expand accessibly when opened
+- [x] Matchup Prep: Add focused UI regression coverage proving evidence details stay collapsed by default and expand accessibly when opened
 - [x] Matchup Prep: Add a rendered Scout Brief evidence test for collapsed default, accessible expand, and accessible collapse states
 
 - [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
