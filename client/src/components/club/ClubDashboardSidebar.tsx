@@ -1,6 +1,5 @@
 import type { ElementType, FocusEvent } from "react";
-import { ChevronLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { ClubsIcon } from "@/components/OtbIcons";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type ClubDashboardSidebarItem = {
@@ -212,27 +211,8 @@ export function ClubDashboardSidebar({
         {renderGroup("Manage", manageItems)}
       </nav>
 
-      <div className="space-y-1 border-t border-white/[0.065] px-3 py-3">
-        <Tooltip delayDuration={250}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={onBackToClubs}
-              aria-label="All clubs"
-              className={utilityButtonClass}
-              style={{ justifyContent: expanded ? "flex-start" : "center", gap: expanded ? "12px" : 0, paddingInline: expanded ? "12px" : 0 }}
-            >
-              <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center"><ClubsIcon size={18} /></span>
-              <span className="flex-1 truncate text-sm font-semibold transition-opacity duration-150 motion-reduce:transition-none" style={{ opacity: expanded ? 1 : 0 }} aria-hidden={!expanded}>All clubs</span>
-              {expanded && <ChevronLeft aria-hidden="true" size={15} strokeWidth={1.7} className="text-white/30" />}
-            </button>
-          </TooltipTrigger>
-          {!expanded && (
-            <TooltipContent side="right" sideOffset={10} className="border border-white/10 bg-[#101d15] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl">All clubs</TooltipContent>
-          )}
-        </Tooltip>
-
-        {!expanded && (
+      {!expanded && (
+        <div className="border-t border-white/[0.065] px-3 py-3">
           <Tooltip delayDuration={250}>
             <TooltipTrigger asChild>
               <button
@@ -248,8 +228,8 @@ export function ClubDashboardSidebar({
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10} className="border border-white/10 bg-[#101d15] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl">Expand sidebar</TooltipContent>
           </Tooltip>
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 }

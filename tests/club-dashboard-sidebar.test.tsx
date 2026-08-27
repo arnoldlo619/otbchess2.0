@@ -55,6 +55,7 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.getByRole("button", { name: "Feed" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByLabelText("12 upcoming").textContent).toBe("9+");
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "All clubs" })).toBeNull();
   });
 
   it("renders workspace and manage groups in the expanded 264px panel", () => {
@@ -90,7 +91,7 @@ describe("ClubDashboardSidebar", () => {
     renderSidebar({ temporarilyExpanded: true, onSelect, onBackToClubs, onToggleCollapsed });
 
     fireEvent.click(screen.getByRole("button", { name: "Events" }));
-    fireEvent.click(screen.getByRole("button", { name: "All clubs" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to all clubs" }));
     fireEvent.click(screen.getByRole("button", { name: "Keep sidebar expanded" }));
 
     expect(onSelect).toHaveBeenCalledWith("events");
@@ -110,6 +111,6 @@ describe("ClubDashboardSidebar", () => {
     const sidebar = readFileSync(resolve(process.cwd(), "client/src/components/club/ClubDashboardSidebar.tsx"), "utf8");
 
     expect(sidebar).not.toMatch(/\p{Extended_Pictographic}/u);
-    expect(sidebar).toContain('import { ClubsIcon } from "@/components/OtbIcons"');
+    expect(sidebar).not.toContain("All clubs");
   });
 });

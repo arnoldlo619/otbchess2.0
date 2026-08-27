@@ -11,6 +11,7 @@
 - [x] Club Dashboard: Redesign the desktop sidebar with premium collapsed and expanded states, professional iconography, and clear active hierarchy
 - [x] Club Dashboard: Preserve accessible keyboard, tooltip, hover-expansion, mobile navigation, and reduced-motion behavior
 - [x] Club Dashboard: Add focused sidebar regression coverage and complete desktop/mobile visual QA
+- [x] Club Dashboard: Remove the redundant All clubs footer action and keep the club logo as the single back-to-clubs affordance
 
 - [x] Club Feed: Add a premium, accessible animated border treatment to the owner announcement composer while preserving posting behavior and mobile usability
 
