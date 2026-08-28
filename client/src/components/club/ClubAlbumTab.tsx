@@ -411,9 +411,9 @@ export function ClubAlbumTab({
   return (
     <section aria-labelledby="club-albums-heading" className="mx-auto w-full max-w-3xl space-y-4">
       <header className={`rounded-3xl border p-5 sm:p-6 ${surface}`}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
+        <div className="relative flex flex-col items-center gap-4 text-center sm:min-h-11 sm:justify-center">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-2 flex items-center justify-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: `${accent}20`, color: accent }}>
                 <Images className="h-4 w-4" aria-hidden="true" />
               </span>
@@ -425,7 +425,7 @@ export function ClubAlbumTab({
             </p>
           </div>
           {canManage && (
-            <Button type="button" onClick={openCreate} className="h-11 shrink-0 rounded-xl px-4 font-semibold text-white" style={{ background: accent }}>
+            <Button type="button" onClick={openCreate} className="h-11 shrink-0 rounded-xl px-4 font-semibold text-white sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2" style={{ background: accent }}>
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               Create album
             </Button>
