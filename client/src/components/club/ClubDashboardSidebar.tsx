@@ -1,4 +1,4 @@
-import type { ElementType, FocusEvent } from "react";
+import { useState, type ElementType, type FocusEvent } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -48,6 +48,7 @@ export function ClubDashboardSidebar({
   onBackToClubs,
 }: ClubDashboardSidebarProps) {
   const expanded = !collapsed || temporarilyExpanded;
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const workspaceItems = items.filter((item) => item.group === "workspace");
   const manageItems = items.filter((item) => item.group === "manage");
 
@@ -65,9 +66,13 @@ export function ClubDashboardSidebar({
       <button
         type="button"
         onClick={() => onSelect(item.id)}
+        onPointerEnter={(event) => {
+          if (event.pointerType !== "touch") setHoveredItemId(item.id);
+        }}
+        onPointerLeave={() => setHoveredItemId(null)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="group/nav-item relative flex items-center rounded-xl border text-left outline-none transition-[width,height,margin,padding,gap,background-color,border-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group relative flex items-center rounded-xl border text-left outline-none transition-[width,height,margin,padding,gap,background-color,border-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
@@ -93,8 +98,12 @@ export function ClubDashboardSidebar({
         )}
         <span
           aria-hidden="true"
-          className="flex h-6 w-6 shrink-0 items-center justify-center transition-colors duration-150 motion-reduce:transition-none"
-          style={{ color: active ? accent : "inherit" }}
+          className="flex h-6 w-6 shrink-0 items-center justify-center transition-[color,transform,filter] duration-200 ease-out motion-reduce:transition-none"
+          style={{
+            color: active ? accent : "inherit",
+            transform: hoveredItemId === item.id ? "scale(1.07)" : "scale(1)",
+            filter: hoveredItemId === item.id ? "drop-shadow(0 0 5px rgba(111,255,156,0.34))" : "none",
+          }}
         >
           <Icon size={19} strokeWidth={active ? 2 : 1.65} />
         </span>

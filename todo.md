@@ -22,6 +22,11 @@
 - [x] Club Dashboard: Refine compact-to-expanded sidebar width, label, and control transitions into one premium motion sequence
 - [x] Club Dashboard: Validate pointer, keyboard, reduced-motion, and mobile behavior after the sidebar motion refinement
 - [x] Club Dashboard: Re-run narrow mobile QA and verify reduced-motion-safe expansion behavior after the motion refinement
+- [x] Club Dashboard: Add restrained pointer-hover scale and brand-glow feedback to sidebar icon controls
+- [ ] Club Dashboard: Validate sidebar icon hover, focus, active, reduced-motion, and mobile behavior
+- [x] Club Dashboard: Capture hover icon feedback and rerun narrow mobile QA after the icon interaction refinement
+- [x] Club Dashboard: Capture explicit desktop hover-state evidence for the final sidebar icon scale and glow treatment
+- [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
