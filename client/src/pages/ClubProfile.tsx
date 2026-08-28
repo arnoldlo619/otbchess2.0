@@ -1541,7 +1541,10 @@ export default function ClubProfile() {
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
           <nav aria-label="Club navigation" className="flex flex-col gap-0 flex-1 justify-center px-2">
-            {(["home", "feed", "events", "members", "album", "leagues"] as const).map((t) => {
+            {(joined
+              ? (["home", "feed", "events", "members", "album", "leagues"] as const)
+              : (["home", "feed", "events", "members"] as const)
+            ).map((t) => {
               const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {
                 home: <OtbHome size={22} accentColor={isActive ? accent : undefined} />,
@@ -2152,6 +2155,7 @@ export default function ClubProfile() {
                 >
                   Join Club
                 </button>
+                <button onClick={() => setActiveTab("album")} className={`text-sm font-semibold ${isDark ? "text-[#7ee787] hover:text-white" : "text-[#436850] hover:text-[#12372A]"}`}>View club albums</button>
               </div>
             ) : (
               <>
@@ -2333,6 +2337,7 @@ export default function ClubProfile() {
                 <p className={`text-sm ${textMuted} max-w-xs`}>Club events and tournaments are only visible to members. Join to see upcoming events and RSVP.</p>
               </div>
               <button onClick={() => { if (!user) { setAuthOpen(true); } else { handleJoin(); } }} className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 ${isDark ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A]" : "bg-[#436850] text-white hover:bg-[#3a5230]"}`}>Join Club</button>
+              <button onClick={() => setActiveTab("leagues")} className={`text-sm font-semibold ${isDark ? "text-[#7ee787] hover:text-white" : "text-[#436850] hover:text-[#12372A]"}`}>View club leagues</button>
             </div>
           );
           const now = new Date();
