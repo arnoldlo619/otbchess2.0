@@ -1598,7 +1598,7 @@ export default function ClubProfile() {
                   </span>
                   {/* Label — slides in to the right, stays on same row as icon */}
                   <span
-                    className="text-[15px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
+                    className="text-[17px] font-bold tracking-tight whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100"
                     style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "-0.01em" }}
                   >
                     {labelMap[t]}
@@ -1631,7 +1631,7 @@ export default function ClubProfile() {
                 aria-label="Settings"
               >
                 <span className="flex-shrink-0 w-7 flex items-center justify-center"><MoreHorizontal size={24} /></span>
-                <span className="text-[13px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
+                <span className="text-[15px] font-semibold tracking-wide uppercase whitespace-nowrap overflow-hidden transition-all duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-w-0 opacity-0 group-hover/sidebar:max-w-[140px] group-hover/sidebar:opacity-100" style={{ color: "inherit", fontFamily: "'Inter', sans-serif", letterSpacing: "0.06em" }}>Settings</span>
               </button>
             )}
 

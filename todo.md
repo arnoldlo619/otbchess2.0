@@ -12,6 +12,11 @@
 - [ ] Club Dashboard: Remove the redundant compact footer icon below Settings
 - [ ] Club Dashboard: Remove the expanded sidebar club-name title and header collapse/expand control
 - [ ] Club Dashboard: Verify minimalist compact and expanded sidebar layouts plus preserved navigation behavior
+- [x] Club Profile: Increase desktop side-navigation button text size for improved visibility
+- [x] Club Profile: Verify navigation typography remains balanced and usable on desktop and mobile
+- [x] Club Profile: Capture enlarged side-navigation labels at desktop and narrow mobile widths to confirm no clipping or misalignment
+- [x] Club Profile: Record the unchanged ClubProfile lint-warning baseline after targeted typography validation
+- [x] Club Profile: Explicitly document desktop and 375px screenshot review for the enlarged navigation labels
 - [x] Club Dashboard: Research industry-grade dashboard sidebars through Mobbin and document the selected navigation system
 - [x] Club Dashboard: Redesign the desktop sidebar with premium collapsed and expanded states, professional iconography, and clear active hierarchy
 - [x] Club Dashboard: Preserve accessible keyboard, tooltip, hover-expansion, mobile navigation, and reduced-motion behavior
