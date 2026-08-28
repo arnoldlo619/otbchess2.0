@@ -2512,21 +2512,11 @@ export default function ClubDashboard() {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
-  // ── Sidebar collapse state (persisted per club) ─────────────────────────────
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem("club-sidebar-collapsed") !== "0";
-    } catch {
-      return true;
-    }
-  });
+  // ── Sidebar disclosure state ───────────────────────────────────────────────
+  // The minimalist rail remains compact by default and reveals labels through
+  // pointer hover or keyboard focus; no persistent pin control is rendered.
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
-  const toggleSidebar = () => setSidebarCollapsed(prev => {
-    const next = !prev;
-    try { localStorage.setItem(`club-sidebar-collapsed`, next ? "1" : "0"); } catch { /* ignore */ }
-    return next;
-  });
   // Effective collapsed state: collapsed only if collapsed AND not hovered
   const sidebarTemporarilyExpanded = sidebarHovered || sidebarKeyboardExpanded;
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("profile");
@@ -3611,11 +3601,10 @@ export default function ClubDashboard() {
           borderColor={navBorder}
           items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
           activeId={tab}
-          collapsed={sidebarCollapsed}
+          collapsed
           temporarilyExpanded={sidebarTemporarilyExpanded}
           onPointerExpandedChange={setSidebarHovered}
           onFocusExpandedChange={setSidebarKeyboardExpanded}
-          onToggleCollapsed={toggleSidebar}
           onSelect={(nextTab) => setTab(nextTab as Tab)}
           onBackToClubs={() => navigate("/clubs")}
         />

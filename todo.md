@@ -9,6 +9,9 @@
 - [x] Club Albums: Remove the requested empty-state camera icon from the public Album panel
 - [x] Club Albums: Center the public Album tab header to match the other club tab pages
 - [x] Club Albums: Verify centered Album header alignment at desktop and mobile widths
+- [ ] Club Dashboard: Remove the redundant compact footer icon below Settings
+- [ ] Club Dashboard: Remove the expanded sidebar club-name title and header collapse/expand control
+- [ ] Club Dashboard: Verify minimalist compact and expanded sidebar layouts plus preserved navigation behavior
 - [x] Club Dashboard: Research industry-grade dashboard sidebars through Mobbin and document the selected navigation system
 - [x] Club Dashboard: Redesign the desktop sidebar with premium collapsed and expanded states, professional iconography, and clear active hierarchy
 - [x] Club Dashboard: Preserve accessible keyboard, tooltip, hover-expansion, mobile navigation, and reduced-motion behavior

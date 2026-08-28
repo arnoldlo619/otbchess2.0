@@ -1,5 +1,4 @@
 import { useState, type ElementType, type FocusEvent } from "react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type ClubDashboardSidebarItem = {
@@ -22,7 +21,6 @@ type ClubDashboardSidebarProps = {
   temporarilyExpanded: boolean;
   onPointerExpandedChange: (expanded: boolean) => void;
   onFocusExpandedChange: (expanded: boolean) => void;
-  onToggleCollapsed: () => void;
   onSelect: (id: string) => void;
   onBackToClubs: () => void;
 };
@@ -43,7 +41,6 @@ export function ClubDashboardSidebar({
   temporarilyExpanded,
   onPointerExpandedChange,
   onFocusExpandedChange,
-  onToggleCollapsed,
   onSelect,
   onBackToClubs,
 }: ClubDashboardSidebarProps) {
@@ -193,25 +190,6 @@ export function ClubDashboardSidebar({
               <span className="text-sm font-bold">{clubName.charAt(0).toUpperCase()}</span>
             )}
           </button>
-          <div
-            className="min-w-0 flex-1 overflow-hidden pl-3 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
-            style={{ opacity: expanded ? 1 : 0, transform: expanded ? "translateX(0)" : "translateX(-6px)", transitionDelay: expanded ? "90ms" : "0ms" }}
-            aria-hidden={!expanded}
-          >
-            <p className="truncate text-sm font-bold tracking-[-0.015em] text-white">{clubName}</p>
-          </div>
-          {expanded && (
-            <button
-              type="button"
-              onClick={onToggleCollapsed}
-              aria-label={collapsed ? "Keep sidebar expanded" : "Collapse sidebar"}
-              aria-pressed={!collapsed}
-              className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/45 outline-none transition-colors duration-150 hover:bg-white/[0.06] hover:text-white/85 focus-visible:ring-2 motion-reduce:transition-none"
-              style={{ color: undefined, boxShadow: "none" }}
-            >
-              {collapsed ? <PanelLeftOpen size={17} strokeWidth={1.7} /> : <PanelLeftClose size={17} strokeWidth={1.7} />}
-            </button>
-          )}
         </div>
       </div>
 
@@ -223,24 +201,7 @@ export function ClubDashboardSidebar({
       </nav>
 
       <div className="border-t border-white/[0.065] px-3 py-3">
-        {settingsItem && <div className="mb-2">{renderItem(settingsItem)}</div>}
-        {!expanded && (
-          <Tooltip delayDuration={250}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={onToggleCollapsed}
-                aria-label="Expand sidebar"
-                aria-pressed={false}
-                className={utilityButtonClass}
-                style={{ justifyContent: "center" }}
-              >
-                <PanelLeftOpen aria-hidden="true" size={18} strokeWidth={1.7} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} className="border border-white/10 bg-[#101d15] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl">Expand sidebar</TooltipContent>
-          </Tooltip>
-        )}
+        {settingsItem && renderItem(settingsItem)}
       </div>
     </aside>
   );

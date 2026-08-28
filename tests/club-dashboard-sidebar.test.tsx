@@ -36,7 +36,6 @@ function renderSidebar(overrides: Partial<React.ComponentProps<typeof ClubDashbo
     temporarilyExpanded: false,
     onPointerExpandedChange: vi.fn(),
     onFocusExpandedChange: vi.fn(),
-    onToggleCollapsed: vi.fn(),
     onSelect: vi.fn(),
     onBackToClubs: vi.fn(),
     ...overrides,
@@ -54,7 +53,7 @@ describe("ClubDashboardSidebar", () => {
     expect(sidebar.style.width).toBe("72px");
     expect(screen.getByRole("button", { name: "Feed" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByLabelText("12 upcoming").textContent).toBe("9+");
-    expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Expand sidebar" })).toBeNull();
     expect(screen.queryByRole("button", { name: "All clubs" })).toBeNull();
     expect(screen.getByRole("button", { name: "Feed" }).style.width).toBe("42px");
   });
@@ -68,7 +67,7 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.queryByText("Manage")).toBeNull();
     expect(screen.queryByText("Club workspace")).toBeNull();
     expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Keep sidebar expanded" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Keep sidebar expanded" })).toBeNull();
   });
 
   it("requests temporary expansion for both pointer and keyboard users", () => {
@@ -86,27 +85,24 @@ describe("ClubDashboardSidebar", () => {
     expect(onFocusExpandedChange).toHaveBeenCalledWith(true);
   });
 
-  it("preserves navigation, back, and pin actions", () => {
+  it("preserves navigation and the logo back action without redundant manual toggle controls", () => {
     const onSelect = vi.fn();
     const onBackToClubs = vi.fn();
-    const onToggleCollapsed = vi.fn();
-    renderSidebar({ temporarilyExpanded: true, onSelect, onBackToClubs, onToggleCollapsed });
+    renderSidebar({ temporarilyExpanded: true, onSelect, onBackToClubs });
 
     fireEvent.click(screen.getByRole("button", { name: "Events" }));
     fireEvent.click(screen.getByRole("button", { name: "Back to all clubs" }));
-    fireEvent.click(screen.getByRole("button", { name: "Keep sidebar expanded" }));
 
     expect(onSelect).toHaveBeenCalledWith("events");
     expect(onBackToClubs).toHaveBeenCalledTimes(1);
-    expect(onToggleCollapsed).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps compact mode as the default while restoring an explicit persisted pin preference", () => {
+  it("keeps compact mode as the default without rendering a persistent pin control", () => {
     const dashboard = readFileSync(resolve(process.cwd(), "client/src/pages/ClubDashboard.tsx"), "utf8");
 
-    expect(dashboard).toContain('localStorage.getItem("club-sidebar-collapsed") !== "0"');
-    expect(dashboard).toContain('localStorage.setItem(`club-sidebar-collapsed`, next ? "1" : "0")');
-    expect(dashboard).toContain("return true;");
+    expect(dashboard).toContain("collapsed");
+    expect(dashboard).not.toContain("toggleSidebar");
+    expect(dashboard).not.toContain("club-sidebar-collapsed");
   });
 
   it("uses the established vector icon system without emoji glyphs", () => {
