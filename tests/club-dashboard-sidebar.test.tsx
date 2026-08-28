@@ -64,9 +64,10 @@ describe("ClubDashboardSidebar", () => {
 
     const sidebar = screen.getByRole("complementary", { name: "Club dashboard sidebar" });
     expect(sidebar.style.width).toBe("264px");
-    expect(screen.getByText("Workspace")).toBeTruthy();
-    expect(screen.getByText("Manage")).toBeTruthy();
-    expect(screen.getByText("Club workspace")).toBeTruthy();
+    expect(screen.queryByText("Workspace")).toBeNull();
+    expect(screen.queryByText("Manage")).toBeNull();
+    expect(screen.queryByText("Club workspace")).toBeNull();
+    expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Keep sidebar expanded" })).toBeTruthy();
   });
 
@@ -112,8 +113,10 @@ describe("ClubDashboardSidebar", () => {
     const sidebar = readFileSync(resolve(process.cwd(), "client/src/components/club/ClubDashboardSidebar.tsx"), "utf8");
 
     expect(sidebar).not.toMatch(/\p{Extended_Pictographic}/u);
-    expect(sidebar).not.toContain("All clubs");
-    expect(sidebar).toContain("flex flex-1 flex-col justify-center gap-5");
+    expect(sidebar).toContain('aria-label="Back to all clubs"');
+    expect(sidebar).not.toContain('renderGroup("Workspace"');
+    expect(sidebar).not.toContain('renderGroup("Manage"');
+    expect(sidebar).toContain("flex flex-1 flex-col justify-center overflow-y-auto");
     expect(sidebar).toContain("active && expanded");
     expect(sidebar).toContain('width: expanded ? "calc(100% - 4px)" : "42px"');
     expect(sidebar).toContain("transition-[width,box-shadow]");

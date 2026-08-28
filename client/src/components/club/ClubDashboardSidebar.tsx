@@ -50,7 +50,8 @@ export function ClubDashboardSidebar({
   const expanded = !collapsed || temporarilyExpanded;
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const workspaceItems = items.filter((item) => item.group === "workspace");
-  const manageItems = items.filter((item) => item.group === "manage");
+  const settingsItem = items.find((item) => item.id === "settings");
+  const primaryItems = [...workspaceItems, ...items.filter((item) => item.group === "manage" && item.id !== "settings")];
 
   function handleBlur(event: FocusEvent<HTMLElement>) {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -151,17 +152,10 @@ export function ClubDashboardSidebar({
     );
   }
 
-  function renderGroup(label: string, groupItems: ClubDashboardSidebarItem[]) {
+  function renderGroup(groupItems: ClubDashboardSidebarItem[]) {
     if (groupItems.length === 0) return null;
     return (
-      <div className={expanded ? "space-y-1.5" : "space-y-1"}>
-        {expanded && (
-          <div className="h-5 overflow-hidden px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none">
-            {label}
-          </div>
-        )}
-        <div className="space-y-1">{groupItems.map(renderItem)}</div>
-      </div>
+      <div className="space-y-1">{groupItems.map(renderItem)}</div>
     );
   }
 
@@ -205,7 +199,6 @@ export function ClubDashboardSidebar({
             aria-hidden={!expanded}
           >
             <p className="truncate text-sm font-bold tracking-[-0.015em] text-white">{clubName}</p>
-            <p className="mt-0.5 text-[11px] font-medium text-white/42">Club workspace</p>
           </div>
           {expanded && (
             <button
@@ -224,14 +217,14 @@ export function ClubDashboardSidebar({
 
       <nav
         aria-label="Club dashboard navigation"
-        className="flex flex-1 flex-col justify-center gap-5 overflow-y-auto px-3 py-5"
+        className="flex flex-1 flex-col justify-center overflow-y-auto px-3 py-5"
       >
-        {renderGroup("Workspace", workspaceItems)}
-        {renderGroup("Manage", manageItems)}
+        {renderGroup(primaryItems)}
       </nav>
 
-      {!expanded && (
-        <div className="border-t border-white/[0.065] px-3 py-3">
+      <div className="border-t border-white/[0.065] px-3 py-3">
+        {settingsItem && <div className="mb-2">{renderItem(settingsItem)}</div>}
+        {!expanded && (
           <Tooltip delayDuration={250}>
             <TooltipTrigger asChild>
               <button
@@ -247,8 +240,8 @@ export function ClubDashboardSidebar({
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10} className="border border-white/10 bg-[#101d15] px-2.5 py-1.5 text-xs font-semibold text-white shadow-xl">Expand sidebar</TooltipContent>
           </Tooltip>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 }

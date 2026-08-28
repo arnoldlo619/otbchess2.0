@@ -26,6 +26,11 @@
 - [ ] Club Dashboard: Validate sidebar icon hover, focus, active, reduced-motion, and mobile behavior
 - [x] Club Dashboard: Capture hover icon feedback and rerun narrow mobile QA after the icon interaction refinement
 - [x] Club Dashboard: Capture explicit desktop hover-state evidence for the final sidebar icon scale and glow treatment
+- [x] Club Dashboard: Remove the expanded sidebar's Club workspace subtitle and Workspace/Manage section labels
+- [x] Club Dashboard: Move Settings into the sidebar footer while preserving compact tooltip and active-state behavior
+- [ ] Club Dashboard: Verify simplified expanded navigation, Settings footer, keyboard focus, and mobile shell behavior
+- [ ] Club Dashboard: Capture expanded label-free sidebar and footer Settings placement after the simplified layout change
+- [ ] Club Dashboard: Re-run keyboard focus and narrow mobile shell verification after the simplified sidebar layout change
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
