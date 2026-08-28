@@ -127,8 +127,10 @@ export function createPrepRouter(): Router {
       return;
     }
 
-    // V3 path (?schema=3)
-    if (req.query.schema === "3") {
+    // The launch-ready report is the default contract. Older callers must opt
+    // into the legacy payload explicitly so a missing query parameter cannot
+    // leave the current `/prep` UI waiting on an incompatible response shape.
+    if (req.query.schema !== "2") {
       try {
         const activeRequest = activeScoutRequestFromQuery(username, req.query as Record<string, string | string[] | undefined>);
         const normalised = activeRequest.normalizedUsername;

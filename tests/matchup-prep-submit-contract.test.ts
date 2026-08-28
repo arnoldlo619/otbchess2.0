@@ -5,6 +5,13 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync(resolve(process.cwd(), "client/src/pages/MatchupPrep.tsx"), "utf8");
 
 describe("Matchup Prep submit action", () => {
+  it("defaults the report route to the launch-ready contract unless legacy schema 2 is explicitly requested", () => {
+    const routeSource = readFileSync(resolve(process.cwd(), "server/prepRoutes.ts"), "utf8");
+
+    expect(routeSource).toContain('if (req.query.schema !== "2")');
+    expect(routeSource).not.toContain('if (req.query.schema === "3")');
+  });
+
   it("keeps Scout opponent as visible button text and a real accessible label", () => {
     expect(source).toMatch(/aria-label="Scout opponent"[\s\S]*?>[\s\S]*?Scout opponent[\s\S]*?<ChevronRight/);
     expect(source).not.toMatch(/>\s*aria-label="Scout opponent"\s*\{/);
