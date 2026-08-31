@@ -19,10 +19,12 @@
 - [x] Club Profile: Explicitly document desktop and 375px screenshot review for the enlarged navigation labels
 - [x] Club Profile: Consolidate non-member navigation by nesting Album under Feed and Leagues under Events
 - [x] Club Profile: Preserve public Album and League access through their consolidated parent-tab experiences
-- [ ] Club Profile: Verify consolidated non-member navigation on desktop, mobile, and keyboard routing
+- [x] Club Profile: Verify consolidated non-member navigation on desktop, mobile, and keyboard routing
 - [x] Club Profile: Scope sidebar consolidation to non-members while preserving clear member Album and League access
 - [ ] Club Profile: Add focused visitor/member navigation and parent-tab routing regression coverage
-- [ ] Club Profile: Capture final desktop, mobile, and keyboard routing QA for consolidated visitor navigation
+- [x] Club Profile: Add committed rendered keyboard-routing coverage for Feed to Album and Events to Leagues contextual actions
+- [ ] Club Profile: Add rendered checks that members retain direct Album and League rail access and visitors do not see standalone entries
+- [x] Club Profile: Capture final desktop, mobile, and keyboard routing QA for consolidated visitor navigation
 - [x] Club Dashboard: Research industry-grade dashboard sidebars through Mobbin and document the selected navigation system
 - [x] Club Dashboard: Redesign the desktop sidebar with premium collapsed and expanded states, professional iconography, and clear active hierarchy
 - [x] Club Dashboard: Preserve accessible keyboard, tooltip, hover-expansion, mobile navigation, and reduced-motion behavior
