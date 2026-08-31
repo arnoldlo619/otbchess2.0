@@ -452,6 +452,7 @@ export default function MatchupPrep() {
             no_recent_games: `No eligible ${formatFilterForFormats(request.formats) === "all" ? "Rapid, Blitz, or Bullet" : formatFilterForFormats(request.formats)} games found for "${request.displayUsername}".`,
             all_filtered: `All eligible games for "${request.displayUsername}" were filtered out. Try switching to All formats.`,
             upstream_rate_limited: "The chess provider is rate-limiting requests. Please try again in a minute.",
+            upstream_timeout: "The chess provider took too long to respond. Please retry your report.",
           };
           throw new Error(friendlyMsg[data.error] ?? data.message ?? `Error ${res.status}`);
         }

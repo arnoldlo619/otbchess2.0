@@ -226,7 +226,8 @@ export type PrepErrorCode =
   | "not_found"
   | "no_recent_games"
   | "all_filtered"
-  | "upstream_rate_limited";
+  | "upstream_rate_limited"
+  | "upstream_timeout";
 
 export interface PrepErrorPayload {
   error: PrepErrorCode;

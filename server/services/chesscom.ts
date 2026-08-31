@@ -67,10 +67,17 @@ function normalizeChesscom(payload: unknown): RawGame {
   };
 }
 
-async function fetchWithRetry(url: string, opts: RequestInit, retries = 3): Promise<Response> {
+export async function fetchWithRetry(
+  url: string,
+  opts: RequestInit,
+  retries = 2,
+  timeoutMs = 10_000,
+): Promise<Response> {
   for (let attempt = 0; attempt < retries; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const res = await fetch(url, opts);
+      const res = await fetch(url, { ...opts, signal: controller.signal });
       if (res.status === 429) {
         // Rate limited — wait and retry
         await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
@@ -78,8 +85,13 @@ async function fetchWithRetry(url: string, opts: RequestInit, retries = 3): Prom
       }
       return res;
     } catch (err) {
-      if (attempt === retries - 1) throw err;
+      if (attempt === retries - 1) {
+        if (controller.signal.aborted) throw new Error("UpstreamTimeout: chess.com", { cause: err });
+        throw new Error("UpstreamRequestFailed: chess.com", { cause: err });
+      }
       await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    } finally {
+      clearTimeout(timeout);
     }
   }
   throw new Error("MaxRetriesExceeded");

@@ -141,6 +141,11 @@ export function createPrepRouter(): Router {
         const cacheKey = scoutRequestCacheKey(activeRequest);
 
         if (!forceRefresh) {
+          const remembered = readRememberedPrepAnalysisReport(cacheKey);
+          if (remembered) {
+            res.json({ ...remembered.report, _cached: true });
+            return;
+          }
           try {
             const db = await getDb();
             const [cached] = await db.select().from(prepCache).where(eq(prepCache.username, cacheKey)).limit(1);
@@ -197,6 +202,8 @@ export function createPrepRouter(): Router {
           res.status(422).json({ error: "all_filtered", message: `All games for "${username}" were filtered out (unrated, wrong time control, or corrupt).` } as PrepErrorPayload);
         } else if (msg.startsWith("UpstreamRateLimited:")) {
           res.status(429).json({ error: "upstream_rate_limited", message: "The chess provider is rate-limiting requests. Please try again in a few minutes." } as PrepErrorPayload);
+        } else if (msg.startsWith("UpstreamTimeout:")) {
+          res.status(504).json({ error: "upstream_timeout", message: "The chess provider took too long to respond. Please retry your report." } as PrepErrorPayload);
         } else {
           res.status(502).json({ error: "all_filtered", message: "Could not generate prep report. Please try again." } as PrepErrorPayload);
         }

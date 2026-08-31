@@ -79,6 +79,11 @@
 - [x] Matchup Prep: Complete and record a finished light-mode Matchup Prep report capture before declaring MP-18 complete
 - [x] Matchup Prep: Diagnose and resolve the reported `/prep` page and Chess.com scouting-report generation failure
 - [x] Matchup Prep: Add a regression for the identified report-generation failure and verify the completed report UI
+- [x] Matchup Prep: Diagnose and resolve the reported Chess.com scouting-report generation regression on `/prep`
+- [x] Matchup Prep: Add a regression for the root cause and verify report generation in the browser
+- [x] Matchup Prep: Bound Chess.com provider requests so an upstream stall resolves to recoverable user feedback instead of indefinite report-building state
+- [x] Matchup Prep: Verify the repaired blank `/prep` to completed Chess.com report browser flow
+- [x] Matchup Prep: Add committed remembered-cache fast-path regression coverage and re-run focused API/UI validation
 - [x] Matchup Prep: Correct compressed empty-state heading word spacing found during visual QA
 - [x] Matchup Prep: Align Strong, Usable, Limited, and Stale freshness thresholds exactly with the launch acceptance policy
 - [x] Matchup Prep: Require structured, evidence-backed legal Scout Brief actions and withhold non-concrete primary recommendations
