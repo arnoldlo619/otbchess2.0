@@ -3989,7 +3989,7 @@ export default function ClubDashboard() {
         {tab === "overview" && isOwnerOrDirector && (
           <div className="space-y-5">
   {/* ── 1. Tasks Needing Attention — only when there are actionable items ── */}
-            {(pendingInvites.length > 0 || !club.description || !club.avatarUrl || upcomingEvents.length === 0) && (
+            {false && (pendingInvites.length > 0 || !club?.description || !club?.avatarUrl || upcomingEvents.length === 0) && (
               <div className="rounded-2xl border border-amber-500/20 p-4" style={{ background: "oklch(0.16 0.06 85 / 0.12)" }}>
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-4 h-4 text-amber-400" />
@@ -4002,13 +4002,13 @@ export default function ClubDashboard() {
                       <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
                     </button>
                   )}
-                  {!club.description && (
+                  {!club?.description && (
                     <button onClick={() => setTab("settings")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
                       <span>Missing club description — add one to attract members</span>
                       <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
                     </button>
                   )}
-                  {!club.avatarUrl && (
+                  {!club?.avatarUrl && (
                     <button onClick={() => setTab("settings")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
                       <span>No club logo uploaded</span>
                       <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
@@ -4062,21 +4062,21 @@ export default function ClubDashboard() {
               <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">Quick Actions</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
-                  { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true), color: accent },
-                  { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true), color: "#60a5fa" },
-                  { icon: QrCode, label: "QR Tools", action: () => { setTab("settings"); setSettingsSubTab("join"); setQrMode("join"); }, color: "#a78bfa" },
-                  { icon: Megaphone, label: "Post", action: () => setTab("feed"), color: "#f59e0b" },
-                ].map(({ icon: Icon, label, action, color }) => (
+                  { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
+                  { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
+                  { icon: QrCode, label: "QR Tools", action: () => { setTab("settings"); setSettingsSubTab("join"); setQrMode("join"); } },
+                  { icon: Megaphone, label: "Post", action: () => setTab("feed") },
+                ].map(({ icon: Icon, label, action }) => (
                   <button
                     key={label}
                     onClick={action}
                     className="flex items-center gap-2.5 p-3 rounded-xl border border-white/06 hover:border-white/15 transition-all text-left"
                     style={{ background: "oklch(0.14 0.04 145)" }}
                   >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${color}18` }}>
-                      <Icon className="w-4 h-4" style={{ color }} />
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/[0.07]">
+                      <Icon className="w-[18px] h-[18px] text-white/80" />
                     </div>
-                    <span className="text-white/80 text-xs font-semibold">{label}</span>
+                    <span className="text-white/90 text-sm font-semibold">{label}</span>
                   </button>
                 ))}
               </div>

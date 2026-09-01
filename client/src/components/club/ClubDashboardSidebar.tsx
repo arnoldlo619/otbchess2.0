@@ -176,16 +176,16 @@ export function ClubDashboardSidebar({
       }}
     >
       <div className="border-b border-white/[0.065] px-3 py-4">
-        <div className="flex h-12 items-center">
+        <div className="flex h-14 items-center">
           <button
             type="button"
             onClick={onBackToClubs}
             aria-label="Back to all clubs"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.09] bg-white/[0.035] outline-none transition-colors duration-150 hover:border-white/15 hover:bg-white/[0.07] focus-visible:ring-2 motion-reduce:transition-none"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.09] bg-white/[0.035] outline-none transition-colors duration-150 hover:border-white/15 hover:bg-white/[0.07] focus-visible:ring-2 motion-reduce:transition-none"
             style={{ color: accent, boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 8%, transparent)` }}
           >
             {clubAvatarUrl ? (
-              <img src={clubAvatarUrl} alt="" className="h-full w-full rounded-[11px] object-cover" />
+              <img src={clubAvatarUrl} alt="" className="h-full w-full rounded-[15px] object-cover" />
             ) : (
               <span className="text-sm font-bold">{clubName.charAt(0).toUpperCase()}</span>
             )}

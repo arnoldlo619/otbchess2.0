@@ -66,6 +66,10 @@
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
 - [ ] Club Dashboard: Verify hover contrast remains distinct from active, focus, touch, and reduced-motion states
+- [ ] Club Dashboard: Increase the compact sidebar club avatar button for stronger visibility
+- [ ] Club Dashboard: Remove the overview Needs Attention block for a more minimal dashboard
+- [ ] Club Dashboard: Make overview quick-action icons monochrome and increase action-label typography
+- [ ] Club Dashboard: Verify the combined dashboard visual cleanup at desktop and mobile widths
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
