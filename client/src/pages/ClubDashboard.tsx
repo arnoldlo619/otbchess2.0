@@ -3948,7 +3948,7 @@ export default function ClubDashboard() {
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
                 {/* ── CLUB BANNER ─────────────────────────────────────────── */}
-                {(() => {
+                {tab !== "album" && (() => {
                   const flag = COUNTRY_FLAGS[club.country ?? ""] ?? "🌍";
                   return (
                     <div
