@@ -42,6 +42,7 @@ import {
   rsvpFormResponses,
   clubAlbums,
   clubAlbumPhotos,
+  clubFeedAttachments,
 } from "../shared/schema";
 import { eq, and, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -1190,6 +1191,68 @@ clubsRouter.delete("/:id/events/:eventId", authMiddleware, async (req: Request, 
 
 // ─── Club Feed API ────────────────────────────────────────────────────────────
 
+const FEED_ATTACHMENT_MAX_COUNT = 4;
+const FEED_ATTACHMENT_MAX_BYTES = 6 * 1024 * 1024;
+const FEED_ATTACHMENT_MAX_TOTAL_BYTES = 16 * 1024 * 1024;
+const FEED_ATTACHMENT_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "text/plain",
+]);
+
+type FeedAttachmentInput = {
+  dataUrl?: string;
+  fileName?: string;
+  mimeType?: string;
+};
+
+function cleanFeedAttachmentName(value: string | undefined, index: number) {
+  const fallback = `attachment-${index + 1}`;
+  const normalized = Array.from(value ?? fallback)
+    .filter((character) => character.charCodeAt(0) >= 32)
+    .join("")
+    .replace(/[\\/]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+  return (normalized || fallback).slice(0, 180);
+}
+
+function parseFeedAttachment(input: FeedAttachmentInput, index: number) {
+  const match = input.dataUrl?.match(/^data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i);
+  const mimeType = input.mimeType?.toLowerCase() ?? match?.[1]?.toLowerCase();
+  if (!match || !mimeType || match[1].toLowerCase() !== mimeType || !FEED_ATTACHMENT_TYPES.has(mimeType)) {
+    throw new Error("Upload a JPEG, PNG, WebP, GIF, PDF, or text file");
+  }
+  const bytes = Buffer.from(match[2], "base64");
+  if (bytes.length === 0 || bytes.length > FEED_ATTACHMENT_MAX_BYTES) {
+    throw new Error("Each attachment must be 6 MB or smaller");
+  }
+  const extension = mimeType === "image/jpeg" ? "jpg" : mimeType === "text/plain" ? "txt" : mimeType.split("/")[1];
+  return { bytes, mimeType, extension, fileName: cleanFeedAttachmentName(input.fileName, index) };
+}
+
+async function isActiveClubMember(clubId: string, ownerId: string, userId: string) {
+  if (ownerId === userId) return true;
+  const db = await getDb();
+  const [membership] = await db.select({ id: dbClubMembers.id }).from(dbClubMembers)
+    .where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)))
+    .limit(1);
+  return Boolean(membership);
+}
+
+function feedAttachmentResponse(clubId: string, feedId: string, attachment: typeof clubFeedAttachments.$inferSelect) {
+  return {
+    id: attachment.id,
+    fileName: attachment.fileName,
+    mimeType: attachment.mimeType,
+    byteSize: attachment.byteSize,
+    url: `/api/clubs/${clubId}/feed/${feedId}/attachments/${attachment.id}/file`,
+  };
+}
+
 /** GET /api/clubs/:id/feed — list feed posts */
 clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -1200,10 +1263,22 @@ clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
       .where(eq(clubFeed.clubId, id))
       .orderBy(desc(clubFeed.isPinned), desc(clubFeed.createdAt))
       .limit(limit);
+    const attachments = rows.length > 0
+      ? await db.select().from(clubFeedAttachments)
+        .where(eq(clubFeedAttachments.clubId, id))
+        .orderBy(clubFeedAttachments.sortOrder, clubFeedAttachments.createdAt)
+      : [];
+    const attachmentsByFeedId = new Map<string, typeof attachments>();
+    for (const attachment of attachments) {
+      const collection = attachmentsByFeedId.get(attachment.feedId) ?? [];
+      collection.push(attachment);
+      attachmentsByFeedId.set(attachment.feedId, collection);
+    }
     res.json(rows.map((r: typeof clubFeed.$inferSelect) => ({
       ...r,
       isPinned: r.isPinned === 1,
       createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+      attachments: (attachmentsByFeedId.get(r.id) ?? []).map((attachment) => feedAttachmentResponse(id, r.id, attachment)),
     })));
   } catch (err) {
     logger.error("[clubs] GET /:id/feed error:", err);
@@ -1211,8 +1286,38 @@ clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
   }
 });
 
+/** GET /api/clubs/:id/feed/:feedId/attachments/:attachmentId/file — authenticated, revocable attachment proxy */
+clubsRouter.get("/:id/feed/:feedId/attachments/:attachmentId/file", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { id, feedId, attachmentId } = req.params;
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id)).limit(1);
+    if (!club || !(await isActiveClubMember(club.id, club.ownerId, userId))) {
+      res.status(404).send("Attachment not found");
+      return;
+    }
+    const [attachment] = await db.select().from(clubFeedAttachments).where(and(
+      eq(clubFeedAttachments.id, attachmentId),
+      eq(clubFeedAttachments.feedId, feedId),
+      eq(clubFeedAttachments.clubId, id),
+    )).limit(1);
+    if (!attachment) {
+      res.status(404).send("Attachment not found");
+      return;
+    }
+    res.set("Cache-Control", "no-store");
+    res.redirect(307, await storageGetSignedUrl(attachment.storageKey));
+  } catch (error) {
+    logger.error("club_feed_attachment_read_failed", { clubId: req.params.id, feedId: req.params.feedId, attachmentId: req.params.attachmentId, error });
+    res.status(502).send("Attachment is temporarily unavailable");
+  }
+});
+
 /** POST /api/clubs/:id/feed — create a feed post */
-clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response) => {
+const feedPostJsonParser = express.json({ limit: "22mb" });
+clubsRouter.post("/:id/feed", requireFullAuth, feedPostJsonParser, async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = getUserId(req, res);
   if (!userId) return;
@@ -1223,21 +1328,63 @@ clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response
     const [membership] = await db.select().from(dbClubMembers)
       .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
     const isOwner = club.ownerId === userId;
-    if (!isOwner && !membership) { res.status(403).json({ error: "Must be a club member to post" }); return; }
-    const body = req.body as typeof clubFeed.$inferInsert;
+    if (!isOwner && !membership) { res.status(403).json({ error: "Active club membership required" }); return; }
+    const body = req.body as typeof clubFeed.$inferInsert & { attachments?: FeedAttachmentInput[] };
+    if (!body.type || typeof body.type !== "string" || body.type.length > 40) {
+      res.status(400).json({ error: "A valid post type is required" }); return;
+    }
+    const cleanDetail = body.detail?.trim() ?? "";
+    if (body.type === "announcement" && !cleanDetail) {
+      res.status(400).json({ error: "Write a message before posting" }); return;
+    }
+    if (cleanDetail.length > 5000) {
+      res.status(400).json({ error: "Post text must be 5,000 characters or fewer" }); return;
+    }
+    if (body.attachments && (!Array.isArray(body.attachments) || body.attachments.length > FEED_ATTACHMENT_MAX_COUNT)) {
+      res.status(400).json({ error: `Add up to ${FEED_ATTACHMENT_MAX_COUNT} attachments per post` }); return;
+    }
+    let preparedAttachments: ReturnType<typeof parseFeedAttachment>[] = [];
+    try {
+      preparedAttachments = (body.attachments ?? []).map(parseFeedAttachment);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : "Invalid attachment" }); return;
+    }
+    if (preparedAttachments.reduce((total, attachment) => total + attachment.bytes.length, 0) > FEED_ATTACHMENT_MAX_TOTAL_BYTES) {
+      res.status(413).json({ error: "Attachments must total 16 MB or less" }); return;
+    }
     const feedId = body.id ?? nanoid(16);
     await db.insert(clubFeed).values({
       id: feedId, clubId: id, type: body.type,
       actorName: body.actorName ?? "", actorAvatarUrl: body.actorAvatarUrl ?? null,
-      detail: body.detail ?? null, linkHref: body.linkHref ?? null,
+      detail: cleanDetail || null, linkHref: body.linkHref ?? null,
       linkLabel: body.linkLabel ?? null, isPinned: body.isPinned ? 1 : 0,
-      payload: body.payload ?? null,
+      payload: body.payload ?? null, createdBy: userId,
     });
+    const storedAttachments = [];
+    for (let index = 0; index < preparedAttachments.length; index += 1) {
+      const attachment = preparedAttachments[index];
+      if (!attachment) continue;
+      const attachmentId = nanoid(20);
+      const { key } = await storagePut(`club-feed/${id}/${feedId}/${attachmentId}.${attachment.extension}`, attachment.bytes, attachment.mimeType);
+      await db.insert(clubFeedAttachments).values({
+        id: attachmentId,
+        feedId,
+        clubId: id,
+        storageKey: key,
+        fileName: attachment.fileName,
+        mimeType: attachment.mimeType,
+        byteSize: attachment.bytes.length,
+        sortOrder: index,
+        createdBy: userId,
+      });
+      storedAttachments.push({ id: attachmentId, fileName: attachment.fileName, mimeType: attachment.mimeType, byteSize: attachment.bytes.length, url: `/api/clubs/${id}/feed/${feedId}/attachments/${attachmentId}/file` });
+    }
     const [created] = await db.select().from(clubFeed).where(eq(clubFeed.id, feedId));
     res.status(201).json({
       ...created,
       isPinned: created.isPinned === 1,
       createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt),
+      attachments: storedAttachments,
     });
   } catch (err) {
     logger.error("[clubs] POST /:id/feed error:", err);
@@ -1254,12 +1401,12 @@ clubsRouter.delete("/:id/feed/:feedId", authMiddleware, async (req: Request, res
     const db = await getDb();
     const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
     if (!club) { res.status(404).json({ error: "Club not found" }); return; }
-    const [membership] = await db.select().from(dbClubMembers)
-      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
     const isOwner = club.ownerId === userId;
-    const isDirector = membership?.role === "director" || membership?.role === "owner";
-    if (!isOwner && !isDirector) { res.status(403).json({ error: "Not authorised" }); return; }
-    await db.delete(clubFeed).where(eq(clubFeed.id, feedId));
+    const [post] = await db.select().from(clubFeed).where(and(eq(clubFeed.id, feedId), eq(clubFeed.clubId, id))).limit(1);
+    if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+    if (!isOwner && post.createdBy !== userId) { res.status(403).json({ error: "Only the original poster or club owner can delete this post" }); return; }
+    await db.delete(clubFeedAttachments).where(and(eq(clubFeedAttachments.feedId, feedId), eq(clubFeedAttachments.clubId, id)));
+    await db.delete(clubFeed).where(and(eq(clubFeed.id, feedId), eq(clubFeed.clubId, id)));
     res.json({ success: true });
   } catch (err) {
     logger.error("[clubs] DELETE /:id/feed/:feedId error:", err);

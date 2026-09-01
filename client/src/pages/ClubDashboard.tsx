@@ -83,12 +83,10 @@ import {
   listFeedEvents,
   syncFeedFromServer,
   seedFeedIfEmpty as _seedFeedIfEmpty,
-  postAnnouncement,
   postPoll,
   postRsvpForm,
   castPollVote,
   upsertFeedRSVP,
-  deleteFeedEvent,
   pinFeedEvent,
   unpinFeedEvent,
   checkAndCloseExpiredPolls,
@@ -178,6 +176,7 @@ import {
   GitBranch as _GitBranch,
   Bell as _Bell,
   Camera,
+  Paperclip,
   Settings2,
   Minus,
   GanttChart,
@@ -212,6 +211,7 @@ import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
+import { apiCreateClubFeedPost, apiDeleteClubFeedPost, canCurrentUserDeleteClubFeedPost, type ClubFeedAttachmentInput } from "@/lib/clubFeedApi";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { ShaderBackground } from "@/components/ui/shader-r";
 import Silk from "@/components/Silk";
@@ -1524,6 +1524,8 @@ function FeedCard({
   const pollExpired = isPoll && event.pollExpiresAt ? new Date(event.pollExpiresAt) < new Date() : false;
   const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
   const userVotedOptions = (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id);
+  const imageAttachments = (event.attachments ?? []).filter((attachment) => attachment.mimeType.startsWith("image/"));
+  const documentAttachments = (event.attachments ?? []).filter((attachment) => !attachment.mimeType.startsWith("image/"));
   const userRsvp = (event.rsvpEntries ?? []).find((r) => r.userId === userId);
 
   function handleVote(optionId: string) {
@@ -1580,8 +1582,7 @@ function FeedCard({
             <p className="text-white/35 text-xs mt-0.5">{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
           )}
         </div>
-        {/* Director action buttons — visible on hover */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
           {canPin && (
             <button
               onClick={() => event.isPinned ? onUnpin(event.id) : onPin(event.id)}
@@ -1600,6 +1601,7 @@ function FeedCard({
               onClick={() => onDelete(event.id)}
               className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/20 hover:text-red-400 transition-colors"
               title="Delete post"
+              aria-label="Delete post"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -1688,9 +1690,30 @@ function FeedCard({
           </div>
         </div>
       )}
-      {!isPoll && !isRsvp && event.type !== "tournament_completed" && event.detail && (
+      {!isPoll && !isRsvp && event.type !== "tournament_completed" && (event.detail || imageAttachments.length > 0 || documentAttachments.length > 0) && (
         <div className="px-4 pb-4">
-          <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
+          {event.detail && <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>}
+          {imageAttachments.length > 0 && (
+            <div className={`mt-3 grid gap-2 ${imageAttachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+              {imageAttachments.map((attachment) => (
+                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer" className="group/image relative overflow-hidden rounded-xl border border-white/10 bg-black/20 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+                  <img loading="lazy" decoding="async" src={attachment.url} alt={attachment.fileName || "Club Feed image attachment"} className="aspect-[4/3] w-full object-cover transition duration-200 group-hover/image:scale-[1.02]" />
+                  <span className="sr-only">Open {attachment.fileName}</span>
+                </a>
+              ))}
+            </div>
+          )}
+          {documentAttachments.length > 0 && (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {documentAttachments.map((attachment) => (
+                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+                  <FileText className="h-4 w-4 shrink-0" style={{ color: accent }} aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate text-xs font-semibold text-white/75">{attachment.fileName}</span>
+                  <Download className="h-3.5 w-3.5 shrink-0 text-white/45" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          )}
           {event.linkHref && (
             <a href={event.linkHref} className="inline-flex items-center gap-1 text-xs font-semibold mt-2 transition-colors hover:opacity-80" style={{ color: accent }}>
               {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
@@ -2590,6 +2613,8 @@ export default function ClubDashboard() {
   const [announcementComposerFocused, setAnnouncementComposerFocused] = useState(false);
   const [announcementComposerExpanded, setAnnouncementComposerExpanded] = useState(false);
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+  const [announcementAttachments, setAnnouncementAttachments] = useState<Array<ClubFeedAttachmentInput & { previewUrl?: string; byteSize: number }>>([]);
+  const [announcementAttachmentError, setAnnouncementAttachmentError] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   // Post-type composer
   const [composerMode, setComposerMode] = useState<"announcement" | "poll" | "rsvp">("announcement");
@@ -2659,6 +2684,7 @@ export default function ClubDashboard() {
   const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const joinQRDialogRef = useRef<HTMLDivElement>(null);
+  const announcementAttachmentInputRef = useRef<HTMLInputElement>(null);
   const deleteMeetupDialogRef = useRef<HTMLDivElement>(null);
   const transferDialogRef = useRef<HTMLDivElement>(null);
   const recordBattleDialogRef = useRef<HTMLDivElement>(null);
@@ -3013,15 +3039,87 @@ export default function ClubDashboard() {
     }
   }
 
-  function submitAnnouncement(e: React.FormEvent) {
+  function resetAnnouncementComposer() {
+    announcementAttachments.forEach((attachment) => attachment.previewUrl && URL.revokeObjectURL(attachment.previewUrl));
+    setAnnouncementText("");
+    setAnnouncementAttachments([]);
+    setAnnouncementAttachmentError(null);
+    setAnnouncementComposerExpanded(false);
+    setAnnouncementComposerFocused(false);
+    if (announcementAttachmentInputRef.current) announcementAttachmentInputRef.current.value = "";
+  }
+
+  async function handleAnnouncementAttachmentSelection(files: FileList | null) {
+    if (!files) return;
+    const selected = Array.from(files);
+    const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf", "text/plain"]);
+    if (selected.length + announcementAttachments.length > 4) {
+      setAnnouncementAttachmentError("Add up to 4 attachments per post.");
+      return;
+    }
+    if (selected.some((file) => !allowed.has(file.type))) {
+      setAnnouncementAttachmentError("Choose a JPEG, PNG, WebP, GIF, PDF, or text file.");
+      return;
+    }
+    if (selected.some((file) => file.size === 0 || file.size > 6 * 1024 * 1024)) {
+      setAnnouncementAttachmentError("Each attachment must be 6 MB or smaller.");
+      return;
+    }
+    if (announcementAttachments.reduce((total, attachment) => total + attachment.byteSize, 0) + selected.reduce((total, file) => total + file.size, 0) > 16 * 1024 * 1024) {
+      setAnnouncementAttachmentError("Attachments must total 16 MB or less.");
+      return;
+    }
+    try {
+      const prepared = await Promise.all(selected.map(async (file) => ({
+        dataUrl: await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Unable to read attachment"));
+          reader.onerror = () => reject(new Error("Unable to read attachment"));
+          reader.readAsDataURL(file);
+        }),
+        fileName: file.name,
+        mimeType: file.type,
+        byteSize: file.size,
+        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      })));
+      setAnnouncementAttachments((current) => [...current, ...prepared]);
+      setAnnouncementAttachmentError(null);
+    } catch {
+      setAnnouncementAttachmentError("Unable to prepare that attachment. Please try again.");
+    } finally {
+      if (announcementAttachmentInputRef.current) announcementAttachmentInputRef.current.value = "";
+    }
+  }
+
+  function removeAnnouncementAttachment(index: number) {
+    setAnnouncementAttachments((current) => {
+      const removed = current[index];
+      if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+      return current.filter((_, currentIndex) => currentIndex !== index);
+    });
+  }
+
+  async function submitAnnouncement(e: React.FormEvent) {
     e.preventDefault();
     if (!announcementText.trim() || !club || !user) return;
     setPostingAnnouncement(true);
-    postAnnouncement(club.id, user.displayName, announcementText.trim(), user.avatarUrl ?? undefined);
-    setAnnouncementText("");
-    setPostingAnnouncement(false);
-    refreshFeed();
-    toast.success("Announcement posted!");
+    try {
+      await apiCreateClubFeedPost(club.id, {
+        type: "announcement",
+        actorName: user.displayName,
+        actorAvatarUrl: user.avatarUrl ?? null,
+        detail: announcementText.trim(),
+        attachments: announcementAttachments.map(({ dataUrl, fileName, mimeType }) => ({ dataUrl, fileName, mimeType })),
+      });
+      resetAnnouncementComposer();
+      const merged = await syncFeedFromServer(club.id);
+      setFeedEvents(merged.slice(0, 50));
+      toast.success("Post published to the club feed.");
+    } catch (error) {
+      setAnnouncementAttachmentError(error instanceof Error ? error.message : "Unable to publish your post.");
+    } finally {
+      setPostingAnnouncement(false);
+    }
   }
 
   function submitPoll(e: React.FormEvent) {
@@ -3116,10 +3214,15 @@ export default function ClubDashboard() {
     refreshFeed();
   }
 
-  function handleDeleteFeedEvent(eventId: string) {
+  async function handleDeleteFeedEvent(eventId: string) {
     if (!club) return;
-    deleteFeedEvent(club.id, eventId);
-    refreshFeed();
+    try {
+      await apiDeleteClubFeedPost(club.id, eventId);
+      setFeedEvents((current) => current.filter((event) => event.id !== eventId));
+      toast.success("Post deleted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to delete post");
+    }
   }
 
   function handlePinFeedEvent(eventId: string) {
@@ -5657,6 +5760,7 @@ export default function ClubDashboard() {
                           value={announcementText}
                           onChange={(e) => setAnnouncementText(e.target.value)}
                           onFocus={() => setAnnouncementComposerFocused(true)}
+                          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); resetAnnouncementComposer(); } }}
                           placeholder="What would you like to share with your club?"
                           maxLength={500}
                           autoFocus
@@ -5672,13 +5776,42 @@ export default function ClubDashboard() {
                           className="relative z-10 h-11 w-full rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-[#4CAF50]/70"
                         />}
                       </div>
+                      {announcementComposerExpanded && (
+                        <>
+                          <input
+                            ref={announcementAttachmentInputRef}
+                            id="club-feed-attachments"
+                            className="sr-only"
+                            type="file"
+                            multiple
+                            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain"
+                            aria-describedby="club-feed-attachment-help"
+                            onChange={(event) => void handleAnnouncementAttachmentSelection(event.currentTarget.files)}
+                          />
+                          {announcementAttachments.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                              {announcementAttachments.map((attachment, index) => (
+                                <div key={`${attachment.fileName}-${index}`} className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.035]">
+                                  {attachment.previewUrl ? <img src={attachment.previewUrl} alt={`Selected ${attachment.fileName}`} className="aspect-square w-full object-cover" /> : <div className="flex aspect-square flex-col items-center justify-center gap-1.5 px-2 text-center"><FileText className="h-5 w-5 text-white/50" /><span className="line-clamp-2 text-[10px] font-semibold text-white/60">{attachment.fileName}</span></div>}
+                                  <button type="button" onClick={() => removeAnnouncementAttachment(index)} className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white shadow-sm transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-white" aria-label={`Remove ${attachment.fileName}`}><X className="h-3.5 w-3.5" /></button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <p id="club-feed-attachment-help" className="text-[11px] leading-5 text-white/35">Up to four JPEG, PNG, WebP, GIF, PDF, or text files. Each file can be up to 6 MB.</p>
+                          {announcementAttachmentError && <p role="alert" className="text-xs font-medium text-red-300">{announcementAttachmentError}</p>}
+                        </>
+                      )}
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          {announcementComposerExpanded && <><Camera className="h-4 w-4 text-white/40" aria-hidden="true" /><Calendar className="h-4 w-4 text-white/40" aria-hidden="true" /></>}
+                          {announcementComposerExpanded && <>
+                            <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold text-white/65 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"><Camera className="h-4 w-4" aria-hidden="true" />Photo / GIF</button>
+                            <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold text-white/65 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"><Paperclip className="h-4 w-4" aria-hidden="true" />Attach</button>
+                          </>}
                           <span id="club-announcement-count" className="text-[11px] tabular-nums text-white/35" aria-live="polite">{announcementText.length}/500</span>
                         </div>
                         <div className="flex items-center gap-2">
-                        {announcementComposerExpanded && <button type="button" onClick={() => { setAnnouncementText(""); setAnnouncementComposerExpanded(false); setAnnouncementComposerFocused(false); }} className="h-9 rounded-xl px-3 text-xs font-semibold text-white/60 transition hover:bg-white/5 hover:text-white">Discard</button>}
+                        {announcementComposerExpanded && <button type="button" onClick={resetAnnouncementComposer} className="h-9 rounded-xl px-3 text-xs font-semibold text-white/60 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">Discard</button>}
                         <button
                           type="submit"
                           disabled={!announcementText.trim() || postingAnnouncement}
@@ -5686,7 +5819,7 @@ export default function ClubDashboard() {
                           style={{ background: accent, touchAction: "manipulation" }}
                         >
                           <Megaphone className="h-3.5 w-3.5" />
-                          Post
+                          {postingAnnouncement ? "Posting…" : "Post"}
                         </button>
                         </div>
                       </div>
@@ -5754,7 +5887,7 @@ export default function ClubDashboard() {
                       avatarUrl={user?.avatarUrl}
                       chesscomUsername={user?.chesscomUsername}
                       clubId={club.id}
-                      canDelete={!!isOwnerOrDirector}
+                      canDelete={canCurrentUserDeleteClubFeedPost(user?.id, club.ownerId, ev.createdBy)}
                       canPin={!!isOwnerOrDirector}
                       onDelete={handleDeleteFeedEvent}
                       onPin={handlePinFeedEvent}

@@ -96,6 +96,16 @@ export interface FeedEvent {
   // ── Image attachment ────────────────────────────────────────────────────
   /** Optional image URL attached to an announcement post */
   imageUrl?: string | null;
+  /** Authenticated, revocable media/document attachments for a Feed post. */
+  attachments?: Array<{
+    id: string;
+    fileName: string;
+    mimeType: string;
+    byteSize: number;
+    url: string;
+  }>;
+  /** Immutable server-side author used for author-or-owner delete permissions. */
+  createdBy?: string | null;
 
   // ── Reactions ────────────────────────────────────────────────────────────
   /**
@@ -288,6 +298,8 @@ export async function syncFeedFromServer(clubId: string): Promise<FeedEvent[]> {
       id: string; type: string; actorName: string; actorAvatarUrl?: string | null;
       detail?: string | null; linkHref?: string | null; linkLabel?: string | null;
       isPinned: boolean; payload?: string | null; createdAt: string;
+      createdBy?: string | null;
+      attachments?: FeedEvent["attachments"];
     }>;
     const local = loadFeed(clubId);
     const localIds = new Set(local.map((e) => e.id));
@@ -309,6 +321,8 @@ export async function syncFeedFromServer(clubId: string): Promise<FeedEvent[]> {
         linkHref: row.linkHref ?? undefined,
         linkLabel: row.linkLabel ?? undefined,
         isPinned: row.isPinned,
+        createdBy: row.createdBy ?? null,
+        attachments: row.attachments ?? [],
         ...extra,
       });
     }

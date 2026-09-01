@@ -51,17 +51,21 @@
 - [ ] Club Dashboard: Re-run keyboard focus and narrow mobile shell verification after the simplified sidebar layout change
 - [x] Club Dashboard: Remove the duplicate tournament-results trophy treatment while retaining the trophy emoji
 - [x] Club Dashboard: Verify minimalist tournament-results card icon hierarchy before checkpointing
-- [ ] Club Feed: Expand the focused post input into a premium full-content social composer for owners and members
-- [ ] Club Feed: Add accessible toolbar controls, discard/post states, and role-aware posting copy without changing announcement persistence
-- [ ] Club Feed: Verify expanded composer interactions, keyboard dismissal, and mobile layout before checkpointing
-- [ ] Club Feed: Confirm and implement the intended member posting permission scope without weakening club moderation
-- [ ] Club Feed: Allow active club members to post directly to the Feed
-- [ ] Club Feed: Restrict Feed deletion to the original poster or club owner
+- [x] Club Feed: Expand the focused post input into a premium full-content social composer for owners and members
+- [x] Club Feed: Add accessible toolbar controls, discard/post states, and role-aware posting copy without changing announcement persistence
+- [x] Club Feed: Verify expanded composer interactions, keyboard dismissal, and mobile layout before checkpointing
+- [x] Club Feed: Confirm and implement the intended member posting permission scope without weakening club moderation
+- [x] Club Feed: Allow active club members to post directly to the Feed
+- [x] Club Feed: Restrict Feed deletion to the original poster or club owner
 - [ ] Club Feed: Add server and client regression coverage for member posts and deletion authorization
 - [ ] Club Feed: Add committed interaction coverage for expanded composer open, discard, submit, and keyboard behavior
-- [ ] Club Feed: Add secure photo, GIF, and file attachments to member Feed posts
-- [ ] Club Feed: Persist and render attached media with upload previews and author-or-owner deletion integrity
-- [ ] Club Feed: Validate attachment types, permissions, accessibility, and responsive Feed rendering
+- [x] Club Feed: Add secure photo, GIF, and file attachments to member Feed posts
+- [x] Club Feed: Persist and render attached media with upload previews and author-or-owner deletion integrity
+- [x] Club Feed: Validate attachment types, permissions, accessibility, and responsive Feed rendering
+- [ ] Club Feed: Add committed UI coverage for composer expansion, Escape/discard, attachment add/remove, failed upload, and submit behavior
+- [ ] Club Feed: Capture expanded-composer and attachment-rendering states at desktop and mobile widths
+- [ ] Club Feed: Add explicit keyboard and accessible-label coverage for the attachment input trigger
+- [x] Club Feed: Intentionally replace legacy local-only announcement persistence with the server-backed Feed contract required for secure attachment authorization
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
@@ -70,8 +74,8 @@
 - [ ] Club Dashboard: Remove the overview Needs Attention block for a more minimal dashboard
 - [ ] Club Dashboard: Make overview quick-action icons monochrome and increase action-label typography
 - [ ] Club Dashboard: Verify the combined dashboard visual cleanup at desktop and mobile widths
-- [ ] Club Dashboard: Remove the Quick Actions QR Tools button and clean the QR action color declaration
-- [ ] Club Dashboard: Verify the reduced quick-action layout and accessible QR action contrast before checkpointing
+- [x] Club Dashboard: Remove the Quick Actions QR Tools button and clean the QR action color declaration
+- [x] Club Dashboard: Verify the reduced quick-action layout and accessible QR action contrast before checkpointing
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
@@ -7374,7 +7378,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Overview, Feed, Members, Events, Tournaments, League, Content, Settings areas
 
 ### D. Club Feed
-- [ ] Post hierarchy with author identity, date/time, media
+- [x] Post hierarchy with author identity, date/time, media
 - [ ] Event attachments, polls, comments/reactions
 - [ ] Empty states
 - [ ] Composer with moderation controls

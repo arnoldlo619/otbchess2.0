@@ -1274,6 +1274,7 @@ export const clubFeed = mysqlTable(
     linkLabel: varchar("link_label", { length: 100 }),
     isPinned: tinyint("is_pinned").notNull().default(0),
     payload: text("payload"),
+    createdBy: varchar("created_by", { length: 64 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
@@ -1284,6 +1285,31 @@ export const clubFeed = mysqlTable(
 );
 export type ClubFeedRow = typeof clubFeed.$inferSelect;
 export type NewClubFeedRow = typeof clubFeed.$inferInsert;
+
+// ─── club_feed_attachments ────────────────────────────────────────────────────
+// File bytes remain in managed storage. This table only stores metadata and the
+// opaque object key used by the authenticated application media proxy.
+export const clubFeedAttachments = mysqlTable(
+  "club_feed_attachments",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    feedId: varchar("feed_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    storageKey: text("storage_key").notNull(),
+    fileName: varchar("file_name", { length: 180 }).notNull(),
+    mimeType: varchar("mime_type", { length: 100 }).notNull(),
+    byteSize: int("byte_size").notNull(),
+    sortOrder: int("sort_order").notNull().default(0),
+    createdBy: varchar("created_by", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    cfaFeedSortIdx: index("cfa_feed_sort_idx").on(table.feedId, table.sortOrder),
+    cfaClubIdx: index("cfa_club_idx").on(table.clubId),
+  })
+);
+export type ClubFeedAttachmentRow = typeof clubFeedAttachments.$inferSelect;
+export type NewClubFeedAttachmentRow = typeof clubFeedAttachments.$inferInsert;
 
 // ─── club_event_rsvps ─────────────────────────────────────────────────────────
 // Server-side store for club event RSVPs (going / maybe / not_going).
