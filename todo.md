@@ -49,6 +49,8 @@
 - [ ] Club Dashboard: Verify simplified expanded navigation, Settings footer, keyboard focus, and mobile shell behavior
 - [ ] Club Dashboard: Capture expanded label-free sidebar and footer Settings placement after the simplified layout change
 - [ ] Club Dashboard: Re-run keyboard focus and narrow mobile shell verification after the simplified sidebar layout change
+- [x] Club Dashboard: Remove the duplicate tournament-results trophy treatment while retaining the trophy emoji
+- [x] Club Dashboard: Verify minimalist tournament-results card icon hierarchy before checkpointing
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
@@ -82,6 +84,10 @@
 - [x] Matchup Prep: Diagnose and resolve the reported Chess.com scouting-report generation regression on `/prep`
 - [x] Matchup Prep: Add a regression for the root cause and verify report generation in the browser
 - [x] Matchup Prep: Bound Chess.com provider requests so an upstream stall resolves to recoverable user feedback instead of indefinite report-building state
+- [ ] Matchup Prep: Diagnose the false “not enough eligible recent games” result for valid Chess.com usernames
+- [ ] Matchup Prep: Repair valid-game eligibility handling without lowering data-integrity safeguards
+- [ ] Matchup Prep: Add deterministic regression coverage for the reported Chess.com eligible-game incident
+- [ ] Matchup Prep: Prove blank `/prep` to completed report generation for the reported public account before checkpointing
 - [x] Matchup Prep: Verify the repaired blank `/prep` to completed Chess.com report browser flow
 - [x] Platform Loader: Replace “Preparing the Page” with “Preparing the Board” across shared loading states
 - [x] Platform Loader: Verify the new loader copy and accessibility announcement before checkpointing

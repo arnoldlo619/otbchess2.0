@@ -1665,8 +1665,8 @@ function FeedCard({
             ) : (
               /* Fallback: just show winner name if no podium data */
               <div className="px-4 py-4 flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                <span className="text-amber-300 text-sm font-bold">{event.detail ?? event.actorName}</span>
+                <span aria-hidden="true" className="text-base leading-none">🏆</span>
+                <span className="text-amber-300 text-sm font-bold">{(event.detail ?? event.actorName).replace(/^🏆\s*/, "")}</span>
               </div>
             )}
             {/* Footer: view results link */}

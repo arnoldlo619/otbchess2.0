@@ -31,6 +31,14 @@ import { requireAuth } from "./auth.js";
 
 // ── Prep cache TTL ───────────────────────────────────────────────────────────
 const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const PREP_CACHE_LOOKUP_TIMEOUT_MS = 750;
+
+async function getPrepCacheDb() {
+  return Promise.race([
+    getDb(),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("PrepCacheLookupTimeout")), PREP_CACHE_LOOKUP_TIMEOUT_MS)),
+  ]);
+}
 
 type AuthenticatedRequest = Request & { userId: string };
 
@@ -131,6 +139,7 @@ export function createPrepRouter(): Router {
     // into the legacy payload explicitly so a missing query parameter cannot
     // leave the current `/prep` UI waiting on an incompatible response shape.
     if (req.query.schema !== "2") {
+      let staleCachedReport: import("../shared/prepTypes.js").ScoutReportV3 | null = null;
       try {
         const activeRequest = activeScoutRequestFromQuery(username, req.query as Record<string, string | string[] | undefined>);
         const normalised = activeRequest.normalizedUsername;
@@ -147,16 +156,19 @@ export function createPrepRouter(): Router {
             return;
           }
           try {
-            const db = await getDb();
+            const db = await getPrepCacheDb();
             const [cached] = await db.select().from(prepCache).where(eq(prepCache.username, cacheKey)).limit(1);
             if (cached) {
               const age = Date.now() - new Date(cached.cachedAt).getTime();
               const versionMatch = cached.engineVersion === ENGINE_VERSION_V3;
-              if (age < PREP_CACHE_TTL_MS && versionMatch) {
+              if (versionMatch) {
                 const payload = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport | import("../shared/prepTypes.js").ScoutReportV3;
                 if ("schemaVersion" in payload && payload.schemaVersion === 1 && "analysisSnapshot" in payload) {
-                  res.json({ ...payload.report, _cached: true });
-                  return;
+                  if (age < PREP_CACHE_TTL_MS) {
+                    res.json({ ...payload.report, _cached: true });
+                    return;
+                  }
+                  staleCachedReport = payload.report;
                 }
               }
             }
@@ -194,6 +206,10 @@ export function createPrepRouter(): Router {
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
         logger.error("[prep v3]", msg);
+        if (staleCachedReport) {
+          res.json({ ...staleCachedReport, _cached: true, _stale: true });
+          return;
+        }
         if (msg.startsWith("PlayerNotFound:")) {
           res.status(404).json({ error: "not_found", message: `Player "${username}" was not found on the selected provider.` } as PrepErrorPayload);
         } else if (msg.startsWith("NoRecentGames:")) {
