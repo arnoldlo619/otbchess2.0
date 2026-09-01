@@ -83,6 +83,8 @@
 - [x] Matchup Prep: Add a regression for the root cause and verify report generation in the browser
 - [x] Matchup Prep: Bound Chess.com provider requests so an upstream stall resolves to recoverable user feedback instead of indefinite report-building state
 - [x] Matchup Prep: Verify the repaired blank `/prep` to completed Chess.com report browser flow
+- [x] Platform Loader: Replace “Preparing the Page” with “Preparing the Board” across shared loading states
+- [x] Platform Loader: Verify the new loader copy and accessibility announcement before checkpointing
 - [x] Matchup Prep: Add committed remembered-cache fast-path regression coverage and re-run focused API/UI validation
 - [x] Matchup Prep: Correct compressed empty-state heading word spacing found during visual QA
 - [x] Matchup Prep: Align Strong, Usable, Limited, and Stale freshness thresholds exactly with the launch acceptance policy

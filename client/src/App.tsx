@@ -84,7 +84,7 @@ const RsvpFormBuilderPage = lazy(() => import("./pages/RsvpFormBuilderPage"));
 function PageLoader() {
   return (
     <div className="otb-route-loader" data-route-loader>
-      <OTBLoader size={72} label="Preparing the page" />
+      <OTBLoader size={72} label="Preparing the Board" />
     </div>
   );
 }

@@ -9,7 +9,7 @@ describe("route loader semantics", () => {
   it("keeps lazy route loading in flow rather than using the full-page loader surface", () => {
     expect(appSource).toContain('className="otb-route-loader"');
     expect(appSource).toContain("data-route-loader");
-    expect(appSource).toContain('<OTBLoader size={72} label="Preparing the page" />');
+    expect(appSource).toContain('<OTBLoader size={72} label="Preparing the Board" />');
     expect(appSource).not.toContain('<OTBLoader fullPage label="Preparing the board" />');
   });
 
