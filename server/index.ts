@@ -359,8 +359,12 @@ export function createApp() {
   //    req.protocol as "https" and secure cookies work correctly. ────────────
   app.set("trust proxy", 1);
 
-  // ── Body size cap — prevents large-payload DoS on state/player endpoints ────
-  app.use(express.json({ limit: "512kb" }));
+  // ── Body size cap — preserves a tight default while allowing the separately
+  // validated Club Feed attachment cap on its one media-bearing POST route. ───
+  app.use(express.json({
+    limit: "512kb",
+    type: (req) => !(req.method === "POST" && /^\/api\/clubs\/[^/]+\/feed\/?$/.test(req.url?.split("?")[0] ?? "")),
+  }));
   app.use(cookieParser());
 
   app.use(requestCorrelation);
@@ -555,6 +559,7 @@ export function createApp() {
   const uploadsDir = "/tmp/otb-uploads";
   app.use("/uploads", express.static(uploadsDir, { maxAge: "7d" }));
   // ── Clubs API (Discover, Create, Join, Members) ───────────────────────────
+  app.use("/api/clubs/:clubId/feed", express.json({ limit: "22mb" }));
   app.use("/api/clubs", clubsRouter);
   app.use("/api/leagues", leaguesRouter);
   app.use("/api/email", emailRouter);

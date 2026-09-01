@@ -72,7 +72,7 @@
 - [x] Club Album: Create a default, owner-editable and owner-deletable Club Photos album for every club
 - [x] Club Album: Use the supplied ChessOTB tournament artwork as the default Club Photos cover image
 - [x] Club Album: Validate default album bootstrapping, owner management, public display, and responsive grid behavior
-- [ ] Club Feed: Resolve the detected request payload limit that blocks larger valid attachment uploads
+- [x] Club Feed: Resolve the detected request payload limit that blocks larger valid attachment uploads
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

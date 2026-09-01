@@ -68,6 +68,7 @@ export const requestCorrelation: RequestHandler = (req, res, next) => {
 
 export const globalErrorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   const requestId = (req as typeof req & RequestWithId).requestId ?? nanoid(10);
+  const isPayloadTooLarge = error?.type === "entity.too.large" || error?.status === 413;
   logger.error("express_unhandled_route_error", {
     requestId,
     method: req.method,
@@ -75,10 +76,10 @@ export const globalErrorHandler: ErrorRequestHandler = (error, req, res, _next) 
     error,
   });
   if (!res.headersSent) {
-    res.status(500).json({
-      error: "Internal server error",
-      message: "We couldn’t complete that request. Please try again.",
-      code: "INTERNAL_SERVER_ERROR",
+    res.status(isPayloadTooLarge ? 413 : 500).json({
+      error: isPayloadTooLarge ? "Request payload too large" : "Internal server error",
+      message: isPayloadTooLarge ? "This upload is too large. Please choose smaller files and try again." : "We couldn’t complete that request. Please try again.",
+      code: isPayloadTooLarge ? "PAYLOAD_TOO_LARGE" : "INTERNAL_SERVER_ERROR",
       requestId,
     });
   }
