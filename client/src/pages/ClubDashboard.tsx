@@ -206,6 +206,7 @@ import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
+import { ClubFeedMediaGallery } from "@/components/club/ClubFeedMediaGallery";
 import { apiGetClub, apiListClubMembers, apiListMyClubs, apiTransferOwnership } from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
@@ -1518,6 +1519,8 @@ function FeedCard({
   onVoted: () => void;
   onRsvped: () => void;
 }) {
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryStartIndex, setGalleryStartIndex] = useState(0);
   const isPoll = event.type === "poll";
   const isRsvp = event.type === "rsvp_form";
   const isPollResult = event.type === "poll_result";
@@ -1695,11 +1698,11 @@ function FeedCard({
           {event.detail && <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>}
           {imageAttachments.length > 0 && (
             <div className={`mt-3 grid gap-2 ${imageAttachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
-              {imageAttachments.map((attachment) => (
-                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer" className="group/image relative overflow-hidden rounded-xl border border-white/10 bg-black/20 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+              {imageAttachments.map((attachment, index) => (
+                <button key={attachment.id} type="button" onClick={() => { setGalleryStartIndex(index); setGalleryOpen(true); }} className="group/image relative overflow-hidden rounded-xl border border-white/10 bg-black/20 text-left focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
                   <img loading="lazy" decoding="async" src={attachment.url} alt={attachment.fileName || "Club Feed image attachment"} className="aspect-[4/3] w-full object-cover transition duration-200 group-hover/image:scale-[1.02]" />
-                  <span className="sr-only">Open {attachment.fileName}</span>
-                </a>
+                  <span className="sr-only">Open {attachment.fileName} in gallery</span>
+                </button>
               ))}
             </div>
           )}
@@ -2102,6 +2105,7 @@ function FeedCard({
           </div>
         </div>
       )}
+      <ClubFeedMediaGallery images={imageAttachments} initialIndex={galleryStartIndex} open={galleryOpen} onOpenChange={setGalleryOpen} />
     </div>
   );
 }

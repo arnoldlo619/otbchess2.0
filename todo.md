@@ -66,6 +66,8 @@
 - [ ] Club Feed: Capture expanded-composer and attachment-rendering states at desktop and mobile widths
 - [ ] Club Feed: Add explicit keyboard and accessible-label coverage for the attachment input trigger
 - [x] Club Feed: Intentionally replace legacy local-only announcement persistence with the server-backed Feed contract required for secure attachment authorization
+- [x] Club Feed: Add an accessible image gallery preview modal for photo and GIF attachments with keyboard, touch, and responsive controls
+- [x] Club Feed: Validate gallery open, close, previous/next navigation, focus handling, and mobile presentation
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
