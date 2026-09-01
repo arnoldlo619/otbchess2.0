@@ -70,6 +70,8 @@
 - [ ] Club Dashboard: Remove the overview Needs Attention block for a more minimal dashboard
 - [ ] Club Dashboard: Make overview quick-action icons monochrome and increase action-label typography
 - [ ] Club Dashboard: Verify the combined dashboard visual cleanup at desktop and mobile widths
+- [ ] Club Dashboard: Remove the Quick Actions QR Tools button and clean the QR action color declaration
+- [ ] Club Dashboard: Verify the reduced quick-action layout and accessible QR action contrast before checkpointing
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 

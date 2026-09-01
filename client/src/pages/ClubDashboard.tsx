@@ -3655,7 +3655,7 @@ export default function ClubDashboard() {
                   style={{
                     background: `${accent}22`,
                     border: `1px solid ${accent}55`,
-                    color: accent,
+                    color: '#fafafa',
                     touchAction: "manipulation",
                   }}
                 >
@@ -4064,7 +4064,6 @@ export default function ClubDashboard() {
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
-                  { icon: QrCode, label: "QR Tools", action: () => { setTab("settings"); setSettingsSubTab("join"); setQrMode("join"); } },
                   { icon: Megaphone, label: "Post", action: () => setTab("feed") },
                 ].map(({ icon: Icon, label, action }) => (
                   <button
