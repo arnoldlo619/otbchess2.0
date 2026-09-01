@@ -9,7 +9,6 @@ import {
   Plus,
   RefreshCw,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -126,68 +125,49 @@ export function formatClubAlbumDate(eventDate: string | null, createdAt: string)
   });
 }
 
-function AlbumMosaic({
+function AlbumGridItem({
   album,
+  photoIndex,
   onOpen,
+  canManage,
+  onEdit,
+  onDelete,
 }: {
   album: ClubAlbum;
+  photoIndex: number | null;
   onOpen: (album: ClubAlbum, index: number) => void;
+  canManage: boolean;
+  onEdit: (album: ClubAlbum) => void;
+  onDelete: (album: ClubAlbum) => void;
 }) {
-  const visible = album.photos.slice(0, 5);
-  const remaining = Math.max(0, album.photos.length - visible.length);
-
-  if (visible.length === 0) {
-    return (
-      <div className="flex aspect-[16/8] items-center justify-center bg-white/[0.025] text-white/25">
-        <Images className="h-9 w-9" aria-hidden="true" />
-      </div>
-    );
-  }
-
-  if (visible.length === 1) {
-    return (
-      <button type="button" onClick={() => onOpen(album, 0)} className="block w-full overflow-hidden bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]">
-        <img
-          src={visible[0].url}
-          alt={visible[0].altText || visible[0].caption || `${album.title} photo 1`}
-          loading="lazy"
-          decoding="async"
-          className="aspect-[16/10] w-full object-cover transition-transform duration-300 motion-safe:hover:scale-[1.015]"
-        />
-      </button>
-    );
-  }
+  const photo = photoIndex === null ? null : album.photos[photoIndex];
+  const coverUrl = photo?.url ?? album.coverImageUrl;
+  const label = photo
+    ? photo.altText || photo.caption || `${album.title} photo ${(photoIndex ?? 0) + 1}`
+    : `${album.title} album cover`;
 
   return (
-    <div className={`grid gap-1 bg-black/30 ${visible.length === 2 ? "grid-cols-2" : "grid-cols-2 grid-rows-2"}`}>
-      {visible.map((photo, index) => {
-        const isLead = visible.length >= 3 && index === 0;
-        const isLast = index === visible.length - 1;
-        return (
-          <button
-            type="button"
-            key={photo.id}
-            onClick={() => onOpen(album, index)}
-            className={`group relative min-h-0 overflow-hidden focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] ${
-              visible.length === 2 ? "aspect-square" : isLead ? "row-span-2 min-h-[244px] sm:min-h-[360px]" : "min-h-[120px] sm:min-h-[178px]"
-            }`}
-          >
-            <img
-              src={photo.url}
-              alt={photo.altText || photo.caption || `${album.title} photo ${index + 1}`}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.025]"
-            />
-            {isLast && remaining > 0 && (
-              <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-2xl font-bold text-white backdrop-blur-[1px]">
-                +{remaining}
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
+    <article className="group relative aspect-square overflow-hidden bg-white/[0.035]">
+      {coverUrl && photo ? (
+        <button type="button" onClick={() => onOpen(album, photoIndex ?? 0)} className="absolute inset-0 block w-full text-left focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`View ${label}`}>
+          <img src={coverUrl} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.035]" />
+        </button>
+      ) : coverUrl ? (
+        <img src={coverUrl} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full items-center justify-center text-white/25"><Images className="h-8 w-8" aria-hidden="true" /></div>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent px-2 pb-2 pt-9 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+        <p className="truncate text-[11px] font-semibold text-white">{album.title}</p>
+        <p className="mt-0.5 text-[10px] text-white/65">{album.photos.length} photo{album.photos.length === 1 ? "" : "s"}</p>
+      </div>
+      {canManage && (photoIndex === 0 || photoIndex === null) && (
+        <div className="absolute right-1.5 top-1.5 z-10 flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+          <button type="button" onClick={() => onEdit(album)} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white/85 shadow-sm backdrop-blur-sm transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" aria-label={`Edit ${album.title}`}><Pencil className="h-3.5 w-3.5" aria-hidden="true" /></button>
+          <button type="button" onClick={() => onDelete(album)} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white/85 shadow-sm backdrop-blur-sm transition hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300" aria-label={`Delete ${album.title}`}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
+        </div>
+      )}
+    </article>
   );
 }
 
@@ -409,28 +389,32 @@ export function ClubAlbumTab({
   const muted = isDark ? "text-white/55" : "text-[#436850]/75";
 
   return (
-    <section aria-labelledby="club-albums-heading" className="mx-auto w-full max-w-3xl space-y-4">
-      <header className={`rounded-3xl border p-5 sm:p-6 ${surface}`}>
-        <div className="relative flex flex-col items-center gap-4 text-center sm:min-h-11 sm:justify-center">
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: `${accent}20`, color: accent }}>
-                <Images className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className={`text-xs font-semibold uppercase tracking-[0.14em] ${muted}`}>Club memories</span>
+    <section aria-label="Albums" className="mx-auto w-full max-w-5xl space-y-4">
+      <header className={`border-b px-1 pb-5 sm:px-2 sm:pb-6 ${isDark ? "border-white/10 text-white" : "border-[#436850]/15 text-[#12372A]"}`}>
+        <div className="flex items-center gap-4 sm:gap-5">
+          <div className="relative shrink-0 rounded-full p-[2px]" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}66, ${accent})` }}>
+            <div className={`rounded-full p-1 ${isDark ? "bg-[#06130d]" : "bg-white"}`}>
+              <PlayerAvatar username={clubName} name={clubName} avatarUrl={clubAvatarUrl ?? undefined} size={72} showBadge={false} />
             </div>
-            <h2 id="club-albums-heading" className="text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>Albums</h2>
-            <p className={`mt-1 text-sm leading-relaxed ${muted}`}>
-              {albums.length > 0 ? `${albums.length} album${albums.length === 1 ? "" : "s"} · ${totalPhotos} photo${totalPhotos === 1 ? "" : "s"}` : `Event photos shared by ${clubName}.`}
-            </p>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 id="club-albums-heading" className="truncate text-xl font-bold tracking-tight sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{clubName}</h2>
+              <span className={`text-xs font-semibold uppercase tracking-[0.12em] ${muted}`}>Photos</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <span><strong className="font-semibold">{totalPhotos}</strong> photos</span>
+              <span><strong className="font-semibold">{albums.length}</strong> album{albums.length === 1 ? "" : "s"}</span>
+            </div>
+            <p className={`mt-2 max-w-2xl text-sm leading-relaxed ${muted}`}>A visual record of {clubName} tournament nights, meetups, and community moments.</p>
           </div>
           {canManage && (
-            <Button type="button" onClick={openCreate} className="h-11 shrink-0 rounded-xl px-4 font-semibold text-white sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2" style={{ background: accent }}>
-              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Create album
+            <Button type="button" onClick={openCreate} className="hidden h-11 shrink-0 rounded-xl px-4 font-semibold text-white sm:inline-flex" style={{ background: accent }}>
+              <Plus className="mr-2 h-4 w-4" aria-hidden="true" /> Create album
             </Button>
           )}
         </div>
+        {canManage && <Button type="button" onClick={openCreate} className="mt-4 h-11 w-full rounded-xl font-semibold text-white sm:hidden" style={{ background: accent }}><Plus className="mr-2 h-4 w-4" aria-hidden="true" /> Create album</Button>}
       </header>
 
       {loading && (
@@ -465,40 +449,20 @@ export function ClubAlbumTab({
         </div>
       )}
 
-      {!loading && !loadError && albums.map((album) => (
-        <article key={album.id} className={`overflow-hidden rounded-3xl border ${surface}`}>
-          <div className="flex items-start gap-3 p-4 sm:p-5">
-            <PlayerAvatar username={clubName} name={clubName} avatarUrl={clubAvatarUrl ?? undefined} size={42} showBadge={false} />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <h3 className="truncate text-[15px] font-bold">{album.title}</h3>
-                <span className={`text-xs ${muted}`}>{formatClubAlbumDate(album.eventDate, album.createdAt)}</span>
-              </div>
-              <p className={`mt-0.5 text-xs ${muted}`}>{clubName} · {album.photos.length} photo{album.photos.length === 1 ? "" : "s"}</p>
-            </div>
-            {canManage && (
-              <div className="flex shrink-0 items-center gap-1">
-                <button type="button" onClick={() => openEdit(album)} className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${isDark ? "text-white/45 hover:bg-white/8 hover:text-white" : "text-[#436850]/70 hover:bg-[#436850]/8"}`} aria-label={`Edit ${album.title}`}>
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button type="button" onClick={() => setDeleteAlbumTarget(album)} className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${isDark ? "text-white/35 hover:bg-red-500/10 hover:text-red-400" : "text-[#436850]/55 hover:bg-red-50 hover:text-red-600"}`} aria-label={`Delete ${album.title}`}>
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-            )}
-          </div>
-          {album.description && <p className={`px-4 pb-4 text-[15px] leading-relaxed sm:px-5 ${isDark ? "text-white/78" : "text-[#12372A]/85"}`}>{album.description}</p>}
-          <AlbumMosaic album={album} onOpen={(target, index) => setViewer({ album: target, index })} />
-          <div className={`flex items-center justify-between gap-3 px-4 py-3 text-xs sm:px-5 ${muted}`}>
-            <span className="inline-flex items-center gap-1.5"><Images className="h-3.5 w-3.5" aria-hidden="true" /> {album.photos.length} photo{album.photos.length === 1 ? "" : "s"}</span>
-            {canManage && (
-              <button type="button" onClick={() => openEdit(album)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 font-semibold transition-colors" style={{ color: accent }}>
-                <Upload className="h-3.5 w-3.5" aria-hidden="true" /> Add photos
-              </button>
-            )}
-          </div>
-        </article>
-      ))}
+      {!loading && !loadError && albums.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5 overflow-hidden rounded-2xl bg-black/20 sm:gap-2" aria-label="Club photo grid">
+          {albums.flatMap((album) => album.photos.length > 0
+            ? album.photos.map((_, index) => <AlbumGridItem key={`${album.id}-${index}`} album={album} photoIndex={index} onOpen={(target, photoIndex) => setViewer({ album: target, index: photoIndex })} canManage={canManage} onEdit={openEdit} onDelete={setDeleteAlbumTarget} />)
+            : <AlbumGridItem key={album.id} album={album} photoIndex={null} onOpen={(target, photoIndex) => setViewer({ album: target, index: photoIndex })} canManage={canManage} onEdit={openEdit} onDelete={setDeleteAlbumTarget} />
+          )}
+          {canManage && (
+            <button type="button" onClick={openCreate} className={`group flex aspect-square flex-col items-center justify-center gap-2 border border-dashed text-center transition hover:border-[#4CAF50]/60 hover:bg-[#4CAF50]/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${isDark ? "border-white/15 text-white/55" : "border-[#436850]/25 text-[#436850]/75"}`} aria-label="Create a new album">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-current transition-transform duration-200 motion-safe:group-hover:scale-105"><Plus className="h-5 w-5" aria-hidden="true" /></span>
+              <span className="px-2 text-xs font-semibold">New album</span>
+            </button>
+          )}
+        </div>
+      )}
 
       <Dialog open={editorOpen} onOpenChange={(open) => { if (!saving) { setEditorOpen(open); if (!open) resetEditor(); } }}>
         <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto rounded-3xl border-white/10 bg-[#09170b] p-0 text-white shadow-2xl">

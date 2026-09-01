@@ -88,14 +88,15 @@ describe("Club Album API behavior", () => {
   it("lists published albums publicly and returns database-checked photo URLs", async () => {
     fakeDb([
       [publicClub],
-      [{ id: "album-1", clubId: "club-1", title: "Club Night", description: null, eventDate: "2026-08-20", createdByName: "Owner", createdAt: new Date("2026-08-20"), updatedAt: new Date("2026-08-20") }],
+      [{ id: "album-1", clubId: "club-1", title: "Club Photos", description: null, eventDate: "2026-08-20", coverImageUrl: "/manus-storage/club-photos-default-cover_8e826089.jpg", createdByName: "Owner", createdAt: new Date("2026-08-20"), updatedAt: new Date("2026-08-20") }],
       [{ id: "photo-1", albumId: "album-1", url: "/manus-storage/secret.webp", caption: "Final round", altText: "Two players at board one", width: 1200, height: 800, sortOrder: 0, createdAt: new Date("2026-08-20") }],
     ]);
 
     const response = await fetch(`${baseUrl}/api/clubs/test-club/albums`);
-    const body = await response.json() as { albums: Array<{ photos: Array<{ url: string }> }> };
+    const body = await response.json() as { albums: Array<{ coverImageUrl: string | null; photos: Array<{ url: string }> }> };
 
     expect(response.status).toBe(200);
+    expect(body.albums[0].coverImageUrl).toBe("/manus-storage/club-photos-default-cover_8e826089.jpg");
     expect(body.albums[0].photos[0].url).toBe("/api/clubs/club-1/albums/album-1/photos/photo-1/file");
     expect(JSON.stringify(body)).not.toContain("/manus-storage/secret.webp");
   });

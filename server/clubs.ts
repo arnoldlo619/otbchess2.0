@@ -554,6 +554,17 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
       role: "owner",
     });
 
+    await db.insert(clubAlbums).values({
+      id: nanoid(),
+      clubId,
+      title: "Club Photos",
+      description: "A place for the club’s tournament nights, meetups, and community moments.",
+      coverImageUrl: "/manus-storage/club-photos-default-cover_8e826089.jpg",
+      createdById: userId,
+      createdByName: ownerName,
+      isPublished: 1,
+    });
+
     const [created] = await db
       .select()
       .from(dbClubs)
@@ -2430,6 +2441,7 @@ clubsRouter.get("/:id/albums", async (req: Request, res: Response) => {
         title: album.title,
         description: album.description ?? null,
         eventDate: album.eventDate ?? null,
+        coverImageUrl: album.coverImageUrl ?? null,
         createdByName: album.createdByName,
         createdAt: albumDate(album.createdAt),
         updatedAt: albumDate(album.updatedAt),

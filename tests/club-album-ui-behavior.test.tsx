@@ -45,6 +45,7 @@ function albumWithPhotos(photoCount = 6): ClubAlbum {
     title: "Championship Night",
     description: "Final-round boards and the trophy presentation.",
     eventDate: "2026-08-24",
+    coverImageUrl: null,
     createdByName: "Owner",
     createdAt: "2026-08-24T19:00:00.000Z",
     updatedAt: "2026-08-24T19:00:00.000Z",
@@ -70,7 +71,7 @@ describe("ClubAlbumTab rendered behavior", () => {
 
   afterEach(() => cleanup());
 
-  it("renders the public empty state without exposing owner controls", async () => {
+  it("keeps a safe public empty state without exposing owner controls if the album service returns no records", async () => {
     render(<ClubAlbumTab {...baseProps} />);
 
     expect(await screen.findByText("No albums yet")).toBeTruthy();
@@ -90,15 +91,15 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(await screen.findByText("No albums yet")).toBeTruthy();
   });
 
-  it("renders a populated social mosaic and opens a keyboard-navigable viewer", async () => {
+  it("renders a populated profile-style photo grid and opens a keyboard-navigable viewer", async () => {
     api.list.mockResolvedValue([albumWithPhotos()]);
     render(<ClubAlbumTab {...baseProps} />);
 
-    expect(await screen.findByText("Championship Night")).toBeTruthy();
-    expect(screen.getByText("Final-round boards and the trophy presentation.")).toBeTruthy();
-    expect(screen.getByText("+1")).toBeTruthy();
+    expect((await screen.findAllByText("Championship Night")).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Club photo grid")).toBeTruthy();
+    expect(screen.getAllByText("6 photos").length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByAltText("Players at round 1"));
+    fireEvent.click(screen.getByRole("button", { name: "View Players at round 1" }));
     expect(await screen.findByText("1 of 6")).toBeTruthy();
 
     fireEvent.keyDown(window, { key: "ArrowRight" });
@@ -112,7 +113,7 @@ describe("ClubAlbumTab rendered behavior", () => {
   it("shows owner creation controls and an accessible album editor", async () => {
     render(<ClubAlbumTab {...baseProps} canManage />);
 
-    const createButton = await screen.findByRole("button", { name: "Create album" });
+    const [createButton] = await screen.findAllByRole("button", { name: "Create album" });
     fireEvent.click(createButton);
 
     expect(await screen.findByRole("dialog")).toBeTruthy();
@@ -123,7 +124,16 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(screen.getByRole("button", { name: "Publish album" })).toBeTruthy();
   });
 
-  it.each([375, 1440])("renders the complete public timeline contract at a %ipx viewport", async (width) => {
+  it("renders the supplied Club Photos cover as a manageable default album card", async () => {
+    api.list.mockResolvedValue([{ ...albumWithPhotos(0), title: "Club Photos", coverImageUrl: "/manus-storage/club-photos-default-cover_8e826089.jpg" }]);
+    render(<ClubAlbumTab {...baseProps} canManage />);
+
+    expect(await screen.findByAltText("Club Photos album cover")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Edit Club Photos" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Delete Club Photos" })).toBeTruthy();
+  });
+
+  it.each([375, 1440])("renders the complete public profile-grid contract at a %ipx viewport", async (width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     window.dispatchEvent(new Event("resize"));
     api.list.mockResolvedValue([albumWithPhotos(3)]);
@@ -131,9 +141,10 @@ describe("ClubAlbumTab rendered behavior", () => {
     render(<ClubAlbumTab {...baseProps} />);
 
     expect(await screen.findByRole("region", { name: "Albums" })).toBeTruthy();
-    expect(screen.getByText("Championship Night")).toBeTruthy();
+    expect(screen.getByLabelText("Club photo grid")).toBeTruthy();
+    expect(screen.getAllByText("Championship Night")).toHaveLength(3);
     expect(screen.getAllByRole("button").filter((button) => button.querySelector("img"))).toHaveLength(3);
-    expect(screen.getByText("3 photos")).toBeTruthy();
+    expect(screen.getAllByText("3 photos").length).toBeGreaterThan(0);
   });
 });
 

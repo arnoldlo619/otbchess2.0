@@ -68,6 +68,11 @@
 - [x] Club Feed: Intentionally replace legacy local-only announcement persistence with the server-backed Feed contract required for secure attachment authorization
 - [x] Club Feed: Add an accessible image gallery preview modal for photo and GIF attachments with keyboard, touch, and responsive controls
 - [x] Club Feed: Validate gallery open, close, previous/next navigation, focus handling, and mobile presentation
+- [x] Club Album: Redesign the public album presentation as an Instagram-inspired Club Profile photo grid
+- [x] Club Album: Create a default, owner-editable and owner-deletable Club Photos album for every club
+- [x] Club Album: Use the supplied ChessOTB tournament artwork as the default Club Photos cover image
+- [x] Club Album: Validate default album bootstrapping, owner management, public display, and responsive grid behavior
+- [ ] Club Feed: Resolve the detected request payload limit that blocks larger valid attachment uploads
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

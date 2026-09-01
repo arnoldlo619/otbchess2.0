@@ -20,6 +20,7 @@ export interface ClubAlbum {
   title: string;
   description: string | null;
   eventDate: string | null;
+  coverImageUrl: string | null;
   createdByName: string;
   createdAt: string;
   updatedAt: string;

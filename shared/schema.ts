@@ -816,6 +816,7 @@ export const clubAlbums = mysqlTable(
     title: varchar("title", { length: 120 }).notNull(),
     description: text("description"),
     eventDate: varchar("event_date", { length: 10 }),
+    coverImageUrl: text("cover_image_url"),
     createdById: varchar("created_by_id", { length: 64 }).notNull(),
     createdByName: varchar("created_by_name", { length: 100 }).notNull().default(""),
     isPublished: tinyint("is_published").notNull().default(1),
