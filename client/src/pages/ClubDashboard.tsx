@@ -5748,14 +5748,24 @@ export default function ClubDashboard() {
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                       <label className="sr-only" htmlFor="club-announcement-composer">Post an announcement</label>
-                      <div className="relative rounded-[14px] p-px" style={{ background: announcementComposerFocused ? `${accent}66` : "rgba(255,255,255,0.12)" }}>
+                      <div
+                        className="relative rounded-[14px] p-px transition-[box-shadow,background] duration-300 ease-out"
+                        style={{
+                          background: announcementComposerFocused
+                            ? `linear-gradient(135deg, ${accent}88, ${accent}2e 46%, rgba(255,255,255,0.14) 100%)`
+                            : "rgba(255,255,255,0.12)",
+                          boxShadow: announcementComposerFocused
+                            ? `0 0 0 1px ${accent}24, 0 12px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05)`
+                            : "inset 0 1px 0 rgba(255,255,255,0.025)",
+                        }}
+                      >
                         {announcementComposerFocused && (
                           <BorderBeam
-                            size={150}
-                            duration={9}
+                            size={72}
+                            duration={18}
                             colorFrom={accent}
-                            colorTo="#9de6a3"
-                            className="motion-reduce:hidden opacity-80"
+                            colorTo="rgba(157, 230, 163, 0.28)"
+                            className="motion-reduce:hidden opacity-45"
                           />
                         )}
                         {announcementComposerExpanded ? <textarea
@@ -5768,7 +5778,7 @@ export default function ClubDashboard() {
                           placeholder="What would you like to share with your club?"
                           maxLength={500}
                           autoFocus
-                          className="relative z-10 min-h-44 w-full resize-none rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-[#4CAF50]/70"
+                          className="relative z-10 min-h-44 w-full resize-none rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-1 focus:ring-[#4CAF50]/55"
                         /> : <input
                           id="club-announcement-composer"
                           aria-describedby="club-announcement-count"
@@ -5777,7 +5787,7 @@ export default function ClubDashboard() {
                           onFocus={() => { setAnnouncementComposerFocused(true); setAnnouncementComposerExpanded(true); }}
                           placeholder="Share an update with your club…"
                           maxLength={500}
-                          className="relative z-10 h-11 w-full rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-[#4CAF50]/70"
+                          className="relative z-10 h-11 w-full rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-1 focus:ring-[#4CAF50]/55"
                         />}
                       </div>
                       {announcementComposerExpanded && (

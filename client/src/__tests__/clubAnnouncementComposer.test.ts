@@ -17,6 +17,7 @@ describe("club announcement composer", () => {
     expect(source).toContain('import { BorderBeam } from "@/components/ui/border-beam"');
     expect(source).toContain('announcementComposerFocused');
     expect(source).toContain('motion-reduce:hidden');
-    expect(source).toContain('postAnnouncement(club.id, user.displayName, announcementText.trim()');
+    expect(source).toContain('apiCreateClubFeedPost(club.id, {');
+    expect(source).toContain('attachments: announcementAttachments.map(({ dataUrl, fileName, mimeType }) => ({ dataUrl, fileName, mimeType }))');
   });
 });
