@@ -77,6 +77,9 @@
 - [x] Club Album: Validate the streamlined Album route and save a checkpoint
 - [x] Club Feed: Refine the focused composer textarea border trace into a subtle premium animation with reduced-motion support
 - [x] Club Feed: Validate the composer focus treatment and save a checkpoint
+- [x] Club Overview: Center the New Meetup, Tournament, and Post quick actions with touch-safe responsive spacing
+- [x] Club Overview: Redesign Recent Activity as a compact event-led management list with clear event actions
+- [ ] Club Overview: Validate activity-list hierarchy, light/dark appearance, empty states, and mobile layout
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

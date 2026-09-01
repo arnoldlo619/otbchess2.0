@@ -4164,10 +4164,10 @@ export default function ClubDashboard() {
               );
             })()}
 
-            {/* ── 4. Quick Actions — compact row ── */}
-            <div>
-              <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">Quick Actions</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* ── 4. Quick Actions — centered owner controls ── */}
+            <section aria-labelledby="overview-quick-actions">
+              <h3 id="overview-quick-actions" className="mb-3 text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
+              <div className="mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
@@ -4176,44 +4176,64 @@ export default function ClubDashboard() {
                   <button
                     key={label}
                     onClick={action}
-                    className="flex items-center gap-2.5 p-3 rounded-xl border border-white/06 hover:border-white/15 transition-all text-left"
-                    style={{ background: "oklch(0.14 0.04 145)" }}
+                    className="group flex min-h-12 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0 active:scale-[0.98]"
+                    style={{
+                      background: isDark ? "oklch(0.14 0.04 145)" : "rgba(255,255,255,0.72)",
+                      borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
+                      color: isDark ? "rgba(255,255,255,0.92)" : "#15291c",
+                      boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 1px 2px rgba(21,41,28,0.04)",
+                      // The visible green focus outline stays consistent in both appearances.
+                      "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3",
+                    } as React.CSSProperties}
                   >
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/[0.07]">
-                      <Icon className="w-[18px] h-[18px] text-white/80" />
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200" style={{ background: isDark ? "rgba(255,255,255,0.07)" : `${accent}13` }}>
+                      <Icon className="h-4 w-4" style={{ color: isDark ? "rgba(255,255,255,0.82)" : accent }} aria-hidden="true" />
                     </div>
-                    <span className="text-white/90 text-sm font-semibold">{label}</span>
+                    <span className="whitespace-nowrap text-[11px] font-semibold sm:text-sm">{label}</span>
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* ── 5. Recent Activity ── */}
             {feedEvents.length > 0 && (
-              <div className="rounded-2xl border border-white/08 overflow-hidden" style={{ background: "oklch(0.16 0.05 145)" }}>
-                <div className="px-4 py-3 border-b border-white/06 flex items-center justify-between">
-                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Recent Activity</h3>
-                  <button onClick={() => setTab("feed")} className="text-xs font-semibold" style={{ color: accent }}>View All</button>
+              <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
+                <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.46)" }}>Club timeline</p>
+                    <h3 id="recent-club-activity" className="mt-0.5 text-sm font-bold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>Recent Activity</h3>
+                  </div>
+                  <button onClick={() => setTab("feed")} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: accent }}>View all</button>
                 </div>
-                <div className="divide-y divide-white/05">
-                  {feedEvents.slice(0, 4).map(ev => (
-                    <div key={ev.id} className="flex items-center gap-3 px-4 py-3">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}15` }}>
-                        {ev.type === "announcement" && <Megaphone className="w-3.5 h-3.5" style={{ color: accent }} />}
-                        {ev.type === "poll" && <BarChart2 className="w-3.5 h-3.5" style={{ color: accent }} />}
-                        {ev.type === "rsvp_form" && <Calendar className="w-3.5 h-3.5" style={{ color: accent }} />}
-                        {!["announcement", "poll", "rsvp_form"].includes(ev.type) && <Zap className="w-3.5 h-3.5" style={{ color: accent }} />}
+                <div className="divide-y" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.075)" }}>
+                  {feedEvents.slice(0, 4).map(ev => {
+                    const imageAttachment = ev.attachments?.find((attachment) => attachment.mimeType.startsWith("image/"));
+                    const activityTitle = ev.type === "announcement" ? ev.detail : ev.type === "poll" ? ev.pollQuestion : ev.type === "rsvp_form" ? ev.rsvpTitle : ev.description;
+                    const activityKind = ev.type === "rsvp_form" ? "Event" : ev.type === "tournament_created" || ev.type === "tournament_completed" ? "Tournament" : ev.type === "poll" ? "Poll" : "Update";
+                    const ActivityIcon = ev.type === "rsvp_form" ? Calendar : ev.type === "poll" ? BarChart2 : ev.type === "tournament_created" || ev.type === "tournament_completed" ? Trophy : Megaphone;
+                    return (
+                    <article key={ev.id} className="group flex gap-3 px-4 py-3.5 transition-colors duration-200 hover:bg-black/[0.025] dark:hover:bg-white/[0.025]">
+                      <div className="relative flex h-[68px] w-[68px] shrink-0 items-end overflow-hidden rounded-xl border" style={{ background: `${accent}18`, borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(21,41,28,0.11)" }}>
+                        {(imageAttachment?.url ?? ev.imageUrl ?? club.bannerUrl) ? <img src={imageAttachment?.url ?? ev.imageUrl ?? club.bannerUrl ?? ""} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" /> : null}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <span className="relative z-10 px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">{activityKind}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white/90 text-sm truncate">
-                          {ev.type === "announcement" ? ev.detail?.slice(0, 60) : ev.type === "poll" ? ev.pollQuestion?.slice(0, 60) : ev.type === "rsvp_form" ? ev.rsvpTitle : ev.description}
-                        </p>
-                        <p className="text-white/30 text-xs">{new Date(ev.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                      <div className="min-w-0 flex-1 py-0.5">
+                        <div className="flex items-start gap-1.5">
+                          <ActivityIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} aria-hidden="true" />
+                          <p className="line-clamp-2 text-sm font-bold leading-5" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>{activityTitle || "Club update"}</p>
+                        </div>
+                        <p className="mt-1 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.46)" : "rgba(21,41,28,0.56)" }}>By {ev.actorName || "Club"}</p>
+                        <p className="mt-0.5 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.44)" }}>{new Date(ev.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: new Date(ev.createdAt).getFullYear() !== new Date().getFullYear() ? "numeric" : undefined })}</p>
                       </div>
-                    </div>
-                  ))}
+                      <button onClick={() => setTab("feed")} className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: isDark ? "rgba(255,255,255,0.74)" : "rgba(21,41,28,0.72)" }} aria-label={`View ${activityTitle || "club activity"} in the feed`}>
+                        View <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </article>
+                    );
+                  })}
                 </div>
-              </div>
+              </section>
             )}
 
 
