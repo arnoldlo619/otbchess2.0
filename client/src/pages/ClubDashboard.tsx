@@ -2588,6 +2588,7 @@ export default function ClubDashboard() {
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [announcementComposerFocused, setAnnouncementComposerFocused] = useState(false);
+  const [announcementComposerExpanded, setAnnouncementComposerExpanded] = useState(false);
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   // Post-type composer
@@ -3138,6 +3139,7 @@ export default function ClubDashboard() {
   const isOwnerOrDirector =
     user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
   const isClubOwner = !!(user && club && club.ownerId === user.id);
+  const isActiveClubMember = !!(user && club && (club.ownerId === user.id || members.some((member) => member.userId === user.id)));
 
   // ── Transfer Ownership handler ───────────────────────────────────────────────
   async function handleTransferOwnership() {
@@ -5625,8 +5627,8 @@ export default function ClubDashboard() {
 
             {/* ── ANNOUNCEMENTS ──────────────────────────────────── */}
             <>
-            {/* ── Composer (owner/director only) ──────────────────────────────── */}
-            {isOwnerOrDirector && (
+            {/* ── Composer (active members) ───────────────────────────────────── */}
+            {isActiveClubMember && (
               <div
                 className="rounded-2xl border border-white/08 overflow-hidden"
                 style={{ background: "oklch(0.16 0.05 145)" }}
@@ -5650,22 +5652,34 @@ export default function ClubDashboard() {
                             className="motion-reduce:hidden opacity-80"
                           />
                         )}
-                        <input
+                        {announcementComposerExpanded ? <textarea
                           id="club-announcement-composer"
                           aria-describedby="club-announcement-count"
                           value={announcementText}
                           onChange={(e) => setAnnouncementText(e.target.value)}
                           onFocus={() => setAnnouncementComposerFocused(true)}
-                          onBlur={() => setAnnouncementComposerFocused(false)}
+                          placeholder="What would you like to share with your club?"
+                          maxLength={500}
+                          autoFocus
+                          className="relative z-10 min-h-44 w-full resize-none rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-[#4CAF50]/70"
+                        /> : <input
+                          id="club-announcement-composer"
+                          aria-describedby="club-announcement-count"
+                          value={announcementText}
+                          onChange={(e) => setAnnouncementText(e.target.value)}
+                          onFocus={() => { setAnnouncementComposerFocused(true); setAnnouncementComposerExpanded(true); }}
                           placeholder="Share an update with your club…"
                           maxLength={500}
                           className="relative z-10 h-11 w-full rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-2 focus:ring-[#4CAF50]/70"
-                        />
+                        />}
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <span id="club-announcement-count" className="text-[11px] tabular-nums text-white/35" aria-live="polite">
-                          {announcementText.length}/500
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {announcementComposerExpanded && <><Camera className="h-4 w-4 text-white/40" aria-hidden="true" /><Calendar className="h-4 w-4 text-white/40" aria-hidden="true" /></>}
+                          <span id="club-announcement-count" className="text-[11px] tabular-nums text-white/35" aria-live="polite">{announcementText.length}/500</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                        {announcementComposerExpanded && <button type="button" onClick={() => { setAnnouncementText(""); setAnnouncementComposerExpanded(false); setAnnouncementComposerFocused(false); }} className="h-9 rounded-xl px-3 text-xs font-semibold text-white/60 transition hover:bg-white/5 hover:text-white">Discard</button>}
                         <button
                           type="submit"
                           disabled={!announcementText.trim() || postingAnnouncement}
@@ -5675,6 +5689,7 @@ export default function ClubDashboard() {
                           <Megaphone className="h-3.5 w-3.5" />
                           Post
                         </button>
+                        </div>
                       </div>
                     </div>
                   </form>

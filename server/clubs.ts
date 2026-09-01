@@ -1862,8 +1862,8 @@ clubsRouter.post("/:id/announcements", requireFullAuth, async (req: Request, res
     const isOwner = club.ownerId === requesterId;
     const [membership] = await db.select().from(dbClubMembers)
       .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
-    if (!isOwner && membership?.role !== "director") {
-      res.status(403).json({ error: "Owner/director only" }); return;
+    if (!isOwner && !membership) {
+      res.status(403).json({ error: "Active club membership required" }); return;
     }
     const { clubAnnouncements } = await import("../shared/schema.js");
     const body = req.body as typeof clubAnnouncements.$inferInsert;
@@ -1900,10 +1900,13 @@ clubsRouter.delete("/:id/announcements/:annId", requireFullAuth, async (req: Req
     const isOwner = club.ownerId === requesterId;
     const [membership] = await db.select().from(dbClubMembers)
       .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
-    if (!isOwner && membership?.role !== "director") {
-      res.status(403).json({ error: "Owner/director only" }); return;
-    }
     const { clubAnnouncements } = await import("../shared/schema.js");
+    const [announcement] = await db.select().from(clubAnnouncements)
+      .where(and(eq(clubAnnouncements.id, annId), eq(clubAnnouncements.clubId, id)));
+    if (!announcement) { res.status(404).json({ error: "Post not found" }); return; }
+    if (!isOwner && announcement.createdBy !== requesterId) {
+      res.status(403).json({ error: "Only the original poster or club owner can delete this post" }); return;
+    }
     await db.delete(clubAnnouncements).where(eq(clubAnnouncements.id, annId));
     res.json({ success: true });
   } catch (err) {

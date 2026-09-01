@@ -51,6 +51,14 @@
 - [ ] Club Dashboard: Re-run keyboard focus and narrow mobile shell verification after the simplified sidebar layout change
 - [x] Club Dashboard: Remove the duplicate tournament-results trophy treatment while retaining the trophy emoji
 - [x] Club Dashboard: Verify minimalist tournament-results card icon hierarchy before checkpointing
+- [ ] Club Feed: Expand the focused post input into a premium full-content social composer for owners and members
+- [ ] Club Feed: Add accessible toolbar controls, discard/post states, and role-aware posting copy without changing announcement persistence
+- [ ] Club Feed: Verify expanded composer interactions, keyboard dismissal, and mobile layout before checkpointing
+- [ ] Club Feed: Confirm and implement the intended member posting permission scope without weakening club moderation
+- [ ] Club Feed: Allow active club members to post directly to the Feed
+- [ ] Club Feed: Restrict Feed deletion to the original poster or club owner
+- [ ] Club Feed: Add server and client regression coverage for member posts and deletion authorization
+- [ ] Club Feed: Add committed interaction coverage for expanded composer open, discard, submit, and keyboard behavior
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
