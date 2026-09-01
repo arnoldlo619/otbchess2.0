@@ -59,6 +59,11 @@
 - [ ] Club Feed: Restrict Feed deletion to the original poster or club owner
 - [ ] Club Feed: Add server and client regression coverage for member posts and deletion authorization
 - [ ] Club Feed: Add committed interaction coverage for expanded composer open, discard, submit, and keyboard behavior
+- [ ] Club Feed: Add secure photo, GIF, and file attachments to member Feed posts
+- [ ] Club Feed: Persist and render attached media with upload previews and author-or-owner deletion integrity
+- [ ] Club Feed: Validate attachment types, permissions, accessibility, and responsive Feed rendering
+- [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
+- [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 

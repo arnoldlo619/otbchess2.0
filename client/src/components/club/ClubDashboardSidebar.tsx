@@ -96,14 +96,14 @@ export function ClubDashboardSidebar({
         )}
         <span
           aria-hidden="true"
-          className="flex h-6 w-6 shrink-0 items-center justify-center transition-[color,transform,filter] duration-200 ease-out motion-reduce:transition-none"
+          className="flex h-7 w-7 shrink-0 items-center justify-center transition-[color,transform,filter] duration-200 ease-out motion-reduce:transition-none"
           style={{
             color: active ? accent : "inherit",
             transform: hoveredItemId === item.id ? "scale(1.07)" : "scale(1)",
             filter: hoveredItemId === item.id ? "drop-shadow(0 0 5px rgba(111,255,156,0.34))" : "none",
           }}
         >
-          <Icon size={19} strokeWidth={active ? 2 : 1.65} />
+          <Icon size={21} strokeWidth={active ? 2 : 1.65} />
         </span>
         <span
           className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
