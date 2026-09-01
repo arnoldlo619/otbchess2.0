@@ -64,6 +64,8 @@
 - [ ] Club Feed: Validate attachment types, permissions, accessibility, and responsive Feed rendering
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
+- [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
+- [ ] Club Dashboard: Verify hover contrast remains distinct from active, focus, touch, and reduced-motion states
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 

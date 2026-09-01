@@ -80,9 +80,9 @@ export function ClubDashboardSidebar({
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
-          background: active ? `color-mix(in srgb, ${accent} 12%, #07140c)` : "transparent",
-          borderColor: active ? `color-mix(in srgb, ${accent} 32%, transparent)` : "transparent",
-          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, white)` : "none",
+          background: active ? `color-mix(in srgb, ${accent} 12%, #07140c)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 10%, #07140c)` : "transparent",
+          borderColor: active ? `color-mix(in srgb, ${accent} 32%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 24%, transparent)` : "transparent",
+          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, white)` : hoveredItemId === item.id ? `inset 2px 0 0 ${accent}, 0 5px 16px color-mix(in srgb, ${accent} 13%, transparent)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
