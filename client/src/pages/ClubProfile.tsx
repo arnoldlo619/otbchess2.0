@@ -1723,7 +1723,7 @@ export default function ClubProfile() {
 
         {/* ── Home tab (overview) ─────────────────────────────────────────── */}
         {activeTab === "home" && (
-          <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="space-y-6 animate-in fade-in duration-200">
             {/* Onboarding checklist for new club owners */}
             {isOwner && club.memberCount <= 3 && (() => {
               const steps = [
@@ -1760,8 +1760,38 @@ export default function ClubProfile() {
               );
             })()}
 
+            <nav aria-label="Club highlights" className="flex items-start gap-4 overflow-x-auto pb-1 sm:gap-5">
+              {[
+                { id: "feed" as const, label: "Updates", Icon: OtbFeed },
+                { id: "events" as const, label: "Events", Icon: OtbEvents },
+                { id: "members" as const, label: "Members", Icon: OtbMembers },
+                { id: "album" as const, label: "Photos", Icon: OtbAlbum },
+              ].map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => handleTabChange(id)}
+                  className="group flex min-w-[58px] flex-col items-center gap-1.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 active:scale-95"
+                  style={{ "--tw-ring-offset-color": isDark ? "oklch(0.13 0.04 145)" : "#f5f8f2" } as React.CSSProperties}
+                >
+                  <span className={`flex h-14 w-14 items-center justify-center rounded-full border p-0.5 transition-[transform,border-color,box-shadow] duration-200 group-hover:-translate-y-0.5 ${isDark ? "border-white/15 bg-white/[0.035]" : "border-[#436850]/20 bg-white/75"}`}>
+                    <span className={`flex h-full w-full items-center justify-center rounded-full ${isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/[0.08]"}`}>
+                      <Icon size={20} accentColor={accent} />
+                    </span>
+                  </span>
+                  <span className={`text-[11px] font-semibold ${textMuted}`}>{label}</span>
+                </button>
+              ))}
+            </nav>
+
+            <section aria-labelledby="club-home-content" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="lg:col-span-2 flex items-center gap-2 border-b pb-3" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(67,104,80,0.18)" }}>
+                <OtbHome size={17} accentColor={accent} />
+                <h2 id="club-home-content" className={`text-sm font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Inside {club.name}</h2>
+              </div>
+
             {/* About — full card (description + details) */}
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 lg:col-span-2`}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>About</h3>
                 {(isOwner || isDirector) && (
@@ -1922,6 +1952,7 @@ export default function ClubProfile() {
                 </div>
               </div>
             )}
+            </section>
           </div>
         )}
 

@@ -80,6 +80,12 @@
 - [x] Club Overview: Center the New Meetup, Tournament, and Post quick actions with touch-safe responsive spacing
 - [x] Club Overview: Redesign Recent Activity as a compact event-led management list with clear event actions
 - [ ] Club Overview: Validate activity-list hierarchy, light/dark appearance, empty states, and mobile layout
+- [x] Club Home: Redesign the Home tab as a responsive profile-first club destination inspired by the supplied reference
+- [x] Club Home: Add a compact club highlight row and a content-led grid while preserving real club actions and links
+- [x] Club Home: Validate owner and visitor presentation, light/dark appearance, keyboard controls, and mobile layout
+- [x] Club Home: Complete the profile-first Home redesign beyond the shortcut row and content grid
+- [x] Club Home: Add explicit owner and visitor Home-route coverage for gated actions and links
+- [x] Club Home: Add light and dark Home presentation coverage and rendered keyboard interaction tests
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

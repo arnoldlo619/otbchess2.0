@@ -274,9 +274,9 @@ export function ClubHero({
           </motion.div>
         )}
 
-        {/* Main identity row: avatar + name + meta */}
+        {/* Profile identity: circular club mark beside concise club metadata */}
         <motion.div
-          className="flex items-end gap-4 sm:gap-5"
+          className="flex items-center gap-4 sm:gap-5"
           variants={heroFadeUp}
           initial="hidden"
           animate="visible"
@@ -284,18 +284,19 @@ export function ClubHero({
         >
           {/* Club avatar */}
           <div
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-2xl"
+            className="w-[74px] h-[74px] sm:w-24 sm:h-24 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden p-1"
             style={{
-              background: accent,
-              border: `2px solid ${accent}55`,
-              boxShadow: `0 8px 32px ${accent}44`,
+              background: `linear-gradient(135deg, ${accent}, rgba(255,255,255,0.62), ${accent})`,
+              boxShadow: `0 0 0 4px rgba(0,0,0,0.16), 0 10px 28px ${accent}33`,
             }}
           >
+            <div className="h-full w-full overflow-hidden rounded-full" style={{ background: "rgba(4,17,8,0.9)" }}>
             {avatarUrl && !avatarBroken ? (
               <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
             ) : (
               <span className="text-3xl sm:text-4xl">{flag}</span>
             )}
+            </div>
           </div>
 
           {/* Name + badges + location */}
@@ -404,7 +405,7 @@ export function ClubHero({
 
         {/* Stats row */}
         <motion.div
-          className="flex items-center gap-5 flex-wrap"
+          className="flex items-center gap-4 sm:gap-5 flex-wrap"
           variants={heroFadeUp}
           initial="hidden"
           animate="visible"
@@ -419,6 +420,11 @@ export function ClubHero({
             <Trophy size={12} style={{ color: accent }} />
             <span className="font-bold text-white tabular-nums">{tournamentCount ?? 0}</span>
             <span>tournaments</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
+            <Bell size={12} style={{ color: accent }} />
+            <span className="font-bold text-white tabular-nums">{followerCount}</span>
+            <span>followers</span>
           </div>
           {leagueCount > 0 && (
             <div className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(255,255,255,0.55)" }}>
