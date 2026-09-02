@@ -88,6 +88,9 @@
 - [x] Club Home: Add light and dark Home presentation coverage and rendered keyboard interaction tests
 - [x] Club Album: Replace category covers with the supplied Chess Tournaments, Chess Leagues, and Chess Club Meetups artwork
 - [x] Club Album: Verify category cover mapping does not bypass real owner album edit or deletion controls
+- [x] Club Album: Create visible default Chess Tournaments, Chess Leagues, and Chess Club Meetups albums for every existing and new club
+- [x] Club Album: Verify all three shared category albums are public to members and manageable by club owners
+- [x] Club Album: Add rendered owner-state coverage proving all three shared category albums expose edit and delete controls
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

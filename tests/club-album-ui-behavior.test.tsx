@@ -78,6 +78,38 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(getCuratedClubAlbumCover("Club Photos")).toBeNull();
   });
 
+  it("renders all three shared category albums for visitors without exposing owner controls", async () => {
+    api.list.mockResolvedValue([
+      { ...albumWithPhotos(0), id: "album-tournaments", title: "Chess Tournaments", coverImageUrl: null },
+      { ...albumWithPhotos(0), id: "album-leagues", title: "Chess Leagues", coverImageUrl: null },
+      { ...albumWithPhotos(0), id: "album-meetups", title: "Chess Club Meetups", coverImageUrl: null },
+    ]);
+
+    render(<ClubAlbumTab {...baseProps} canManage={false} />);
+
+    expect(await screen.findByAltText("Chess Tournaments album cover")).toBeTruthy();
+    expect(screen.getByAltText("Chess Leagues album cover")).toBeTruthy();
+    expect(screen.getByAltText("Chess Club Meetups album cover")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /edit chess/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /delete chess/i })).toBeNull();
+  });
+
+  it("keeps all three shared category albums editable and deletable for club owners", async () => {
+    api.list.mockResolvedValue([
+      { ...albumWithPhotos(0), id: "album-tournaments", title: "Chess Tournaments", coverImageUrl: null },
+      { ...albumWithPhotos(0), id: "album-leagues", title: "Chess Leagues", coverImageUrl: null },
+      { ...albumWithPhotos(0), id: "album-meetups", title: "Chess Club Meetups", coverImageUrl: null },
+    ]);
+
+    render(<ClubAlbumTab {...baseProps} canManage />);
+
+    await screen.findByAltText("Chess Tournaments album cover");
+    for (const title of ["Chess Tournaments", "Chess Leagues", "Chess Club Meetups"]) {
+      expect(screen.getByRole("button", { name: `Edit ${title}` })).toBeTruthy();
+      expect(screen.getByRole("button", { name: `Delete ${title}` })).toBeTruthy();
+    }
+  });
+
   it("keeps a safe public empty state without exposing owner controls if the album service returns no records", async () => {
     render(<ClubAlbumTab {...baseProps} />);
 

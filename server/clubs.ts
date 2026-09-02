@@ -554,16 +554,48 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
       role: "owner",
     });
 
-    await db.insert(clubAlbums).values({
-      id: nanoid(),
-      clubId,
-      title: "Club Photos",
-      description: "A place for the club’s tournament nights, meetups, and community moments.",
-      coverImageUrl: "/manus-storage/club-photos-default-cover_8e826089.jpg",
-      createdById: userId,
-      createdByName: ownerName,
-      isPublished: 1,
-    });
+    await db.insert(clubAlbums).values([
+      {
+        id: nanoid(),
+        clubId,
+        title: "Club Photos",
+        description: "A place for the club’s tournament nights, meetups, and community moments.",
+        coverImageUrl: "/manus-storage/club-photos-default-cover_8e826089.jpg",
+        createdById: userId,
+        createdByName: ownerName,
+        isPublished: 1,
+      },
+      {
+        id: nanoid(),
+        clubId,
+        title: "Chess Tournaments",
+        description: "Tournament moments and results from the club.",
+        coverImageUrl: "/manus-storage/chess-tournaments_23c8b088.jpg",
+        createdById: userId,
+        createdByName: ownerName,
+        isPublished: 1,
+      },
+      {
+        id: nanoid(),
+        clubId,
+        title: "Chess Leagues",
+        description: "League nights, standings, and club competition.",
+        coverImageUrl: "/manus-storage/chess-leagues_770bca1d.jpg",
+        createdById: userId,
+        createdByName: ownerName,
+        isPublished: 1,
+      },
+      {
+        id: nanoid(),
+        clubId,
+        title: "Chess Club Meetups",
+        description: "Casual over-the-board meetups and community moments.",
+        coverImageUrl: "/manus-storage/chess-club-meetups_c17d81ae.jpg",
+        createdById: userId,
+        createdByName: ownerName,
+        isPublished: 1,
+      },
+    ]);
 
     const [created] = await db
       .select()

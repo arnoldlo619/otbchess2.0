@@ -120,6 +120,13 @@
       "when": 1788264521468,
       "tag": "0016_thick_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1788346900000,
+      "tag": "0017_visible_club_album_categories",
+      "breakpoints": true
     }
   ]
 }
