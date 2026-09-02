@@ -202,6 +202,37 @@ describe("Club Album API behavior", () => {
     expect(JSON.stringify(body)).not.toContain("/manus-storage/");
   });
 
+  it("allows active members to upload only into the shared category albums", async () => {
+    const { insertValues } = fakeDb([
+      [publicClub],
+      [{ id: "album-tournaments", clubId: "club-1", title: "Chess Tournaments" }],
+      [],
+      [{ userId: "member-1" }],
+      [{ total: 0 }],
+    ]);
+    const allowed = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-tournaments/photos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "member-1" },
+      body: JSON.stringify({ dataUrl: `data:image/webp;base64,${Buffer.from("member-image").toString("base64")}` }),
+    });
+
+    expect(allowed.status).toBe(201);
+    expect(insertValues).toHaveBeenCalledWith(expect.objectContaining({ albumId: "album-tournaments", createdById: "member-1" }));
+
+    fakeDb([
+      [publicClub],
+      [{ id: "album-private", clubId: "club-1", title: "Club Photos" }],
+      [],
+    ]);
+    const blocked = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-private/photos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "member-1" },
+      body: JSON.stringify({ dataUrl: `data:image/webp;base64,${Buffer.from("member-image").toString("base64")}` }),
+    });
+
+    expect(blocked.status).toBe(403);
+  });
+
   it("allows owners to remove one photo and delete an entire album", async () => {
     const photoDb = fakeDb([[publicClub]]);
     const photoDelete = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1`, {

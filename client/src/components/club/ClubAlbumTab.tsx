@@ -67,9 +67,20 @@ interface ClubAlbumTabProps {
   clubName: string;
   clubAvatarUrl?: string | null;
   canManage: boolean;
+  canUpload: boolean;
   currentUserName?: string;
   accent: string;
   isDark: boolean;
+}
+
+const SHARED_CATEGORY_ALBUM_TITLES = new Set([
+  "chess tournaments",
+  "chess leagues",
+  "chess club meetups",
+]);
+
+export function isSharedCategoryAlbum(title: string) {
+  return SHARED_CATEGORY_ALBUM_TITLES.has(title.trim().toLowerCase());
 }
 
 function dataUrlFromBlob(blob: Blob): Promise<string> {
@@ -144,15 +155,19 @@ function AlbumGridItem({
   photoIndex,
   onOpen,
   canManage,
+  canUpload,
   onEdit,
   onDelete,
+  onUpload,
 }: {
   album: ClubAlbum;
   photoIndex: number | null;
   onOpen: (album: ClubAlbum, index: number) => void;
   canManage: boolean;
+  canUpload: boolean;
   onEdit: (album: ClubAlbum) => void;
   onDelete: (album: ClubAlbum) => void;
+  onUpload: (album: ClubAlbum) => void;
 }) {
   const photo = photoIndex === null ? null : album.photos[photoIndex];
   // A real uploaded album photo remains the highest-priority cover. Category
@@ -164,12 +179,10 @@ function AlbumGridItem({
 
   return (
     <article className="group relative aspect-square overflow-hidden bg-white/[0.035]">
-      {coverUrl && photo ? (
-        <button type="button" onClick={() => onOpen(album, photoIndex ?? 0)} className="absolute inset-0 block w-full text-left focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`View ${label}`}>
-          <img src={coverUrl} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.035]" />
+      {coverUrl ? (
+        <button type="button" onClick={() => onOpen(album, photoIndex ?? 0)} className="absolute inset-0 block w-full text-left focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`Open ${album.title} album`}>
+          <img src={coverUrl} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-[260ms] ease-out motion-safe:group-hover:scale-[1.045]" />
         </button>
-      ) : coverUrl ? (
-        <img src={coverUrl} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full items-center justify-center text-white/25"><Images className="h-8 w-8" aria-hidden="true" /></div>
       )}
@@ -182,6 +195,11 @@ function AlbumGridItem({
           <button type="button" onClick={() => onEdit(album)} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white/85 shadow-sm backdrop-blur-sm transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" aria-label={`Edit ${album.title}`}><Pencil className="h-3.5 w-3.5" aria-hidden="true" /></button>
           <button type="button" onClick={() => onDelete(album)} className="flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white/85 shadow-sm backdrop-blur-sm transition hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300" aria-label={`Delete ${album.title}`}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
         </div>
+      )}
+      {canUpload && isSharedCategoryAlbum(album.title) && photoIndex === null && (
+        <button type="button" onClick={() => onUpload(album)} className="absolute bottom-2 right-2 z-10 inline-flex h-9 items-center gap-1.5 rounded-full bg-black/70 px-3 text-[11px] font-semibold text-white shadow-sm backdrop-blur-md transition hover:bg-black/90 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" aria-label={`Upload photos to ${album.title}`}>
+          <ImagePlus className="h-3.5 w-3.5" aria-hidden="true" /> Upload photos
+        </button>
       )}
     </article>
   );
@@ -207,6 +225,7 @@ export function ClubAlbumTab({
   clubName,
   clubAvatarUrl,
   canManage,
+  canUpload,
   currentUserName = "Club director",
   accent,
   isDark,
@@ -225,6 +244,7 @@ export function ClubAlbumTab({
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const [formError, setFormError] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ album: ClubAlbum; index: number } | null>(null);
+  const [uploadAlbum, setUploadAlbum] = useState<ClubAlbum | null>(null);
   const [deleteAlbumTarget, setDeleteAlbumTarget] = useState<ClubAlbum | null>(null);
   const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -249,7 +269,7 @@ export function ClubAlbumTab({
   const viewerCount = viewer?.album.photos.length ?? 0;
 
   useEffect(() => {
-    if (!viewer) return;
+    if (!viewer || viewer.album.photos.length === 0) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft") {
         setViewer((current) => current ? { ...current, index: (current.index - 1 + current.album.photos.length) % current.album.photos.length } : null);
@@ -264,6 +284,7 @@ export function ClubAlbumTab({
 
   const resetEditor = () => {
     setEditingAlbum(null);
+    setUploadAlbum(null);
     setTitle("");
     setDescription("");
     setEventDate("");
@@ -286,6 +307,15 @@ export function ClubAlbumTab({
     setFormError(null);
     setUploadProgress({ completed: 0, total: 0 });
     setEditorOpen(true);
+  };
+
+  const openUpload = (album: ClubAlbum) => {
+    setEditorOpen(false);
+    setEditingAlbum(null);
+    setPendingPhotos([]);
+    setFormError(null);
+    setUploadProgress({ completed: 0, total: 0 });
+    setUploadAlbum(album);
   };
 
   const handleFiles = async (files: FileList | null) => {
@@ -361,6 +391,42 @@ export function ClubAlbumTab({
       }
       await loadAlbums();
       const message = error instanceof Error ? error.message : "Unable to save this album";
+      setFormError(uploaded > 0 ? `${uploaded} photo${uploaded === 1 ? "" : "s"} uploaded before an error occurred. ${message}` : message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const uploadPhotosToAlbum = async () => {
+    if (!uploadAlbum) return;
+    if (pendingPhotos.length === 0) {
+      setFormError("Choose at least one photo to upload.");
+      return;
+    }
+
+    setSaving(true);
+    setFormError(null);
+    let uploaded = 0;
+    try {
+      setUploadProgress({ completed: 0, total: pendingPhotos.length });
+      for (const photo of pendingPhotos) {
+        await apiUploadClubAlbumPhoto(clubId, uploadAlbum.id, {
+          dataUrl: photo.dataUrl,
+          caption: photo.caption,
+          altText: photo.caption,
+          width: photo.width,
+          height: photo.height,
+        });
+        uploaded += 1;
+        setUploadProgress({ completed: uploaded, total: pendingPhotos.length });
+      }
+      await loadAlbums();
+      const albumTitle = uploadAlbum.title;
+      resetEditor();
+      toast.success(`${uploaded} photo${uploaded === 1 ? "" : "s"} added to ${albumTitle}`);
+    } catch (error) {
+      await loadAlbums();
+      const message = error instanceof Error ? error.message : "Unable to upload photos";
       setFormError(uploaded > 0 ? `${uploaded} photo${uploaded === 1 ? "" : "s"} uploaded before an error occurred. ${message}` : message);
     } finally {
       setSaving(false);
@@ -467,10 +533,12 @@ export function ClubAlbumTab({
 
       {!loading && !loadError && albums.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5 overflow-hidden rounded-2xl bg-black/20 sm:gap-2" aria-label="Club photo grid">
-          {albums.flatMap((album) => album.photos.length > 0
-            ? album.photos.map((_, index) => <AlbumGridItem key={`${album.id}-${index}`} album={album} photoIndex={index} onOpen={(target, photoIndex) => setViewer({ album: target, index: photoIndex })} canManage={canManage} onEdit={openEdit} onDelete={setDeleteAlbumTarget} />)
-            : <AlbumGridItem key={album.id} album={album} photoIndex={null} onOpen={(target, photoIndex) => setViewer({ album: target, index: photoIndex })} canManage={canManage} onEdit={openEdit} onDelete={setDeleteAlbumTarget} />
-          )}
+          {albums.flatMap((album) => {
+            const photoIndexes = album.photos.length > 0 ? album.photos.map((_, index) => index) : [null];
+            return photoIndexes.map((photoIndex) => (
+              <AlbumGridItem key={`${album.id}-${photoIndex ?? "cover"}`} album={album} photoIndex={photoIndex} onOpen={(target, selectedIndex) => setViewer({ album: target, index: selectedIndex })} canManage={canManage} canUpload={canUpload} onEdit={openEdit} onDelete={setDeleteAlbumTarget} onUpload={openUpload} />
+            ));
+          })}
           {canManage && (
             <button type="button" onClick={openCreate} className={`group flex aspect-square flex-col items-center justify-center gap-2 border border-dashed text-center transition hover:border-[#4CAF50]/60 hover:bg-[#4CAF50]/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${isDark ? "border-white/15 text-white/55" : "border-[#436850]/25 text-[#436850]/75"}`} aria-label="Create a new album">
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-current transition-transform duration-200 motion-safe:group-hover:scale-105"><Plus className="h-5 w-5" aria-hidden="true" /></span>
@@ -480,26 +548,28 @@ export function ClubAlbumTab({
         </div>
       )}
 
-      <Dialog open={editorOpen} onOpenChange={(open) => { if (!saving) { setEditorOpen(open); if (!open) resetEditor(); } }}>
+      <Dialog open={editorOpen || uploadAlbum !== null} onOpenChange={(open) => { if (!saving && !open) { setEditorOpen(false); resetEditor(); } }}>
         <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto rounded-3xl border-white/10 bg-[#09170b] p-0 text-white shadow-2xl">
           <DialogHeader className="border-b border-white/8 px-5 py-5 text-left sm:px-6">
-            <DialogTitle className="text-xl font-bold" style={{ fontFamily: "'Clash Display', sans-serif" }}>{editingAlbum ? "Edit album" : "Create album"}</DialogTitle>
-            <DialogDescription className="text-sm text-white/50">Share event photos publicly on the club’s Album timeline.</DialogDescription>
+            <DialogTitle className="text-xl font-bold" style={{ fontFamily: "'Clash Display', sans-serif" }}>{uploadAlbum ? `Upload photos to ${uploadAlbum.title}` : editingAlbum ? "Edit album" : "Create album"}</DialogTitle>
+            <DialogDescription className="text-sm text-white/50">{uploadAlbum ? "Add photos to this shared club album." : "Share event photos publicly on the club’s Album timeline."}</DialogDescription>
           </DialogHeader>
           <div className="space-y-5 px-5 py-5 sm:px-6">
-            <div className="space-y-2">
-              <label htmlFor="club-album-title" className="text-sm font-semibold text-white/85">Album title</label>
-              <Input id="club-album-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="Friday Night Swiss" className="h-11 border-white/10 bg-white/5 text-base text-white placeholder:text-white/30" />
-              <p className="text-right text-[11px] tabular-nums text-white/35">{title.length}/120</p>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="club-album-date" className="text-sm font-semibold text-white/85">Event date <span className="font-normal text-white/35">(optional)</span></label>
-              <Input id="club-album-date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} className="h-11 border-white/10 bg-white/5 text-base text-white [color-scheme:dark]" />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="club-album-description" className="text-sm font-semibold text-white/85">Album caption <span className="font-normal text-white/35">(optional)</span></label>
-              <Textarea id="club-album-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} rows={3} placeholder="A quick recap of the event and the people in these photos." className="resize-none border-white/10 bg-white/5 text-base text-white placeholder:text-white/30" />
-            </div>
+            {!uploadAlbum && <>
+              <div className="space-y-2">
+                <label htmlFor="club-album-title" className="text-sm font-semibold text-white/85">Album title</label>
+                <Input id="club-album-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} placeholder="Friday Night Swiss" className="h-11 border-white/10 bg-white/5 text-base text-white placeholder:text-white/30" />
+                <p className="text-right text-[11px] tabular-nums text-white/35">{title.length}/120</p>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="club-album-date" className="text-sm font-semibold text-white/85">Event date <span className="font-normal text-white/35">(optional)</span></label>
+                <Input id="club-album-date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} className="h-11 border-white/10 bg-white/5 text-base text-white [color-scheme:dark]" />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="club-album-description" className="text-sm font-semibold text-white/85">Album caption <span className="font-normal text-white/35">(optional)</span></label>
+                <Textarea id="club-album-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} rows={3} placeholder="A quick recap of the event and the people in these photos." className="resize-none border-white/10 bg-white/5 text-base text-white placeholder:text-white/30" />
+              </div>
+            </>}
 
             <div className="space-y-3">
               <div>
@@ -548,10 +618,10 @@ export function ClubAlbumTab({
             {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/8 px-3 py-2.5 text-sm text-red-300" role="alert">{formError}</p>}
           </div>
           <DialogFooter className="border-t border-white/8 px-5 py-4 sm:px-6">
-            <Button type="button" variant="ghost" onClick={() => setEditorOpen(false)} disabled={saving} className="h-11 rounded-xl text-white/60 hover:bg-white/8 hover:text-white">Cancel</Button>
-            <Button type="button" onClick={() => void saveAlbum()} disabled={saving || preparingFiles} className="h-11 rounded-xl px-5 font-semibold text-white" style={{ background: accent }}>
+            <Button type="button" variant="ghost" onClick={() => { setEditorOpen(false); resetEditor(); }} disabled={saving} className="h-11 rounded-xl text-white/60 hover:bg-white/8 hover:text-white">Cancel</Button>
+            <Button type="button" onClick={() => void (uploadAlbum ? uploadPhotosToAlbum() : saveAlbum())} disabled={saving || preparingFiles} className="h-11 rounded-xl px-5 font-semibold text-white" style={{ background: accent }}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-              {saving ? "Saving…" : editingAlbum ? "Save changes" : "Publish album"}
+              {saving ? "Saving…" : uploadAlbum ? "Upload photos" : editingAlbum ? "Save changes" : "Publish album"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -561,15 +631,20 @@ export function ClubAlbumTab({
         <DialogContent showCloseButton={false} className="h-[100dvh] w-screen max-w-none gap-0 overflow-hidden rounded-none border-0 bg-black p-0 text-white">
           <DialogTitle className="sr-only">{viewer?.album.title ?? "Album photo"}</DialogTitle>
           <DialogDescription className="sr-only">Full-screen club album photo viewer. Use the left and right arrow keys to navigate.</DialogDescription>
-          {viewer && currentPhoto && (
+          {viewer && (currentPhoto || getCuratedClubAlbumCover(viewer.album.title) || viewer.album.coverImageUrl) && (
             <div className="relative flex h-full min-h-0 flex-col">
               <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:px-6">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">{viewer.album.title}</p>
-                  <p className="mt-0.5 text-xs tabular-nums text-white/60">{viewer.index + 1} of {viewerCount}</p>
+                  <p className="mt-0.5 text-xs tabular-nums text-white/60">{viewerCount ? `${viewer.index + 1} of ${viewerCount}` : "Album cover"}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {canManage && (
+                  {canUpload && isSharedCategoryAlbum(viewer.album.title) && (
+                    <button type="button" onClick={() => { setViewer(null); openUpload(viewer.album); }} className="inline-flex h-11 items-center gap-2 rounded-full bg-[#4CAF50] px-4 text-xs font-semibold text-white shadow-lg transition hover:bg-[#57bf59] focus:outline-none focus:ring-2 focus:ring-white" aria-label={`Upload photos to ${viewer.album.title}`}>
+                      <ImagePlus className="h-4 w-4" aria-hidden="true" /> Upload photos
+                    </button>
+                  )}
+                  {canManage && currentPhoto && (
                     <button type="button" onClick={() => void deleteCurrentPhoto()} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-md transition-colors hover:bg-red-500/25 hover:text-red-300" aria-label="Remove this photo">
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -580,7 +655,7 @@ export function ClubAlbumTab({
                 </div>
               </div>
               <div className="flex min-h-0 flex-1 items-center justify-center px-2 py-20 sm:px-16">
-                <img src={currentPhoto.url} alt={currentPhoto.altText || currentPhoto.caption || `${viewer.album.title} photo ${viewer.index + 1}`} className="max-h-full max-w-full object-contain" />
+                <img src={currentPhoto?.url ?? getCuratedClubAlbumCover(viewer.album.title) ?? viewer.album.coverImageUrl ?? ""} alt={currentPhoto?.altText || currentPhoto?.caption || `${viewer.album.title} album cover`} className="max-h-full max-w-full object-contain" />
               </div>
               {viewerCount > 1 && (
                 <>
@@ -593,7 +668,7 @@ export function ClubAlbumTab({
                 </>
               )}
               <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/85 to-transparent px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] pt-12 text-center">
-                {currentPhoto.caption && <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/85">{currentPhoto.caption}</p>}
+                {currentPhoto?.caption && <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/85">{currentPhoto.caption}</p>}
               </div>
             </div>
           )}

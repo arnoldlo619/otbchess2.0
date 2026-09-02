@@ -2437,6 +2437,24 @@ async function canManageClubAlbums(clubId: string, ownerId: string, userId: stri
   return membership?.role === "director";
 }
 
+const memberUploadableSharedAlbumTitles = new Set([
+  "chess tournaments",
+  "chess leagues",
+  "chess club meetups",
+]);
+
+async function canUploadToClubAlbum(clubId: string, ownerId: string, userId: string, albumTitle: string) {
+  if (await canManageClubAlbums(clubId, ownerId, userId)) return true;
+  if (!memberUploadableSharedAlbumTitles.has(albumTitle.trim().toLowerCase())) return false;
+  const db = await getDb();
+  const [membership] = await db
+    .select({ userId: dbClubMembers.userId })
+    .from(dbClubMembers)
+    .where(and(eq(dbClubMembers.clubId, clubId), eq(dbClubMembers.userId, userId)))
+    .limit(1);
+  return Boolean(membership);
+}
+
 function albumDate(value: Date | string) {
   return value instanceof Date ? value.toISOString() : String(value);
 }
@@ -2638,13 +2656,13 @@ clubsRouter.post("/:id/albums/:albumId/photos", requireFullAuth, albumPhotoJsonP
       res.status(404).json({ error: "Club not found" });
       return;
     }
-    if (!(await canManageClubAlbums(club.id, club.ownerId, userId))) {
-      res.status(403).json({ error: "Only club owners and directors can upload album photos" });
-      return;
-    }
     const [album] = await db.select().from(clubAlbums).where(and(eq(clubAlbums.id, req.params.albumId), eq(clubAlbums.clubId, club.id))).limit(1);
     if (!album) {
       res.status(404).json({ error: "Album not found" });
+      return;
+    }
+    if (!(await canUploadToClubAlbum(club.id, club.ownerId, userId, album.title))) {
+      res.status(403).json({ error: "Active club membership is required to upload to shared club albums" });
       return;
     }
 

@@ -29,6 +29,16 @@ describe("Club Feed attachment parser boundary", () => {
     expect(response.status).toBe(401);
   });
 
+  it("accepts a valid-sized Album photo body through its route-scoped parser before auth rejects it", async () => {
+    const response = await fetch(`${baseUrl}/api/clubs/club-1/albums/album-1/photos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: largeJson,
+    });
+
+    expect(response.status).toBe(401);
+  });
+
   it("retains the 512 KB parser cap for unrelated API routes", async () => {
     const response = await fetch(`${baseUrl}/api/unknown`, {
       method: "POST",

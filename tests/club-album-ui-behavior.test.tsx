@@ -33,6 +33,7 @@ const baseProps = {
   clubName: "1904 Chess Club",
   clubAvatarUrl: null,
   canManage: false,
+  canUpload: false,
   currentUserName: "Owner",
   accent: "#4CAF50",
   isDark: true,
@@ -94,6 +95,32 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(screen.queryByRole("button", { name: /delete chess/i })).toBeNull();
   });
 
+  it("opens a shared category cover in the lightbox and exposes Upload Photos to active members", async () => {
+    api.list.mockResolvedValue([{ ...albumWithPhotos(0), id: "album-tournaments", title: "Chess Tournaments", coverImageUrl: null }]);
+    render(<ClubAlbumTab {...baseProps} canUpload />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open Chess Tournaments album" }));
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(within(screen.getByRole("dialog")).getByAltText("Chess Tournaments album cover")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Upload photos to Chess Tournaments" }));
+    expect(await screen.findByRole("heading", { name: "Upload photos to Chess Tournaments" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Choose event photos" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Upload photos" })).toBeTruthy();
+  });
+
+  it.each([375, 1440])("keeps shared Album lightbox and upload controls accessible at a %ipx viewport", async (width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    window.dispatchEvent(new Event("resize"));
+    api.list.mockResolvedValue([{ ...albumWithPhotos(0), id: "album-meetups", title: "Chess Club Meetups", coverImageUrl: null }]);
+
+    render(<ClubAlbumTab {...baseProps} canUpload />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open Chess Club Meetups album" }));
+    const gallery = await screen.findByRole("dialog");
+    expect(within(gallery).getByRole("button", { name: "Upload photos to Chess Club Meetups" })).toBeTruthy();
+    expect(within(gallery).getByRole("button", { name: "Close photo viewer" })).toBeTruthy();
+  });
+
   it("keeps all three shared category albums editable and deletable for club owners", async () => {
     api.list.mockResolvedValue([
       { ...albumWithPhotos(0), id: "album-tournaments", title: "Chess Tournaments", coverImageUrl: null },
@@ -138,7 +165,7 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(screen.getByLabelText("Club photo grid")).toBeTruthy();
     expect(screen.getAllByText("6 photos").length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: "View Players at round 1" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Open Championship Night album" })[0]!);
     expect(await screen.findByText("1 of 6")).toBeTruthy();
 
     fireEvent.keyDown(window, { key: "ArrowRight" });

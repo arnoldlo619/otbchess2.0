@@ -91,6 +91,13 @@
 - [x] Club Album: Create visible default Chess Tournaments, Chess Leagues, and Chess Club Meetups albums for every existing and new club
 - [x] Club Album: Verify all three shared category albums are public to members and manageable by club owners
 - [x] Club Album: Add rendered owner-state coverage proving all three shared category albums expose edit and delete controls
+- [x] Club Album: Add a subtle hover zoom treatment to album category cover images with reduced-motion support
+- [x] Club Album: Open default album covers into an accessible album lightbox gallery
+- [x] Club Album: Let active club members and owners upload photos from inside default category albums
+- [x] Club Album: Add authorization and interaction coverage for member uploads, default-cover lightbox entry, and responsive controls
+- [x] Club Album: Scope the larger album-photo request parser so valid optimized uploads are not rejected by the global payload guard
+- [x] Club Album: Add explicit mobile and desktop coverage for default-album lightbox controls and Upload Photos actions
+- [x] Club Album: Re-run focused Album UI/API/parser validation after responsive interaction coverage
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

@@ -5739,6 +5739,7 @@ export default function ClubDashboard() {
             clubName={club.name}
             clubAvatarUrl={club.avatarUrl}
             canManage={Boolean(isOwnerOrDirector)}
+            canUpload={isActiveClubMember}
             currentUserName={user?.displayName ?? club.ownerName}
             accent={accent}
             isDark={isDark}

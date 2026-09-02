@@ -3265,6 +3265,7 @@ export default function ClubProfile() {
             clubName={club.name}
             clubAvatarUrl={club.avatarUrl}
             canManage={isOwner || isDirector}
+            canUpload={joined}
             currentUserName={user?.displayName ?? club.ownerName}
             accent={accent}
             isDark={isDark}
