@@ -98,6 +98,11 @@
 - [x] Club Album: Scope the larger album-photo request parser so valid optimized uploads are not rejected by the global payload guard
 - [x] Club Album: Add explicit mobile and desktop coverage for default-album lightbox controls and Upload Photos actions
 - [x] Club Album: Re-run focused Album UI/API/parser validation after responsive interaction coverage
+- [x] Club Album: Add an accessible drag-and-drop zone to the Upload Photos modal while preserving file-picker and multi-image preparation flows
+- [x] Club Album: Add drag-and-drop interaction coverage and verify upload behavior across narrow and desktop viewports
+- [x] Club Album: Add explicit 375px and desktop coverage for drag-and-drop feedback and keyboard file-picker fallback
+- [x] Club Album: Prove a valid dropped image is prepared, queued, and submitted through the shared Album upload modal
+- [x] Club Album: Re-run focused UI/API/parser validation after the drag-and-drop responsive and valid-file coverage
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

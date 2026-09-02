@@ -104,7 +104,7 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(within(screen.getByRole("dialog")).getByAltText("Chess Tournaments album cover")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Upload photos to Chess Tournaments" }));
     expect(await screen.findByRole("heading", { name: "Upload photos to Chess Tournaments" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Choose event photos" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Drop photos here or choose event photos" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Upload photos" })).toBeTruthy();
   });
 
@@ -119,6 +119,67 @@ describe("ClubAlbumTab rendered behavior", () => {
     const gallery = await screen.findByRole("dialog");
     expect(within(gallery).getByRole("button", { name: "Upload photos to Chess Club Meetups" })).toBeTruthy();
     expect(within(gallery).getByRole("button", { name: "Close photo viewer" })).toBeTruthy();
+  });
+
+  it("shows drag feedback and routes dropped files through the existing image validation flow", async () => {
+    api.list.mockResolvedValue([{ ...albumWithPhotos(0), id: "album-tournaments", title: "Chess Tournaments", coverImageUrl: null }]);
+    render(<ClubAlbumTab {...baseProps} canUpload />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Upload photos to Chess Tournaments" }));
+    const dropZone = await screen.findByRole("button", { name: "Drop photos here or choose event photos" });
+    fireEvent.dragEnter(dropZone, { dataTransfer: { files: [] } });
+    expect(screen.getByText("Drop photos to add them")).toBeTruthy();
+
+    fireEvent.drop(dropZone, { dataTransfer: { files: [new File(["not-a-photo"], "notes.txt", { type: "text/plain" })] } });
+    expect((await screen.findByRole("alert")).textContent).toContain("notes.txt is not a supported JPEG, PNG, or WebP image");
+  });
+
+  it.each([375, 1440])("keeps the drag-and-drop target and keyboard picker fallback usable at a %ipx viewport", async (width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    window.dispatchEvent(new Event("resize"));
+    api.list.mockResolvedValue([{ ...albumWithPhotos(0), id: "album-leagues", title: "Chess Leagues", coverImageUrl: null }]);
+    const clickInput = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => undefined);
+    render(<ClubAlbumTab {...baseProps} canUpload />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Upload photos to Chess Leagues" }));
+    const dropZone = await screen.findByRole("button", { name: "Drop photos here or choose event photos" });
+    fireEvent.dragEnter(dropZone, { dataTransfer: { files: [] } });
+    expect(screen.getByText("Drop photos to add them")).toBeTruthy();
+    fireEvent.keyDown(dropZone, { key: " " });
+    expect(clickInput).toHaveBeenCalled();
+    clickInput.mockRestore();
+  });
+
+  it("prepares, queues, and submits a valid dropped image through the shared Album modal", async () => {
+    class TestImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      naturalWidth = 640;
+      naturalHeight = 480;
+      set src(_value: string) { queueMicrotask(() => this.onload?.()); }
+    }
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage: vi.fn() } as unknown as CanvasRenderingContext2D);
+    const toBlob = vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) => callback(new Blob(["optimized"], { type: "image/webp" })));
+    const createObjectUrl = vi.fn(() => "blob:queued-photo");
+    const revokeObjectUrl = vi.fn();
+    vi.stubGlobal("URL", { createObjectURL: createObjectUrl, revokeObjectURL: revokeObjectUrl });
+    vi.stubGlobal("Image", TestImage);
+    api.list.mockResolvedValue([{ ...albumWithPhotos(0), id: "album-meetups", title: "Chess Club Meetups", coverImageUrl: null }]);
+
+    try {
+      render(<ClubAlbumTab {...baseProps} canUpload />);
+      fireEvent.click(await screen.findByRole("button", { name: "Upload photos to Chess Club Meetups" }));
+      const dropZone = await screen.findByRole("button", { name: "Drop photos here or choose event photos" });
+      fireEvent.drop(dropZone, { dataTransfer: { files: [new File(["source-image"], "round-one.png", { type: "image/png" })] } });
+
+      expect(await screen.findByDisplayValue("round one")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: "Upload photos" }));
+      await waitFor(() => expect(api.upload).toHaveBeenCalledWith("club-1", "album-meetups", expect.objectContaining({ caption: "round one" })));
+    } finally {
+      getContext.mockRestore();
+      toBlob.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it("keeps all three shared category albums editable and deletable for club owners", async () => {

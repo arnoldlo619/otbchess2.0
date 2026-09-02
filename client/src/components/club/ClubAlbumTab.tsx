@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -240,6 +240,7 @@ export function ClubAlbumTab({
   const [eventDate, setEventDate] = useState("");
   const [pendingPhotos, setPendingPhotos] = useState<PreparedPhoto[]>([]);
   const [preparingFiles, setPreparingFiles] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0 });
   const [formError, setFormError] = useState<string | null>(null);
@@ -290,6 +291,7 @@ export function ClubAlbumTab({
     setEventDate("");
     setPendingPhotos([]);
     setFormError(null);
+    setIsDragActive(false);
     setUploadProgress({ completed: 0, total: 0 });
   };
 
@@ -336,6 +338,12 @@ export function ClubAlbumTab({
       setPreparingFiles(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const handlePhotoDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragActive(false);
+    void handleFiles(event.dataTransfer.files);
   };
 
   const saveAlbum = async () => {
@@ -578,10 +586,30 @@ export function ClubAlbumTab({
               </div>
               <label htmlFor="club-album-files" className="sr-only">Event photos</label>
               <input id="club-album-files" ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(event) => void handleFiles(event.target.files)} />
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={preparingFiles || saving} className="flex min-h-24 w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.025] px-4 text-sm font-semibold text-white/65 transition-colors hover:border-[#4CAF50]/50 hover:bg-[#4CAF50]/5 hover:text-white disabled:opacity-50">
+              <div
+                role="button"
+                tabIndex={preparingFiles || saving ? -1 : 0}
+                aria-label="Drop photos here or choose event photos"
+                aria-disabled={preparingFiles || saving}
+                onClick={() => { if (!preparingFiles && !saving) fileInputRef.current?.click(); }}
+                onKeyDown={(event) => {
+                  if ((event.key === "Enter" || event.key === " ") && !preparingFiles && !saving) {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                onDragEnter={(event) => { event.preventDefault(); if (!preparingFiles && !saving) setIsDragActive(true); }}
+                onDragOver={(event) => event.preventDefault()}
+                onDragLeave={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragActive(false);
+                }}
+                onDrop={handlePhotoDrop}
+                className={`flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-5 text-center text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${preparingFiles || saving ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${isDragActive ? "border-[#4CAF50] bg-[#4CAF50]/10 text-white" : "border-white/15 bg-white/[0.025] text-white/65 hover:border-[#4CAF50]/50 hover:bg-[#4CAF50]/5 hover:text-white"}`}
+              >
                 {preparingFiles ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <ImagePlus className="h-5 w-5" aria-hidden="true" />}
-                {preparingFiles ? "Preparing photos…" : "Choose event photos"}
-              </button>
+                <span>{preparingFiles ? "Preparing photos…" : isDragActive ? "Drop photos to add them" : "Drop photos here or choose event photos"}</span>
+                {!preparingFiles && <span className="text-xs font-normal text-white/40">JPEG, PNG, or WebP</span>}
+              </div>
 
               {pendingPhotos.length > 0 && (
                 <div className="grid gap-3 sm:grid-cols-2">
