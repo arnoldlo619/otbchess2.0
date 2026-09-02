@@ -6,13 +6,11 @@ const source = readFileSync(resolve(import.meta.dirname, "../client/src/pages/Cl
 const heroSource = readFileSync(resolve(import.meta.dirname, "../client/src/components/club/ClubHero.tsx"), "utf8");
 
 describe("Club Home profile layout", () => {
-  it("adds a named, functional profile highlight row rather than decorative controls", () => {
-    expect(source).toContain('aria-label="Club highlights"');
-    expect(source).toContain('label: "Updates"');
-    expect(source).toContain('label: "Events"');
-    expect(source).toContain('label: "Members"');
-    expect(source).toContain('label: "Photos"');
-    expect(source).toContain('onClick={() => handleTabChange(id)}');
+  it("removes the duplicate in-content tab navigation in favor of the primary club navigation", () => {
+    expect(source).not.toContain('aria-label="Club highlights"');
+    expect(source).not.toContain('label: "Updates", Icon: OtbFeed');
+    expect(source).toContain('isOwner={isOwner}');
+    expect(source).toContain('joined={joined}');
   });
 
   it("keeps Home content readable in a responsive profile grid", () => {
@@ -21,7 +19,6 @@ describe("Club Home profile layout", () => {
     expect(source).toContain('id="club-home-content"');
     expect(source).toContain('lg:col-span-2');
     expect(source).toContain('overflow-x-auto');
-    expect(source).toContain('focus-visible:ring-2 focus-visible:ring-[#4CAF50]');
   });
 
   it("preserves real owner and visitor profile actions around the redesigned Home content", () => {

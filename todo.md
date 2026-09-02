@@ -107,6 +107,8 @@
 - [x] Club Dashboard: Validate the sidebar brand swap preserves navigation and responsive layout
 - [x] Club Dashboard: Add explicit responsive validation for the OTB!! sidebar brand swap at compact desktop and narrow/mobile layouts
 - [x] Club Dashboard: Re-run focused sidebar regression and responsive visual QA after the OTB!! brand-mark swap
+- [x] Club Profile: Remove the redundant in-content tab navigation that duplicates the Club sidebar destinations
+- [x] Club Profile: Verify desktop sidebar and mobile menu navigation remain the sole tab controls after cleanup
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
