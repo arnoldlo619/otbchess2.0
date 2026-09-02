@@ -26,7 +26,7 @@ vi.mock("../client/src/components/PlayerAvatar", () => ({
   PlayerAvatar: ({ name }: { name: string }) => <div aria-label={`${name} avatar`} />,
 }));
 
-import { ClubAlbumTab, prepareClubAlbumPhoto } from "../client/src/components/club/ClubAlbumTab";
+import { ClubAlbumTab, getCuratedClubAlbumCover, prepareClubAlbumPhoto } from "../client/src/components/club/ClubAlbumTab";
 
 const baseProps = {
   clubId: "club-1",
@@ -70,6 +70,13 @@ describe("ClubAlbumTab rendered behavior", () => {
   });
 
   afterEach(() => cleanup());
+
+  it("uses the supplied category artwork for tournament, league, and meetup album covers", () => {
+    expect(getCuratedClubAlbumCover("Chess Tournaments")).toBe("/manus-storage/chess-tournaments_23c8b088.jpg");
+    expect(getCuratedClubAlbumCover("Chess Leagues")).toBe("/manus-storage/chess-leagues_770bca1d.jpg");
+    expect(getCuratedClubAlbumCover("Chess Club Meetups")).toBe("/manus-storage/chess-club-meetups_c17d81ae.jpg");
+    expect(getCuratedClubAlbumCover("Club Photos")).toBeNull();
+  });
 
   it("keeps a safe public empty state without exposing owner controls if the album service returns no records", async () => {
     render(<ClubAlbumTab {...baseProps} />);

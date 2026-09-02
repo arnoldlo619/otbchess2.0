@@ -86,6 +86,8 @@
 - [x] Club Home: Complete the profile-first Home redesign beyond the shortcut row and content grid
 - [x] Club Home: Add explicit owner and visitor Home-route coverage for gated actions and links
 - [x] Club Home: Add light and dark Home presentation coverage and rendered keyboard interaction tests
+- [x] Club Album: Replace category covers with the supplied Chess Tournaments, Chess Leagues, and Chess Club Meetups artwork
+- [x] Club Album: Verify category cover mapping does not bypass real owner album edit or deletion controls
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

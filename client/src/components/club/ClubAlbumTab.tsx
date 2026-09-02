@@ -39,6 +39,20 @@ const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 const MAX_IMAGE_EDGE = 2048;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+const CURATED_ALBUM_COVERS = {
+  tournaments: "/manus-storage/chess-tournaments_23c8b088.jpg",
+  leagues: "/manus-storage/chess-leagues_770bca1d.jpg",
+  meetups: "/manus-storage/chess-club-meetups_c17d81ae.jpg",
+} as const;
+
+export function getCuratedClubAlbumCover(title: string): string | null {
+  const normalizedTitle = title.trim().toLowerCase();
+  if (normalizedTitle.includes("tournament")) return CURATED_ALBUM_COVERS.tournaments;
+  if (normalizedTitle.includes("league")) return CURATED_ALBUM_COVERS.leagues;
+  if (normalizedTitle.includes("meetup")) return CURATED_ALBUM_COVERS.meetups;
+  return null;
+}
+
 interface PreparedPhoto {
   id: string;
   name: string;
@@ -141,7 +155,9 @@ function AlbumGridItem({
   onDelete: (album: ClubAlbum) => void;
 }) {
   const photo = photoIndex === null ? null : album.photos[photoIndex];
-  const coverUrl = photo?.url ?? album.coverImageUrl;
+  // A real uploaded album photo remains the highest-priority cover. Category
+  // artwork only replaces generic covers for the matching album destinations.
+  const coverUrl = photo?.url ?? getCuratedClubAlbumCover(album.title) ?? album.coverImageUrl;
   const label = photo
     ? photo.altText || photo.caption || `${album.title} photo ${(photoIndex ?? 0) + 1}`
     : `${album.title} album cover`;
