@@ -10,8 +10,6 @@ export type ClubDashboardSidebarItem = {
 };
 
 type ClubDashboardSidebarProps = {
-  clubName: string;
-  clubAvatarUrl?: string | null;
   accent: string;
   background: string;
   borderColor: string;
@@ -30,8 +28,6 @@ function badgeLabel(value: number) {
 }
 
 export function ClubDashboardSidebar({
-  clubName,
-  clubAvatarUrl,
   accent,
   background,
   borderColor,
@@ -156,8 +152,6 @@ export function ClubDashboardSidebar({
     );
   }
 
-  const utilityButtonClass = "relative flex h-11 w-full items-center rounded-xl border border-transparent text-left text-white/55 outline-none transition-colors duration-150 hover:border-white/[0.06] hover:bg-white/[0.045] hover:text-white/85 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none";
-
   return (
     // Pointer hover temporarily reveals labels; the equivalent focus-capture path preserves keyboard access.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
@@ -184,11 +178,7 @@ export function ClubDashboardSidebar({
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.09] bg-white/[0.035] outline-none transition-colors duration-150 hover:border-white/15 hover:bg-white/[0.07] focus-visible:ring-2 motion-reduce:transition-none"
             style={{ color: accent, boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 8%, transparent)` }}
           >
-            {clubAvatarUrl ? (
-              <img src={clubAvatarUrl} alt="" className="h-full w-full rounded-[15px] object-cover" />
-            ) : (
-              <span className="text-sm font-bold">{clubName.charAt(0).toUpperCase()}</span>
-            )}
+            <img src="/manus-storage/chessotb-wordmark-320_e1731168.webp" alt="OTB!!" className="h-auto w-9 object-contain transition-opacity duration-150 hover:opacity-80" />
           </button>
         </div>
       </div>

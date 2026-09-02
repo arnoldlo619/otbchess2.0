@@ -25,8 +25,6 @@ const items: ClubDashboardSidebarItem[] = [
 
 function renderSidebar(overrides: Partial<React.ComponentProps<typeof ClubDashboardSidebar>> = {}) {
   const props: React.ComponentProps<typeof ClubDashboardSidebar> = {
-    clubName: "1904 Chess Club",
-    clubAvatarUrl: null,
     accent: "#4CAF50",
     background: "#07140c",
     borderColor: "#183420",
@@ -95,6 +93,24 @@ describe("ClubDashboardSidebar", () => {
 
     expect(onSelect).toHaveBeenCalledWith("events");
     expect(onBackToClubs).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the shared OTB!! landing-page wordmark instead of club-specific artwork", () => {
+    renderSidebar();
+
+    const logo = screen.getByRole("img", { name: "OTB!!" });
+    expect(logo.getAttribute("src")).toBe("/manus-storage/chessotb-wordmark-320_e1731168.webp");
+    expect(screen.queryByLabelText("1904 Chess Club avatar")).toBeNull();
+  });
+
+  it.each([375, 1024])("keeps the responsive sidebar brand control stable at a %ipx viewport", (width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    window.dispatchEvent(new Event("resize"));
+    renderSidebar();
+
+    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/manus-storage/chessotb-wordmark-320_e1731168.webp");
+    expect(screen.getByRole("complementary", { name: "Club dashboard sidebar" }).className).toContain("hidden");
+    expect(screen.getByRole("complementary", { name: "Club dashboard sidebar" }).className).toContain("lg:flex");
   });
 
   it("keeps compact mode as the default without rendering a persistent pin control", () => {

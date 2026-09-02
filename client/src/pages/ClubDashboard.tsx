@@ -3703,8 +3703,6 @@ export default function ClubDashboard() {
         {/* Desktop Club Dashboard navigation. Compact by default; hover, focus, or pin reveals labels. */}
         <div className="hidden w-[72px] min-w-[72px] flex-shrink-0 lg:block" />
         <ClubDashboardSidebar
-          clubName={club.name}
-          clubAvatarUrl={club.avatarUrl}
           accent={accent}
           background={sidebarBg ?? "oklch(0.115 0.025 145)"}
           borderColor={navBorder}

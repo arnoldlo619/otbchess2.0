@@ -103,6 +103,10 @@
 - [x] Club Album: Add explicit 375px and desktop coverage for drag-and-drop feedback and keyboard file-picker fallback
 - [x] Club Album: Prove a valid dropped image is prepared, queued, and submitted through the shared Album upload modal
 - [x] Club Album: Re-run focused UI/API/parser validation after the drag-and-drop responsive and valid-file coverage
+- [x] Club Dashboard: Replace the sidebar corner club logo with the shared OTB!! landing-page header brand mark
+- [x] Club Dashboard: Validate the sidebar brand swap preserves navigation and responsive layout
+- [x] Club Dashboard: Add explicit responsive validation for the OTB!! sidebar brand swap at compact desktop and narrow/mobile layouts
+- [x] Club Dashboard: Re-run focused sidebar regression and responsive visual QA after the OTB!! brand-mark swap
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
