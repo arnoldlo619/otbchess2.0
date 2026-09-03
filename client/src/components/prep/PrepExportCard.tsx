@@ -29,6 +29,7 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
   const generated = new Date(view.snapshot.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const avgRating = view.opponent.avgRating;
   const summaryStats = [["Avg rating", avgRating ?? "Not available"]] as const;
+  const isPro = view.tier === "pro";
 
   return (
     <div
@@ -53,10 +54,10 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
 
       <section>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
-          <h2 style={{ margin: 0, fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", color: COLORS.green }}>Three actions for this matchup</h2>
+          <h2 style={{ margin: 0, fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", color: COLORS.green }}>{isPro ? "Detailed prep targets" : "Top openings"}</h2>
           <span style={{ color: COLORS.tertiary, fontSize: 11 }}>{view.gameWindow.from} – {view.gameWindow.to}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.max(1, Math.min(3, view.actions.length))}, minmax(0, 1fr))`, gap: 14 }}>
+        {isPro ? <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.max(1, Math.min(3, view.actions.length))}, minmax(0, 1fr))`, gap: 14 }}>
           {view.actions.length > 0 ? view.actions.map((action, index) => (
             <article key={action.id} style={{ minHeight: 250, padding: 20, borderRadius: 14, border: `1px solid ${COLORS.border}`, background: COLORS.surface }}>
               <p style={{ margin: 0, color: COLORS.green, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em" }}>ACTION {index + 1}</p>
@@ -70,7 +71,21 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
               <p style={{ margin: 0, color: COLORS.secondary, fontSize: 14 }}>Insufficient current evidence for a primary recommendation.</p>
             </div>
           )}
-        </div>
+        </div> : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            {(["white", "black"] as const).map(color => (
+              <article key={color} style={{ minHeight: 190, padding: 20, borderRadius: 14, border: `1px solid ${COLORS.border}`, background: COLORS.surface }}>
+                <p style={{ margin: 0, color: COLORS.green, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>As {titleCase(color)}</p>
+                {view.openingSummary[color].length > 0 ? view.openingSummary[color].map((opening, index) => (
+                  <div key={opening.name} style={{ display: "flex", alignItems: "center", gap: 12, marginTop: index === 0 ? 18 : 14 }}>
+                    <span style={{ display: "grid", width: 25, height: 25, placeItems: "center", borderRadius: "50%", background: "#17301d", color: COLORS.green, fontSize: 11, fontWeight: 800 }}>{index + 1}</span>
+                    <div><p style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>{opening.name}</p><p style={{ margin: "4px 0 0", color: COLORS.tertiary, fontSize: 11 }}>{opening.games} game{opening.games === 1 ? "" : "s"} · {Math.round(opening.share * 100)}%</p></div>
+                  </div>
+                )) : <p style={{ margin: "18px 0 0", color: COLORS.secondary, fontSize: 13 }}>No eligible games in this report.</p>}
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section style={{ display: "flex", gap: 12, marginTop: 22, padding: 16, borderRadius: 12, border: `1px solid ${COLORS.border}` }}>

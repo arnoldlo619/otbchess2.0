@@ -1,4 +1,4 @@
-import type { ScoutAction, ScoutFreshness, ScoutReportSnapshot, ScoutReportV3 } from "./prepTypes.js";
+import type { ScoutAction, ScoutFreshness, ScoutOpeningSummary, ScoutReportSnapshot, ScoutReportV3 } from "./prepTypes.js";
 
 export interface ScoutReportProjection {
   snapshot: ScoutReportSnapshot;
@@ -12,6 +12,8 @@ export interface ScoutReportProjection {
   gameWindow: ScoutReportV3["dataQuality"]["window"];
   freshness: ScoutFreshness;
   actions: ScoutAction[];
+  openingSummary: Record<"white" | "black", ScoutOpeningSummary[]>;
+  tier: "free" | "pro";
 }
 
 export function projectScoutReport(report: ScoutReportV3): ScoutReportProjection {
@@ -32,5 +34,7 @@ export function projectScoutReport(report: ScoutReportV3): ScoutReportProjection
     gameWindow: report.dataQuality.window,
     freshness: report.freshness ?? report.dataQuality.freshness ?? "limited",
     actions: report.scoutBrief ?? [],
+    openingSummary: report.openingSummary ?? { white: [], black: [] },
+    tier: report.access?.tier ?? "free",
   };
 }

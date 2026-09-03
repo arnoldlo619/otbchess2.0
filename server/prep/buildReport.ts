@@ -15,12 +15,13 @@ import type {
   RawGame,
   ScoutReportV3,
 } from "../../shared/prepTypes.js";
+import { simpleOpeningName } from "../../shared/simpleOpeningNames.js";
 import { parseGames } from "./parseGames.js";
 import { synthesize, buildForecasts } from "./insightEngine.js";
 import { runGuards } from "./guards.js";
 import { buildScoutBrief, classifyFreshness, headlineInsightEligible } from "./evidencePolicy.js";
 
-export const ENGINE_VERSION = "4.0.0-launch.1";
+export const ENGINE_VERSION = "4.1.0-tiered-brief";
 
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
 
@@ -124,6 +125,21 @@ export function buildReport(
 
   const forecasts = buildForecasts(parsed);
   const scoutBrief = buildScoutBrief(kept, myColor, freshness);
+  const openingSummary = (color: Color) => {
+    const byFamily = new Map<string, { games: number; score: number }>();
+    for (const game of parsed.filter(candidate => candidate.scoutedColor === color)) {
+      const name = simpleOpeningName(game.opening.name, game.opening.eco, game.plies[0]?.san);
+      const existing = byFamily.get(name) ?? { games: 0, score: 0 };
+      existing.games += 1;
+      existing.score += game.scoutedScore;
+      byFamily.set(name, existing);
+    }
+    const total = parsed.filter(candidate => candidate.scoutedColor === color).length;
+    return Array.from(byFamily.entries())
+      .sort(([, a], [, b]) => b.games - a.games || a.score - b.score)
+      .slice(0, 2)
+      .map(([name, value]) => ({ name, games: value.games, share: total ? value.games / total : 0, score: value.games ? value.score / value.games : 0 }));
+  };
 
   return {
     version: 3,
@@ -151,6 +167,7 @@ export function buildReport(
       notes,
     },
     openingForecast: forecasts,
+    openingSummary: { white: openingSummary("white"), black: openingSummary("black") },
     insights: kept,
     scoutBrief,
     sections: {

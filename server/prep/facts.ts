@@ -2,6 +2,7 @@
 // Ported from reference/src/engine.ts (buildFacts section) — identical behavior.
 
 import type { Color, ParsedGame } from "../../shared/prepTypes.js";
+import { simpleOpeningName } from "../../shared/simpleOpeningNames.js";
 import { buildPositionTree } from "./positionTree.js";
 
 export interface Group {
@@ -23,7 +24,8 @@ export const grp = (gs: ParsedGame[]): Group => ({
   score: gs.reduce((s, g) => s + g.scoutedScore, 0),
 });
 
-export const familyOf = (name: string): string => name.split(":")[0].trim();
+export const familyOf = (game: ParsedGame): string =>
+  simpleOpeningName(game.opening.name, game.opening.eco, game.plies[0]?.san);
 
 export const sample = (
   gs: ParsedGame[],
@@ -48,7 +50,7 @@ export function buildFacts(parsed: ParsedGame[]): Facts {
     for (const g of byColor[c]) {
       const key =
         g.opening.bookExitPly >= 2
-          ? familyOf(g.opening.name)
+          ? familyOf(g)
           : "Other / irregular";
       const existing = fam[c].get(key);
       if (existing) existing.push(g);

@@ -98,6 +98,16 @@ export interface ScoutAction {
   evidence: Insight["evidence"] & { relevantGames: number; parentGames?: number; sourceGameIds: string[] };
 }
 
+/** A familiar opening family, aggregated from the opponent's eligible games. */
+export interface ScoutOpeningSummary {
+  name: string;
+  games: number;
+  share: number;
+  score: number;
+}
+
+export type ScoutAccessTier = "free" | "pro";
+
 export interface ForecastBranch {
   moveSan: string;
   /** Canonical game path through this move, retained solely for legal board/analysis previews. */
@@ -146,6 +156,10 @@ export interface ScoutReportV3 {
     notes: string[];
   };
   openingForecast: Record<Color, ForecastBranch[]>;
+  /** The short opening overview shown to every account, independent of perspective. */
+  openingSummary?: Record<Color, ScoutOpeningSummary[]>;
+  /** Server-resolved tier policy; free responses omit detailed source insights. */
+  access?: { tier: ScoutAccessTier; detailedInsightsAvailable: boolean };
   insights: Insight[];
   scoutBrief?: ScoutAction[];
   sections: {

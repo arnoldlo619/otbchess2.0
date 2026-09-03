@@ -9,7 +9,7 @@ import { Router, type Request, type RequestHandler, type Response } from "expres
 import { eq, and, or, desc } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
-import { prepCache, savedPrepReports, gameSessions } from "../shared/schema.js";
+import { prepCache, savedPrepReports, gameSessions, users } from "../shared/schema.js";
 import { logger } from "./logger.js";
 import { validate, prepResolveSchema, prepSaveSchema, coachInsightSchema } from "./validation.js";
 import { buildPrepReport, ENGINE_VERSION } from "./prepEngine.js";
@@ -21,13 +21,14 @@ import { fetchLichess } from "./services/lichess.js";
 import { derivePopulationCandidates } from "./population/candidates.js";
 import { resolvePopulationReference } from "./population/resolver.js";
 import { registerTrackedPopulationPosition } from "./population/tracked.js";
-import type { AnalysisLaunchSubject, CachedPrepAnalysisReport, FetchOpts, PrepErrorPayload } from "../shared/prepTypes.js";
+import type { AnalysisLaunchSubject, CachedPrepAnalysisReport, FetchOpts, PrepErrorPayload, ScoutReportV3 } from "../shared/prepTypes.js";
 import {
   SCOUT_ARCHIVE_MONTHS,
   activeScoutRequestFromQuery,
   scoutRequestCacheKey,
 } from "../shared/scoutRequest.js";
 import { requireAuth } from "./auth.js";
+import { getTokenPayload } from "./authCore.js";
 
 // ── Prep cache TTL ───────────────────────────────────────────────────────────
 const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -67,6 +68,46 @@ function readRememberedPrepAnalysisReport(cacheKey: string): CachedPrepAnalysisR
   }
   return entry.value;
 }
+
+async function hasPrepProAccess(req: Request): Promise<boolean> {
+  const payload = getTokenPayload(req);
+  if (!payload || payload.isGuest) return false;
+  try {
+    const db = await getDb();
+    const [user] = await db
+      .select({ isPro: users.isPro, isStaff: users.isStaff, proExpiresAt: users.proExpiresAt })
+      .from(users)
+      .where(eq(users.id, payload.sub))
+      .limit(1);
+    return Boolean(user && (user.isStaff || (user.isPro && (!user.proExpiresAt || user.proExpiresAt > new Date()))));
+  } catch {
+    return false;
+  }
+}
+
+export function presentPrepReport(report: ScoutReportV3, hasProAccess: boolean): ScoutReportV3 {
+  const access = { tier: hasProAccess ? "pro" as const : "free" as const, detailedInsightsAvailable: hasProAccess };
+  if (hasProAccess) return { ...report, access };
+  return {
+    ...report,
+    access,
+    insights: [],
+    scoutBrief: [],
+    openingForecast: { white: [], black: [] },
+    populationReferences: undefined,
+    sections: {
+      matchupSummary: [], strengths: [], weaknesses: [], weakSignals: [],
+      ifYouHaveWhite: [], ifYouHaveBlack: [], deviationPoints: [], behavior: [], prepChecklist: [],
+    },
+  };
+}
+
+const requirePrepPro: RequestHandler = (req, res, next) => {
+  void hasPrepProAccess(req).then(hasAccess => {
+    if (hasAccess) return next();
+    return res.status(403).json({ error: "PRO_REQUIRED", message: "Detailed Matchup Prep analysis is available with Pro." });
+  }).catch(next);
+};
 
 // ── Cache helper ─────────────────────────────────────────────────────────────
 async function getCachedOrBuildPrepReport(
@@ -141,6 +182,7 @@ export function createPrepRouter(): Router {
     if (req.query.schema !== "2") {
       let staleCachedReport: import("../shared/prepTypes.js").ScoutReportV3 | null = null;
       try {
+        const proAccess = await hasPrepProAccess(req);
         const activeRequest = activeScoutRequestFromQuery(username, req.query as Record<string, string | string[] | undefined>);
         const normalised = activeRequest.normalizedUsername;
         const maxGames = activeRequest.maxGames;
@@ -152,7 +194,7 @@ export function createPrepRouter(): Router {
         if (!forceRefresh) {
           const remembered = readRememberedPrepAnalysisReport(cacheKey);
           if (remembered) {
-            res.json({ ...remembered.report, _cached: true });
+            res.json({ ...presentPrepReport(remembered.report, proAccess), _cached: true });
             return;
           }
           try {
@@ -165,7 +207,7 @@ export function createPrepRouter(): Router {
                 const payload = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport | import("../shared/prepTypes.js").ScoutReportV3;
                 if ("schemaVersion" in payload && payload.schemaVersion === 1 && "analysisSnapshot" in payload) {
                   if (age < PREP_CACHE_TTL_MS) {
-                    res.json({ ...payload.report, _cached: true });
+                    res.json({ ...presentPrepReport(payload.report, proAccess), _cached: true });
                     return;
                   }
                   staleCachedReport = payload.report;
@@ -202,12 +244,12 @@ export function createPrepRouter(): Router {
           });
         } catch { /* non-fatal */ }
 
-        res.json({ ...report, _cached: false });
+        res.json({ ...presentPrepReport(report, proAccess), _cached: false });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
         logger.error("[prep v3]", msg);
         if (staleCachedReport) {
-          res.json({ ...staleCachedReport, _cached: true, _stale: true });
+          res.json({ ...presentPrepReport(staleCachedReport, await hasPrepProAccess(req)), _cached: true, _stale: true });
           return;
         }
         if (msg.startsWith("PlayerNotFound:")) {
@@ -228,6 +270,10 @@ export function createPrepRouter(): Router {
     }
 
     // V2 legacy path
+    if (!(await hasPrepProAccess(req))) {
+      res.status(403).json({ error: "PRO_REQUIRED", message: "Detailed Matchup Prep analysis is available with Pro." });
+      return;
+    }
     try {
       const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
       const forceRefresh = req.query.refresh === "true";
@@ -297,7 +343,7 @@ export function createPrepRouter(): Router {
   });
 
   // POST /analysis/resolve
-  router.post("/analysis/resolve", requireAuth, prepLimiter, validate(prepResolveSchema), async (req, res) => {
+  router.post("/analysis/resolve", requireAuth, requirePrepPro, prepLimiter, validate(prepResolveSchema), async (req, res) => {
     try {
       const { subject } = req.body as { subject: unknown };
       if (!subject || typeof subject !== "object") {
@@ -380,7 +426,7 @@ export function createPrepRouter(): Router {
   });
 
   // GET /analysis/enrich/:gameId
-  router.get("/analysis/enrich/:gameId", requireAuth, prepLimiter, async (req, res) => {
+  router.get("/analysis/enrich/:gameId", requireAuth, requirePrepPro, prepLimiter, async (req, res) => {
     const { gameId } = req.params;
     if (!gameId || !/^[A-Za-z0-9]{8}$/.test(gameId)) {
       res.status(400).json({ error: "invalid_game_id", message: "Game ID must be exactly 8 alphanumeric characters." }); return;
@@ -489,7 +535,7 @@ export function createPrepRouter(): Router {
       const [row] = await db.select().from(savedPrepReports)
         .where(and(eq(savedPrepReports.id, id), eq(savedPrepReports.userId, userId))).limit(1);
       if (!row) { res.status(404).json({ error: "Report not found" }); return; }
-      res.json({ report: JSON.parse(row.reportJson), meta: {
+      res.json({ report: presentPrepReport(JSON.parse(row.reportJson) as ScoutReportV3, await hasPrepProAccess(req)), meta: {
         id: row.id, opponentUsername: row.opponentUsername, opponentName: row.opponentName,
         winRate: row.winRate, gamesAnalyzed: row.gamesAnalyzed,
         prepLinesCount: row.prepLinesCount, savedAt: row.savedAt,
@@ -517,7 +563,7 @@ export function createPrepRouter(): Router {
   }));
 
   // POST /coach-insight — LLM-powered coaching insight
-  router.post("/coach-insight", requireAuth, rateLimit({ windowMs: 60_000, max: 10 }), validate(coachInsightSchema), withAuthenticatedUser(async (req, res) => {
+  router.post("/coach-insight", requireAuth, requirePrepPro, rateLimit({ windowMs: 60_000, max: 10 }), validate(coachInsightSchema), withAuthenticatedUser(async (req, res) => {
     try {
       const { promptJson } = req.body;
       if (!promptJson || typeof promptJson !== "string") {

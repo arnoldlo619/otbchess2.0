@@ -109,6 +109,13 @@
 - [x] Club Dashboard: Re-run focused sidebar regression and responsive visual QA after the OTB!! brand-mark swap
 - [x] Club Profile: Remove the redundant in-content tab navigation that duplicates the Club sidebar destinations
 - [x] Club Profile: Verify desktop sidebar and mobile menu navigation remain the sole tab controls after cleanup
+- [x] Matchup Prep: Define a free Scout Brief that shows the opponent's top two simple White openings and top two simple Black openings
+- [x] Matchup Prep: Gate detailed weakness insights and difficult lines behind Pro membership without hiding the free brief
+- [x] Matchup Prep: Replace niche variation labels with consistent, recognizable opening family names
+- [x] Matchup Prep: Preserve reliable Chess.com provider behavior, loading/error states, and report caching across tiers
+- [x] Matchup Prep: Add entitlement, data-quality, opening-name, and tier-aware UI regression coverage
+- [x] Matchup Prep: Add executable server-route tests proving free users receive 403 for Pro-only analysis, enrichment, coaching, and legacy detailed reports
+- [x] Matchup Prep: Add saved-report entitlement regression proving free users receive the projected brief while Pro users retain detailed analysis
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
