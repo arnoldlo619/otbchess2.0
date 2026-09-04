@@ -131,6 +131,8 @@
 - [x] Landing Page: Revert the unintended line break in the landing hero subtitle
 - [x] Landing Page: Capture desktop and 375px visual QA with the How It Works H2 specifically in view
 - [x] Landing Page: Save a checkpoint for the verified two-line How It Works heading refinement
+- [x] Landing Page: Remove the redundant pill-shaped badge from the referenced visual section without altering the content cards
+- [x] Landing Page: Verify the adjusted landing section and save a checkpoint
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

@@ -13,6 +13,13 @@ describe("Home dead-code integrity", () => {
     expect(homeSource).not.toContain("lightboxOpen");
   });
 
+  it("removes the redundant How It Works Step pill badge while retaining the step content", () => {
+    expect(homeSource).not.toContain("function StepBadge");
+    expect(homeSource).not.toContain("otb-step-badge");
+    expect(homeSource).toContain("Create Your Tournament, Share QR Code");
+    expect(homeSource).toContain("Optimal Pairings Generated");
+  });
+
   it("keeps the active landing composition intact", () => {
     expect(homeSource).toContain("<Hero onCreateTournament={openTournamentWizard} />");
     expect(homeSource).toContain("<Features />");

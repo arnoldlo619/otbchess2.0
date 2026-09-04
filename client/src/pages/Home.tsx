@@ -827,18 +827,8 @@ const stepAccentVariants = {
   },
 };
 
-function StepBadge({ number, icon, isDark }: { number: string; icon: React.ReactNode; isDark: boolean }) {
-  return (
-    <div className={`otb-step-badge ${isDark ? "otb-step-badge--dark" : ""}`}>
-      <span className="otb-step-badge__icon" aria-hidden="true">{icon}</span>
-      <span>Step {number}</span>
-    </div>
-  );
-}
-
 function ParallaxStep({
   number,
-  icon,
   title,
   description,
   cta,
@@ -858,7 +848,6 @@ function ParallaxStep({
   caption2,
 }: {
   number: string;
-  icon: React.ReactNode;
   title: string;
   description: string;
   cta?: string;
@@ -906,9 +895,6 @@ function ParallaxStep({
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <motion.div variants={stepItemVariants} className="mb-6 inline-flex select-none">
-            <StepBadge number={number} icon={icon} isDark={isDark} />
-          </motion.div>
           <div className="relative">
             <span
               className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none step-number ${
@@ -1011,11 +997,6 @@ function ParallaxStep({
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
       >
-        {/* Step badge */}
-        <motion.div variants={stepItemVariants} className="mb-6 inline-flex select-none">
-          <StepBadge number={number} icon={icon} isDark={isDark} />
-        </motion.div>
-
         {/* Step number watermark + heading */}
         <div className="relative">
           <span
@@ -1163,7 +1144,6 @@ function HowItWorks() {
           <ParallaxStep
             key={step.number}
             number={step.number}
-            icon={step.icon}
             title={step.title}
             description={step.description}
             cta={step.cta}

@@ -89,10 +89,6 @@
   --color-otb-accent: var(--otb-accent);
 }
 
-@keyframes otb-step-badge-shift {
-  to { background-position: 200% 50%; }
-}
-
 @keyframes formatImagePlaceholder {
   to { background-position: -200% 0; }
 }
@@ -155,64 +151,6 @@
   .format-image-placeholder {
     animation: none;
   }
-}
-
-.otb-step-badge {
-  position: relative;
-  isolation: isolate;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  overflow: hidden;
-  border: 1px solid color-mix(in oklab, #436850 48%, transparent);
-  border-radius: 9999px;
-  padding: 0.32rem 0.68rem 0.32rem 0.38rem;
-  color: #254b32;
-  background: linear-gradient(105deg, color-mix(in oklab, #dfead7 92%, white) 0%, #f8fbf4 42%, #c2d8b5 54%, #f8fbf4 67%, #dfead7 100%);
-  background-size: 200% 100%;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 5px 14px rgba(18,55,42,0.08);
-  font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
-  animation: otb-step-badge-shift 10s linear infinite;
-}
-
-.otb-step-badge::before {
-  position: absolute;
-  inset: 1px;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(115deg, rgba(255,255,255,0.6), transparent 38%, rgba(255,255,255,0.18) 64%, rgba(255,255,255,0.52));
-  content: "";
-  pointer-events: none;
-}
-
-.otb-step-badge__icon {
-  display: inline-flex;
-  width: 1.28rem;
-  height: 1.28rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid currentColor;
-  border-radius: 9999px;
-  background: rgba(255,255,255,0.48);
-}
-
-.otb-step-badge--dark {
-  border-color: oklch(0.74 0.11 145 / 0.52);
-  color: oklch(0.84 0.1 145);
-  background: linear-gradient(105deg, oklch(0.25 0.045 145 / 0.98) 0%, oklch(0.31 0.07 145 / 0.98) 43%, oklch(0.45 0.11 145 / 0.98) 55%, oklch(0.31 0.07 145 / 0.98) 68%, oklch(0.25 0.045 145 / 0.98) 100%);
-  box-shadow: inset 0 1px 0 oklch(0.9 0.05 145 / 0.12), 0 7px 18px oklch(0.1 0.03 145 / 0.2);
-}
-
-.otb-step-badge--dark .otb-step-badge__icon {
-  background: oklch(0.12 0.025 145 / 0.42);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .otb-step-badge { animation: none; }
 }
 
 @keyframes otb-loader-square-path {
