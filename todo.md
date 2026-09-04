@@ -137,6 +137,9 @@
 - [x] Landing Page: Route the Chess.com User Lookup call to the lower landing-page Chess.com integration section
 - [x] Landing Page: Split the updated ecosystem heading into balanced two-line wording without exceeding 80 characters
 - [x] Landing Page: Validate edited copy, anchor behavior, desktop/mobile wrapping, and save a checkpoint
+- [x] Club Overview: Widen Recent Activity category labels so TOURNAMENTS remains fully visible
+- [x] Club Overview: Ensure each Recent Activity tournament card renders exactly one trophy icon treatment
+- [x] Club Overview: Validate the adjusted activity cards and save a checkpoint
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

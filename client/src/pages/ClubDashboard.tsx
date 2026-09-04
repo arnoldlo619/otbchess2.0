@@ -4207,24 +4207,26 @@ export default function ClubDashboard() {
                   {feedEvents.slice(0, 4).map(ev => {
                     const imageAttachment = ev.attachments?.find((attachment) => attachment.mimeType.startsWith("image/"));
                     const activityTitle = ev.type === "announcement" ? ev.detail : ev.type === "poll" ? ev.pollQuestion : ev.type === "rsvp_form" ? ev.rsvpTitle : ev.description;
-                    const activityKind = ev.type === "rsvp_form" ? "Event" : ev.type === "tournament_created" || ev.type === "tournament_completed" ? "Tournament" : ev.type === "poll" ? "Poll" : "Update";
+                    const isTournamentActivity = ev.type === "tournament_created" || ev.type === "tournament_completed";
+                    const displayActivityTitle = (isTournamentActivity ? activityTitle?.replace(/^(?:🏆\s*)+/, "").trim() : activityTitle) || "Club update";
+                    const activityKind = ev.type === "rsvp_form" ? "Event" : isTournamentActivity ? "Tournaments" : ev.type === "poll" ? "Poll" : "Update";
                     const ActivityIcon = ev.type === "rsvp_form" ? Calendar : ev.type === "poll" ? BarChart2 : ev.type === "tournament_created" || ev.type === "tournament_completed" ? Trophy : Megaphone;
                     return (
                     <article key={ev.id} className="group flex gap-3 px-4 py-3.5 transition-colors duration-200 hover:bg-black/[0.025] dark:hover:bg-white/[0.025]">
-                      <div className="relative flex h-[68px] w-[68px] shrink-0 items-end overflow-hidden rounded-xl border" style={{ background: `${accent}18`, borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(21,41,28,0.11)" }}>
+                      <div className="relative flex h-[76px] w-[108px] shrink-0 items-end overflow-hidden rounded-xl border sm:h-[84px] sm:w-[116px]" style={{ background: `${accent}18`, borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(21,41,28,0.11)" }}>
                         {(imageAttachment?.url ?? ev.imageUrl ?? club.bannerUrl) ? <img src={imageAttachment?.url ?? ev.imageUrl ?? club.bannerUrl ?? ""} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" /> : null}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <span className="relative z-10 px-2 pb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">{activityKind}</span>
+                        <span className="relative z-10 px-2.5 pb-2 text-[10px] font-bold uppercase tracking-[0.07em] text-white sm:text-[11px]">{activityKind}</span>
                       </div>
                       <div className="min-w-0 flex-1 py-0.5">
                         <div className="flex items-start gap-1.5">
                           <ActivityIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: accent }} aria-hidden="true" />
-                          <p className="line-clamp-2 text-sm font-bold leading-5" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>{activityTitle || "Club update"}</p>
+                          <p className="line-clamp-2 text-sm font-bold leading-5" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>{displayActivityTitle}</p>
                         </div>
                         <p className="mt-1 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.46)" : "rgba(21,41,28,0.56)" }}>By {ev.actorName || "Club"}</p>
                         <p className="mt-0.5 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.44)" }}>{new Date(ev.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: new Date(ev.createdAt).getFullYear() !== new Date().getFullYear() ? "numeric" : undefined })}</p>
                       </div>
-                      <button onClick={() => setTab("feed")} className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: isDark ? "rgba(255,255,255,0.74)" : "rgba(21,41,28,0.72)" }} aria-label={`View ${activityTitle || "club activity"} in the feed`}>
+                      <button onClick={() => setTab("feed")} className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: isDark ? "rgba(255,255,255,0.74)" : "rgba(21,41,28,0.72)" }} aria-label={`View ${displayActivityTitle} in the feed`}>
                         View <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </article>
