@@ -162,6 +162,8 @@
 - [x] Club Sidebar: Remove animated border containers from compact navigation controls and use softer minimal active and hover feedback
 - [x] Club Sidebar: Replace the sidebar OTB!! wordmark with the unframed shared !! thumbnail logo and preserve accessible back navigation
 - [x] Club Sidebar: Validate the simplified sidebar at desktop and narrow mobile widths before checkpointing
+- [x] Club Sidebar: Smoothly increase the unframed !! thumbnail size when the compact rail expands on hover or keyboard focus
+- [x] Club Sidebar: Validate expansion-linked logo motion, reduced-motion behavior, and responsive navigation before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

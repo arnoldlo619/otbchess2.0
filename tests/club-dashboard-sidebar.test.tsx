@@ -106,6 +106,18 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.queryByLabelText("1904 Chess Club avatar")).toBeNull();
   });
 
+  it("smoothly enlarges the unframed thumbnail when the rail is expanded", () => {
+    const { rerender, props } = renderSidebar();
+
+    expect(screen.getByRole("img", { name: "OTB!!" }).style.transform).toBe("scale(1)");
+
+    rerender(<ClubDashboardSidebar {...props} temporarilyExpanded />);
+
+    const logo = screen.getByRole("img", { name: "OTB!!" });
+    expect(logo.style.transform).toBe("scale(1.12)");
+    expect(logo.className).toContain("motion-reduce:transition-none");
+  });
+
   it.each([375, 1024])("keeps the responsive sidebar brand control stable at a %ipx viewport", (width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     window.dispatchEvent(new Event("resize"));
@@ -138,6 +150,6 @@ describe("ClubDashboardSidebar", () => {
     expect(sidebar).toContain("rounded-lg transition-[background-color,color,transform,opacity]");
     expect(sidebar).not.toContain("inset 2px 0 0");
     expect(sidebar).not.toContain("drop-shadow(0 0 5px");
-    expect(sidebar).toContain("group-hover/brand:scale-[1.03]");
+    expect(sidebar).toContain('transform: expanded ? "scale(1.12)" : "scale(1)"');
   });
 });

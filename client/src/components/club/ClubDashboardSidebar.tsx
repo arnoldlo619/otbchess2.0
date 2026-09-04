@@ -170,7 +170,13 @@ export function ClubDashboardSidebar({
             className="group/brand flex h-14 w-14 shrink-0 items-center justify-center bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:opacity-90 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
             style={{ color: accent, "--tw-ring-color": accent } as React.CSSProperties}
           >
-            <img src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp" alt="OTB!!" className="h-14 w-14 object-contain transition-transform duration-200 ease-out group-hover/brand:scale-[1.03] motion-reduce:transition-none" draggable={false} />
+            <img
+              src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+              alt="OTB!!"
+              className="h-14 w-14 origin-left object-contain transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+              style={{ transform: expanded ? "scale(1.12)" : "scale(1)" }}
+              draggable={false}
+            />
           </button>
         </div>
       </div>

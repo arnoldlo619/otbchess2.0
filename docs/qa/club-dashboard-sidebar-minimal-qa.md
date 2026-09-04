@@ -5,3 +5,5 @@ At desktop width, the compact rail shows the shared `!!` thumbnail without a sur
 The focused responsive test confirms the desktop sidebar stays hidden at narrow mobile width, preserving the separate mobile navigation path.
 
 At 375px, the Club Dashboard remained uncluttered and used its existing compact header menu rather than displaying the desktop rail.
+
+The focused sidebar interaction suite verifies that the thumbnail transitions from `scale(1)` to `scale(1.12)` when the rail expands via hover or keyboard focus, with the animation disabled under reduced-motion preferences.
