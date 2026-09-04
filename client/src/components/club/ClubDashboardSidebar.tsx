@@ -76,9 +76,9 @@ export function ClubDashboardSidebar({
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
-          background: active ? `color-mix(in srgb, ${accent} 12%, #07140c)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 10%, #07140c)` : "transparent",
-          borderColor: active ? `color-mix(in srgb, ${accent} 32%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 24%, transparent)` : "transparent",
-          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 16%, white)` : hoveredItemId === item.id ? `inset 2px 0 0 ${accent}, 0 5px 16px color-mix(in srgb, ${accent} 13%, transparent)` : "none",
+          background: active ? `color-mix(in srgb, ${accent} 9%, #07140c)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 7%, #07140c)` : "transparent",
+          borderColor: active ? `color-mix(in srgb, ${accent} 28%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 20%, transparent)` : "transparent",
+          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 14%, white), 0 7px 18px color-mix(in srgb, ${accent} 8%, transparent)` : hoveredItemId === item.id ? `inset 2px 0 0 ${accent}, 0 5px 16px color-mix(in srgb, ${accent} 11%, transparent)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
@@ -92,14 +92,17 @@ export function ClubDashboardSidebar({
         )}
         <span
           aria-hidden="true"
-          className="flex h-7 w-7 shrink-0 items-center justify-center transition-[color,transform,filter] duration-200 ease-out motion-reduce:transition-none"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border transition-[background-color,border-color,color,transform,filter,box-shadow] duration-200 ease-out motion-reduce:transition-none"
           style={{
             color: active ? accent : "inherit",
-            transform: hoveredItemId === item.id ? "scale(1.07)" : "scale(1)",
-            filter: hoveredItemId === item.id ? "drop-shadow(0 0 5px rgba(111,255,156,0.34))" : "none",
+            background: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : hoveredItemId === item.id ? "rgba(255,255,255,0.055)" : "transparent",
+            borderColor: active ? `color-mix(in srgb, ${accent} 35%, transparent)` : hoveredItemId === item.id ? "rgba(255,255,255,0.09)" : "transparent",
+            transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.04)" : "scale(1)",
+            filter: hoveredItemId === item.id ? "drop-shadow(0 0 5px rgba(111,255,156,0.28))" : "none",
+            boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 18%, white)` : "none",
           }}
         >
-          <Icon size={21} strokeWidth={active ? 2 : 1.65} />
+          <Icon size={19} strokeWidth={active ? 2 : 1.7} />
         </span>
         <span
           className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
@@ -169,16 +172,16 @@ export function ClubDashboardSidebar({
         boxShadow: expanded && collapsed ? "12px 0 36px rgba(0,0,0,0.26)" : "none",
       }}
     >
-      <div className="border-b border-white/[0.065] px-3 py-4">
+      <div className="border-b border-white/[0.065] px-2 py-4">
         <div className="flex h-14 items-center">
           <button
             type="button"
             onClick={onBackToClubs}
             aria-label="Back to all clubs"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.09] bg-white/[0.035] outline-none transition-colors duration-150 hover:border-white/15 hover:bg-white/[0.07] focus-visible:ring-2 motion-reduce:transition-none"
-            style={{ color: accent, boxShadow: `0 0 0 1px color-mix(in srgb, ${accent} 8%, transparent)` }}
+            className="group/brand flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-transparent outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-white/[0.045] active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
+            style={{ color: accent, "--tw-ring-color": accent } as React.CSSProperties}
           >
-            <img src="/manus-storage/chessotb-wordmark-320_e1731168.webp" alt="OTB!!" className="h-auto w-9 object-contain transition-opacity duration-150 hover:opacity-80" />
+            <img src="/manus-storage/chessotb-wordmark-320_e1731168.webp" alt="OTB!!" className="h-auto w-11 object-contain transition-[opacity,transform] duration-200 ease-out group-hover/brand:scale-[1.04] group-hover/brand:opacity-95 motion-reduce:transition-none" />
           </button>
         </div>
       </div>

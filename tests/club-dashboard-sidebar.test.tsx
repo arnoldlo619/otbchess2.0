@@ -100,6 +100,8 @@ describe("ClubDashboardSidebar", () => {
 
     const logo = screen.getByRole("img", { name: "OTB!!" });
     expect(logo.getAttribute("src")).toBe("/manus-storage/chessotb-wordmark-320_e1731168.webp");
+    expect(screen.getByRole("button", { name: "Back to all clubs" }).className).not.toContain("border-white");
+    expect(logo.className).toContain("w-11");
     expect(screen.queryByLabelText("1904 Chess Club avatar")).toBeNull();
   });
 
@@ -133,5 +135,7 @@ describe("ClubDashboardSidebar", () => {
     expect(sidebar).toContain('width: expanded ? "calc(100% - 4px)" : "42px"');
     expect(sidebar).toContain("transition-[width,box-shadow]");
     expect(sidebar).toContain("motion-reduce:transition-none");
+    expect(sidebar).toContain("rounded-[10px] border transition-[background-color,border-color,color,transform,filter,box-shadow]");
+    expect(sidebar).toContain("group-hover/brand:scale-[1.04]");
   });
 });

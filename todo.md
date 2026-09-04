@@ -148,6 +148,9 @@
 - [x] Club Feed: Align Feed card surfaces, hierarchy, and metadata styling with the refined Club Owner Overview activity-card system
 - [x] Club Feed: Preserve announcement, event, result, attachment, gallery, and author-or-owner deletion behavior through the card redesign
 - [x] Club Feed: Add coverage and validate desktop/mobile light and dark Feed card presentation before checkpointing
+- [x] Club Sidebar: Remove the OTB!! logo button border and refine its scale and hit area for visibility
+- [x] Club Sidebar: Upgrade compact navigation icon surfaces, active state, and hover treatment for a premium cohesive system
+- [x] Club Sidebar: Validate the refined sidebar at desktop and narrow mobile widths before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
