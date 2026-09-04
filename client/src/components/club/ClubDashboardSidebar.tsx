@@ -66,7 +66,7 @@ export function ClubDashboardSidebar({
         onPointerLeave={() => setHoveredItemId(null)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
-        className="group relative flex items-center rounded-xl border text-left outline-none transition-[width,height,margin,padding,gap,background-color,border-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
+        className="group relative flex items-center rounded-xl text-left outline-none transition-[width,height,margin,padding,gap,background-color,color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#07140c] motion-reduce:transition-none"
         style={{
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
@@ -76,30 +76,19 @@ export function ClubDashboardSidebar({
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
-          background: active ? `color-mix(in srgb, ${accent} 9%, #07140c)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 7%, #07140c)` : "transparent",
-          borderColor: active ? `color-mix(in srgb, ${accent} 28%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 20%, transparent)` : "transparent",
-          boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 14%, white), 0 7px 18px color-mix(in srgb, ${accent} 8%, transparent)` : hoveredItemId === item.id ? `inset 2px 0 0 ${accent}, 0 5px 16px color-mix(in srgb, ${accent} 11%, transparent)` : "none",
+          background: active ? `color-mix(in srgb, ${accent} 11%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 5%, transparent)` : "transparent",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
       >
-        {active && expanded && (
-          <span
-            aria-hidden="true"
-            className="absolute left-0 top-3 h-5 w-0.5 rounded-r-full"
-            style={{ background: accent }}
-          />
-        )}
         <span
           aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border transition-[background-color,border-color,color,transform,filter,box-shadow] duration-200 ease-out motion-reduce:transition-none"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,transform,opacity] duration-200 ease-out motion-reduce:transition-none"
           style={{
             color: active ? accent : "inherit",
-            background: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : hoveredItemId === item.id ? "rgba(255,255,255,0.055)" : "transparent",
-            borderColor: active ? `color-mix(in srgb, ${accent} 35%, transparent)` : hoveredItemId === item.id ? "rgba(255,255,255,0.09)" : "transparent",
-            transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.04)" : "scale(1)",
-            filter: hoveredItemId === item.id ? "drop-shadow(0 0 5px rgba(111,255,156,0.28))" : "none",
-            boxShadow: active ? `inset 0 1px 0 color-mix(in srgb, ${accent} 18%, white)` : "none",
+            background: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : hoveredItemId === item.id ? "rgba(255,255,255,0.045)" : "transparent",
+            opacity: active ? 1 : hoveredItemId === item.id ? 0.95 : 0.82,
+            transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.02)" : "scale(1)",
           }}
         >
           <Icon size={19} strokeWidth={active ? 2 : 1.7} />
@@ -178,10 +167,10 @@ export function ClubDashboardSidebar({
             type="button"
             onClick={onBackToClubs}
             aria-label="Back to all clubs"
-            className="group/brand flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-transparent outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-white/[0.045] active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
+            className="group/brand flex h-14 w-14 shrink-0 items-center justify-center bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:opacity-90 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
             style={{ color: accent, "--tw-ring-color": accent } as React.CSSProperties}
           >
-            <img src="/manus-storage/chessotb-wordmark-320_e1731168.webp" alt="OTB!!" className="h-auto w-11 object-contain transition-[opacity,transform] duration-200 ease-out group-hover/brand:scale-[1.04] group-hover/brand:opacity-95 motion-reduce:transition-none" />
+            <img src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp" alt="OTB!!" className="h-14 w-14 object-contain transition-transform duration-200 ease-out group-hover/brand:scale-[1.03] motion-reduce:transition-none" draggable={false} />
           </button>
         </div>
       </div>

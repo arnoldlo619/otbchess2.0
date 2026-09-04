@@ -95,13 +95,14 @@ describe("ClubDashboardSidebar", () => {
     expect(onBackToClubs).toHaveBeenCalledTimes(1);
   });
 
-  it("uses the shared OTB!! landing-page wordmark instead of club-specific artwork", () => {
+  it("uses the shared unframed OTB!! thumbnail instead of club-specific artwork", () => {
     renderSidebar();
 
     const logo = screen.getByRole("img", { name: "OTB!!" });
-    expect(logo.getAttribute("src")).toBe("/manus-storage/chessotb-wordmark-320_e1731168.webp");
+    expect(logo.getAttribute("src")).toBe("/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp");
     expect(screen.getByRole("button", { name: "Back to all clubs" }).className).not.toContain("border-white");
-    expect(logo.className).toContain("w-11");
+    expect(screen.getByRole("button", { name: "Back to all clubs" }).className).not.toContain("rounded");
+    expect(logo.className).toContain("h-14 w-14");
     expect(screen.queryByLabelText("1904 Chess Club avatar")).toBeNull();
   });
 
@@ -110,7 +111,7 @@ describe("ClubDashboardSidebar", () => {
     window.dispatchEvent(new Event("resize"));
     renderSidebar();
 
-    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/manus-storage/chessotb-wordmark-320_e1731168.webp");
+    expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp");
     expect(screen.getByRole("complementary", { name: "Club dashboard sidebar" }).className).toContain("hidden");
     expect(screen.getByRole("complementary", { name: "Club dashboard sidebar" }).className).toContain("lg:flex");
   });
@@ -131,11 +132,12 @@ describe("ClubDashboardSidebar", () => {
     expect(sidebar).not.toContain('renderGroup("Workspace"');
     expect(sidebar).not.toContain('renderGroup("Manage"');
     expect(sidebar).toContain("flex flex-1 flex-col justify-center overflow-y-auto");
-    expect(sidebar).toContain("active && expanded");
     expect(sidebar).toContain('width: expanded ? "calc(100% - 4px)" : "42px"');
     expect(sidebar).toContain("transition-[width,box-shadow]");
     expect(sidebar).toContain("motion-reduce:transition-none");
-    expect(sidebar).toContain("rounded-[10px] border transition-[background-color,border-color,color,transform,filter,box-shadow]");
-    expect(sidebar).toContain("group-hover/brand:scale-[1.04]");
+    expect(sidebar).toContain("rounded-lg transition-[background-color,color,transform,opacity]");
+    expect(sidebar).not.toContain("inset 2px 0 0");
+    expect(sidebar).not.toContain("drop-shadow(0 0 5px");
+    expect(sidebar).toContain("group-hover/brand:scale-[1.03]");
   });
 });

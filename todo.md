@@ -159,6 +159,9 @@
 - [x] Matchup Prep: Integrate branch controls, observed evidence, Position to Practice, Copy FEN, board flip, and replay controls using legal report data
 - [x] Matchup Prep: Preserve free/Pro entitlement boundaries, provider reliability, real data binding, accessibility, and responsive loading, empty, limited-data, and error states
 - [x] Matchup Prep: Add data-integrity and interaction regressions, live report QA, and save a checkpoint for the completed redesign
+- [x] Club Sidebar: Remove animated border containers from compact navigation controls and use softer minimal active and hover feedback
+- [x] Club Sidebar: Replace the sidebar OTB!! wordmark with the unframed shared !! thumbnail logo and preserve accessible back navigation
+- [x] Club Sidebar: Validate the simplified sidebar at desktop and narrow mobile widths before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
