@@ -449,8 +449,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
               style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
             >
-              <span className="sm:hidden">Sign up with chess.com username. Pairings are generated automatically.</span>
-              <span className="hidden sm:inline">Players sign up with their chess.com username,<br />We generate optimal pairings automatically.</span>
+              Host tournaments with automatic pairings.
             </h2>
           </div>
 
@@ -1331,8 +1330,7 @@ function BentoCard({
             <img
               decoding="async"
               src={cardImage}
-              alt=""
-              aria-hidden="true"
+              alt={`${title} feature preview`}
               className={`absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out ${
                 prefersReducedMotion ? "" : "group-hover:scale-[1.03]"
               }`}
@@ -2125,7 +2123,7 @@ export default function Home() {
 
   // SEO
   usePageMeta({
-    title: "Play Chess OTB",
+    title: "ChessOTB | Host Chess Tournaments Over the Board",
     description: "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and QR check-in. Free for chess clubs.",
     path: "/",
   });

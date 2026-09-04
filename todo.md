@@ -123,6 +123,10 @@
 - [x] Matchup Prep: Remove the Scout Brief explanatory subtitle while preserving the opening overview
 - [x] Matchup Prep: Remove the redundant opponent color/evidence strip below the Scout Brief header
 - [x] Matchup Prep: Validate simplified Scout Brief hierarchy and save a checkpoint
+- [x] Landing Page SEO: Shorten the overlong H2 to 80 characters or fewer
+- [x] Landing Page SEO: Set document.title to 30–60 characters using runtime title handling
+- [x] Landing Page SEO: Add descriptive alt text to the one landing-page image currently missing it
+- [x] Landing Page SEO: Verify exact copy limits, accessibility, and responsive presentation before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
