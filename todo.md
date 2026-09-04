@@ -120,6 +120,9 @@
 - [x] Landing Page: Save a checkpoint for the verified hosting-headline copy update
 - [x] Landing Page: Visually verify the updated tournament-hosting headline at desktop and narrow mobile widths to confirm hierarchy and clean wrapping
 - [x] Landing Page: Save a checkpoint for the verified hosting-headline copy update after visual QA passes
+- [x] Matchup Prep: Remove the Scout Brief explanatory subtitle while preserving the opening overview
+- [x] Matchup Prep: Remove the redundant opponent color/evidence strip below the Scout Brief header
+- [x] Matchup Prep: Validate simplified Scout Brief hierarchy and save a checkpoint
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

@@ -1,6 +1,6 @@
 import { Chess } from "chess.js";
 import { useState } from "react";
-import { AlertCircle, ChevronRight, Crown, Crosshair, Database, LockKeyhole, ShieldCheck } from "lucide-react";
+import { AlertCircle, ChevronRight, Crown, Crosshair, Database, LockKeyhole } from "lucide-react";
 
 import type { Insight, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { projectScoutReport } from "../../../../shared/scoutReportProjection";
@@ -97,8 +97,6 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
   const view = projectScoutReport(report);
   const request = view.snapshot.activeRequest;
   const opponentColor = request.myColor === "white" ? "black" : "white";
-  const opponentRecord = report.opponent.record[opponentColor];
-  const opponentGames = opponentRecord.w + opponentRecord.d + opponentRecord.l;
   const supportingFacts = report.insights
     .filter(insight => insight.color === opponentColor && insight.sampleSize >= 6)
     .filter(insight => !new Set(view.actions.map(action => action.sourceInsightId)).has(insight.id));
@@ -113,7 +111,6 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
     }) : null;
   };
 
-  const contextLine = view.formatBreakdown.filter(item => item.games > 0).map(item => `${item.games} ${item.format}`).join(" · ") || "No eligible format breakdown";
   const hasProAccess = view.tier === "pro";
   const proFindings = report.insights
     .filter(insight => insight.kind === "weakness" || insight.kind === "deviation_point")
@@ -129,7 +126,6 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
           </div>
           <div className="min-w-0 flex-1">
             <h2 id="scout-brief-title" className={`text-lg font-bold tracking-tight ${t.textPrimary}`}>Scout Brief</h2>
-            <p className={`mt-1 text-sm ${t.textSecondary}`}>Their two most-played openings with each color, using familiar opening names.</p>
           </div>
           <div className="text-right">
             <p className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${hasProAccess ? (isDark ? "bg-amber-400/10 text-amber-300" : "bg-amber-50 text-amber-700") : (isDark ? "bg-white/[0.07] text-white/65" : "bg-[#edf2e9] text-[#315640]")}`}>
@@ -139,13 +135,6 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
             <p className={`mt-1 text-[11px] ${t.textTertiary}`}>{view.gamesAnalyzed} games · {displayConfidence(view.freshness)} evidence</p>
           </div>
         </header>
-
-        <div className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border px-3 py-2.5 text-xs ${isDark ? "border-[#25342a] bg-black/10" : "border-[#d8e1d3] bg-[#f7faf5]"}`}>
-          <ShieldCheck aria-hidden="true" className={`h-4 w-4 ${isDark ? "text-[#8dcc9b]" : "text-[#315640]"}`} />
-          <span className={`font-semibold ${t.textPrimary}`}>{report.opponent.username} as {opponentColor === "white" ? "White" : "Black"}</span>
-          <span className={t.textTertiary}>{opponentGames >= 8 ? `${opponentGames} eligible games` : "Insufficient evidence for primary recommendations"}</span>
-          <span className={t.textTertiary}>{contextLine}</span>
-        </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2" data-testid="simple-opening-brief">
           {(["white", "black"] as const).map(color => {

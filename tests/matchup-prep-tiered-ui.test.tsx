@@ -35,6 +35,8 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.getByRole("link", { name: /View Pro/i }).getAttribute("href")).toBe("/pricing");
     expect(screen.queryByText("Opening Forecast")).toBeNull();
     expect(screen.queryByText("Evidence summary")).toBeNull();
+    expect(screen.queryByText(/Their two most-played openings with each color/i)).toBeNull();
+    expect(screen.queryByText(/scouted-player as Black/i)).toBeNull();
   });
 
   it("keeps the same opening overview and adds detailed weakness analysis for Pro", () => {
