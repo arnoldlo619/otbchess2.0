@@ -1,17 +1,15 @@
 import { useMemo, useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
-import { BookOpen, ChevronLeft, ChevronRight, FlipVertical2, RotateCcw } from "lucide-react";
+import { BookOpen, Check, ChevronLeft, ChevronRight, Copy, ExternalLink, FlipVertical2, RotateCcw, SkipBack, SkipForward } from "lucide-react";
 
-import type { ForecastBranch, Insight } from "../../../../shared/prepTypes";
+import type { ForecastBranch } from "../../../../shared/prepTypes";
 
 interface Tokens {
   card: string;
-  cardSubtle: string;
   textPrimary: string;
   textSecondary: string;
   textTertiary: string;
-  divider: string;
   [key: string]: string;
 }
 
@@ -21,52 +19,70 @@ interface ForecastWalkthroughProps {
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
-  weaknessInsights?: Insight[];
+  opponentRating?: number | null;
   analysisHrefForUciPath?: (uciPath: string[]) => string | null;
 }
+
+type BoardColor = "white" | "black";
+
+const LIVIUS_ASSETS = {
+  bB: "/manus-storage/bb_f19e11d7.svg",
+  bK: "/manus-storage/bk_c580017b.svg",
+  bN: "/manus-storage/bn_25e1f702.svg",
+  bP: "/manus-storage/bp_a43d79b8.svg",
+  bQ: "/manus-storage/bq_ec463ffd.svg",
+  bR: "/manus-storage/br_3d562911.svg",
+  wB: "/manus-storage/wb_711c3710.svg",
+  wK: "/manus-storage/wk_5db8dee7.svg",
+  wN: "/manus-storage/wn_ad0aee6a.svg",
+  wP: "/manus-storage/wp_338143cc.svg",
+  wQ: "/manus-storage/wq_2bb887b5.svg",
+  wR: "/manus-storage/wr_fdc96a34.svg",
+} as const;
+
+const LIVIUS_PIECES = Object.fromEntries(
+  Object.entries(LIVIUS_ASSETS).map(([piece, src]) => [piece, () => (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className="h-[88%] w-[88%] select-none object-contain"
+    />
+  )]),
+);
 
 function replayPath(path: string[]) {
   const chess = new Chess();
   const uci: string[] = [];
+  const moves: Array<{ san: string; from: string; to: string; color: BoardColor }> = [];
   for (const san of path) {
     try {
       const move = chess.move(san);
       uci.push(move.from + move.to + (move.promotion ?? ""));
+      moves.push({ san: move.san, from: move.from, to: move.to, color: move.color === "w" ? "white" : "black" });
     } catch {
       return null;
     }
   }
-  return { fen: chess.fen(), uci };
+  return { fen: chess.fen(), uci, moves, turn: chess.turn() === "w" ? "white" as const : "black" as const };
 }
 
-function describePosition(fen: string | undefined, path: string[]): string {
-  if (!fen) return "Starting chess position. Use the named move buttons to navigate legal continuations.";
-  const chess = new Chess(fen);
-  const pieces = chess.board().flatMap((rank, rankIndex) => rank.flatMap((piece, fileIndex) => {
-    if (!piece) return [];
-    const file = String.fromCharCode("a".charCodeAt(0) + fileIndex);
-    const square = `${file}${8 - rankIndex}`;
-    const color = piece.color === "w" ? "White" : "Black";
-    const names = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
-    return [`${color} ${names[piece.type]} on ${square}`];
-  }));
-  const turn = chess.turn() === "w" ? "White" : "Black";
-  return `Position after ${pathLabel(path)}. ${pieces.join(", ")}. ${turn} to move. Use the named move buttons to navigate legal continuations.`;
-}
-
-function branchAtPath(branches: ForecastBranch[], path: string[]): ForecastBranch | null {
+function getPathBranches(branches: ForecastBranch[], path: string[]): ForecastBranch[] {
+  const selections: ForecastBranch[] = [];
   let current = branches;
-  let selected: ForecastBranch | null = null;
   for (const san of path) {
-    selected = current.find(branch => branch.moveSan === san) ?? null;
-    if (!selected) return null;
+    const selected = current.find(branch => branch.moveSan === san);
+    if (!selected) break;
+    selections.push(selected);
     current = selected.children ?? [];
   }
-  return selected;
+  return selections;
 }
 
 function branchesAtPath(branches: ForecastBranch[], path: string[]): ForecastBranch[] {
-  return branchAtPath(branches, path)?.children ?? (path.length === 0 ? branches : []);
+  const selections = getPathBranches(branches, path);
+  return selections.length === path.length ? (selections.at(-1)?.children ?? (path.length === 0 ? branches : [])) : [];
 }
 
 function pathLabel(path: string[]): string {
@@ -78,14 +94,27 @@ function pathLabel(path: string[]): string {
   }, []).join(" ");
 }
 
-function confidenceLabel(count: number): string {
-  if (count >= 8) return "Good sample";
-  if (count >= 6) return "Supporting sample";
-  return "Small sample";
+function describePosition({ fen, path, orientation, sideToMove, opponentUsername, submittedColor }: {
+  fen: string;
+  path: string[];
+  orientation: BoardColor;
+  sideToMove: BoardColor;
+  opponentUsername: string;
+  submittedColor: BoardColor;
+}): string {
+  const bottomPlayer = orientation === submittedColor ? "You" : opponentUsername;
+  const activePlayer = sideToMove === submittedColor ? "You" : opponentUsername;
+  return `${pathLabel(path)}. ${activePlayer} to move. ${bottomPlayer} is at the bottom of the board. Current FEN: ${fen}.`;
 }
 
 function actorLabel(branch: ForecastBranch, opponentUsername: string): string {
-  return branch.actor === "opponent" ? `${opponentUsername}'s tendency` : "Your move";
+  return branch.actor === "opponent" ? `${opponentUsername}'s tendency` : "Your candidate";
+}
+
+function actorTone(branch: ForecastBranch) {
+  return branch.actor === "opponent"
+    ? "border-[#7ED957]/35 bg-[#7ED957]/10 text-[#d1f5ba]"
+    : "border-[#FFF598]/45 bg-[#FFF598]/10 text-[#FFF598]";
 }
 
 function BranchButton({
@@ -106,7 +135,6 @@ function BranchButton({
   const parentGames = branch.parentGames ?? Math.max(branch.count, Math.round(branch.count / Math.max(branch.pct, 0.01)));
   const frequency = Math.round((branch.count / Math.max(parentGames, 1)) * 100);
   const actor = actorLabel(branch, opponentUsername);
-  const isOpponent = branch.actor === "opponent";
 
   return (
     <button
@@ -116,32 +144,55 @@ function BranchButton({
       onMouseLeave={() => onPreview(null)}
       onFocus={() => onPreview(branch)}
       onBlur={() => onPreview(null)}
-      className={`group w-full rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B9A6A] focus-visible:ring-offset-2 ${
+      className={`group flex min-h-14 w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7ED957] focus-visible:ring-offset-2 ${
         isDark
-          ? "border-[#243028]/70 bg-[#111d13] hover:border-[#436850]/70 hover:bg-[#152319] focus-visible:ring-offset-[#0a1409]"
-          : "border-[#ADBC9F]/70 bg-white hover:border-[#436850]/50 hover:bg-[#f7faf5] focus-visible:ring-offset-white"
+          ? "border-white/10 bg-[#0b2a20] hover:border-[#7ED957]/50 hover:bg-[#10382a] focus-visible:ring-offset-[#08241a]"
+          : "border-[#bfd2b7] bg-white hover:border-[#436850]/60 hover:bg-[#f7faf5] focus-visible:ring-offset-white"
       }`}
-      aria-label={`${actor}: ${branch.moveSan}. ${branch.count} of ${parentGames} games, ${frequency} percent.`}
+      aria-label={`${actor}: ${branch.moveSan}. Seen in ${branch.count} of ${parentGames} games reaching this position.`}
     >
-      <span className="flex min-h-11 items-center gap-3">
-        <span className={`grid h-9 min-w-11 place-items-center rounded-lg px-2 font-mono text-sm font-bold ${
-          isOpponent
-            ? isDark ? "bg-amber-400/10 text-amber-300" : "bg-amber-50 text-amber-800"
-            : isDark ? "bg-[#436850]/20 text-[#a7d8b1]" : "bg-[#e8f0e5] text-[#23482f]"
-        }`}>{branch.moveSan}</span>
-        <span className="min-w-0 flex-1">
-          <span className={`block text-xs font-semibold ${t.textPrimary}`}>{actor}</span>
-          <span className={`mt-0.5 block truncate text-[11px] ${t.textTertiary}`}>
-            {branch.label ?? (isOpponent ? "Observed reply" : "Games reaching this choice")}
-          </span>
-        </span>
-        <span className="shrink-0 text-right">
-          <span className={`block text-xs font-semibold tabular-nums ${t.textSecondary}`}>{frequency}%</span>
-          <span className={`block text-[10px] tabular-nums ${t.textTertiary}`}>{branch.count}/{parentGames}</span>
-        </span>
-        {(branch.children?.length ?? 0) > 0 && <ChevronRight aria-hidden="true" className={`h-4 w-4 shrink-0 ${t.textTertiary}`} />}
+      <span className={`grid min-h-10 min-w-14 place-items-center rounded-md border px-2 font-mono text-base font-bold ${actorTone(branch)}`}>
+        {branch.moveSan}
       </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block text-sm font-semibold ${t.textPrimary}`}>{actor}</span>
+        <span className={`mt-0.5 block truncate text-xs ${t.textTertiary}`}>{branch.label ?? "Observed continuation"}</span>
+      </span>
+      <span className="shrink-0 text-right">
+        <span className={`block text-sm font-bold tabular-nums ${t.textSecondary}`}>{frequency}%</span>
+        <span className={`block text-xs tabular-nums ${t.textTertiary}`}>{branch.count}/{parentGames}</span>
+      </span>
+      <ChevronRight aria-hidden="true" className={`h-4 w-4 shrink-0 ${t.textTertiary}`} />
     </button>
+  );
+}
+
+function PlayerRail({
+  label,
+  color,
+  detail,
+  toMove,
+  isDark,
+}: {
+  label: string;
+  color: BoardColor;
+  detail: string;
+  toMove: boolean;
+  isDark: boolean;
+}) {
+  return (
+    <div className={`flex min-h-10 items-center justify-between gap-3 px-1.5 ${isDark ? "text-white/65" : "text-[#315640]"}`}>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-md text-[10px] font-bold ${color === "white" ? "border border-[#d5caa8] bg-[#F0E6C5] text-[#294330]" : "border border-white/10 bg-[#1a2621] text-white/80"}`}>
+          {label === "You" ? "YOU" : label.slice(0, 2).toUpperCase()}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-semibold">{label}</span>
+          <span className="block text-xs opacity-70">{color === "white" ? "White pieces" : "Black pieces"}{detail ? ` · ${detail}` : ""}</span>
+        </span>
+      </div>
+      {toMove && <span className="shrink-0 rounded-full border border-[#7ED957]/45 bg-[#7ED957]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#aeea91]">To move</span>}
+    </div>
   );
 }
 
@@ -151,131 +202,184 @@ export function ForecastWalkthrough({
   isDark,
   t,
   opponentUsername,
+  opponentRating,
   analysisHrefForUciPath,
 }: ForecastWalkthroughProps) {
-  const submittedColor = myColor === "black" ? "black" : "white";
-  const opponentColor = submittedColor === "white" ? "black" : "white";
+  const submittedColor: BoardColor = myColor === "black" ? "black" : "white";
+  const opponentColor: BoardColor = submittedColor === "white" ? "black" : "white";
   const rootBranches = useMemo(() => openingForecast[opponentColor] ?? [], [openingForecast, opponentColor]);
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
   const [previewBranch, setPreviewBranch] = useState<ForecastBranch | null>(null);
   const [flipped, setFlipped] = useState(submittedColor === "black");
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const [prefersReducedMotion] = useState(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
-  const selectedBranch = useMemo(() => branchAtPath(rootBranches, selectedPath), [rootBranches, selectedPath]);
+  const selectedBranches = useMemo(() => getPathBranches(rootBranches, selectedPath), [rootBranches, selectedPath]);
   const currentBranches = useMemo(() => branchesAtPath(rootBranches, selectedPath), [rootBranches, selectedPath]);
-  const displayedPath = previewBranch?.previewPath ?? selectedPath;
+  const displayedPath = useMemo(
+    () => previewBranch ? (previewBranch.previewPath ?? [...selectedPath, previewBranch.moveSan]) : selectedPath,
+    [previewBranch, selectedPath],
+  );
   const replay = useMemo(() => replayPath(displayedPath), [displayedPath]);
-  const positionDescription = useMemo(() => describePosition(replay?.fen, displayedPath), [replay?.fen, displayedPath]);
+  const committedReplay = useMemo(() => replayPath(selectedPath), [selectedPath]);
+  const lastMove = replay?.moves[replay.moves.length - 1];
+  const sideToMove = replay?.turn ?? "white";
+  const orientation: BoardColor = flipped ? "black" : "white";
+  const topColor: BoardColor = orientation === "white" ? "black" : "white";
+  const bottomColor: BoardColor = orientation;
+  const candidateUci = previewBranch?.moveUci ?? (() => {
+    if (!previewBranch) return undefined;
+    return replayPath([...selectedPath, previewBranch.moveSan])?.uci.at(-1);
+  })();
+  const squareStyles = useMemo(() => {
+    if (!lastMove) return {};
+    return {
+      [lastMove.from]: { backgroundColor: "rgba(255, 245, 152, 0.28)" },
+      [lastMove.to]: { backgroundColor: "rgba(255, 245, 152, 0.46)", boxShadow: "inset 0 0 0 2px rgba(255, 245, 152, 0.42)" },
+    };
+  }, [lastMove]);
+  const positionDescription = useMemo(() => describePosition({
+    fen: replay?.fen ?? new Chess().fen(),
+    path: displayedPath,
+    orientation,
+    sideToMove,
+    opponentUsername,
+    submittedColor,
+  }), [displayedPath, opponentUsername, orientation, replay?.fen, sideToMove, submittedColor]);
   const analysisHref = selectedPath.length > 0 && analysisHrefForUciPath
-    ? analysisHrefForUciPath(replayPath(selectedPath)?.uci ?? [])
+    ? analysisHrefForUciPath(committedReplay?.uci ?? [])
     : null;
-  const nextActor = currentBranches[0]?.actor === "opponent" ? `${opponentUsername}'s tendency` : "Your move";
-  const screenReaderInstructions = "Chessboard piece display. Use the named move buttons beside the board to navigate each legal position.";
+  const nextActor = currentBranches[0]?.actor === "opponent" ? "Opponent tendency" : "Your decision";
+  const decisionPath = selectedPath.length > 0 ? selectedPath.slice(0, -1) : [];
+  const topIsUser = topColor === submittedColor;
+  const bottomIsUser = bottomColor === submittedColor;
+  const topDetail = topIsUser ? "Your side" : opponentRating ? `${opponentRating} rating` : "Opponent";
+  const bottomDetail = bottomIsUser ? "Your side" : opponentRating ? `${opponentRating} rating` : "Opponent";
+
+  const handleCopyFen = async () => {
+    const fen = committedReplay?.fen ?? replay?.fen ?? new Chess().fen();
+    try {
+      await navigator.clipboard.writeText(fen);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
+  };
 
   if (rootBranches.length === 0) return null;
 
   return (
-    <section id="opening-forecast" className={`${t.card} p-4 sm:p-5`} aria-labelledby="opening-forecast-title">
-      <header className="flex flex-wrap items-start gap-3 border-b border-current/10 pb-4">
-        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDark ? "bg-[#436850]/15 text-[#8dcc9b]" : "bg-[#e8f0e5] text-[#315640]"}`}>
-          <BookOpen aria-hidden="true" className="h-4 w-4" />
+    <section id="opening-forecast" className={`${t.card} overflow-hidden p-4 sm:p-6`} aria-labelledby="opening-forecast-title">
+      <header className="flex flex-wrap items-start gap-3 border-b border-current/10 pb-4 sm:pb-5">
+        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${isDark ? "bg-[#7ED957]/10 text-[#aeea91]" : "bg-[#e5f2df] text-[#315640]"}`}>
+          <BookOpen aria-hidden="true" className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 id="opening-forecast-title" className={`text-sm font-bold ${t.textPrimary}`}>Opening Forecast</h2>
-          <p className={`mt-0.5 text-xs ${t.textTertiary}`}>
-            You play {submittedColor === "white" ? "White" : "Black"}. Every branch is replayed from a legal position.
-          </p>
+          <h2 id="opening-forecast-title" className={`text-lg font-bold tracking-tight sm:text-xl ${t.textPrimary}`}>Legal line explorer</h2>
+          <p className={`mt-1 text-sm ${t.textSecondary}`}>Every move is ordered and attributed to the correct side.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setFlipped(value => !value)}
-          className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B9A6A] ${isDark ? "text-white/65 hover:bg-white/5 hover:text-white" : "text-[#436850] hover:bg-[#e8f0e5]"}`}
-          aria-label="Flip chessboard orientation"
-        >
-          <FlipVertical2 aria-hidden="true" className="h-4 w-4" />
-          <span className="hidden sm:inline">Flip board</span>
-        </button>
+        <div className={`flex items-center gap-3 text-xs font-semibold ${t.textTertiary}`} aria-label="Move ownership key">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#FFF598]" />Your move</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#7ED957]" />Opponent move</span>
+        </div>
       </header>
 
-      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(280px,440px)_minmax(300px,1fr)]">
+      <div className={`mt-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-3 ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`} aria-label="Current legal move sequence">
+        {selectedBranches.length > 0 ? selectedBranches.map((branch, index) => (
+          <span key={`${branch.moveSan}-${index}`} className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-sm font-bold ${actorTone(branch)}`}>
+            {index % 2 === 0 ? `${Math.floor(index / 2) + 1}.` : ""} {branch.moveSan}
+          </span>
+        )) : <span className={`text-sm ${t.textTertiary}`}>Select an observed line to begin.</span>}
+      </div>
+
+      <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.03fr)_minmax(22rem,.97fr)] xl:gap-10">
         <div className="min-w-0">
-          <div className="overflow-hidden rounded-xl">
-            <p id="forecast-board-instructions" role="status" aria-live="polite" className="sr-only">{positionDescription} {screenReaderInstructions}</p>
+          <PlayerRail
+            label={topIsUser ? "You" : opponentUsername}
+            color={topColor}
+            detail={topDetail}
+            toMove={sideToMove === topColor}
+            isDark={isDark}
+          />
+          <p id="forecast-board-instructions" role="status" aria-live="polite" className="sr-only">{positionDescription} Use the named move buttons to navigate legal continuations.</p>
+          <div className={`overflow-hidden rounded-md border shadow-[0_12px_30px_rgba(0,0,0,0.16)] ${isDark ? "border-white/15 bg-[#061F17]" : "border-[#6F9F69]/50 bg-[#F0E6C5]"}`}>
             <div aria-hidden="true" inert>
-            <Chessboard
-              options={{
-                position: replay?.fen ?? new Chess().fen(),
-                boardOrientation: flipped ? "black" : "white",
-                allowDragging: false,
-                animationDurationInMs: prefersReducedMotion ? 0 : 180,
-                darkSquareStyle: { backgroundColor: isDark ? "#294330" : "#769656" },
-                lightSquareStyle: { backgroundColor: isDark ? "#dfe8d9" : "#eeeed2" },
-                boardStyle: { borderRadius: "12px", boxShadow: isDark ? "0 12px 30px rgba(0,0,0,.25)" : "0 12px 30px rgba(18,55,42,.12)" },
-              }}
-            />
+              <Chessboard
+                options={{
+                  pieces: LIVIUS_PIECES,
+                  position: replay?.fen ?? new Chess().fen(),
+                  boardOrientation: orientation,
+                  allowDragging: false,
+                  animationDurationInMs: prefersReducedMotion ? 0 : 180,
+                  showNotation: true,
+                  darkSquareStyle: { backgroundColor: "#6F9F69" },
+                  lightSquareStyle: { backgroundColor: "#F0E6C5" },
+                  darkSquareNotationStyle: { color: "#F0E6C5", fontWeight: 700, fontSize: "11px" },
+                  lightSquareNotationStyle: { color: "#294330", fontWeight: 700, fontSize: "11px" },
+                  squareStyles,
+                  arrows: candidateUci && previewBranch ? [{ startSquare: candidateUci.slice(0, 2), endSquare: candidateUci.slice(2, 4), color: "rgba(255,245,152,0.72)" }] : [],
+                  boardStyle: { borderRadius: "5px", boxShadow: "none" },
+                }}
+              />
             </div>
           </div>
-          <p className={`mt-2 truncate rounded-lg px-3 py-2 font-mono text-[11px] ${isDark ? "bg-black/20 text-white/55" : "bg-[#f1f5ee] text-[#436850]"}`}>
-            {pathLabel(displayedPath)}
-          </p>
+          <PlayerRail
+            label={bottomIsUser ? "You" : opponentUsername}
+            color={bottomColor}
+            detail={bottomDetail}
+            toMove={sideToMove === bottomColor}
+            isDark={isDark}
+          />
+
+          <div className={`mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2.5 ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`}>
+            <span className={`text-xs font-medium ${t.textSecondary}`}>Position {selectedPath.length + 1} · {sideToMove === "white" ? "White" : "Black"} to move</span>
+            <span className={`max-w-full truncate font-mono text-[11px] ${t.textTertiary}`}>{pathLabel(displayedPath)}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-5 gap-2" aria-label="Replay controls">
+            <button type="button" onClick={() => setSelectedPath([])} disabled={selectedPath.length === 0} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.09]" : "border-[#c8d8c1] bg-white text-[#315640] hover:bg-[#f2f7ef]"}`}><SkipBack aria-hidden="true" className="h-3.5 w-3.5" /><span className="hidden sm:inline">Start</span></button>
+            <button type="button" onClick={() => setSelectedPath(path => path.slice(0, -1))} disabled={selectedPath.length === 0} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.09]" : "border-[#c8d8c1] bg-white text-[#315640] hover:bg-[#f2f7ef]"}`}><ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" /><span className="hidden sm:inline">Back</span></button>
+            <button type="button" onClick={() => currentBranches[0] && setSelectedPath(path => [...path, currentBranches[0].moveSan])} disabled={currentBranches.length === 0} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.09]" : "border-[#c8d8c1] bg-white text-[#315640] hover:bg-[#f2f7ef]"}`}><span className="hidden sm:inline">Next</span><SkipForward aria-hidden="true" className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => setSelectedPath(decisionPath)} disabled={selectedPath.length === 0} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.09]" : "border-[#c8d8c1] bg-white text-[#315640] hover:bg-[#f2f7ef]"}`}><RotateCcw aria-hidden="true" className="h-3.5 w-3.5" /><span className="hidden sm:inline">Decision</span></button>
+            <button type="button" onClick={() => setFlipped(value => !value)} aria-pressed={flipped} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors ${isDark ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.09]" : "border-[#c8d8c1] bg-white text-[#315640] hover:bg-[#f2f7ef]"}`}><FlipVertical2 aria-hidden="true" className="h-3.5 w-3.5" /><span className="hidden sm:inline">Flip</span></button>
+          </div>
         </div>
 
         <div className="min-w-0">
-          <div className="flex min-h-11 flex-wrap items-center gap-2">
-            <span className={`mr-auto text-xs font-bold uppercase tracking-[0.12em] ${t.textSecondary}`}>{nextActor}</span>
-            <button
-              type="button"
-              onClick={() => setSelectedPath(path => path.slice(0, -1))}
-              disabled={selectedPath.length === 0}
-              className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B9A6A] disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "text-white/65 hover:bg-white/5" : "text-[#436850] hover:bg-[#e8f0e5]"}`}
-            >
-              <ChevronLeft aria-hidden="true" className="h-4 w-4" /> Back
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedPath([])}
-              disabled={selectedPath.length === 0}
-              className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B9A6A] disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "text-white/65 hover:bg-white/5" : "text-[#436850] hover:bg-[#e8f0e5]"}`}
-            >
-              <RotateCcw aria-hidden="true" className="h-4 w-4" /> Reset
-            </button>
-          </div>
+          <p className={`text-xs font-bold uppercase tracking-[0.14em] ${currentBranches[0]?.actor === "opponent" ? (isDark ? "text-[#aeea91]" : "text-[#315640]") : (isDark ? "text-[#FFF598]" : "text-[#6f6500]")}`}>{nextActor}</p>
+          <h3 className={`mt-2 text-2xl font-bold tracking-tight sm:text-3xl ${t.textPrimary}`}>{currentBranches.length > 0 ? "Choose a branch to prepare" : "Observed branch complete"}</h3>
+          <p className={`mt-2 text-sm leading-relaxed ${t.textSecondary}`}>{currentBranches.length > 0 ? "These are observed continuations from the selected legal position, not engine recommendations." : "Use Start, Back, or Decision to review an earlier position."}</p>
 
-          <div className="mt-2 space-y-2">
+          <div className="mt-5 space-y-2.5">
             {currentBranches.length > 0 ? currentBranches.map(branch => (
-              <BranchButton
-                key={`${selectedPath.join("-")}-${branch.moveSan}`}
-                branch={branch}
-                opponentUsername={opponentUsername}
-                isDark={isDark}
-                t={t}
-                onSelect={() => {
-                  setSelectedPath(path => [...path, branch.moveSan]);
-                  setPreviewBranch(null);
-                }}
-                onPreview={setPreviewBranch}
-              />
+              <BranchButton key={`${selectedPath.join("-")}-${branch.moveSan}`} branch={branch} opponentUsername={opponentUsername} isDark={isDark} t={t} onSelect={() => { setSelectedPath(path => [...path, branch.moveSan]); setPreviewBranch(null); }} onPreview={setPreviewBranch} />
             )) : (
-              <p className={`rounded-xl border border-current/10 p-4 text-sm ${t.textTertiary}`}>No further continuation met the evidence threshold.</p>
+              <div className={`rounded-lg border p-4 text-sm ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"} ${t.textSecondary}`}>No further continuation met the evidence threshold.</div>
             )}
           </div>
 
-          {selectedBranch && (
-            <div className={`mt-3 rounded-xl border p-3 ${isDark ? "border-[#243028]/70 bg-[#0d1a0f]/60" : "border-[#ADBC9F]/60 bg-[#f7faf5]"}`}>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className={`text-xs font-semibold ${t.textPrimary}`}>{confidenceLabel(selectedBranch.count)}</span>
-                <span className={`text-[11px] ${t.textTertiary}`}>Based on {selectedBranch.count} game{selectedBranch.count === 1 ? "" : "s"} reaching this position</span>
-                {selectedBranch.label && <span className={`text-[11px] font-semibold ${t.textSecondary}`}>{selectedBranch.label}</span>}
+          <div className={`mt-5 rounded-lg border p-4 ${isDark ? "border-white/10 bg-[#0b2a20]" : "border-[#c8d8c1] bg-[#f7faf5]"}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>Observed recent branch</p>
+            <p className={`mt-2 font-mono text-base font-bold ${t.textPrimary}`}>{pathLabel(selectedPath)}</p>
+            <p className={`mt-2 text-sm leading-relaxed ${t.textSecondary}`}>{selectedBranches.at(-1) ? `Seen in ${selectedBranches.at(-1)!.count} of ${selectedBranches.at(-1)!.parentGames ?? selectedBranches.at(-1)!.count} games reaching this position.` : "Select a branch to see its supporting evidence."}</p>
+            {analysisHref && <a href={analysisHref} className={`mt-3 inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7ED957] ${isDark ? "bg-[#7ED957]/10 text-[#b9f29c] hover:bg-[#7ED957]/15" : "bg-[#e5f2df] text-[#315640] hover:bg-[#d8ebd1]"}`}>Open supporting analysis <ExternalLink aria-hidden="true" className="h-4 w-4" /></a>}
+          </div>
+
+          <div className={`mt-4 rounded-lg border p-4 ${isDark ? "border-white/10 bg-black/15" : "border-[#c8d8c1] bg-white"}`}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>Position to practice</p>
+                <p className={`mt-1 text-sm font-semibold ${t.textPrimary}`}>{sideToMove === submittedColor ? "Your move" : "Opponent to move"}</p>
               </div>
-              {analysisHref && (
-                <a href={analysisHref} className={`mt-3 inline-flex min-h-11 items-center rounded-lg px-3 text-xs font-semibold ${isDark ? "bg-[#436850]/20 text-[#a7d8b1] hover:bg-[#436850]/30" : "bg-[#e8f0e5] text-[#23482f] hover:bg-[#dce9d8]"}`}>
-                  Analyze this position
-                </a>
-              )}
+              <button type="button" onClick={() => void handleCopyFen()} className={`inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7ED957] ${isDark ? "bg-[#7ED957] text-[#08241a] hover:bg-[#a0e87d]" : "bg-[#315640] text-white hover:bg-[#23482f]"}`}>
+                {copyStatus === "copied" ? <Check aria-hidden="true" className="h-4 w-4" /> : <Copy aria-hidden="true" className="h-4 w-4" />}
+                {copyStatus === "copied" ? "Copied" : "Copy FEN"}
+              </button>
             </div>
-          )}
+            <code className={`mt-3 block break-all rounded-md border px-3 py-2.5 text-xs leading-relaxed ${isDark ? "border-white/10 bg-black/20 text-white/70" : "border-[#d8e1d3] bg-[#f7faf5] text-[#315640]"}`}>{committedReplay?.fen ?? replay?.fen ?? new Chess().fen()}</code>
+            <p aria-live="polite" className={`mt-2 text-xs ${copyStatus === "failed" ? "text-red-500" : t.textTertiary}`}>{copyStatus === "failed" ? "Unable to copy the FEN. Select and copy it manually." : "Use this legal position for focused rehearsal."}</p>
+          </div>
         </div>
       </div>
     </section>

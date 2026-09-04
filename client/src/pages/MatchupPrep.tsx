@@ -55,7 +55,6 @@ import {
   scoutRequestRoute,
   scoutRequestSearchParams,
 } from "../../../shared/scoutRequest";
-import { OTBLoader } from "@/components/OTBLoader";
 import { derivePrepErrorCode, describePrepError } from "@/lib/prepErrorPresentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -828,7 +827,7 @@ export default function MatchupPrep() {
       </div>
 
       {/* ── Page Content ── */}
-      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5 sm:py-7 space-y-4 sm:space-y-5">
+      <div className="mx-auto max-w-[1400px] px-3 py-5 sm:px-6 sm:py-7 space-y-4 sm:space-y-5">
 
         {/* ── Saved Reports Panel ── */}
         {showSavedPanel && user && (
@@ -846,9 +845,14 @@ export default function MatchupPrep() {
 
         {/* ── Loading State ── */}
         {loading && (
-          <div className={`min-h-[360px] rounded-3xl border flex items-center justify-center ${isDark ? "border-white/10 bg-white/[0.025]" : "border-[#436850]/15 bg-white/70"}`}>
-            <OTBLoader size={112} label="Building your opponent report" isDark={isDark} />
-          </div>
+          <section className={`animate-pulse rounded-xl border p-4 sm:p-6 ${isDark ? "border-white/10 bg-[#0b2a20]" : "border-[#c8d8c1] bg-white"}`} aria-busy="true" aria-label="Building your opponent report">
+            <div className={`h-3 w-44 rounded ${isDark ? "bg-white/10" : "bg-[#d8e1d3]"}`} />
+            <div className={`mt-4 h-12 w-2/5 max-w-[22rem] rounded ${isDark ? "bg-white/10" : "bg-[#d8e1d3]"}`} />
+            <div className={`mt-8 grid gap-px overflow-hidden rounded-lg border sm:grid-cols-3 xl:grid-cols-6 ${isDark ? "border-white/10 bg-white/10" : "border-[#d8e1d3] bg-[#d8e1d3]"}`}>
+              {Array.from({ length: 6 }, (_, index) => <div key={index} className={`min-h-24 p-4 ${isDark ? "bg-[#0b2a20]" : "bg-white"}`}><div className={`h-2.5 w-2/3 rounded ${isDark ? "bg-white/10" : "bg-[#e5ece1]"}`} /><div className={`mt-4 h-4 w-4/5 rounded ${isDark ? "bg-white/10" : "bg-[#e5ece1]"}`} /></div>)}
+            </div>
+            <div className="mt-8 grid gap-3 lg:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <div key={index} className={`min-h-64 rounded-lg border p-5 ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`}><div className={`h-3 w-16 rounded ${isDark ? "bg-white/10" : "bg-[#e5ece1]"}`} /><div className={`mt-8 h-6 w-4/5 rounded ${isDark ? "bg-white/10" : "bg-[#e5ece1]"}`} /><div className={`mt-4 h-16 rounded ${isDark ? "bg-white/10" : "bg-[#e5ece1]"}`} /></div>)}</div>
+          </section>
         )}
 
         {/* ── Error State (detailed, requirement 11) ── */}
@@ -874,52 +878,6 @@ export default function MatchupPrep() {
         {/* ── V3 Report ── */}
         {reportV3 && !loading && (
           <div className="space-y-4 sm:space-y-5">
-
-            {/* V3 Opponent Hero — minimal card */}
-            <div className={`${t.card} p-4 sm:p-5 flex items-center gap-4`}>
-              {opponentProfile?.avatar && (
-                <img src={opponentProfile.avatar} alt={reportV3.opponent.username} className="w-12 h-12 rounded-full object-cover shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  {opponentProfile?.title && (
-                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"}`}>
-                      {opponentProfile.title}
-                    </span>
-                  )}
-                  <h2 className={`text-base font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {reportV3.opponent.username}
-                  </h2>
-                  {opponentProfile?.countryCode && (
-                    <span className="text-sm">{countryCodeToFlag(opponentProfile.countryCode)}</span>
-                  )}
-                  <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${isDark ? "bg-[#1e2e22] text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
-                    {(reportV3.reportSnapshot?.activeRequest.platform ?? reportV3.provider) === "lichess" ? "Lichess" : "chess.com"}
-                  </span>
-                </div>
-                <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
-                  {reportV3.dataQuality.parsed} games analyzed
-                  {reportV3.dataQuality.grade !== "A" && (
-                    <span className={`ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                      reportV3.dataQuality.grade === "B" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
-                      reportV3.dataQuality.grade === "C" ? "bg-orange-500/10 text-orange-500 border border-orange-500/20" :
-                      "bg-red-500/10 text-red-500 border border-red-500/20"
-                    }`}>
-                      {reportV3.dataQuality.grade === "B" ? "Fair data" : reportV3.dataQuality.grade === "C" ? "Limited data" : "Sparse data"}
-                    </span>
-                  )}
-                  {reportV3.opponent.avgRating !== null && ` · ~${reportV3.opponent.avgRating} avg rating`}
-                  {reportV3.opponent.timeControlSplit.rapid && ` · ${reportV3.opponent.timeControlSplit.rapid.games} rapid`}
-                  {reportV3.opponent.timeControlSplit.blitz && ` · ${reportV3.opponent.timeControlSplit.blitz.games} blitz`}
-                </p>
-              </div>
-              {/* Color context badge */}
-              <span className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-lg ${isDark ? "bg-[#1e2e22] text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"}`}>
-                You {(reportV3.reportSnapshot?.activeRequest.myColor ?? activeScoutRequest?.myColor) === "white" ? "White" : "Black"} · Opponent {(reportV3.reportSnapshot?.activeRequest.myColor ?? activeScoutRequest?.myColor) === "white" ? "Black" : "White"}
-              </span>
-            </div>
-
-            {/* V3 Scout Report — progressive-disclosure layout */}
             <V3ScoutReportTab
               report={reportV3}
               isDark={isDark}

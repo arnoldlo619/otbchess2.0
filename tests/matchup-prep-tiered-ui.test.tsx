@@ -39,7 +39,7 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.queryByText(/scouted-player as Black/i)).toBeNull();
   });
 
-  it("keeps the same opening overview and adds detailed weakness analysis for Pro", () => {
+  it("keeps the opening overview and adds the 30-second Pro plan", () => {
     const proReport: ScoutReportV3 = {
       ...freeReport,
       access: { tier: "pro", detailedInsightsAvailable: true },
@@ -48,8 +48,9 @@ describe("free Matchup Prep Scout Brief", () => {
     };
     render(<V3ScoutReportTab report={proReport} isDark={true} t={tokens} reportCacheKey="snapshot-key" />);
     expect(screen.getByText("Italian Game")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Pro analysis" })).toBeTruthy();
-    expect(screen.getByText("Lowest-scoring opening")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "The 30-second plan" })).toBeTruthy();
+    expect(screen.getAllByText("Target this underperforming line").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Practice")).toBeTruthy();
     expect(screen.queryByRole("link", { name: /View Pro/i })).toBeNull();
   });
 });

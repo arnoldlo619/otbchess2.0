@@ -153,6 +153,12 @@
 - [x] Club Sidebar: Validate the refined sidebar at desktop and narrow mobile widths before checkpointing
 - [x] Club Profile: Increase the referenced content section's typography scale and supporting metadata for accessible readability
 - [x] Club Profile: Validate the enlarged section typography at desktop and narrow mobile widths before checkpointing
+- [x] Matchup Prep: Replace the legacy report presentation with the approved concise player header, evidence summary, and three-action Scout Brief hierarchy
+- [x] Matchup Prep: Rebuild the Legal Line Explorer as a full-width responsive experience without a separate Your Rehearsal card
+- [x] Matchup Prep: Upgrade the board to use a consistent licensed SVG piece set, readable coordinates, semantic move states, orientation rails, and restrained move transitions
+- [x] Matchup Prep: Integrate branch controls, observed evidence, Position to Practice, Copy FEN, board flip, and replay controls using legal report data
+- [x] Matchup Prep: Preserve free/Pro entitlement boundaries, provider reliability, real data binding, accessibility, and responsive loading, empty, limited-data, and error states
+- [x] Matchup Prep: Add data-integrity and interaction regressions, live report QA, and save a checkpoint for the completed redesign
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
