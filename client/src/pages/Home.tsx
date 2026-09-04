@@ -1071,7 +1071,7 @@ function HowItWorks() {
       number: "01",
       icon: <Trophy className="w-3 h-3" />,
       title: "Create Your Tournament, Share QR Code",
-      description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code. Players scan and register on the spot.",
+      description: "Input the Date, Location, Time, and Time Format to instantly get a shareable QR code.",
       cta: "Host a Tournament",
       ctaHref: NAV_CTA_PRIMARY.path,
       imageSrc: "/manus-storage/qr-screen-720_e2bcd40f.webp",
@@ -1082,10 +1082,10 @@ function HowItWorks() {
     {
       number: "02",
       icon: <Users className="w-3 h-3" />,
-      title: "Players Sign Up with chess.com ELO",
-      description: "Share a link. Players enter their chess.com username, and we automatically pull their verified ELO rating in real time.",
-      cta: "Try the Join Flow",
-      ctaHref: "/join/OTB2026",
+      title: "Players Sign Up with Chess.com Username",
+      description: "After all players input their usernames, we generate optimal pairings based on ELO and round performance.",
+      cta: "Try our Chess.com User Lookup",
+      ctaHref: "#chesscom-integration",
       imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
       imageAlt: "Player join form with chess.com username lookup",
       imageSrc2: "/manus-storage/player-signup-confirm-600_8416caa0.webp",
@@ -1095,8 +1095,8 @@ function HowItWorks() {
     {
       number: "03",
       icon: <Swords className="w-3 h-3" />,
-      title: "Optimal Pairings Generated",
-      description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
+      title: "Seamless Tournament Flow for All",
+      description: "Tournament players see their matchup and board assignment, while directors report board results with one click.",
       cta: "View Live Demo",
       ctaHref: LIVE_TOURNAMENT_DEMO_PATH,
       imageSrc: "/manus-storage/exit-gallery-600_9c924914.webp",
@@ -1364,7 +1364,9 @@ function Features() {
             className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            Everything in one ecosystem.
+            Everything a Chess Club{" "}
+            <br />
+            needs in one ecosystem.
           </h2>
           <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${isDark ? "text-white/55" : "text-[#436850]"}`}>
             Tournaments, clubs, leagues, and match prep. One platform built for OTB chess.
@@ -1555,7 +1557,7 @@ function PlayerDemo() {
 
   return (
     <section
-      id="player-demo"
+      id="chesscom-integration"
       className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
       ref={ref}
     >

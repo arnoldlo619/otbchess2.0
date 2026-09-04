@@ -133,6 +133,10 @@
 - [x] Landing Page: Save a checkpoint for the verified two-line How It Works heading refinement
 - [x] Landing Page: Remove the redundant pill-shaped badge from the referenced visual section without altering the content cards
 - [x] Landing Page: Verify the adjusted landing section and save a checkpoint
+- [x] Landing Page: Verify and preserve the updated How It Works copy for event details, player signup, and tournament flow
+- [x] Landing Page: Route the Chess.com User Lookup call to the lower landing-page Chess.com integration section
+- [x] Landing Page: Split the updated ecosystem heading into balanced two-line wording without exceeding 80 characters
+- [x] Landing Page: Validate edited copy, anchor behavior, desktop/mobile wrapping, and save a checkpoint
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
