@@ -21,6 +21,14 @@ describe("Club Home profile layout", () => {
     expect(source).toContain('overflow-x-auto');
   });
 
+  it("uses a readable typography scale throughout the Club Home content section", () => {
+    expect(source).toContain('text-base font-bold sm:text-lg ${textMain}');
+    expect(source).toContain('text-base leading-7 sm:text-[1.0625rem]');
+    expect(source).toContain('text-base font-semibold uppercase tracking-wider sm:text-[1.0625rem]');
+    expect(source).toContain('className={`text-sm ${textMuted}`}');
+    expect(source).toContain('max-w-[64px] truncate text-xs font-medium');
+  });
+
   it("preserves real owner and visitor profile actions around the redesigned Home content", () => {
     expect(source).toContain('isOwner={isOwner}');
     expect(source).toContain('joined={joined}');

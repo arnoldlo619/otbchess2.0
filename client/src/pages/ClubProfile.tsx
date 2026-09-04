@@ -1762,18 +1762,18 @@ export default function ClubProfile() {
 
             <section aria-labelledby="club-home-content" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="lg:col-span-2 flex items-center gap-2 border-b pb-3" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(67,104,80,0.18)" }}>
-                <OtbHome size={17} accentColor={accent} />
-                <h2 id="club-home-content" className={`text-sm font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Inside {club.name}</h2>
+                <OtbHome size={19} accentColor={accent} />
+                <h2 id="club-home-content" className={`text-base font-bold sm:text-lg ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Inside {club.name}</h2>
               </div>
 
             {/* About — full card (description + details) */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 lg:col-span-2`}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>About</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className={`text-base font-semibold uppercase tracking-wider sm:text-[1.0625rem] ${isDark ? "text-white/55" : "text-[#436850]"}`}>About</h3>
                 {(isOwner || isDirector) && (
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                    className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors ${
                       isDark
                         ? "bg-white/10 text-white hover:bg-white/20"
                         : "bg-[#ADBC9F]/40 text-[#12372A] hover:bg-[#ADBC9F]"
@@ -1784,33 +1784,33 @@ export default function ClubProfile() {
                 )}
               </div>
               {club.description && (
-                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>
+                <p className={`mb-5 text-base leading-7 sm:text-[1.0625rem] ${isDark ? "text-white/85" : "text-[#12372A]/85"}`}>
                   {club.description}
                 </p>
               )}
               <div className={`grid grid-cols-2 gap-3 pt-3 border-t ${isDark ? "border-white/8" : "border-[#ADBC9F]/50"}`}>
                 {club.location && (
                   <div className="flex items-center gap-2">
-                    <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{flag} {club.location}</span>
+                    <MapPin className={`h-4 w-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <span className={`text-sm ${isDark ? "text-white/75" : "text-[#12372A]/80"}`}>{flag} {club.location}</span>
                   </div>
                 )}
                 {club.category && (
                   <div className="flex items-center gap-2">
-                    <Hash className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{categoryLabel}</span>
+                    <Hash className={`h-4 w-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <span className={`text-sm ${isDark ? "text-white/75" : "text-[#12372A]/80"}`}>{categoryLabel}</span>
                   </div>
                 )}
                 {club.foundedAt && (
                   <div className="flex items-center gap-2">
-                    <Calendar className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{formatDate(club.foundedAt)}</span>
+                    <Calendar className={`h-4 w-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <span className={`text-sm ${isDark ? "text-white/75" : "text-[#12372A]/80"}`}>{formatDate(club.foundedAt)}</span>
                   </div>
                 )}
                 {club.ownerName && (
                   <div className="flex items-center gap-2">
-                    <Crown className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/70" : "text-[#12372A]/75"}`}>{club.ownerName}</span>
+                    <Crown className={`h-4 w-4 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                    <span className={`text-sm ${isDark ? "text-white/75" : "text-[#12372A]/80"}`}>{club.ownerName}</span>
                   </div>
                 )}
               </div>
@@ -1827,10 +1827,10 @@ export default function ClubProfile() {
                 <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                   <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
-                      <Calendar className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                      <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Upcoming</h3>
+                      <Calendar className={`h-[18px] w-[18px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                      <h3 className={`text-base font-semibold uppercase tracking-wider sm:text-[1.0625rem] ${isDark ? "text-white/55" : "text-[#436850]"}`}>Upcoming</h3>
                     </div>
-                    <button onClick={() => handleTabChange("events")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View all →</button>
+                    <button onClick={() => handleTabChange("events")} className={`text-sm font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View all →</button>
                   </div>
                   <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                     {upcoming.map((item, i) => (
@@ -1839,8 +1839,8 @@ export default function ClubProfile() {
                           {item.type === "tournament" ? <Trophy className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} /> : <Calendar className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${textMain}`}>{item.title}</p>
-                          <p className={`text-xs ${textMuted}`}>{new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
+                          <p className={`truncate text-base font-medium ${textMain}`}>{item.title}</p>
+                          <p className={`text-sm ${textMuted}`}>{new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
                         </div>
                       </div>
                     ))}
@@ -1854,17 +1854,17 @@ export default function ClubProfile() {
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                   <div className="flex items-center gap-2">
-                    <Zap className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                    <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Recent Activity</h3>
+                    <Zap className={`h-[18px] w-[18px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                    <h3 className={`text-base font-semibold uppercase tracking-wider sm:text-[1.0625rem] ${isDark ? "text-white/55" : "text-[#436850]"}`}>Recent Activity</h3>
                   </div>
-                  <button onClick={() => handleTabChange("feed")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>See all →</button>
+                  <button onClick={() => handleTabChange("feed")} className={`text-sm font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>See all →</button>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"} max-h-[200px] overflow-hidden`}>
                   {feedEvents.slice(0, 3).map((event) => (
                     <div key={event.id} className="px-5 py-3 flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isDark ? "bg-[#4CAF50]" : "bg-[#436850]"}`} />
-                      <p className={`text-sm truncate flex-1 ${textMain}`}>{event.description || event.detail?.slice(0, 60) || "Activity"}</p>
-                      <span className={`text-xs flex-shrink-0 ${textMuted}`}>{new Date(event.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                      <p className={`flex-1 truncate text-base ${textMain}`}>{event.description || event.detail?.slice(0, 60) || "Activity"}</p>
+                      <span className={`flex-shrink-0 text-sm ${textMuted}`}>{new Date(event.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                     </div>
                   ))}
                 </div>
@@ -1882,11 +1882,11 @@ export default function ClubProfile() {
                 <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                   <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
-                      <Users className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
-                      <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>Members</h3>
-                      <span className={`text-xs ${textMuted}`}>{members.length}</span>
+                      <Users className={`h-[18px] w-[18px] ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`} />
+                      <h3 className={`text-base font-semibold uppercase tracking-wider sm:text-[1.0625rem] ${isDark ? "text-white/55" : "text-[#436850]"}`}>Members</h3>
+                      <span className={`text-sm ${textMuted}`}>{members.length}</span>
                     </div>
-                    <button onClick={() => handleTabChange("members")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View all →</button>
+                    <button onClick={() => handleTabChange("members")} className={`text-sm font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View all →</button>
                   </div>
                   <div className="flex items-center gap-3 px-5 py-4">
                     {top.map((m) => (
@@ -1894,11 +1894,11 @@ export default function ClubProfile() {
                         <div className="w-10 h-10 rounded-full overflow-hidden">
                           <PlayerAvatar username={m.chesscomUsername ?? m.lichessUsername ?? m.displayName} platform={m.chesscomUsername ? "chesscom" : m.lichessUsername ? "lichess" : undefined} name={m.displayName} size={40} showBadge={false} />
                         </div>
-                        <span className={`text-[10px] font-medium truncate max-w-[56px] ${textMuted}`}>{m.displayName?.split(" ")[0]}</span>
+                        <span className={`max-w-[64px] truncate text-xs font-medium ${textMuted}`}>{m.displayName?.split(" ")[0]}</span>
                       </div>
                     ))}
                     {members.length > 4 && (
-                      <button onClick={() => handleTabChange("members")} className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? "bg-white/8 text-white/50" : "bg-[#ADBC9F]/30 text-[#436850]"}`}>+{members.length - 4}</button>
+                      <button onClick={() => handleTabChange("members")} className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${isDark ? "bg-white/8 text-white/50" : "bg-[#ADBC9F]/30 text-[#436850]"}`}>+{members.length - 4}</button>
                     )}
                   </div>
                 </div>
@@ -1910,19 +1910,19 @@ export default function ClubProfile() {
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                   <div className="flex items-center gap-2">
-                    <Award className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                    <h3 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-[#436850]"}`}>League</h3>
+                    <Award className={`h-[18px] w-[18px] ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                    <h3 className={`text-base font-semibold uppercase tracking-wider sm:text-[1.0625rem] ${isDark ? "text-white/55" : "text-[#436850]"}`}>League</h3>
                   </div>
-                  <button onClick={() => handleTabChange("leagues")} className={`text-xs font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View →</button>
+                  <button onClick={() => handleTabChange("leagues")} className={`text-sm font-semibold ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}>View →</button>
                 </div>
                 <div className="px-5 py-3">
                   {clubLeagues.filter(lg => lg.status === "active").slice(0, 1).map(lg => (
                     <div key={lg.id} className="flex items-center justify-between">
                       <div>
-                        <p className={`text-sm font-semibold ${textMain}`}>{lg.name}</p>
-                        <p className={`text-xs ${textMuted}`}>Week {lg.currentWeek} of {lg.totalWeeks} · {lg.playerCount} players</p>
+                        <p className={`text-base font-semibold ${textMain}`}>{lg.name}</p>
+                        <p className={`text-sm ${textMuted}`}>Week {lg.currentWeek} of {lg.totalWeeks} · {lg.playerCount} players</p>
                       </div>
-                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: "oklch(0.55 0.13 145 / 0.15)", color: "oklch(0.55 0.13 145)" }}>Active</span>
+                      <span className="rounded-full px-2.5 py-1 text-sm font-semibold" style={{ background: "oklch(0.55 0.13 145 / 0.15)", color: "oklch(0.55 0.13 145)" }}>Active</span>
                     </div>
                   ))}
                 </div>
