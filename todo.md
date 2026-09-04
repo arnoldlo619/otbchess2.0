@@ -116,6 +116,10 @@
 - [x] Matchup Prep: Add entitlement, data-quality, opening-name, and tier-aware UI regression coverage
 - [x] Matchup Prep: Add executable server-route tests proving free users receive 403 for Pro-only analysis, enrichment, coaching, and legacy detailed reports
 - [x] Matchup Prep: Add saved-report entitlement regression proving free users receive the projected brief while Pro users retain detailed analysis
+- [x] Landing Page: Verify the updated tournament-hosting headline retains hierarchy, wrapping, and responsive readability
+- [x] Landing Page: Save a checkpoint for the verified hosting-headline copy update
+- [x] Landing Page: Visually verify the updated tournament-hosting headline at desktop and narrow mobile widths to confirm hierarchy and clean wrapping
+- [x] Landing Page: Save a checkpoint for the verified hosting-headline copy update after visual QA passes
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
