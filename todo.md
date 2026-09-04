@@ -140,6 +140,14 @@
 - [x] Club Overview: Widen Recent Activity category labels so TOURNAMENTS remains fully visible
 - [x] Club Overview: Ensure each Recent Activity tournament card renders exactly one trophy icon treatment
 - [x] Club Overview: Validate the adjusted activity cards and save a checkpoint
+- [x] Club Feed: Align Feed card surfaces, metadata hierarchy, and action styling with the Club Owner Overview activity-card system
+- [x] Club Feed: Preserve Feed-specific polls, RSVPs, event results, secure media, galleries, and author-or-owner actions through the redesign
+- [x] Club Feed: Add card-variant coverage and validate responsive Feed presentation before checkpointing
+- [x] Club Feed: Add rendered UI coverage for announcement, poll, RSVP, tournament-result, attachment, and gallery card variants
+- [x] Club Feed: Capture desktop and narrow-mobile visual QA for the redesigned Feed cards and verify light/dark appearance parity
+- [x] Club Feed: Align Feed card surfaces, hierarchy, and metadata styling with the refined Club Owner Overview activity-card system
+- [x] Club Feed: Preserve announcement, event, result, attachment, gallery, and author-or-owner deletion behavior through the card redesign
+- [x] Club Feed: Add coverage and validate desktop/mobile light and dark Feed card presentation before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

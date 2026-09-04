@@ -1,9 +1,13 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ authFetch: vi.fn() }));
 vi.mock("../client/src/lib/apiFetch", () => ({ authFetch: mocks.authFetch }));
 
 import { apiCreateClubFeedPost, apiDeleteClubFeedPost, canCurrentUserDeleteClubFeedPost } from "../client/src/lib/clubFeedApi";
+
+const dashboardSource = readFileSync(resolve(import.meta.dirname, "../client/src/pages/ClubDashboard.tsx"), "utf8");
 
 describe("Club Feed client contract", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -32,5 +36,14 @@ describe("Club Feed client contract", () => {
     expect(canCurrentUserDeleteClubFeedPost("owner-1", "owner-1", "author-1")).toBe(true);
     expect(canCurrentUserDeleteClubFeedPost("director-1", "owner-1", "author-1")).toBe(false);
     expect(canCurrentUserDeleteClubFeedPost(undefined, "owner-1", "author-1")).toBe(false);
+  });
+
+  it("uses the Overview-aligned card hierarchy while retaining Feed media and event interactions", () => {
+    expect(dashboardSource).toContain("const cardSurface = isDark ? \"oklch(0.155 0.045 145)\" : \"rgba(255,255,255,0.76)\"");
+    expect(dashboardSource).toContain("const eventKind = event.type === \"tournament_completed\"");
+    expect(dashboardSource).toContain("<ClubFeedMediaGallery images={imageAttachments}");
+    expect(dashboardSource).toContain("onClick={() => handleRsvp(s)}");
+    expect(dashboardSource).toContain("onClick={() => handleVote(opt.id)}");
+    expect(dashboardSource).toContain("canCurrentUserDeleteClubFeedPost(user?.id, club.ownerId, ev.createdBy)");
   });
 });

@@ -1488,9 +1488,10 @@ function EditEventModal({
 
 // ── FeedCard (rich interactive card for poll / rsvp_form / announcement) ──────
 
-function FeedCard({
+export function FeedCard({
   event,
   accent,
+  isDark,
   userId,
   displayName,
   avatarUrl,
@@ -1506,6 +1507,7 @@ function FeedCard({
 }: {
   event: FeedEvent;
   accent: string;
+  isDark: boolean;
   userId: string;
   displayName: string;
   avatarUrl?: string | null;
@@ -1530,6 +1532,21 @@ function FeedCard({
   const imageAttachments = (event.attachments ?? []).filter((attachment) => attachment.mimeType.startsWith("image/"));
   const documentAttachments = (event.attachments ?? []).filter((attachment) => !attachment.mimeType.startsWith("image/"));
   const userRsvp = (event.rsvpEntries ?? []).find((r) => r.userId === userId);
+  const eventKind = event.type === "tournament_completed"
+    ? "Tournament results"
+    : event.type === "tournament_created"
+      ? "Tournament"
+      : isRsvp
+        ? "Event"
+        : isPoll || isPollResult
+          ? "Club poll"
+          : "Club update";
+  const primaryText = isDark ? "rgba(255,255,255,0.92)" : "#15291c";
+  const secondaryText = isDark ? "rgba(255,255,255,0.52)" : "rgba(21,41,28,0.58)";
+  const mutedText = isDark ? "rgba(255,255,255,0.36)" : "rgba(21,41,28,0.44)";
+  const cardBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)";
+  const dividerBorder = isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.075)";
+  const cardSurface = isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)";
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId) return;
@@ -1544,24 +1561,28 @@ function FeedCard({
   }
 
   return (
-    <div
-      className={`rounded-2xl border overflow-hidden group transition-all ${
+    <article
+      className={`group overflow-hidden rounded-2xl border transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px ${
         event.isPinned
           ? "border-amber-500/30 shadow-[0_0_0_1px_oklch(0.78_0.15_80_/_0.15)]"
-          : "border-white/08"
+          : "hover:border-white/[0.13] dark:hover:border-white/[0.13]"
       }`}
-      style={{ background: event.isPinned ? "oklch(0.17 0.06 80 / 0.4)" : "oklch(0.16 0.05 145)" }}
+      style={{
+        background: event.isPinned ? (isDark ? "oklch(0.17 0.06 80 / 0.4)" : "oklch(0.93 0.05 80 / 0.42)") : cardSurface,
+        borderColor: event.isPinned ? undefined : cardBorder,
+        boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)",
+      }}
     >
       {/* Pinned banner strip */}
       {event.isPinned && (
-        <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-amber-500/20" style={{ background: "oklch(0.22 0.08 80 / 0.5)" }}>
+        <div className="flex items-center gap-1.5 border-b px-4 py-1.5" style={{ background: isDark ? "oklch(0.22 0.08 80 / 0.5)" : "oklch(0.93 0.05 80 / 0.68)", borderColor: "oklch(0.55 0.12 80 / 0.25)" }}>
           <Pin className="w-3 h-3 text-amber-400" />
           <span className="text-amber-400 text-[10px] font-bold uppercase tracking-widest">Pinned Post</span>
         </div>
       )}
-      <div className="flex items-start gap-3 p-4 pb-3">
+      <div className="flex items-start gap-3 border-b px-4 py-3.5" style={{ borderColor: dividerBorder }}>
         {event.type === "tournament_completed" ? (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-400/[0.08] px-1.5 text-center text-[11px] font-black leading-tight text-amber-300">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-400/25 bg-amber-400/[0.08] px-1.5 text-center text-[11px] font-black leading-tight text-amber-300">
             {formatTournamentResultDate(event.createdAt)}
           </div>
         ) : (
@@ -1572,17 +1593,18 @@ function FeedCard({
             {event.type === "tournament_completed" ? (
               <span className="text-amber-300 text-sm font-bold">{formatTournamentResultFeedTitle(event.tournamentName)}</span>
             ) : (
-              <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
+              <span className="text-sm font-bold" style={{ color: primaryText }}>{event.actorName}</span>
             )}
-            {event.type !== "tournament_completed" && (
-              <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
+            <span className="text-xs" style={{ color: mutedText }}>{timeAgo(event.createdAt)}</span>
+          </div>
+          <div className="mt-0.5 flex items-center gap-1.5 text-xs" style={{ color: secondaryText }}>
+            <span className="font-medium">{eventKind}</span>
+            {event.type !== "tournament_completed" && event.description && (
+              <><span aria-hidden="true" style={{ color: mutedText }}>·</span><span className="truncate">{event.description}</span></>
             )}
           </div>
-          {event.type !== "tournament_completed" && (
-            <p className="text-white/50 text-xs mt-0.5">{event.description}</p>
-          )}
           {event.type === "tournament_completed" && event.tournamentFormat && (
-            <p className="text-white/35 text-xs mt-0.5">{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
+            <p className="mt-0.5 text-xs" style={{ color: secondaryText }}>{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
           )}
         </div>
         <div className="flex items-center gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
@@ -1612,7 +1634,7 @@ function FeedCard({
         </div>
       </div>
       {!isPoll && !isRsvp && event.type === "tournament_completed" && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 pt-3.5">
           {/* Visual podium card — mirrors the Instagram carousel slide aesthetic */}
           <div
             className="rounded-2xl overflow-hidden relative"
@@ -1694,8 +1716,8 @@ function FeedCard({
         </div>
       )}
       {!isPoll && !isRsvp && event.type !== "tournament_completed" && (event.detail || imageAttachments.length > 0 || documentAttachments.length > 0) && (
-        <div className="px-4 pb-4">
-          {event.detail && <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>}
+        <div className="px-4 pb-4 pt-3.5">
+          {event.detail && <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: secondaryText }}>{event.detail}</p>}
           {imageAttachments.length > 0 && (
             <div className={`mt-3 grid gap-2 ${imageAttachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
               {imageAttachments.map((attachment, index) => (
@@ -1709,10 +1731,10 @@ function FeedCard({
           {documentAttachments.length > 0 && (
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {documentAttachments.map((attachment) => (
-                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" style={{ borderColor: cardBorder, background: isDark ? "rgba(255,255,255,0.035)" : "rgba(21,41,28,0.035)" }}>
                   <FileText className="h-4 w-4 shrink-0" style={{ color: accent }} aria-hidden="true" />
-                  <span className="min-w-0 flex-1 truncate text-xs font-semibold text-white/75">{attachment.fileName}</span>
-                  <Download className="h-3.5 w-3.5 shrink-0 text-white/45" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate text-xs font-semibold" style={{ color: primaryText }}>{attachment.fileName}</span>
+                  <Download className="h-3.5 w-3.5 shrink-0" style={{ color: mutedText }} aria-hidden="true" />
                 </a>
               ))}
             </div>
@@ -1725,8 +1747,8 @@ function FeedCard({
         </div>
       )}
       {isPoll && event.pollOptions && (
-        <div className="px-4 pb-4 space-y-3">
-          <p className="text-white font-semibold text-sm">{event.pollQuestion}</p>
+        <div className="space-y-3 px-4 pb-4 pt-3.5">
+          <p className="text-sm font-bold" style={{ color: primaryText }}>{event.pollQuestion}</p>
           <div className="space-y-2">
             {event.pollOptions.map((opt) => {
               const voteCount = Object.keys(opt.votes).length;
@@ -1738,7 +1760,8 @@ function FeedCard({
                   key={opt.id}
                   onClick={() => handleVote(opt.id)}
                   disabled={pollExpired}
-                  className={`w-full text-left rounded-xl overflow-hidden border transition-all relative ${voted ? "border-[#4CAF50]/50" : "border-white/10 hover:border-white/25"} ${pollExpired ? "cursor-default" : "cursor-pointer"}`}
+                  className={`relative w-full overflow-hidden rounded-xl border text-left transition-all ${voted ? "border-[#4CAF50]/50" : "hover:border-white/25"} ${pollExpired ? "cursor-default" : "cursor-pointer"}`}
+                  style={{ borderColor: voted ? undefined : cardBorder }}
                 >
                   {showResults && (
                     <div className="absolute inset-0 rounded-xl transition-all duration-500" style={{ width: `${pct}%`, background: voted ? "oklch(0.44 0.12 145 / 0.25)" : "rgba(255,255,255,0.05)" }} />
@@ -1748,15 +1771,15 @@ function FeedCard({
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${voted ? "border-[#4CAF50] bg-[#4CAF50]" : "border-white/30"}`}>
                         {voted && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
                       </div>
-                      <span className={`text-sm font-medium ${voted ? "text-white" : "text-white/70"}`}>{opt.text}</span>
+                      <span className="text-sm font-medium" style={{ color: voted ? primaryText : secondaryText }}>{opt.text}</span>
                     </div>
-                    {showResults && <span className="text-xs text-white/40 font-semibold">{pct}%</span>}
+                    {showResults && <span className="text-xs font-semibold" style={{ color: mutedText }}>{pct}%</span>}
                   </div>
                 </button>
               );
             })}
           </div>
-          <div className="flex items-center justify-between text-xs text-white/30">
+          <div className="flex items-center justify-between text-xs" style={{ color: mutedText }}>
             <span>{totalPollVotes} vote{totalPollVotes !== 1 ? "s" : ""}</span>
             {event.pollExpiresAt && (
               <span className={pollExpired ? "text-red-400/60" : ""}>{pollExpired ? "Closed" : `Closes ${timeAgo(event.pollExpiresAt)}`}</span>
@@ -1765,8 +1788,8 @@ function FeedCard({
         </div>
       )}
       {isPollResult && event.pollResultBreakdown && (
-        <div className="px-4 pb-4 space-y-3">
-          <div className="rounded-xl p-3 border border-amber-500/20" style={{ background: "oklch(0.18 0.06 80 / 0.25)" }}>
+        <div className="space-y-3 px-4 pb-4 pt-3.5">
+          <div className="rounded-xl border border-amber-500/20 p-3" style={{ background: isDark ? "oklch(0.18 0.06 80 / 0.25)" : "oklch(0.93 0.05 80 / 0.60)" }}>
             <div className="flex items-center gap-2 mb-2">
               <Award className="w-4 h-4 text-amber-400 flex-shrink-0" />
               <span className="text-sm font-bold text-amber-300">
@@ -1801,9 +1824,9 @@ function FeedCard({
         </div>
       )}
       {isRsvp && (
-        <div className="px-4 pb-4 space-y-3">
-          <div className="rounded-xl p-3 border border-white/08" style={{ background: "oklch(0.20 0.06 145)" }}>
-            <p className="text-white font-semibold text-sm">{event.rsvpTitle}</p>
+        <div className="space-y-3 px-4 pb-4 pt-3.5">
+          <div className="rounded-xl border p-3" style={{ background: isDark ? "oklch(0.20 0.06 145)" : "rgba(21,41,28,0.035)", borderColor: cardBorder }}>
+            <p className="text-sm font-bold" style={{ color: primaryText }}>{event.rsvpTitle}</p>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               {event.rsvpDate && (
                 <span className="flex items-center gap-1 text-xs text-white/50">
@@ -2106,7 +2129,7 @@ function FeedCard({
         </div>
       )}
       <ClubFeedMediaGallery images={imageAttachments} initialIndex={galleryStartIndex} open={galleryOpen} onOpenChange={setGalleryOpen} />
-    </div>
+    </article>
   );
 }
 
@@ -5917,6 +5940,7 @@ export default function ClubDashboard() {
                       key={ev.id}
                       event={ev}
                       accent={accent}
+                      isDark={isDark}
                       userId={user?.id ?? ""}
                       displayName={user?.displayName ?? ""}
                       avatarUrl={user?.avatarUrl}
