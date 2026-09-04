@@ -127,6 +127,10 @@
 - [x] Landing Page SEO: Set document.title to 30–60 characters using runtime title handling
 - [x] Landing Page SEO: Add descriptive alt text to the one landing-page image currently missing it
 - [x] Landing Page SEO: Verify exact copy limits, accessibility, and responsive presentation before checkpointing
+- [x] Landing Page: Split the How It Works H2 into a balanced two-line layout while retaining its 80-character SEO limit
+- [x] Landing Page: Revert the unintended line break in the landing hero subtitle
+- [x] Landing Page: Capture desktop and 375px visual QA with the How It Works H2 specifically in view
+- [x] Landing Page: Save a checkpoint for the verified two-line How It Works heading refinement
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

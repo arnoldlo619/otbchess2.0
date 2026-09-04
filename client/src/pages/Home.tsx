@@ -1148,7 +1148,9 @@ function HowItWorks() {
           className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4"
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
-          The easiest way to host a chess tournament
+          The easiest way to{" "}
+          <br />
+          host a chess tournament
         </h2>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
           No spreadsheets. No manual pairings. Just a QR code and a room full of chess players.
