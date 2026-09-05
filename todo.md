@@ -185,6 +185,9 @@
 - [x] Home: Verify the updated ChessOTB tools ecosystem supporting copy for hierarchy and responsive wrapping
 - [x] Home: Replace the stale Matchup Prep visual target with a polished glasses study icon and accessible label
 - [x] Home: Validate the updated ecosystem section on desktop and mobile before checkpointing
+- [x] Club Album: Persist uploaded media against the selected album rather than the top-level gallery
+- [x] Club Album: Show uploaded media only after opening its album cover, preserving album grid and lightbox behavior
+- [x] Club Album: Validate album-scoped upload and gallery behavior across owner and mobile flows before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

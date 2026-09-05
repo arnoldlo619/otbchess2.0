@@ -218,15 +218,16 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(await screen.findByText("No albums yet")).toBeTruthy();
   });
 
-  it("renders a populated profile-style photo grid and opens a keyboard-navigable viewer", async () => {
+  it("renders one album cover and opens its complete keyboard-navigable photo gallery", async () => {
     api.list.mockResolvedValue([albumWithPhotos()]);
     render(<ClubAlbumTab {...baseProps} />);
 
     expect((await screen.findAllByText("Championship Night")).length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Club photo grid")).toBeTruthy();
     expect(screen.getAllByText("6 photos").length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "Open Championship Night album" })).toHaveLength(1);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Open Championship Night album" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Open Championship Night album" }));
     expect(await screen.findByText("1 of 6")).toBeTruthy();
 
     fireEvent.keyDown(window, { key: "ArrowRight" });
@@ -260,7 +261,7 @@ describe("ClubAlbumTab rendered behavior", () => {
     expect(screen.getByRole("button", { name: "Delete Club Photos" })).toBeTruthy();
   });
 
-  it.each([375, 1440])("renders the complete public profile-grid contract at a %ipx viewport", async (width) => {
+  it.each([375, 1440])("renders album covers rather than leaking every uploaded photo into the public grid at a %ipx viewport", async (width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     window.dispatchEvent(new Event("resize"));
     api.list.mockResolvedValue([albumWithPhotos(3)]);
@@ -269,8 +270,8 @@ describe("ClubAlbumTab rendered behavior", () => {
 
     expect(await screen.findByRole("region", { name: "Albums" })).toBeTruthy();
     expect(screen.getByLabelText("Club photo grid")).toBeTruthy();
-    expect(screen.getAllByText("Championship Night")).toHaveLength(3);
-    expect(screen.getAllByRole("button").filter((button) => button.querySelector("img"))).toHaveLength(3);
+    expect(screen.getAllByText("Championship Night")).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Open Championship Night album" })).toHaveLength(1);
     expect(screen.getAllByText("3 photos").length).toBeGreaterThan(0);
   });
 });

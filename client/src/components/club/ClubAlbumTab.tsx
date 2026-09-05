@@ -541,12 +541,9 @@ export function ClubAlbumTab({
 
       {!loading && !loadError && albums.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5 overflow-hidden rounded-2xl bg-black/20 sm:gap-2" aria-label="Club photo grid">
-          {albums.flatMap((album) => {
-            const photoIndexes = album.photos.length > 0 ? album.photos.map((_, index) => index) : [null];
-            return photoIndexes.map((photoIndex) => (
-              <AlbumGridItem key={`${album.id}-${photoIndex ?? "cover"}`} album={album} photoIndex={photoIndex} onOpen={(target, selectedIndex) => setViewer({ album: target, index: selectedIndex })} canManage={canManage} canUpload={canUpload} onEdit={openEdit} onDelete={setDeleteAlbumTarget} onUpload={openUpload} />
-            ));
-          })}
+          {albums.map((album) => (
+            <AlbumGridItem key={album.id} album={album} photoIndex={album.photos.length > 0 ? 0 : null} onOpen={(target, selectedIndex) => setViewer({ album: target, index: selectedIndex })} canManage={canManage} canUpload={canUpload} onEdit={openEdit} onDelete={setDeleteAlbumTarget} onUpload={openUpload} />
+          ))}
           {canManage && (
             <button type="button" onClick={openCreate} className={`group flex aspect-square flex-col items-center justify-center gap-2 border border-dashed text-center transition hover:border-[#4CAF50]/60 hover:bg-[#4CAF50]/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${isDark ? "border-white/15 text-white/55" : "border-[#436850]/25 text-[#436850]/75"}`} aria-label="Create a new album">
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-current transition-transform duration-200 motion-safe:group-hover:scale-105"><Plus className="h-5 w-5" aria-hidden="true" /></span>
