@@ -62,7 +62,7 @@ function rememberPrepAnalysisReport(cacheKey: string, value: CachedPrepAnalysisR
 function readRememberedPrepAnalysisReport(cacheKey: string): CachedPrepAnalysisReport | null {
   const entry = prepAnalysisMemory.get(cacheKey);
   if (!entry) return null;
-  if (Date.now() - entry.cachedAt > PREP_ANALYSIS_MEMORY_TTL_MS) {
+  if (Date.now() - entry.cachedAt > PREP_ANALYSIS_MEMORY_TTL_MS || entry.value.report.engineVersion !== ENGINE_VERSION_V3) {
     prepAnalysisMemory.delete(cacheKey);
     return null;
   }

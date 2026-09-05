@@ -15,3 +15,9 @@
 
 - The desktop header now centrally aligns the compact Matchup Prep and Scout opponent identity while keeping brand and account/report actions at opposing edges. The mobile header stays intentionally uncluttered.
 - The Scout Report uses the real parsed provider-game record to calculate and render the opponent’s White and Black win percentages. Its component regression fixture verifies the displayed values without relying on generated percentages.
+
+## Scout Brief reliability
+
+- Root cause: the original brief accepted only primary insights carrying a rare legal-line payload. Common, evidence-backed opening tendencies and responses were discarded, causing a false empty plan.
+- Eligible Pro reports now assemble exactly three cards: **Expect**, **Prepare**, and **Practice**. They use observed opening lines, matched source games, and the report’s actual time-control/date window. The existing Pro projection remains server-enforced; free responses retain only the simple opening snapshot.
+- Stale reports remain recommendation-free. Reports without at least two verified games in one common opening sequence receive an honest evidence-limit state instead of invented guidance.

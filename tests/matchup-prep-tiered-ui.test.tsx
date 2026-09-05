@@ -46,13 +46,20 @@ describe("free Matchup Prep Scout Brief", () => {
       ...freeReport,
       access: { tier: "pro", detailedInsightsAvailable: true },
       insights: [{ id: "weak:sicilian", kind: "weakness", color: "black", role: "plays", claim: "They score 42% in Sicilian Defense positions.", evidence: { stat: "3/7", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true } }, interpretation: "A reliable target.", recommendation: { action: "Target the Sicilian Defense." }, confidence: "medium_high", sampleSize: 7, baseline: { metric: "black", value: 0.5, delta: -0.08 } }],
-      scoutBrief: [{ id: "weak:sicilian", sourceInsightId: "weak:sicilian", kind: "weakness", type: "target", opponentColor: "black", colorPerspective: "white", finding: "They score 42% in Sicilian Defense positions.", title: "Target this underperforming line", action: { label: "With White, target the Sicilian Defense.", source: "recentEvidence" }, whyItMatters: "A reliable target.", confidence: "medium_high", evidence: { stat: "3/7", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true }, relevantGames: 7, sourceGameIds: [] } }],
+      scoutBrief: [
+        { id: "observed:expect:sicilian", sourceInsightId: "observed:expect:sicilian", kind: "opening_tendency", type: "expect", opponentColor: "black", colorPerspective: "white", finding: "Sicilian Defense is their most observed Black setup.", title: "Plan for the Sicilian Defense first.", action: { label: "With White, plan for the Sicilian Defense first.", legalLine: ["e4", "c5"], source: "explorerReference" }, whyItMatters: "e4 c5 appeared in 7 of 10 eligible Black games.", confidence: "medium_high", evidence: { stat: "7/10 eligible Black games", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true }, relevantGames: 7, parentGames: 10, sourceGameIds: [] } },
+        { id: "observed:prepare:sicilian", sourceInsightId: "observed:prepare:sicilian", kind: "opening_tendency", type: "prepare", opponentColor: "black", colorPerspective: "white", finding: "The observed Sicilian Defense line is ready to rehearse.", title: "Prepare your response to the Sicilian Defense.", action: { label: "With White, rehearse the main response to the Sicilian Defense.", legalLine: ["e4", "c5"], source: "explorerReference" }, whyItMatters: "Rehearse e4 c5 before deciding on your first calm reply.", confidence: "medium_high", evidence: { stat: "7/10 eligible Black games", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true }, relevantGames: 7, parentGames: 10, sourceGameIds: [] } },
+        { id: "observed:practice:sicilian", sourceInsightId: "observed:practice:sicilian", kind: "opening_tendency", type: "practice", opponentColor: "black", colorPerspective: "white", finding: "This is the most repeated Sicilian Defense position.", title: "Practice the main position.", action: { label: "With White, practice the observed Sicilian Defense position.", legalLine: ["e4", "c5"], source: "explorerReference" }, whyItMatters: "Set up e4 c5 and play the next move from memory.", confidence: "medium_high", evidence: { stat: "7/10 eligible Black games", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true }, relevantGames: 7, parentGames: 10, sourceGameIds: [] } },
+      ],
     };
     render(<V3ScoutReportTab report={proReport} isDark={true} t={tokens} reportCacheKey="snapshot-key" />);
     expect(screen.getByText("Italian Game")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "The 30-second plan" })).toBeTruthy();
-    expect(screen.getAllByText("Target this underperforming line").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Expect")).toBeTruthy();
+    expect(screen.getByText("Prepare")).toBeTruthy();
     expect(screen.getByText("Practice")).toBeTruthy();
+    expect(screen.getAllByText("Plan for the Sicilian Defense first.").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("No high-confidence action yet")).toBeNull();
     expect(screen.queryByRole("link", { name: /View Pro/i })).toBeNull();
   });
 });

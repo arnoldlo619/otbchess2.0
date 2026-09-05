@@ -9,7 +9,9 @@ import type {
   CachedPrepAnalysisReport,
   Color,
   FetchOpts,
+  ForecastBranch,
   Insight,
+  ParsedGame,
   PrepAnalysisSnapshot,
   Provider,
   RawGame,
@@ -18,12 +20,49 @@ import type {
 import { simpleOpeningName } from "../../shared/simpleOpeningNames.js";
 import { parseGames } from "./parseGames.js";
 import { synthesize, buildForecasts } from "./insightEngine.js";
+import { sample } from "./facts.js";
 import { runGuards } from "./guards.js";
-import { buildScoutBrief, classifyFreshness, headlineInsightEligible } from "./evidencePolicy.js";
+import { buildScoutBrief, classifyFreshness, headlineInsightEligible, type ScoutBriefFallback } from "./evidencePolicy.js";
 
-export const ENGINE_VERSION = "4.1.0-tiered-brief";
+export const ENGINE_VERSION = "4.2.0-complete-brief";
 
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
+
+function primaryObservedLine(branches: ForecastBranch[]): ForecastBranch | null {
+  let branch = branches[0];
+  if (!branch?.previewPath?.length) return null;
+  while (branch.children.length > 0 && (branch.previewPath?.length ?? 0) < 6) {
+    const next = [...branch.children].sort((a, b) => b.count - a.count || a.moveSan.localeCompare(b.moveSan))[0];
+    if (!next?.previewPath?.length) break;
+    branch = next;
+  }
+  return branch;
+}
+
+function observedScoutBriefFallback(
+  parsed: ParsedGame[],
+  color: Color,
+  branches: ForecastBranch[],
+  openingName: string | undefined,
+  window: ScoutReportV3["dataQuality"]["window"],
+): ScoutBriefFallback | undefined {
+  const branch = primaryObservedLine(branches);
+  const legalLine = branch?.previewPath;
+  if (!branch || !legalLine?.length) return undefined;
+  const colorGames = parsed.filter(game => game.scoutedColor === color);
+  const matchingGames = colorGames.filter(game => legalLine.every((move, index) => game.plies[index]?.san === move));
+  if (matchingGames.length < 2 || colorGames.length < 2) return undefined;
+  return {
+    openingName: branch.label ?? openingName ?? `${color === "white" ? "White" : "Black"} main line`,
+    opponentColor: color,
+    legalLine,
+    relevantGames: matchingGames.length,
+    totalGames: colorGames.length,
+    sourceGameIds: matchingGames.map(game => `${game.provider}:${game.url}`),
+    evidenceGames: sample(matchingGames),
+    evidenceWindow: { ...window, timeClasses: [], ratedOnly: true },
+  };
+}
 
 export function buildReport(
   provider: Provider,
@@ -79,6 +118,12 @@ export function buildReport(
 
   const usable = parsed.length;
   const freshness = classifyFreshness(parsed);
+  const reportWindow = {
+    from: dateOf(Math.min(...parsed.map(game => game.endTime))),
+    to: dateOf(Math.max(...parsed.map(game => game.endTime))),
+    timeClasses: o.timeClasses,
+    ratedOnly: o.ratedOnly,
+  };
   const grade: ScoutReportV3["dataQuality"]["grade"] =
     freshness === "strong" ? "A" :
     freshness === "usable" ? "B" :
@@ -124,7 +169,6 @@ export function buildReport(
   ];
 
   const forecasts = buildForecasts(parsed);
-  const scoutBrief = buildScoutBrief(kept, myColor, freshness);
   const openingSummary = (color: Color) => {
     const byFamily = new Map<string, { games: number; score: number }>();
     for (const game of parsed.filter(candidate => candidate.scoutedColor === color)) {
@@ -140,6 +184,16 @@ export function buildReport(
       .slice(0, 2)
       .map(([name, value]) => ({ name, games: value.games, share: total ? value.games / total : 0, score: value.games ? value.score / value.games : 0 }));
   };
+  const summaries = { white: openingSummary("white"), black: openingSummary("black") };
+  const opponentColor: Color = myColor === "white" ? "black" : "white";
+  const fallback = freshness === "stale" ? undefined : observedScoutBriefFallback(
+    parsed,
+    opponentColor,
+    forecasts[opponentColor],
+    summaries[opponentColor][0]?.name,
+    reportWindow,
+  );
+  const scoutBrief = buildScoutBrief(kept, myColor, freshness, fallback);
 
   return {
     version: 3,
@@ -159,15 +213,15 @@ export function buildReport(
       excluded,
       ratedShare,
       window: {
-        from: dateOf(Math.min(...parsed.map(g => g.endTime))),
-        to: dateOf(Math.max(...parsed.map(g => g.endTime))),
+        from: reportWindow.from,
+        to: reportWindow.to,
       },
       grade,
       freshness,
       notes,
     },
     openingForecast: forecasts,
-    openingSummary: { white: openingSummary("white"), black: openingSummary("black") },
+    openingSummary: summaries,
     insights: kept,
     scoutBrief,
     sections: {

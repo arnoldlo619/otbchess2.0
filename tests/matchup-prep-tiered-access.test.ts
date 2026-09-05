@@ -38,7 +38,7 @@ describe("tiered Matchup Prep access", () => {
     expect(simpleOpeningName("Main Setup: d4-Nc3-Bf4", "D02", "d4")).toBe("Queen's Pawn Opening");
   });
 
-  it("builds at most two familiar opening families for each color from eligible games", () => {
+  it("builds familiar opening summaries plus a complete evidence-backed Pro Scout Brief from eligible games", () => {
     const generated = buildReport(
       "chesscom",
       "sameplayer",
@@ -49,6 +49,29 @@ describe("tiered Matchup Prep access", () => {
     expect(generated.openingSummary?.black.length).toBeLessThanOrEqual(2);
     expect(generated.openingSummary?.white.map(opening => opening.name).join(" ")).not.toMatch(/Variation|Classical,/i);
     expect(generated.openingSummary?.black.map(opening => opening.name).join(" ")).not.toMatch(/Variation|Classical,/i);
+    expect(generated.scoutBrief?.map(action => action.type)).toEqual(["expect", "prepare", "practice"]);
+    expect(generated.scoutBrief?.every(action => action.evidence.relevantGames >= 2 && action.evidence.games.length > 0)).toBe(true);
+    expect(generated.scoutBrief?.every(action => action.action.source === "explorerReference")).toBe(true);
+  });
+
+  it("keeps a complete observed-line brief for limited samples while withholding a stale report plan", () => {
+    const limited = buildReport(
+      "chesscom",
+      "sameplayer",
+      makeLaunchGames({ count: 6, playerColor: "black" }),
+      { maxGames: 30, months: 24, timeClasses: ["rapid", "blitz", "bullet"], ratedOnly: true },
+    );
+    const stale = buildReport(
+      "chesscom",
+      "sameplayer",
+      makeLaunchGames({ count: 20, playerColor: "black", newestDaysAgo: 550, spacingDays: 7 }),
+      { maxGames: 30, months: 24, timeClasses: ["rapid", "blitz", "bullet"], ratedOnly: true },
+    );
+
+    expect(limited.dataQuality.freshness).toBe("limited");
+    expect(limited.scoutBrief?.map(action => action.type)).toEqual(["expect", "prepare", "practice"]);
+    expect(stale.dataQuality.freshness).toBe("stale");
+    expect(stale.scoutBrief).toEqual([]);
   });
 
   it("returns only the simple opening brief to free accounts", () => {

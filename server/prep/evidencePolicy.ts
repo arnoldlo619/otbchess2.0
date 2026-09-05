@@ -79,7 +79,7 @@ function titleFor(insight: Insight): string {
 }
 
 function actionTypeFor(insight: Insight): ScoutAction["type"] {
-  if (insight.kind === "weakness") return "target";
+  if (insight.kind === "weakness") return "prepare";
   if (insight.kind === "opening_tendency" || insight.kind === "response_pattern") return "expect";
   if (insight.kind === "deviation_point") return "prepare";
   return "practice";
@@ -98,38 +98,117 @@ function colorCorrectAction(action: string, myColor: Color): string {
   return `With ${side}, ${action.charAt(0).toLowerCase()}${action.slice(1)}`;
 }
 
+export interface ScoutBriefFallback {
+  openingName: string;
+  opponentColor: Color;
+  legalLine: string[];
+  relevantGames: number;
+  totalGames: number;
+  sourceGameIds: string[];
+  evidenceGames: Insight["evidence"]["games"];
+  evidenceWindow: Insight["evidence"]["window"];
+}
+
+function actionFromInsight(insight: Insight, myColor: Color, freshness: ScoutFreshness): ScoutAction {
+  return {
+    id: insight.id,
+    sourceInsightId: insight.id,
+    kind: insight.kind,
+    type: actionTypeFor(insight),
+    opponentColor: insight.color,
+    colorPerspective: myColor,
+    finding: insight.claim,
+    title: titleFor(insight),
+    action: { label: colorCorrectAction(insight.recommendation.action, myColor), legalLine: legalLineFor(insight), source: "recentEvidence" },
+    whyItMatters: insight.interpretation,
+    confidence: freshness === "limited" && insight.confidence === "high" ? "medium_high" : insight.confidence,
+    evidence: { ...insight.evidence, relevantGames: insight.sampleSize, sourceGameIds: insight.evidence.games.map(game => game.url) },
+  };
+}
+
+function fallbackConfidence(relevantGames: number): Insight["confidence"] {
+  if (relevantGames >= 8) return "medium_high";
+  if (relevantGames >= 6) return "medium";
+  return "low";
+}
+
+function fallbackActions(fallback: ScoutBriefFallback, myColor: Color): ScoutAction[] {
+  const side = fallback.opponentColor === "white" ? "White" : "Black";
+  const line = fallback.legalLine.join(" ");
+  const evidence = {
+    stat: `${fallback.relevantGames}/${fallback.totalGames} eligible ${side} games reached this line`,
+    games: fallback.evidenceGames,
+    window: fallback.evidenceWindow,
+    relevantGames: fallback.relevantGames,
+    parentGames: fallback.totalGames,
+    sourceGameIds: fallback.sourceGameIds,
+  };
+  const shared = {
+    kind: "opening_tendency" as const,
+    opponentColor: fallback.opponentColor,
+    colorPerspective: myColor,
+    confidence: fallbackConfidence(fallback.relevantGames),
+    evidence,
+  };
+
+  return [
+    {
+      ...shared,
+      id: `observed:expect:${fallback.legalLine.join("-")}`,
+      sourceInsightId: `observed:expect:${fallback.legalLine.join("-")}`,
+      type: "expect" as const,
+      finding: `${fallback.openingName} is their most observed ${side} setup in this report.`,
+      title: `Plan for ${fallback.openingName} first.`,
+      action: { label: colorCorrectAction(`plan for ${fallback.openingName} first.`, myColor), legalLine: fallback.legalLine, source: "explorerReference" as const },
+      whyItMatters: `${line} appeared in ${fallback.relevantGames} of ${fallback.totalGames} eligible ${side} games.`,
+    },
+    {
+      ...shared,
+      id: `observed:prepare:${fallback.legalLine.join("-")}`,
+      sourceInsightId: `observed:prepare:${fallback.legalLine.join("-")}`,
+      type: "prepare" as const,
+      finding: `The observed ${fallback.openingName} line is ready to rehearse.`,
+      title: `Prepare your response to ${fallback.openingName}.`,
+      action: { label: colorCorrectAction(`rehearse the main response to ${fallback.openingName}.`, myColor), legalLine: fallback.legalLine, source: "explorerReference" as const },
+      whyItMatters: `Rehearse ${line}, then decide on your first calm reply as ${myColor === "white" ? "White" : "Black"}.`,
+    },
+    {
+      ...shared,
+      id: `observed:practice:${fallback.legalLine.join("-")}`,
+      sourceInsightId: `observed:practice:${fallback.legalLine.join("-")}`,
+      type: "practice" as const,
+      finding: `This is the most repeated ${fallback.openingName} position in the current sample.`,
+      title: "Practice the main position.",
+      action: { label: colorCorrectAction(`practice the observed ${fallback.openingName} position.`, myColor), legalLine: fallback.legalLine, source: "explorerReference" as const },
+      whyItMatters: `Set up ${line} and play the next move from memory before checking the line explorer.`,
+    },
+  ];
+}
+
 export function buildScoutBrief(
   insights: Insight[],
   myColor: Color,
   freshness: ScoutFreshness,
+  fallback?: ScoutBriefFallback,
 ): ScoutAction[] {
   const opponentColor: Color = myColor === "white" ? "black" : "white";
   const priority: Insight["kind"][] = ["weakness", "deviation_point", "response_pattern", "opening_tendency", "strength", "behavior"];
   const seenIds = new Set<string>();
   const seenActions = new Set<string>();
 
-  return insights
-    .filter(insight => insight.color === opponentColor && primaryInsightEligible(insight, freshness) && legalLineFor(insight))
+  const primaryActions = insights
+    .filter(insight => insight.color === opponentColor && primaryInsightEligible(insight, freshness))
     .sort((a, b) => priority.indexOf(a.kind) - priority.indexOf(b.kind) || b.sampleSize - a.sampleSize || a.id.localeCompare(b.id))
     .flatMap((insight): ScoutAction[] => {
       const actionKey = normalizedAction(insight.recommendation.action);
       if (seenIds.has(insight.id) || seenActions.has(actionKey)) return [];
       seenIds.add(insight.id);
       seenActions.add(actionKey);
-      return [{
-        id: insight.id,
-        sourceInsightId: insight.id,
-        kind: insight.kind,
-        type: actionTypeFor(insight),
-        opponentColor: insight.color,
-        colorPerspective: myColor,
-        finding: insight.claim,
-        title: titleFor(insight),
-        action: { label: colorCorrectAction(insight.recommendation.action, myColor), legalLine: legalLineFor(insight), source: "recentEvidence" },
-        whyItMatters: insight.interpretation,
-        confidence: freshness === "limited" && insight.confidence === "high" ? "medium_high" : insight.confidence,
-        evidence: { ...insight.evidence, relevantGames: insight.sampleSize, sourceGameIds: insight.evidence.games.map(game => game.url) },
-      }];
-    })
-    .slice(0, 3);
+      return [actionFromInsight(insight, myColor, freshness)];
+    });
+  const observedFallbacks = fallback && fallback.opponentColor === opponentColor ? fallbackActions(fallback, myColor) : [];
+
+  return (["expect", "prepare", "practice"] as const)
+    .map(type => primaryActions.find(action => action.type === type) ?? observedFallbacks.find(action => action.type === type))
+    .filter((action): action is ScoutAction => Boolean(action));
 }

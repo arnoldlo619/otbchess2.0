@@ -147,7 +147,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
   const whiteWinPercentage = winPercentage(report.opponent.record.white);
   const blackWinPercentage = winPercentage(report.opponent.record.black);
   const actionHref = (action: ScoutAction): string | null => {
-    if (!reportCacheKey || !action.action.legalLine?.length) return null;
+    if (!reportCacheKey || !action.action.legalLine?.length || action.action.source !== "recentEvidence") return null;
     const path = canonicalUciPathFromSanLine(action.action.legalLine.join(" "));
     return path ? buildPositionAnalysisUrl({ reportCacheKey, canonicalUciPath: path, evidenceClaimId: action.sourceInsightId, returnPath: `${window.location.pathname}${window.location.search}#scout-brief` }) : null;
   };
@@ -190,7 +190,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
               </div>
               <p className={`text-sm ${t.textSecondary}`}>{actions.length > 0 ? `${actions.length} actions. No repeated filler.` : "No action card meets the evidence threshold yet."}</p>
             </header>
-            {actions.length > 0 ? <div className="mt-5 grid gap-3 lg:grid-cols-3">{actions.map((action, index) => <ActionCard key={action.id} action={action} index={index} isDark={isDark} t={t} analysisHref={actionHref(action)} />)}</div> : <div className={`${t.card} mt-5 p-5`}><h3 className={`text-base font-bold ${t.textPrimary}`}>No high-confidence action yet</h3><p className={`mt-2 text-sm leading-relaxed ${t.textSecondary}`}>The opening snapshot remains available while the evidence sample grows.</p></div>}
+            {actions.length > 0 ? <div className="mt-5 grid gap-3 lg:grid-cols-3">{actions.map((action, index) => <ActionCard key={action.id} action={action} index={index} isDark={isDark} t={t} analysisHref={actionHref(action)} />)}</div> : <div className={`${t.card} mt-5 p-5`}><h3 className={`text-base font-bold ${t.textPrimary}`}>No repeated opening line yet</h3><p className={`mt-2 text-sm leading-relaxed ${t.textSecondary}`}>This report needs at least two verified games in the same opening sequence before it can create a practical plan.</p></div>}
           </section>
           {progressAction && <section className={`rounded-lg border px-4 py-4 sm:px-5 ${isDark ? "border-[#7ED957]/25 bg-[#7ED957]/[0.045]" : "border-[#b8d2ae] bg-[#f2f8ee]"}`} aria-label="Primary opening evidence share"><div className="flex flex-wrap items-center justify-between gap-3"><span className={`text-sm font-bold ${t.textPrimary}`}>{progressAction.title}</span><span className={`text-xs font-semibold ${t.textSecondary}`}>{progressAction.evidence.relevantGames} of {progressTotal} observed games</span></div><div className={`mt-3 h-2 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#dcebd6]"}`}><div className="h-full rounded-full bg-[#7ED957] transition-[width] duration-300" style={{ width: `${progressValue}%` }} /></div></section>}
           <OpeningSnapshot report={report} isDark={isDark} t={t} />
