@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const avatarHookMock = vi.hoisted(() => vi.fn());
+
+vi.mock("../client/src/hooks/useChessAvatar.js", () => ({
+  useChessAvatar: avatarHookMock,
+}));
 
 import { V3ScoutReportTab } from "../client/src/components/prep/V3ScoutReportTab.js";
 import type { ScoutReportV3 } from "../shared/prepTypes.js";
@@ -23,9 +29,23 @@ const freeReport: ScoutReportV3 = {
 };
 
 describe("free Matchup Prep Scout Brief", () => {
+  it("renders the Chess.com image when available and initials when the provider has no image", () => {
+    avatarHookMock.mockReturnValue({ url: "https://images.chess.com/avatar.jpg", status: "loaded" as const });
+    const { rerender } = render(<V3ScoutReportTab report={freeReport} isDark={false} t={tokens} reportCacheKey="snapshot-key" />);
+    expect(screen.getByRole("img", { name: "scouted-player's Chess.com profile" })).toBeTruthy();
+
+    avatarHookMock.mockReturnValue({ url: null, status: "loaded" as const });
+    rerender(<V3ScoutReportTab report={freeReport} isDark={false} t={tokens} reportCacheKey="snapshot-key" />);
+    expect(screen.queryByRole("img", { name: "scouted-player's Chess.com profile" })).toBeNull();
+    expect(screen.getByLabelText("scouted-player initials").textContent).toBe("S");
+  });
+
   it("shows only two familiar openings for each color and a clear Pro boundary", () => {
+    avatarHookMock.mockReturnValue({ url: "https://images.chess.com/avatar.jpg", status: "loaded" as const });
     render(<V3ScoutReportTab report={freeReport} isDark={false} t={tokens} reportCacheKey="snapshot-key" />);
     expect(screen.getByTestId("simple-opening-brief")).toBeTruthy();
+    expect(screen.getByTestId("scout-report-opponent-avatar")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "scouted-player's Chess.com profile" }).getAttribute("src")).toBe("https://images.chess.com/avatar.jpg");
     expect(screen.getByRole("heading", { name: "As White" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "As Black" })).toBeTruthy();
     expect(screen.getByText("Italian Game")).toBeTruthy();

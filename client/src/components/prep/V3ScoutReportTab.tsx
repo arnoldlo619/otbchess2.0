@@ -1,5 +1,5 @@
 import { Chess } from "chess.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, ChevronRight, Database, LockKeyhole } from "lucide-react";
 
 import type { ScoutAction, ScoutReportV3 } from "../../../../shared/prepTypes";
@@ -7,6 +7,7 @@ import { projectScoutReport } from "../../../../shared/scoutReportProjection";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 import { DataQualityBanner } from "./DataQualityBanner";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
+import { useChessAvatar } from "../../hooks/useChessAvatar";
 
 type Tokens = {
   card: string;
@@ -102,6 +103,26 @@ function formatMoveSequence(moves?: string[]): string | null {
   return moves.map((move, index) => `${Math.floor(index / 2) + 1}${index % 2 ? "..." : "."} ${move}`).join(" ");
 }
 
+function OpponentProfileAvatar({ username, provider, isDark }: { username: string; provider: ScoutReportV3["provider"]; isDark: boolean }) {
+  const isChesscom = provider === "chesscom";
+  const { url, status } = useChessAvatar(isChesscom ? username : null);
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => setImageFailed(false), [url, username]);
+  const initial = username.trim().charAt(0).toUpperCase() || "?";
+  const showImage = isChesscom && Boolean(url) && !imageFailed;
+
+  return (
+    <div data-testid="scout-report-opponent-avatar" className={`relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border shadow-[0_12px_32px_rgba(4,26,16,0.16)] sm:h-16 sm:w-16 ${isDark ? "border-[#aeea91]/45 bg-[#173d2c]" : "border-[#8cad7f] bg-[#e5f0df]"}`}>
+      {isChesscom && status === "loading" ? <span aria-label="Loading Chess.com profile image" className={`h-full w-full animate-pulse ${isDark ? "bg-white/10" : "bg-[#cfe1c8]"}`} /> : null}
+      {showImage ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the load error switches to the visible initials fallback.
+        <img src={url!} alt={`${username}'s Chess.com profile`} className="relative z-10 h-full w-full object-cover" onError={() => setImageFailed(true)} />
+      ) : null}
+      <span aria-hidden={showImage} aria-label={showImage ? undefined : `${username} initials`} className={`absolute inset-0 grid place-items-center text-lg font-black uppercase ${isDark ? "text-[#d7ffbc]" : "text-[#234f31]"}`}>{initial}</span>
+    </div>
+  );
+}
+
 function ActionCard({ action, index, isDark, t, analysisHref, expectedMoves }: { action: ScoutAction; index: number; isDark: boolean; t: Tokens; analysisHref: string | null; expectedMoves: { white: string | null; black: string | null } }) {
   const copy = ACTION_COPY[action.type];
   const denominator = action.evidence.parentGames ?? action.evidence.relevantGames;
@@ -188,10 +209,13 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
     <div className="space-y-5 sm:space-y-6">
       <section className={`${t.card} overflow-hidden p-4 sm:p-6`} aria-labelledby="scout-report-title">
         <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className={`text-[11px] font-bold uppercase tracking-[0.18em] ${isDark ? "text-[#aeea91]" : "text-[#315640]"}`}>Scout report / {providerLabel}</p>
-            <h1 id="scout-report-title" className={`mt-2 break-words text-3xl font-black uppercase italic tracking-[-0.05em] sm:text-5xl ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{report.opponent.username}</h1>
-            <p className={`mt-2 text-base sm:text-lg ${t.textSecondary}`}><strong className={t.textPrimary}>{whiteWinPercentage} as White</strong> <span aria-hidden="true">·</span> <strong className={t.textPrimary}>{blackWinPercentage} as Black</strong></p>
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <OpponentProfileAvatar username={report.opponent.username} provider={report.provider} isDark={isDark} />
+            <div className="min-w-0">
+              <p className={`text-[11px] font-bold uppercase tracking-[0.18em] ${isDark ? "text-[#aeea91]" : "text-[#315640]"}`}>Scout report / {providerLabel}</p>
+              <h1 id="scout-report-title" className={`mt-2 break-words text-3xl font-black uppercase italic tracking-[-0.05em] sm:text-5xl ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{report.opponent.username}</h1>
+              <p className={`mt-2 text-base sm:text-lg ${t.textSecondary}`}><strong className={t.textPrimary}>{whiteWinPercentage} as White</strong> <span aria-hidden="true">·</span> <strong className={t.textPrimary}>{blackWinPercentage} as Black</strong></p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <span className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${isDark ? "border-white/15 text-white/70" : "border-[#c8d8c1] text-[#315640]"}`}>{providerLabel}</span>

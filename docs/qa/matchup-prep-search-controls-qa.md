@@ -31,3 +31,8 @@
 
 - The Expect card determines the mover from each forecast branch’s canonical path before reading legacy metadata. The Black value therefore reports the first observed Black reply (for example, `1... c5`) and cannot mistakenly repeat White’s `1. e4`.
 - The As White and As Black labels are larger, brighter, and use a low-amplitude glow only when motion is allowed. Reduced-motion users receive the same high-contrast labels without animation.
+
+## Scout Report profile image
+
+- Chess.com Scout Reports now load the opponent’s real provider profile image through the existing same-origin profile proxy, without changing the report-generation or cache path.
+- The header reserves a responsive circular identity slot while the image loads and falls back to the opponent’s initial when Chess.com has no image, the request fails, or the image cannot render. The image has descriptive alternative text; the initials fallback remains available to assistive technology only when needed.

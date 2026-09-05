@@ -180,6 +180,8 @@
 - [x] Matchup Prep: Correct the Expect card’s Black first-move extraction to show the opponent’s actual first Black reply
 - [x] Matchup Prep: Increase Expect-card White and Black label visibility with subtle motion-safe emphasis
 - [x] Matchup Prep: Verify the corrected move perspective and responsive visual treatment before checkpointing
+- [x] Matchup Prep: Surface the opponent’s real provider profile image in the Scout Report header with an accessible fallback
+- [x] Matchup Prep: Verify profile-image data propagation, header layout, and responsive presentation before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

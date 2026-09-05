@@ -72,8 +72,10 @@ async function fetchAvatar(username: string): Promise<string | null> {
       return null;
     }
 
-    const data = await res.json() as { profile?: { avatar?: string } };
-    const url: string | null = data.profile?.avatar ?? null;
+    const data = await res.json() as { avatar?: string; profile?: { avatar?: string } };
+    // The current server proxy exposes Chess.com profile fields at the top level.
+    // Keep the nested fallback for any older proxy response still in a browser cache.
+    const url: string | null = data.avatar ?? data.profile?.avatar ?? null;
 
     memCache.set(key, url);
     writeSession(key, url);
