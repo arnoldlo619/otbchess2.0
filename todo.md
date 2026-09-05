@@ -41,7 +41,7 @@
 - [x] Club Dashboard: Validate pointer, keyboard, reduced-motion, and mobile behavior after the sidebar motion refinement
 - [x] Club Dashboard: Re-run narrow mobile QA and verify reduced-motion-safe expansion behavior after the motion refinement
 - [x] Club Dashboard: Add restrained pointer-hover scale and brand-glow feedback to sidebar icon controls
-- [ ] Club Dashboard: Validate sidebar icon hover, focus, active, reduced-motion, and mobile behavior
+- [x] Club Dashboard: Validate sidebar icon hover, focus, active, reduced-motion, and mobile behavior
 - [x] Club Dashboard: Capture hover icon feedback and rerun narrow mobile QA after the icon interaction refinement
 - [x] Club Dashboard: Capture explicit desktop hover-state evidence for the final sidebar icon scale and glow treatment
 - [x] Club Dashboard: Remove the expanded sidebar's Club workspace subtitle and Workspace/Manage section labels

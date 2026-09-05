@@ -83,6 +83,21 @@ describe("ClubDashboardSidebar", () => {
     expect(onFocusExpandedChange).toHaveBeenCalledWith(true);
   });
 
+  it("uses restrained hover feedback while retaining visible focus and reduced-motion safeguards", () => {
+    renderSidebar();
+
+    const overview = screen.getByRole("button", { name: "Overview" });
+    fireEvent.pointerEnter(overview, { pointerType: "mouse" });
+
+    expect(overview.style.background).toContain("color-mix");
+    expect(overview.querySelector("span[aria-hidden='true']")?.getAttribute("style")).toContain("scale(1.02)");
+
+    fireEvent.pointerLeave(overview, { pointerType: "mouse" });
+    expect(overview.style.background).toBe("transparent");
+    expect(overview.className).toContain("focus-visible:ring-2");
+    expect(overview.className).toContain("motion-reduce:transition-none");
+  });
+
   it("preserves navigation and the logo back action without redundant manual toggle controls", () => {
     const onSelect = vi.fn();
     const onBackToClubs = vi.fn();
