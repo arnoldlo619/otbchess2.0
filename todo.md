@@ -177,6 +177,9 @@
 - [x] Matchup Prep: Show the actual most-observed first moves as White and Black in the Expect Scout Brief card
 - [x] Matchup Prep: Add short observed move sequences and clearer familiar opening labels to the opening snapshot
 - [x] Matchup Prep: Verify Scout Brief specificity and opening-label clarity across tiers, responsive UI, and a checkpoint
+- [x] Matchup Prep: Correct the Expect card’s Black first-move extraction to show the opponent’s actual first Black reply
+- [x] Matchup Prep: Increase Expect-card White and Black label visibility with subtle motion-safe emphasis
+- [x] Matchup Prep: Verify the corrected move perspective and responsive visual treatment before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

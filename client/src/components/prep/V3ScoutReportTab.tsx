@@ -74,15 +74,22 @@ function actionConfidence(action: ScoutAction): string {
   return action.confidence.replace(/_/g, " ").replace(/^./, letter => letter.toUpperCase());
 }
 
-function formatMove(move: { moveSan: string; moveNumber?: number; sideToMove?: "white" | "black" }): string {
-  if (!move.moveNumber || !move.sideToMove) return move.moveSan;
-  const mover = move.sideToMove === "white" ? "black" : "white";
-  return `${move.moveNumber}${mover === "black" ? "..." : "."} ${move.moveSan}`;
+function moverForBranch(move: ScoutReportV3["openingForecast"]["white"][number]): "white" | "black" | null {
+  if (move.previewPath?.length) return move.previewPath.length % 2 === 1 ? "white" : "black";
+  if (move.sideToMove) return move.sideToMove === "white" ? "black" : "white";
+  return null;
+}
+
+function formatMove(move: ScoutReportV3["openingForecast"]["white"][number]): string {
+  const mover = moverForBranch(move);
+  const moveNumber = move.moveNumber ?? (move.previewPath?.length ? Math.ceil(move.previewPath.length / 2) : undefined);
+  if (!moveNumber || !mover) return move.moveSan;
+  return `${moveNumber}${mover === "black" ? "..." : "."} ${move.moveSan}`;
 }
 
 function firstObservedMove(branches: ScoutReportV3["openingForecast"]["white"], color: "white" | "black"): string | null {
   for (const branch of branches) {
-    const mover = branch.sideToMove === "white" ? "black" : branch.sideToMove === "black" ? "white" : null;
+    const mover = moverForBranch(branch);
     if (mover === color) return formatMove(branch);
     const nested = firstObservedMove(branch.children, color);
     if (nested) return nested;
@@ -106,7 +113,7 @@ function ActionCard({ action, index, isDark, t, analysisHref, expectedMoves }: {
         <span className={`grid h-8 w-8 place-items-center rounded-full border text-xs font-bold ${isDark ? "border-white/15 text-white/65" : "border-[#b8cdb0] text-[#315640]"}`}>{copy.number ?? index + 1}</span>
       </div>
       <h3 className={`mt-6 text-xl font-bold leading-tight tracking-tight ${t.textPrimary}`}>{isExpectCard ? "Expect these opening moves" : action.title}</h3>
-      {isExpectCard ? <dl className={`mt-4 space-y-2 rounded-md border px-3 py-3 text-sm ${isDark ? "border-white/10 bg-black/10" : "border-[#d8e1d3] bg-[#f7faf5]"}`}><div className="flex items-baseline justify-between gap-3"><dt className={`font-semibold ${t.textSecondary}`}>As White:</dt><dd className={`font-mono font-bold ${t.textPrimary}`}>{expectedMoves.white ?? "No repeated first move"}</dd></div><div className="flex items-baseline justify-between gap-3"><dt className={`font-semibold ${t.textSecondary}`}>As Black:</dt><dd className={`font-mono font-bold ${t.textPrimary}`}>{expectedMoves.black ?? "No repeated first move"}</dd></div></dl> : <><p className={`mt-3 text-sm leading-relaxed ${t.textSecondary}`}>{action.whyItMatters}</p>{action.action.legalLine?.length ? <p className={`mt-4 font-mono text-sm font-bold ${isDark ? "text-[#FFF598]" : "text-[#6f6500]"}`}>{action.action.legalLine.join(" ")}</p> : null}</>}
+      {isExpectCard ? <dl className={`mt-4 space-y-2 rounded-md border px-3 py-3 text-sm ${isDark ? "border-white/10 bg-black/10" : "border-[#d8e1d3] bg-[#f7faf5]"}`}><div className="flex items-baseline justify-between gap-3"><dt data-testid="scout-brief-as-white" className={`scout-brief-move-label text-base font-bold tracking-[-0.01em] ${isDark ? "text-[#d7ffbc]" : "text-[#234f31]"}`}>As White:</dt><dd className={`font-mono font-bold ${t.textPrimary}`}>{expectedMoves.white ?? "No repeated first move"}</dd></div><div className="flex items-baseline justify-between gap-3"><dt data-testid="scout-brief-as-black" className={`scout-brief-move-label text-base font-bold tracking-[-0.01em] ${isDark ? "text-[#d7ffbc]" : "text-[#234f31]"}`}>As Black:</dt><dd className={`font-mono font-bold ${t.textPrimary}`}>{expectedMoves.black ?? "No repeated first move"}</dd></div></dl> : <><p className={`mt-3 text-sm leading-relaxed ${t.textSecondary}`}>{action.whyItMatters}</p>{action.action.legalLine?.length ? <p className={`mt-4 font-mono text-sm font-bold ${isDark ? "text-[#FFF598]" : "text-[#6f6500]"}`}>{action.action.legalLine.join(" ")}</p> : null}</>}
       <div className={`mt-auto flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs ${isDark ? "border-white/10" : "border-[#d8e1d3]"} ${t.textTertiary}`}>
         <span><strong className={t.textPrimary}>{action.evidence.relevantGames} of {denominator}</strong> observed games</span>
         <span>{actionConfidence(action)}</span>

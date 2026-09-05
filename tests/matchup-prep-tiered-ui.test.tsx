@@ -47,8 +47,8 @@ describe("free Matchup Prep Scout Brief", () => {
       ...freeReport,
       access: { tier: "pro", detailedInsightsAvailable: true },
       openingForecast: {
-        white: [{ moveSan: "e4", moveNumber: 1, sideToMove: "black", actor: "opponent", count: 8, pct: 0.8, score: 0.5, wins: 4, draws: 0, losses: 4, children: [] }],
-        black: [{ moveSan: "e4", moveNumber: 1, sideToMove: "black", actor: "user", count: 7, pct: 0.7, score: 0.43, wins: 3, draws: 0, losses: 4, children: [{ moveSan: "c5", moveNumber: 1, sideToMove: "white", actor: "opponent", count: 6, pct: 0.86, score: 0.4, wins: 2, draws: 1, losses: 3, children: [] }] }],
+        white: [{ moveSan: "e4", moveNumber: 1, sideToMove: "black", actor: "opponent", previewPath: ["e4"], count: 8, pct: 0.8, score: 0.5, wins: 4, draws: 0, losses: 4, children: [] }],
+        black: [{ moveSan: "e4", moveNumber: 1, sideToMove: "black", actor: "user", previewPath: ["e4"], count: 7, pct: 0.7, score: 0.43, wins: 3, draws: 0, losses: 4, children: [{ moveSan: "c5", moveNumber: 1, sideToMove: "white", actor: "opponent", previewPath: ["e4", "c5"], count: 6, pct: 0.86, score: 0.4, wins: 2, draws: 1, losses: 3, children: [] }] }],
       },
       insights: [{ id: "weak:sicilian", kind: "weakness", color: "black", role: "plays", claim: "They score 42% in Sicilian Defense positions.", evidence: { stat: "3/7", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true } }, interpretation: "A reliable target.", recommendation: { action: "Target the Sicilian Defense." }, confidence: "medium_high", sampleSize: 7, baseline: { metric: "black", value: 0.5, delta: -0.08 } }],
       scoutBrief: [
@@ -65,8 +65,10 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.getByText("Practice")).toBeTruthy();
     expect(screen.getByText("Expect these opening moves")).toBeTruthy();
     expect(screen.getAllByText("As White:").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId("scout-brief-as-white").className).toContain("scout-brief-move-label");
     expect(screen.getByText("1. e4")).toBeTruthy();
     expect(screen.getAllByText("As Black:").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId("scout-brief-as-black").className).toContain("scout-brief-move-label");
     expect(screen.getByText("1... c5")).toBeTruthy();
     expect(screen.queryByText("No high-confidence action yet")).toBeNull();
     expect(screen.queryByRole("link", { name: /View Pro/i })).toBeNull();

@@ -93,6 +93,17 @@
   to { background-position: -200% 0; }
 }
 
+@keyframes scout-brief-move-label-glow {
+  0%, 100% { text-shadow: 0 0 0.25rem color-mix(in srgb, currentColor 18%, transparent); }
+  50% { text-shadow: 0 0 0.65rem color-mix(in srgb, currentColor 42%, transparent); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scout-brief-move-label {
+    animation: scout-brief-move-label-glow 3.8s ease-in-out infinite;
+  }
+}
+
 .otb-pattern-text {
   position: relative;
   display: inline-block;

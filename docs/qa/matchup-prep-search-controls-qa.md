@@ -26,3 +26,8 @@
 
 - The Expect card now reads **“Expect these opening moves”** and presents the opponent’s actual earliest observed move as White and as Black, each in correctly numbered chess notation.
 - The opening snapshot now appends a compact two-to-four-ply observed sequence to each opening family. Move patterns promote broad provider labels to recognizable names such as Queen’s Gambit, London System, Pirc Defense, Sicilian Defense, and Scandinavian Defense only when the recorded moves support that label.
+
+## Expect-card move perspective
+
+- The Expect card determines the mover from each forecast branch’s canonical path before reading legacy metadata. The Black value therefore reports the first observed Black reply (for example, `1... c5`) and cannot mistakenly repeat White’s `1. e4`.
+- The As White and As Black labels are larger, brighter, and use a low-amplitude glow only when motion is allowed. Reduced-motion users receive the same high-contrast labels without animation.
