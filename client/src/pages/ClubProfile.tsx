@@ -11,9 +11,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { ClubProfileNavigationItems } from "@/components/club/ClubProfileNavigationItems";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { clubProfileNavigationTabs, type ClubProfileTabId } from "@/lib/clubProfileNavigation";
 import {
   getClub,
   getClubBySlug,
@@ -897,7 +899,7 @@ export default function ClubProfile() {
   const isDark = theme === "dark";
 
   // Read optional ?tab= query param for deep-linking (e.g. from League Dashboard champion banner)
-  type ClubTabId = "home" | "feed" | "events" | "members" | "album" | "leagues";
+  type ClubTabId = ClubProfileTabId;
   const initialTab: ClubTabId = (() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
     const p = new URLSearchParams(search);
@@ -1541,10 +1543,7 @@ export default function ClubProfile() {
 
           {/* Nav items — vertically centered, Partiful-style horizontal icon+label rows */}
           <nav aria-label="Club navigation" className="flex flex-col gap-0 flex-1 justify-center px-2">
-            {(joined
-              ? (["home", "feed", "events", "members", "album", "leagues"] as const)
-              : (["home", "feed", "events", "members"] as const)
-            ).map((t) => {
+            <ClubProfileNavigationItems joined={joined}>{(t) => {
               const isActive = activeTab === t;
               const iconMap: Record<string, React.ReactNode> = {
                 home: <OtbHome size={22} accentColor={isActive ? accent : undefined} />,
@@ -1608,7 +1607,7 @@ export default function ClubProfile() {
                   </span>
                 </button>
               );
-            })}
+            }}</ClubProfileNavigationItems>
           </nav>
 
           {/* Bottom: utility icons */}
@@ -4544,7 +4543,7 @@ export default function ClubProfile() {
       >
         <div className="flex items-center px-1">
           {/* Club section tabs */}
-          {(["home", "feed", "events", "members", "album", "leagues"] as const).map((t) => {
+          <ClubProfileNavigationItems joined={joined}>{(t) => {
             const isTabActive = activeTab === t;
             const iconMap: Record<string, React.ReactNode> = {
               home: <OtbHome size={18} accentColor={isTabActive ? accent : undefined} />,
@@ -4581,7 +4580,7 @@ export default function ClubProfile() {
                 </span>
               </button>
             );
-          })}
+          }}</ClubProfileNavigationItems>
           {/* Divider */}
           <div
             className="w-px self-stretch mx-0.5"
