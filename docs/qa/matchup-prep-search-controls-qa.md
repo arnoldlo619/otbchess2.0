@@ -21,3 +21,8 @@
 - Root cause: the original brief accepted only primary insights carrying a rare legal-line payload. Common, evidence-backed opening tendencies and responses were discarded, causing a false empty plan.
 - Eligible Pro reports now assemble exactly three cards: **Expect**, **Prepare**, and **Practice**. They use observed opening lines, matched source games, and the report’s actual time-control/date window. The existing Pro projection remains server-enforced; free responses retain only the simple opening snapshot.
 - Stale reports remain recommendation-free. Reports without at least two verified games in one common opening sequence receive an honest evidence-limit state instead of invented guidance.
+
+## Move-specific Scout Brief
+
+- The Expect card now reads **“Expect these opening moves”** and presents the opponent’s actual earliest observed move as White and as Black, each in correctly numbered chess notation.
+- The opening snapshot now appends a compact two-to-four-ply observed sequence to each opening family. Move patterns promote broad provider labels to recognizable names such as Queen’s Gambit, London System, Pirc Defense, Sicilian Defense, and Scandinavian Defense only when the recorded moves support that label.

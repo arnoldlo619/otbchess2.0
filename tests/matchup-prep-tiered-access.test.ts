@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { simpleOpeningName } from "../shared/simpleOpeningNames.js";
+import { familiarOpeningNameFromMoves, simpleOpeningName } from "../shared/simpleOpeningNames.js";
 import type { ScoutReportV3 } from "../shared/prepTypes.js";
 import { presentPrepReport } from "../server/prepRoutes.js";
 import { buildReport } from "../server/prep/buildReport.js";
@@ -36,6 +36,9 @@ describe("tiered Matchup Prep access", () => {
     expect(simpleOpeningName("Sicilian Defense: Najdorf Variation", "B90")).toBe("Sicilian Defense");
     expect(simpleOpeningName("Classical, 4...Qe7", "C65")).toBe("Ruy Lopez");
     expect(simpleOpeningName("Main Setup: d4-Nc3-Bf4", "D02", "d4")).toBe("Queen's Pawn Opening");
+    expect(familiarOpeningNameFromMoves("Queen's Pawn Opening", "D00", ["d4", "d5", "c4", "e6"])).toBe("Queen's Gambit");
+    expect(familiarOpeningNameFromMoves("Modern Defense", "B06", ["e4", "d6", "d4", "Nf6"])).toBe("Pirc Defense");
+    expect(familiarOpeningNameFromMoves("Modern Defense", "B06", ["d4", "g6", "c4", "Bg7"])).toBe("1...g6 defense");
   });
 
   it("builds familiar opening summaries plus a complete evidence-backed Pro Scout Brief from eligible games", () => {
@@ -49,6 +52,8 @@ describe("tiered Matchup Prep access", () => {
     expect(generated.openingSummary?.black.length).toBeLessThanOrEqual(2);
     expect(generated.openingSummary?.white.map(opening => opening.name).join(" ")).not.toMatch(/Variation|Classical,/i);
     expect(generated.openingSummary?.black.map(opening => opening.name).join(" ")).not.toMatch(/Variation|Classical,/i);
+    expect(generated.openingSummary?.white.every(opening => opening.moves && opening.moves.length >= 2)).toBe(true);
+    expect(generated.openingSummary?.black.every(opening => opening.moves && opening.moves.length >= 2)).toBe(true);
     expect(generated.scoutBrief?.map(action => action.type)).toEqual(["expect", "prepare", "practice"]);
     expect(generated.scoutBrief?.every(action => action.evidence.relevantGames >= 2 && action.evidence.games.length > 0)).toBe(true);
     expect(generated.scoutBrief?.every(action => action.action.source === "explorerReference")).toBe(true);

@@ -17,14 +17,14 @@ import type {
   RawGame,
   ScoutReportV3,
 } from "../../shared/prepTypes.js";
-import { simpleOpeningName } from "../../shared/simpleOpeningNames.js";
+import { familiarOpeningNameFromMoves } from "../../shared/simpleOpeningNames.js";
 import { parseGames } from "./parseGames.js";
 import { synthesize, buildForecasts } from "./insightEngine.js";
 import { sample } from "./facts.js";
 import { runGuards } from "./guards.js";
 import { buildScoutBrief, classifyFreshness, headlineInsightEligible, type ScoutBriefFallback } from "./evidencePolicy.js";
 
-export const ENGINE_VERSION = "4.2.0-complete-brief";
+export const ENGINE_VERSION = "4.3.0-observed-moves";
 
 const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
 
@@ -44,7 +44,7 @@ function observedScoutBriefFallback(
   color: Color,
   branches: ForecastBranch[],
   openingName: string | undefined,
-  window: ScoutReportV3["dataQuality"]["window"],
+  window: ScoutBriefFallback["evidenceWindow"],
 ): ScoutBriefFallback | undefined {
   const branch = primaryObservedLine(branches);
   const legalLine = branch?.previewPath;
@@ -60,8 +60,28 @@ function observedScoutBriefFallback(
     totalGames: colorGames.length,
     sourceGameIds: matchingGames.map(game => `${game.provider}:${game.url}`),
     evidenceGames: sample(matchingGames),
-    evidenceWindow: { ...window, timeClasses: [], ratedOnly: true },
+    evidenceWindow: window,
   };
+}
+
+function mostObservedOpeningMoves(games: ParsedGame[], maxPlies = 4): string[] {
+  let matchingGames = games;
+  const moves: string[] = [];
+  for (let ply = 0; ply < maxPlies; ply += 1) {
+    const candidates = new Map<string, ParsedGame[]>();
+    for (const game of matchingGames) {
+      const move = game.plies[ply]?.san;
+      if (!move) continue;
+      const bucket = candidates.get(move);
+      if (bucket) bucket.push(game);
+      else candidates.set(move, [game]);
+    }
+    const selected = Array.from(candidates.entries()).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))[0];
+    if (!selected) break;
+    moves.push(selected[0]);
+    matchingGames = selected[1];
+  }
+  return moves;
 }
 
 export function buildReport(
@@ -170,19 +190,22 @@ export function buildReport(
 
   const forecasts = buildForecasts(parsed);
   const openingSummary = (color: Color) => {
-    const byFamily = new Map<string, { games: number; score: number }>();
+    const byFamily = new Map<string, ParsedGame[]>();
     for (const game of parsed.filter(candidate => candidate.scoutedColor === color)) {
-      const name = simpleOpeningName(game.opening.name, game.opening.eco, game.plies[0]?.san);
-      const existing = byFamily.get(name) ?? { games: 0, score: 0 };
-      existing.games += 1;
-      existing.score += game.scoutedScore;
+      const moves = game.plies.slice(0, 4).map(ply => ply.san);
+      const name = familiarOpeningNameFromMoves(game.opening.name, game.opening.eco, moves);
+      const existing = byFamily.get(name) ?? [];
+      existing.push(game);
       byFamily.set(name, existing);
     }
     const total = parsed.filter(candidate => candidate.scoutedColor === color).length;
     return Array.from(byFamily.entries())
-      .sort(([, a], [, b]) => b.games - a.games || a.score - b.score)
+      .sort(([, a], [, b]) => b.length - a.length || a.reduce((sum, game) => sum + game.scoutedScore, 0) - b.reduce((sum, game) => sum + game.scoutedScore, 0))
       .slice(0, 2)
-      .map(([name, value]) => ({ name, games: value.games, share: total ? value.games / total : 0, score: value.games ? value.score / value.games : 0 }));
+      .map(([name, games]) => {
+        const score = games.reduce((sum, game) => sum + game.scoutedScore, 0);
+        return { name, moves: mostObservedOpeningMoves(games), games: games.length, share: total ? games.length / total : 0, score: games.length ? score / games.length : 0 };
+      });
   };
   const summaries = { white: openingSummary("white"), black: openingSummary("black") };
   const opponentColor: Color = myColor === "white" ? "black" : "white";

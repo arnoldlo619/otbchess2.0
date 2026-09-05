@@ -174,6 +174,9 @@
 - [x] Matchup Prep: Diagnose why usable Pro reports fall back to an empty 30-second plan
 - [x] Matchup Prep: Generate a reliable three-card Expect, Prepare, and Practice Scout Brief from evidence-backed report data
 - [x] Matchup Prep: Preserve free/Pro authorization while validating the brief on report, loading, limited-data, and responsive states
+- [x] Matchup Prep: Show the actual most-observed first moves as White and Black in the Expect Scout Brief card
+- [x] Matchup Prep: Add short observed move sequences and clearer familiar opening labels to the opening snapshot
+- [x] Matchup Prep: Verify Scout Brief specificity and opening-label clarity across tiers, responsive UI, and a checkpoint
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

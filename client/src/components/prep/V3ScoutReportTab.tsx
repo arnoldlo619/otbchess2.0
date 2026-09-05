@@ -74,18 +74,39 @@ function actionConfidence(action: ScoutAction): string {
   return action.confidence.replace(/_/g, " ").replace(/^./, letter => letter.toUpperCase());
 }
 
-function ActionCard({ action, index, isDark, t, analysisHref }: { action: ScoutAction; index: number; isDark: boolean; t: Tokens; analysisHref: string | null }) {
+function formatMove(move: { moveSan: string; moveNumber?: number; sideToMove?: "white" | "black" }): string {
+  if (!move.moveNumber || !move.sideToMove) return move.moveSan;
+  const mover = move.sideToMove === "white" ? "black" : "white";
+  return `${move.moveNumber}${mover === "black" ? "..." : "."} ${move.moveSan}`;
+}
+
+function firstObservedMove(branches: ScoutReportV3["openingForecast"]["white"], color: "white" | "black"): string | null {
+  for (const branch of branches) {
+    const mover = branch.sideToMove === "white" ? "black" : branch.sideToMove === "black" ? "white" : null;
+    if (mover === color) return formatMove(branch);
+    const nested = firstObservedMove(branch.children, color);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+function formatMoveSequence(moves?: string[]): string | null {
+  if (!moves?.length) return null;
+  return moves.map((move, index) => `${Math.floor(index / 2) + 1}${index % 2 ? "..." : "."} ${move}`).join(" ");
+}
+
+function ActionCard({ action, index, isDark, t, analysisHref, expectedMoves }: { action: ScoutAction; index: number; isDark: boolean; t: Tokens; analysisHref: string | null; expectedMoves: { white: string | null; black: string | null } }) {
   const copy = ACTION_COPY[action.type];
   const denominator = action.evidence.parentGames ?? action.evidence.relevantGames;
+  const isExpectCard = action.type === "expect";
   return (
     <article className={`flex min-h-[258px] flex-col rounded-lg border p-5 sm:p-6 ${isDark ? "border-white/10 bg-[#0b2a20]" : "border-[#c8d8c1] bg-white"}`}>
       <div className="flex items-center justify-between gap-3">
         <span className={`text-xs font-bold uppercase tracking-[0.16em] ${isDark ? "text-[#aeea91]" : "text-[#315640]"}`}>{copy.label}</span>
         <span className={`grid h-8 w-8 place-items-center rounded-full border text-xs font-bold ${isDark ? "border-white/15 text-white/65" : "border-[#b8cdb0] text-[#315640]"}`}>{copy.number ?? index + 1}</span>
       </div>
-      <h3 className={`mt-6 text-xl font-bold leading-tight tracking-tight ${t.textPrimary}`}>{action.title}</h3>
-      <p className={`mt-3 text-sm leading-relaxed ${t.textSecondary}`}>{action.whyItMatters}</p>
-      {action.action.legalLine?.length ? <p className={`mt-4 font-mono text-sm font-bold ${isDark ? "text-[#FFF598]" : "text-[#6f6500]"}`}>{action.action.legalLine.join(" ")}</p> : null}
+      <h3 className={`mt-6 text-xl font-bold leading-tight tracking-tight ${t.textPrimary}`}>{isExpectCard ? "Expect these opening moves" : action.title}</h3>
+      {isExpectCard ? <dl className={`mt-4 space-y-2 rounded-md border px-3 py-3 text-sm ${isDark ? "border-white/10 bg-black/10" : "border-[#d8e1d3] bg-[#f7faf5]"}`}><div className="flex items-baseline justify-between gap-3"><dt className={`font-semibold ${t.textSecondary}`}>As White:</dt><dd className={`font-mono font-bold ${t.textPrimary}`}>{expectedMoves.white ?? "No repeated first move"}</dd></div><div className="flex items-baseline justify-between gap-3"><dt className={`font-semibold ${t.textSecondary}`}>As Black:</dt><dd className={`font-mono font-bold ${t.textPrimary}`}>{expectedMoves.black ?? "No repeated first move"}</dd></div></dl> : <><p className={`mt-3 text-sm leading-relaxed ${t.textSecondary}`}>{action.whyItMatters}</p>{action.action.legalLine?.length ? <p className={`mt-4 font-mono text-sm font-bold ${isDark ? "text-[#FFF598]" : "text-[#6f6500]"}`}>{action.action.legalLine.join(" ")}</p> : null}</>}
       <div className={`mt-auto flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-xs ${isDark ? "border-white/10" : "border-[#d8e1d3]"} ${t.textTertiary}`}>
         <span><strong className={t.textPrimary}>{action.evidence.relevantGames} of {denominator}</strong> observed games</span>
         <span>{actionConfidence(action)}</span>
@@ -117,7 +138,7 @@ function OpeningSnapshot({ report, isDark, t }: { report: ScoutReportV3; isDark:
               </div>
               {openings.length > 0 ? (
                 <ol className="mt-4 space-y-3">
-                  {openings.map((opening, index) => <li key={opening.name} className="flex items-center gap-3"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold ${isDark ? "bg-[#7ED957]/10 text-[#aeea91]" : "bg-[#e2ecde] text-[#315640]"}`}>{index + 1}</span><div className="min-w-0 flex-1"><p className={`truncate text-base font-semibold ${t.textPrimary}`}>{opening.name}</p><p className={`mt-0.5 text-xs ${t.textTertiary}`}>{opening.games} game{opening.games === 1 ? "" : "s"} · {Math.round(opening.share * 100)}%</p></div></li>)}
+                  {openings.map((opening, index) => { const moves = formatMoveSequence(opening.moves); return <li key={opening.name} className="flex items-start gap-3"><span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold ${isDark ? "bg-[#7ED957]/10 text-[#aeea91]" : "bg-[#e2ecde] text-[#315640]"}`}>{index + 1}</span><div className="min-w-0 flex-1"><p className={`text-base font-semibold leading-snug ${t.textPrimary}`}>{opening.name}{moves ? <span className={`font-normal ${t.textSecondary}`}> ({moves})</span> : null}</p><p className={`mt-0.5 text-xs ${t.textTertiary}`}>{opening.games} game{opening.games === 1 ? "" : "s"} · {Math.round(opening.share * 100)}%</p></div></li>; })}
                 </ol>
               ) : <p className={`mt-4 text-sm ${t.textSecondary}`}>No eligible {color} games in this report.</p>}
             </section>
@@ -146,6 +167,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
   const opposingRecord = report.opponent.record[opponentColor];
   const whiteWinPercentage = winPercentage(report.opponent.record.white);
   const blackWinPercentage = winPercentage(report.opponent.record.black);
+  const expectedMoves = { white: firstObservedMove(report.openingForecast.white, "white"), black: firstObservedMove(report.openingForecast.black, "black") };
   const actionHref = (action: ScoutAction): string | null => {
     if (!reportCacheKey || !action.action.legalLine?.length || action.action.source !== "recentEvidence") return null;
     const path = canonicalUciPathFromSanLine(action.action.legalLine.join(" "));
@@ -190,7 +212,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
               </div>
               <p className={`text-sm ${t.textSecondary}`}>{actions.length > 0 ? `${actions.length} actions. No repeated filler.` : "No action card meets the evidence threshold yet."}</p>
             </header>
-            {actions.length > 0 ? <div className="mt-5 grid gap-3 lg:grid-cols-3">{actions.map((action, index) => <ActionCard key={action.id} action={action} index={index} isDark={isDark} t={t} analysisHref={actionHref(action)} />)}</div> : <div className={`${t.card} mt-5 p-5`}><h3 className={`text-base font-bold ${t.textPrimary}`}>No repeated opening line yet</h3><p className={`mt-2 text-sm leading-relaxed ${t.textSecondary}`}>This report needs at least two verified games in the same opening sequence before it can create a practical plan.</p></div>}
+            {actions.length > 0 ? <div className="mt-5 grid gap-3 lg:grid-cols-3">{actions.map((action, index) => <ActionCard key={action.id} action={action} index={index} isDark={isDark} t={t} analysisHref={actionHref(action)} expectedMoves={expectedMoves} />)}</div> : <div className={`${t.card} mt-5 p-5`}><h3 className={`text-base font-bold ${t.textPrimary}`}>No repeated opening line yet</h3><p className={`mt-2 text-sm leading-relaxed ${t.textSecondary}`}>This report needs at least two verified games in the same opening sequence before it can create a practical plan.</p></div>}
           </section>
           {progressAction && <section className={`rounded-lg border px-4 py-4 sm:px-5 ${isDark ? "border-[#7ED957]/25 bg-[#7ED957]/[0.045]" : "border-[#b8d2ae] bg-[#f2f8ee]"}`} aria-label="Primary opening evidence share"><div className="flex flex-wrap items-center justify-between gap-3"><span className={`text-sm font-bold ${t.textPrimary}`}>{progressAction.title}</span><span className={`text-xs font-semibold ${t.textSecondary}`}>{progressAction.evidence.relevantGames} of {progressTotal} observed games</span></div><div className={`mt-3 h-2 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#dcebd6]"}`}><div className="h-full rounded-full bg-[#7ED957] transition-[width] duration-300" style={{ width: `${progressValue}%` }} /></div></section>}
           <OpeningSnapshot report={report} isDark={isDark} t={t} />

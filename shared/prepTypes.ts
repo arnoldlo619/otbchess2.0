@@ -101,6 +101,8 @@ export interface ScoutAction {
 /** A familiar opening family, aggregated from the opponent's eligible games. */
 export interface ScoutOpeningSummary {
   name: string;
+  /** Most-observed legal move sequence in this opening family, limited to four plies. */
+  moves?: string[];
   games: number;
   share: number;
   score: number;

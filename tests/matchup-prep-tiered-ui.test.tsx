@@ -14,7 +14,7 @@ const freeReport: ScoutReportV3 = {
   opponent: { username: "scouted-player", record: { white: { w: 5, d: 1, l: 4 }, black: { w: 3, d: 2, l: 5 } }, avgRating: 1540, timeControlSplit: { rapid: { games: 20, score: 0.5 } } },
   dataQuality: { requested: 30, fetched: 20, parsed: 20, quarantined: 0, excluded: {}, ratedShare: 1, window: { from: "2026-01-01", to: "2026-09-01" }, grade: "A", freshness: "strong", notes: [] },
   openingForecast: { white: [], black: [] },
-  openingSummary: { white: [{ name: "Italian Game", games: 8, share: 0.8, score: 0.5 }, { name: "London System", games: 2, share: 0.2, score: 0.5 }], black: [{ name: "Sicilian Defense", games: 7, share: 0.7, score: 0.43 }, { name: "Scandinavian Defense", games: 3, share: 0.3, score: 0.5 }] },
+  openingSummary: { white: [{ name: "Italian Game", moves: ["e4", "e5", "Nf3", "Nc6"], games: 8, share: 0.8, score: 0.5 }, { name: "London System", moves: ["d4", "d5", "Bf4", "Nf6"], games: 2, share: 0.2, score: 0.5 }], black: [{ name: "Sicilian Defense", moves: ["e4", "c5", "Nf3", "d6"], games: 7, share: 0.7, score: 0.43 }, { name: "Scandinavian Defense", moves: ["e4", "d5", "exd5", "Qxd5"], games: 3, share: 0.3, score: 0.5 }] },
   access: { tier: "free", detailedInsightsAvailable: false },
   insights: [], scoutBrief: [],
   sections: { matchupSummary: [], strengths: [], weaknesses: [], weakSignals: [], ifYouHaveWhite: [], ifYouHaveBlack: [], deviationPoints: [], behavior: [], prepChecklist: [] },
@@ -29,6 +29,7 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.getByRole("heading", { name: "As White" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "As Black" })).toBeTruthy();
     expect(screen.getByText("Italian Game")).toBeTruthy();
+    expect(screen.getByText("Italian Game").parentElement?.textContent).toContain("(1. e4 1... e5 2. Nf3 2... Nc6)");
     expect(screen.getByText("London System")).toBeTruthy();
     expect(screen.getByText("Sicilian Defense")).toBeTruthy();
     expect(screen.getByText("Scandinavian Defense")).toBeTruthy();
@@ -45,6 +46,10 @@ describe("free Matchup Prep Scout Brief", () => {
     const proReport: ScoutReportV3 = {
       ...freeReport,
       access: { tier: "pro", detailedInsightsAvailable: true },
+      openingForecast: {
+        white: [{ moveSan: "e4", moveNumber: 1, sideToMove: "black", actor: "opponent", count: 8, pct: 0.8, score: 0.5, wins: 4, draws: 0, losses: 4, children: [] }],
+        black: [{ moveSan: "e4", moveNumber: 1, sideToMove: "black", actor: "user", count: 7, pct: 0.7, score: 0.43, wins: 3, draws: 0, losses: 4, children: [{ moveSan: "c5", moveNumber: 1, sideToMove: "white", actor: "opponent", count: 6, pct: 0.86, score: 0.4, wins: 2, draws: 1, losses: 3, children: [] }] }],
+      },
       insights: [{ id: "weak:sicilian", kind: "weakness", color: "black", role: "plays", claim: "They score 42% in Sicilian Defense positions.", evidence: { stat: "3/7", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true } }, interpretation: "A reliable target.", recommendation: { action: "Target the Sicilian Defense." }, confidence: "medium_high", sampleSize: 7, baseline: { metric: "black", value: 0.5, delta: -0.08 } }],
       scoutBrief: [
         { id: "observed:expect:sicilian", sourceInsightId: "observed:expect:sicilian", kind: "opening_tendency", type: "expect", opponentColor: "black", colorPerspective: "white", finding: "Sicilian Defense is their most observed Black setup.", title: "Plan for the Sicilian Defense first.", action: { label: "With White, plan for the Sicilian Defense first.", legalLine: ["e4", "c5"], source: "explorerReference" }, whyItMatters: "e4 c5 appeared in 7 of 10 eligible Black games.", confidence: "medium_high", evidence: { stat: "7/10 eligible Black games", games: [], window: { from: "2026-01-01", to: "2026-09-01", timeClasses: ["rapid"], ratedOnly: true }, relevantGames: 7, parentGames: 10, sourceGameIds: [] } },
@@ -58,7 +63,11 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.getByText("Expect")).toBeTruthy();
     expect(screen.getByText("Prepare")).toBeTruthy();
     expect(screen.getByText("Practice")).toBeTruthy();
-    expect(screen.getAllByText("Plan for the Sicilian Defense first.").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Expect these opening moves")).toBeTruthy();
+    expect(screen.getAllByText("As White:").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("1. e4")).toBeTruthy();
+    expect(screen.getAllByText("As Black:").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("1... c5")).toBeTruthy();
     expect(screen.queryByText("No high-confidence action yet")).toBeNull();
     expect(screen.queryByRole("link", { name: /View Pro/i })).toBeNull();
   });

@@ -85,3 +85,32 @@ export function simpleOpeningName(rawName?: string, eco?: string, firstMove?: st
   if (firstMove === "Nf3") return "Reti Opening";
   return "Other opening";
 }
+
+/**
+ * Upgrades broad provider labels only when the sampled moves make a familiar
+ * opening family unambiguous. The fallback stays descriptive rather than
+ * guessing a named opening from one or two plies.
+ */
+export function familiarOpeningNameFromMoves(
+  rawName?: string,
+  eco?: string,
+  moves: string[] = [],
+): string {
+  const sequence = moves.join(" ");
+  if (/^d4 d5 c4\b/.test(sequence)) return "Queen's Gambit";
+  if (/^d4 d5 Bf4\b/.test(sequence)) return "London System";
+  if (/^d4 Nf6 Bg5\b/.test(sequence)) return "Trompowsky Attack";
+  if (/^d4 Nf6 c4 g6\b/.test(sequence) || /^Nf3 Nf6 g3 g6\b/.test(sequence)) return "King's Indian Defense";
+  if (/^e4 c5\b/.test(sequence)) return "Sicilian Defense";
+  if (/^e4 d5\b/.test(sequence)) return "Scandinavian Defense";
+  if (/^e4 c6\b/.test(sequence)) return "Caro-Kann Defense";
+  if (/^e4 e6\b/.test(sequence)) return "French Defense";
+  if (/^e4 d6\b/.test(sequence)) return "Pirc Defense";
+  if (/^e4 e5 Nf3 Nc6 Bb5\b/.test(sequence)) return "Ruy Lopez";
+  if (/^e4 e5 Nf3 Nc6 Bc4\b/.test(sequence)) return "Italian Game";
+
+  const name = simpleOpeningName(rawName, eco, moves[0]);
+  if (name === "Queen's Pawn Opening") return "1.d4 opening";
+  if (name === "Modern Defense") return "1...g6 defense";
+  return name;
+}
