@@ -188,9 +188,9 @@ export function ClubDashboardSidebar({
         {renderGroup(primaryItems)}
       </nav>
 
-      <div className="border-t border-white/[0.065] px-3 py-3">
+      <footer aria-label="Club dashboard settings" className="border-t border-white/[0.065] px-3 py-3">
         {settingsItem && renderItem(settingsItem)}
-      </div>
+      </footer>
     </aside>
   );
 }

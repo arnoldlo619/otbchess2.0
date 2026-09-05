@@ -68,6 +68,16 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.queryByRole("button", { name: "Keep sidebar expanded" })).toBeNull();
   });
 
+  it("keeps Settings as the sole footer destination after the simplified navigation cleanup", () => {
+    renderSidebar({ temporarilyExpanded: true });
+
+    const settings = screen.getByRole("button", { name: "Settings" });
+    const footer = screen.getByRole("contentinfo", { name: "Club dashboard settings" });
+    expect(footer.contains(settings)).toBe(true);
+    expect(footer.className).toContain("border-t");
+    expect(footer.className).toContain("px-3");
+  });
+
   it("requests temporary expansion for both pointer and keyboard users", () => {
     const onPointerExpandedChange = vi.fn();
     const onFocusExpandedChange = vi.fn();

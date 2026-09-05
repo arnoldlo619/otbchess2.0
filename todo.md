@@ -46,9 +46,12 @@
 - [x] Club Dashboard: Capture explicit desktop hover-state evidence for the final sidebar icon scale and glow treatment
 - [x] Club Dashboard: Remove the expanded sidebar's Club workspace subtitle and Workspace/Manage section labels
 - [x] Club Dashboard: Move Settings into the sidebar footer while preserving compact tooltip and active-state behavior
-- [ ] Club Dashboard: Verify simplified expanded navigation, Settings footer, keyboard focus, and mobile shell behavior
-- [ ] Club Dashboard: Capture expanded label-free sidebar and footer Settings placement after the simplified layout change
-- [ ] Club Dashboard: Re-run keyboard focus and narrow mobile shell verification after the simplified sidebar layout change
+- [x] Club Dashboard: Verify simplified expanded navigation, Settings footer, keyboard focus, and mobile shell behavior
+- [x] Club Dashboard: Capture expanded label-free sidebar and footer Settings placement after the simplified layout change
+- [x] Club Dashboard: Re-run keyboard focus and narrow mobile shell verification after the simplified sidebar layout change
+- [x] Club Dashboard: Capture an explicit expanded desktop sidebar QA pass showing label-free navigation and footer-only Settings placement
+- [x] Club Dashboard: Capture an expanded desktop sidebar state with an available Settings footer destination after hover or keyboard expansion
+- [x] Club Dashboard: Record the expanded Settings-footer visual evidence before checkpointing simplified navigation
 - [x] Club Dashboard: Remove the duplicate tournament-results trophy treatment while retaining the trophy emoji
 - [x] Club Dashboard: Verify minimalist tournament-results card icon hierarchy before checkpointing
 - [x] Club Feed: Expand the focused post input into a premium full-content social composer for owners and members
