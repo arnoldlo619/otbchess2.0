@@ -8,6 +8,7 @@ import type {
 
 const DAY_SECONDS = 86_400;
 const RECENT_WINDOW_SECONDS = 90 * DAY_SECONDS;
+export const MIN_PRIMARY_EVIDENCE_GAMES = 8;
 
 export function effectiveEvidenceSample(games: ParsedGame[], nowSeconds = Math.floor(Date.now() / 1000)): number {
   return games.reduce(
@@ -23,7 +24,7 @@ export function confidenceForEvidence(
 ): Insight["confidence"] {
   const effectiveSample = effectiveEvidenceSample(games, nowSeconds);
   if (effectiveSample >= 12 && intervalWidth <= 0.3) return "high";
-  if (effectiveSample >= 8) return "medium_high";
+  if (effectiveSample >= MIN_PRIMARY_EVIDENCE_GAMES) return "medium_high";
   if (effectiveSample >= 6) return "medium";
   return "low";
 }
@@ -34,11 +35,7 @@ export function conditionalEvidenceFrequency(
 ): { count: number; parentCount: number; ratio: number } {
   const safeParent = Math.max(parentGames, 0);
   const safeCount = Math.min(Math.max(matchingGames, 0), safeParent);
-  return {
-    count: safeCount,
-    parentCount: safeParent,
-    ratio: safeParent > 0 ? safeCount / safeParent : 0,
-  };
+  return { count: safeCount, parentCount: safeParent, ratio: safeParent > 0 ? safeCount / safeParent : 0 };
 }
 
 export function classifyFreshness(games: ParsedGame[], nowSeconds = Math.floor(Date.now() / 1000)): ScoutFreshness {
@@ -50,12 +47,12 @@ export function classifyFreshness(games: ParsedGame[], nowSeconds = Math.floor(D
   const within180 = ordered.filter(game => nowSeconds - game.endTime <= 180 * DAY_SECONDS).length / games.length;
   const within365 = ordered.filter(game => nowSeconds - game.endTime <= 365 * DAY_SECONDS).length / games.length;
   if (games.length >= 20 && newestAgeDays <= 90 && within180 >= 0.6) return "strong";
-  if (games.length >= 8 && newestAgeDays <= 365 && within365 >= 0.4) return "usable";
+  if (games.length >= MIN_PRIMARY_EVIDENCE_GAMES && newestAgeDays <= 365 && within365 >= 0.4) return "usable";
   return "limited";
 }
 
 export function primaryInsightEligible(insight: Insight, freshness: ScoutFreshness): boolean {
-  return insight.sampleSize >= 8 && freshness !== "stale" && insight.confidence !== "low";
+  return insight.sampleSize >= MIN_PRIMARY_EVIDENCE_GAMES && freshness !== "stale" && insight.confidence !== "low";
 }
 
 export function headlineInsightEligible(insight: Insight, freshness: ScoutFreshness): boolean {
@@ -71,11 +68,12 @@ function normalizedAction(value: string): string {
 }
 
 function titleFor(insight: Insight): string {
-  if (insight.kind === "weakness") return "Target this underperforming line";
-  if (insight.kind === "strength") return "Avoid their comfort zone";
-  if (insight.kind === "deviation_point") return "Prepare the decision point";
-  if (insight.kind === "response_pattern") return "Expect this reply";
-  return "Prepare their most likely choice";
+  const opening = insight.recommendation.line?.san?.split(/\s+/).slice(0, 4).join(" ");
+  if (insight.kind === "weakness") return opening ? `Prepare the ${opening} position` : "Prepare the recurring weak line";
+  if (insight.kind === "strength") return opening ? `Respect the ${opening} setup` : "Respect their recurring setup";
+  if (insight.kind === "deviation_point") return opening ? `Prepare the ${opening} decision` : "Prepare the decision point";
+  if (insight.kind === "response_pattern") return opening ? `Expect ${opening}` : "Expect the recurring reply";
+  return opening ? `Expect ${opening}` : "Expect the recurring setup";
 }
 
 function actionTypeFor(insight: Insight): ScoutAction["type"] {
@@ -92,34 +90,29 @@ function legalLineFor(insight: Insight): string[] | undefined {
   return line.length > 0 ? line : undefined;
 }
 
-function colorCorrectAction(action: string, myColor: Color): string {
-  const side = myColor === "white" ? "White" : "Black";
-  if (new RegExp(`^with ${side}[,.]`, "i").test(action)) return action;
-  return `With ${side}, ${action.charAt(0).toLowerCase()}${action.slice(1)}`;
-}
-
 export interface ScoutBriefFallback {
   openingName: string;
   opponentColor: Color;
   legalLine: string[];
   relevantGames: number;
   totalGames: number;
+  reportGames: number;
   sourceGameIds: string[];
   evidenceGames: Insight["evidence"]["games"];
   evidenceWindow: Insight["evidence"]["window"];
 }
 
-function actionFromInsight(insight: Insight, myColor: Color, freshness: ScoutFreshness): ScoutAction {
+function actionFromInsight(insight: Insight, freshness: ScoutFreshness): ScoutAction {
   return {
     id: insight.id,
     sourceInsightId: insight.id,
     kind: insight.kind,
     type: actionTypeFor(insight),
     opponentColor: insight.color,
-    colorPerspective: myColor,
+    colorPerspective: insight.color,
     finding: insight.claim,
     title: titleFor(insight),
-    action: { label: colorCorrectAction(insight.recommendation.action, myColor), legalLine: legalLineFor(insight), source: "recentEvidence" },
+    action: { label: insight.recommendation.action, legalLine: legalLineFor(insight), source: "recentEvidence" },
     whyItMatters: insight.interpretation,
     confidence: freshness === "limited" && insight.confidence === "high" ? "medium_high" : insight.confidence,
     evidence: { ...insight.evidence, relevantGames: insight.sampleSize, sourceGameIds: insight.evidence.games.map(game => game.url) },
@@ -132,7 +125,7 @@ function fallbackConfidence(relevantGames: number): Insight["confidence"] {
   return "low";
 }
 
-function fallbackActions(fallback: ScoutBriefFallback, myColor: Color): ScoutAction[] {
+function fallbackActions(fallback: ScoutBriefFallback): ScoutAction[] {
   const side = fallback.opponentColor === "white" ? "White" : "Black";
   const line = fallback.legalLine.join(" ");
   const evidence = {
@@ -146,67 +139,68 @@ function fallbackActions(fallback: ScoutBriefFallback, myColor: Color): ScoutAct
   const shared = {
     kind: "opening_tendency" as const,
     opponentColor: fallback.opponentColor,
-    colorPerspective: myColor,
+    colorPerspective: fallback.opponentColor,
     confidence: fallbackConfidence(fallback.relevantGames),
     evidence,
   };
-
   return [
     {
       ...shared,
-      id: `observed:expect:${fallback.legalLine.join("-")}`,
-      sourceInsightId: `observed:expect:${fallback.legalLine.join("-")}`,
+      id: `observed:expect:${fallback.opponentColor}:${fallback.legalLine.join("-")}`,
+      sourceInsightId: `observed:expect:${fallback.opponentColor}:${fallback.legalLine.join("-")}`,
       type: "expect" as const,
       finding: `${fallback.openingName} is their most observed ${side} setup in this report.`,
       title: `Plan for ${fallback.openingName} first.`,
-      action: { label: colorCorrectAction(`plan for ${fallback.openingName} first.`, myColor), legalLine: fallback.legalLine, source: "explorerReference" as const },
+      action: { label: `Plan for ${fallback.openingName} first.`, legalLine: fallback.legalLine, source: "explorerReference" as const },
       whyItMatters: `${line} appeared in ${fallback.relevantGames} of ${fallback.totalGames} eligible ${side} games.`,
     },
     {
       ...shared,
-      id: `observed:prepare:${fallback.legalLine.join("-")}`,
-      sourceInsightId: `observed:prepare:${fallback.legalLine.join("-")}`,
+      id: `observed:prepare:${fallback.opponentColor}:${fallback.legalLine.join("-")}`,
+      sourceInsightId: `observed:prepare:${fallback.opponentColor}:${fallback.legalLine.join("-")}`,
       type: "prepare" as const,
       finding: `The observed ${fallback.openingName} line is ready to rehearse.`,
       title: `Prepare your response to ${fallback.openingName}.`,
-      action: { label: colorCorrectAction(`rehearse the main response to ${fallback.openingName}.`, myColor), legalLine: fallback.legalLine, source: "explorerReference" as const },
-      whyItMatters: `Rehearse ${line}, then decide on your first calm reply as ${myColor === "white" ? "White" : "Black"}.`,
+      action: { label: `Rehearse the main response to ${fallback.openingName}.`, legalLine: fallback.legalLine, source: "explorerReference" as const },
+      whyItMatters: `Rehearse ${line}, then decide on a calm reply from the resulting position.`,
     },
     {
       ...shared,
-      id: `observed:practice:${fallback.legalLine.join("-")}`,
-      sourceInsightId: `observed:practice:${fallback.legalLine.join("-")}`,
+      id: `observed:practice:${fallback.opponentColor}:${fallback.legalLine.join("-")}`,
+      sourceInsightId: `observed:practice:${fallback.opponentColor}:${fallback.legalLine.join("-")}`,
       type: "practice" as const,
       finding: `This is the most repeated ${fallback.openingName} position in the current sample.`,
       title: "Practice the main position.",
-      action: { label: colorCorrectAction(`practice the observed ${fallback.openingName} position.`, myColor), legalLine: fallback.legalLine, source: "explorerReference" as const },
+      action: { label: `Practice the observed ${fallback.openingName} position.`, legalLine: fallback.legalLine, source: "explorerReference" as const },
       whyItMatters: `Set up ${line} and play the next move from memory before checking the line explorer.`,
     },
   ];
 }
 
+/** Build a single opponent-centered action list. Explorer orientation is deliberately not an input. */
 export function buildScoutBrief(
   insights: Insight[],
-  myColor: Color,
   freshness: ScoutFreshness,
-  fallback?: ScoutBriefFallback,
+  fallbacks?: ScoutBriefFallback[],
 ): ScoutAction[] {
-  const opponentColor: Color = myColor === "white" ? "black" : "white";
+  if (freshness === "stale") return [];
   const priority: Insight["kind"][] = ["weakness", "deviation_point", "response_pattern", "opening_tendency", "strength", "behavior"];
   const seenIds = new Set<string>();
   const seenActions = new Set<string>();
-
   const primaryActions = insights
-    .filter(insight => insight.color === opponentColor && primaryInsightEligible(insight, freshness))
+    .filter(insight => primaryInsightEligible(insight, freshness))
     .sort((a, b) => priority.indexOf(a.kind) - priority.indexOf(b.kind) || b.sampleSize - a.sampleSize || a.id.localeCompare(b.id))
     .flatMap((insight): ScoutAction[] => {
       const actionKey = normalizedAction(insight.recommendation.action);
       if (seenIds.has(insight.id) || seenActions.has(actionKey)) return [];
       seenIds.add(insight.id);
       seenActions.add(actionKey);
-      return [actionFromInsight(insight, myColor, freshness)];
+      return [actionFromInsight(insight, freshness)];
     });
-  const observedFallbacks = fallback && fallback.opponentColor === opponentColor ? fallbackActions(fallback, myColor) : [];
+  const observedFallbacks = (fallbacks ?? [])
+    .filter(fallback => fallback.reportGames >= MIN_PRIMARY_EVIDENCE_GAMES && fallback.relevantGames >= 2)
+    .sort((a, b) => b.relevantGames - a.relevantGames || b.totalGames - a.totalGames || a.opponentColor.localeCompare(b.opponentColor))
+    .flatMap(fallbackActions);
 
   return (["expect", "prepare", "practice"] as const)
     .map(type => primaryActions.find(action => action.type === type) ?? observedFallbacks.find(action => action.type === type))

@@ -43,6 +43,15 @@ const rootBranch: ForecastBranch = {
   }],
 };
 
+const whiteRootBranch: ForecastBranch = {
+  ...rootBranch,
+  moveSan: "d4",
+  previewPath: ["d4"],
+  moveUci: "d2d4",
+  label: "Most observed White first move",
+  children: [{ ...rootBranch.children[0], moveSan: "d5", previewPath: ["d4", "d5"], moveUci: "d7d5" }],
+};
+
 describe("Legal Line Explorer", () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -74,5 +83,20 @@ describe("Legal Line Explorer", () => {
     fireEvent.click(screen.getByRole("button", { name: /copy fen/i }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.getByRole("button", { name: /copied/i })).toBeTruthy());
+  });
+
+  it("keeps the playing-color switch inside the explorer and swaps the opponent tree without altering report identity", () => {
+    render(<ForecastWalkthrough openingForecast={{ white: [whiteRootBranch], black: [rootBranch] }} isDark t={tokens} opponentUsername="opponent" />);
+
+    const white = screen.getByRole("button", { name: "White" });
+    const black = screen.getByRole("button", { name: "Black" });
+    expect(white.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /opponent's tendency: e4/i })).toBeTruthy();
+
+    fireEvent.click(black);
+    expect(black.getAttribute("aria-pressed")).toBe("true");
+    expect(white.getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByRole("button", { name: /opponent's tendency: d4/i })).toBeTruthy();
+    expect(screen.getByTestId("legal-line-board").dataset.orientation).toBe("black");
   });
 });

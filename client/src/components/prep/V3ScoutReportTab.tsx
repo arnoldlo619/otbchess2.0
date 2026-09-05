@@ -184,15 +184,19 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
   }
 
   const view = projectScoutReport(report);
-  const request = view.snapshot.activeRequest;
-  const opponentColor = request.myColor === "white" ? "black" : "white";
   const hasProAccess = view.tier === "pro";
   const actions = view.actions.slice(0, 3);
   const supportingFacts = report.insights
-    .filter(insight => insight.color === opponentColor && insight.sampleSize >= 6)
+    .filter(insight => insight.sampleSize >= 6)
     .filter(insight => !new Set(view.actions.map(action => action.sourceInsightId)).has(insight.id));
   const providerLabel = view.opponent.provider === "lichess" ? "Lichess" : "Chess.com";
-  const opposingRecord = report.opponent.record[opponentColor];
+  const combinedRecord = (["white", "black"] as const).reduce((total, color) => ({
+    w: total.w + report.opponent.record[color].w,
+    d: total.d + report.opponent.record[color].d,
+    l: total.l + report.opponent.record[color].l,
+  }), { w: 0, d: 0, l: 0 });
+  const combinedGames = combinedRecord.w + combinedRecord.d + combinedRecord.l;
+  const overallScore = combinedGames ? Math.round(((combinedRecord.w + combinedRecord.d * 0.5) / combinedGames) * 100) : null;
   const whiteWinPercentage = winPercentage(report.opponent.record.white);
   const blackWinPercentage = winPercentage(report.opponent.record.black);
   const expectedMoves = { white: firstObservedMove(report.openingForecast.white, "white"), black: firstObservedMove(report.openingForecast.black, "black") };
@@ -228,7 +232,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Games analyzed</dt><dd className={`mt-2 text-base font-bold ${t.textPrimary}`}>{view.gamesAnalyzed} eligible</dd></div>
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Time controls</dt><dd className={`mt-2 text-sm font-bold leading-snug ${t.textPrimary}`}>{formatTimeControls(view.formatBreakdown)}</dd></div>
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Date window</dt><dd className={`mt-2 text-sm font-bold leading-snug ${t.textPrimary}`}>{formatDateWindow(view.gameWindow.from, view.gameWindow.to)}</dd></div>
-          <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Opponent record</dt><dd className={`mt-2 text-base font-bold ${t.textPrimary}`}>{opposingRecord ? `${opposingRecord.w}–${opposingRecord.d}–${opposingRecord.l}` : "Unavailable"}</dd></div>
+          <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Opponent win rate</dt><dd className={`mt-2 text-base font-bold ${t.textPrimary}`}>{overallScore === null ? "Unavailable" : `${overallScore}%`} <span className={`text-xs font-medium ${t.textTertiary}`}>· {combinedRecord.w}–{combinedRecord.d}–{combinedRecord.l}</span></dd></div>
           <div className="p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Report checked</dt><dd className={`mt-2 text-sm font-bold ${t.textPrimary}`}>{formatDate(report.generatedAt)}</dd></div>
         </dl>
       </section>
@@ -247,7 +251,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
           </section>
           {progressAction && <section className={`rounded-lg border px-4 py-4 sm:px-5 ${isDark ? "border-[#7ED957]/25 bg-[#7ED957]/[0.045]" : "border-[#b8d2ae] bg-[#f2f8ee]"}`} aria-label="Primary opening evidence share"><div className="flex flex-wrap items-center justify-between gap-3"><span className={`text-sm font-bold ${t.textPrimary}`}>{progressAction.title}</span><span className={`text-xs font-semibold ${t.textSecondary}`}>{progressAction.evidence.relevantGames} of {progressTotal} observed games</span></div><div className={`mt-3 h-2 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#dcebd6]"}`}><div className="h-full rounded-full bg-[#7ED957] transition-[width] duration-300" style={{ width: `${progressValue}%` }} /></div></section>}
           <OpeningSnapshot report={report} isDark={isDark} t={t} />
-          <ForecastWalkthrough openingForecast={report.openingForecast} myColor={request.myColor} isDark={isDark} t={t} opponentUsername={report.opponent.username} opponentRating={report.opponent.avgRating} analysisHrefForUciPath={reportCacheKey ? canonicalUciPath => buildPositionAnalysisUrl({ reportCacheKey, canonicalUciPath, returnPath: `${window.location.pathname}${window.location.search}#opening-forecast` }) : undefined} />
+          <ForecastWalkthrough openingForecast={report.openingForecast} isDark={isDark} t={t} opponentUsername={report.opponent.username} opponentRating={report.opponent.avgRating} analysisHrefForUciPath={reportCacheKey ? canonicalUciPath => buildPositionAnalysisUrl({ reportCacheKey, canonicalUciPath, returnPath: `${window.location.pathname}${window.location.search}#opening-forecast` }) : undefined} />
           <details className={`${t.card} group overflow-hidden`} open={evidenceOpen} onToggle={event => setEvidenceOpen(event.currentTarget.open)}>
             <summary aria-expanded={evidenceOpen} className={`flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7ED957] sm:px-5 ${isDark ? "hover:bg-white/[0.025]" : "hover:bg-[#f7faf5]"}`}><Database aria-hidden="true" className={`h-4 w-4 ${t.textTertiary}`} /><span className={`flex-1 text-sm font-semibold ${t.textPrimary}`}>Evidence summary</span><span className={`text-xs ${t.textTertiary}`}>{supportingFacts.length} supporting fact{supportingFacts.length === 1 ? "" : "s"}</span><ChevronRight aria-hidden="true" className={`h-4 w-4 transition-transform group-open:rotate-90 ${t.textTertiary}`} /></summary>
             <div className={`border-t px-4 py-4 sm:px-5 ${t.divider}`}><DataQualityBanner dataQuality={report.dataQuality} isDark={isDark} />{supportingFacts.length > 0 && <ul className="mt-4 space-y-2">{supportingFacts.map(fact => <li key={fact.id} className={`rounded-lg border p-3 text-sm ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`}><p className={`font-semibold leading-relaxed ${t.textPrimary}`}>{fact.claim}</p><p className={`mt-1 text-xs ${t.textTertiary}`}>{fact.evidence.stat} · {fact.confidence.replace("_", " ")} confidence</p></li>)}</ul>}</div>

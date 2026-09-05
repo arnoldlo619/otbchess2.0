@@ -33,6 +33,11 @@ import { getTokenPayload } from "./authCore.js";
 // ── Prep cache TTL ───────────────────────────────────────────────────────────
 const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PREP_CACHE_LOOKUP_TIMEOUT_MS = 750;
+const PREP_PIPELINE_DEADLINE_MS = 30_000;
+
+function prepError(status: number, error: PrepErrorPayload["error"], message: string) {
+  return { status, body: { error, message } satisfies PrepErrorPayload };
+}
 
 async function getPrepCacheDb() {
   return Promise.race([
@@ -171,7 +176,7 @@ export function createPrepRouter(): Router {
   router.get("/:username", prepLimiter, async (req, res) => {
     const username = req.params.username;
     if (!username || username.length < 2 || username.length > 50) {
-      const errPayload: PrepErrorPayload = { error: "invalid_username", message: "Username must be 2–50 characters." };
+      const errPayload: PrepErrorPayload = { error: "INVALID_USERNAME", message: "Username must be 2–50 characters." };
       res.status(400).json(errPayload);
       return;
     }
@@ -181,6 +186,11 @@ export function createPrepRouter(): Router {
     // leave the current `/prep` UI waiting on an incompatible response shape.
     if (req.query.schema !== "2") {
       let staleCachedReport: import("../shared/prepTypes.js").ScoutReportV3 | null = null;
+      const requestAbortController = new AbortController();
+      const cancelRequest = () => requestAbortController.abort();
+      req.once("aborted", cancelRequest);
+      res.once("close", cancelRequest);
+      const pipelineStartedAt = Date.now();
       try {
         const proAccess = await hasPrepProAccess(req);
         const activeRequest = activeScoutRequestFromQuery(username, req.query as Record<string, string | string[] | undefined>);
@@ -194,6 +204,7 @@ export function createPrepRouter(): Router {
         if (!forceRefresh) {
           const remembered = readRememberedPrepAnalysisReport(cacheKey);
           if (remembered) {
+            logger.telemetry("prep_pipeline", { provider, cache: "memory", status: "success", durationMs: Date.now() - pipelineStartedAt, fetched: remembered.report.dataQuality.fetched, parsed: remembered.report.dataQuality.parsed });
             res.json({ ...presentPrepReport(remembered.report, proAccess), _cached: true });
             return;
           }
@@ -207,6 +218,7 @@ export function createPrepRouter(): Router {
                 const payload = JSON.parse(cached.reportJson) as CachedPrepAnalysisReport | import("../shared/prepTypes.js").ScoutReportV3;
                 if ("schemaVersion" in payload && payload.schemaVersion === 1 && "analysisSnapshot" in payload) {
                   if (age < PREP_CACHE_TTL_MS) {
+                    logger.telemetry("prep_pipeline", { provider, cache: "database", status: "success", durationMs: Date.now() - pipelineStartedAt, fetched: payload.report.dataQuality.fetched, parsed: payload.report.dataQuality.parsed });
                     res.json({ ...presentPrepReport(payload.report, proAccess), _cached: true });
                     return;
                   }
@@ -217,7 +229,10 @@ export function createPrepRouter(): Router {
           } catch { /* non-fatal */ }
         }
 
-        const fetchOpts: FetchOpts = { maxGames, months: SCOUT_ARCHIVE_MONTHS, timeClasses, ratedOnly: true };
+        const fetchOpts: FetchOpts = {
+          maxGames: Math.min(maxGames, 30), months: SCOUT_ARCHIVE_MONTHS, timeClasses, ratedOnly: true,
+          deadlineAt: pipelineStartedAt + PREP_PIPELINE_DEADLINE_MS, signal: requestAbortController.signal,
+        };
         const raw = provider === "lichess"
           ? await fetchLichess(normalised, fetchOpts)
           : await fetchChesscom(normalised, fetchOpts);
@@ -244,27 +259,33 @@ export function createPrepRouter(): Router {
           });
         } catch { /* non-fatal */ }
 
+        logger.telemetry("prep_pipeline", { provider, cache: "miss", status: "success", durationMs: Date.now() - pipelineStartedAt, fetched: raw.length, parsed: report.dataQuality.parsed });
         res.json({ ...presentPrepReport(report, proAccess), _cached: false });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        logger.error("[prep v3]", msg);
+        logger.telemetry("prep_pipeline", { status: "error", durationMs: Date.now() - pipelineStartedAt, code: msg.split(":")[0].slice(0, 80) });
         if (staleCachedReport) {
           res.json({ ...presentPrepReport(staleCachedReport, await hasPrepProAccess(req)), _cached: true, _stale: true });
           return;
         }
-        if (msg.startsWith("PlayerNotFound:")) {
-          res.status(404).json({ error: "not_found", message: `Player "${username}" was not found on the selected provider.` } as PrepErrorPayload);
+        if (msg.startsWith("RequestCancelled:")) {
+          if (!res.headersSent) res.status(499).json(prepError(499, "REQUEST_CANCELLED", "The scout request was cancelled.").body);
+        } else if (msg.startsWith("PlayerNotFound:")) {
+          res.status(404).json(prepError(404, "PLAYER_NOT_FOUND", `Player "${username}" was not found on the selected provider.`).body);
         } else if (msg.startsWith("NoRecentGames:")) {
-          res.status(404).json({ error: "no_recent_games", message: `No eligible Rapid, Blitz, or Bullet games found for "${username}".` } as PrepErrorPayload);
+          res.status(404).json(prepError(404, "NO_ELIGIBLE_GAMES", `No eligible Rapid, Blitz, or Bullet games found for "${username}".`).body);
         } else if (msg.startsWith("NoUsableGames:")) {
-          res.status(422).json({ error: "all_filtered", message: `All games for "${username}" were filtered out (unrated, wrong time control, or corrupt).` } as PrepErrorPayload);
-        } else if (msg.startsWith("UpstreamRateLimited:")) {
-          res.status(429).json({ error: "upstream_rate_limited", message: "The chess provider is rate-limiting requests. Please try again in a few minutes." } as PrepErrorPayload);
+          res.status(422).json(prepError(422, "ALL_GAMES_FILTERED", `All games for "${username}" were filtered out (unrated, wrong time control, or corrupt).`).body);
+        } else if (msg.startsWith("UpstreamRateLimited:") || msg.startsWith("LichessRateLimited:")) {
+          res.status(429).json(prepError(429, "UPSTREAM_RATE_LIMITED", "The chess provider is rate-limiting requests. Please try again in a few minutes.").body);
         } else if (msg.startsWith("UpstreamTimeout:")) {
-          res.status(504).json({ error: "upstream_timeout", message: "The chess provider took too long to respond. Please retry your report." } as PrepErrorPayload);
+          res.status(504).json(prepError(504, "UPSTREAM_TIMEOUT", "The chess provider took too long to respond. Please retry your report.").body);
         } else {
-          res.status(502).json({ error: "all_filtered", message: "Could not generate prep report. Please try again." } as PrepErrorPayload);
+          res.status(502).json(prepError(502, "UPSTREAM_UNAVAILABLE", "Could not reach the chess provider. Please retry your report.").body);
         }
+      } finally {
+        req.removeListener("aborted", cancelRequest);
+        res.removeListener("close", cancelRequest);
       }
       return;
     }

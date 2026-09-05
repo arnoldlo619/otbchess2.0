@@ -15,7 +15,9 @@ interface Tokens {
 
 interface ForecastWalkthroughProps {
   openingForecast: Record<"white" | "black", ForecastBranch[]>;
+  /** @deprecated Legacy alias accepted for old links and tests. */
   myColor?: "white" | "black" | "not_sure";
+  initialExplorerColor?: "white" | "black";
   isDark: boolean;
   t: Tokens;
   opponentUsername: string;
@@ -199,18 +201,20 @@ function PlayerRail({
 export function ForecastWalkthrough({
   openingForecast,
   myColor = "white",
+  initialExplorerColor,
   isDark,
   t,
   opponentUsername,
   opponentRating,
   analysisHrefForUciPath,
 }: ForecastWalkthroughProps) {
-  const submittedColor: BoardColor = myColor === "black" ? "black" : "white";
-  const opponentColor: BoardColor = submittedColor === "white" ? "black" : "white";
+  const initialColor: BoardColor = initialExplorerColor ?? (myColor === "black" ? "black" : "white");
+  const [playerColor, setPlayerColor] = useState<BoardColor>(initialColor);
+  const opponentColor: BoardColor = playerColor === "white" ? "black" : "white";
   const rootBranches = useMemo(() => openingForecast[opponentColor] ?? [], [openingForecast, opponentColor]);
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
   const [previewBranch, setPreviewBranch] = useState<ForecastBranch | null>(null);
-  const [flipped, setFlipped] = useState(submittedColor === "black");
+  const [flipped, setFlipped] = useState(initialColor === "black");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const [prefersReducedMotion] = useState(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -246,15 +250,15 @@ export function ForecastWalkthrough({
     orientation,
     sideToMove,
     opponentUsername,
-    submittedColor,
-  }), [displayedPath, opponentUsername, orientation, replay?.fen, sideToMove, submittedColor]);
+    submittedColor: playerColor,
+  }), [displayedPath, opponentUsername, orientation, playerColor, replay?.fen, sideToMove]);
   const analysisHref = selectedPath.length > 0 && analysisHrefForUciPath
     ? analysisHrefForUciPath(committedReplay?.uci ?? [])
     : null;
   const nextActor = currentBranches[0]?.actor === "opponent" ? "Opponent tendency" : "Your decision";
   const decisionPath = selectedPath.length > 0 ? selectedPath.slice(0, -1) : [];
-  const topIsUser = topColor === submittedColor;
-  const bottomIsUser = bottomColor === submittedColor;
+  const topIsUser = topColor === playerColor;
+  const bottomIsUser = bottomColor === playerColor;
   const topDetail = topIsUser ? "Your side" : opponentRating ? `${opponentRating} rating` : "Opponent";
   const bottomDetail = bottomIsUser ? "Your side" : opponentRating ? `${opponentRating} rating` : "Opponent";
 
@@ -285,6 +289,22 @@ export function ForecastWalkthrough({
           <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#7ED957]" />Opponent move</span>
         </div>
       </header>
+
+      <fieldset className={`mt-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2.5 ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`}>
+        <legend className="sr-only">Your playing color in the Legal Line Explorer</legend>
+        <span className={`mr-1 text-xs font-semibold ${t.textSecondary}`}>Playing</span>
+        {(["white", "black"] as const).map(color => (
+          <button
+            key={color}
+            type="button"
+            aria-pressed={playerColor === color}
+            onClick={() => { setPlayerColor(color); setSelectedPath([]); setPreviewBranch(null); setFlipped(color === "black"); }}
+            className={`min-h-9 rounded-md border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7ED957] ${playerColor === color ? (isDark ? "border-[#7ED957]/55 bg-[#7ED957]/10 text-[#d7ffbc]" : "border-[#5b8c58] bg-[#e5f2df] text-[#234f31]") : (isDark ? "border-white/10 text-white/60 hover:bg-white/[0.05]" : "border-[#c8d8c1] text-[#436850] hover:bg-white")}`}
+          >
+            {color === "white" ? "White" : "Black"}
+          </button>
+        ))}
+      </fieldset>
 
       <div className={`mt-4 flex flex-wrap items-center gap-2 rounded-lg border px-3 py-3 ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`} aria-label="Current legal move sequence">
         {selectedBranches.length > 0 ? selectedBranches.map((branch, index) => (
@@ -370,7 +390,7 @@ export function ForecastWalkthrough({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>Position to practice</p>
-                <p className={`mt-1 text-sm font-semibold ${t.textPrimary}`}>{sideToMove === submittedColor ? "Your move" : "Opponent to move"}</p>
+                <p className={`mt-1 text-sm font-semibold ${t.textPrimary}`}>{sideToMove === playerColor ? "Your move" : "Opponent to move"}</p>
               </div>
               <button type="button" onClick={() => void handleCopyFen()} className={`inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7ED957] ${isDark ? "bg-[#7ED957] text-[#08241a] hover:bg-[#a0e87d]" : "bg-[#315640] text-white hover:bg-[#23482f]"}`}>
                 {copyStatus === "copied" ? <Check aria-hidden="true" className="h-4 w-4" /> : <Copy aria-hidden="true" className="h-4 w-4" />}

@@ -53,19 +53,21 @@ afterEach(() => {
 
 describe("Matchup Prep Standard provider backfill", () => {
   it("uses bounded provider pages while continuing until the eligible target or history exhaustion", () => {
-    expect(SCOUT_PROVIDER_PAGE_SIZE).toBe(100);
+    expect(SCOUT_PROVIDER_PAGE_SIZE).toBe(60);
   });
 
-  it("Lichess paginates past 130 filtered recent games and selects the next 30 eligible games", async () => {
-    const firstPage = Array.from({ length: 100 }, (_, index) => lichessGame(index, false));
-    const secondPage = [
-      ...Array.from({ length: 30 }, (_, index) => lichessGame(index + 100, false)),
-      ...Array.from({ length: 30 }, (_, index) => lichessGame(index + 130, true)),
+  it("Lichess paginates past 150 filtered recent games and selects the next 30 eligible games", async () => {
+    const firstPage = Array.from({ length: 60 }, (_, index) => lichessGame(index, false));
+    const secondPage = Array.from({ length: 60 }, (_, index) => lichessGame(index + 60, false));
+    const thirdPage = [
+      ...Array.from({ length: 30 }, (_, index) => lichessGame(index + 120, false)),
+      ...Array.from({ length: 30 }, (_, index) => lichessGame(index + 150, true)),
     ];
+    let pageIndex = 0;
     const fetchMock = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
-      expect(url).toContain("max=100");
-      const page = url.includes("until=") ? secondPage : firstPage;
+      expect(url).toContain("max=60");
+      const page = [firstPage, secondPage, thirdPage][pageIndex++] ?? [];
       return new Response(page.map(game => JSON.stringify(game)).join("\n"), { status: 200 });
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -73,10 +75,10 @@ describe("Matchup Prep Standard provider backfill", () => {
     const raw = await fetchLichess("backfillplayer", options);
     const report = buildReport("lichess", "backfillplayer", raw, options, "black");
 
-    expect(raw).toHaveLength(160);
+    expect(raw).toHaveLength(180);
     expect(report.dataQuality.parsed).toBe(30);
-    expect(report.dataQuality.excluded.too_short_or_abandoned).toBe(130);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(report.dataQuality.excluded.too_short_or_abandoned).toBe(150);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it("Chess.com walks older archives past 140 filtered games and stops after finding 30 eligible games", async () => {

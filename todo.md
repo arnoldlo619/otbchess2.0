@@ -188,6 +188,18 @@
 - [x] Club Album: Persist uploaded media against the selected album rather than the top-level gallery
 - [x] Club Album: Show uploaded media only after opening its album cover, preserving album grid and lightbox behavior
 - [x] Club Album: Validate album-scoped upload and gallery behavior across owner and mobile flows before checkpointing
+- [x] Product brief: Review the attached implementation requirements against the existing ChessOTB architecture
+- [x] Product brief: Implement the approved, production-ready scope from the attached brief
+- [x] Product brief: Add focused validation, document outcomes, and save a checkpoint
+- [x] Matchup Prep launch: Create an acceptance ledger mapping provider reliability, data integrity, identity, explorer, accessibility, and responsive requirements to code and tests
+- [x] Matchup Prep launch: Add deterministic regressions for bounded provider behavior, typed errors, dates, opening labels, identity, color scope, and legal explorer state
+- [x] Matchup Prep launch: Enforce bounded Chess.com and Lichess pipelines with cancellation, one retry policy, factual staged progress, and typed error recovery
+- [x] Matchup Prep launch: Prevent technical, timeout, abort, or parser errors from being reported as insufficient game history
+- [x] Matchup Prep launch: Preserve immutable provider and format report identity across cache, recent, saved, URL, and export flows
+- [x] Matchup Prep launch: Make date ranges timezone-safe and opening labels demonstrably consistent with displayed legal move prefixes
+- [x] Matchup Prep launch: Preserve dynamic dual-color opponent summary and confine player-color state to Legal Line Explorer only
+- [x] Matchup Prep launch: Verify full-width Legal Line Explorer legal replay, accessibility, themes, and responsive breakpoints
+- [x] Matchup Prep launch: Execute live provider smoke tests, complete the acceptance matrix, and checkpoint only passing release criteria
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

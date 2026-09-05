@@ -72,15 +72,14 @@ describe("Matchup Prep scout controls", () => {
     fireEvent.change(input, { target: { value: "PracticeOpponent" } });
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Lichess" }));
     fireEvent.click(screen.getByRole("menuitemradio", { name: "blitz" }));
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Black" }));
 
     expect(input.getAttribute("aria-label")).toBe("Lichess opponent username");
     expect(screen.getByRole("menuitemradio", { name: "Lichess" }).getAttribute("data-state")).toBe("checked");
     expect(screen.getByRole("menuitemradio", { name: "blitz" }).getAttribute("data-state")).toBe("checked");
-    expect(screen.getByRole("menuitemradio", { name: "Black" }).getAttribute("data-state")).toBe("checked");
+    expect(screen.queryByRole("menuitemradio", { name: "Black" })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Run scout" }));
-    expect(testState.navigate).toHaveBeenCalledWith("/prep/PracticeOpponent?provider=lichess&myColor=black&tc=blitz");
+    expect(testState.navigate).toHaveBeenCalledWith("/prep/PracticeOpponent?provider=lichess&tc=blitz");
   });
 
   it("dismisses the Scout Opponent menu with Escape and restores focus to its trigger", async () => {
@@ -105,8 +104,8 @@ describe("Matchup Prep scout controls", () => {
         reportSnapshot: {
           activeRequest: {
             platform: "chesscom", normalizedUsername: "scouted-player", displayUsername: "scouted-player",
-            myColor: "white", formats: ["rapid", "blitz", "bullet"], mode: "standard", maxGames: 30,
-            schemaVersion: "launch-2", requestedAt: "2026-09-05T00:00:00.000Z",
+            formats: ["rapid", "blitz", "bullet"], mode: "standard", maxGames: 30,
+            schemaVersion: "launch-3", requestedAt: "2026-09-05T00:00:00.000Z",
           },
         },
       }),

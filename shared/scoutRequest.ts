@@ -7,9 +7,10 @@ import type {
   ScoutFormatFilter,
 } from "./prepTypes.js";
 
-export const SCOUT_SCHEMA_VERSION = "launch-2";
+export const SCOUT_SCHEMA_VERSION = "launch-3";
 export const SCOUT_MAX_GAMES = 30 as const;
-export const SCOUT_PROVIDER_PAGE_SIZE = 100 as const;
+/** Limits each provider page to a small bounded batch while still allowing 30 eligible games after filtering. */
+export const SCOUT_PROVIDER_PAGE_SIZE = 60 as const;
 export const SCOUT_ARCHIVE_MONTHS = 24;
 export const ALL_SCOUT_FORMATS: ScoutFormat[] = ["rapid", "blitz", "bullet"];
 
@@ -47,12 +48,12 @@ export function createActiveScoutRequest(
     platform: draft.platform,
     normalizedUsername: normalizeScoutUsername(displayUsername),
     displayUsername,
-    myColor: draft.myColor,
     formats: formatsForFilter(draft.format),
     mode: "standard",
     maxGames: SCOUT_MAX_GAMES,
     schemaVersion: SCOUT_SCHEMA_VERSION,
     requestedAt,
+    ...(draft.explorerColor ?? draft.myColor ? { explorerColor: draft.explorerColor ?? draft.myColor } : {}),
   };
 }
 
@@ -69,7 +70,7 @@ export function activeScoutRequestFromQuery(
   return createActiveScoutRequest({
     platform: readProvider(read("provider") ?? read("platform")),
     displayUsername: username,
-    myColor: readColor(read("myColor") ?? read("color")),
+    explorerColor: readColor(read("explorerColor") ?? read("myColor") ?? read("color")),
     format: readFormat(read("tc") ?? read("format")),
   }, requestedAt);
 }
@@ -77,10 +78,9 @@ export function activeScoutRequestFromQuery(
 export function scoutRequestCacheKey(request: ActiveScoutRequest): string {
   const formatKey = request.formats.join("+");
   return [
-    "v4",
+    "v5",
     request.platform,
     request.normalizedUsername,
-    `c${request.myColor}`,
     `f${formatKey}`,
     `m${request.mode}`,
     `g${request.maxGames}`,
@@ -89,11 +89,12 @@ export function scoutRequestCacheKey(request: ActiveScoutRequest): string {
 }
 
 export function scoutRequestSearchParams(request: ActiveScoutRequest): URLSearchParams {
-  return new URLSearchParams({
+  const params = new URLSearchParams({
     provider: request.platform,
-    myColor: request.myColor,
     tc: formatFilterForFormats(request.formats),
   });
+  if (request.explorerColor) params.set("explorerColor", request.explorerColor);
+  return params;
 }
 
 export function scoutRequestRoute(request: ActiveScoutRequest): string {

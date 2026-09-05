@@ -73,14 +73,14 @@ describe("centralized Matchup Prep evidence policy", () => {
   });
 
   it.each(["opening_tendency", "response_pattern", "weakness", "strength", "deviation_point"] as const)(
-    "makes %s actions explicit for the submitted side",
+    "keeps %s actions opponent-centered without a global playing-color prefix",
     kind => {
-      const whiteAction = buildScoutBrief([insight(kind, "black")], "white", "usable")[0];
-      const blackAction = buildScoutBrief([insight(kind, "white")], "black", "usable")[0];
-      expect(whiteAction.action.label).toMatch(/^With White,/);
-      expect(whiteAction.opponentColor).toBe("black");
-      expect(blackAction.action.label).toMatch(/^With Black,/);
-      expect(blackAction.opponentColor).toBe("white");
+      const blackAction = buildScoutBrief([insight(kind, "black")], "usable")[0];
+      const whiteAction = buildScoutBrief([insight(kind, "white")], "usable")[0];
+      expect(blackAction.action.label).not.toMatch(/^With (White|Black),/);
+      expect(blackAction.opponentColor).toBe("black");
+      expect(whiteAction.action.label).not.toMatch(/^With (White|Black),/);
+      expect(whiteAction.opponentColor).toBe("white");
     },
   );
 });

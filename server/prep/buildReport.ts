@@ -24,9 +24,13 @@ import { sample } from "./facts.js";
 import { runGuards } from "./guards.js";
 import { buildScoutBrief, classifyFreshness, headlineInsightEligible, type ScoutBriefFallback } from "./evidencePolicy.js";
 
-export const ENGINE_VERSION = "4.3.0-observed-moves";
+export const ENGINE_VERSION = "5.0.0-launch-remediation";
 
-const dateOf = (t: number): string => new Date(t * 1000).toISOString().slice(0, 10);
+/** Provider timestamps are UTC instants; render calendar dates explicitly in UTC to avoid local timezone drift. */
+const dateOf = (t: number): string => {
+  const date = new Date(t * 1000);
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+};
 
 function primaryObservedLine(branches: ForecastBranch[]): ForecastBranch | null {
   let branch = branches[0];
@@ -58,6 +62,7 @@ function observedScoutBriefFallback(
     legalLine,
     relevantGames: matchingGames.length,
     totalGames: colorGames.length,
+    reportGames: parsed.length,
     sourceGameIds: matchingGames.map(game => `${game.provider}:${game.url}`),
     evidenceGames: sample(matchingGames),
     evidenceWindow: window,
@@ -89,7 +94,7 @@ export function buildReport(
   username: string,
   raw: RawGame[],
   o: FetchOpts,
-  myColor: Color = "white",
+  _legacyExplorerColor: Color = "white",
 ): ScoutReportV3 {
   const parsedResult = parseGames(raw, username, o);
   const parsed = [...parsedResult.parsed]
@@ -164,14 +169,6 @@ export function buildReport(
     .filter(i => !headlineOK(i) && (i.kind === "weakness" || i.kind === "strength" || i.kind === "response_pattern"))
     .map(i => i.id);
 
-  // Game plan insights for "If You Have White/Black" sections
-  const ifWhite = weaknesses
-    .filter(w => w.color === "black" && headlineOK(w))
-    .concat(strengths.filter(s => s.color === "black" && headlineOK(s)));
-  const ifBlack = weaknesses
-    .filter(w => w.color === "white" && headlineOK(w))
-    .concat(strengths.filter(s => s.color === "white" && headlineOK(s)));
-
   // Prep checklist: top actionable items
   const checklist: ScoutReportV3["sections"]["prepChecklist"] = [
     ...weaknesses.filter(headlineOK).slice(0, 3).map(i => ({
@@ -208,15 +205,14 @@ export function buildReport(
       });
   };
   const summaries = { white: openingSummary("white"), black: openingSummary("black") };
-  const opponentColor: Color = myColor === "white" ? "black" : "white";
-  const fallback = freshness === "stale" ? undefined : observedScoutBriefFallback(
+  const fallbacks = (parsed.length >= 8 && freshness !== "stale" ? (["white", "black"] as const).map(color => observedScoutBriefFallback(
     parsed,
-    opponentColor,
-    forecasts[opponentColor],
-    summaries[opponentColor][0]?.name,
+    color,
+    forecasts[color],
+    summaries[color][0]?.name,
     reportWindow,
-  );
-  const scoutBrief = buildScoutBrief(kept, myColor, freshness, fallback);
+  )).filter((fallback): fallback is ScoutBriefFallback => Boolean(fallback)) : []);
+  const scoutBrief = buildScoutBrief(kept, freshness, fallbacks);
 
   return {
     version: 3,
@@ -252,8 +248,8 @@ export function buildReport(
       strengths: ids(strengths.filter(headlineOK)),
       weaknesses: ids(weaknesses.filter(headlineOK)),
       weakSignals: weakSignalIds,
-      ifYouHaveWhite: ids(ifWhite),
-      ifYouHaveBlack: ids(ifBlack),
+      ifYouHaveWhite: [],
+      ifYouHaveBlack: [],
       deviationPoints: ids(deviations.filter(headlineOK)),
       behavior: ids(behaviors),
       prepChecklist: checklist,
@@ -303,7 +299,7 @@ export function buildCachedPrepAnalysisReport(
   reportCacheKey: string,
   activeRequest: ActiveScoutRequest,
 ): CachedPrepAnalysisReport {
-  const report = buildReport(provider, username, raw, options, activeRequest.myColor);
+  const report = buildReport(provider, username, raw, options);
   const { parsed } = parseGames(raw, username, options);
   const evidenceUrls = new Set(report.insights.flatMap(insight => insight.evidence.games.map(game => game.url)));
   const legalPathMap = new Map<string, string[]>();
@@ -337,7 +333,7 @@ export function buildCachedPrepAnalysisReport(
   const analysisSnapshot: PrepAnalysisSnapshot = {
     schemaVersion: 1,
     reportCacheKey,
-    submittedMyColor: activeRequest.myColor,
+    submittedMyColor: activeRequest.explorerColor ?? "white",
     createdAt,
     evidenceGameKeys,
     sourceGames,

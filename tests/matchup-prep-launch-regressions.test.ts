@@ -27,7 +27,7 @@ describe("Matchup Prep launch blockers before remediation", () => {
     const activeRequest = createActiveScoutRequest({
       platform: "lichess",
       displayUsername: "sameplayer",
-      myColor: "black",
+      explorerColor: "black",
       format: "all",
     }, "2026-08-27T00:00:00.000Z");
     const cached = buildCachedPrepAnalysisReport(
@@ -43,11 +43,10 @@ describe("Matchup Prep launch blockers before remediation", () => {
         platform: "lichess",
         normalizedUsername: "sameplayer",
         displayUsername: "sameplayer",
-        myColor: "black",
         formats: ["rapid", "blitz", "bullet"],
         mode: "standard",
         maxGames: 30,
-        schemaVersion: "launch-2",
+        schemaVersion: "launch-3",
       },
     });
   });
@@ -84,28 +83,30 @@ describe("Matchup Prep launch blockers before remediation", () => {
     expect(quarantined).toBe(0);
   });
 
-  it("MP-05: the shareable route encodes provider, username, color, and format", () => {
-    const activeRequest = createActiveScoutRequest({ platform: "lichess", displayUsername: "SamePlayer", myColor: "black", format: "blitz" });
+  it("MP-05: the shareable route encodes provider, username, format, and optional explorer orientation", () => {
+    const activeRequest = createActiveScoutRequest({ platform: "lichess", displayUsername: "SamePlayer", explorerColor: "black", format: "blitz" });
     const route = scoutRequestRoute(activeRequest);
-    expect(route).toBe("/prep/SamePlayer?provider=lichess&myColor=black&tc=blitz");
+    expect(route).toBe("/prep/SamePlayer?provider=lichess&tc=blitz&explorerColor=black");
     const parsed = activeScoutRequestFromQuery("SamePlayer", new URLSearchParams(route.split("?")[1]), activeRequest.requestedAt);
     expect(parsed).toEqual(activeRequest);
   });
 
   it("MP-05/06: a completed Lichess snapshot, route reload, and recent-history restore cannot resolve to Chess.com", () => {
-    const lichess = createActiveScoutRequest({ platform: "lichess", displayUsername: "SamePlayer", myColor: "black", format: "rapid" });
-    const chesscom = createActiveScoutRequest({ platform: "chesscom", displayUsername: "sameplayer", myColor: "black", format: "rapid" });
+    const lichess = createActiveScoutRequest({ platform: "lichess", displayUsername: "SamePlayer", explorerColor: "black", format: "rapid" });
+    const chesscom = createActiveScoutRequest({ platform: "chesscom", displayUsername: "sameplayer", explorerColor: "black", format: "rapid" });
     expect(scoutRequestRoute(lichess)).toContain("provider=lichess");
     expect(scoutRequestCacheKey(lichess)).not.toBe(scoutRequestCacheKey(chesscom));
     expect(pageSource).toContain("scoutRequestRoute(request)");
     expect(pageSource).toContain("data.reportSnapshot?.activeRequest ?? request");
   });
 
-  it("MP-06: cache identity includes platform, normalized username, color, formats, mode, max games, and schema version", () => {
-    const whiteRapid = createActiveScoutRequest({ platform: "chesscom", displayUsername: "Player", myColor: "white", format: "rapid" });
-    const blackAll = createActiveScoutRequest({ platform: "chesscom", displayUsername: "player", myColor: "black", format: "all" });
-    expect(scoutRequestCacheKey(whiteRapid)).toBe("v4:chesscom:player:cwhite:frapid:mstandard:g30:slaunch-2");
-    expect(scoutRequestCacheKey(blackAll)).toBe("v4:chesscom:player:cblack:frapid+blitz+bullet:mstandard:g30:slaunch-2");
+  it("MP-06: cache identity includes platform, normalized username, formats, mode, max games, and schema version only", () => {
+    const whiteRapid = createActiveScoutRequest({ platform: "chesscom", displayUsername: "Player", explorerColor: "white", format: "rapid" });
+    const blackRapid = createActiveScoutRequest({ platform: "chesscom", displayUsername: "player", explorerColor: "black", format: "rapid" });
+    const blackAll = createActiveScoutRequest({ platform: "chesscom", displayUsername: "player", explorerColor: "black", format: "all" });
+    expect(scoutRequestCacheKey(whiteRapid)).toBe("v5:chesscom:player:frapid:mstandard:g30:slaunch-3");
+    expect(scoutRequestCacheKey(blackRapid)).toBe(scoutRequestCacheKey(whiteRapid));
+    expect(scoutRequestCacheKey(blackAll)).toBe("v5:chesscom:player:frapid+blitz+bullet:mstandard:g30:slaunch-3");
     expect(routeSource).toContain("scoutRequestCacheKey(activeRequest)");
   });
 
@@ -140,7 +141,7 @@ describe("Matchup Prep launch blockers before remediation", () => {
   });
 
   it("MP-14: primary recommendations contain no generic actions or duplicate stable IDs", () => {
-    const report = buildReport("chesscom", "sameplayer", EVIDENCE_FIXTURES.twentyRecent, standardOptions, "black");
+    const report = buildReport("chesscom", "sameplayer", EVIDENCE_FIXTURES.twentyRecent, standardOptions);
     const concreteInsight = report.insights.find(insight => insight.recommendation.line) ?? {
       ...report.insights[0],
       color: "white" as const,
@@ -148,7 +149,7 @@ describe("Matchup Prep launch blockers before remediation", () => {
       sampleSize: 8,
       confidence: "medium" as const,
     };
-    const actions = concreteInsight ? buildScoutBrief([concreteInsight], "black", "usable") : [];
+    const actions = concreteInsight ? buildScoutBrief([concreteInsight], "usable") : [];
     expect(actions.length).toBeGreaterThan(0);
     expect(new Set(actions.map(action => action.id)).size).toBe(actions.length);
     expect(actions.map(action => action.action?.label ?? "").join(" ")).not.toMatch(/know your setup|play solidly|prepare your main line|be ready for alternatives|rehearse to move 10/i);
@@ -160,7 +161,7 @@ describe("Matchup Prep launch blockers before remediation", () => {
   });
 
   it("MP-15: Standard is the only launch mode rather than the same report under a Deep label", () => {
-    const request = createActiveScoutRequest({ platform: "chesscom", displayUsername: "player", myColor: "white", format: "all" });
+    const request = createActiveScoutRequest({ platform: "chesscom", displayUsername: "player", format: "all" });
     expect(request).toMatchObject({ mode: "standard", maxGames: 30 });
     expect(pageSource).not.toMatch(/gc === "50" \? "Standard" : "Deep"/);
     expect(pageSource).not.toMatch(/\["50", "100"\]/);

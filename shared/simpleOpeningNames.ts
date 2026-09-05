@@ -109,6 +109,15 @@ export function familiarOpeningNameFromMoves(
   if (/^e4 e5 Nf3 Nc6 Bb5\b/.test(sequence)) return "Ruy Lopez";
   if (/^e4 e5 Nf3 Nc6 Bc4\b/.test(sequence)) return "Italian Game";
 
+  // A provider/ECO label can overstate what the visible short prefix proves.
+  // Keep these labels neutral until the displayed legal moves establish a
+  // familiar opening family rather than presenting a conflicting name.
+  if (moves.length >= 4) {
+    const lastIndex = moves.length - 1;
+    const moveNumber = Math.floor(lastIndex / 2) + 1;
+    return `Common position after ${moveNumber}${lastIndex % 2 ? "..." : "."}${moves[lastIndex]}`;
+  }
+
   const name = simpleOpeningName(rawName, eco, moves[0]);
   if (name === "Queen's Pawn Opening") return "1.d4 opening";
   if (name === "Modern Defense") return "1...g6 defense";

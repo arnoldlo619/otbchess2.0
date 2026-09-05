@@ -12,20 +12,24 @@ export type ScoutFreshness = "strong" | "usable" | "limited" | "stale";
 export interface DraftScoutRequest {
   platform: Provider;
   displayUsername: string;
-  myColor: Color;
   format: ScoutFormatFilter;
+  /** Optional UI preference for the Legal Line Explorer only. */
+  explorerColor?: Color;
+  /** @deprecated Legacy input accepted only while old URLs are migrated. */
+  myColor?: Color;
 }
 
 export interface ActiveScoutRequest {
   platform: Provider;
   normalizedUsername: string;
   displayUsername: string;
-  myColor: Color;
   formats: ScoutFormat[];
   mode: ScoutMode;
   maxGames: 30;
   schemaVersion: string;
   requestedAt: string;
+  /** Optional UI preference. It is intentionally excluded from report identity. */
+  explorerColor?: Color;
 }
 
 export interface ScoutReportSnapshot {
@@ -227,6 +231,10 @@ export interface FetchOpts {
   months: number;         // provider archive lookback
   timeClasses: string[];  // rapid, blitz, and/or bullet
   ratedOnly: boolean;     // default true
+  /** Server-only absolute deadline for the complete provider pipeline. */
+  deadlineAt?: number;
+  /** Propagated when the browser ends an in-flight scout request. */
+  signal?: AbortSignal;
 }
 
 export const DEFAULT_FETCH_OPTS: FetchOpts = {
@@ -238,12 +246,14 @@ export const DEFAULT_FETCH_OPTS: FetchOpts = {
 
 /** Structured error payloads from /api/prep/:username */
 export type PrepErrorCode =
-  | "invalid_username"
-  | "not_found"
-  | "no_recent_games"
-  | "all_filtered"
-  | "upstream_rate_limited"
-  | "upstream_timeout";
+  | "INVALID_USERNAME"
+  | "PLAYER_NOT_FOUND"
+  | "NO_ELIGIBLE_GAMES"
+  | "ALL_GAMES_FILTERED"
+  | "UPSTREAM_RATE_LIMITED"
+  | "UPSTREAM_TIMEOUT"
+  | "UPSTREAM_UNAVAILABLE"
+  | "REQUEST_CANCELLED";
 
 export interface PrepErrorPayload {
   error: PrepErrorCode;
@@ -384,6 +394,7 @@ export interface AnalysisSnapshotGame {
 export interface PrepAnalysisSnapshot {
   schemaVersion: 1;
   reportCacheKey: string;
+  /** Legacy default orientation retained for old analysis links only. */
   submittedMyColor: Color;
   createdAt: string;
   evidenceGameKeys: string[];

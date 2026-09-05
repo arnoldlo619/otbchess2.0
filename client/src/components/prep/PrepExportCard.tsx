@@ -25,7 +25,6 @@ function titleCase(value: string): string {
 export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
   if (!report.reportSnapshot) return null;
   const view = projectScoutReport(report);
-  const request = view.snapshot.activeRequest;
   const generated = new Date(view.snapshot.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const avgRating = view.opponent.avgRating;
   const summaryStats = [["Avg rating", avgRating ?? "Not available"]] as const;
@@ -45,7 +44,7 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <p style={{ margin: 0, color: COLORS.secondary, fontSize: 13 }}>{view.opponent.provider === "lichess" ? "Lichess" : "Chess.com"} · You play {titleCase(request.myColor)}</p>
+          <p style={{ margin: 0, color: COLORS.secondary, fontSize: 13 }}>{view.opponent.provider === "lichess" ? "Lichess" : "Chess.com"} · Opponent overview</p>
           <p style={{ margin: "5px 0 0", color: COLORS.tertiary, fontSize: 11 }}>{view.gamesAnalyzed} games · {titleCase(view.freshness)} evidence</p>
         </div>
       </header>

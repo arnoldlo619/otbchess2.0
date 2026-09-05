@@ -4,7 +4,7 @@ import { describePrepError } from "../client/src/lib/prepErrorPresentation";
 describe("describePrepError", () => {
   it("makes a provider 404 explicit and avoids irrelevant retry controls", () => {
     const state = describePrepError({
-      code: "not_found",
+      code: "PLAYER_NOT_FOUND",
       username: "Pircunset",
       provider: "chesscom",
     });
@@ -17,7 +17,7 @@ describe("describePrepError", () => {
 
   it("keeps an upstream outage retryable and provider-specific", () => {
     const state = describePrepError({
-      code: "upstream_unavailable",
+      code: "UPSTREAM_UNAVAILABLE",
       username: "example",
       provider: "lichess",
     });

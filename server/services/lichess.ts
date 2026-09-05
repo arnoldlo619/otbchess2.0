@@ -45,19 +45,25 @@ function normalizeLichess(g: LichessApiGame): RawGame {
 }
 
 /** One process-wide Lichess lane: concurrency 1, 429 cooldown, deadline. */
-export async function scheduleLichessRequest(url: string, init: RequestInit = {}, timeoutMs = 12_000): Promise<Response> {
+export async function scheduleLichessRequest(url: string, init: RequestInit = {}, timeoutMs = 12_000, outerSignal?: AbortSignal): Promise<Response> {
   let release: (() => void) | undefined;
   const previous = requestTail;
   requestTail = new Promise<void>(resolve => { release = resolve; });
   await previous.catch(() => undefined);
   try {
+    if (outerSignal?.aborted) throw new Error("RequestCancelled: lichess");
     if (cooldownUntil !== null && Date.now() < cooldownUntil) {
       throw new Error(`LichessRateLimited: cooldown until ${new Date(cooldownUntil).toISOString()}`);
     }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const abortOuter = () => controller.abort();
+    outerSignal?.addEventListener("abort", abortOuter, { once: true });
+    try {
     const response = await fetch(url, {
       ...init,
       headers: { "User-Agent": UA, ...(init.headers ?? {}) },
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: controller.signal,
     });
     if (response.status === 429) {
       const retryAfterSeconds = Number.parseInt(response.headers.get("Retry-After") ?? "60", 10);
@@ -65,6 +71,14 @@ export async function scheduleLichessRequest(url: string, init: RequestInit = {}
       throw new Error(`LichessRateLimited: 429 from ${url}`);
     }
     return response;
+    } catch (error) {
+      if (outerSignal?.aborted) throw new Error("RequestCancelled: lichess", { cause: error });
+      if (controller.signal.aborted) throw new Error("UpstreamTimeout: lichess", { cause: error });
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+      outerSignal?.removeEventListener("abort", abortOuter);
+    }
   } finally {
     release?.();
   }
@@ -80,13 +94,11 @@ export function resetLichessSchedulerForTests(): void {
   requestTail = Promise.resolve();
 }
 
-async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Promise<Response> {
+async function fetchWithRetry(url: string, init: RequestInit, timeoutMs: number, outerSignal?: AbortSignal, retries = 2): Promise<Response> {
   let lastError: unknown;
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      // Public user exports can be slow for prolific players. Keep a bounded
-      // deadline, but avoid treating a normal large NDJSON response as a fault.
-      return await scheduleLichessRequest(url, init, 30_000);
+      return await scheduleLichessRequest(url, init, timeoutMs, outerSignal);
     } catch (error) {
       lastError = error;
       if (error instanceof Error && error.message.startsWith("LichessRateLimited:")) throw error;
@@ -97,21 +109,30 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Prom
 }
 
 export async function fetchLichess(username: string, options: FetchOpts): Promise<RawGame[]> {
+  const deadlineAt = options.deadlineAt ?? Date.now() + 30_000;
+  const requestTimeout = () => {
+    if (options.signal?.aborted) throw new Error("RequestCancelled: lichess");
+    const remaining = deadlineAt - Date.now();
+    if (remaining < 250) throw new Error("UpstreamTimeout: lichess");
+    return Math.min(12_000, remaining);
+  };
   const perf = options.timeClasses.join(",");
   const out: RawGame[] = [];
+  let eligibleCount = 0;
   let until: number | null = null;
 
   while (true) {
     const pagination = until === null ? "" : `&until=${until}`;
     const url = `https://lichess.org/api/games/user/${username}?max=${SCOUT_PROVIDER_PAGE_SIZE}&rated=${options.ratedOnly}&perfType=${perf}&moves=true&opening=false${pagination}`;
-    const response = await fetchWithRetry(url, { headers: { Accept: "application/x-ndjson" } });
+    const response = await fetchWithRetry(url, { headers: { Accept: "application/x-ndjson" } }, requestTimeout(), options.signal);
     if (response.status === 404) throw new Error(`PlayerNotFound: ${username}`);
     if (!response.ok) throw new Error(`Upstream${response.status}`);
     const lines = (await response.text()).trim().split("\n").filter(Boolean);
     if (!lines.length) break;
     const page = lines.map(line => normalizeLichess(JSON.parse(line) as LichessApiGame));
     out.push(...page);
-    if (parseGames(out, username, options).parsed.length >= options.maxGames) break;
+    eligibleCount += parseGames(page, username, options).parsed.length;
+    if (eligibleCount >= options.maxGames) break;
     if (page.length < SCOUT_PROVIDER_PAGE_SIZE) break;
     const oldestMillis = Math.min(...page.map(game => game.endTime * 1000).filter(Number.isFinite));
     if (!Number.isFinite(oldestMillis) || oldestMillis <= 0) break;

@@ -72,19 +72,29 @@ export async function fetchWithRetry(
   opts: RequestInit,
   retries = 2,
   timeoutMs = 10_000,
+  outerSignal?: AbortSignal,
 ): Promise<Response> {
+  const throwIfCancelled = () => {
+    if (outerSignal?.aborted) throw new Error("RequestCancelled: chess.com");
+  };
   for (let attempt = 0; attempt < retries; attempt++) {
+    throwIfCancelled();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const abortOuter = () => controller.abort();
+    outerSignal?.addEventListener("abort", abortOuter, { once: true });
     try {
       const res = await fetch(url, { ...opts, signal: controller.signal });
       if (res.status === 429) {
-        // Rate limited — wait and retry
-        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+        if (attempt === retries - 1) throw new Error("UpstreamRateLimited: chess.com");
+        // One bounded retry is enough to avoid retry storms.
+        await new Promise(r => setTimeout(r, Math.min(2_000 * (attempt + 1), Math.max(0, timeoutMs - 50))));
         continue;
       }
       return res;
     } catch (err) {
+      if (outerSignal?.aborted) throw new Error("RequestCancelled: chess.com", { cause: err });
+      if (err instanceof Error && err.message.startsWith("UpstreamRateLimited:")) throw err;
       if (attempt === retries - 1) {
         if (controller.signal.aborted) throw new Error("UpstreamTimeout: chess.com", { cause: err });
         throw new Error("UpstreamRequestFailed: chess.com", { cause: err });
@@ -92,15 +102,27 @@ export async function fetchWithRetry(
       await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
     } finally {
       clearTimeout(timeout);
+      outerSignal?.removeEventListener("abort", abortOuter);
     }
   }
-  throw new Error("MaxRetriesExceeded");
+  throw new Error("UpstreamRequestFailed: chess.com");
 }
 
 export async function fetchChesscom(username: string, o: FetchOpts): Promise<RawGame[]> {
+  const deadlineAt = o.deadlineAt ?? Date.now() + 30_000;
+  const remainingMs = () => Math.max(0, deadlineAt - Date.now());
+  const requestTimeout = () => {
+    if (o.signal?.aborted) throw new Error("RequestCancelled: chess.com");
+    const remaining = remainingMs();
+    if (remaining < 250) throw new Error("UpstreamTimeout: chess.com");
+    return Math.min(10_000, remaining);
+  };
   const archRes = await fetchWithRetry(
     `https://api.chess.com/pub/player/${username.toLowerCase()}/games/archives`,
-    { headers: { "User-Agent": UA } }
+    { headers: { "User-Agent": UA } },
+    2,
+    requestTimeout(),
+    o.signal,
   );
   if (archRes.status === 404) throw new Error(`PlayerNotFound: ${username}`);
   if (archRes.status === 429) throw new Error(`UpstreamRateLimited: chess.com`);
@@ -114,15 +136,16 @@ export async function fetchChesscom(username: string, o: FetchOpts): Promise<Raw
   if (!months.length) throw new Error(`NoRecentGames: ${username}`);
 
   const out: RawGame[] = [];
+  let eligibleCount = 0;
   for (const url of months) {
-    const res = await fetchWithRetry(url, { headers: { "User-Agent": UA } });
+    const res = await fetchWithRetry(url, { headers: { "User-Agent": UA } }, 2, requestTimeout(), o.signal);
     if (!res.ok) continue;
     const monthPayload = asRecord(await res.json());
     const games = Array.isArray(monthPayload.games) ? monthPayload.games : [];
-    for (const game of [...games].reverse()) {
-      out.push(normalizeChesscom(game));
-    }
-    if (parseGames(out, username, o).parsed.length >= o.maxGames) break;
+    const page = [...games].reverse().map(normalizeChesscom);
+    out.push(...page);
+    eligibleCount += parseGames(page, username, o).parsed.length;
+    if (eligibleCount >= o.maxGames) break;
   }
   if (!out.length) throw new Error(`NoRecentGames: ${username}`);
   return out;

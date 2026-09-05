@@ -16,7 +16,8 @@ describe("Matchup Prep submit action", () => {
     expect(source).toMatch(/aria-label="Scout opponent filters"[\s\S]*?>[\s\S]*?Scout opponent[\s\S]*?<ChevronDown/);
     expect(source).toContain("<DropdownMenuRadioGroup value={provider}");
     expect(source).toContain("<DropdownMenuRadioGroup value={tcFilter}");
-    expect(source).toContain("<DropdownMenuRadioGroup value={myColor}");
+    expect(source).not.toContain("<DropdownMenuRadioGroup value={myColor}");
+    expect(source).toContain("explorerColor");
     expect(source).toContain('form="scout-opponent-form"');
   });
 

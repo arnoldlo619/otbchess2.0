@@ -277,8 +277,9 @@ export default function MatchupPrep() {
   const [searchInput, setSearchInput] = useState(params.username || "");
   const [report, setReport] = useState<PrepReport | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ code: PrepErrorPayload["error"]; message: string } | null>(null);
   const reportRequestIdRef = useRef(0);
+  const reportAbortRef = useRef<AbortController | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("scout");
 
@@ -300,10 +301,6 @@ export default function MatchupPrep() {
   // Time-control filter for prep report
   type TcFilter = ScoutFormatFilter;
   const [tcFilter, setTcFilter] = useState<TcFilter>("all");
-
-  // My color — canonical color perspective (which side the user is playing)
-  type MyColor = "white" | "black";
-  const [myColor, setMyColor] = useState<MyColor>("white");
 
   // Export state
   const [exportLoading, setExportLoading] = useState<"png" | "pdf" | null>(null);
@@ -427,15 +424,18 @@ export default function MatchupPrep() {
       const request = activeScoutRequestFromQuery(params.username, new URLSearchParams(window.location.search));
       setSearchInput(request.displayUsername);
       setProvider(request.platform);
-      setMyColor(request.myColor);
       setTcFilter(formatFilterForFormats(request.formats));
       void fetchReport(request);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.username, location]);
+
+  useEffect(() => () => reportAbortRef.current?.abort(), []);
 
   async function fetchReport(request: ActiveScoutRequest, refresh = false) {
     const requestId = ++reportRequestIdRef.current;
+    reportAbortRef.current?.abort();
+    const controller = new AbortController();
+    reportAbortRef.current = controller;
     setActiveScoutRequest(request);
     if (refresh) {
       setRefreshing(true);
@@ -451,18 +451,21 @@ export default function MatchupPrep() {
         query.set("schema", "3");
         if (refresh) query.set("refresh", "true");
         const url = `/api/prep/${encodeURIComponent(request.displayUsername)}?${query.toString()}`;
-        const res = await authFetch(url);
+        const res = await authFetch(url, { signal: controller.signal });
         if (!res.ok) {
-          const data: PrepErrorPayload = await res.json().catch(() => ({ error: "all_filtered", message: "Unknown error" }));
-          const friendlyMsg: Record<string, string> = {
-            invalid_username: "Username must be 2–50 characters.",
-            not_found: `Player "${request.displayUsername}" was not found on ${request.platform === "lichess" ? "Lichess" : "chess.com"}.`,
-            no_recent_games: `No eligible ${formatFilterForFormats(request.formats) === "all" ? "Rapid, Blitz, or Bullet" : formatFilterForFormats(request.formats)} games found for "${request.displayUsername}".`,
-            all_filtered: `All eligible games for "${request.displayUsername}" were filtered out. Try switching to All formats.`,
-            upstream_rate_limited: "The chess provider is rate-limiting requests. Please try again in a minute.",
-            upstream_timeout: "The chess provider took too long to respond. Please retry your report.",
+          const data: PrepErrorPayload = await res.json().catch(() => ({ error: "UPSTREAM_UNAVAILABLE", message: "Unknown error" }));
+          const friendlyMsg: Record<PrepErrorPayload["error"], string> = {
+            INVALID_USERNAME: "Username must be 2–50 characters.",
+            PLAYER_NOT_FOUND: `Player "${request.displayUsername}" was not found on ${request.platform === "lichess" ? "Lichess" : "chess.com"}.`,
+            NO_ELIGIBLE_GAMES: `No eligible ${formatFilterForFormats(request.formats) === "all" ? "Rapid, Blitz, or Bullet" : formatFilterForFormats(request.formats)} games found for "${request.displayUsername}".`,
+            ALL_GAMES_FILTERED: `All eligible games for "${request.displayUsername}" were filtered out.`,
+            UPSTREAM_RATE_LIMITED: "The chess provider is rate-limiting requests. Please try again in a minute.",
+            UPSTREAM_TIMEOUT: "The chess provider took too long to respond. Please retry your report.",
+            UPSTREAM_UNAVAILABLE: "The chess provider is temporarily unavailable. Please retry your report.",
+            REQUEST_CANCELLED: "The scout request was cancelled.",
           };
-          throw new Error(friendlyMsg[data.error] ?? data.message ?? `Error ${res.status}`);
+          setError({ code: data.error, message: friendlyMsg[data.error] ?? data.message ?? `Error ${res.status}` });
+          return;
         }
         const data: ScoutReportV3 = await res.json();
         if (requestId !== reportRequestIdRef.current) return;
@@ -472,15 +475,17 @@ export default function MatchupPrep() {
         const updated = addRecentlyScouted({
           username: completedRequest.displayUsername,
           provider: completedRequest.platform,
-          myColor: completedRequest.myColor,
+          myColor: completedRequest.explorerColor ?? "white",
           tcFilter: formatFilterForFormats(completedRequest.formats),
         });
         setRecentlyScouted(updated);
     } catch (err: unknown) {
       if (requestId !== reportRequestIdRef.current) return;
-      setError(err instanceof Error ? err.message : "Failed to fetch prep report");
+      if (controller.signal.aborted) return;
+      setError({ code: "UPSTREAM_UNAVAILABLE", message: err instanceof Error ? err.message : "Failed to fetch prep report" });
     } finally {
       if (requestId === reportRequestIdRef.current) {
+        reportAbortRef.current = null;
         setLoading(false);
         setRefreshing(false);
       }
@@ -554,7 +559,7 @@ export default function MatchupPrep() {
     e.preventDefault();
     const u = searchInput.trim();
     if (!u) return;
-    const request = createActiveScoutRequest({ platform: provider, displayUsername: u, myColor, format: tcFilter });
+    const request = createActiveScoutRequest({ platform: provider, displayUsername: u, format: tcFilter });
     const route = scoutRequestRoute(request);
     const sameRoute = `${window.location.pathname}${window.location.search}` === route;
     if (sameRoute) {
@@ -749,12 +754,6 @@ export default function MatchupPrep() {
                     </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-[#d8e1d3]"} />
-                <DropdownMenuLabel className={`px-2 py-2 text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>I’m playing</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={myColor} onValueChange={(value) => setMyColor(value as "white" | "black")} className="grid grid-cols-2 gap-1 px-1 pb-3">
-                  <DropdownMenuRadioItem value="white" onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm">White</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="black" onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm">Black</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
                 <button
                   type="submit"
                   form="scout-opponent-form"
@@ -801,16 +800,17 @@ export default function MatchupPrep() {
         {/* ── Error State (detailed, requirement 11) ── */}
         {error && !loading && (
           <PrepErrorState
-            error={error}
+            error={error.message}
+            errorCode={error.code}
             username={searchInput}
             provider={provider}
             onRetry={() => {
-              const request = createActiveScoutRequest({ platform: provider, displayUsername: searchInput, myColor, format: tcFilter });
+              const request = createActiveScoutRequest({ platform: provider, displayUsername: searchInput, format: tcFilter });
               void fetchReport(request);
             }}
             onUseAllFormats={() => {
               setTcFilter("all");
-              const request = createActiveScoutRequest({ platform: provider, displayUsername: searchInput, myColor, format: "all" });
+              const request = createActiveScoutRequest({ platform: provider, displayUsername: searchInput, format: "all" });
               void fetchReport(request);
             }}
             isDark={isDark}
@@ -909,13 +909,12 @@ export default function MatchupPrep() {
             onSelect={(entry) => {
               setSearchInput(entry.username);
               setProvider(entry.provider);
-              setMyColor(entry.myColor === "black" ? "black" : "white");
               setTcFilter(entry.tcFilter);
               const request = createActiveScoutRequest({
                 platform: entry.provider,
                 displayUsername: entry.username,
-                myColor: entry.myColor,
                 format: entry.tcFilter,
+                explorerColor: entry.myColor === "black" ? "black" : "white",
               });
               navigate(scoutRequestRoute(request));
             }}
@@ -1944,21 +1943,6 @@ function EnginePatternSection({ enginePatterns, isDark, t }: {
   );
 }
 
-function OpeningRow({ name, winRate, count, isDark, t }: { name: string; winRate: number; count: number; isDark: boolean; t: Tokens }) {
-  const wr = Math.round(winRate * 100);
-  return (
-    <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
-      <span className={`text-xs truncate ${t.textSecondary}`}>{name}</span>
-      <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-xs ${t.textTertiary}`}>{count}g</span>
-        <span className={`text-xs font-semibold ${wr >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : wr < 40 ? (isDark ? "text-red-400" : "text-red-500") : t.textTertiary}`}>
-          {wr}%
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function _EndgameBar({ profile, isDark, t }: { profile: { checkmates: number; resignations: number; timeouts: number; draws: number; total: number }; isDark: boolean; t: Tokens }) {
   if (profile.total === 0) return <p className={`text-xs ${t.textTertiary}`}>No endgame data</p>;
   const matePct = Math.round((profile.checkmates / profile.total) * 100);
@@ -2319,58 +2303,12 @@ function PracticeBoardTab({
 
 // ── Shared Components ─────────────────────────────────────────────────────────
 
-// ── Premium Loading State (requirement 11) ───────────────────────────────────────────────────────────────────────────
-function PrepLoadingState({ username, isDark, t }: { username: string; isDark: boolean; t: Tokens }) {
-  const [step, setStep] = useState(0);
-  const steps = [
-    "Fetching recent games…",
-    "Classifying openings…",
-    "Finding targetable weaknesses…",
-    "Building your prep plan…",
-  ];
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStep(s => Math.min(s + 1, steps.length - 1));
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [steps.length]);
-  return (
-    <div className={`${t.card} py-16 flex flex-col items-center gap-5`}>
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-        isDark ? "bg-[#162018]" : "bg-[#436850]/06"
-      }`}>
-        <Loader2 className="w-7 h-7 text-[#5B9A6A] animate-spin" />
-      </div>
-      <div className="text-center space-y-2 max-w-xs">
-        <p className={`text-sm font-semibold ${t.textPrimary}`}>Scouting {username}</p>
-        <div className="space-y-1.5">
-          {steps.map((s, i) => (
-            <div key={i} className={`flex items-center gap-2 justify-center transition-all duration-500 ${
-              i < step ? "opacity-40" : i === step ? "opacity-100" : "opacity-20"
-            }`}>
-              {i < step ? (
-                <span className="text-[#5B9A6A] text-xs">&#10003;</span>
-              ) : i === step ? (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#5B9A6A] animate-pulse inline-block" />
-              ) : (
-                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-20 inline-block" />
-              )}
-              <span className={`text-xs ${
-                i === step ? t.textSecondary : t.textTertiary
-              }`}>{s}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Detailed Error State (requirement 11) ───────────────────────────────────────────────────────────────────────────
 function PrepErrorState({
-  error, username, provider, onRetry, onUseAllFormats, isDark, t
+  error, errorCode, username, provider, onRetry, onUseAllFormats, isDark, t
 }: {
   error: string;
+  errorCode?: PrepErrorPayload["error"];
   username: string;
   provider: "chesscom" | "lichess";
   onRetry: () => void;
@@ -2379,7 +2317,7 @@ function PrepErrorState({
   t: Tokens;
 }) {
   const presentation = describePrepError({
-    code: derivePrepErrorCode(error),
+    code: errorCode ?? derivePrepErrorCode(error),
     username,
     provider,
   });
