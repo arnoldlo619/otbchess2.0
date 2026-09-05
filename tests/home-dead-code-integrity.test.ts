@@ -35,4 +35,10 @@ describe("Home dead-code integrity", () => {
     expect(homeSource).toContain("<PlayerDemo />");
     expect(homeSource).toContain("<CTASection onCreateTournament={openTournamentWizard} />");
   });
+
+  it("keeps the ChessOTB tools message and Matchup Prep study-glasses visual", () => {
+    expect(homeSource).toContain("Manage your Club and Tournaments with our Suite of ChessOTB Tools");
+    expect(homeSource).toContain('icon={<Glasses aria-hidden="true"');
+    expect(homeSource).not.toContain('icon={<Brain className="w-4 h-4" />}');
+  });
 });

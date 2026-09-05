@@ -182,6 +182,9 @@
 - [x] Matchup Prep: Verify the corrected move perspective and responsive visual treatment before checkpointing
 - [x] Matchup Prep: Surface the opponent’s real provider profile image in the Scout Report header with an accessible fallback
 - [x] Matchup Prep: Verify profile-image data propagation, header layout, and responsive presentation before checkpointing
+- [x] Home: Verify the updated ChessOTB tools ecosystem supporting copy for hierarchy and responsive wrapping
+- [x] Home: Replace the stale Matchup Prep visual target with a polished glasses study icon and accessible label
+- [x] Home: Validate the updated ecosystem section on desktop and mobile before checkpointing
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

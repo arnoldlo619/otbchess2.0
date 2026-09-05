@@ -8,8 +8,8 @@ describe("landing page editorial punctuation", () => {
     expect(home).not.toContain("—");
   });
 
-  it("keeps the mobile sign-up message concise without em-dash construction", () => {
+  it("keeps the current tournament sign-up message concise without em-dash construction", () => {
     const home = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
-    expect(home).toContain("Sign up with chess.com username. Pairings are generated automatically.");
+    expect(home).toContain("Players Sign Up with Chess.com Username");
   });
 });

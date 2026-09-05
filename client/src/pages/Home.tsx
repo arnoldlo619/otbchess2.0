@@ -55,7 +55,7 @@ import {
   Ghost,
   LayoutDashboard,
   BookOpen,
-  Brain,
+  Glasses,
   GraduationCap,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
@@ -1369,7 +1369,7 @@ function Features() {
             needs in one ecosystem.
           </h2>
           <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${isDark ? "text-white/55" : "text-[#436850]"}`}>
-            Tournaments, clubs, leagues, and match prep. One platform built for OTB chess.
+            Manage your Club and Tournaments with our Suite of ChessOTB Tools
           </p>
         </div>
 
@@ -1425,7 +1425,7 @@ function Features() {
             description="AI-powered scouting report: openings, problem lines, and blunder patterns from their chess.com history before you sit down."
             cta="Try Scout Report"
             href="/prep"
-            icon={<Brain className="w-4 h-4" />}
+            icon={<Glasses aria-hidden="true" className="h-[18px] w-[18px] drop-shadow-[0_2px_4px_rgba(124,245,98,0.24)]" strokeWidth={1.9} />}
             isDark={isDark}
             inView={inView}
             delay={320}
