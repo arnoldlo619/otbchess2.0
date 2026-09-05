@@ -47,6 +47,16 @@ import { authFetch } from "@/lib/apiFetch";
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { V3ScoutReportTab } from "@/components/prep/V3ScoutReportTab";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { ActiveScoutRequest, Provider, ScoutFormatFilter, ScoutReportV3, PrepErrorPayload } from "../../../shared/prepTypes";
 import {
   activeScoutRequestFromQuery,
@@ -286,7 +296,6 @@ export default function MatchupPrep() {
   const [provider, setProvider] = useState<Provider>("chesscom");
   const [reportV3, setReportV3] = useState<ScoutReportV3 | null>(null);
   const [activeScoutRequest, setActiveScoutRequest] = useState<ActiveScoutRequest | null>(null);
-  const [showScoutControls, setShowScoutControls] = useState(true);
 
   // Time-control filter for prep report
   type TcFilter = ScoutFormatFilter;
@@ -460,7 +469,6 @@ export default function MatchupPrep() {
         setReportV3(data);
         const completedRequest = data.reportSnapshot?.activeRequest ?? request;
         setActiveScoutRequest(completedRequest);
-        setShowScoutControls(false);
         const updated = addRecentlyScouted({
           username: completedRequest.displayUsername,
           provider: completedRequest.platform,
@@ -619,215 +627,153 @@ export default function MatchupPrep() {
     <div className={`min-h-screen ${t.page}`}>
 
       {/* ── Sticky Header ── */}
-      <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
-        {/* Nav bar row */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
+      <div data-testid="matchup-prep-topbar" className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-3 py-2 sm:px-6">
           <NavLogo />
-          <div className="flex items-center gap-2">
-            <AvatarNavDropdown />
-          </div>
-        </div>
-        {/* Search row */}
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
-          {reportV3 && !showScoutControls ? (
-            <div className={`flex min-h-[42px] flex-1 items-center justify-between gap-3 rounded-xl border px-3 ${isDark ? "border-[#25342a] bg-[#0d1a0f]" : "border-[#d8e1d3] bg-white"}`}>
-              <div className="min-w-0">
-                <p className={`truncate text-sm font-semibold ${t.textPrimary}`}>{reportV3.opponent.username}</p>
-                <p className={`truncate text-[11px] ${t.textTertiary}`}>{reportV3.reportSnapshot?.activeRequest.platform === "lichess" ? "Lichess" : "Chess.com"} · You play {reportV3.reportSnapshot?.activeRequest.myColor === "black" ? "Black" : "White"}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowScoutControls(true)}
-                className={`inline-flex min-h-10 shrink-0 items-center rounded-lg px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] ${isDark ? "bg-[#436850]/20 text-[#a7d8b1] hover:bg-[#436850]/30" : "bg-[#e8f0e5] text-[#23482f] hover:bg-[#dce9d8]"}`}
-              >
-                Update scout
-              </button>
-            </div>
-          ) : (
-          <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
-              <input
-                type="text"
-                aria-label={provider === "lichess" ? "Lichess opponent username" : "Chess.com opponent username"}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
-                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
-                autoComplete="off"
-                autoCapitalize="none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!searchInput.trim() || loading}
-              className={`group relative inline-flex min-h-[42px] shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl border px-4 py-2 text-sm font-semibold tracking-[-0.01em] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] focus-visible:ring-offset-2 active:scale-[0.98] ${
-                searchInput.trim() && !loading
-                  ? isDark
-                    ? "border-[#8dcc9b]/40 bg-[linear-gradient(135deg,#4d8060_0%,#355f45_100%)] text-white shadow-[0_5px_18px_rgba(22,58,33,0.34)] hover:-translate-y-px hover:border-[#b7e3c0]/65 hover:shadow-[0_9px_24px_rgba(22,58,33,0.46)]"
-                    : "border-[#315640] bg-[linear-gradient(135deg,#4e805d_0%,#365f44_100%)] text-white shadow-[0_4px_14px_rgba(43,79,52,0.22)] hover:-translate-y-px hover:border-[#23432f] hover:shadow-[0_8px_20px_rgba(43,79,52,0.3)]"
-                  : isDark ? "cursor-not-allowed border-white/5 bg-white/[0.045] text-white/25 shadow-none" : "cursor-not-allowed border-[#ADBC9F]/35 bg-[#ADBC9F]/35 text-[#436850]/50 shadow-none"
-              }`}
-              aria-label="Scout opponent"
-              aria-busy={loading}
-            >
-              {loading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Building report</>
-              ) : (
-                <><span>Scout opponent</span><ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" /></>
-              )}
-            </button>
-          </form>
-          )}
-
-          {/* Action buttons — only when report is loaded */}
-          {(report || reportV3) && (
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                    onClick={() => {
-                      const completedRequest = reportV3?.reportSnapshot?.activeRequest ?? activeScoutRequest;
-                      if (completedRequest) void fetchReport({ ...completedRequest, requestedAt: new Date().toISOString() }, true);
-                    }}
-                disabled={refreshing}
-                className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                  isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]"
-                }`}
-                title="Refresh report"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              </button>
-              {user && (
-                <button
-                  onClick={savedId ? () => setShowSavedPanel(p => !p) : handleSaveReport}
-                  disabled={saving}
-                  className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                    savedId
-                      ? isDark ? "text-[#5B9A6A] hover:bg-[#436850]/10" : "text-[#436850] hover:bg-[#436850]/08"
-                      : isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]"
-                  }`}
-                  title={savedId ? "Saved — view saved reports" : "Save this report"}
-                >
-                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedId ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
-                </button>
-              )}
-              {/* Export dropdown */}
-              {reportV3 && (
-                <div className="relative group">
-                  <button
-                    className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                      isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-[#ADBC9F]/50 text-[#436850] hover:text-[#436850]"
-                    }`}
-                    title="Export report"
-                    disabled={exportLoading !== null}
-                  >
-                    {exportLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                  </button>
-                  {/* Dropdown on hover */}
-                  <div className={`absolute right-0 top-full mt-1 w-44 rounded-xl border shadow-xl z-50 overflow-hidden opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity ${
-                    isDark ? "bg-[#0d1a0f] border-[#1e2e22]" : "bg-white border-[#ADBC9F]/60"
-                  }`}>
-                    <button
-                      onClick={handleExportPng}
-                      disabled={exportLoading !== null}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${
-                        isDark ? "text-white/70 hover:bg-white/05 hover:text-white" : "text-[#436850] hover:bg-[#ADBC9F]/20"
-                      }`}
-                    >
-                      <FileImage className="w-3.5 h-3.5 shrink-0" />
-                      Save as Image
-                    </button>
-                    <button
-                      onClick={handleExportPdf}
-                      disabled={exportLoading !== null}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors ${
-                        isDark ? "text-white/70 hover:bg-white/05 hover:text-white" : "text-[#436850] hover:bg-[#ADBC9F]/20"
-                      }`}
-                    >
-                      <FileText className="w-3.5 h-3.5 shrink-0" />
-                      Print / Save PDF
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-          {/* ── Smart Filters Row ── */}
-          <div className={`max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2 flex-wrap ${(showScoutControls || !reportV3) ? "" : "hidden"}`}>
-            {/* Provider selector (V3 only) */}
+          <div className="flex items-center gap-1.5">
+            {(report || reportV3) && (
               <>
-                <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Source</span>
-                <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-                  {(["chesscom", "lichess"] as const).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setProvider(p)}
-                      aria-pressed={provider === p}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                        provider === p
-                          ? "bg-[#436850] text-white shadow-sm"
-                          : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-                      }`}
-                    >
-                      {p === "chesscom" ? "chess.com" : "Lichess"}
-                    </button>
-                  ))}
-                </div>
-                <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
-              </>
-
-            {/* Time Control */}
-            <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Format</span>
-            <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}>
-              {(["all", "rapid", "blitz", "bullet"] as const).map((tc) => (
                 <button
-                  key={tc}
-                  data-testid={`tc-filter-${tc}`}
-                  onClick={() => setTcFilter(tc)}
-                  aria-pressed={tcFilter === tc}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all capitalize ${
-                  tcFilter === tc
-                    ? "bg-[#436850] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : tc === "blitz" ? "Blitz" : "Bullet"}
-              </button>
-            ))}
-          </div>
-
-          {/* Separator */}
-          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-[#1e2e22]" : "bg-[#ADBC9F]"}`} />
-
-          {/* I'm playing — canonical color perspective */}
-          <span className={`text-xs font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>I'm playing</span>
-          <div
-            role="radiogroup"
-            aria-label="Your color"
-            className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-[#ADBC9F]/40/80 border border-[#ADBC9F]/60"}`}
-          >
-            {(["white", "black"] as const).map((c) => (
-              <button
-                key={c}
-                role="radio"
-                aria-checked={myColor === c}
-                onClick={() => setMyColor(c)}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                  myColor === c
-                    ? "bg-[#436850] text-white shadow-sm"
-                    : isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#12372A]"
-                }`}
-              >
-                {c === "white" ? "White" : "Black"}
-              </button>
-            ))}
+                  onClick={() => {
+                    const completedRequest = reportV3?.reportSnapshot?.activeRequest ?? activeScoutRequest;
+                    if (completedRequest) void fetchReport({ ...completedRequest, requestedAt: new Date().toISOString() }, true);
+                  }}
+                  disabled={refreshing}
+                  className={`flex min-h-10 min-w-10 items-center justify-center rounded-xl transition-colors ${
+                    isDark ? "text-white/40 hover:bg-white/5 hover:text-white/70" : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#436850]"
+                  }`}
+                  aria-label="Refresh report"
+                  title="Refresh report"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                </button>
+                {user && (
+                  <button
+                    onClick={savedId ? () => setShowSavedPanel((visible) => !visible) : handleSaveReport}
+                    disabled={saving}
+                    className={`flex min-h-10 min-w-10 items-center justify-center rounded-xl transition-colors ${
+                      savedId
+                        ? isDark ? "text-[#5B9A6A] hover:bg-[#436850]/10" : "text-[#436850] hover:bg-[#436850]/8"
+                        : isDark ? "text-white/40 hover:bg-white/5 hover:text-white/70" : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#436850]"
+                    }`}
+                    aria-label={savedId ? "Saved report" : "Save this report"}
+                    title={savedId ? "Saved — view saved reports" : "Save this report"}
+                  >
+                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : savedId ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+                  </button>
+                )}
+                {reportV3 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        disabled={exportLoading !== null}
+                        className={`flex min-h-10 min-w-10 items-center justify-center rounded-xl transition-colors ${
+                          isDark ? "text-white/40 hover:bg-white/5 hover:text-white/70" : "text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#436850]"
+                        }`}
+                        aria-label="Export report"
+                        title="Export report"
+                      >
+                        {exportLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className={`w-48 rounded-xl border p-1.5 shadow-2xl ${isDark ? "border-[#294434] bg-[#0b1c10] text-white" : "border-[#cbd9c5] bg-white text-[#173622]"}`}>
+                      <DropdownMenuItem onSelect={handleExportPng} disabled={exportLoading !== null} className="min-h-10 rounded-lg">
+                        <FileImage className="h-3.5 w-3.5" />
+                        Save as image
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={handleExportPdf} disabled={exportLoading !== null} className="min-h-10 rounded-lg">
+                        <FileText className="h-3.5 w-3.5" />
+                        Print / Save PDF
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </>
+            )}
+            <AvatarNavDropdown />
           </div>
         </div>
       </div>
 
       {/* ── Page Content ── */}
       <div className="mx-auto max-w-[1400px] px-3 py-5 sm:px-6 sm:py-7 space-y-4 sm:space-y-5">
+
+        <section data-testid="scout-opponent-section" aria-labelledby="scout-opponent-heading" className={`rounded-2xl border p-4 sm:p-5 ${isDark ? "border-[#253a2b] bg-[#07140c]/70" : "border-[#d8e1d3] bg-white"}`}>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isDark ? "text-[#91d89c]" : "text-[#436850]"}`}>Matchup Prep</p>
+              <h1 id="scout-opponent-heading" className={`mt-0.5 text-lg font-bold tracking-[-0.025em] ${t.textPrimary}`}>Scout opponent</h1>
+            </div>
+            {reportV3 && <p className={`hidden text-xs sm:block ${t.textTertiary}`}>Update the report with a new search.</p>}
+          </div>
+          <form id="scout-opponent-form" onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <Search className={`pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${isDark ? "text-white/70" : t.textTertiary}`} />
+              <input
+                type="text"
+                aria-label={provider === "lichess" ? "Lichess opponent username" : "Chess.com opponent username"}
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder={provider === "lichess" ? "Lichess username" : "chess.com username"}
+                className={`w-full rounded-xl border py-2.5 pl-9 pr-3 text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
+                autoComplete="off"
+                autoCapitalize="none"
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`group inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold tracking-[-0.01em] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] active:scale-[0.98] ${
+                    isDark
+                      ? "border-[#8dcc9b]/40 bg-[linear-gradient(135deg,#4d8060_0%,#355f45_100%)] text-white shadow-[0_5px_18px_rgba(22,58,33,0.34)] hover:-translate-y-px hover:border-[#b7e3c0]/65"
+                      : "border-[#315640] bg-[linear-gradient(135deg,#4e805d_0%,#365f44_100%)] text-white shadow-[0_4px_14px_rgba(43,79,52,0.22)] hover:-translate-y-px hover:border-[#23432f]"
+                  }`}
+                  aria-label="Scout opponent filters"
+                  aria-busy={loading}
+                  disabled={loading}
+                >
+                  {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Building report</> : <><span>Scout opponent</span><ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" /></>}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className={`w-[min(22rem,calc(100vw-1.5rem))] rounded-xl border p-2 shadow-2xl ${isDark ? "border-[#294434] bg-[#0b1c10] text-white" : "border-[#cbd9c5] bg-white text-[#173622]"}`}>
+                <DropdownMenuLabel className={`px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>Source</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={provider} onValueChange={(value) => setProvider(value as Provider)} className="grid grid-cols-2 gap-1 px-1 pb-2">
+                  <DropdownMenuRadioItem value="chesscom" onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm">Chess.com</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="lichess" onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm">Lichess</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-[#d8e1d3]"} />
+                <DropdownMenuLabel className={`px-2 py-2 text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>Format</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={tcFilter} onValueChange={(value) => setTcFilter(value as ScoutFormatFilter)} className="grid grid-cols-2 gap-1 px-1 pb-2">
+                  {(["all", "rapid", "blitz", "bullet"] as const).map((format) => (
+                    <DropdownMenuRadioItem key={format} value={format} data-testid={`tc-filter-${format}`} onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm capitalize">
+                      {format === "all" ? "All formats" : format}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator className={isDark ? "bg-white/10" : "bg-[#d8e1d3]"} />
+                <DropdownMenuLabel className={`px-2 py-2 text-[10px] font-bold uppercase tracking-[0.14em] ${t.textTertiary}`}>I’m playing</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={myColor} onValueChange={(value) => setMyColor(value as "white" | "black")} className="grid grid-cols-2 gap-1 px-1 pb-3">
+                  <DropdownMenuRadioItem value="white" onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm">White</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="black" onSelect={(event) => event.preventDefault()} className="rounded-lg text-sm">Black</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <button
+                  type="submit"
+                  form="scout-opponent-form"
+                  disabled={!searchInput.trim() || loading}
+                  className={`flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8dcc9b] ${
+                    searchInput.trim() && !loading
+                      ? "bg-[#4e805d] text-white hover:bg-[#416f50]"
+                      : isDark ? "cursor-not-allowed bg-white/10 text-white/35" : "cursor-not-allowed bg-[#e8f0e5] text-[#56715b]"
+                  }`}
+                >
+                  Run scout
+                </button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </form>
+        </section>
 
         {/* ── Saved Reports Panel ── */}
         {showSavedPanel && user && (
@@ -999,11 +945,6 @@ export default function MatchupPrep() {
               <p className={`text-sm ${t.textSecondary} leading-relaxed`}>
                 Enter your opponent's chess.com username to scout their weaknesses, study counter-lines, and drill them on a real board.
               </p>
-            </div>
-            <div className={`flex gap-6 text-xs ${t.textTertiary}`}>
-              <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> Scout</span>
-              <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Study</span>
-              <span className="flex items-center gap-1.5"><Dumbbell className="w-3.5 h-3.5" /> Practice</span>
             </div>
           </div>
         )}

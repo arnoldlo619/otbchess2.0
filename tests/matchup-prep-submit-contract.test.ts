@@ -12,9 +12,12 @@ describe("Matchup Prep submit action", () => {
     expect(routeSource).not.toContain('if (req.query.schema === "3")');
   });
 
-  it("keeps Scout opponent as visible button text and a real accessible label", () => {
-    expect(source).toMatch(/aria-label="Scout opponent"[\s\S]*?>[\s\S]*?Scout opponent[\s\S]*?<ChevronRight/);
-    expect(source).not.toMatch(/>\s*aria-label="Scout opponent"\s*\{/);
+  it("keeps Scout opponent as visible dropdown-trigger text with an accessible filter label", () => {
+    expect(source).toMatch(/aria-label="Scout opponent filters"[\s\S]*?>[\s\S]*?Scout opponent[\s\S]*?<ChevronDown/);
+    expect(source).toContain("<DropdownMenuRadioGroup value={provider}");
+    expect(source).toContain("<DropdownMenuRadioGroup value={tcFilter}");
+    expect(source).toContain("<DropdownMenuRadioGroup value={myColor}");
+    expect(source).toContain('form="scout-opponent-form"');
   });
 
   it("uses the submitted immutable provider in V3 report requests", () => {
@@ -35,6 +38,6 @@ describe("Matchup Prep submit action", () => {
     expect(source).toContain("focus-visible:ring-2 focus-visible:ring-[#8dcc9b]");
     expect(source).toContain("hover:-translate-y-px");
     expect(source).toContain("aria-busy={loading}");
-    expect(source).toContain("group-hover:translate-x-0.5");
+    expect(source).toContain("active:scale-[0.98]");
   });
 });
