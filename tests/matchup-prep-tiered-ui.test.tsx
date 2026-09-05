@@ -32,6 +32,8 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.getByText("London System")).toBeTruthy();
     expect(screen.getByText("Sicilian Defense")).toBeTruthy();
     expect(screen.getByText("Scandinavian Defense")).toBeTruthy();
+    expect(screen.getByText("50% as White")).toBeTruthy();
+    expect(screen.getByText("30% as Black")).toBeTruthy();
     expect(screen.getByRole("link", { name: /View Pro/i }).getAttribute("href")).toBe("/pricing");
     expect(screen.queryByText("Opening Forecast")).toBeNull();
     expect(screen.queryByText("Evidence summary")).toBeNull();

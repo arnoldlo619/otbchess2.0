@@ -168,6 +168,9 @@
 - [x] Matchup Prep: Consolidate Source, Format, and Playing filters into an accessible Scout Opponent dropdown menu
 - [x] Matchup Prep: Remove the referenced redundant report chrome without changing free/Pro report behavior
 - [x] Matchup Prep: Add interaction coverage and validate keyboard, desktop, and mobile filtering before checkpointing
+- [x] Matchup Prep: Show real Chess.com White and Black win percentages in the Scout Report summary copy
+- [x] Matchup Prep: Centrally align the requested report summary element in the Matchup Prep header without duplicating navigation controls
+- [x] Matchup Prep: Verify the visual-edit refinements with data-backed tests, responsive QA, and a checkpoint
 - [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint

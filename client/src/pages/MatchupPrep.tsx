@@ -630,6 +630,10 @@ export default function MatchupPrep() {
       <div data-testid="matchup-prep-topbar" className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-3 py-2 sm:px-6">
           <NavLogo />
+          <div data-testid="matchup-prep-nav-title" className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 text-center sm:block">
+            <p className={`text-[9px] font-bold uppercase tracking-[0.16em] ${isDark ? "text-[#91d89c]" : "text-[#436850]"}`}>Matchup Prep</p>
+            <h1 className={`mt-0.5 text-sm font-bold tracking-[-0.025em] ${t.textPrimary}`}>Scout opponent</h1>
+          </div>
           <div className="flex items-center gap-1.5">
             {(report || reportV3) && (
               <>
@@ -699,14 +703,7 @@ export default function MatchupPrep() {
       {/* ── Page Content ── */}
       <div className="mx-auto max-w-[1400px] px-3 py-5 sm:px-6 sm:py-7 space-y-4 sm:space-y-5">
 
-        <section data-testid="scout-opponent-section" aria-labelledby="scout-opponent-heading" className={`rounded-2xl border p-4 sm:p-5 ${isDark ? "border-[#253a2b] bg-[#07140c]/70" : "border-[#d8e1d3] bg-white"}`}>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${isDark ? "text-[#91d89c]" : "text-[#436850]"}`}>Matchup Prep</p>
-              <h1 id="scout-opponent-heading" className={`mt-0.5 text-lg font-bold tracking-[-0.025em] ${t.textPrimary}`}>Scout opponent</h1>
-            </div>
-            {reportV3 && <p className={`hidden text-xs sm:block ${t.textTertiary}`}>Update the report with a new search.</p>}
-          </div>
+        <section data-testid="scout-opponent-section" aria-label="Scout opponent lookup" className={`rounded-2xl border p-3 sm:p-4 ${isDark ? "border-[#253a2b] bg-[#07140c]/70" : "border-[#d8e1d3] bg-white"}`}>
           <form id="scout-opponent-form" onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row">
             <div className="relative min-w-0 flex-1">
               <Search className={`pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 ${isDark ? "text-white/70" : t.textTertiary}`} />

@@ -45,11 +45,13 @@ describe("Matchup Prep scout controls", () => {
 
     const input = screen.getByRole("textbox", { name: "Chess.com opponent username" });
     const topbar = screen.getByTestId("matchup-prep-topbar");
+    const navTitle = screen.getByTestId("matchup-prep-nav-title");
     const section = screen.getByTestId("scout-opponent-section");
 
-    expect(screen.getByRole("heading", { name: "Scout opponent" })).toBeTruthy();
+    expect(navTitle.contains(screen.getByRole("heading", { name: "Scout opponent" }))).toBe(true);
     expect(section.contains(input)).toBe(true);
     expect(topbar.contains(input)).toBe(false);
+    expect(section.querySelector("h1")).toBeNull();
     expect(screen.queryByText("Source")).toBeNull();
     expect(screen.queryByText("Format")).toBeNull();
     expect(screen.queryByText("I’m playing")).toBeNull();

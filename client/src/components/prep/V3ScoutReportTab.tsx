@@ -65,6 +65,11 @@ function formatTimeControls(breakdown: Array<{ format: string; games: number }>)
   return populated.length > 0 ? populated.join(" · ") : "All formats";
 }
 
+function winPercentage(record: { w: number; d: number; l: number }): string {
+  const games = record.w + record.d + record.l;
+  return games > 0 ? `${Math.round((record.w / games) * 100)}%` : "No eligible games";
+}
+
 function actionConfidence(action: ScoutAction): string {
   return action.confidence.replace(/_/g, " ").replace(/^./, letter => letter.toUpperCase());
 }
@@ -139,6 +144,8 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
     .filter(insight => !new Set(view.actions.map(action => action.sourceInsightId)).has(insight.id));
   const providerLabel = view.opponent.provider === "lichess" ? "Lichess" : "Chess.com";
   const opposingRecord = report.opponent.record[opponentColor];
+  const whiteWinPercentage = winPercentage(report.opponent.record.white);
+  const blackWinPercentage = winPercentage(report.opponent.record.black);
   const actionHref = (action: ScoutAction): string | null => {
     if (!reportCacheKey || !action.action.legalLine?.length) return null;
     const path = canonicalUciPathFromSanLine(action.action.legalLine.join(" "));
@@ -155,7 +162,7 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
           <div>
             <p className={`text-[11px] font-bold uppercase tracking-[0.18em] ${isDark ? "text-[#aeea91]" : "text-[#315640]"}`}>Scout report / {providerLabel}</p>
             <h1 id="scout-report-title" className={`mt-2 break-words text-3xl font-black uppercase italic tracking-[-0.05em] sm:text-5xl ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{report.opponent.username}</h1>
-            <p className={`mt-2 text-base sm:text-lg ${t.textSecondary}`}><strong className={t.textPrimary}>You play {request.myColor === "black" ? "Black" : "White"}</strong> <span aria-hidden="true">·</span> Opponent plays {opponentColor === "black" ? "Black" : "White"}</p>
+            <p className={`mt-2 text-base sm:text-lg ${t.textSecondary}`}><strong className={t.textPrimary}>{whiteWinPercentage} as White</strong> <span aria-hidden="true">·</span> <strong className={t.textPrimary}>{blackWinPercentage} as Black</strong></p>
           </div>
           <div className="flex flex-wrap gap-2">
             <span className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${isDark ? "border-white/15 text-white/70" : "border-[#c8d8c1] text-[#315640]"}`}>{providerLabel}</span>
