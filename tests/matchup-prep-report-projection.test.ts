@@ -85,6 +85,8 @@ describe("Matchup Prep immutable report projection", () => {
     const source = readFileSync(resolve(process.cwd(), "client/src/components/prep/PrepExportCard.tsx"), "utf8");
     expect(source).toContain("projectScoutReport(report)");
     expect(source).toContain("view.actions");
+    expect(source).toContain('"Opponent win rate"');
+    expect(source).toContain("const colorSummary = `${whiteWinRate ?? \"—\"}% as White · ${blackWinRate ?? \"—\"}% as Black`;");
     expect(source).not.toMatch(/myColor\??:/);
   });
 });

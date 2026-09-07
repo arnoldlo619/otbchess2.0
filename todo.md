@@ -194,6 +194,13 @@
 - [x] Product brief: Review the attached implementation requirements against the existing ChessOTB architecture
 - [x] Product brief: Implement the approved, production-ready scope from the attached brief
 - [x] Product brief: Add focused validation, document outcomes, and save a checkpoint
+- [x] Matchup Prep brief reassessment: Reconcile the pasted acceptance criteria against the latest shared Matchup Prep implementation and prior completed work
+- [x] Matchup Prep brief reassessment: Implement only uncovered reliability, report-quality, UX, performance, and accessibility acceptance criteria
+- [x] Matchup Prep brief reassessment: Validate remaining acceptance criteria with deterministic tests, live provider checks, responsive QA, and a checkpoint
+- [x] Matchup Prep brief reassessment: Complete the required live smoke matrix for Hikaru, DrNykterstein or maia1, and invalid provider-specific usernames
+- [x] Matchup Prep brief reassessment: Verify Saved/Recent restoration and export date/provenance parity against immutable report identity
+- [x] Matchup Prep brief reassessment: Capture dark and light Legal Line Explorer QA across both playing-color states and required responsive breakpoints
+- [x] Matchup Prep brief reassessment: Run the production build and record the final release verdict against every acceptance ID
 - [x] Matchup Prep launch: Create an acceptance ledger mapping provider reliability, data integrity, identity, explorer, accessibility, and responsive requirements to code and tests
 - [x] Matchup Prep launch: Add deterministic regressions for bounded provider behavior, typed errors, dates, opening labels, identity, color scope, and legal explorer state
 - [x] Matchup Prep launch: Enforce bounded Chess.com and Lichess pipelines with cancellation, one retry policy, factual staged progress, and typed error recovery

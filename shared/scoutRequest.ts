@@ -19,8 +19,8 @@ function readProvider(value: string | null | undefined): Provider {
   return value === "lichess" ? "lichess" : "chesscom";
 }
 
-function readColor(value: string | null | undefined): Color {
-  return value === "black" ? "black" : "white";
+function readOptionalColor(value: string | null | undefined): Color | undefined {
+  return value === "white" || value === "black" ? value : undefined;
 }
 
 function readFormat(value: string | null | undefined): ScoutFormatFilter {
@@ -70,7 +70,7 @@ export function activeScoutRequestFromQuery(
   return createActiveScoutRequest({
     platform: readProvider(read("provider") ?? read("platform")),
     displayUsername: username,
-    explorerColor: readColor(read("explorerColor") ?? read("myColor") ?? read("color")),
+    explorerColor: readOptionalColor(read("explorerColor") ?? read("myColor") ?? read("color")),
     format: readFormat(read("tc") ?? read("format")),
   }, requestedAt);
 }

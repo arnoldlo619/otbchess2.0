@@ -42,9 +42,21 @@ The V3 cache key currently includes the legacy global `myColor`, so reports can 
 | --- | --- | --- | --- |
 | 2026-09-05 | Chess.com | humblelowkey | Request entered the bounded report-loading state, then produced a 30-game report with Chess.com identity, provider avatar, dynamic White/Black win rates, format split, UTC-safe date window, and opening summaries. The Free tier correctly showed the locked Pro Scout Brief boundary. |
 | 2026-09-05 | Lichess | thibault | Request entered the bounded report-loading state, then produced a distinct 30-game Lichess report with Lichess identity, dynamic White/Black rates, a 29-blitz/1-bullet format split, an independent date window, and Lichess opening summaries. The Free tier correctly showed the locked Pro Scout Brief boundary. |
+| 2026-09-07 | Chess.com | Hikaru | Reassessment smoke produced a 30-game Chess.com report. An explicit cache-bypassing refresh completed in 8.6 seconds, fetched 60 raw games, parsed 30 eligible games, and preserved the immutable Chess.com/all-formats identity. |
+| 2026-09-07 | Lichess | DrNykterstein | Reassessment smoke produced a distinct 30-game Lichess report in 13.7 seconds, fetched 60 raw games, and parsed 30 eligible games. It retained the Lichess/all-formats identity and rendered the cross-year evidence range with both years. |
+| 2026-09-07 | Chess.com | `chessotb_invalid_probe_20260907` | Typed **PLAYER_NOT_FOUND** recovery rendered with Chess.com-specific wording, no false insufficient-history statement, and no retry action for a verified unavailable username. |
+| 2026-09-07 | Lichess | `chessotb_invalid_probe_20260907` | Typed **PLAYER_NOT_FOUND** recovery rendered with Lichess-specific wording, no false insufficient-history statement, and no retry action for a verified unavailable username. |
+
+The refreshed visible Chess.com report now renders the canonical data window as **Aug 30 – Aug 30, 2026**, matching the server’s UTC date-only values and the export-side calendar formatter. A cross-year Lichess window now includes both years, preventing a valid May 2025 to April 2026 range from appearing reversed.
 
 ## Responsive review
 
 The verified desktop report keeps identity, color-split performance, requested evidence context, and the Free/Pro boundary in a clear single hierarchy. At 375px, the search controls stack into full-width touch targets; profile identity, data-quality badges, color split, key stats, opening sequences, and upgrade boundary remain legible without horizontal overflow.
 
 The compact live Scout Opponent menu exposes provider and time-control radio choices plus a run action, without a global player-color choice. Escape dismissal was exercised after opening the menu; the rendered interaction suite separately verifies focus restoration and keyboard behavior deterministically.
+
+The Legal Line Explorer regression now verifies its local White/Black switch in both dark and light appearances, alongside legal replay, board flipping, and FEN-copy behavior. No explorer orientation is serialized into an ordinary report URL unless an explicit explorer link supplies it.
+
+## 2026-09-07 reassessment verdict
+
+The reassessment found and resolved four remaining launch-quality gaps: overlarge Chess.com monthly archive handling, slow cache-persistence impact on the response path, viewer-timezone date shifts, and ambiguous cross-year date presentation. Saved and Recent report identities were additionally verified to preserve provider and requested formats. The production build completed successfully, and the focused acceptance suite passed with 77 Matchup Prep tests plus four Legal Line Explorer interaction tests.

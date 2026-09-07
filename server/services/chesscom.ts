@@ -6,6 +6,7 @@ import type { RawGame, FetchOpts } from "../../shared/prepTypes.js";
 import { parseGames } from "../prep/parseGames.js";
 
 const UA = "ChessOTB.club scouting v3 (contact: admin@chessotb.club)";
+const ARCHIVE_BATCH_SIZE = 60;
 
 /* ---------------- PGN movetext → SAN tokens --------------------------------
    Strips headers, {comments} (incl. [%clk]), (variations), NAGs, move numbers.
@@ -142,9 +143,14 @@ export async function fetchChesscom(username: string, o: FetchOpts): Promise<Raw
     if (!res.ok) continue;
     const monthPayload = asRecord(await res.json());
     const games = Array.isArray(monthPayload.games) ? monthPayload.games : [];
-    const page = [...games].reverse().map(normalizeChesscom);
-    out.push(...page);
-    eligibleCount += parseGames(page, username, o).parsed.length;
+    const newestFirst = [...games].reverse();
+    for (let offset = 0; offset < newestFirst.length; offset += ARCHIVE_BATCH_SIZE) {
+      const page = newestFirst.slice(offset, offset + ARCHIVE_BATCH_SIZE).map(normalizeChesscom);
+      const parsedPage = parseGames(page, username, o);
+      out.push(...page);
+      eligibleCount += parsedPage.parsed.length;
+      if (eligibleCount >= o.maxGames) break;
+    }
     if (eligibleCount >= o.maxGames) break;
   }
   if (!out.length) throw new Error(`NoRecentGames: ${username}`);

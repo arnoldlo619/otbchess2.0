@@ -1,6 +1,7 @@
 import React from "react";
 import type { ScoutReportV3 } from "../../../../shared/prepTypes";
 import { projectScoutReport } from "../../../../shared/scoutReportProjection";
+import { formatScoutDateUtc, formatScoutDateWindowUtc } from "../../lib/scoutDateDisplay";
 
 const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
 const COLORS = {
@@ -22,12 +23,20 @@ function titleCase(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function winRate(record: { w: number; d: number; l: number }): number | null {
+  const total = record.w + record.d + record.l;
+  return total > 0 ? Math.round((record.w / total) * 100) : null;
+}
+
 export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
   if (!report.reportSnapshot) return null;
   const view = projectScoutReport(report);
-  const generated = new Date(view.snapshot.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const generated = formatScoutDateUtc(view.snapshot.createdAt);
   const avgRating = view.opponent.avgRating;
-  const summaryStats = [["Avg rating", avgRating ?? "Not available"]] as const;
+  const whiteWinRate = winRate(report.opponent.record.white);
+  const blackWinRate = winRate(report.opponent.record.black);
+  const colorSummary = `${whiteWinRate ?? "—"}% as White · ${blackWinRate ?? "—"}% as Black`;
+  const summaryStats = [["Opponent win rate", colorSummary], ["Avg rating", avgRating ?? "Not available"]] as const;
   const isPro = view.tier === "pro";
 
   return (
@@ -54,7 +63,7 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
       <section>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
           <h2 style={{ margin: 0, fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", color: COLORS.green }}>{isPro ? "Detailed prep targets" : "Top openings"}</h2>
-          <span style={{ color: COLORS.tertiary, fontSize: 11 }}>{view.gameWindow.from} – {view.gameWindow.to}</span>
+          <span style={{ color: COLORS.tertiary, fontSize: 11 }}>{formatScoutDateWindowUtc(view.gameWindow.from, view.gameWindow.to)}</span>
         </div>
         {isPro ? <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.max(1, Math.min(3, view.actions.length))}, minmax(0, 1fr))`, gap: 14 }}>
           {view.actions.length > 0 ? view.actions.map((action, index) => (

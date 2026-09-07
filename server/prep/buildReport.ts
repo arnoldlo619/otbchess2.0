@@ -103,6 +103,10 @@ export function buildReport(
   const { excluded, quarantined } = parsedResult;
 
   if (!parsed.length) {
+    const excludedCount = Object.values(excluded).reduce((total, count) => total + count, 0);
+    if (quarantined > 0 && quarantined === raw.length && excludedCount === quarantined) {
+      throw new Error(`PgnParseFailed: ${username} (fetched ${raw.length}, no legally replayable games)`);
+    }
     throw new Error(
       `NoUsableGames: ${username} (fetched ${raw.length}, all excluded/quarantined)`
     );

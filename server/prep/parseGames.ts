@@ -49,7 +49,7 @@ export function parseGames(raw: RawGame[], scouted: string, o: FetchOpts): Parse
       plies.push({ san, epd: epdOf(chess), by });
     }
 
-    if (!legal) { quarantined++; continue; }
+    if (!legal) { bump("pgn_parse_failed"); quarantined++; continue; }
 
     // ── Opening classification via EPD book ────────────────────────────────
     let opening = { eco: "?", name: "Unclassified", bookExitPly: 0 };

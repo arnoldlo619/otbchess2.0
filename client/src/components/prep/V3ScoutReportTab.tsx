@@ -4,6 +4,7 @@ import { AlertCircle, ChevronRight, Database, LockKeyhole } from "lucide-react";
 
 import type { ScoutAction, ScoutReportV3 } from "../../../../shared/prepTypes";
 import { projectScoutReport } from "../../../../shared/scoutReportProjection";
+import { formatScoutDateUtc, formatScoutDateWindowUtc } from "../../lib/scoutDateDisplay";
 import { ForecastWalkthrough } from "./ForecastWalkthrough";
 import { DataQualityBanner } from "./DataQualityBanner";
 import { buildPositionAnalysisUrl } from "../../lib/analyzeAction";
@@ -46,19 +47,6 @@ function canonicalUciPathFromSanLine(line: string): string[] | null {
     }
   }
   return path.length > 0 ? path : null;
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.valueOf()) ? value : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
-}
-
-function formatDateWindow(from: string, to: string): string {
-  const start = new Date(from);
-  const end = new Date(to);
-  if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) return `${from} – ${to}`;
-  const formatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
-  return `${formatter.format(start)} – ${formatter.format(end)}, ${end.getFullYear()}`;
 }
 
 function formatTimeControls(breakdown: Array<{ format: string; games: number }>): string {
@@ -231,9 +219,9 @@ export function V3ScoutReportTab({ report, isDark, t, reportCacheKey }: Props) {
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Opponent rating</dt><dd className={`mt-2 text-base font-bold ${t.textPrimary}`}>{view.opponent.avgRating ? `${view.opponent.avgRating} avg` : "Unavailable"}</dd></div>
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Games analyzed</dt><dd className={`mt-2 text-base font-bold ${t.textPrimary}`}>{view.gamesAnalyzed} eligible</dd></div>
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Time controls</dt><dd className={`mt-2 text-sm font-bold leading-snug ${t.textPrimary}`}>{formatTimeControls(view.formatBreakdown)}</dd></div>
-          <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Date window</dt><dd className={`mt-2 text-sm font-bold leading-snug ${t.textPrimary}`}>{formatDateWindow(view.gameWindow.from, view.gameWindow.to)}</dd></div>
+          <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Date window</dt><dd className={`mt-2 text-sm font-bold leading-snug ${t.textPrimary}`}>{formatScoutDateWindowUtc(view.gameWindow.from, view.gameWindow.to)}</dd></div>
           <div className="border-b border-r border-current/10 p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Opponent win rate</dt><dd className={`mt-2 text-base font-bold ${t.textPrimary}`}>{overallScore === null ? "Unavailable" : `${overallScore}%`} <span className={`text-xs font-medium ${t.textTertiary}`}>· {combinedRecord.w}–{combinedRecord.d}–{combinedRecord.l}</span></dd></div>
-          <div className="p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Report checked</dt><dd className={`mt-2 text-sm font-bold ${t.textPrimary}`}>{formatDate(report.generatedAt)}</dd></div>
+          <div className="p-4"><dt className={`text-[10px] font-bold uppercase tracking-[0.12em] ${t.textTertiary}`}>Report checked</dt><dd className={`mt-2 text-sm font-bold ${t.textPrimary}`}>{formatScoutDateUtc(report.generatedAt)}</dd></div>
         </dl>
       </section>
 

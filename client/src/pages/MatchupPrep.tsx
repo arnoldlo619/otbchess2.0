@@ -216,6 +216,7 @@ interface SavedReportMeta {
   gamesAnalyzed: number | null;
   prepLinesCount: number | null;
   savedAt: string;
+  identity: Pick<ActiveScoutRequest, "platform" | "normalizedUsername" | "formats" | "mode" | "maxGames" | "schemaVersion"> | null;
 }
 
 
@@ -457,12 +458,15 @@ export default function MatchupPrep() {
           const friendlyMsg: Record<PrepErrorPayload["error"], string> = {
             INVALID_USERNAME: "Username must be 2–50 characters.",
             PLAYER_NOT_FOUND: `Player "${request.displayUsername}" was not found on ${request.platform === "lichess" ? "Lichess" : "chess.com"}.`,
+            NO_RECENT_GAMES: `No recent rated Rapid, Blitz, or Bullet games were found for "${request.displayUsername}".`,
             NO_ELIGIBLE_GAMES: `No eligible ${formatFilterForFormats(request.formats) === "all" ? "Rapid, Blitz, or Bullet" : formatFilterForFormats(request.formats)} games found for "${request.displayUsername}".`,
             ALL_GAMES_FILTERED: `All eligible games for "${request.displayUsername}" were filtered out.`,
             UPSTREAM_RATE_LIMITED: "The chess provider is rate-limiting requests. Please try again in a minute.",
             UPSTREAM_TIMEOUT: "The chess provider took too long to respond. Please retry your report.",
             UPSTREAM_UNAVAILABLE: "The chess provider is temporarily unavailable. Please retry your report.",
+            PGN_PARSE_FAILED: "The chess provider returned game data that could not be read. Please retry your report.",
             REQUEST_CANCELLED: "The scout request was cancelled.",
+            UNKNOWN_ERROR: "We couldn’t generate a prep report yet. Please retry your report.",
           };
           setError({ code: data.error, message: friendlyMsg[data.error] ?? data.message ?? `Error ${res.status}` });
           return;
@@ -475,8 +479,11 @@ export default function MatchupPrep() {
         const updated = addRecentlyScouted({
           username: completedRequest.displayUsername,
           provider: completedRequest.platform,
-          myColor: completedRequest.explorerColor ?? "white",
-          tcFilter: formatFilterForFormats(completedRequest.formats),
+          formats: completedRequest.formats,
+          mode: completedRequest.mode,
+          maxGames: completedRequest.maxGames,
+          schemaVersion: completedRequest.schemaVersion,
+          explorerColor: completedRequest.explorerColor,
         });
         setRecentlyScouted(updated);
     } catch (err: unknown) {
@@ -777,7 +784,19 @@ export default function MatchupPrep() {
             reports={savedReports}
             loading={loadingSaved}
             savedId={savedId}
-            onSelect={(u) => { navigate(`/prep/${encodeURIComponent(u)}`); setShowSavedPanel(false); }}
+            onSelect={(saved) => {
+              if (!saved.identity) return;
+              const request: ActiveScoutRequest = {
+                ...saved.identity,
+                displayUsername: saved.opponentUsername,
+                requestedAt: new Date().toISOString(),
+              };
+              setSearchInput(request.displayUsername);
+              setProvider(request.platform);
+              setTcFilter(formatFilterForFormats(request.formats));
+              navigate(scoutRequestRoute(request));
+              setShowSavedPanel(false);
+            }}
             onDelete={handleDeleteSaved}
             onClose={() => setShowSavedPanel(false)}
             isDark={isDark}
@@ -909,16 +928,16 @@ export default function MatchupPrep() {
             onSelect={(entry) => {
               setSearchInput(entry.username);
               setProvider(entry.provider);
-              setTcFilter(entry.tcFilter);
+              setTcFilter(formatFilterForFormats(entry.formats));
               const request = createActiveScoutRequest({
                 platform: entry.provider,
                 displayUsername: entry.username,
-                format: entry.tcFilter,
-                explorerColor: entry.myColor === "black" ? "black" : "white",
+                format: formatFilterForFormats(entry.formats),
+                explorerColor: entry.explorerColor,
               });
               navigate(scoutRequestRoute(request));
             }}
-            onRemove={(entry) => { const updated = removeRecentlyScouted(entry.username, entry.provider); setRecentlyScouted(updated); }}
+            onRemove={(entry) => { const updated = removeRecentlyScouted(entry); setRecentlyScouted(updated); }}
             isDark={isDark}
             t={t}
           />
@@ -2387,7 +2406,7 @@ function SavedReportsPanel({
   reports: SavedReportMeta[];
   loading: boolean;
   savedId: number | null;
-  onSelect: (username: string) => void;
+  onSelect: (report: SavedReportMeta) => void;
   onDelete: (id: number) => void;
   onClose: () => void;
   isDark: boolean;
@@ -2410,13 +2429,14 @@ function SavedReportsPanel({
         <div className="space-y-2">
           {reports.map((r) => (
             <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${t.cardSubtle} ${t.rowHover}`}>
-              <button className="flex-1 flex items-center gap-3 text-left min-w-0" onClick={() => onSelect(r.opponentUsername)}>
+              <button className="flex-1 flex items-center gap-3 text-left min-w-0 disabled:cursor-not-allowed disabled:opacity-55" onClick={() => onSelect(r)} disabled={!r.identity} aria-describedby={!r.identity ? `saved-report-${r.id}-legacy` : undefined}>
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#436850]/15" : "bg-[#436850]/08"}`}>
                   <Target className="w-4 h-4 text-[#5B9A6A]" />
                 </div>
                 <div className="min-w-0">
                   <p className={`text-sm font-medium truncate ${t.textPrimary}`}>{r.opponentUsername}</p>
                   <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${t.textTertiary} mt-0.5`}>
+                    {r.identity ? <span>{r.identity.platform === "lichess" ? "Lichess" : "Chess.com"} · {formatFilterForFormats(r.identity.formats)}</span> : <span id={`saved-report-${r.id}-legacy`}>Legacy report: scout again to verify source</span>}
                     {r.winRate !== null && <span>{r.winRate}% win rate</span>}
                     {r.gamesAnalyzed !== null && <span>{r.gamesAnalyzed} games</span>}
                     {r.prepLinesCount !== null && r.prepLinesCount > 0 && <span>{r.prepLinesCount} lines</span>}
@@ -2454,7 +2474,7 @@ function RecentlyScoutedChips({
       <div className="flex flex-wrap gap-2">
         {entries.map((entry) => (
           <div
-            key={`${entry.username}-${entry.provider}`}
+            key={`${entry.username}-${entry.provider}-${entry.formats.join(",")}`}
             className={`group flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border text-sm font-medium transition-all ${
               isDark
                 ? "bg-[#0d1a0f]/60 border-[#1e2e22]/60 text-white/70 hover:border-[#436850]/40 hover:text-white"

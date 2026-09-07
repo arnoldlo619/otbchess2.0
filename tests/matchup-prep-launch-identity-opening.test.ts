@@ -30,6 +30,12 @@ describe("Matchup Prep launch identity and opening-label contracts", () => {
     expect(scoutRequestSearchParams(request).toString()).toBe("provider=lichess&tc=all&explorerColor=black");
   });
 
+  it("COLOR-03: omits player color from ordinary report URLs unless an explorer link explicitly supplies it", () => {
+    const request = activeScoutRequestFromQuery("SamePlayer", new URLSearchParams("provider=chesscom&tc=rapid"));
+    expect(request.explorerColor).toBeUndefined();
+    expect(scoutRequestSearchParams(request).toString()).toBe("provider=chesscom&tc=rapid");
+  });
+
   it("OPEN-01: uses neutral legal-position labels when the visible prefix does not establish a named opening", () => {
     expect(familiarOpeningNameFromMoves("Queen's Pawn Opening", "D00", ["Nf3", "d5", "g3", "Nf6"])).toBe("Common position after 2...Nf6");
     expect(familiarOpeningNameFromMoves("Italian Game", "C50", ["e4", "e5", "Nf3", "d5"])).toBe("Common position after 2...d5");

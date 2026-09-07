@@ -248,12 +248,15 @@ export const DEFAULT_FETCH_OPTS: FetchOpts = {
 export type PrepErrorCode =
   | "INVALID_USERNAME"
   | "PLAYER_NOT_FOUND"
+  | "NO_RECENT_GAMES"
   | "NO_ELIGIBLE_GAMES"
   | "ALL_GAMES_FILTERED"
   | "UPSTREAM_RATE_LIMITED"
   | "UPSTREAM_TIMEOUT"
   | "UPSTREAM_UNAVAILABLE"
-  | "REQUEST_CANCELLED";
+  | "PGN_PARSE_FAILED"
+  | "REQUEST_CANCELLED"
+  | "UNKNOWN_ERROR";
 
 export interface PrepErrorPayload {
   error: PrepErrorCode;

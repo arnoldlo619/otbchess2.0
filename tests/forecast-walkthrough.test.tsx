@@ -99,4 +99,14 @@ describe("Legal Line Explorer", () => {
     expect(screen.getByRole("button", { name: /opponent's tendency: d4/i })).toBeTruthy();
     expect(screen.getByTestId("legal-line-board").dataset.orientation).toBe("black");
   });
+
+  it("keeps both playing-color selections readable in the light explorer presentation", () => {
+    render(<ForecastWalkthrough openingForecast={{ white: [whiteRootBranch], black: [rootBranch] }} isDark={false} t={tokens} opponentUsername="opponent" />);
+
+    expect(screen.getByRole("button", { name: "White" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /opponent's tendency: e4/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Black" }));
+    expect(screen.getByRole("button", { name: "Black" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /opponent's tendency: d4/i })).toBeTruthy();
+  });
 });

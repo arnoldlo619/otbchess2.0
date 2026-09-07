@@ -27,6 +27,7 @@ import {
   activeScoutRequestFromQuery,
   scoutRequestCacheKey,
 } from "../shared/scoutRequest.js";
+import { savedScoutIdentityFromReport, savedScoutIdentityKey } from "../shared/savedScoutIdentity.js";
 import { requireAuth } from "./auth.js";
 import { getTokenPayload } from "./authCore.js";
 
@@ -249,7 +250,7 @@ export function createPrepRouter(): Router {
         rememberPrepAnalysisReport(cacheKey, cachedReport);
 
         try {
-          const db = await getDb();
+          const db = await getPrepCacheDb();
           const reportStr = JSON.stringify(cachedReport);
           await db.insert(prepCache).values({
             username: cacheKey, reportJson: reportStr,
@@ -273,7 +274,9 @@ export function createPrepRouter(): Router {
         } else if (msg.startsWith("PlayerNotFound:")) {
           res.status(404).json(prepError(404, "PLAYER_NOT_FOUND", `Player "${username}" was not found on the selected provider.`).body);
         } else if (msg.startsWith("NoRecentGames:")) {
-          res.status(404).json(prepError(404, "NO_ELIGIBLE_GAMES", `No eligible Rapid, Blitz, or Bullet games found for "${username}".`).body);
+          res.status(404).json(prepError(404, "NO_RECENT_GAMES", `No recent rated Rapid, Blitz, or Bullet games were found for "${username}".`).body);
+        } else if (msg.startsWith("PgnParseFailed:")) {
+          res.status(422).json(prepError(422, "PGN_PARSE_FAILED", `Recent games for "${username}" could not be legally replayed.`).body);
         } else if (msg.startsWith("NoUsableGames:")) {
           res.status(422).json(prepError(422, "ALL_GAMES_FILTERED", `All games for "${username}" were filtered out (unrated, wrong time control, or corrupt).`).body);
         } else if (msg.startsWith("UpstreamRateLimited:") || msg.startsWith("LichessRateLimited:")) {
@@ -281,7 +284,7 @@ export function createPrepRouter(): Router {
         } else if (msg.startsWith("UpstreamTimeout:")) {
           res.status(504).json(prepError(504, "UPSTREAM_TIMEOUT", "The chess provider took too long to respond. Please retry your report.").body);
         } else {
-          res.status(502).json(prepError(502, "UPSTREAM_UNAVAILABLE", "Could not reach the chess provider. Please retry your report.").body);
+          res.status(500).json(prepError(500, "UNKNOWN_ERROR", "ChessOTB could not generate this report. Please retry your report.").body);
         }
       } finally {
         req.removeListener("aborted", cancelRequest);
@@ -498,17 +501,26 @@ export function createPrepRouter(): Router {
       if (!opponentUsername || !reportJson) {
         res.status(400).json({ error: "opponentUsername and reportJson are required" }); return;
       }
+      const identity = savedScoutIdentityFromReport(reportJson);
+      if (!identity || identity.normalizedUsername !== opponentUsername.toLowerCase().trim()) {
+        res.status(422).json({ error: "Saved report is missing immutable provider and format identity." }); return;
+      }
+      const serializedReport = typeof reportJson === "string" ? reportJson : JSON.stringify(reportJson);
       const db = await getDb();
-      const [existing] = await db.select({ id: savedPrepReports.id })
+      const existingRows = await db.select({ id: savedPrepReports.id, reportJson: savedPrepReports.reportJson })
         .from(savedPrepReports)
         .where(and(eq(savedPrepReports.userId, userId), eq(savedPrepReports.opponentUsername, opponentUsername.toLowerCase().trim())))
-        .limit(1);
+        .limit(50);
+      const existing = existingRows.find((row) => {
+        const existingIdentity = savedScoutIdentityFromReport(row.reportJson);
+        return existingIdentity !== null && savedScoutIdentityKey(existingIdentity) === savedScoutIdentityKey(identity);
+      });
       if (existing) {
         await db.update(savedPrepReports)
           .set({
             opponentName: opponentName ?? null, winRate: winRate ?? null,
             gamesAnalyzed: gamesAnalyzed ?? null, prepLinesCount: prepLinesCount ?? null,
-            reportJson: typeof reportJson === "string" ? reportJson : JSON.stringify(reportJson),
+            reportJson: serializedReport,
             savedAt: new Date(),
           }).where(eq(savedPrepReports.id, existing.id));
         res.json({ id: existing.id, updated: true });
@@ -517,7 +529,7 @@ export function createPrepRouter(): Router {
           userId, opponentUsername: opponentUsername.toLowerCase().trim(),
           opponentName: opponentName ?? null, winRate: winRate ?? null,
           gamesAnalyzed: gamesAnalyzed ?? null, prepLinesCount: prepLinesCount ?? null,
-          reportJson: typeof reportJson === "string" ? reportJson : JSON.stringify(reportJson),
+          reportJson: serializedReport,
         });
         res.json({ id: result.insertId, updated: false });
       }
@@ -536,10 +548,10 @@ export function createPrepRouter(): Router {
         id: savedPrepReports.id, opponentUsername: savedPrepReports.opponentUsername,
         opponentName: savedPrepReports.opponentName, winRate: savedPrepReports.winRate,
         gamesAnalyzed: savedPrepReports.gamesAnalyzed, prepLinesCount: savedPrepReports.prepLinesCount,
-        savedAt: savedPrepReports.savedAt,
+        savedAt: savedPrepReports.savedAt, reportJson: savedPrepReports.reportJson,
       }).from(savedPrepReports).where(eq(savedPrepReports.userId, userId))
         .orderBy(desc(savedPrepReports.savedAt)).limit(50);
-      res.json({ reports: rows });
+      res.json({ reports: rows.map(({ reportJson, ...row }) => ({ ...row, identity: savedScoutIdentityFromReport(reportJson) })) });
     } catch (err) {
       logger.error("[saved-prep] list error:", err);
       res.status(500).json({ error: "Failed to fetch saved reports" });

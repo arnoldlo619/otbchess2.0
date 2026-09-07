@@ -1,16 +1,29 @@
 export type PrepProvider = "chesscom" | "lichess";
-export type PrepErrorCode = "INVALID_USERNAME" | "PLAYER_NOT_FOUND" | "UPSTREAM_RATE_LIMITED" | "UPSTREAM_TIMEOUT" | "UPSTREAM_UNAVAILABLE" | "NO_ELIGIBLE_GAMES" | "ALL_GAMES_FILTERED" | "REQUEST_CANCELLED" | "UNKNOWN";
+export type PrepErrorCode =
+  | "INVALID_USERNAME"
+  | "PLAYER_NOT_FOUND"
+  | "NO_RECENT_GAMES"
+  | "NO_ELIGIBLE_GAMES"
+  | "ALL_GAMES_FILTERED"
+  | "UPSTREAM_RATE_LIMITED"
+  | "UPSTREAM_TIMEOUT"
+  | "UPSTREAM_UNAVAILABLE"
+  | "PGN_PARSE_FAILED"
+  | "REQUEST_CANCELLED"
+  | "UNKNOWN_ERROR";
 
 export function derivePrepErrorCode(message: string | null | undefined): PrepErrorCode {
   const value = message?.toLowerCase() ?? "";
   if (value.includes("not found")) return "PLAYER_NOT_FOUND";
   if (value.includes("rate-limit")) return "UPSTREAM_RATE_LIMITED";
   if (value.includes("took too long") || value.includes("timeout")) return "UPSTREAM_TIMEOUT";
-  if (value.includes("no eligible") || value.includes("no recent games")) return "NO_ELIGIBLE_GAMES";
+  if (value.includes("no recent games")) return "NO_RECENT_GAMES";
+  if (value.includes("no eligible")) return "NO_ELIGIBLE_GAMES";
   if (value.includes("filtered out")) return "ALL_GAMES_FILTERED";
+  if (value.includes("pgn") || value.includes("parse")) return "PGN_PARSE_FAILED";
   if (value.includes("cancelled")) return "REQUEST_CANCELLED";
   if (value.includes("temporarily unavailable") || value.includes("could not reach")) return "UPSTREAM_UNAVAILABLE";
-  return "UNKNOWN";
+  return "UNKNOWN_ERROR";
 }
 
 export function describePrepError({ code, username, provider }: { code: PrepErrorCode; username: string; provider: PrepProvider }) {
@@ -37,13 +50,23 @@ export function describePrepError({ code, username, provider }: { code: PrepErro
     };
   }
 
-  if (code === "NO_ELIGIBLE_GAMES" || code === "ALL_GAMES_FILTERED") {
+  if (code === "NO_RECENT_GAMES" || code === "NO_ELIGIBLE_GAMES" || code === "ALL_GAMES_FILTERED") {
     return {
       title: `We found ${quotedUsername}, but not enough eligible recent games.`,
       detail: "Only rated, recent games with usable move data are included in a Standard prep report.",
       reasons: ["The player may not have enough recent rated games in this format.", "Some games may be excluded because their move data is incomplete."],
       supportsRetry: true,
       supportsFilterControls: true,
+    };
+  }
+
+  if (code === "PGN_PARSE_FAILED") {
+    return {
+      title: `We couldn’t read enough recent ${providerName} games for ${quotedUsername}.`,
+      detail: "The provider returned recent games, but their move records could not be verified for a Standard prep report.",
+      reasons: ["This is a move-data parsing issue, not a finding about the player’s game history."],
+      supportsRetry: true,
+      supportsFilterControls: false,
     };
   }
 
