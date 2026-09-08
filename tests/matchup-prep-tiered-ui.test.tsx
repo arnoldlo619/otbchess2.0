@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const avatarHookMock = vi.hoisted(() => vi.fn());
@@ -9,6 +9,7 @@ vi.mock("../client/src/hooks/useChessAvatar.js", () => ({
 }));
 
 import { V3ScoutReportTab } from "../client/src/components/prep/V3ScoutReportTab.js";
+import { PrepExportCard } from "../client/src/components/prep/PrepExportCard.js";
 import type { ScoutReportV3 } from "../shared/prepTypes.js";
 
 const tokens = {
@@ -92,5 +93,18 @@ describe("free Matchup Prep Scout Brief", () => {
     expect(screen.getByText("1... c5")).toBeTruthy();
     expect(screen.queryByText("No high-confidence action yet")).toBeNull();
     expect(screen.queryByRole("link", { name: /View Pro/i })).toBeNull();
+  });
+
+  it("renders a direct-label opening-frequency chart in the export summary", () => {
+    render(<PrepExportCard report={freeReport} />);
+
+    const chart = screen.getByRole("img", { name: /opening frequency chart for scouted-player/i });
+    expect(within(chart).getByText("Italian Game")).toBeTruthy();
+    expect(within(chart).getByText("Sicilian Defense")).toBeTruthy();
+    expect(within(chart).getByText("White · 8 games · 80%")).toBeTruthy();
+    expect(within(chart).getByText("Black · 7 games · 70%")).toBeTruthy();
+    const bars = within(chart).getAllByTestId("opening-frequency-bar");
+    expect(bars[0].getAttribute("style")).toContain("width: 100%");
+    expect(bars[1].getAttribute("style")).toContain("width: 88%");
   });
 });

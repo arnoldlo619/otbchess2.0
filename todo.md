@@ -201,6 +201,9 @@
 - [x] Matchup Prep brief reassessment: Verify Saved/Recent restoration and export date/provenance parity against immutable report identity
 - [x] Matchup Prep brief reassessment: Capture dark and light Legal Line Explorer QA across both playing-color states and required responsive breakpoints
 - [x] Matchup Prep brief reassessment: Run the production build and record the final release verdict against every acceptance ID
+- [x] Matchup Prep export: Add a data-backed visual chart for the opponent’s most frequently played openings
+- [x] Matchup Prep export: Preserve opening names, frequencies, color context, and theme readability in image and PDF outputs
+- [x] Matchup Prep export: Add regression coverage and validate chart rendering before checkpointing
 - [x] Matchup Prep launch: Create an acceptance ledger mapping provider reliability, data integrity, identity, explorer, accessibility, and responsive requirements to code and tests
 - [x] Matchup Prep launch: Add deterministic regressions for bounded provider behavior, typed errors, dates, opening labels, identity, color scope, and legal explorer state
 - [x] Matchup Prep launch: Enforce bounded Chess.com and Lichess pipelines with cancellation, one retry policy, factual staged progress, and typed error recovery

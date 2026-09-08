@@ -60,3 +60,7 @@ The Legal Line Explorer regression now verifies its local White/Black switch in 
 ## 2026-09-07 reassessment verdict
 
 The reassessment found and resolved four remaining launch-quality gaps: overlarge Chess.com monthly archive handling, slow cache-persistence impact on the response path, viewer-timezone date shifts, and ambiguous cross-year date presentation. Saved and Recent report identities were additionally verified to preserve provider and requested formats. The production build completed successfully, and the focused acceptance suite passed with 77 Matchup Prep tests plus four Legal Line Explorer interaction tests.
+
+## Opening-frequency export chart
+
+On the live Hikaru Chess.com report, the export surface now renders a **Most-played openings** horizontal-bar chart sourced from the same immutable opening summary as the report. Each bar carries direct opening, color, game-count, and percentage labels, while the bar width is scaled against the most frequent observed opening. This preserves clarity in image and PDF exports without relying on color alone.

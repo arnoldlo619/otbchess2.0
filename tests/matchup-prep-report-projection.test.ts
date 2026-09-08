@@ -28,6 +28,10 @@ function snapshotReport(): ScoutReportV3 {
       freshness: "usable",
       notes: [],
     },
+    openingSummary: {
+      white: [{ name: "Italian Game", moves: ["e4", "e5", "Nf3", "Nc6"], games: 9, share: 0.75, score: 0.61 }],
+      black: [{ name: "Sicilian Defense", moves: ["e4", "c5", "Nf3", "d6"], games: 3, share: 0.75, score: 0.42 }],
+    },
     openingForecast: { white: [], black: [] },
     insights: [],
     scoutBrief: [{
@@ -88,5 +92,13 @@ describe("Matchup Prep immutable report projection", () => {
     expect(source).toContain('"Opponent win rate"');
     expect(source).toContain("const colorSummary = `${whiteWinRate ?? \"—\"}% as White · ${blackWinRate ?? \"—\"}% as Black`;");
     expect(source).not.toMatch(/myColor\??:/);
+  });
+
+  it("defines a direct-label opening-frequency chart from the immutable opening summary", () => {
+    const source = readFileSync(resolve(process.cwd(), "client/src/components/prep/PrepExportCard.tsx"), "utf8");
+    expect(source).toContain("function mostPlayedOpenings");
+    expect(source).toContain("Opening frequency");
+    expect(source).toContain("opening-frequency-bar");
+    expect(source).toContain("view.openingSummary");
   });
 });

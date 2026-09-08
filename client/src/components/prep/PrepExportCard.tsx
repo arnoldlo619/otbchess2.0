@@ -28,6 +28,21 @@ function winRate(record: { w: number; d: number; l: number }): number | null {
   return total > 0 ? Math.round((record.w / total) * 100) : null;
 }
 
+type OpeningFrequency = {
+  color: "white" | "black";
+  games: number;
+  name: string;
+  share: number;
+};
+
+function mostPlayedOpenings(openingSummary: ReturnType<typeof projectScoutReport>["openingSummary"]): OpeningFrequency[] {
+  return (["white", "black"] as const)
+    .flatMap(color => openingSummary[color].map(opening => ({ color, games: opening.games, name: opening.name, share: opening.share })))
+    .filter(opening => opening.games > 0)
+    .sort((a, b) => b.games - a.games || b.share - a.share || a.name.localeCompare(b.name))
+    .slice(0, 4);
+}
+
 export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
   if (!report.reportSnapshot) return null;
   const view = projectScoutReport(report);
@@ -38,11 +53,13 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
   const colorSummary = `${whiteWinRate ?? "—"}% as White · ${blackWinRate ?? "—"}% as Black`;
   const summaryStats = [["Opponent win rate", colorSummary], ["Avg rating", avgRating ?? "Not available"]] as const;
   const isPro = view.tier === "pro";
+  const openingFrequencies = mostPlayedOpenings(view.openingSummary);
+  const maxOpeningGames = Math.max(1, ...openingFrequencies.map(opening => opening.games));
 
   return (
     <div
       ref={cardRef}
-      style={{ width: 1080, minHeight: 680, padding: 48, boxSizing: "border-box", background: COLORS.page, color: COLORS.primary, fontFamily: "Inter, Helvetica Neue, Arial, sans-serif" }}
+      style={{ width: 1080, minHeight: 900, padding: 48, boxSizing: "border-box", background: COLORS.page, color: COLORS.primary, fontFamily: "Inter, Helvetica Neue, Arial, sans-serif" }}
     >
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -94,6 +111,37 @@ export function PrepExportCard({ report, cardRef }: PrepExportCardProps) {
             ))}
           </div>
         )}
+      </section>
+
+      <section style={{ marginTop: 22, padding: 20, borderRadius: 14, border: `1px solid ${COLORS.border}`, background: COLORS.surface }} aria-labelledby="opening-frequency-chart-title">
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
+          <div>
+            <p style={{ margin: 0, color: COLORS.green, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>Opening frequency</p>
+            <h2 id="opening-frequency-chart-title" style={{ margin: "5px 0 0", fontSize: 18, lineHeight: 1.2 }}>Most-played openings</h2>
+          </div>
+          <span style={{ color: COLORS.tertiary, fontSize: 11 }}>Top {openingFrequencies.length || 0} observed</span>
+        </div>
+        {openingFrequencies.length > 0 ? (
+          <div role="img" aria-label={`Opening frequency chart for ${view.opponent.username}: ${openingFrequencies.map(opening => `${opening.name} as ${titleCase(opening.color)}, ${opening.games} games`).join("; ")}`}>
+            {openingFrequencies.map(opening => {
+              const width = `${Math.max(8, Math.round((opening.games / maxOpeningGames) * 100))}%`;
+              const colorLabel = titleCase(opening.color);
+              const barColor = opening.color === "white" ? COLORS.green : "#9ab8eb";
+              return (
+                <div key={`${opening.color}:${opening.name}`} style={{ display: "grid", gridTemplateColumns: "minmax(240px, 0.9fr) minmax(250px, 1.3fr) 118px", alignItems: "center", gap: 16, marginTop: 13 }}>
+                  <div>
+                    <p style={{ margin: 0, color: COLORS.primary, fontSize: 14, fontWeight: 700 }}>{opening.name}</p>
+                    <p style={{ margin: "4px 0 0", color: COLORS.secondary, fontSize: 11 }}>{colorLabel} · {opening.games} game{opening.games === 1 ? "" : "s"} · {Math.round(opening.share * 100)}%</p>
+                  </div>
+                  <div style={{ height: 10, overflow: "hidden", borderRadius: 999, background: COLORS.border }} aria-hidden="true">
+                    <div data-testid="opening-frequency-bar" style={{ width, height: "100%", borderRadius: 999, background: barColor }} />
+                  </div>
+                  <p style={{ margin: 0, color: COLORS.primary, fontSize: 12, fontWeight: 700, textAlign: "right" }}>{opening.games} game{opening.games === 1 ? "" : "s"} · {Math.round(opening.share * 100)}%</p>
+                </div>
+              );
+            })}
+          </div>
+        ) : <p style={{ margin: 0, color: COLORS.secondary, fontSize: 13 }}>No opening-frequency data is available in this report.</p>}
       </section>
 
       <section style={{ display: "flex", gap: 12, marginTop: 22, padding: 16, borderRadius: 12, border: `1px solid ${COLORS.border}` }}>
