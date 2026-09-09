@@ -33,7 +33,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
-import { normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
+import { chessComPlayerEndpoint, normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type RowStatus = "pending" | "loading" | "ready" | "duplicate" | "error";
@@ -79,7 +79,7 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
 // to avoid CORS issues, IP-based rate limiting, and 404s for high-profile accounts
 // (e.g. @magnuscarlsen, @hikaru) that chess.com blocks from direct browser requests.
 export async function lookupChessComRsvp(username: string): Promise<Partial<Player>> {
-  const res = await fetchWithRetry(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
+  const res = await fetchWithRetry(chessComPlayerEndpoint(username));
   if (res.status === 404) throw new Error("Not found on chess.com");
   if (res.status === 429) throw new Error("Rate limited — try again in a moment");
   if (!res.ok) throw new Error(`chess.com error (${res.status})`);

@@ -13,7 +13,16 @@ describe("service worker Matchup Prep network policy", () => {
     expect(prepPolicy).toBeGreaterThan(-1);
     expect(genericApiPolicy).toBeGreaterThan(prepPolicy);
     expect(source.slice(prepPolicy, genericApiPolicy)).toContain("event.respondWith(fetch(request))");
-    expect(source).toContain('const CACHE_VERSION = "otb-chess-v5"');
-    expect(registrationSource).toContain('.register("/sw.js?v=otb-chess-v5", { scope: "/" })');
+    expect(source).toContain('const CACHE_VERSION = "otb-chess-v6"');
+    expect(registrationSource).toContain('.register("/sw.js?v=otb-chess-v6", { scope: "/" })');
+  });
+
+  it("keeps tournament player identity responses network-only so stale profile payloads cannot reach registration flows", () => {
+    const playerPolicy = source.indexOf('if (url.pathname.startsWith("/api/chess/player/"))');
+    const genericApiPolicy = source.indexOf('if (url.pathname.startsWith("/api/"))');
+
+    expect(playerPolicy).toBeGreaterThan(-1);
+    expect(genericApiPolicy).toBeGreaterThan(playerPolicy);
+    expect(source.slice(playerPolicy, genericApiPolicy)).toContain('fetch(request, { cache: "no-store" })');
   });
 });

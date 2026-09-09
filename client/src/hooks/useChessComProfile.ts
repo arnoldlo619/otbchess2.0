@@ -11,7 +11,7 @@
 import { useState, useCallback } from "react";
 
 import { authFetch } from "@/lib/apiFetch";
-import { normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
+import { chessComPlayerEndpoint, normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface OpeningEntry {
   name: string;
@@ -75,7 +75,7 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
 
   if (cache.has(key)) return cache.get(key)!;
 
-  const res = await authFetch(`/api/chess/player/${encodeURIComponent(key)}`);
+  const res = await authFetch(chessComPlayerEndpoint(key));
 
   if (res.status === 404) {
     const err = new Error("not_found");

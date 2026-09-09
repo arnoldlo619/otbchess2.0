@@ -14,7 +14,7 @@
 
 /* global self, caches, fetch, Response, AbortController, setTimeout, clearTimeout, URL */
 
-const CACHE_VERSION = "otb-chess-v5";
+const CACHE_VERSION = "otb-chess-v6";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -75,6 +75,13 @@ self.addEventListener("fetch", (event) => {
   // { error: "Offline" } responses. Always let the application own this request.
   if (url.pathname.startsWith("/api/prep/")) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  // Player identity is used by Director, RSVP imports, and QR registration.
+  // It must never replay a cached response that may have an older payload shape.
+  if (url.pathname.startsWith("/api/chess/player/")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
     return;
   }
 

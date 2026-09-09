@@ -42,7 +42,7 @@ import type { Player } from "@/lib/tournamentData";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
 import { authFetch } from "@/lib/apiFetch";
-import { normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
+import { chessComPlayerEndpoint, normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Platform = "chess.com" | "lichess" | "manual" | "csv";
@@ -110,7 +110,7 @@ async function fetchWithRetry(url: string, fetchFn: (url: string) => Promise<Res
 export async function lookupChessCom(username: string): Promise<LookupResult> {
   // Route through server proxy to avoid browser User-Agent restrictions and
   // Cloudflare rate-limiting on direct browser → api.chess.com calls
-  const res = await fetchWithRetry(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`, authFetch);
+  const res = await fetchWithRetry(chessComPlayerEndpoint(username), authFetch);
   if (res.status === 404) throw new Error("Player not found on chess.com");
   if (res.status === 429) throw new Error("Rate limited — try again in a moment");
   if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`);

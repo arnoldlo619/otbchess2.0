@@ -210,6 +210,11 @@
 - [x] Tournament Wizard: Remove the redundant format-selection heading while retaining the Choose a format to get started instruction
 - [x] Tournament Wizard: Refine all four mode cards for high-contrast dark appearance without changing typography or selection behavior
 - [x] Tournament Wizard: Validate dark/light formats, selected state, and responsive layouts before checkpointing
+- [x] Tournament incident: Reproduce the live undefined-name failure through director player lookup, RSVP upload, and QR join flows
+- [x] Tournament incident: Identify and repair the actual shared runtime source rather than relying on assumed proxy payloads
+- [x] Tournament incident: Add end-to-end flow coverage for Chess.com ELO/profile lookup, participant persistence, RSVP imports, and QR username registration
+- [x] Tournament incident: Verify all three live participant entry points with provider-backed data before checkpointing
+- [x] Tournament incident: Prevent stale PWA and API-cached Chess.com profile payloads from reaching director, RSVP, or QR registration lookups
 - [x] Matchup Prep launch: Create an acceptance ledger mapping provider reliability, data integrity, identity, explorer, accessibility, and responsive requirements to code and tests
 - [x] Matchup Prep launch: Add deterministic regressions for bounded provider behavior, typed errors, dates, opening labels, identity, color scope, and legal explorer state
 - [x] Matchup Prep launch: Enforce bounded Chess.com and Lichess pipelines with cancellation, one retry policy, factual staged progress, and typed error recovery

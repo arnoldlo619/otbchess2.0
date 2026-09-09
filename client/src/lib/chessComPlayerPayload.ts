@@ -7,6 +7,15 @@ export type ChessComPlayerPayload = {
   stats: Record<string, unknown>;
 };
 
+/**
+ * Player identity and ratings are live tournament inputs. Keep this URL versioned
+ * so a service worker from an older release cannot replay the former nested
+ * payload contract to Add Player, RSVP import, or QR registration.
+ */
+export function chessComPlayerEndpoint(username: string): string {
+  return `/api/chess/player/${encodeURIComponent(username.trim().toLowerCase())}?v=player-v2`;
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>

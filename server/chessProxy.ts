@@ -78,6 +78,11 @@ export function createChessProxyRouter(): Router {
   router.get("/chess/player/:username", chessProxyLimiter, async (req, res) => {
     try {
       const { status, body } = await proxyChessCom(req.params.username);
+      // Tournament registration depends on current provider profile semantics.
+      // Do not allow browsers, CDNs, or the PWA to replay an older flat/nested
+      // response after a rolling client deployment.
+      res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
       res.status(status).json(body);
     } catch (err) {
       logger.error("[chess proxy]", err);

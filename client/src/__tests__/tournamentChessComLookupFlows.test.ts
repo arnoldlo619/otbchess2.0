@@ -8,6 +8,7 @@ vi.mock("@/lib/apiFetch", () => ({
 
 import { lookupChessCom } from "../components/AddPlayerModal.js";
 import { lookupChessComRsvp } from "../components/UploadRSVPModal.js";
+import { fetchFromChessCom } from "../hooks/useChessComProfile.js";
 
 const flatChessComPayload = {
   username: "hikaru",
@@ -42,7 +43,7 @@ describe("Tournament Chess.com lookup flows", () => {
   it("lets tournament directors add a player from a flattened Chess.com profile payload", async () => {
     const player = await lookupChessCom("Hikaru");
 
-    expect(authFetchMock).toHaveBeenCalledWith("/api/chess/player/hikaru");
+    expect(authFetchMock).toHaveBeenCalledWith("/api/chess/player/hikaru?v=player-v2");
     expect(player).toMatchObject({
       name: "Hikaru Nakamura",
       username: "hikaru",
@@ -57,7 +58,7 @@ describe("Tournament Chess.com lookup flows", () => {
   it("lets RSVP spreadsheet imports resolve a player from the same flattened Chess.com payload", async () => {
     const player = await lookupChessComRsvp("Hikaru");
 
-    expect(fetch).toHaveBeenCalledWith("/api/chess/player/hikaru");
+    expect(fetch).toHaveBeenCalledWith("/api/chess/player/hikaru?v=player-v2");
     expect(player).toMatchObject({
       name: "Hikaru Nakamura",
       username: "hikaru",
@@ -66,6 +67,20 @@ describe("Tournament Chess.com lookup flows", () => {
       elo: 2811,
       platform: "chesscom",
       country: "US",
+    });
+  });
+
+  it("uses the same versioned live profile contract for QR join username lookup", async () => {
+    const profile = await fetchFromChessCom("Hikaru-qr-incident-check");
+
+    expect(authFetchMock).toHaveBeenCalledWith(
+      "/api/chess/player/hikaru-qr-incident-check?v=player-v2",
+    );
+    expect(profile).toMatchObject({
+      username: "hikaru",
+      name: "Hikaru Nakamura",
+      rapid: 2811,
+      blitz: 3168,
     });
   });
 });
