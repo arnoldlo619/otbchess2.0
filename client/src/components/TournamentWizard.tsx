@@ -1015,15 +1015,15 @@ function TournamentFormatCard({
       onClick={() => onSelect(mode)}
       aria-pressed={isSelected}
       aria-label={`${title}. ${description}`}
-      className="group relative flex flex-col items-start overflow-hidden rounded-[16px] border text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#436850] focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:rounded-[20px] motion-reduce:hover:translate-y-0"
+      className="group relative flex flex-col items-start overflow-hidden rounded-[16px] border text-left transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1.5 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71dc8a] focus-visible:ring-offset-2 focus-visible:ring-offset-[#173321] sm:rounded-[20px] motion-reduce:hover:translate-y-0"
       style={{
-        background: "#f5f0e6",
-        borderColor: isSelected ? "rgba(49,139,75,0.9)" : "rgba(67,104,80,0.25)",
+        background: "linear-gradient(145deg, oklch(0.245 0.055 145) 0%, oklch(0.205 0.045 145) 100%)",
+        borderColor: isSelected ? "rgba(113,220,138,0.88)" : "rgba(219,255,226,0.16)",
         touchAction: "manipulation",
-        boxShadow: isSelected ? "0 0 0 1px rgba(96,214,121,0.35), 0 6px 22px rgba(31,123,65,0.20)" : "0 2px 12px rgba(0,0,0,0.12)",
+        boxShadow: isSelected ? "0 0 0 1px rgba(113,220,138,0.30), 0 10px 30px rgba(2,24,13,0.40)" : "0 2px 14px rgba(2,24,13,0.30)",
       }}
-      onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.22)"; }}
-      onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.12)"; }}
+      onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 10px 30px rgba(2,24,13,0.48)"; }}
+      onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 14px rgba(2,24,13,0.30)"; }}
     >
       {isSelected && (
         <div
@@ -1035,27 +1035,27 @@ function TournamentFormatCard({
       <div className="flex w-full items-center justify-between px-4 pt-4 sm:px-5 sm:pt-5">
         <span
           className="rounded-[4px] border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] sm:px-2.5 sm:text-[10px]"
-          style={{ color: "#2a5535", borderColor: "#2a5535", background: "transparent" }}
+          style={{ color: "#9AE6A8", borderColor: "rgba(154,230,168,0.46)", background: "rgba(113,220,138,0.10)" }}
         >
           {badge}
         </span>
-        <span className="font-mono text-xs font-bold tracking-[0.2em] text-[#2a5535]/50">{number}</span>
+        <span className="font-mono text-xs font-bold tracking-[0.2em] text-white/38">{number}</span>
       </div>
 
       {/* Title + subtitle */}
       <div className="w-full px-4 pt-2 sm:px-5 sm:pt-3">
-        <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-[#1a3a22] sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+        <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {title}
         </h3>
-        <p className="mt-1 text-[13px] leading-relaxed text-[#2a5535]/60 sm:text-sm">{description}</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-white/62 sm:text-sm">{description}</p>
       </div>
 
       {/* Separator */}
-      <div className="w-full px-4 sm:px-5"><div className="mt-2 border-t border-[#2a5535]/15 sm:mt-3" /></div>
+      <div className="w-full px-4 sm:px-5"><div className="mt-2 border-t border-white/12 sm:mt-3" /></div>
 
       {/* Illustration */}
       <div className="w-full flex-1 px-4 pt-3 pb-0 sm:px-5 sm:pt-4">
-        <div className="relative w-full overflow-hidden rounded-[10px] bg-[#e4dbc8] sm:rounded-[14px]" style={{ aspectRatio: "3 / 2" }}>
+        <div className="relative w-full overflow-hidden rounded-[10px] bg-[oklch(0.17_0.035_145)] ring-1 ring-inset ring-white/10 sm:rounded-[14px]" style={{ aspectRatio: "3 / 2" }}>
           <div
             aria-hidden="true"
             className="format-image-placeholder absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.08),rgba(255,255,255,0.38),rgba(255,255,255,0.08))] bg-[length:200%_100%] motion-safe:animate-[formatImagePlaceholder_1.3s_ease-in-out_infinite]"
@@ -1077,8 +1077,8 @@ function TournamentFormatCard({
 
       {/* Footer: meta + arrow */}
       <div className="flex w-full items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
-        <span className="text-[11px] font-semibold text-[#2a5535]/55 sm:text-xs">{meta}</span>
-        <ArrowRight className="h-4 w-4 text-[#2a5535]/60 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5" />
+        <span className="text-[11px] font-semibold text-white/52 sm:text-xs">{meta}</span>
+        <ArrowRight className="h-4 w-4 text-[#9AE6A8]/78 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5" />
       </div>
     </button>
   );
@@ -1183,7 +1183,6 @@ function ModeSelect({
           >
             Create a Tournament
           </h2>
-          <p className="px-4 text-sm leading-relaxed text-white/55 sm:px-0 sm:text-base">How would you like to get started?</p>
           <p className="px-4 text-sm leading-relaxed text-white/55 sm:px-0 sm:text-base" style={{ marginTop: "-0.25rem" }}>Choose a format to get started.</p>
         </div>
 
