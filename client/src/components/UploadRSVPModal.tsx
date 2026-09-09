@@ -33,6 +33,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
+import { normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type RowStatus = "pending" | "loading" | "ready" | "duplicate" | "error";
@@ -77,14 +78,12 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
 // Route all chess.com lookups through the server proxy (/api/chess/player/:username)
 // to avoid CORS issues, IP-based rate limiting, and 404s for high-profile accounts
 // (e.g. @magnuscarlsen, @hikaru) that chess.com blocks from direct browser requests.
-async function lookupChessCom(username: string): Promise<Partial<Player>> {
+export async function lookupChessComRsvp(username: string): Promise<Partial<Player>> {
   const res = await fetchWithRetry(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
   if (res.status === 404) throw new Error("Not found on chess.com");
   if (res.status === 429) throw new Error("Rate limited — try again in a moment");
   if (!res.ok) throw new Error(`chess.com error (${res.status})`);
-  const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
-  const profile = data.profile ?? {};
-  const stats = data.stats ?? {};
+  const { profile, stats } = normalizeChessComPlayerPayload(await res.json(), username);
   // Parse all rating categories with safe optional chaining
   const rapidElo: number | undefined =
     (stats.chess_rapid as Record<string, unknown> | undefined)?.last
@@ -149,7 +148,7 @@ async function lookupLichess(username: string): Promise<Partial<Player>> {
   };
 }
 
-function makePlayer(partial: Partial<Player>): Player {
+export function makePlayer(partial: Partial<Player>): Player {
   return {
     id: nanoid(),
     name: partial.name ?? partial.username ?? "Unknown",
@@ -397,7 +396,7 @@ export function UploadRSVPModal({
           try {
             const partial =
               platform === "chesscom"
-                ? await lookupChessCom(username)
+                ? await lookupChessComRsvp(username)
                 : await lookupLichess(username);
             const player = makePlayer(partial);
             setRows((prev) =>

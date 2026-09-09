@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { X, ExternalLink, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
 
 // ─── Country flag helper ──────────────────────────────────────────────────────
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -214,7 +215,7 @@ export function PlayerProfileSheet({ player, onClose, isDark, rank, totalPlayers
     // Fetch profile + stats
     fetch(`/api/chess/player/${encodeURIComponent(username)}`)
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-      .then((data: ChessProfile) => setChessProfile(data))
+      .then((data: unknown) => setChessProfile(normalizeChessComPlayerPayload(data, username) as ChessProfile))
       .catch(() => setProfileError(true))
       .finally(() => setLoadingProfile(false));
 

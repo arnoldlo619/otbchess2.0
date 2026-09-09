@@ -11,6 +11,7 @@
 import { useState, useCallback } from "react";
 
 import { authFetch } from "@/lib/apiFetch";
+import { normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface OpeningEntry {
   name: string;
@@ -84,8 +85,7 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
 
   if (!res.ok) throw new Error(`chess.com proxy error: ${res.status}`);
 
-  const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
-  const { profile: profileData, stats: statsData } = data;
+  const { profile: profileData, stats: statsData } = normalizeChessComPlayerPayload(await res.json(), username);
 
   const rapid = (statsData?.chess_rapid as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
   const blitz = (statsData?.chess_blitz as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;

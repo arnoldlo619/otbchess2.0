@@ -204,6 +204,9 @@
 - [x] Matchup Prep export: Add a data-backed visual chart for the opponent’s most frequently played openings
 - [x] Matchup Prep export: Preserve opening names, frequencies, color context, and theme readability in image and PDF outputs
 - [x] Matchup Prep export: Add regression coverage and validate chart rendering before checkpointing
+- [x] Tournament operations: Diagnose the shared undefined-name failure in director participant lookup and RSVP uploads
+- [x] Tournament operations: Repair participant and RSVP data contracts with clear validation and recovery states
+- [x] Tournament operations: Add end-to-end regression coverage for Chess.com participant lookup and RSVP upload flows
 - [x] Matchup Prep launch: Create an acceptance ledger mapping provider reliability, data integrity, identity, explorer, accessibility, and responsive requirements to code and tests
 - [x] Matchup Prep launch: Add deterministic regressions for bounded provider behavior, typed errors, dates, opening labels, identity, color scope, and legal explorer state
 - [x] Matchup Prep launch: Enforce bounded Chess.com and Lichess pipelines with cancellation, one retry policy, factual staged progress, and typed error recovery
