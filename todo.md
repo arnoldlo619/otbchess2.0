@@ -217,6 +217,9 @@
 - [x] Tournament payments: Add the full payment configuration experience to the Director Settings dashboard
 - [x] Tournament payments: Preserve payment links, QR uploads, toggles, ordering, instructions, validation, persistence, and player-facing display
 - [x] Tournament payments: Validate Director Settings and wizard removal across desktop and mobile before checkpointing
+- [x] Tournament Wizard: Audit and raise low-contrast supporting text for dark and light appearance modes
+- [x] Tournament Wizard: Preserve typography hierarchy and selection behavior while improving visible text contrast
+- [x] Tournament Wizard: Add contrast regression coverage and validate desktop/mobile wizard readability before checkpointing
 - [x] Tournament incident: Reproduce the live undefined-name failure through director player lookup, RSVP upload, and QR join flows
 - [x] Tournament incident: Identify and repair the actual shared runtime source rather than relying on assumed proxy payloads
 - [x] Tournament incident: Add end-to-end flow coverage for Chess.com ELO/profile lookup, participant persistence, RSVP imports, and QR username registration

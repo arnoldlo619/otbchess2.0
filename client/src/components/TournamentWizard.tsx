@@ -260,7 +260,7 @@ const T = {
   lBorderFocus: "#436850",
   lText: "#12372A",
   lSub: "#436850",
-  lMuted: "#9CA3AF",
+  lMuted: "#64748B",
   lInput: "#FFFFFF",
   lInputBorder: "#D1D5DB",
   // dark
@@ -270,8 +270,8 @@ const T = {
   dBorder: "rgba(255,255,255,0.10)",
   dBorderFocus: "#436850",
   dText: "#FFFFFF",
-  dSub: "rgba(255,255,255,0.55)",
-  dMuted: "rgba(255,255,255,0.30)",
+  dSub: "rgba(255,255,255,0.72)",
+  dMuted: "rgba(255,255,255,0.52)",
   dInput: "oklch(0.25 0.07 145)",
   dInputBorder: "rgba(255,255,255,0.12)",
 };
@@ -573,7 +573,7 @@ function HeroPanel({
 
       {/* Step content */}
       <div className="relative" key={`${mode}-${step}`} style={{ animation: `heroIn 0.45s cubic-bezier(0.22,1,0.36,1) both` }}>
-        <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mb-4">
+        <p className="text-xs font-semibold tracking-widest uppercase text-white/68 mb-4">
           {s.hero.eyebrow}
         </p>
         <div className="flex items-start gap-3 mb-6">
@@ -594,7 +594,7 @@ function HeroPanel({
             {s.hero.title}
           </h2>
         </div>
-        <p className="text-white/55 text-sm leading-relaxed max-w-xs">{s.hero.body}</p>
+        <p className="text-white/78 text-sm leading-relaxed max-w-xs">{s.hero.body}</p>
       </div>
 
       {/* Step dots */}
@@ -820,7 +820,7 @@ function TournamentFormatCard({
         >
           {badge}
         </span>
-        <span className="font-mono text-xs font-bold tracking-[0.2em] text-white/38">{number}</span>
+        <span className="font-mono text-xs font-bold tracking-[0.2em] text-white/60">{number}</span>
       </div>
 
       {/* Title + subtitle */}
@@ -828,7 +828,7 @@ function TournamentFormatCard({
         <h3 className="text-[22px] font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-[28px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {title}
         </h3>
-        <p className="mt-1 text-[13px] leading-relaxed text-white/62 sm:text-sm">{description}</p>
+        <p className="mt-1 text-[13px] leading-relaxed text-white/74 sm:text-sm">{description}</p>
       </div>
 
       {/* Separator */}
@@ -858,7 +858,7 @@ function TournamentFormatCard({
 
       {/* Footer: meta + arrow */}
       <div className="flex w-full items-center justify-between px-4 py-3 sm:px-5 sm:py-4">
-        <span className="text-[11px] font-semibold text-white/52 sm:text-xs">{meta}</span>
+        <span className="text-[11px] font-semibold text-white/70 sm:text-xs">{meta}</span>
         <ArrowRight className="h-4 w-4 text-[#9AE6A8]/78 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5" />
       </div>
     </button>
@@ -964,7 +964,7 @@ function ModeSelect({
           >
             Create a Tournament
           </h2>
-          <p className="px-4 text-sm leading-relaxed text-white/55 sm:px-0 sm:text-base" style={{ marginTop: "-0.25rem" }}>Choose a format to get started.</p>
+          <p className="px-4 text-sm leading-relaxed text-white/78 sm:px-0 sm:text-base" style={{ marginTop: "-0.25rem" }}>Choose a format to get started.</p>
         </div>
 
         {/* Format cards: screenshot evidence stays visually quiet until a hover or keyboard focus asks for detail. */}

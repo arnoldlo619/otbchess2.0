@@ -16,7 +16,7 @@ describe("Tournament Wizard format-card appearance", () => {
   it("uses high-contrast dark surfaces for all reusable tournament format cards", () => {
     expect(wizardSource).toContain('background: "linear-gradient(145deg, oklch(0.245 0.055 145) 0%, oklch(0.205 0.045 145) 100%)"');
     expect(wizardSource).toContain('text-white sm:text-[28px]');
-    expect(wizardSource).toContain('text-white/62 sm:text-sm');
+    expect(wizardSource).toContain('text-white/74 sm:text-sm');
     expect(wizardSource).toContain('bg-[oklch(0.17_0.035_145)]');
     expect(wizardSource).toContain('focus-visible:ring-[#71dc8a]');
     expect(wizardSource).not.toContain('background: "#f5f0e6"');
@@ -45,5 +45,14 @@ describe("Tournament Wizard format-card appearance", () => {
     expect(wizardSource).toContain('aria-label={`${title}. ${description}`}');
     expect(wizardSource).toContain('focus-visible:ring-[#71dc8a]');
     expect(wizardSource).toContain('touchAction: "manipulation"');
+  });
+
+  it("uses legible supporting-text tokens in both dark and light Wizard appearances", () => {
+    expect(wizardSource).toContain('dSub: "rgba(255,255,255,0.72)"');
+    expect(wizardSource).toContain('dMuted: "rgba(255,255,255,0.52)"');
+    expect(wizardSource).toContain('lMuted: "#64748B"');
+    expect(wizardSource).toContain('text-white/78 text-sm leading-relaxed max-w-xs');
+    expect(wizardSource).toContain('text-white/68 mb-4');
+    expect(wizardSource).toContain('text-white/70 sm:text-xs');
   });
 });
