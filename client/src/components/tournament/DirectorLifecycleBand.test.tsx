@@ -73,12 +73,12 @@ describe("Director lifecycle integration", () => {
   const directorSource = readFileSync(resolve(import.meta.dirname, "../../pages/Director.tsx"), "utf8");
 
   it("routes automatic and manual completion through one retryable publishing path", () => {
-    expect(directorSource).toContain('const [finalizationStatus, setFinalizationStatus] = useState<"idle" | "pending" | "success" | "error">');
+    expect(directorSource).toContain('const [, setFinalizationStatus] = useState<"idle" | "pending" | "success" | "error">');
     expect(directorSource).toContain("const publishFinalTournamentState = useCallback(async () =>");
     expect(directorSource).toContain('setFinalizationStatus("pending")');
     expect(directorSource).toContain('setFinalizationStatus("error")');
     expect(directorSource).toContain('setFinalizationStatus("success")');
-    expect(directorSource.match(/publishFinalTournamentState\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(6);
+    expect(directorSource.match(/publishFinalTournamentState\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(5);
     expect(directorSource).toContain("autoCompletedRef.current = false");
     expect(directorSource).toContain("autoCompletedSwissRef.current = false");
     expect(directorSource).toContain("autoCompletedQuadsRef.current = false");
@@ -93,10 +93,18 @@ describe("Director lifecycle integration", () => {
     expect(navigator).not.toContain("onClick");
   });
 
-  it("mounts the lifecycle band with independent last-saved data", () => {
-    expect(directorSource).toContain("<DirectorLifecycleBand");
-    expect(directorSource).toContain("lastSaved={lastSaved}");
-    expect(directorSource).toContain("lifecycle={directorLifecycle}");
+  it("keeps lifecycle calculations out of the host dashboard chrome", () => {
+    expect(directorSource).not.toContain("<DirectorLifecycleBand");
+    expect(directorSource).not.toContain('from "@/components/tournament/DirectorLifecycleBand"');
+    expect(directorSource).not.toContain("selectDirectorLifecycleStatus");
+    expect(directorSource).not.toContain("lastSaved,");
+  });
+
+  it("removes the decorative recap SVG while preserving the recap action", () => {
+    const recapStart = directorSource.indexOf("Create Recap");
+    const recapSlice = directorSource.slice(Math.max(0, recapStart - 600), recapStart + 120);
+    expect(recapSlice).toContain("Create Recap");
+    expect(recapSlice).not.toContain("<svg");
   });
 
   it("keeps critical Director actions visible without hover-only disclosure", () => {

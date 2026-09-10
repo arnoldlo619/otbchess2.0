@@ -220,6 +220,9 @@
 - [x] Tournament Wizard: Audit and raise low-contrast supporting text for dark and light appearance modes
 - [x] Tournament Wizard: Preserve typography hierarchy and selection behavior while improving visible text contrast
 - [x] Tournament Wizard: Add contrast regression coverage and validate desktop/mobile wizard readability before checkpointing
+- [x] Director dashboard: Remove the redundant draft lifecycle section from tournament host dashboards
+- [x] Director dashboard: Remove the specified decorative SVG without affecting host actions or state
+- [x] Director dashboard: Add regression coverage and validate the simplified host dashboard before checkpointing
 - [x] Tournament incident: Reproduce the live undefined-name failure through director player lookup, RSVP upload, and QR join flows
 - [x] Tournament incident: Identify and repair the actual shared runtime source rather than relying on assumed proxy payloads
 - [x] Tournament incident: Add end-to-end flow coverage for Chess.com ELO/profile lookup, participant persistence, RSVP imports, and QR username registration

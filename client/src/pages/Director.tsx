@@ -31,12 +31,11 @@ import { encodeMetaParam } from "@/lib/base64";
 import { useAuthContext } from "@/context/AuthContext";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { ResultAuditTrail } from "@/components/tournament/ResultAuditTrail";
-import { DirectorLifecycleBand } from "@/components/tournament/DirectorLifecycleBand";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { getPlayerCountError, getTournamentFormatLabel } from "@/lib/formatRegistry";
-import { getTournamentStatusDisplay, selectDirectorLifecycleStatus } from "@/lib/tournamentUtils";
+import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
@@ -2242,7 +2241,6 @@ export default function Director() {
     isRegistration,
     canStart,
     liveStandings,
-    lastSaved,
     addPlayer,
     addLatePlayer,
     updatePlayer,
@@ -2269,17 +2267,7 @@ export default function Director() {
     isElimBracketComplete,
     loadMockQuadsState,
   } = useDirectorState(tournamentId, resultActor);
-  const [finalizationStatus, setFinalizationStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const directorLifecycle = useMemo(() => selectDirectorLifecycleStatus({
-    status: state.status,
-    playerCount: state.players.length,
-    canStart,
-    currentRound: state.currentRound,
-    totalRounds: state.totalRounds,
-    allResultsIn,
-    canGenerateNext,
-    finalizationStatus,
-  }), [allResultsIn, canGenerateNext, canStart, finalizationStatus, state.currentRound, state.players.length, state.status, state.totalRounds]);
+  const [, setFinalizationStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   const devQuadsScenarioLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -3379,17 +3367,6 @@ export default function Director() {
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
           <div className="flex-1 min-w-0 space-y-5">
-
-            <DirectorLifecycleBand
-              lifecycle={directorLifecycle}
-              lastSaved={lastSaved}
-              isDark={isDark}
-              onRetryFinalization={() => {
-                void publishFinalTournamentState().then((published) => {
-                  if (published) toast.success("Final results published.");
-                });
-              }}
-            />
 
             {/* ── Round Timer — mobile: above title; desktop: between title and tabs ── */}
             {!isRegistration && (
@@ -4853,9 +4830,6 @@ export default function Director() {
                                 isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-white border border-[#ADBC9F] text-[#12372A]/80 hover:bg-[#FBFADA]"
                               }`}
                             >
-                              <div className="w-4 h-4 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
-                                <svg viewBox="0 0 24 24" fill="white" className="w-2.5 h-2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
-                              </div>
                               Create Recap
                             </button>
                             {/* More options toggle — Print/Export + Live Stream */}
