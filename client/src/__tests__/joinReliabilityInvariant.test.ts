@@ -174,6 +174,23 @@ describe("Join reliability integration", () => {
     expect(directorStateSource).toContain("export function removeJoinedPlayerFromTournament");
   });
 
+  it("catches QR registrations in active Director tabs when an SSE event is missed", () => {
+    const playerRouteStart = serverSource.indexOf('app.get("/api/tournament/:id/players"');
+    const playerRouteEnd = serverSource.indexOf('app.post("/api/tournament/:id/players"');
+    const playerRoute = serverSource.slice(playerRouteStart, playerRouteEnd);
+    const directorSyncStart = directorSource.indexOf("Server player sync — SSE stream");
+    const directorSyncEnd = directorSource.indexOf("Auto-scroll to the Generate CTA", directorSyncStart);
+    const directorSync = directorSource.slice(directorSyncStart, directorSyncEnd);
+
+    expect(playerRoute).toContain('res.setHeader("Cache-Control", "no-store")');
+    expect(directorSync).toContain('cache: "no-store"');
+    expect(directorSync).toContain("es.onopen = () => { void refreshRemoteRoster(); };");
+    expect(directorSync).toContain('document.addEventListener("visibilitychange", refreshOnVisibilityChange)');
+    expect(directorSync).toContain("const rosterPoll = window.setInterval");
+    expect(directorSync).toContain("window.clearInterval(rosterPoll)");
+    expect(directorSync).toContain("disposed = true");
+  });
+
   it("keeps duplicate and invalid invite outcomes explicit", () => {
     expect(directorStateSource).toContain('reason: "duplicate"');
     expect(joinSource).toContain('title: "Already Registered"');

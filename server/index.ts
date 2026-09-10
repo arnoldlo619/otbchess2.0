@@ -602,6 +602,9 @@ export function createApp() {
         .where(eq(tournamentPlayers.tournamentId, id))
         .orderBy(tournamentPlayers.joinedAt);
       const players = rows.map((r) => JSON.parse(r.playerJson));
+      // Registration rosters are live operational data. Never return an older
+      // snapshot after a player scans the tournament join QR code.
+      res.setHeader("Cache-Control", "no-store");
       res.json({ players, count: players.length });
     } catch (err) {
       logger.error("[players] GET error:", err);

@@ -2832,25 +2832,36 @@ export default function Director() {
   }, [allResultsIn, state.currentRound, state.totalRounds]);
 
   // ── Server player sync — SSE stream ────────────────────────────────────
-  // During the registration phase, open a persistent SSE connection to the
-  // server. When a player registers from any device, the server pushes a
-  // "player_joined" event and we immediately merge them into local state.
-  // EventSource reconnects automatically on network interruptions.
+  // During registration, use SSE for immediate cross-device joins plus durable
+  // no-cache snapshots after reconnects, tab visibility changes, and a brief
+  // polling fallback. This prevents a transient SSE miss from stranding a QR
+  // registration outside the Director roster.
   useEffect(() => {
     if (!isRegistration || tournamentId === "otb-demo-2026") return;
 
-    // 1. Fetch the current snapshot first so we don't miss players who joined
-    //    before this tab opened.
-    const fetchSnapshot = async () => {
+    let disposed = false;
+    let snapshotInFlight = false;
+    const refreshRemoteRoster = async () => {
+      if (snapshotInFlight) return;
+      snapshotInFlight = true;
       try {
-        const data = await apiFetch<{ players: import("@/lib/tournamentData").Player[] }>(`/api/tournament/${encodeURIComponent(tournamentId)}/players`);
-        if (Array.isArray(data.players)) data.players.forEach(addPlayer);
+        const data = await apiFetch<{ players: import("@/lib/tournamentData").Player[] }>(`/api/tournament/${encodeURIComponent(tournamentId)}/players`, {
+          cache: "no-store",
+        });
+        if (!disposed && Array.isArray(data.players)) data.players.forEach(addPlayer);
       } catch { /* silent */ }
+      finally { snapshotInFlight = false; }
     };
-    fetchSnapshot();
+    void refreshRemoteRoster();
 
-    // 2. Open the SSE stream for real-time updates.
+    const refreshOnVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refreshRemoteRoster();
+    };
+    document.addEventListener("visibilitychange", refreshOnVisibilityChange);
+
+    // Immediate same-instance updates; EventSource automatically reconnects.
     const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`);
+    es.onopen = () => { void refreshRemoteRoster(); };
 
     es.addEventListener("player_joined", (e: MessageEvent) => {
       try {
@@ -2864,7 +2875,16 @@ export default function Director() {
       logger.warn("[sse] player stream error — will reconnect automatically");
     };
 
-    return () => es.close();
+    // The snapshot fallback covers a missed event, server restart, or a join
+    // handled by another autoscaled instance with a separate in-memory SSE map.
+    const rosterPoll = window.setInterval(() => { void refreshRemoteRoster(); }, 5_000);
+
+    return () => {
+      disposed = true;
+      document.removeEventListener("visibilitychange", refreshOnVisibilityChange);
+      window.clearInterval(rosterPoll);
+      es.close();
+    };
   }, [isRegistration, tournamentId, addPlayer]);
 
   // Auto-scroll to the Generate CTA when all results are entered on the Boards tab.

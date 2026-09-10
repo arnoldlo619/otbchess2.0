@@ -250,6 +250,11 @@
 - [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
+- [x] Tournament QR join: Trace player registration persistence and Director dashboard roster synchronization
+- [x] Tournament QR join: Repair the Director roster refresh when a player joins through the QR flow
+- [x] Tournament QR join: Add end-to-end regression coverage for QR join to director roster updates
+- [x] Tournament QR join: Verify live mobile join and Director dashboard synchronization before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
