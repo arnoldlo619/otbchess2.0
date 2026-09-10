@@ -21,6 +21,7 @@ import { forwardRef, useState, useEffect } from "react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ─── Accent palette ───────────────────────────────────────────────────────────
 /** Curated palette exposed to the Report page color picker. */
@@ -110,6 +111,7 @@ function StatBlock({
   accentColor,
   animDelay,
   forExport,
+  isDark,
 }: {
   label: string;
   value: number | string;
@@ -118,6 +120,7 @@ function StatBlock({
   accentColor?: string;
   animDelay?: number;
   forExport?: boolean;
+  isDark: boolean;
 }) {
   const numericTarget = typeof value === "number" ? value : parseFloat(String(value)) || 0;
   const animated = useAnimatedValue(numericTarget, 900, animDelay ?? 0);
@@ -134,9 +137,9 @@ function StatBlock({
         flexDirection: "column",
         alignItems: "center",
         padding: forExport ? "34px 24px" : "14px 10px",
-        background: "rgba(255,255,255,0.04)",
+        background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.82)",
         borderRadius: forExport ? 24 : 12,
-        border: "1px solid rgba(255,255,255,0.07)",
+        border: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(18,55,42,0.12)",
         gap: forExport ? 10 : 4,
       }}
     >
@@ -146,7 +149,7 @@ function StatBlock({
           fontSize: forExport ? 68 : 26,
           fontWeight: 800,
           lineHeight: 1,
-          color: accent && accentColor ? accentColor : "white",
+          color: accent && accentColor ? accentColor : isDark ? "white" : "#12372A",
         }}
       >
         {display}
@@ -155,7 +158,7 @@ function StatBlock({
         <span
           style={{
             fontSize: forExport ? 17 : 9,
-            color: "rgba(255,255,255,0.35)",
+            color: isDark ? "rgba(255,255,255,0.35)" : "#587166",
             fontWeight: 500,
           }}
         >
@@ -166,7 +169,7 @@ function StatBlock({
         style={{
           fontSize: forExport ? 16 : 8,
           fontWeight: 700,
-          color: "rgba(255,255,255,0.28)",
+          color: isDark ? "rgba(255,255,255,0.28)" : "#6E847A",
           textTransform: "uppercase",
           letterSpacing: "0.10em",
         }}
@@ -231,10 +234,66 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
 
     const [imgError, setImgError] = useState(false);
     const badgeCfg = BADGE_CONFIG[badge] ?? BADGE_CONFIG.participant;
+    const { theme } = useTheme();
+    const isDark = theme === "dark";
 
     // Resolve the effective accent color
     const accentColor = accentColorProp ?? defaultAccentForBadge(badge);
     const accentGlow = hexToGlow(accentColor, 0.18);
+    const badgeBaseColor = badge === "participant" ? "#4CAF50" : badgeCfg.textColor;
+    const visual = isDark
+      ? {
+          canvas: "linear-gradient(160deg, oklch(0.20 0.055 148) 0%, oklch(0.14 0.07 148) 60%, oklch(0.10 0.09 148) 100%)",
+          shadow: "0 8px 32px rgba(0,0,0,0.4)",
+          texture: "rgba(255,255,255,0.035)",
+          header: `radial-gradient(ellipse at 50% 0%, ${accentGlow} 0%, transparent 70%)`,
+          imageFilter: "blur(24px) saturate(0.4) brightness(0.35)",
+          text: "rgba(255,255,255,0.92)",
+          strongText: "white",
+          mutedText: "rgba(255,255,255,0.38)",
+          subtleText: "rgba(255,255,255,0.28)",
+          divider: "rgba(255,255,255,0.08)",
+          quietDivider: "rgba(255,255,255,0.06)",
+          surface: "rgba(255,255,255,0.04)",
+          surfaceBorder: "rgba(255,255,255,0.07)",
+          avatarSurface: "rgba(255,255,255,0.07)",
+          avatarText: "rgba(255,255,255,0.7)",
+          avatarShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}20`,
+          draw: "rgba(255,255,255,0.28)",
+          loss: "rgba(239,68,68,0.55)",
+          onlineWin: "#4ade80",
+          onlineLoss: "rgba(239,68,68,0.65)",
+          badgeBackground: badgeCfg.color,
+          badgeText: badgeCfg.textColor,
+          badgeBorder: `${badgeCfg.textColor}30`,
+          logoShadow: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+        }
+      : {
+          canvas: "linear-gradient(155deg, #FAFDF8 0%, #EEF6EA 55%, #E2EFDE 100%)",
+          shadow: "0 18px 38px rgba(18,55,42,0.14), 0 3px 10px rgba(18,55,42,0.08)",
+          texture: "rgba(18,55,42,0.06)",
+          header: `linear-gradient(135deg, ${hexToGlow(accentColor, 0.22)} 0%, rgba(255,255,255,0.72) 44%, rgba(227,239,222,0.9) 100%)`,
+          imageFilter: "blur(24px) saturate(0.55) brightness(1.12) opacity(0.34)",
+          text: "#12372A",
+          strongText: "#12372A",
+          mutedText: "#587166",
+          subtleText: "#6E847A",
+          divider: "rgba(18,55,42,0.14)",
+          quietDivider: "rgba(18,55,42,0.10)",
+          surface: "rgba(255,255,255,0.82)",
+          surfaceBorder: "rgba(18,55,42,0.12)",
+          avatarSurface: "#E8F1E5",
+          avatarText: "#355A45",
+          avatarShadow: `0 8px 22px rgba(18,55,42,0.14), 0 0 0 1px ${accentColor}24`,
+          draw: "#71877D",
+          loss: "#C84D4D",
+          onlineWin: "#16803E",
+          onlineLoss: "#B53A3A",
+          badgeBackground: hexToGlow(badgeBaseColor, 0.13),
+          badgeText: badge === "champion" ? "#9A6700" : badge === "runner_up" ? "#52667A" : badge === "third_place" ? "#A34212" : badgeBaseColor,
+          badgeBorder: hexToGlow(badgeBaseColor, 0.28),
+          logoShadow: "drop-shadow(0 1px 1px rgba(18,55,42,0.16))",
+        };
 
     const flag = FLAG_EMOJI[player.country] ?? "";
     const ordinal = rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`;
@@ -260,14 +319,15 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       <div
         ref={ref}
         data-stats-card
+        data-card-theme={isDark ? "dark" : "light"}
         className={forExport ? "" : "w-full"}
         style={{
           fontFamily: "'Inter', sans-serif",
           borderRadius: forExport ? 40 : 24,
           overflow: "hidden",
           position: "relative",
-          background: "linear-gradient(160deg, oklch(0.20 0.055 148) 0%, oklch(0.14 0.07 148) 60%, oklch(0.10 0.09 148) 100%)",
-          boxShadow: forExport ? "none" : "0 8px 32px rgba(0,0,0,0.4)",
+          background: visual.canvas,
+          boxShadow: forExport ? "none" : visual.shadow,
           ...(forExport ? { width: EW, height: EH } : {}),
         }}
       >
@@ -276,7 +336,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px)",
+            backgroundImage: `radial-gradient(circle, ${visual.texture} 1px, transparent 1px)`,
             backgroundSize: "24px 24px",
             pointerEvents: "none",
           }}
@@ -288,7 +348,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             position: "relative",
             height: headerH,
             overflow: "hidden",
-            background: `radial-gradient(ellipse at 50% 0%, ${accentGlow} 0%, transparent 70%)`,
+            background: visual.header,
           }}
         >
           {/* Blurred avatar as background */}
@@ -303,7 +363,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
-                filter: "blur(24px) saturate(0.4) brightness(0.35)",
+                filter: visual.imageFilter,
                 transform: "scale(1.1)",
               }}
             />
@@ -322,7 +382,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 fontFamily: "'Clash Display', sans-serif",
                 fontSize: forExport ? 42 : 18,
                 fontWeight: 900,
-                color: "rgba(255,255,255,0.92)",
+                color: visual.text,
                 letterSpacing: "-0.01em",
                 lineHeight: 1.1,
                 margin: 0,
@@ -354,7 +414,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   marginTop: forExport ? 10 : 4,
                   fontSize: forExport ? 18 : 8,
                   fontWeight: 500,
-                  color: "rgba(255,255,255,0.35)",
+                  color: visual.mutedText,
                 }}
               >
                 {tournamentDate}
@@ -379,10 +439,10 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 fontWeight: 700,
                 padding: forExport ? "8px 20px" : "3px 10px",
                 borderRadius: 999,
-                background: badgeCfg.color,
-                color: badgeCfg.textColor,
+                background: visual.badgeBackground,
+                color: visual.badgeText,
                 backdropFilter: "blur(8px)",
-                border: `1px solid ${badgeCfg.textColor}30`,
+                border: `1px solid ${visual.badgeBorder}`,
               }}
             >
               {badgeLabel}
@@ -415,9 +475,9 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 borderRadius: forExport ? 28 : 16,
                 overflow: "hidden",
                 flexShrink: 0,
-                background: "rgba(255,255,255,0.07)",
+                background: visual.avatarSurface,
                 border: `3px solid ${accentColor}50`,
-                boxShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}20`,
+                boxShadow: visual.avatarShadow,
               }}
             >
               {showPhoto ? (
@@ -444,7 +504,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                       fontFamily: "'Clash Display', sans-serif",
                       fontSize: Math.round(avatarDisplaySize * 0.38),
                       fontWeight: 800,
-                      color: "rgba(255,255,255,0.7)",
+                      color: visual.avatarText,
                     }}
                   >
                     {player.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
@@ -479,7 +539,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   fontFamily: "'Clash Display', sans-serif",
                   fontSize: forExport ? 58 : 22,
                   fontWeight: 800,
-                  color: "white",
+                  color: visual.strongText,
                   lineHeight: 1.05,
                   marginBottom: forExport ? 8 : 4,
                   overflow: "hidden",
@@ -493,7 +553,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               <p
                 style={{
                   fontSize: forExport ? 20 : 9,
-                  color: "rgba(255,255,255,0.38)",
+                  color: visual.mutedText,
                   fontWeight: 500,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -526,7 +586,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               <p
                 style={{
                   fontSize: forExport ? 17 : 8,
-                  color: "rgba(255,255,255,0.28)",
+                  color: visual.subtleText,
                   fontWeight: 600,
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
@@ -538,7 +598,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           </div>
 
           {/* ── Divider ── */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: forExport ? 40 : 16 }} />
+          <div style={{ height: 1, background: visual.divider, marginBottom: forExport ? 40 : 16 }} />
 
           {/* ── Stats grid: 3 columns ── */}
           <div
@@ -549,9 +609,9 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               marginBottom: forExport ? 40 : 16,
             }}
           >
-            <StatBlock label="Score" value={points} sub="pts" accent accentColor={accentColor} animDelay={0} forExport={forExport} />
-            <StatBlock label="Performance" value={performanceRating} sub={`${ratingSign}${ratingChange}`} animDelay={100} forExport={forExport} />
-            <StatBlock label="Streak" value={`${longestStreak}W`} sub="best run" animDelay={200} forExport={forExport} />
+            <StatBlock label="Score" value={points} sub="pts" accent accentColor={accentColor} animDelay={0} forExport={forExport} isDark={isDark} />
+            <StatBlock label="Performance" value={performanceRating} sub={`${ratingSign}${ratingChange}`} animDelay={100} forExport={forExport} isDark={isDark} />
+            <StatBlock label="Streak" value={`${longestStreak}W`} sub="best run" animDelay={200} forExport={forExport} isDark={isDark} />
           </div>
 
           {/* ── W/D/L bar ── */}
@@ -568,13 +628,13 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 }}
               >
                 {wins > 0 && <div style={{ width: `${wPct}%`, background: accentColor, borderRadius: 999 }} />}
-                {draws > 0 && <div style={{ width: `${dPct}%`, background: "rgba(255,255,255,0.22)", borderRadius: 999 }} />}
-                {losses > 0 && <div style={{ width: `${lPct}%`, background: "rgba(239,68,68,0.55)", borderRadius: 999 }} />}
+                {draws > 0 && <div style={{ width: `${dPct}%`, background: visual.draw, borderRadius: 999 }} />}
+                {losses > 0 && <div style={{ width: `${lPct}%`, background: visual.loss, borderRadius: 999 }} />}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: accentColor }}>{wins}W</span>
-                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: "rgba(255,255,255,0.28)" }}>{draws}D</span>
-                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: "rgba(239,68,68,0.55)" }}>{losses}L</span>
+                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: visual.draw }}>{draws}D</span>
+                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: visual.loss }}>{losses}L</span>
               </div>
             </div>
           )}
@@ -593,28 +653,28 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   marginBottom: forExport ? 40 : 16,
                   padding: forExport ? "24px 28px" : "10px 12px",
                   borderRadius: forExport ? 20 : 10,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: visual.surface,
+                  border: `1px solid ${visual.surfaceBorder}`,
                 }}
               >
                 {/* Label row */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: forExport ? 12 : 6 }}>
-                  <span style={{ fontSize: forExport ? 15 : 7, fontWeight: 700, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.10em" }}>
+                  <span style={{ fontSize: forExport ? 15 : 7, fontWeight: 700, color: visual.subtleText, textTransform: "uppercase", letterSpacing: "0.10em" }}>
                     Recent Form (Last {cfTotal})
                   </span>
                   <div style={{ display: "flex", gap: forExport ? 12 : 6 }}>
-                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: "#4ade80", fontFamily: "'JetBrains Mono', monospace" }}>{chesscomWins}W</span>
-                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: "rgba(255,255,255,0.28)", fontFamily: "'JetBrains Mono', monospace" }}>{chesscomDraws}D</span>
-                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: "rgba(239,68,68,0.65)", fontFamily: "'JetBrains Mono', monospace" }}>{chesscomLosses}L</span>
+                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: visual.onlineWin, fontFamily: "'JetBrains Mono', monospace" }}>{chesscomWins}W</span>
+                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: visual.draw, fontFamily: "'JetBrains Mono', monospace" }}>{chesscomDraws}D</span>
+                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: visual.onlineLoss, fontFamily: "'JetBrains Mono', monospace" }}>{chesscomLosses}L</span>
                   </div>
                 </div>
                 {/* Segmented bar */}
                 <div style={{ display: "flex", height: forExport ? 10 : 5, borderRadius: 999, overflow: "hidden", gap: 1, marginBottom: forExport ? 10 : 4 }}>
-                  {cfWPct > 0 && <div style={{ width: `${cfWPct}%`, background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 999 }} />}
-                  {cfDPct > 0 && <div style={{ width: `${cfDPct}%`, background: "rgba(255,255,255,0.18)", borderRadius: 999 }} />}
-                  {cfLPct > 0 && <div style={{ width: `${cfLPct}%`, background: "linear-gradient(90deg, #dc2626, #f87171)", borderRadius: 999 }} />}
+                  {cfWPct > 0 && <div style={{ width: `${cfWPct}%`, background: isDark ? "linear-gradient(90deg, #16a34a, #4ade80)" : "linear-gradient(90deg, #127536, #38A35D)", borderRadius: 999 }} />}
+                  {cfDPct > 0 && <div style={{ width: `${cfDPct}%`, background: visual.draw, borderRadius: 999 }} />}
+                  {cfLPct > 0 && <div style={{ width: `${cfLPct}%`, background: isDark ? "linear-gradient(90deg, #dc2626, #f87171)" : "linear-gradient(90deg, #B53A3A, #DE7373)", borderRadius: 999 }} />}
                 </div>
-                <span style={{ fontSize: forExport ? 14 : 7, color: "rgba(255,255,255,0.22)" }}>{cfWinRate}% win rate online</span>
+                <span style={{ fontSize: forExport ? 14 : 7, color: visual.subtleText }}>{cfWinRate}% win rate online</span>
               </div>
             );
           })()}
@@ -627,7 +687,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               justifyContent: "space-between",
               gap: forExport ? 30 : 12,
               paddingTop: forExport ? 30 : 12,
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              borderTop: `1px solid ${visual.quietDivider}`,
             }}
           >
             {bestWin ? (
@@ -636,7 +696,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   style={{
                     fontSize: forExport ? 14 : 7,
                     fontWeight: 700,
-                    color: "rgba(255,255,255,0.22)",
+                    color: visual.subtleText,
                     textTransform: "uppercase",
                     letterSpacing: "0.12em",
                     marginBottom: forExport ? 6 : 2,
@@ -648,7 +708,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   style={{
                   fontSize: forExport ? 22 : 11,
                   fontWeight: 700,
-                  color: "rgba(255,255,255,0.65)",
+                  color: visual.strongText,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
@@ -656,7 +716,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 >
                   {bestWin.opponent.name}
                 </p>
-                <p style={{ fontSize: forExport ? 16 : 8, color: "rgba(255,255,255,0.28)" }}>
+                <p style={{ fontSize: forExport ? 16 : 8, color: visual.mutedText }}>
                   {bestWin.opponent.elo} ELO
                 </p>
               </div>
@@ -666,7 +726,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 style={{
                   fontSize: forExport ? 14 : 7,
                   fontWeight: 700,
-                  color: "rgba(255,255,255,0.22)",
+                  color: visual.subtleText,
                   textTransform: "uppercase",
                   letterSpacing: "0.12em",
                   marginBottom: forExport ? 6 : 2,
@@ -674,7 +734,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               >
                 Buchholz
               </p>
-              <p style={{ fontSize: forExport ? 22 : 11, fontWeight: 700, color: "rgba(255,255,255,0.55)" }}>
+              <p style={{ fontSize: forExport ? 22 : 11, fontWeight: 700, color: visual.strongText }}>
                 {buchholz.toFixed(1)}
               </p>
             </div>
@@ -685,7 +745,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             style={{
               marginTop: forExport ? 48 : 16,
               paddingTop: forExport ? 20 : 7,
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              borderTop: `1px solid ${visual.quietDivider}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -703,7 +763,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   height: forExport ? 36 : 16,
                   objectFit: "contain",
                   flexShrink: 0,
-                  filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+                  filter: visual.logoShadow,
                 }}
               />
               <span
@@ -726,7 +786,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 style={{
                   fontSize: forExport ? 11 : 6,
                   fontWeight: 700,
-                  color: "rgba(255,255,255,0.25)",
+                  color: visual.subtleText,
                   textTransform: "uppercase",
                   letterSpacing: "0.12em",
                   marginBottom: 1,
@@ -738,7 +798,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 style={{
                   fontSize: forExport ? 16 : 7,
                   fontWeight: 600,
-                  color: "rgba(255,255,255,0.45)",
+                  color: visual.mutedText,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",

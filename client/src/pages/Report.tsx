@@ -545,8 +545,12 @@ function ExportableCard({
     <>
       <button
         onClick={() => setShowExpanded(true)}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors border border-white/20 text-white hover:bg-white/10 active:scale-95"
-        style={{ background: accentColor + "22" }}
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors border active:scale-95 ${
+          isDark
+            ? "border-white/20 text-white hover:bg-white/10"
+            : "border-[#12372A]/15 text-[#12372A] bg-white/80 hover:bg-white"
+        }`}
+        style={isDark ? { background: accentColor + "22" } : undefined}
       >
         <Expand className="w-4 h-4" />
         View Full Card
@@ -570,7 +574,11 @@ function ExportableCard({
       <button
         onClick={handleShare}
         disabled={exporting}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 text-white font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30 disabled:opacity-60 active:scale-95"
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors border disabled:opacity-60 active:scale-95 ${
+          isDark
+            ? "bg-white/20 text-white hover:bg-white/30 border-white/30"
+            : "bg-[#12372A]/8 text-[#12372A] hover:bg-[#12372A]/12 border-[#12372A]/15"
+        }`}
       >
         <Share2 className="w-4 h-4" />
         Share Image
@@ -613,7 +621,11 @@ function ExportableCard({
 
       {/* Desktop hover overlay — hidden on touch devices */}
       {!isTouch && (
-        <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
+        <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5 ${
+          isDark
+            ? "bg-black/60"
+            : "bg-[#F8FCF5]/88 backdrop-blur-sm shadow-[inset_0_0_0_1px_rgba(18,55,42,0.08)]"
+        }`}>
           {ActionButtons}
         </div>
       )}

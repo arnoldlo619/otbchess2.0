@@ -259,6 +259,10 @@
 - [x] Director readability: Align Standings typography and row visibility with the Players tab
 - [x] Director readability: Add regression coverage and validate desktop/mobile readability before checkpointing
 
+- [x] Performance Report: Audit player-card theme tokens and identify light-mode visual gaps
+- [x] Performance Report: Create a distinct premium light-mode player-card appearance while preserving dark mode
+- [x] Performance Report: Verify light/dark toggle, export, sharing, and responsive card presentation before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
