@@ -213,6 +213,10 @@
 - [x] Tournament Wizard: Remove the Format Preview step after selecting a tournament mode
 - [x] Tournament Wizard: Take each selected format directly into its configuration wizard with format choice preserved
 - [x] Tournament Wizard: Add mode-selection transition coverage and validate desktop and mobile interaction before checkpointing
+- [x] Tournament payments: Remove Optional entry payment links and Player payment order/instructions sections from the Tournament Wizard
+- [x] Tournament payments: Add the full payment configuration experience to the Director Settings dashboard
+- [x] Tournament payments: Preserve payment links, QR uploads, toggles, ordering, instructions, validation, persistence, and player-facing display
+- [x] Tournament payments: Validate Director Settings and wizard removal across desktop and mobile before checkpointing
 - [x] Tournament incident: Reproduce the live undefined-name failure through director player lookup, RSVP upload, and QR join flows
 - [x] Tournament incident: Identify and repair the actual shared runtime source rather than relying on assumed proxy payloads
 - [x] Tournament incident: Add end-to-end flow coverage for Chess.com ELO/profile lookup, participant persistence, RSVP imports, and QR username registration

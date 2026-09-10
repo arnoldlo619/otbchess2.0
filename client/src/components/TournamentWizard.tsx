@@ -27,9 +27,6 @@ import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { useTheme } from "@/contexts/ThemeContext";
-import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
-import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
@@ -68,18 +65,13 @@ import {
   Users2,
   Timer,
   Globe,
-  DollarSign,
-  ImagePlus,
-  Trash2,
-  GripVertical,
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
 import { getFormatConfig, getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { apiListMyClubs } from "@/lib/clubsApi";
 import type { Club } from "@/lib/clubRegistry";
-import { PlayerPaymentMethods } from "@/components/tournament/PlayerPaymentMethods";
-import { DEFAULT_PAYMENT_METHOD_ORDER, hasValidPaymentLinks, normalizePaymentMethodOrder, validatePaymentLinks, type PaymentMethod } from "@/lib/paymentLinks";
+import { DEFAULT_PAYMENT_METHOD_ORDER, type PaymentMethod } from "@/lib/paymentLinks";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -327,9 +319,6 @@ function ClubLinkDropdown({
     onChange({
       clubId: club?.id ?? null,
       clubName: club?.name ?? null,
-      paymentVenmo: club?.paymentVenmo ?? "",
-      paymentCashapp: club?.paymentCashapp ?? "",
-      paymentPaypal: club?.paymentPaypal ?? "",
     });
     setOpen(false);
   };
@@ -715,178 +704,6 @@ function TextInput({
         onBlur={() => { setFocused(false); setHovered(false); }}
       />
     </div>
-  );
-}
-
-function readPaymentQrImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read image"));
-    reader.onerror = () => reject(new Error("Could not read image"));
-    reader.readAsDataURL(file);
-  });
-}
-
-function PaymentQrUpload({
-  method,
-  value,
-  onChange,
-  isDark,
-}: {
-  method: "Venmo" | "Cash App" | "PayPal";
-  value: string;
-  onChange: (value: string) => void;
-  isDark: boolean;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
-  const handleFile = async (file?: File) => {
-    if (!file) return;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      toast.error("Upload a PNG, JPEG, or WebP QR image.");
-      return;
-    }
-    if (file.size > 1.5 * 1024 * 1024) {
-      toast.error("QR image must be 1.5 MB or smaller.");
-      return;
-    }
-    setUploading(true);
-    try {
-      onChange(await readPaymentQrImage(file));
-      toast.success(`${method} QR image added.`);
-    } catch {
-      toast.error("Unable to read that QR image. Please try another file.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const surface = isDark ? "rgba(5,22,12,0.44)" : "rgba(255,255,255,0.56)";
-  const border = isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)";
-
-  return (
-    <div className="rounded-xl border p-2.5" style={{ background: surface, borderColor: border }}>
-      <input ref={inputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void handleFile(event.target.files?.[0])} aria-label={`Upload ${method} QR code image`} />
-      {value ? (
-        <div className="flex items-center gap-2">
-          <img src={value} alt={`${method} payment QR preview`} className="h-10 w-10 rounded-lg border bg-white object-contain p-0.5" style={{ borderColor: border }} />
-          <span className="min-w-0 flex-1 truncate text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{method} QR ready</span>
-          <button type="button" onClick={() => inputRef.current?.click()} className="rounded-md p-1.5 transition-colors hover:bg-emerald-500/10" aria-label={`Replace ${method} QR image`}><ImagePlus className="h-3.5 w-3.5" style={{ color: T.green }} /></button>
-          <button type="button" onClick={() => onChange("")} className="rounded-md p-1.5 transition-colors hover:bg-red-500/10" aria-label={`Remove ${method} QR image`}><Trash2 className="h-3.5 w-3.5" style={{ color: isDark ? "#fca5a5" : "#b91c1c" }} /></button>
-        </div>
-      ) : (
-        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold transition-colors hover:bg-emerald-500/10 disabled:cursor-wait" style={{ color: T.green }}>
-          <ImagePlus className="h-3.5 w-3.5" />
-          {uploading ? "Reading QR…" : `Upload ${method} QR`}
-        </button>
-      )}
-    </div>
-  );
-}
-
-function PaymentLinkValidationNotice({ data, isDark }: { data: WizardData; isDark: boolean }) {
-  const errors = Object.values(validatePaymentLinks(data));
-  if (errors.length === 0) return null;
-
-  return (
-    <div role="alert" className="mt-3 rounded-xl border px-3 py-2.5 text-xs leading-relaxed" style={{ background: isDark ? "rgba(239,68,68,0.10)" : "#FEF2F2", borderColor: isDark ? "rgba(248,113,113,0.35)" : "#FECACA", color: isDark ? "#FCA5A5" : "#B91C1C" }}>
-      <p className="font-bold">Fix payment links before continuing</p>
-      <ul className="mt-1 list-disc space-y-0.5 pl-4">{errors.map((error) => <li key={error}>{error}</li>)}</ul>
-    </div>
-  );
-}
-
-function PaymentMethodToggle({
-  method,
-  enabled,
-  onChange,
-  isDark,
-}: {
-  method: string;
-  enabled: boolean;
-  onChange: (enabled: boolean) => void;
-  isDark: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={enabled}
-      onClick={() => onChange(!enabled)}
-      className="group flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50]"
-      data-payment-method-toggle={method.toLowerCase().replace(/\s+/g, "-")}
-      style={{
-        background: enabled ? (isDark ? "rgba(76,175,80,0.15)" : "rgba(76,175,80,0.10)") : (isDark ? "rgba(255,255,255,0.04)" : "rgba(67,104,80,0.05)"),
-        borderColor: enabled ? (isDark ? "rgba(76,175,80,0.42)" : "rgba(47,132,74,0.35)") : (isDark ? "rgba(255,255,255,0.10)" : "rgba(67,104,80,0.15)"),
-        color: isDark ? "rgba(255,255,255,0.88)" : "#12372A",
-      }}
-    >
-      <span className="min-w-0 truncate">{method}</span>
-      <span className="flex shrink-0 items-center gap-2.5" aria-hidden="true">
-        <span className="text-xs font-semibold" style={{ color: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.42)" : "#6B7280") }}>{enabled ? "On" : "Off"}</span>
-        <span className="flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors" style={{ background: enabled ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.20)" : "#9CA3AF") }}>
-          <span className="h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200" style={{ transform: enabled ? "translateX(20px)" : "translateX(0)" }} />
-        </span>
-      </span>
-    </button>
-  );
-}
-
-const PAYMENT_METHOD_DETAILS: Record<PaymentMethod, { label: "Venmo" | "Cash App" | "PayPal"; placeholder: string }> = {
-  venmo: { label: "Venmo", placeholder: "Venmo @handle or link" },
-  cashapp: { label: "Cash App", placeholder: "Cash App $cashtag or link" },
-  paypal: { label: "PayPal", placeholder: "PayPal link" },
-};
-
-function SortablePaymentMethodCard({ method, data, isDark }: { method: PaymentMethod; data: WizardData; isDark: boolean }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: method });
-  const detail = PAYMENT_METHOD_DETAILS[method];
-  const enabled = method === "venmo" ? data.paymentVenmoEnabled : method === "cashapp" ? data.paymentCashappEnabled : data.paymentPaypalEnabled;
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`flex items-center gap-2 rounded-xl border p-2.5 transition-opacity ${enabled ? "" : "opacity-55"}`}
-      style={{
-        transform: CSS.Transform.toString(transform), transition,
-        background: isDark ? "rgba(5,22,12,0.24)" : "rgba(255,255,255,0.32)",
-        borderColor: isDragging ? "rgba(76,175,80,0.75)" : isDark ? "rgba(123,220,145,0.16)" : "rgba(47,132,74,0.16)",
-        boxShadow: isDragging ? "0 16px 32px rgba(0,0,0,0.24)" : "none",
-        zIndex: isDragging ? 10 : undefined,
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <button type="button" className="flex h-8 w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg transition-colors hover:bg-emerald-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] active:cursor-grabbing" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "#436850" }} aria-label={`Reorder ${detail.label}`} {...attributes} {...listeners}>
-          <GripVertical className="h-4 w-4" aria-hidden="true" />
-        </button>
-        <div className="min-w-0 flex-1"><p className="text-xs font-bold" style={{ color: isDark ? T.dText : T.lText }}>{detail.label}</p><p className="text-[11px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>{enabled ? "Enabled for players" : "Currently disabled"}</p></div>
-        <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Drag</span>
-      </div>
-    </div>
-  );
-}
-
-function PaymentConfiguration({ data, onChange, isDark }: { data: WizardData; onChange: (patch: Partial<WizardData>) => void; isDark: boolean }) {
-  const order = normalizePaymentMethodOrder(data.paymentMethodOrder);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return;
-    const from = order.indexOf(active.id as PaymentMethod);
-    const to = order.indexOf(over.id as PaymentMethod);
-    if (from >= 0 && to >= 0) onChange({ paymentMethodOrder: arrayMove(order, from, to) });
-  };
-
-  return (
-    <section className="mt-4 rounded-2xl border p-4 sm:p-5" style={{ background: isDark ? "rgba(71,173,98,0.07)" : "rgba(71,173,98,0.06)", borderColor: isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)" }}>
-      <div><h3 className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>Player payment order and instructions</h3><p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Drag a method to prioritize it on registration. Add any details players should include with their payment.</p></div>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={order} strategy={rectSortingStrategy}>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">{order.map((method) => <SortablePaymentMethodCard key={method} method={method} data={data} isDark={isDark} />)}</div>
-        </SortableContext>
-      </DndContext>
-      <div className="mt-4"><Label isDark={isDark} hint="optional">Payment instructions for players</Label><TextArea value={data.paymentInstructions} onChange={(paymentInstructions) => onChange({ paymentInstructions })} placeholder="e.g. Include your USCF ID and tournament name in the payment note. Please pay before your first round." isDark={isDark} /></div>
-    </section>
   );
 }
 
@@ -1373,38 +1190,6 @@ function QuickstartForm({
           loading={loadingClubs}
         />
       )}
-
-      <section
-        className="rounded-2xl border p-4 sm:p-5"
-        style={{
-          background: isDark ? "rgba(71,173,98,0.07)" : "rgba(71,173,98,0.06)",
-          borderColor: isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)",
-        }}
-      >
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: isDark ? "rgba(123,220,145,0.13)" : "rgba(47,132,74,0.11)" }}>
-            <DollarSign className="h-4 w-4" style={{ color: T.green }} />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>Optional entry payment links</h3>
-            <p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-              Let players pay the host directly. Linking a club prefills its saved methods; these values stay editable for this tournament.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className={`space-y-2 ${data.paymentVenmoEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Venmo" enabled={data.paymentVenmoEnabled} onChange={(paymentVenmoEnabled) => onChange({ paymentVenmoEnabled })} isDark={isDark} /><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
-          <div className={`space-y-2 ${data.paymentCashappEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Cash App" enabled={data.paymentCashappEnabled} onChange={(paymentCashappEnabled) => onChange({ paymentCashappEnabled })} isDark={isDark} /><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
-          <div className={`space-y-2 ${data.paymentPaypalEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="PayPal" enabled={data.paymentPaypalEnabled} onChange={(paymentPaypalEnabled) => onChange({ paymentPaypalEnabled })} isDark={isDark} /><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
-        </div>
-        <PaymentLinkValidationNotice data={data} isDark={isDark} />
-        <div className="mt-4 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(47,132,74,0.15)" }}>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Player registration preview</p>
-          <PlayerPaymentMethods payments={data} preview isDark={isDark} />
-        </div>
-      </section>
-
-      <PaymentConfiguration data={data} onChange={onChange} isDark={isDark} />
 
       {/* Tournament Settings — explicit controls with optional Smart Defaults toggle */}
       <div>
@@ -3225,36 +3010,6 @@ function StepDetails({
         </div>
       )}
 
-      <section
-        className="rounded-2xl border p-4 sm:p-5"
-        style={{
-          background: isDark ? "rgba(71,173,98,0.07)" : "rgba(71,173,98,0.06)",
-          borderColor: isDark ? "rgba(123,220,145,0.18)" : "rgba(47,132,74,0.18)",
-        }}
-      >
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: isDark ? "rgba(123,220,145,0.13)" : "rgba(47,132,74,0.11)" }}>
-            <DollarSign className="h-4 w-4" style={{ color: T.green }} />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>Optional entry payment links</h3>
-            <p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-              Let players pay the host directly. Linking a club prefills its saved methods; these values stay editable for this tournament.
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className={`space-y-2 ${data.paymentVenmoEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Venmo" enabled={data.paymentVenmoEnabled} onChange={(paymentVenmoEnabled) => onChange({ paymentVenmoEnabled })} isDark={isDark} /><TextInput value={data.paymentVenmo} onChange={(v) => onChange({ paymentVenmo: v })} placeholder="Venmo @handle or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Venmo" value={data.paymentVenmoQrUrl} onChange={(value) => onChange({ paymentVenmoQrUrl: value })} isDark={isDark} /></div>
-          <div className={`space-y-2 ${data.paymentCashappEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="Cash App" enabled={data.paymentCashappEnabled} onChange={(paymentCashappEnabled) => onChange({ paymentCashappEnabled })} isDark={isDark} /><TextInput value={data.paymentCashapp} onChange={(v) => onChange({ paymentCashapp: v })} placeholder="Cash App $cashtag or link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="Cash App" value={data.paymentCashappQrUrl} onChange={(value) => onChange({ paymentCashappQrUrl: value })} isDark={isDark} /></div>
-          <div className={`space-y-2 ${data.paymentPaypalEnabled ? "" : "opacity-55"}`}><PaymentMethodToggle method="PayPal" enabled={data.paymentPaypalEnabled} onChange={(paymentPaypalEnabled) => onChange({ paymentPaypalEnabled })} isDark={isDark} /><TextInput value={data.paymentPaypal} onChange={(v) => onChange({ paymentPaypal: v })} placeholder="PayPal link" icon={Link2} isDark={isDark} /><PaymentQrUpload method="PayPal" value={data.paymentPaypalQrUrl} onChange={(value) => onChange({ paymentPaypalQrUrl: value })} isDark={isDark} /></div>
-        </div>
-        <PaymentLinkValidationNotice data={data} isDark={isDark} />
-        <div className="mt-4 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(47,132,74,0.15)" }}>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Player registration preview</p>
-          <PlayerPaymentMethods payments={data} preview isDark={isDark} />
-        </div>
-      </section>
-      <PaymentConfiguration data={data} onChange={onChange} isDark={isDark} />
     </div>
   );
 }
@@ -4631,11 +4386,11 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         : true
       : mode === "quickstart"
       ? step === 0
-        ? data.name.trim().length > 0 && hasValidPaymentLinks(data)
+        ? data.name.trim().length > 0
         : true
       // schedule / quads / large_event modes: step-specific validation
       : step === 0
-      ? data.name.trim().length > 0 && hasValidPaymentLinks(data)
+      ? data.name.trim().length > 0
       : step === 1
       // Format step: for Quads, must have rounds=3 (auto-set); for all, time control required
       ? data.timePreset.trim().length > 0
@@ -4671,17 +4426,6 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       clubName: data.clubName ?? null,
       customSlug: data.customSlug.trim() || null,
       coverImageUrl: data.coverImageUrl || null,
-      paymentVenmo: data.paymentVenmo.trim() || null,
-      paymentCashapp: data.paymentCashapp.trim() || null,
-      paymentPaypal: data.paymentPaypal.trim() || null,
-      paymentVenmoEnabled: data.paymentVenmoEnabled,
-      paymentCashappEnabled: data.paymentCashappEnabled,
-      paymentPaypalEnabled: data.paymentPaypalEnabled,
-      paymentVenmoQrUrl: data.paymentVenmoQrUrl || null,
-      paymentCashappQrUrl: data.paymentCashappQrUrl || null,
-      paymentPaypalQrUrl: data.paymentPaypalQrUrl || null,
-      paymentInstructions: data.paymentInstructions.trim() || null,
-      paymentMethodOrder: normalizePaymentMethodOrder(data.paymentMethodOrder),
       ...(data.isBracketParent ? { isBracketParent: true } : {}),
     });
     grantDirectorSession(slug);

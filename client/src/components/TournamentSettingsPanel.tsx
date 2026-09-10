@@ -21,6 +21,8 @@ import {
   type TournamentConfig,
 } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { TournamentPaymentSettings, type TournamentPaymentSettingsValue } from "@/components/tournament/TournamentPaymentSettings";
+import { hasValidPaymentLinks, normalizePaymentMethodOrder } from "@/lib/paymentLinks";
 import {
   Trophy,
   MapPin,
@@ -99,7 +101,7 @@ function getPairingInfoRows(format: string): Array<[string, string]> {
 
 // ─── Local form state ─────────────────────────────────────────────────────────
 
-interface SettingsForm {
+interface SettingsForm extends TournamentPaymentSettingsValue {
   name: string;
   venue: string;
   date: string;
@@ -126,6 +128,17 @@ function configToForm(cfg: TournamentConfig): SettingsForm {
     timeIncrement: cfg.timeIncrement,
     timePreset: cfg.timePreset,
     ratingSystem: cfg.ratingSystem,
+    paymentVenmo: cfg.paymentVenmo ?? "",
+    paymentCashapp: cfg.paymentCashapp ?? "",
+    paymentPaypal: cfg.paymentPaypal ?? "",
+    paymentVenmoEnabled: cfg.paymentVenmoEnabled !== false,
+    paymentCashappEnabled: cfg.paymentCashappEnabled !== false,
+    paymentPaypalEnabled: cfg.paymentPaypalEnabled !== false,
+    paymentVenmoQrUrl: cfg.paymentVenmoQrUrl ?? "",
+    paymentCashappQrUrl: cfg.paymentCashappQrUrl ?? "",
+    paymentPaypalQrUrl: cfg.paymentPaypalQrUrl ?? "",
+    paymentInstructions: cfg.paymentInstructions ?? "",
+    paymentMethodOrder: normalizePaymentMethodOrder(cfg.paymentMethodOrder),
   };
 }
 
@@ -306,6 +319,10 @@ export function TournamentSettingsPanel({
 
   const handleSave = () => {
     if (!form || !dirty || isLocked) return;
+    if (!hasValidPaymentLinks(form)) {
+      toast.error("Fix unsupported payment links before saving");
+      return;
+    }
     setSaving(true);
     const updated = updateTournamentConfig(tournamentId, {
       name: form.name.trim(),
@@ -319,6 +336,17 @@ export function TournamentSettingsPanel({
       timeIncrement: form.timeIncrement,
       timePreset: form.timePreset,
       ratingSystem: form.ratingSystem,
+      paymentVenmo: form.paymentVenmo.trim() || null,
+      paymentCashapp: form.paymentCashapp.trim() || null,
+      paymentPaypal: form.paymentPaypal.trim() || null,
+      paymentVenmoEnabled: form.paymentVenmoEnabled,
+      paymentCashappEnabled: form.paymentCashappEnabled,
+      paymentPaypalEnabled: form.paymentPaypalEnabled,
+      paymentVenmoQrUrl: form.paymentVenmoQrUrl || null,
+      paymentCashappQrUrl: form.paymentCashappQrUrl || null,
+      paymentPaypalQrUrl: form.paymentPaypalQrUrl || null,
+      paymentInstructions: form.paymentInstructions.trim() || null,
+      paymentMethodOrder: normalizePaymentMethodOrder(form.paymentMethodOrder),
     });
     setSaving(false);
     if (updated) {
@@ -704,6 +732,9 @@ export function TournamentSettingsPanel({
           </div>
         </div>
       </div>
+
+      {/* ── Pairing Info (read-only) ── */}
+      <TournamentPaymentSettings value={form} onChange={patch} isDark={isDark} disabled={isLocked} />
 
       {/* ── Pairing Info (read-only) ── */}
       <div

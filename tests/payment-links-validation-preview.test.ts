@@ -6,6 +6,8 @@ import type { TournamentConfig } from "../client/src/lib/tournamentRegistry";
 
 const root = resolve(__dirname, "..");
 const wizard = readFileSync(resolve(root, "client/src/components/TournamentWizard.tsx"), "utf8");
+const settings = readFileSync(resolve(root, "client/src/components/TournamentSettingsPanel.tsx"), "utf8");
+const paymentSettings = readFileSync(resolve(root, "client/src/components/tournament/TournamentPaymentSettings.tsx"), "utf8");
 const join = readFileSync(resolve(root, "client/src/pages/Join.tsx"), "utf8");
 const playerPayment = readFileSync(resolve(root, "client/src/components/tournament/PlayerPaymentMethods.tsx"), "utf8");
 
@@ -35,11 +37,11 @@ describe("tournament payment validation and registration preview", () => {
     expect(hasValidPaymentLinks(disabledVenmo)).toBe(true);
   });
 
-  it("gates the configuration flow and renders validation feedback in both payment sections", () => {
-    expect(wizard).toContain("hasValidPaymentLinks(data)");
-    expect(wizard.match(/PaymentLinkValidationNotice data=\{data\}/g)).toHaveLength(2);
-    expect(wizard.match(/PlayerPaymentMethods payments=\{data\} preview/g)).toHaveLength(2);
-    expect(wizard).toContain("Fix payment links before continuing");
+  it("keeps creation unblocked and validates configured payment links in Director Settings", () => {
+    expect(wizard).not.toContain("hasValidPaymentLinks(data)");
+    expect(settings).toContain("if (!hasValidPaymentLinks(form))");
+    expect(paymentSettings).toContain("Fix payment links before saving");
+    expect(paymentSettings).toContain("PlayerPaymentMethods payments={value} preview");
   });
 
   it("reuses the player payment surface on registration with safe external-link behavior", () => {
@@ -51,12 +53,11 @@ describe("tournament payment validation and registration preview", () => {
   });
 
   it("provides independent accessible toggles and persists enabled states for all payment methods", () => {
-    expect(wizard.match(/<PaymentMethodToggle method=/g)).toHaveLength(6);
-    expect(wizard).toContain("role=\"switch\"");
-    expect(wizard).toContain("aria-checked={enabled}");
-    expect(wizard).toContain("paymentVenmoEnabled: data.paymentVenmoEnabled");
-    expect(wizard).toContain("paymentCashappEnabled: data.paymentCashappEnabled");
-    expect(wizard).toContain("paymentPaypalEnabled: data.paymentPaypalEnabled");
+    expect(paymentSettings).toContain("role=\"switch\"");
+    expect(paymentSettings).toContain("aria-checked={enabled}");
+    expect(settings).toContain("paymentVenmoEnabled: form.paymentVenmoEnabled");
+    expect(settings).toContain("paymentCashappEnabled: form.paymentCashappEnabled");
+    expect(settings).toContain("paymentPaypalEnabled: form.paymentPaypalEnabled");
     expect(playerPayment).toContain("values.paymentVenmoEnabled === false");
     expect(playerPayment).toContain("values.paymentCashappEnabled === false");
     expect(playerPayment).toContain("values.paymentPaypalEnabled === false");
@@ -75,11 +76,11 @@ describe("tournament payment validation and registration preview", () => {
     };
     expect(config.paymentInstructions).toContain("USCF ID");
     expect(config.paymentMethodOrder?.[0]).toBe("cashapp");
-    expect(wizard).toContain("DndContext");
-    expect(wizard).toContain("sortableKeyboardCoordinates");
-    expect(wizard).toContain("paymentMethodOrder: arrayMove(order, from, to)");
-    expect(wizard).toContain("Payment instructions for players");
-    expect(wizard).toContain("Include your USCF ID");
+    expect(paymentSettings).toContain("DndContext");
+    expect(paymentSettings).toContain("sortableKeyboardCoordinates");
+    expect(paymentSettings).toContain("paymentMethodOrder: arrayMove(order, from, to)");
+    expect(paymentSettings).toContain("Payment instructions");
+    expect(paymentSettings).toContain("Include your USCF ID");
   });
 
   it("renders the registration payment methods in host order with their instruction note", () => {
