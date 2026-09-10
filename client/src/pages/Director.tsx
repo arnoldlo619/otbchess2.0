@@ -46,6 +46,7 @@ import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
 import {
   Crown,
+  Check,
   ChevronLeft,
   ChevronRight as _ChevronRight,
   Play,
@@ -199,9 +200,14 @@ const _RESULT_OPTIONS: { value: Result; label: string; short: string }[] = [
 
 function resultBadgeClass(result: Result, isDark: boolean): string {
   if (result === "*") return isDark ? "bg-white/10 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]";
-  if (result === "1-0") return "bg-emerald-100 text-emerald-700";
-  if (result === "0-1") return "bg-red-100 text-red-700";
-  return "bg-blue-100 text-blue-700";
+  if (result === "1-0" || result === "0-1") {
+    return isDark
+      ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30"
+      : "bg-emerald-100 text-emerald-800 border border-emerald-300";
+  }
+  return isDark
+    ? "bg-blue-500/20 text-blue-300 border border-blue-400/25"
+    : "bg-sky-100 text-sky-800 border border-sky-300";
 }
 
 function pointsFor(result: Result, side: "white" | "black"): string {
@@ -334,7 +340,7 @@ function BoardCard({
             ? "bg-[oklch(0.22_0.06_145)] border-white/10"
             : "bg-[oklch(0.24_0.07_145)] border-[#4CAF50]/25 shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
           : isComplete
-          ? "bg-white border-[#ADBC9F]/60 shadow-sm"
+          ? "bg-white border-[#8BAE98] shadow-[0_4px_14px_rgba(23,107,69,0.12)]"
           : "bg-white border-[#436850]/25 shadow-[0_2px_8px_rgba(61,107,71,0.08)]"
       }`}
     >
@@ -486,10 +492,10 @@ function BoardCard({
             </div>
           </div>
           <span className={`flex-shrink-0 text-2xl font-black tabular-nums ${
-            game.result === "1-0" ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
-            : game.result === "0-1" ? isDark ? "text-white/15" : "text-[#436850]/50"
-            : game.result === "½-½" ? isDark ? "text-blue-400" : "text-blue-500"
-            : isDark ? "text-white/12" : "text-[#436850]/50"
+            game.result === "1-0" ? isDark ? "text-[#4CAF50]" : "text-[#176B45]"
+            : game.result === "0-1" ? isDark ? "text-white/15" : "text-[#6B7D73]"
+            : game.result === "½-½" ? isDark ? "text-blue-400" : "text-[#1D4E89]"
+            : isDark ? "text-white/12" : "text-[#6B7D73]"
           }`}>{pointsFor(game.result, "white")}</span>
         </div>
 
@@ -546,10 +552,10 @@ function BoardCard({
             </div>
           </div>
           <span className={`flex-shrink-0 text-2xl font-black tabular-nums ${
-            game.result === "0-1" ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
-            : game.result === "1-0" ? isDark ? "text-white/15" : "text-[#436850]/50"
-            : game.result === "½-½" ? isDark ? "text-blue-400" : "text-blue-500"
-            : isDark ? "text-white/12" : "text-[#436850]/50"
+            game.result === "0-1" ? isDark ? "text-[#4CAF50]" : "text-[#176B45]"
+            : game.result === "1-0" ? isDark ? "text-white/15" : "text-[#6B7D73]"
+            : game.result === "½-½" ? isDark ? "text-blue-400" : "text-[#1D4E89]"
+            : isDark ? "text-white/12" : "text-[#6B7D73]"
           }`}>{pointsFor(game.result, "black")}</span>
         </div>
       </div>
@@ -566,7 +572,7 @@ function BoardCard({
         </div>
       ) : (
       <div
-        className={`px-4 pb-4 pt-1.5 flex gap-2 ${isComplete ? "opacity-55" : ""}`}
+        className="px-4 pb-4 pt-1.5 flex gap-2"
       >
         {([
           { value: "1-0"  as Result, label: white?.name?.split(" ")[0] ?? "White", isWinner: true,  isDraw: false },
@@ -577,7 +583,6 @@ function BoardCard({
           // When a result is set, dim the non-selected buttons
           const hasResult = game.result && game.result !== "*";
           const isDimmed = !isSelected && !!hasResult;
-          const isPendingThis = pendingCorrection === opt.value;
           return (
             <button
               key={opt.value}
@@ -598,25 +603,28 @@ function BoardCard({
                 toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
               style={{ minHeight: "48px", touchAction: "manipulation" }}
+              aria-pressed={isSelected}
+              aria-label={`${opt.label}${isSelected ? " selected as the recorded result" : ""}`}
               className={`flex-1 py-3.5 px-2 text-sm sm:text-base font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
                   ? opt.isDraw
                     ? isDark
                       ? "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.2)] scale-[1.02]"
-                      : "bg-amber-50 border-amber-300 text-amber-600 shadow-[0_0_0_1px_rgba(245,158,11,0.15)] scale-[1.02]"
+                      : "bg-[#B45309] border-[#92400E] text-white shadow-[0_2px_8px_rgba(146,64,14,0.28)] scale-[1.02]"
                     : isDark
                       ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50] shadow-[0_0_0_1px_rgba(76,175,80,0.2)] scale-[1.02]"
-                      : "bg-[#436850]/10 border-[#436850]/40 text-[#436850] shadow-[0_0_0_1px_rgba(61,107,71,0.15)] scale-[1.02]"
+                      : "bg-[#176B45] border-[#0F5132] text-white shadow-[0_2px_8px_rgba(15,81,50,0.28)] scale-[1.02]"
                   : isDimmed
                   ? isDark
                     ? "bg-white/02 border-white/05 text-white/20 cursor-default"
-                    : "bg-[#FBFADA]/70/40 border-[#ADBC9F]/70 text-[#436850]/70 cursor-default"
+                    : "bg-[#F4F7F2] border-[#D3E0D0] text-[#6B7D73] cursor-default"
                   : isDark
                   ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80 hover:border-white/15"
-                  : "bg-[#FBFADA]/70/80 border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A] hover:border-[#ADBC9F]"
+                  : "bg-white border-[#ADBC9F] text-[#315442] hover:bg-[#EEF6EA] hover:text-[#12372A] hover:border-[#7EAD8E]"
               }`}
               title={opt.value === "1-0" ? `${white?.name} wins` : opt.value === "0-1" ? `${black?.name} wins` : "Draw"}
             >
+              {isSelected && <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />}
               {opt.label}
             </button>
           );
@@ -765,7 +773,7 @@ function DoubleSwissBoardCard({
       <div className={`rounded-xl border px-3 py-2.5 ${
         isDark
           ? isComplete ? "bg-white/03 border-white/08" : "bg-white/05 border-[#4CAF50]/20"
-          : isComplete ? "bg-[#FBFADA]/70 border-[#ADBC9F]" : "bg-white border-[#436850]/20"
+          : isComplete ? "bg-[#F4FAF2] border-[#9EC3A6]" : "bg-white border-[#436850]/20"
       }`}>
         {/* Game label + result badge */}
         <div className="flex items-center justify-between mb-2">
@@ -789,7 +797,7 @@ function DoubleSwissBoardCard({
           }`}>{black.name.split(" ")[0]} ⬛</span>
         </div>
         {/* Result buttons */}
-        <div className={`flex gap-1.5 ${isComplete ? "opacity-60" : ""}`}>
+        <div className="flex gap-1.5">
            {(["1-0", "½-½", "0-1"] as Result[]).map((v) => {
             const isSelected = game.result === v;
             const label = v === "1-0" ? white.name.split(" ")[0] : v === "0-1" ? black.name.split(" ")[0] : "Draw";
@@ -803,24 +811,27 @@ function DoubleSwissBoardCard({
                   if (navigator.vibrate) navigator.vibrate(isSelected ? [30, 20, 30] : 40);
                   onResult(game.id, v);
                 }}
+                aria-pressed={isSelected}
+                aria-label={`${label}${isSelected ? " selected as the recorded result" : ""}`}
                 className={`flex-1 py-2.5 px-1 text-sm font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
                   isSelected
                     ? isDrawOpt
                       ? isDark
                         ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                        : "bg-amber-50 border-amber-300 text-amber-600"
+                        : "bg-[#B45309] border-[#92400E] text-white shadow-[0_2px_7px_rgba(146,64,14,0.24)]"
                       : isDark
                         ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
-                        : "bg-[#436850]/10 border-[#436850]/40 text-[#436850]"
+                        : "bg-[#176B45] border-[#0F5132] text-white shadow-[0_2px_7px_rgba(15,81,50,0.24)]"
                     : isDimmed
                     ? isDark
                       ? "bg-white/02 border-white/05 text-white/20 cursor-default"
-                      : "bg-[#FBFADA]/70/40 border-[#ADBC9F]/70 text-[#436850]/70 cursor-default"
+                      : "bg-[#F4F7F2] border-[#D3E0D0] text-[#6B7D73] cursor-default"
                     : isDark
                     ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80"
-                    : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50 hover:text-[#12372A]"
+                    : "bg-white border-[#ADBC9F] text-[#315442] hover:bg-[#EEF6EA] hover:text-[#12372A]"
                 }`}
               >
+                {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />}
                 {label}
               </button>
             );
@@ -848,7 +859,7 @@ function DoubleSwissBoardCard({
           ? "bg-[oklch(0.22_0.06_145)] border-white/10"
           : "bg-[oklch(0.24_0.07_145)] border-[#4CAF50]/25 shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
         : bothComplete
-        ? "bg-white border-[#ADBC9F]/60 shadow-sm"
+        ? "bg-white border-[#8BAE98] shadow-[0_4px_14px_rgba(23,107,69,0.12)]"
         : "bg-white border-[#436850]/25 shadow-[0_2px_8px_rgba(61,107,71,0.08)]"
     }`}>
       {/* Board header */}

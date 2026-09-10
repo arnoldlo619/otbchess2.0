@@ -263,6 +263,10 @@
 - [x] Performance Report: Create a distinct premium light-mode player-card appearance while preserving dark mode
 - [x] Performance Report: Verify light/dark toggle, export, sharing, and responsive card presentation before checkpointing
 
+- [x] Director pairings: Audit light-mode winner, draw, and reported-score result states for contrast gaps
+- [x] Director pairings: Strengthen completed board-result visibility in light appearance while preserving dark mode
+- [x] Director pairings: Add regression coverage and validate completed pairing results across appearances before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
