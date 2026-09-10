@@ -99,6 +99,8 @@ import {
   AlertTriangle,
   CalendarDays,
   ClipboardList,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -3838,7 +3840,8 @@ export default function Director() {
                                 ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-700"
                                 : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
                             }`}>
-                              <span>💰 {paid} / {state.players.length} paid</span>
+                              <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>{paid} / {state.players.length} paid</span>
                             </div>
                           );
                         })()}
@@ -3890,7 +3893,8 @@ export default function Director() {
                                     : isDark ? "bg-white/05 text-white/40 border border-transparent" : "bg-[#ADBC9F]/40 text-[#436850] border border-transparent"
                                 }`}
                               >
-                                {rt === "rapid" ? "⚡ Rapid" : "🔥 Blitz"}
+                                {rt === "rapid" ? <Zap className="w-3.5 h-3.5" aria-hidden="true" /> : <Swords className="w-3.5 h-3.5" aria-hidden="true" />}
+                                {rt === "rapid" ? "Rapid" : "Blitz"}
                               </button>
                             );
                           })}
@@ -3927,30 +3931,17 @@ export default function Director() {
 
                     {/* Player roster with check-in chips */}
                     <div className="px-4 sm:px-6 py-3">
-                      {/* Column headers — desktop only */}
+                      {/* Column headers — tablet and desktop only */}
                       {state.players.length > 0 && (
-                        <div className={`hidden sm:flex items-center gap-2.5 px-3 pb-1.5 mb-1 border-b ${
+                        <div className={`hidden md:grid grid-cols-[2.5rem_minmax(0,1fr)_7.5rem_7.5rem_8.5rem_5.5rem] items-center gap-3 px-3 pb-2.5 mb-1 border-b ${
                           isDark ? "border-white/08" : "border-[#ADBC9F]"
                         }`}>
-                          {/* Match row layout: checkbox(w-5) + rank(w-4) + avatar(w-[30px]) + name(flex-1) */}
-                          <div className="w-5 flex-shrink-0" />
-                          <div className="w-4 flex-shrink-0" />
-                          <div className="w-[30px] flex-shrink-0" />
-                          <div className="flex-1 min-w-0" />
-                          {/* Status: chip is ~62px wide, center-align header over it */}
-                          <span className={`text-xs font-bold uppercase tracking-widest flex-shrink-0 w-[80px] text-center ${
-                            isDark ? "text-white/70" : "text-[#12372A]"
-                          }`}>Status</span>
-                          {/* ELO: column is ~52px, right-aligned */}
-                          <span className={`text-xs font-bold uppercase tracking-widest flex-shrink-0 w-[60px] text-right ${
-                            isDark ? "text-white/70" : "text-[#12372A]"
-                          }`}>ELO</span>
-                          {/* Payment: two stacked buttons ~60px wide */}
-                          <span className={`text-xs font-bold uppercase tracking-widest flex-shrink-0 w-[60px] text-right ${
-                            isDark ? "text-white/70" : "text-[#12372A]"
-                          }`}>Payment</span>
-                          {/* edit + remove buttons (hidden until hover, but reserve space) */}
-                          <div className="w-[52px] flex-shrink-0" />
+                          <div />
+                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Player</span>
+                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Check-in</span>
+                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] text-right ${isDark ? "text-white/35" : "text-[#436850]"}`}>Rating</span>
+                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Payment</span>
+                          <span className="sr-only">Roster actions</span>
                         </div>
                       )}
                       {state.players.length === 0 ? (
@@ -3975,7 +3966,7 @@ export default function Director() {
                                 <div key={p.id}>
                                   {/* ── Mobile card (<640px) ────────────────────────────────────────────────────── */}
                                   <div
-                                    className={`sm:hidden rounded-xl mb-1 transition-all ${
+                                    className={`md:hidden rounded-xl mb-1 transition-all ${
                                       isCheckedIn
                                         ? isDark ? "bg-[#436850]/08" : "bg-green-50/60"
                                         : isDark ? "bg-white/02" : "bg-white"
@@ -4031,21 +4022,23 @@ export default function Director() {
                                         <button
                                           onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
                                           style={{ minHeight: "36px" }}
-                                          className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
-                                            p.paymentStatus === "cash"
-                                              ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
-                                              : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
+                                        aria-pressed={p.paymentStatus === "cash"}
+                                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                                          p.paymentStatus === "cash"
+                                            ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                                            : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
                                           }`}
-                                        >💵 Cash</button>
+                                        ><Banknote className="w-3 h-3" aria-hidden="true" />Cash</button>
                                         <button
                                           onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
                                           style={{ minHeight: "36px" }}
-                                          className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
-                                            p.paymentStatus === "card"
-                                              ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
-                                              : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
+                                        aria-pressed={p.paymentStatus === "card"}
+                                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                                          p.paymentStatus === "card"
+                                            ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
+                                            : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
                                           }`}
-                                        >💳 Card</button>
+                                        ><CreditCard className="w-3 h-3" aria-hidden="true" />Card</button>
                                       </div>
                                       {pendingRemoveId === p.id ? (
                                         <div className={`flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-bold mt-2 ${
@@ -4065,100 +4058,100 @@ export default function Director() {
                                   </div>
                                   {/* ── Desktop row (≥640px) ─────────────────────────────────────────────────────────── */}
                                   <div
-                                    style={{ minHeight: "52px", touchAction: "manipulation" }}
-                                    className={`hidden sm:flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
+                                    style={{ minHeight: "68px", touchAction: "manipulation" }}
+                                    className={`hidden md:grid grid-cols-[2.5rem_minmax(0,1fr)_7.5rem_7.5rem_8.5rem_5.5rem] items-center gap-3 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
                                       isCheckedIn
                                         ? isDark ? "bg-[#436850]/08 hover:bg-[#436850]/15" : "bg-green-50/60 hover:bg-green-50"
                                         : isDark ? "hover:bg-white/04" : "hover:bg-[#FBFADA]"
                                     }`}
                                     onClick={() => toggleCheckIn(p.id)}
                                   >
-                                  {/* Check-in indicator */}
-                                  <button
-                                    className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
-                                      isCheckedIn
-                                        ? "bg-[#436850] text-white"
-                                        : isDark ? "border border-white/15 hover:border-white/30" : "border border-[#ADBC9F] hover:border-[#436850]/40"
-                                    }`}
-                                    onClick={(e) => { e.stopPropagation(); toggleCheckIn(p.id); }}
-                                  >
-                                    {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
-                                  </button>
-                                  {/* Rank number */}
-                                  <span className={`text-xs font-mono w-4 flex-shrink-0 text-right ${
-                                    isDark ? "text-white/25" : "text-[#436850]/70"
-                                  }`}>{idx + 1}</span>
-                                  {/* Avatar */}
-                                  <PlayerAvatar
-                                    username={p.username}
-                                    name={p.name}
-                                    size={30}
-                                    showBadge
-                                    platform={p.platform}
-                                    avatarUrl={p.avatarUrl}
-                                    flairEmoji={p.flairEmoji}
-                                  />
-                                  {/* Name + username */}
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
-                                    {p.username && (
-                                      <p className={`text-sm truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>
-                                    )}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                                        isCheckedIn
+                                          ? "bg-[#436850] text-white"
+                                          : isDark ? "border border-white/15 hover:border-white/30" : "border border-[#ADBC9F] hover:border-[#436850]/40"
+                                      }`}
+                                      onClick={(e) => { e.stopPropagation(); toggleCheckIn(p.id); }}
+                                      aria-label={isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
+                                    >
+                                      {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                    </button>
+                                    <span className={`text-xs font-mono w-3 text-right ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>{idx + 1}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <PlayerAvatar
+                                      username={p.username}
+                                      name={p.name}
+                                      size={30}
+                                      showBadge
+                                      platform={p.platform}
+                                      avatarUrl={p.avatarUrl}
+                                      flairEmoji={p.flairEmoji}
+                                    />
+                                    <div className="min-w-0">
+                                      <p className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
+                                      {p.username && <p className={`text-sm truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>}
+                                    </div>
                                   </div>
                                   {/* Status chip */}
-                                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 w-[80px] text-center ${
+                                  <span className={`inline-flex w-fit items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${
                                     isCheckedIn
                                       ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-green-100 text-green-700"
                                       : isDark ? "bg-white/10 text-white/80" : "bg-[#436850]/15 text-[#12372A]"
                                   }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isCheckedIn ? "bg-current" : isDark ? "bg-white/40" : "bg-[#436850]/50"}`} />
                                     {isCheckedIn ? "Checked In" : "Registered"}
                                   </span>
                                   {/* ELO */}
                                   {(p.rapidElo || p.blitzElo) ? (
-                                    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                                    <div className="flex items-center justify-end gap-1.5 min-w-0">
                                       {p.rapidElo ? (
-                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold tabular-nums px-2 py-1 rounded-md whitespace-nowrap ${
                                           (tournamentConfig?.ratingType ?? "rapid") === "rapid"
                                             ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                             : isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
-                                        }`}>⚡{p.rapidElo}</span>
+                                        }`}><span className="text-[9px] uppercase tracking-wide opacity-70">R</span>{p.rapidElo}</span>
                                       ) : null}
                                       {p.blitzElo ? (
-                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold tabular-nums px-2 py-1 rounded-md whitespace-nowrap ${
                                           (tournamentConfig?.ratingType ?? "rapid") === "blitz"
                                             ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                             : isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
-                                        }`}>🔥{p.blitzElo}</span>
+                                        }`}><span className="text-[9px] uppercase tracking-wide opacity-70">B</span>{p.blitzElo}</span>
                                       ) : null}
                                     </div>
                                   ) : p.elo != null ? (
-                                    <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg w-[60px] text-right ${
+                                    <span className={`justify-self-end text-xs font-bold tabular-nums px-2.5 py-1 rounded-md ${
                                       isDark ? "bg-white/08 text-white/80" : "bg-[#ADBC9F]/40 text-[#12372A]"
                                     }`}>{p.elo}</span>
                                   ) : null}
                                   {/* Payment status */}
-                                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0 w-[60px]" onClick={(e) => e.stopPropagation()}>
+                                  <div className="grid grid-cols-2 gap-1" onClick={(e) => e.stopPropagation()}>
                                     <button
                                       onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
-                                      className={`text-xs font-bold px-2 py-0.5 rounded transition-all w-full text-center ${
+                                      aria-pressed={p.paymentStatus === "cash"}
+                                      className={`inline-flex items-center justify-center gap-1 min-h-8 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
                                         p.paymentStatus === "cash"
                                           ? isDark ? "bg-emerald-500/25 text-emerald-300" : "bg-emerald-100 text-emerald-700"
-                                          : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#ADBC9F]/40 text-[#12372A] hover:text-[#12372A]"
+                                          : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#F6F8F4] text-[#436850] hover:bg-[#EAF0E7]"
                                       }`}
                                       title="Toggle cash payment"
                                     >
-                                      💵 Cash
+                                      <Banknote className="w-3 h-3" aria-hidden="true" /> Cash
                                     </button>
                                     <button
                                       onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
-                                      className={`text-xs font-bold px-2 py-0.5 rounded transition-all w-full text-center ${
+                                      aria-pressed={p.paymentStatus === "card"}
+                                      className={`inline-flex items-center justify-center gap-1 min-h-8 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
                                         p.paymentStatus === "card"
                                           ? isDark ? "bg-blue-500/25 text-blue-300" : "bg-blue-100 text-blue-700"
-                                          : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#ADBC9F]/40 text-[#12372A] hover:text-[#12372A]"
+                                          : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#F6F8F4] text-[#436850] hover:bg-[#EAF0E7]"
                                       }`}
                                       title="Toggle card payment"
                                     >
-                                      💳 Card
+                                      <CreditCard className="w-3 h-3" aria-hidden="true" /> Card
                                     </button>
                                   </div>
                                   {/* Edit + Remove action buttons — always visible on mobile, hover-reveal on desktop */}
@@ -4239,14 +4232,14 @@ export default function Director() {
                           }`}>Payments</span>
                           <div className="flex items-center gap-3">
                             {paidCash > 0 && (
-                              <span className={`text-[11px] font-bold ${
+                              <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
                                 isDark ? "text-emerald-400" : "text-emerald-600"
-                              }`}>💵 {paidCash} cash</span>
+                              }`}><Banknote className="w-3 h-3" aria-hidden="true" />{paidCash} cash</span>
                             )}
                             {paidCard > 0 && (
-                              <span className={`text-[11px] font-bold ${
+                              <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
                                 isDark ? "text-blue-400" : "text-blue-600"
-                              }`}>💳 {paidCard} card</span>
+                              }`}><CreditCard className="w-3 h-3" aria-hidden="true" />{paidCard} card</span>
                             )}
                             {unpaid > 0 && (
                               <span className={`text-[11px] font-bold ${

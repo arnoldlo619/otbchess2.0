@@ -271,6 +271,10 @@
 - [x] Director pairings: Refine light-mode winner and draw states into restrained premium result controls
 - [x] Director pairings: Revalidate theme-specific result controls and checkpoint the visual polish
 
+- [x] Director roster: Audit Check-in Roster column alignment, density, and responsive layout
+- [x] Director roster: Refine status, rating, and payment controls into a premium aligned table surface
+- [x] Director roster: Add regression coverage and validate roster responsiveness and accessibility before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation

@@ -275,6 +275,11 @@ describe("Director Home and Standings readability", () => {
     standingsStart,
     directorSource.indexOf("/* ── Players Tab", standingsStart),
   );
+  const rosterStart = homeSource.indexOf("Check-In Roster");
+  const checkInRosterSource = homeSource.slice(
+    rosterStart,
+    homeSource.indexOf("/* Payment summary footer", rosterStart),
+  );
 
   it("keeps normal and Double Swiss pairing names at a readable 16px-plus scale", () => {
     expect(boardCardSource.match(/text-base sm:text-\[17px\] font-bold/g)).toHaveLength(2);
@@ -318,6 +323,31 @@ describe("Director Home and Standings readability", () => {
   it("gives completed winner and draw score badges a dedicated light-mode contrast treatment", () => {
     expect(directorSource).toContain('"bg-emerald-100 text-emerald-800 border border-emerald-300"');
     expect(directorSource).toContain('"bg-sky-100 text-sky-800 border border-sky-300"');
+  });
+
+  it("uses shared grid columns so Check-in Roster headers and desktop row data align", () => {
+    const rosterGrid = "grid-cols-[2.5rem_minmax(0,1fr)_7.5rem_7.5rem_8.5rem_5.5rem]";
+    expect(checkInRosterSource.split(rosterGrid).length - 1).toBeGreaterThanOrEqual(2);
+    expect(checkInRosterSource).toContain("Player</span>");
+    expect(checkInRosterSource).toContain("Check-in</span>");
+    expect(checkInRosterSource).toContain("Rating</span>");
+    expect(checkInRosterSource).toContain("Payment</span>");
+  });
+
+  it("preserves a mobile roster card fallback instead of compressing the grid below the tablet breakpoint", () => {
+    expect(checkInRosterSource).toContain('className={`md:hidden rounded-xl mb-1 transition-all ${');
+    expect(checkInRosterSource).toContain('className={`hidden md:grid grid-cols-[');
+  });
+
+  it("uses compact accessible payment segments and paired rapid or blitz rating labels", () => {
+    expect(checkInRosterSource).toContain('aria-pressed={p.paymentStatus === "cash"}');
+    expect(checkInRosterSource).toContain('aria-pressed={p.paymentStatus === "card"}');
+    expect(checkInRosterSource).toContain("<Banknote className=\"w-3 h-3\"");
+    expect(checkInRosterSource).toContain("<CreditCard className=\"w-3 h-3\"");
+    expect(checkInRosterSource).toContain(">R</span>{p.rapidElo}");
+    expect(checkInRosterSource).toContain(">B</span>{p.blitzElo}");
+    expect(checkInRosterSource).not.toContain("💵 Cash");
+    expect(checkInRosterSource).not.toContain("💳 Card");
   });
 });
 
