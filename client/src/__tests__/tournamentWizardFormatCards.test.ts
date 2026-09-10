@@ -29,4 +29,21 @@ describe("Tournament Wizard format-card appearance", () => {
     expect(wizardSource).toContain('mode="large_event"');
     expect(wizardSource).toContain('mode="schedule"');
   });
+
+  it("takes a selected format straight into its setup flow without rendering the Format Preview interstitial", () => {
+    expect(wizardSource).toContain("<ModeSelect isDark={isDark} onSelect={handleSelectMode} onClose={onClose} />");
+    expect(wizardSource).not.toContain("function FormatPreview");
+    expect(wizardSource).not.toContain("FORMAT PREVIEW");
+    expect(wizardSource).not.toContain("Change format");
+    expect(wizardSource).not.toContain("previewMode");
+    expect(wizardSource).toContain('setMode("quickstart")');
+    expect(wizardSource).toContain("setMode(m)");
+  });
+
+  it("keeps the direct-selection screen usable across mobile and desktop breakpoints", () => {
+    expect(wizardSource).toContain('grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6');
+    expect(wizardSource).toContain('aria-label={`${title}. ${description}`}');
+    expect(wizardSource).toContain('focus-visible:ring-[#71dc8a]');
+    expect(wizardSource).toContain('touchAction: "manipulation"');
+  });
 });

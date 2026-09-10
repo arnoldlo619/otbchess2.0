@@ -92,7 +92,6 @@ export function tournamentWizardDraftKey(initialClubId?: string | null): string 
 
 interface TournamentWizardDraft {
   mode: WizardMode;
-  previewMode: TournamentFormatMode | null;
   step: number;
   data: WizardData;
 }
@@ -942,47 +941,12 @@ function TextArea({
 
 type TournamentFormatMode = "quickstart" | "schedule" | "large_event" | "quads";
 
-const FORMAT_PREVIEWS: Record<TournamentFormatMode, {
-  title: string;
-  badge: string;
-  description: string;
-  imageSrc: string;
-  highlights: string[];
-  primaryLabel: string;
-}> = {
-  quickstart: {
-    title: "Quickstart",
-    badge: "Recommended",
-    description: "A focused setup for starting a club tournament in minutes. Add the essentials now and fine-tune details later.",
-    imageSrc: "/manus-storage/quickstart-card_9af1c159.webp",
-    highlights: ["Swiss pairing", "5 rounds", "Up to 16 players", "10 + 5 rapid"],
-    primaryLabel: "Use Quickstart",
-  },
-  quads: {
-    title: "Quads",
-    badge: "Club favorite",
-    description: "Create balanced four-player rating groups where every player meets each opponent once.",
-    imageSrc: "/manus-storage/quads-card_7af5dc0e.webp",
-    highlights: ["Rating grouped", "Four-player sections", "3 fixed rounds", "Round robin"],
-    primaryLabel: "Use Quads",
-  },
-  large_event: {
-    title: "Large Event",
-    badge: "Tournament scale",
-    description: "Run Swiss qualification rounds followed by a seeded elimination finish for a larger field.",
-    imageSrc: "/manus-storage/large-event-card_18ffa5c2.webp",
-    highlights: ["Up to 100 players", "Swiss qualification", "Top-64 cutoff", "Seeded elimination"],
-    primaryLabel: "Use Large Event",
-  },
-  schedule: {
-    title: "Schedule",
-    badge: "Full control",
-    description: "Configure the full event: format, time control, capacity, rounds, ratings, and club details.",
-    imageSrc: "/manus-storage/schedule-card_2d98c379.webp",
-    highlights: ["Custom format", "Custom rounds", "Time controls", "Ratings and capacity"],
-    primaryLabel: "Customize Tournament",
-  },
-};
+const FORMAT_CARD_IMAGES = [
+  "/manus-storage/quickstart_fabb5e03.png",
+  "/manus-storage/quads_e9f0eb03.png",
+  "/manus-storage/large-event_3f6a565e.png",
+  "/manus-storage/schedule_485beed2.png",
+];
 
 interface TournamentFormatCardProps {
   mode: TournamentFormatMode;
@@ -1104,10 +1068,10 @@ function ModeSelect({
   });
 
   useEffect(() => {
-    for (const preview of Object.values(FORMAT_PREVIEWS)) {
+    for (const imageSrc of FORMAT_CARD_IMAGES) {
       const image = new Image();
       image.decoding = "async";
-      image.src = preview.imageSrc;
+      image.src = imageSrc;
       void image.decode?.().catch(() => undefined);
     }
   }, []);
@@ -1232,94 +1196,6 @@ function ModeSelect({
             isSelected={selectedMode === "schedule"}
             onSelect={handleSelect}
           />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FormatPreview({
-  mode,
-  onBack,
-  onConfirm,
-}: {
-  mode: TournamentFormatMode;
-  onBack: () => void;
-  onConfirm: () => void;
-}) {
-  const preview = FORMAT_PREVIEWS[mode];
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const backButtonRef = useRef<HTMLButtonElement>(null);
-  useAccessibleOverlay({
-    open: true,
-    onClose: onBack,
-    containerRef: dialogRef,
-    initialFocusRef: backButtonRef,
-  });
-
-  return (
-    <div
-      ref={dialogRef}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="tournament-format-preview-title"
-      tabIndex={-1}
-      className="fixed inset-0 z-[200] overflow-y-auto bg-[#0b2514]"
-      style={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-50"
-        style={{ backgroundImage: "repeating-conic-gradient(rgba(255,255,255,0.025) 0% 25%, transparent 0% 50%)", backgroundSize: "40px 40px" }}
-      />
-      <div className="relative mx-auto flex min-h-full w-full max-w-4xl flex-col px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 sm:pb-12 sm:pt-8">
-        <button
-          ref={backButtonRef}
-          type="button"
-          onClick={onBack}
-          className="group inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7bdc91]"
-        >
-          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-          Change format
-        </button>
-
-        <div className="my-auto grid gap-5 py-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-8 lg:py-12">
-          <section className="overflow-hidden rounded-[22px] border border-white/10 bg-[#f5f0e6] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.32)] sm:rounded-[28px] sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <span className="rounded-[4px] border border-[#2a5535] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#2a5535]">{preview.badge}</span>
-              <span className="text-xs font-semibold tracking-wide text-[#2a5535]/50">FORMAT PREVIEW</span>
-            </div>
-            <h2 id="tournament-format-preview-title" className="mt-4 text-[34px] font-black leading-none tracking-[-0.05em] text-[#1a3a22] sm:text-[52px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              {preview.title}
-            </h2>
-            <p className="mt-3 max-w-[42ch] text-sm leading-relaxed text-[#2a5535]/68 sm:text-base">{preview.description}</p>
-            <div className="mt-5 overflow-hidden rounded-[14px] border border-[#2a5535]/10 bg-white/35 sm:rounded-[18px]">
-              <img src={preview.imageSrc} alt="" aria-hidden="true" className="aspect-[16/9] w-full object-contain" />
-            </div>
-          </section>
-
-          <section className="flex flex-col rounded-[22px] border border-white/10 bg-[#102f1b] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:rounded-[28px] sm:p-7">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#87e69d]">Included setup</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              {preview.highlights.map((highlight) => (
-                <div key={highlight} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-3 text-sm font-semibold text-white/80">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#3b9b55] text-[#071b0d]"><Check className="h-3.5 w-3.5 stroke-[3]" /></span>
-                  {highlight}
-                </div>
-              ))}
-            </div>
-            <div className="mt-auto pt-7">
-              <button
-                type="button"
-                onClick={onConfirm}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#47ad62] px-5 py-4 text-base font-black text-[#06190b] shadow-[0_10px_28px_rgba(71,173,98,0.24)] transition-transform hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white motion-reduce:hover:translate-y-0"
-              >
-                {preview.primaryLabel}
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </button>
-              <p className="mt-3 text-center text-xs leading-relaxed text-white/45">You can change details in the next step.</p>
-            </div>
-          </section>
         </div>
       </div>
     </div>
@@ -4606,7 +4482,6 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   const isDark = theme === "dark";
   const { user } = useAuthContext();
   const [mode, setMode] = useState<WizardMode>("select");
-  const [previewMode, setPreviewMode] = useState<TournamentFormatMode | null>(null);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [data, setData] = useState<WizardData>({
@@ -4648,7 +4523,6 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     if (open) {
       const draft = readDraft<TournamentWizardDraft>(draftKey);
       setMode(draft?.mode ?? "select");
-      setPreviewMode(draft?.previewMode ?? null);
       setStep(draft?.step ?? 0);
       setDirection(1);
       setData(draft?.data ? sanitizeTournamentDraftData(draft.data) : {
@@ -4686,11 +4560,10 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     if (!open || !draftReadyRef.current) return;
     writeDraft<TournamentWizardDraft>(draftKey, {
       mode,
-      previewMode,
       step,
       data: sanitizeTournamentDraftData(data),
     });
-  }, [open, draftKey, mode, previewMode, step, data]);
+  }, [open, draftKey, mode, step, data]);
 
   // When entering quickstart mode, auto-fill today's date
   const handleSelectMode = (m: "quickstart" | "schedule" | "large_event" | "brackets" | "quads") => {
@@ -4865,8 +4738,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
   const handleBack = useCallback(() => {
     if (mode === "select") {
-      if (previewMode) setPreviewMode(null);
-      else onClose();
+      onClose();
       return;
     }
     if (step > 0) {
@@ -4876,7 +4748,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       // Back from first step of either path → return to mode select
       setMode("select");
     }
-  }, [mode, step, onClose, previewMode]);
+  }, [mode, step, onClose]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -4887,7 +4759,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, canAdvance, handleNext, mode, onClose, previewMode]);
+  }, [open, canAdvance, handleNext, mode, onClose]);
 
   useSwipeGesture(scrollContainerRef, {
     onSwipeLeft: () => { if (canAdvance) handleNext(); },
@@ -4904,18 +4776,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   if (mode === "select") {
     return createPortal(
       <>
-        {previewMode ? (
-          <FormatPreview
-            mode={previewMode}
-            onBack={() => setPreviewMode(null)}
-            onConfirm={() => {
-              handleSelectMode(previewMode);
-              setPreviewMode(null);
-            }}
-          />
-        ) : (
-          <ModeSelect isDark={isDark} onSelect={setPreviewMode} onClose={onClose} />
-        )}
+        <ModeSelect isDark={isDark} onSelect={handleSelectMode} onClose={onClose} />
         <style>{`
           @keyframes wizardFadeIn { from { opacity: 0; } to { opacity: 1; } }
           @keyframes formatSelectionGlow {
