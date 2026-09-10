@@ -267,6 +267,10 @@
 - [x] Director pairings: Strengthen completed board-result visibility in light appearance while preserving dark mode
 - [x] Director pairings: Add regression coverage and validate completed pairing results across appearances before checkpointing
 
+- [x] Director pairings: Audit the selected-result treatment against premium light-mode visual standards
+- [x] Director pairings: Refine light-mode winner and draw states into restrained premium result controls
+- [x] Director pairings: Revalidate theme-specific result controls and checkpoint the visual polish
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation

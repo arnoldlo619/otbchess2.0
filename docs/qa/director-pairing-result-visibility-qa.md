@@ -16,3 +16,9 @@ The local Director route for `quik-1-2026` redirected to the Director Access scr
 - TypeScript passed with zero errors.
 - Changed-file lint passed with zero errors; six existing Director warnings remain outside this scope.
 - Full suite: 6,923 passing, 13 existing failures across accessibility-overlay, native-form-label, and Tournament Wizard payment-toggle source contracts; none target Director pairing results.
+
+## Premium light-mode refinement — 2026-09-10
+
+The first high-contrast revision made selected results too visually heavy for the Director dashboard. The final light-mode treatment now uses restrained pale green and pale amber selection surfaces, darker semantic text, a precise border, a subtle inset keyline, and the existing checkmark/pressed-state cue. Unselected reported outcomes use a quiet neutral surface rather than a washed-out container. This keeps the result immediately scannable without treating every completed result as a primary call-to-action.
+
+The existing dark-mode selection classes remain unchanged. Focused Director result coverage passed (56 tests), TypeScript passed, changed-file lint has zero errors, full project lint has zero errors, and the server restarted cleanly. The accessible demo route is available but does not expose the standard or Double Swiss board-result controls; no live tournament state was modified during review.

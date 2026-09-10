@@ -610,14 +610,14 @@ function BoardCard({
                   ? opt.isDraw
                     ? isDark
                       ? "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.2)] scale-[1.02]"
-                      : "bg-[#B45309] border-[#92400E] text-white shadow-[0_2px_8px_rgba(146,64,14,0.28)] scale-[1.02]"
+                      : "bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B] shadow-[inset_0_0_0_1px_rgba(183,121,31,0.12)]"
                     : isDark
                       ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50] shadow-[0_0_0_1px_rgba(76,175,80,0.2)] scale-[1.02]"
-                      : "bg-[#176B45] border-[#0F5132] text-white shadow-[0_2px_8px_rgba(15,81,50,0.28)] scale-[1.02]"
+                      : "bg-[#E7F4EC] border-[#2F7D4E] text-[#164A31] shadow-[inset_0_0_0_1px_rgba(47,125,78,0.12)]"
                   : isDimmed
                   ? isDark
                     ? "bg-white/02 border-white/05 text-white/20 cursor-default"
-                    : "bg-[#F4F7F2] border-[#D3E0D0] text-[#6B7D73] cursor-default"
+                    : "bg-[#FAFCF9] border-[#DDE8DD] text-[#718174] cursor-default"
                   : isDark
                   ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80 hover:border-white/15"
                   : "bg-white border-[#ADBC9F] text-[#315442] hover:bg-[#EEF6EA] hover:text-[#12372A] hover:border-[#7EAD8E]"
@@ -818,14 +818,14 @@ function DoubleSwissBoardCard({
                     ? isDrawOpt
                       ? isDark
                         ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                        : "bg-[#B45309] border-[#92400E] text-white shadow-[0_2px_7px_rgba(146,64,14,0.24)]"
+                        : "bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B] shadow-[inset_0_0_0_1px_rgba(183,121,31,0.12)]"
                       : isDark
                         ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
-                        : "bg-[#176B45] border-[#0F5132] text-white shadow-[0_2px_7px_rgba(15,81,50,0.24)]"
+                        : "bg-[#E7F4EC] border-[#2F7D4E] text-[#164A31] shadow-[inset_0_0_0_1px_rgba(47,125,78,0.12)]"
                     : isDimmed
                     ? isDark
                       ? "bg-white/02 border-white/05 text-white/20 cursor-default"
-                      : "bg-[#F4F7F2] border-[#D3E0D0] text-[#6B7D73] cursor-default"
+                      : "bg-[#FAFCF9] border-[#DDE8DD] text-[#718174] cursor-default"
                     : isDark
                     ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80"
                     : "bg-white border-[#ADBC9F] text-[#315442] hover:bg-[#EEF6EA] hover:text-[#12372A]"

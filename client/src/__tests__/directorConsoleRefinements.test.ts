@@ -296,19 +296,21 @@ describe("Director Home and Standings readability", () => {
     expect(standingsSource).not.toContain("px-3 py-2.5 text-[10px] tabular-nums text-right");
   });
 
-  it("keeps completed normal-board winner and draw results high-contrast in light mode", () => {
+  it("keeps completed normal-board winner and draw results premium and high-contrast in light mode", () => {
     expect(boardCardSource).toContain('className="px-4 pb-4 pt-1.5 flex gap-2"');
     expect(boardCardSource).not.toContain('isComplete ? "opacity-55"');
-    expect(boardCardSource).toContain('"bg-[#176B45] border-[#0F5132] text-white');
-    expect(boardCardSource).toContain('"bg-[#B45309] border-[#92400E] text-white');
+    expect(boardCardSource).toContain('"bg-[#E7F4EC] border-[#2F7D4E] text-[#164A31]');
+    expect(boardCardSource).toContain('"bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B]');
+    expect(boardCardSource).not.toContain('"bg-[#176B45] border-[#0F5132] text-white');
     expect(boardCardSource).toContain('aria-pressed={isSelected}');
     expect(boardCardSource).toContain('Check className="w-4 h-4 flex-shrink-0"');
   });
 
-  it("keeps completed Double Swiss game results high-contrast in light mode", () => {
+  it("keeps completed Double Swiss game results premium and high-contrast in light mode", () => {
     expect(doubleSwissCardSource).not.toContain('isComplete ? "opacity-60"');
-    expect(doubleSwissCardSource).toContain('"bg-[#176B45] border-[#0F5132] text-white');
-    expect(doubleSwissCardSource).toContain('"bg-[#B45309] border-[#92400E] text-white');
+    expect(doubleSwissCardSource).toContain('"bg-[#E7F4EC] border-[#2F7D4E] text-[#164A31]');
+    expect(doubleSwissCardSource).toContain('"bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B]');
+    expect(doubleSwissCardSource).not.toContain('"bg-[#176B45] border-[#0F5132] text-white');
     expect(doubleSwissCardSource).toContain('aria-pressed={isSelected}');
     expect(doubleSwissCardSource).toContain('Check className="w-3.5 h-3.5 flex-shrink-0"');
   });
