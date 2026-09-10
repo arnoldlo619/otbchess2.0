@@ -232,7 +232,7 @@ function ByeCard({ game, players, isDark }: {
           isDark ? "border-white/08 bg-white/04" : "border-[#ADBC9F]/50 bg-[#FBFADA]/70/80"
         }`}
       >
-        <span className={`flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+        <span className={`flex items-center gap-1.5 text-sm font-bold tracking-widest uppercase ${isDark ? "text-white/40" : "text-[#436850]"}`}>
           {game.board === 1 && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
           Board {game.board}
         </span>
@@ -252,7 +252,7 @@ function ByeCard({ game, players, isDark }: {
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
+            <span className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>
               {byePlayer.name}
             </span>
             {byePlayer.title && (
@@ -261,17 +261,17 @@ function ByeCard({ game, players, isDark }: {
               </span>
             )}
           </div>
-          <span className={`text-xs ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+          <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>
             {byePlayer.elo} ELO
           </span>
         </div>
         <div className="text-right">
           <div className="text-lg font-bold text-blue-500">+½</div>
-          <div className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>bye point</div>
+          <div className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>bye point</div>
         </div>
       </div>
       <div className="px-4 pb-3">
-        <p className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>
+        <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>
           Odd number of players — this player receives a half-point bye this round.
         </p>
       </div>
@@ -351,7 +351,7 @@ function BoardCard({
             <GripVertical className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/25" : "text-[#436850]/70"}`} />
           )}
           <span
-            className={`flex items-center gap-1.5 text-[11px] font-black tracking-[0.12em] uppercase ${
+            className={`flex items-center gap-1.5 text-sm font-black tracking-[0.12em] uppercase ${
               editMode
                 ? isSwapSource
                   ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
@@ -363,7 +363,7 @@ function BoardCard({
             Board {game.board}
           </span>
           {!editMode && !isComplete && (
-            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
               isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-800"
             }`}>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -467,7 +467,7 @@ function BoardCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <PlayerHoverCard player={white} isDark={isDark}>
-                <span className={`text-sm font-bold cursor-default hover:text-[#436850] transition-colors truncate ${
+                <span className={`text-base sm:text-[17px] font-bold cursor-default hover:text-[#436850] transition-colors truncate ${
                   isDark ? "text-white" : "text-[#12372A]"
                 }`}>
                   {white.name}
@@ -480,12 +480,12 @@ function BoardCard({
                   {white.title}
                 </span>
               )}
-              <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+              <span className={`flex-shrink-0 text-xs font-bold tabular-nums px-2 py-0.5 rounded-md ${
                 isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
               }`}>{white.elo}</span>
             </div>
           </div>
-          <span className={`flex-shrink-0 text-xl font-black tabular-nums ${
+          <span className={`flex-shrink-0 text-2xl font-black tabular-nums ${
             game.result === "1-0" ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
             : game.result === "0-1" ? isDark ? "text-white/15" : "text-[#436850]/50"
             : game.result === "½-½" ? isDark ? "text-blue-400" : "text-blue-500"
@@ -500,7 +500,7 @@ function BoardCard({
           <div className={`flex-1 h-px ${
             isDark ? "bg-white/05" : "bg-[#ADBC9F]/40"
           }`} />
-          <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${
+          <span className={`text-xs font-black uppercase tracking-[0.15em] ${
             isDark ? "text-white/20" : "text-[#436850]"
           }`}>vs</span>
           <div className={`flex-1 h-px ${
@@ -527,7 +527,7 @@ function BoardCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <PlayerHoverCard player={black} isDark={isDark}>
-                <span className={`text-sm font-bold cursor-default hover:text-[#436850] transition-colors truncate ${
+                <span className={`text-base sm:text-[17px] font-bold cursor-default hover:text-[#436850] transition-colors truncate ${
                   isDark ? "text-white" : "text-[#12372A]"
                 }`}>
                   {black.name}
@@ -540,12 +540,12 @@ function BoardCard({
                   {black.title}
                 </span>
               )}
-              <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+              <span className={`flex-shrink-0 text-xs font-bold tabular-nums px-2 py-0.5 rounded-md ${
                 isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
               }`}>{black.elo}</span>
             </div>
           </div>
-          <span className={`flex-shrink-0 text-xl font-black tabular-nums ${
+          <span className={`flex-shrink-0 text-2xl font-black tabular-nums ${
             game.result === "0-1" ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
             : game.result === "1-0" ? isDark ? "text-white/15" : "text-[#436850]/50"
             : game.result === "½-½" ? isDark ? "text-blue-400" : "text-blue-500"
@@ -598,7 +598,7 @@ function BoardCard({
                 toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
               style={{ minHeight: "48px", touchAction: "manipulation" }}
-            className={`flex-1 py-3.5 px-2 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
+              className={`flex-1 py-3.5 px-2 text-sm sm:text-base font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
                   ? opt.isDraw
                     ? isDark
@@ -769,17 +769,17 @@ function DoubleSwissBoardCard({
       }`}>
         {/* Game label + result badge */}
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-[10px] font-black tracking-widest uppercase ${
+          <span className={`text-xs font-black tracking-widest uppercase ${
             isDark ? "text-white/30" : "text-[#436850]"
           }`}>{label}</span>
           {isComplete && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${resultBadgeClass(game.result, isDark)}`}>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${resultBadgeClass(game.result, isDark)}`}>
               {game.result}
             </span>
           )}
         </div>
         {/* Color indicators */}
-        <div className="flex items-center gap-1.5 mb-2.5 text-[11px]">
+        <div className="flex items-center gap-1.5 mb-2.5 text-sm">
           <span className={`px-1.5 py-0.5 rounded font-bold ${
             isDark ? "bg-white/90 text-[#12372A]" : "bg-white border border-[#ADBC9F] text-[#12372A]/85"
           }`}>{white.name.split(" ")[0]} ⬜</span>
@@ -803,7 +803,7 @@ function DoubleSwissBoardCard({
                   if (navigator.vibrate) navigator.vibrate(isSelected ? [30, 20, 30] : 40);
                   onResult(game.id, v);
                 }}
-                className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
+                className={`flex-1 py-2.5 px-1 text-sm font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
                   isSelected
                     ? isDrawOpt
                       ? isDark
@@ -856,17 +856,17 @@ function DoubleSwissBoardCard({
         isDark ? "border-white/08 bg-white/03" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70/60"
       }`}>
         <div className="flex items-center gap-2">
-          <span className={`flex items-center gap-1.5 text-[11px] font-black tracking-[0.12em] uppercase ${
+          <span className={`flex items-center gap-1.5 text-sm font-black tracking-[0.12em] uppercase ${
             isDark ? "text-white/35" : "text-[#436850]"
           }`}>
             {gameA.board === 1 && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
             Board {gameA.board}
           </span>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
             isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
           }`}>2× Games</span>
           {!bothComplete && (
-            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
               isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
             }`}>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -952,11 +952,11 @@ function DoubleSwissBoardCard({
           <PlayerAvatar username={p1.username} name={p1.name}
             platform={p1.platform === "lichess" ? "lichess" : "chesscom"}
             size={32} showBadge avatarUrl={p1.avatarUrl} flairEmoji={p1.flairEmoji} />
-          <span className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p1.name}</span>
+          <span className={`text-base sm:text-[17px] font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p1.name}</span>
           {p1.title && <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
             isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
           }`}>{p1.title}</span>}
-          <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+          <span className={`flex-shrink-0 text-xs font-bold tabular-nums px-2 py-0.5 rounded-md ${
             isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
           }`}>{p1.elo}</span>
         </div>
@@ -964,11 +964,11 @@ function DoubleSwissBoardCard({
           isDark ? "text-white/20" : "text-[#436850]/70"
         }`}>vs</span>
         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-          <span className={`text-sm font-bold truncate text-right ${isDark ? "text-white" : "text-[#12372A]"}`}>{p2.name}</span>
+          <span className={`text-base sm:text-[17px] font-bold truncate text-right ${isDark ? "text-white" : "text-[#12372A]"}`}>{p2.name}</span>
           {p2.title && <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
             isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
           }`}>{p2.title}</span>}
-          <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+          <span className={`flex-shrink-0 text-xs font-bold tabular-nums px-2 py-0.5 rounded-md ${
             isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
           }`}>{p2.elo}</span>
           <PlayerAvatar username={p2.username} name={p2.name}
@@ -3993,8 +3993,8 @@ export default function Director() {
                                       </button>
                                       <PlayerAvatar username={p.username} name={p.name} size={32} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                                       <div className="flex-1 min-w-0">
-                                        <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
-                                        {p.username && <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>}
+                                        <p className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
+                                        {p.username && <p className={`text-sm truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>}
                                       </div>
                                       <div className="flex items-center gap-1.5 flex-shrink-0">
                                         {elo != null && (
@@ -4089,9 +4089,9 @@ export default function Director() {
                                   />
                                   {/* Name + username */}
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
+                                    <p className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
                                     {p.username && (
-                                      <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>
+                                      <p className={`text-sm truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>
                                     )}
                                   </div>
                                   {/* Status chip */}
@@ -4436,14 +4436,14 @@ export default function Director() {
                   {state.format !== "quads" && (<div>
                     <div className="flex items-center justify-between py-1">
                       <h3
-                        className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
+                        className={`text-base sm:text-lg font-black tracking-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
                       >
                         Round {state.currentRound} Pairings
                       </h3>
                       <div className="flex items-center gap-2">
                         {/* Boards complete count */}
-                        <span className={`text-[11px] font-bold tabular-nums ${
+                        <span className={`text-xs font-bold tabular-nums ${
                           allResultsIn
                             ? isDark ? "text-[#4CAF50]" : "text-green-700"
                             : isDark ? "text-white/40" : "text-[#436850]"
@@ -4452,7 +4452,7 @@ export default function Director() {
                             ? `${completedBoards} / ${totalBoards} boards`
                             : `${completedGames} / ${totalGames}`}
                         </span>
-                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border ${
                           allResultsIn
                             ? isDark
                               ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50]"
@@ -5177,7 +5177,7 @@ export default function Director() {
                   {/* ── Completed rounds accordion ───────────────────────────────── */}
                   {state.rounds.filter((r) => r.number < state.currentRound).length > 0 && (
                     <div>
-                      <h2 className={`text-[10px] font-black uppercase tracking-[0.12em] mb-3 ${isDark ? "text-white/25" : "text-[#436850]"}`}>
+                      <h2 className={`text-xs font-black uppercase tracking-[0.12em] mb-3 ${isDark ? "text-white/25" : "text-[#436850]"}`}>
                         Completed Rounds
                       </h2>
                       <div className="space-y-2">
@@ -5192,12 +5192,12 @@ export default function Director() {
                               }`}
                             >
                               <div className="flex items-center justify-between mb-2.5">
-                                <span className={`text-[11px] font-black uppercase tracking-widest ${
+                                <span className={`text-sm font-black uppercase tracking-widest ${
                                   isDark ? "text-white/40" : "text-[#436850]"
                                 }`}>
                                   Round {round.number}
                                 </span>
-                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
                                   isDark ? "bg-[#4CAF50]/10 text-[#4CAF50]" : "bg-green-50 text-green-700"
                                 }`}>
                                   <CheckCircle2 className="w-3 h-3" /> Complete
@@ -5211,13 +5211,13 @@ export default function Director() {
                                     <div key={g.id} className={`flex items-center gap-2 min-w-0 px-2 py-1.5 rounded-lg ${
                                       isDark ? "bg-white/03" : "bg-[#FBFADA]/70/60"
                                     }`}>
-                                      <span className={`flex-1 truncate text-xs font-semibold ${isDark ? "text-white/65" : "text-[#12372A]/85"}`}>
+                                      <span className={`flex-1 truncate text-sm font-semibold ${isDark ? "text-white/65" : "text-[#12372A]/85"}`}>
                                         {w?.name.split(" ")[0]}
                                       </span>
-                                      <span className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-[10px] ${resultBadgeClass(g.result, isDark)}`}>
+                                      <span className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-xs ${resultBadgeClass(g.result, isDark)}`}>
                                         {g.result}
                                       </span>
-                                      <span className={`flex-1 truncate text-xs font-semibold text-right ${isDark ? "text-white/65" : "text-[#12372A]/85"}`}>
+                                      <span className={`flex-1 truncate text-sm font-semibold text-right ${isDark ? "text-white/65" : "text-[#12372A]/85"}`}>
                                         {b?.name.split(" ")[0]}
                                       </span>
                                     </div>
@@ -5256,10 +5256,10 @@ export default function Director() {
                     <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
                       isDark ? "border-white/08" : "border-[#ADBC9F]/70"
                     }`}>
-                      <h3 className={`text-[11px] font-black uppercase tracking-[0.12em] ${
+                      <h3 className={`text-xs font-black uppercase tracking-[0.12em] ${
                         isDark ? "text-white/40" : "text-[#436850]"
                       }`}>Top Standings</h3>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                         isDark ? "bg-[#4CAF50]/12 text-[#4CAF50]" : "bg-green-50 text-green-700"
                       }`}>Round {state.currentRound} of {state.totalRounds}</span>
                     </div>
@@ -5284,7 +5284,7 @@ export default function Director() {
                             >
                               {/* Rank number */}
                               <span
-                                className={`text-[10px] font-black uppercase tracking-widest ${cfg.numColor}`}
+                                className={`text-xs font-black uppercase tracking-widest ${cfg.numColor}`}
                               >
                                 #{cfg.rank}
                               </span>
@@ -5300,13 +5300,13 @@ export default function Director() {
                               />
                               {/* Name + title */}
                               <div className="text-center min-w-0 w-full">
-                                <p className={`text-xs font-black truncate ${
+                                <p className={`text-sm font-black truncate ${
                                   isDark ? "text-white" : "text-[#12372A]"
                                 }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                                   {player.name.split(" ")[0]}
                                 </p>
                                 {player.title && (
-                                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded mt-0.5 inline-block ${
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded mt-0.5 inline-block ${
                                     isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
                                   }`}>{player.title}</span>
                                 )}
@@ -5321,12 +5321,12 @@ export default function Director() {
                                 >
                                   {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                                 </span>
-                                <span className={`text-[9px] font-bold ml-0.5 ${
+                                <span className={`text-xs font-bold ml-0.5 ${
                                   isDark ? "text-white/25" : "text-[#436850]"
                                 }`}>pts</span>
                               </div>
                               {/* W/D/L */}
-                              <p className={`text-[10px] tabular-nums ${
+                              <p className={`text-xs tabular-nums ${
                                 isDark ? "text-white/35" : "text-[#436850]"
                               }`}>{row.wins}W {row.draws}D {row.losses}L</p>
                             </div>
@@ -5350,31 +5350,31 @@ export default function Director() {
                         <tr className={`border-b ${
                           isDark ? "border-white/08 bg-white/02" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"
                         }`}>
-                          <th scope="col" className={`w-8 px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-center ${
+                          <th scope="col" className={`w-8 px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-center ${
                             isDark ? "text-white/30" : "text-[#436850]"
                           }`}>#</th>
-                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-left ${
+                          <th scope="col" className={`px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-left ${
                             isDark ? "text-white/30" : "text-[#436850]"
                           }`}>Player</th>
-                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                          <th scope="col" className={`px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-right ${
                             isDark ? "text-white/30" : "text-[#436850]"
                           }`}>Pts</th>
-                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                          <th scope="col" className={`px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-right ${
                             isDark ? "text-white/30" : "text-[#436850]"
                           }`}>W/D/L</th>
                           {isDoubleSwiss && (
-                            <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                            <th scope="col" className={`px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-right ${
                               isDark ? "text-white/30" : "text-[#436850]"
                             }`}>Match</th>
                           )}
-                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                          <th scope="col" className={`px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-right ${
                             isDark ? "text-white/30" : "text-[#436850]"
                           }`}>
                             <span className="inline-flex items-center justify-end gap-0.5">
                               Buch.<TiebreakTooltip type="buchholz" position="above" />
                             </span>
                           </th>
-                          <th scope="col" className={`px-3 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-right ${
+                          <th scope="col" className={`px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-right ${
                             isDark ? "text-white/30" : "text-[#436850]"
                           }`}>Rating</th>
                         </tr>
@@ -5400,7 +5400,7 @@ export default function Director() {
                               style={{ animationDelay: `${rowDelay}ms` }}
                             >
                               {/* Rank */}
-                              <td className={`w-8 px-3 py-2.5 text-[11px] font-black text-center tabular-nums ${
+                              <td className={`w-8 px-3 py-3 text-sm font-black text-center tabular-nums ${
                                 isLeader
                                   ? isDark ? "text-amber-400" : "text-amber-600"
                                   : i === 1
@@ -5411,27 +5411,27 @@ export default function Director() {
                               }`}>{i + 1}</td>
 
                               {/* Player */}
-                              <th scope="row" className="px-3 py-2.5 text-left font-normal">
+                              <th scope="row" className="px-3 py-3 text-left font-normal">
                                 <div className="flex items-center gap-2 min-w-0">
                                   <PlayerAvatar
                                     username={p.username}
                                     name={p.name}
-                                    size={28}
+                                    size={32}
                                     platform={p.platform}
                                     avatarUrl={p.avatarUrl}
                                   />
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-1">
-                                      <span className={`text-xs font-bold truncate ${
+                                      <span className={`text-base font-bold truncate ${
                                         isDark ? "text-white" : "text-[#12372A]"
                                       }`}>{p.name.split(" ")[0]}</span>
                                       {p.title && (
-                                        <span className={`flex-shrink-0 text-[9px] font-black px-1 py-0.5 rounded ${
+                                        <span className={`flex-shrink-0 text-[10px] font-black px-1 py-0.5 rounded ${
                                           isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
                                         }`}>{p.title}</span>
                                       )}
                                     </div>
-                                    <span className={`text-[10px] ${
+                                    <span className={`text-xs ${
                                       isDark ? "text-white/25" : "text-[#436850]"
                                     }`}>@{p.username}</span>
                                   </div>
@@ -5439,7 +5439,7 @@ export default function Director() {
                               </th>
 
                               {/* Points */}
-                              <td className={`px-3 py-2.5 text-sm font-black tabular-nums text-right ${
+                              <td className={`px-3 py-3 text-base font-black tabular-nums text-right ${
                                 isLeader
                                   ? isDark ? "text-amber-400" : "text-amber-600"
                                   : isDark ? "text-white" : "text-[#12372A]"
@@ -5448,13 +5448,13 @@ export default function Director() {
                               </td>
 
                               {/* W/D/L */}
-                              <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right ${
+                              <td className={`px-3 py-3 text-xs tabular-nums text-right ${
                                 isDark ? "text-white/40" : "text-[#436850]"
                               }`}>{row.wins}/{row.draws}/{row.losses}</td>
 
                               {/* Match W/D/L — Double Swiss only */}
                               {isDoubleSwiss && (
-                                <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right font-semibold ${
+                                <td className={`px-3 py-3 text-xs tabular-nums text-right font-semibold ${
                                   row.matchW > row.matchL
                                     ? isDark ? "text-emerald-400" : "text-emerald-600"
                                     : row.matchL > row.matchW
@@ -5466,12 +5466,12 @@ export default function Director() {
                               )}
 
                               {/* Buchholz */}
-                              <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right ${
+                              <td className={`px-3 py-3 text-xs tabular-nums text-right ${
                                 isDark ? "text-white/30" : "text-[#436850]"
                               }`}>{row.buchholz.toFixed(1)}</td>
 
                               {/* Rating */}
-                              <td className={`px-3 py-2.5 text-[10px] tabular-nums text-right ${
+                              <td className={`px-3 py-3 text-xs tabular-nums text-right ${
                                 isDark ? "text-white/30" : "text-[#436850]"
                               }`}>{p.elo ?? "—"}</td>
                             </tr>
@@ -5521,16 +5521,16 @@ export default function Director() {
                           {/* Name + record */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
-                              <span className={`text-xs font-bold truncate ${
+                              <span className={`text-base font-bold truncate ${
                                 isDark ? "text-white" : "text-[#12372A]"
                               }`}>{p.name.split(" ")[0]}</span>
                               {p.title && (
-                                <span className={`flex-shrink-0 text-[9px] font-black px-1 py-0.5 rounded ${
+                                <span className={`flex-shrink-0 text-[10px] font-black px-1 py-0.5 rounded ${
                                   isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#436850]/08 text-[#436850]"
                                 }`}>{p.title}</span>
                               )}
                             </div>
-                            <span className={`text-[10px] tabular-nums ${
+                            <span className={`text-xs tabular-nums ${
                               isDark ? "text-white/30" : "text-[#436850]"
                             }`}>{row.wins}W {row.draws}D {row.losses}L · {p.elo ?? "—"}</span>
                           </div>
@@ -5544,7 +5544,7 @@ export default function Director() {
                             }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                               {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                             </span>
-                            <p className={`text-[9px] ${
+                            <p className={`text-xs ${
                               isDark ? "text-white/25" : "text-[#436850]"
                             }`}>pts</p>
                           </div>
@@ -5560,7 +5560,7 @@ export default function Director() {
                     <Info className={`w-3 h-3 mt-0.5 flex-shrink-0 ${
                       isDark ? "text-white/20" : "text-[#436850]/70"
                     }`} />
-                    <p className={`text-[10px] leading-relaxed ${
+                    <p className={`text-xs leading-relaxed ${
                       isDark ? "text-white/25" : "text-[#436850]"
                     }`}>
                       <span className="font-bold">Tiebreak order:</span> 1. Points · 2. Buchholz (sum of opponents' scores) · 3. Wins · 4. Wins with Black. Higher Buchholz = stronger opposition faced.

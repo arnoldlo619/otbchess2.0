@@ -255,6 +255,48 @@ describe("Board Search and Jump-to-Unreported", () => {
   });
 });
 
+// ── Director Readability Scale Tests ────────────────────────────────────────
+
+describe("Director Home and Standings readability", () => {
+  const boardCardSource = directorSource.slice(
+    directorSource.indexOf("function BoardCard"),
+    directorSource.indexOf("function DoubleSwissBoardCard"),
+  );
+  const doubleSwissCardSource = directorSource.slice(
+    directorSource.indexOf("function DoubleSwissBoardCard"),
+    directorSource.indexOf("/// ─── Standings Mini Table"),
+  );
+  const homeSource = directorSource.slice(
+    directorSource.indexOf('activeTab === "home"'),
+    directorSource.indexOf('activeTab === "standings"'),
+  );
+  const standingsStart = directorSource.indexOf('activeTab === "standings"');
+  const standingsSource = directorSource.slice(
+    standingsStart,
+    directorSource.indexOf("/* ── Players Tab", standingsStart),
+  );
+
+  it("keeps normal and Double Swiss pairing names at a readable 16px-plus scale", () => {
+    expect(boardCardSource.match(/text-base sm:text-\[17px\] font-bold/g)).toHaveLength(2);
+    expect(boardCardSource).toContain("text-sm sm:text-base font-bold");
+    expect(doubleSwissCardSource.match(/text-base sm:text-\[17px\] font-bold/g)).toHaveLength(2);
+    expect(doubleSwissCardSource).toContain("text-sm font-bold rounded-lg");
+  });
+
+  it("keeps Home roster names and usernames readable during registration", () => {
+    expect(homeSource.match(/text-base font-semibold truncate/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(homeSource.match(/text-sm truncate/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(homeSource).toContain("text-base sm:text-lg font-black tracking-tight");
+  });
+
+  it("matches Standings player identity and key data to the Players-tab readable scale", () => {
+    expect(standingsSource).toContain("text-base font-bold truncate");
+    expect(standingsSource).toContain("text-base font-black tabular-nums text-right");
+    expect(standingsSource).toContain("px-3 py-3 text-xs font-black uppercase");
+    expect(standingsSource).not.toContain("px-3 py-2.5 text-[10px] tabular-nums text-right");
+  });
+});
+
 // ── Round Lifecycle Tests ───────────────────────────────────────────────────
 
 describe("Round Lifecycle", () => {

@@ -255,6 +255,10 @@
 - [x] Tournament QR join: Add end-to-end regression coverage for QR join to director roster updates
 - [x] Tournament QR join: Verify live mobile join and Director dashboard synchronization before checkpointing
 
+- [x] Director readability: Increase pairings and player-name typography across the Home dashboard
+- [x] Director readability: Align Standings typography and row visibility with the Players tab
+- [x] Director readability: Add regression coverage and validate desktop/mobile readability before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation
