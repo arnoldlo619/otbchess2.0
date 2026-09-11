@@ -101,6 +101,7 @@ import {
   ClipboardList,
   Banknote,
   CreditCard,
+  UserMinus,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -2259,6 +2260,8 @@ export default function Director() {
     updatePlayer,
     removePlayer,
     removePlayerRound1,
+    withdrawPlayer,
+    reinstatePlayer,
     swapBoards,
     replaceRoundGames,
     assignBye,
@@ -2580,6 +2583,7 @@ export default function Director() {
     } catch { return new Set<string>(); }
   });
   const toggleCheckIn = useCallback((playerId: string) => {
+    if (state.players.find((player) => player.id === playerId)?.withdrawn) return;
     setCheckedInIds((prev) => {
       const next = new Set(prev);
       if (next.has(playerId)) next.delete(playerId);
@@ -2587,7 +2591,7 @@ export default function Director() {
       try { localStorage.setItem(checkInKey, JSON.stringify(Array.from(next))); } catch {}
       return next;
     });
-  }, [checkInKey]);
+  }, [checkInKey, state.players]);
 
   // ── Board search filter state ───────────────────────────────────────────────────────
   const [boardSearch, setBoardSearch] = useState("");
@@ -2602,6 +2606,16 @@ export default function Director() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // ── Player removal confirmation (registration phase) ─────────────────────
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [pendingWithdrawId, setPendingWithdrawId] = useState<string | null>(null);
+  const withdrawalDialogRef = useRef<HTMLDivElement>(null);
+  const withdrawalCancelRef = useRef<HTMLButtonElement>(null);
+  const closeWithdrawalDialog = useCallback(() => setPendingWithdrawId(null), []);
+  useAccessibleOverlay({
+    open: pendingWithdrawId !== null,
+    onClose: closeWithdrawalDialog,
+    containerRef: withdrawalDialogRef,
+    initialFocusRef: withdrawalCancelRef,
+  });
   const [isDeleting, setIsDeleting] = useState(false);
   // ── Bulk ELO refresh state ────────────────────────────────────────────────
   const [isRefreshingElo, setIsRefreshingElo] = useState(false);
@@ -3170,6 +3184,42 @@ export default function Director() {
     });
 
   const activeFilterCount = (filterTitle !== "all" ? 1 : 0) + (filterCountry !== "all" ? 1 : 0);
+
+  const supportsPlayerWithdrawal =
+    !isRegistration &&
+    state.status !== "completed" &&
+    state.format !== "quads" &&
+    state.format !== "roundrobin" &&
+    state.format !== "elimination" &&
+    !(state.format === "swiss_elim" && state.elimPhase === "elimination");
+  const withdrawalTarget = pendingWithdrawId
+    ? state.players.find((player) => player.id === pendingWithdrawId) ?? null
+    : null;
+
+  const confirmWithdrawal = useCallback(() => {
+    if (!withdrawalTarget) {
+      closeWithdrawalDialog();
+      return;
+    }
+    withdrawPlayer(withdrawalTarget.id);
+    setCheckedInIds((previous) => {
+      const next = new Set(previous);
+      next.delete(withdrawalTarget.id);
+      try { localStorage.setItem(checkInKey, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+    toast.success(`${withdrawalTarget.name} withdrawn`, {
+      description: "Past results remain. They will be excluded from future pairings.",
+    });
+    closeWithdrawalDialog();
+  }, [checkInKey, closeWithdrawalDialog, withdrawalTarget, withdrawPlayer]);
+
+  const reinstateWithdrawnPlayer = useCallback((player: import("@/lib/tournamentData").Player) => {
+    reinstatePlayer(player.id);
+    toast.success(`${player.name} reinstated`, {
+      description: "They will return to the next generated pairing round.",
+    });
+  }, [reinstatePlayer]);
 
   function toggleSort(key: typeof sortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -3961,6 +4011,7 @@ export default function Director() {
                             })
                             .map((p, idx) => {
                               const isCheckedIn = checkedInIds.has(p.id);
+                              const isWithdrawn = p.withdrawn === true;
                               const elo = p.rapidElo ?? p.blitzElo ?? p.elo;
                               return (
                                 <div key={p.id}>
@@ -3978,18 +4029,19 @@ export default function Director() {
                                   >
                                     {/* Top row: check-in + avatar + name + status */}
                                     <div
-                                      className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer"
+                                      className={`flex items-center gap-2.5 px-3 py-2.5 ${isWithdrawn ? "cursor-default" : "cursor-pointer"}`}
                                       style={{ touchAction: "manipulation" }}
-                                      onClick={() => toggleCheckIn(p.id)}
+                                      onClick={isWithdrawn ? undefined : () => toggleCheckIn(p.id)}
                                     >
                                       <button
-                                        className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                                        disabled={isWithdrawn}
+                                        className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all disabled:cursor-not-allowed ${
                                           isCheckedIn
                                             ? "bg-[#436850] text-white"
                                             : isDark ? "border border-white/15" : "border border-[#ADBC9F]"
                                         }`}
-                                        onClick={(e) => { e.stopPropagation(); toggleCheckIn(p.id); }}
-                                        aria-label={isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
+                                        onClick={(e) => { e.stopPropagation(); if (!isWithdrawn) toggleCheckIn(p.id); }}
+                                        aria-label={isWithdrawn ? `${p.name} is withdrawn` : isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
                                       >
                                         {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
                                       </button>
@@ -4005,10 +4057,12 @@ export default function Director() {
                                           }`}>{elo}</span>
                                         )}
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                          isCheckedIn
+                                          isWithdrawn
+                                            ? isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"
+                                            : isCheckedIn
                                             ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-100 text-green-700"
                                             : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
-                                        }`}>{isCheckedIn ? "In" : "Reg"}</span>
+                                        }`}>{isWithdrawn ? "Out" : isCheckedIn ? "In" : "Reg"}</span>
                                       </div>
                                     </div>
                                     {/* Bottom row: payment + actions */}
@@ -4040,7 +4094,7 @@ export default function Director() {
                                           }`}
                                         ><CreditCard className="w-3 h-3" aria-hidden="true" />Card</button>
                                       </div>
-                                      {pendingRemoveId === p.id ? (
+                                      {isRegistration && pendingRemoveId === p.id ? (
                                         <div className={`flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-bold mt-2 ${
                                           isDark ? "bg-red-500/15 border border-red-500/25" : "bg-red-50 border border-red-200"
                                         }`}>
@@ -4051,7 +4105,13 @@ export default function Director() {
                                       ) : (
                                         <div className="flex items-center gap-0.5 mt-2">
                                           <button onClick={() => setEditingPlayer(p)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${ isDark ? "text-white/40 hover:bg-white/08" : "text-[#436850] hover:bg-[#ADBC9F]/50"}`} aria-label={`Edit ${p.name}`}><Pencil className="w-3.5 h-3.5" /></button>
-                                          <button onClick={() => setPendingRemoveId(p.id)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${ isDark ? "text-red-400 hover:bg-red-500/15" : "text-red-400 hover:bg-red-50"}`} aria-label={`Remove ${p.name}`}><X className="w-3.5 h-3.5" /></button>
+                                          {isRegistration ? (
+                                            <button onClick={() => setPendingRemoveId(p.id)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${ isDark ? "text-red-400 hover:bg-red-500/15" : "text-red-400 hover:bg-red-50"}`} aria-label={`Remove ${p.name}`}><X className="w-3.5 h-3.5" /></button>
+                                          ) : supportsPlayerWithdrawal && (isWithdrawn ? (
+                                            <button onClick={() => reinstateWithdrawnPlayer(p)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${isDark ? "text-emerald-400 hover:bg-emerald-500/15" : "text-emerald-700 hover:bg-emerald-50"}`} title="Reinstate for future pairings" aria-label={`Reinstate ${p.name} for future pairings`}><Undo2 className="w-3.5 h-3.5" /></button>
+                                          ) : (
+                                            <button onClick={() => setPendingWithdrawId(p.id)} style={{ minWidth: "44px", minHeight: "44px" }} className={`flex items-center justify-center rounded-lg ${isDark ? "text-amber-300 hover:bg-amber-500/15" : "text-amber-700 hover:bg-amber-50"}`} title="Withdraw from future pairings" aria-label={`Withdraw ${p.name} from future pairings`}><UserMinus className="w-3.5 h-3.5" /></button>
+                                          ))}
                                         </div>
                                       )}
                                     </div>
@@ -4060,21 +4120,24 @@ export default function Director() {
                                   <div
                                     style={{ minHeight: "68px", touchAction: "manipulation" }}
                                     className={`hidden md:grid grid-cols-[2.5rem_minmax(0,1fr)_7.5rem_7.5rem_8.5rem_5.5rem] items-center gap-3 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
-                                      isCheckedIn
+                                      isWithdrawn
+                                        ? isDark ? "bg-amber-500/08 hover:bg-amber-500/12" : "bg-amber-50/60 hover:bg-amber-50"
+                                        : isCheckedIn
                                         ? isDark ? "bg-[#436850]/08 hover:bg-[#436850]/15" : "bg-green-50/60 hover:bg-green-50"
                                         : isDark ? "hover:bg-white/04" : "hover:bg-[#FBFADA]"
                                     }`}
-                                    onClick={() => toggleCheckIn(p.id)}
+                                    onClick={isWithdrawn ? undefined : () => toggleCheckIn(p.id)}
                                   >
                                   <div className="flex items-center gap-2">
                                     <button
+                                      disabled={isWithdrawn}
                                       className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
                                         isCheckedIn
                                           ? "bg-[#436850] text-white"
                                           : isDark ? "border border-white/15 hover:border-white/30" : "border border-[#ADBC9F] hover:border-[#436850]/40"
                                       }`}
-                                      onClick={(e) => { e.stopPropagation(); toggleCheckIn(p.id); }}
-                                      aria-label={isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
+                                      onClick={(e) => { e.stopPropagation(); if (!isWithdrawn) toggleCheckIn(p.id); }}
+                                      aria-label={isWithdrawn ? `${p.name} is withdrawn` : isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
                                     >
                                       {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
                                     </button>
@@ -4097,12 +4160,14 @@ export default function Director() {
                                   </div>
                                   {/* Status chip */}
                                   <span className={`inline-flex w-fit items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${
-                                    isCheckedIn
+                                    isWithdrawn
+                                      ? isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"
+                                      : isCheckedIn
                                       ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-green-100 text-green-700"
                                       : isDark ? "bg-white/10 text-white/80" : "bg-[#436850]/15 text-[#12372A]"
                                   }`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${isCheckedIn ? "bg-current" : isDark ? "bg-white/40" : "bg-[#436850]/50"}`} />
-                                    {isCheckedIn ? "Checked In" : "Registered"}
+                                    <span className={`w-1.5 h-1.5 rounded-full ${isWithdrawn || isCheckedIn ? "bg-current" : isDark ? "bg-white/40" : "bg-[#436850]/50"}`} />
+                                    {isWithdrawn ? "Withdrawn" : isCheckedIn ? "Checked In" : "Registered"}
                                   </span>
                                   {/* ELO */}
                                   {(p.rapidElo || p.blitzElo) ? (
@@ -4155,7 +4220,7 @@ export default function Director() {
                                     </button>
                                   </div>
                                   {/* Edit + Remove action buttons — always visible on mobile, hover-reveal on desktop */}
-                                  {pendingRemoveId === p.id ? (
+                                  {isRegistration && pendingRemoveId === p.id ? (
                                     /* Inline confirmation strip */
                                     <div
                                       className={`flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-bold flex-shrink-0 ${
@@ -4195,18 +4260,39 @@ export default function Director() {
                                       >
                                         <Pencil className="w-3.5 h-3.5" />
                                       </button>
-                                      {/* Remove button */}
-                                      <button
-                                        onClick={() => setPendingRemoveId(p.id)}
-                                        style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
-                                        className={`flex items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${
-                                          isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
-                                        }`}
-                                        title="Remove player"
-                                        aria-label={`Remove ${p.name}`}
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
+                                      {isRegistration ? (
+                                        <button
+                                          onClick={() => setPendingRemoveId(p.id)}
+                                          style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                          className={`flex items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${
+                                            isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
+                                          }`}
+                                          title="Remove player"
+                                          aria-label={`Remove ${p.name}`}
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      ) : supportsPlayerWithdrawal && (isWithdrawn ? (
+                                        <button
+                                          onClick={() => reinstateWithdrawnPlayer(p)}
+                                          style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                          className={`flex items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${isDark ? "hover:bg-emerald-500/15 text-emerald-400" : "hover:bg-emerald-50 text-emerald-700"}`}
+                                          title="Reinstate for future pairings"
+                                          aria-label={`Reinstate ${p.name} for future pairings`}
+                                        >
+                                          <Undo2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => setPendingWithdrawId(p.id)}
+                                          style={{ minWidth: "44px", minHeight: "44px", touchAction: "manipulation" }}
+                                          className={`flex items-center justify-center rounded-lg opacity-70 hover:opacity-100 focus-visible:opacity-100 transition-all ${isDark ? "hover:bg-amber-500/15 text-amber-300" : "hover:bg-amber-50 text-amber-700"}`}
+                                          title="Withdraw from future pairings"
+                                          aria-label={`Withdraw ${p.name} from future pairings`}
+                                        >
+                                          <UserMinus className="w-3.5 h-3.5" />
+                                        </button>
+                                      ))}
                                     </div>
                                   )}
                                   </div>
@@ -6059,6 +6145,9 @@ export default function Director() {
                           {p.title && (
                             <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                           )}
+                          {p.withdrawn && (
+                            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Withdrawn</span>
+                          )}
                           <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                           {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
                             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
@@ -6111,7 +6200,7 @@ export default function Director() {
                           )}
                         </div>
                         {/* Bye button — only during active round, not for Quads (Quads has no byes) */}
-                        {!isRegistration && currentRoundData && state.format !== "quads" && (
+                        {!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads" && (
                           byePlayerIds.has(p.id) ? (
                             <button
                               onClick={() => {
@@ -6147,6 +6236,25 @@ export default function Director() {
                             </button>
                           )
                         )}
+                        {supportsPlayerWithdrawal && (p.withdrawn ? (
+                          <button
+                            onClick={() => reinstateWithdrawnPlayer(p)}
+                            className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${isDark ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}
+                            title="Reinstate for future pairings"
+                            aria-label={`Reinstate ${p.name} for future pairings`}
+                          >
+                            <Undo2 className="w-3 h-3" /> Reinstate
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setPendingWithdrawId(p.id)}
+                            className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15" : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"}`}
+                            title="Withdraw from future pairings"
+                            aria-label={`Withdraw ${p.name} from future pairings`}
+                          >
+                            <UserMinus className="w-3 h-3" /> Withdraw
+                          </button>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -6179,6 +6287,9 @@ export default function Director() {
                             </PlayerHoverCard>
                             {p.title && (
                               <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                            )}
+                            {p.withdrawn && (
+                              <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Withdrawn</span>
                             )}
                             <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                             {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
@@ -6241,7 +6352,7 @@ export default function Director() {
                         <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>colors</p>
                       </div>
                       {/* Bye button — mobile (not for Quads, which has no byes) */}
-                      {!isRegistration && currentRoundData && state.format !== "quads" && (
+                      {!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads" && (
                         byePlayerIds.has(p.id) ? (
                           <button
                             onClick={() => { revokeBye(p.id); toast.info(`${p.name}'s bye revoked`); }}
@@ -6268,6 +6379,23 @@ export default function Director() {
                           </button>
                         )
                       )}
+                      {supportsPlayerWithdrawal && (p.withdrawn ? (
+                        <button
+                          onClick={() => reinstateWithdrawnPlayer(p)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${isDark ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}
+                          aria-label={`Reinstate ${p.name} for future pairings`}
+                        >
+                          <Undo2 className="w-3 h-3" /> Reinstate
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setPendingWithdrawId(p.id)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${isDark ? "bg-amber-500/10 border-amber-500/30 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"}`}
+                          aria-label={`Withdraw ${p.name} from future pairings`}
+                        >
+                          <UserMinus className="w-3 h-3" /> Withdraw
+                        </button>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -7309,6 +7437,57 @@ export default function Director() {
             tournamentId={tournamentId}
           />
         </Suspense>
+      )}
+
+      {/* ── Withdraw Player Confirmation Dialog ─────────────────────────────── */}
+      {withdrawalTarget && (
+        <div className="modal-overlay z-[60]">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeWithdrawalDialog}
+          />
+          <div
+            ref={withdrawalDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Withdraw ${withdrawalTarget.name} from future pairings`}
+            tabIndex={-1}
+            className={`modal-card max-w-sm rounded-2xl border p-6 shadow-2xl ${
+              isDark ? "border-amber-500/20 bg-[oklch(0.18_0.04_145)]" : "border-amber-200 bg-white"
+            }`}
+            style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
+          >
+            <div className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDark ? "bg-amber-500/15" : "bg-amber-50"}`}>
+              <UserMinus className={`h-5 w-5 ${isDark ? "text-amber-300" : "text-amber-700"}`} aria-hidden="true" />
+            </div>
+            <h2 className={`mb-1 text-center text-lg font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}>
+              Withdraw {withdrawalTarget.name}?
+            </h2>
+            <p className={`mb-4 text-center text-sm leading-relaxed ${isDark ? "text-white/60" : "text-[#436850]"}`}>
+              Their completed games and standings stay intact. They will not appear in any future round pairings.
+            </p>
+            {currentRoundData?.games.some((game) => game.result === "*" && (game.whiteId === withdrawalTarget.id || game.blackId === withdrawalTarget.id)) && (
+              <div className={`mb-4 rounded-xl border px-3 py-2.5 text-xs leading-relaxed ${isDark ? "border-amber-500/25 bg-amber-500/10 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                Their current board is still open. Record or resolve that result before advancing the round.
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                ref={withdrawalCancelRef}
+                onClick={closeWithdrawalDialog}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors ${isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmWithdrawal}
+                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors ${isDark ? "bg-amber-500/20 text-amber-200 hover:bg-amber-500/30" : "bg-[#12372A] text-white hover:bg-[#2d5235]"}`}
+              >
+                Withdraw player
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Start Tournament Confirmation Dialog ─────────────────────────────── */}

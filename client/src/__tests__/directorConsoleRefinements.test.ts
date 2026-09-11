@@ -408,6 +408,26 @@ describe("Round Lifecycle", () => {
   });
 });
 
+describe("Tournament withdrawal controls", () => {
+  it("keeps a director confirmation before withdrawing a player from future pairings", () => {
+    expect(directorSource).toContain('const [pendingWithdrawId, setPendingWithdrawId] = useState<string | null>(null);');
+    expect(directorSource).toContain('aria-label={`Withdraw ${withdrawalTarget.name} from future pairings`}');
+    expect(directorSource).toContain("Their completed games and standings stay intact. They will not appear in any future round pairings.");
+  });
+
+  it("exposes clear withdrawal and reinstate actions in both operational roster views", () => {
+    expect(directorSource.match(/Withdraw \$\{p\.name\} from future pairings/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(directorSource.match(/Reinstate \$\{p\.name\} for future pairings/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(directorSource).toContain('p.withdrawn && (');
+    expect(directorSource).toContain("supportsPlayerWithdrawal");
+  });
+
+  it("keeps a withdrawn participant out of check-in changes and manual-bye controls", () => {
+    expect(directorSource).toContain("if (state.players.find((player) => player.id === playerId)?.withdrawn) return;");
+    expect(directorSource).toContain('!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads"');
+  });
+});
+
 // ── Public Mode Chip Tests ──────────────────────────────────────────────────
 
 describe("Public Mode Chip", () => {

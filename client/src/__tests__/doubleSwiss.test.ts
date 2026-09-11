@@ -110,4 +110,22 @@ describe("generateDoubleSwissPairings", () => {
     const games = generateDoubleSwissPairings(players, [], 1);
     expect(games).toHaveLength(6);
   });
+
+  it("excludes a withdrawn player from every game while retaining two games for each active board", () => {
+    const players = [
+      makePlayer("a", 1600),
+      makePlayer("b", 1550),
+      makePlayer("c", 1500),
+      makePlayer("d", 1450),
+      makePlayer("withdrawn", 1400),
+    ].map((player) => player.id === "withdrawn" ? { ...player, withdrawn: true } : player);
+
+    const games = generateDoubleSwissPairings(players, [], 2);
+    const pairedIds = games.flatMap((game) => [game.whiteId, game.blackId]);
+
+    expect(games).toHaveLength(4);
+    expect(pairedIds).not.toContain("withdrawn");
+    expect(games.filter((game) => game.gameIndex === 0)).toHaveLength(2);
+    expect(games.filter((game) => game.gameIndex === 1)).toHaveLength(2);
+  });
 });

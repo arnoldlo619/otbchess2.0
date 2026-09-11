@@ -190,6 +190,34 @@ describe("tournament lifecycle safety coverage", () => {
     }
   });
 
+  it("retains a withdrawn player's completed-round score while excluding them from every later Swiss pairing", () => {
+    let players = makePlayers(6);
+    const round1 = completeRound(players, {
+      number: 1,
+      status: "in_progress",
+      games: generateSwissPairings(players, [], 1),
+    });
+    players = syncPlayersFromStandings(round1.playersWithColorHistory, [round1.round]);
+    const beforeWithdrawal = computeStandings(players, [round1.round]);
+    const withdrawnId = "p6";
+    const withdrawnPlayers = players.map((player) =>
+      player.id === withdrawnId ? { ...player, withdrawn: true } : player,
+    );
+
+    const round2Games = generateSwissPairings(withdrawnPlayers, [round1.round], 2);
+    const validation = validatePairings(round2Games, withdrawnPlayers, [round1.round], 2);
+    const historicalStanding = beforeWithdrawal.find((row) => row.player.id === withdrawnId);
+    const retainedStanding = computeStandings(withdrawnPlayers, [round1.round])
+      .find((row) => row.player.id === withdrawnId);
+
+    expect(validation.errors).toEqual([]);
+    expect(playerIdsInRound(round2Games)).not.toContain(withdrawnId);
+    expect(round2Games).toHaveLength(3); // five active players: two boards and one bye
+    expect(retainedStanding?.points).toBe(historicalStanding?.points);
+    expect(retainedStanding?.wins).toBe(historicalStanding?.wins);
+    expect(retainedStanding?.losses).toBe(historicalStanding?.losses);
+  });
+
   it("generates and validates first-round pairings for a 32-player event", () => {
     const players = makePlayers(32);
     const games = generateSwissPairings(players, [], 1);

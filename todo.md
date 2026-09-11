@@ -275,6 +275,13 @@
 - [x] Director roster: Refine status, rating, and payment controls into a premium aligned table surface
 - [x] Director roster: Add regression coverage and validate roster responsiveness and accessibility before checkpointing
 
+- [x] Tournament QR join: Assess intermittent mobile blank-page failures and present a remediation plan for review without implementation
+
+- [x] Tournament player lifecycle: Add a director-controlled withdrawal action that preserves prior results
+- [x] Tournament pairing: Exclude withdrawn players from all future Swiss, Double Swiss, and supported format pairings
+- [x] Tournament withdrawal: Add director UI, confirmation, accessible status, and restoration behavior where safe
+- [x] Tournament withdrawal: Add regression coverage and verify live-round safeguards before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation

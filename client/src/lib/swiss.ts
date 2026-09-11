@@ -89,6 +89,15 @@ function effectiveRating(p: Player): number {
   return p.pairingRating ?? p.elo ?? 1200;
 }
 
+/** A withdrawn player remains in standings/history but never receives a future pairing. */
+export function isPairingEligible(player: Player): boolean {
+  return player.withdrawn !== true;
+}
+
+export function getPairingEligiblePlayers(players: Player[]): Player[] {
+  return players.filter(isPairingEligible);
+}
+
 // ─── Tiebreak Computation ─────────────────────────────────────────────────────
 
 /**
@@ -303,7 +312,8 @@ export function validatePairings(
 ): PairingValidation {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const playerIds = new Set(players.map((p) => p.id));
+  const eligiblePlayers = getPairingEligiblePlayers(players);
+  const playerIds = new Set(eligiblePlayers.map((p) => p.id));
 
   // Build played pairs from previous rounds
   const played = new Set<string>();
@@ -365,7 +375,7 @@ export function validatePairings(
   }
 
   // Check all non-bye players are paired
-  const expectedPaired = players.length % 2 === 0 ? players.length : players.length - 1;
+  const expectedPaired = eligiblePlayers.length % 2 === 0 ? eligiblePlayers.length : eligiblePlayers.length - 1;
   if (pairedInThisRound.size < expectedPaired) {
     warnings.push(`Only ${pairedInThisRound.size} of ${expectedPaired} expected players are paired`);
   }
@@ -409,7 +419,7 @@ export function generateSwissPairings(
   }
 
   // Sort by points desc, pairingRating desc
-  const sorted = [...players].sort((a, b) =>
+  const sorted = getPairingEligiblePlayers(players).sort((a, b) =>
     b.points !== a.points
       ? b.points - a.points
       : effectiveRating(b) - effectiveRating(a)

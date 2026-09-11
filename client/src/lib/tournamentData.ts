@@ -47,6 +47,10 @@ export interface Player {
   email?: string;
   /** Payment status for the tournament entry fee */
   paymentStatus?: "unpaid" | "cash" | "card";
+  /** Withdrawn players retain their historical results but are ineligible for future pairings. */
+  withdrawn?: boolean;
+  /** ISO timestamp recorded when a tournament director withdrew this player. */
+  withdrawnAt?: string;
 }
 
 export interface Game {

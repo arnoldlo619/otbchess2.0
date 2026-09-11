@@ -10,7 +10,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
-import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel, type StandingRow } from "./swiss";
+import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel, getPairingEligiblePlayers, type StandingRow } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
 import { calculateQuadStandings, generateQuadTournament, swapPlayersBetweenSections, type QuadSection, type QuadSettings, DEFAULT_QUAD_SETTINGS } from "./quads";
@@ -588,6 +588,59 @@ export function useDirectorState(
     });
   }, []);
 
+  /**
+   * Withdraw an active player between rounds. Historical games and standings are
+   * deliberately retained, while future Swiss pairing generation excludes them.
+   * Quads and an active elimination bracket have structurally prebuilt paths, so
+   * directors are prevented from creating an invalid partial withdrawal there.
+   */
+  const withdrawPlayer = useCallback((playerId: string): void => {
+    setState((prev) => {
+      if (
+        prev.status === "registration" ||
+        prev.status === "completed" ||
+        prev.format === "quads" ||
+        prev.format === "roundrobin" ||
+        prev.format === "elimination" ||
+        (prev.format === "swiss_elim" && prev.elimPhase === "elimination")
+      ) return prev;
+      const target = prev.players.find((player) => player.id === playerId);
+      if (!target || target.withdrawn) return prev;
+      return {
+        ...prev,
+        players: prev.players.map((player) =>
+          player.id === playerId
+            ? { ...player, withdrawn: true, withdrawnAt: new Date().toISOString() }
+            : player,
+        ),
+      };
+    });
+  }, []);
+
+  /** Reinstatement returns a player to eligibility for the next generated round. */
+  const reinstatePlayer = useCallback((playerId: string): void => {
+    setState((prev) => {
+      if (
+        prev.status === "registration" ||
+        prev.status === "completed" ||
+        prev.format === "quads" ||
+        prev.format === "roundrobin" ||
+        prev.format === "elimination" ||
+        (prev.format === "swiss_elim" && prev.elimPhase === "elimination")
+      ) return prev;
+      const target = prev.players.find((player) => player.id === playerId);
+      if (!target?.withdrawn) return prev;
+      return {
+        ...prev,
+        players: prev.players.map((player) =>
+          player.id === playerId
+            ? { ...player, withdrawn: false, withdrawnAt: undefined }
+            : player,
+        ),
+      };
+    });
+  }, []);
+
   // Start the tournament — transition from registration to Round 1
   const startTournament = useCallback((): { round1Games: Game[]; players: Player[] } | null => {
     let result: { round1Games: Game[]; players: Player[] } | null = null;
@@ -742,8 +795,10 @@ export function useDirectorState(
 
         // Swiss phase just completed — auto-generate elimination bracket
         if (prev.elimPhase === "swiss" && prev.currentRound >= swissRoundCount) {
-          const cutoffSize = suggestElimCutoff(prev.players.length);
-          const standings = computeStandings(prev.players, prev.rounds);
+          const eligiblePlayers = getPairingEligiblePlayers(prev.players);
+          const cutoffSize = suggestElimCutoff(eligiblePlayers.length);
+          const standings = computeStandings(prev.players, prev.rounds)
+            .filter((standing) => !standing.player.withdrawn);
           const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
           const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
           const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
@@ -830,11 +885,13 @@ export function useDirectorState(
       const allDone = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
       if (!allDone) return prev;
       const nextRoundNum = prev.currentRound + 1;
-      const standings = computeStandings(prev.players, prev.rounds);
-      const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
+      const standings = computeStandings(prev.players, prev.rounds)
+        .filter((standing) => !standing.player.withdrawn);
+      const effectiveCutoff = Math.min(cutoffSize, suggestElimCutoff(standings.length));
+      const advancingPlayers = standings.slice(0, effectiveCutoff).map((s) => s.player);
       const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
       const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
-      const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+      const elimRoundsCount = Math.ceil(Math.log2(effectiveCutoff));
       result = { roundNum: nextRoundNum, games: elimGames, players: prev.players, elimPhase: "elimination", elimPlayers: advancingPlayers };
       return {
         ...prev,
@@ -842,9 +899,9 @@ export function useDirectorState(
         currentRound: nextRoundNum,
         totalRounds: prev.currentRound + elimRoundsCount,
         elimPhase: "elimination",
-        elimCutoff: cutoffSize,
+        elimCutoff: effectiveCutoff,
         elimPlayers: advancingPlayers,
-        elimRoundLabelText: elimRoundLabel(cutoffSize),
+        elimRoundLabelText: elimRoundLabel(effectiveCutoff),
       };
     });
     return result;
@@ -868,21 +925,23 @@ export function useDirectorState(
       const swissRoundsOnly = prev.rounds.filter((r) => r.number <= swissRoundCount);
 
       // Re-generate with new cutoff
-      const standings = computeStandings(prev.players, swissRoundsOnly);
-      const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
+      const standings = computeStandings(prev.players, swissRoundsOnly)
+        .filter((standing) => !standing.player.withdrawn);
+      const effectiveCutoff = Math.min(cutoffSize, suggestElimCutoff(standings.length));
+      const advancingPlayers = standings.slice(0, effectiveCutoff).map((s) => s.player);
       const nextRoundNum = swissRoundCount + 1;
       const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
       const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
-      const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+      const elimRoundsCount = Math.ceil(Math.log2(effectiveCutoff));
 
       return {
         ...prev,
         rounds: [...swissRoundsOnly, newRound],
         currentRound: nextRoundNum,
         totalRounds: swissRoundCount + elimRoundsCount,
-        elimCutoff: cutoffSize,
+        elimCutoff: effectiveCutoff,
         elimPlayers: advancingPlayers,
-        elimRoundLabelText: elimRoundLabel(cutoffSize),
+        elimRoundLabelText: elimRoundLabel(effectiveCutoff),
       };
     });
   }, []);
@@ -893,8 +952,10 @@ export function useDirectorState(
       if (prev.format !== "swiss_elim" || prev.elimPhase !== "cutoff") return prev;
 
       // Get standings from the Swiss phase
-      const standings = computeStandings(prev.players, prev.rounds);
-      const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
+      const standings = computeStandings(prev.players, prev.rounds)
+        .filter((standing) => !standing.player.withdrawn);
+      const effectiveCutoff = Math.min(cutoffSize, suggestElimCutoff(standings.length));
+      const advancingPlayers = standings.slice(0, effectiveCutoff).map((s) => s.player);
 
       // Generate first elimination round
       const nextRoundNum = prev.currentRound + 1;
@@ -902,7 +963,7 @@ export function useDirectorState(
       const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
 
       // Calculate total rounds needed
-      const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+      const elimRoundsCount = Math.ceil(Math.log2(effectiveCutoff));
 
       return {
         ...prev,
@@ -910,9 +971,9 @@ export function useDirectorState(
         currentRound: nextRoundNum,
         totalRounds: prev.currentRound + elimRoundsCount,
         elimPhase: "elimination",
-        elimCutoff: cutoffSize,
+        elimCutoff: effectiveCutoff,
         elimPlayers: advancingPlayers,
-        elimRoundLabelText: elimRoundLabel(cutoffSize),
+        elimRoundLabelText: elimRoundLabel(effectiveCutoff),
       };
     });
   }, []);
@@ -994,6 +1055,7 @@ export function useDirectorState(
   const assignBye = useCallback((playerId: string) => {
     setState((prev) => {
       if (prev.status === "registration" || prev.status === "completed") return prev;
+      if (prev.players.find((player) => player.id === playerId)?.withdrawn) return prev;
       const currentRound = prev.rounds.find((r) => r.number === prev.currentRound);
       if (!currentRound) return prev;
       // Don't double-assign
@@ -1170,6 +1232,8 @@ export function useDirectorState(
     updatePlayer,
     removePlayer,
     removePlayerRound1,
+    withdrawPlayer,
+    reinstatePlayer,
     swapBoards,
     replaceRoundGames,
     assignBye,
