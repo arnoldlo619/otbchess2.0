@@ -308,7 +308,10 @@ describe("Director Home and Standings readability", () => {
     expect(boardCardSource).toContain('"bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B]');
     expect(boardCardSource).not.toContain('"bg-[#176B45] border-[#0F5132] text-white');
     expect(boardCardSource).toContain('aria-pressed={isSelected}');
-    expect(boardCardSource).toContain('Check className="w-4 h-4 flex-shrink-0"');
+    expect(boardCardSource).toContain('style={{ minHeight: "44px", touchAction: "manipulation" }}');
+    expect(boardCardSource).toContain('flex-1 py-2 px-2 text-sm sm:text-base font-bold');
+    expect(boardCardSource).not.toContain('scale-[1.02]');
+    expect(boardCardSource).not.toContain('Check className=');
   });
 
   it("keeps completed Double Swiss game results premium and high-contrast in light mode", () => {
@@ -317,7 +320,18 @@ describe("Director Home and Standings readability", () => {
     expect(doubleSwissCardSource).toContain('"bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B]');
     expect(doubleSwissCardSource).not.toContain('"bg-[#176B45] border-[#0F5132] text-white');
     expect(doubleSwissCardSource).toContain('aria-pressed={isSelected}');
-    expect(doubleSwissCardSource).toContain('Check className="w-3.5 h-3.5 flex-shrink-0"');
+    expect(doubleSwissCardSource).toContain('flex-1 py-2 px-1 text-sm font-bold');
+    expect(doubleSwissCardSource).toContain('style={{ minHeight: "44px", touchAction: "manipulation" }}');
+  });
+
+  it("centers the tournament name and operational summary details in the Director identity block", () => {
+    const identityStart = directorSource.indexOf("/* Round title row */");
+    const identitySource = directorSource.slice(identityStart, directorSource.indexOf("/* Round Timer", identityStart));
+
+    expect(identitySource).toContain('className="flex flex-col items-center gap-2 text-center"');
+    expect(identitySource).toContain('className="flex items-center justify-center gap-2.5 flex-wrap"');
+    expect(identitySource).toContain('className="flex flex-wrap items-center justify-center gap-1.5 mt-1.5"');
+    expect(identitySource).toContain("Round {state.currentRound} / {state.totalRounds}");
   });
 
   it("gives completed winner and draw score badges a dedicated light-mode contrast treatment", () => {

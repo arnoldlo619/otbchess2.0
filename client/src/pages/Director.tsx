@@ -46,7 +46,6 @@ import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
 import {
   Crown,
-  Check,
   ChevronLeft,
   ChevronRight as _ChevronRight,
   Play,
@@ -605,17 +604,17 @@ function BoardCard({
                   : "Draw";
                 toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
-              style={{ minHeight: "48px", touchAction: "manipulation" }}
+              style={{ minHeight: "44px", touchAction: "manipulation" }}
               aria-pressed={isSelected}
               aria-label={`${opt.label}${isSelected ? " selected as the recorded result" : ""}`}
-              className={`flex-1 py-3.5 px-2 text-sm sm:text-base font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
+              className={`flex-1 py-2 px-2 text-sm sm:text-base font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
                   ? opt.isDraw
                     ? isDark
-                      ? "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.2)] scale-[1.02]"
+                      ? "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.2)]"
                       : "bg-[#FFF5E1] border-[#B7791F] text-[#7A4A0B] shadow-[inset_0_0_0_1px_rgba(183,121,31,0.12)]"
                     : isDark
-                      ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50] shadow-[0_0_0_1px_rgba(76,175,80,0.2)] scale-[1.02]"
+                      ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50] shadow-[0_0_0_1px_rgba(76,175,80,0.2)]"
                       : "bg-[#E7F4EC] border-[#2F7D4E] text-[#164A31] shadow-[inset_0_0_0_1px_rgba(47,125,78,0.12)]"
                   : isDimmed
                   ? isDark
@@ -627,7 +626,6 @@ function BoardCard({
               }`}
               title={opt.value === "1-0" ? `${white?.name} wins` : opt.value === "0-1" ? `${black?.name} wins` : "Draw"}
             >
-              {isSelected && <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />}
               {opt.label}
             </button>
           );
@@ -641,7 +639,7 @@ function BoardCard({
                   if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
                   onUndo();
                 }}
-                className={`flex-shrink-0 w-11 py-3 flex items-center justify-center rounded-xl border transition-all duration-150 active:scale-95 ${
+                className={`flex-shrink-0 h-11 w-11 flex items-center justify-center rounded-xl border transition-all duration-150 active:scale-95 ${
                   isDark
                     ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
                     : "bg-amber-50 border-amber-200 text-amber-500 hover:bg-amber-100"
@@ -658,7 +656,7 @@ function BoardCard({
                 onResult(game.id, "*");
                 toast.info(`Board ${game.board}: result cleared`);
               }}
-              className={`flex-shrink-0 w-11 py-3 text-sm rounded-xl border transition-all duration-150 active:scale-95 ${
+              className={`flex-shrink-0 h-11 w-11 text-sm rounded-xl border transition-all duration-150 active:scale-95 ${
                 isDark
                   ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
                   : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50"
@@ -816,7 +814,8 @@ function DoubleSwissBoardCard({
                 }}
                 aria-pressed={isSelected}
                 aria-label={`${label}${isSelected ? " selected as the recorded result" : ""}`}
-                className={`flex-1 py-2.5 px-1 text-sm font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
+                style={{ minHeight: "44px", touchAction: "manipulation" }}
+                className={`flex-1 py-2 px-1 text-sm font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
                   isSelected
                     ? isDrawOpt
                       ? isDark
@@ -834,7 +833,6 @@ function DoubleSwissBoardCard({
                     : "bg-white border-[#ADBC9F] text-[#315442] hover:bg-[#EEF6EA] hover:text-[#12372A]"
                 }`}
               >
-                {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />}
                 {label}
               </button>
             );
@@ -842,7 +840,7 @@ function DoubleSwissBoardCard({
           {isComplete && (
             <button
               onClick={() => onResult(game.id, "*")}
-              className={`flex-shrink-0 w-9 py-2 text-xs rounded-lg border transition-all duration-150 ${
+              className={`flex-shrink-0 h-11 w-11 text-xs rounded-lg border transition-all duration-150 ${
                 isDark
                   ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
                   : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#436850] hover:bg-[#ADBC9F]/50"
@@ -3525,9 +3523,9 @@ export default function Director() {
                 {/* ── Page Title + Tab Bar ───────────────────────────────── */}
           <div className="space-y-3">
             {/* Round title row */}
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center gap-2.5 flex-wrap">
                   <h1
                     className={`text-2xl sm:text-3xl font-black tracking-tight leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -3542,7 +3540,7 @@ export default function Director() {
                 </div>
                 {/* Bracket child: back-to-parent link + bracket label badge */}
                 {tournamentConfig?.bracketLabel && tournamentConfig?.parentBracketGroupId && (
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center justify-center gap-2 mt-0.5">
                     <button
                       onClick={() => {
                         // Navigate to the parent bracket group's tournament manage page
@@ -3571,7 +3569,7 @@ export default function Director() {
                   </div>
                 )}
                 {/* Command Center — operational status strip */}
-                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-1.5">
                   {/* Format + Time */}
                   <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
                     isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
