@@ -289,6 +289,9 @@
 - [x] Director presentation: Center tournament title and format, round, roster, and visibility summary details
 - [x] Director presentation: Add regression coverage and validate the refined desktop and mobile hierarchy before checkpointing
 
+- [x] Training page: Verify the updated OTB Toolkit copy and remove the requested stale div target if present
+- [x] Training page: Add focused regression coverage, validate the simplified header, and checkpoint the visual edit
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation

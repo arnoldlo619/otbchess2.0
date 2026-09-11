@@ -9,7 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { AppNavBar } from "@/components/AppNavBar";
 import { BGPattern } from "@/components/ui/bg-pattern";
 import { Link } from "wouter";
-import { ArrowRight, ExternalLink, Lock, FlaskConical } from "lucide-react";
+import { ArrowRight, ExternalLink, FlaskConical } from "lucide-react";
 
 // ─── Tool Definitions ─────────────────────────────────────────────────────────
 const TOOLS = [
@@ -84,12 +84,6 @@ const TOOLS = [
     size: "medium",
   },
 ] as const;
-
-const COMING_SOON = [
-  { label: "Endgame Drills", desc: "Master rook endings, pawn races, and K+P vs K." },
-  { label: "Tactics Trainer", desc: "Daily puzzles calibrated to your rating." },
-  { label: "Study Plans", desc: "Personalized weekly prep based on your weaknesses." },
-];
 
 // ─── Tool Card ────────────────────────────────────────────────────────────────
 function ToolCard({
@@ -251,49 +245,6 @@ function ToolCard({
   );
 }
 
-// ─── Coming Soon Cell ─────────────────────────────────────────────────────────
-function ComingSoonCell({
-  item,
-  isDark,
-}: {
-  item: (typeof COMING_SOON)[number];
-  isDark: boolean;
-}) {
-  return (
-    <div
-      className={`relative rounded-2xl p-5 flex flex-col gap-2 ${
-        isDark
-          ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60"
-          : "bg-[#f0f5f0] border border-[#ADBC9F]/40"
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        <Lock
-          className={`w-3.5 h-3.5 ${isDark ? "text-white/25" : "text-[#436850]/40"}`}
-        />
-        <span
-          className={`text-xs font-bold uppercase tracking-widest ${
-            isDark ? "text-white/30" : "text-[#436850]/50"
-          }`}
-        >
-          Coming Soon
-        </span>
-      </div>
-      <p
-        className={`text-sm font-semibold ${
-          isDark ? "text-white/45" : "text-[#12372A]/60"
-        }`}
-        style={{ fontFamily: "'Clash Display', sans-serif" }}
-      >
-        {item.label}
-      </p>
-      <p className={`text-xs leading-relaxed ${isDark ? "text-white/30" : "text-[#436850]/50"}`}>
-        {item.desc}
-      </p>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Training() {
   const { theme } = useTheme();
@@ -335,7 +286,7 @@ export default function Training() {
               isDark ? "text-white/55" : "text-[#436850]/80"
             }`}
           >
-            Scout opponents, build your repertoire, and study openings — everything you need to show up prepared.
+            ChessOTB.Club OTB Toolkit
           </p>
         </div>
 
@@ -365,30 +316,6 @@ export default function Training() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <ToolCard tool={TOOLS[1]} isDark={isDark} isBeta compact />
           <ToolCard tool={TOOLS[2]} isDark={isDark} isBeta compact />
-        </div>
-
-        {/* ── Coming Soon Row ── */}
-        <div className="mt-4 sm:mt-5">
-          <div
-            className={`rounded-2xl p-5 sm:p-6 ${
-              isDark
-                ? "bg-[#0d1a0f]/40 border border-[#1e2e22]/50"
-                : "bg-white/60 border border-[#ADBC9F]/40"
-            }`}
-          >
-            <p
-              className={`text-xs font-bold uppercase tracking-[0.18em] mb-4 ${
-                isDark ? "text-white/25" : "text-[#436850]/40"
-              }`}
-            >
-              On the roadmap
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {COMING_SOON.map((item) => (
-                <ComingSoonCell key={item.label} item={item} isDark={isDark} />
-              ))}
-            </div>
-          </div>
         </div>
 
       </div>
