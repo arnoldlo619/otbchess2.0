@@ -301,6 +301,10 @@
 - [x] Home page: Transform the stale Tournament Director card into the requested OTB Studio content-creation card and external CTA
 - [x] Home page: Add regression coverage, validate the responsive layout and external OTB Studio link, then checkpoint
 
+- [x] Home page: Verify stale tournament-flow copy targets before manual messaging updates
+- [x] Home page: Apply the requested check-in, pairing, and live-results messaging updates
+- [x] Home page: Add regression coverage, validate responsive copy layout, and checkpoint the edits
+
 - [x] My Clubs: Verify the stale filter and All Countries select targets before removing them
 - [x] My Clubs: Remove the requested select filters and any now-unused filter state safely
 - [x] My Clubs: Add regression coverage, validate responsive layout, and checkpoint the simplified filters

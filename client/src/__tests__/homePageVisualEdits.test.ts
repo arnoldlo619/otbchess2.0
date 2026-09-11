@@ -27,4 +27,23 @@ describe("Home page visual edits", () => {
     expect(homeSource).toContain('rel={external ? "noopener noreferrer" : undefined}');
     expect(homeSource).not.toContain('title="Intuitive Host Dashboard"');
   });
+
+  it("keeps the requested tournament-flow messaging", () => {
+    expect(homeSource).toContain(
+      "Players scan once arriving for seamless check-in process for everyone.",
+    );
+    expect(homeSource).toContain("Round pairings optimally generated on ELO rating");
+    expect(homeSource).toContain(
+      "Live and automated round updates for players. Simple one click match result reporting for directors.",
+    );
+    expect(homeSource).not.toContain(
+      "Input the Date, Location, Time, and Time Format to instantly get a shareable QR code.",
+    );
+    expect(homeSource).not.toContain(
+      "After all players input their usernames, we generate optimal pairings based on ELO and round performance.",
+    );
+    expect(homeSource).not.toContain(
+      "Tournament players see their matchup and board assignment, while directors report board results with one click.",
+    );
+  });
 });
