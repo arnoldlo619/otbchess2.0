@@ -66,7 +66,6 @@ import {
   SlidersHorizontal,
   X,
   BadgeCheck,
-  ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CREATE_CLUB_WIZARD_ACTIVE_KEY, CreateClubWizard } from "@/components/CreateClubWizard";
@@ -1114,27 +1113,9 @@ export default function MyClubs() {
                 )}
               </button>
 
-              {/* Desktop sort */}
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="relative">
-                  <ArrowUpDown className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
-                  <select
-                    aria-label="Sort clubs"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className={`pl-8 pr-6 py-2.5 rounded-xl border text-xs font-medium outline-none cursor-pointer appearance-none ${
-                      isDark ? "bg-white/6 border-white/10 text-white/70" : "bg-white border-[#ADBC9F] text-[#436850]"
-                    }`}
-                  >
-                    {(Object.keys(SORT_LABELS) as SortOption[]).map((s) => (
-                      <option key={s} value={s}>{SORT_LABELS[s]}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
             </div>
 
-            {/* Desktop filter row */}
+            {/* Desktop category filters */}
             <div className="hidden sm:flex items-center gap-2 mt-2.5 flex-wrap">
               {/* Category chips */}
               {ALL_CATEGORIES.map((cat) => (
@@ -1155,61 +1136,6 @@ export default function MyClubs() {
                   {cat === "all" ? "All" : CATEGORY_LABELS[cat]}
                 </button>
               ))}
-
-              {/* Location filter */}
-              {locationTree.length > 0 && (
-                <>
-                  <div className={`w-px h-5 ${isDark ? "bg-white/10" : "bg-[#ADBC9F]/50"}`} />
-                  <div className="relative">
-                    <MapPin className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none ${textMuted}`} />
-                    <select
-                      aria-label="Filter clubs by country"
-                      value={locationFilter}
-                      onChange={(e) => { setLocationFilter(e.target.value); setCityFilter("all"); }}
-                      className={`pl-7 pr-6 py-1.5 rounded-full border text-xs font-medium outline-none cursor-pointer appearance-none ${
-                        locationFilter !== "all"
-                          ? isDark
-                            ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
-                            : "bg-[#436850]/10 border-[#436850]/30 text-[#436850]"
-                          : isDark
-                            ? "bg-white/5 border-white/8 text-white/50"
-                            : "bg-white border-[#ADBC9F]/50 text-[#436850]"
-                      }`}
-                    >
-                      <option value="all">All Countries</option>
-                      {locationTree.map((loc) => (
-                        <option key={loc.code} value={loc.code}>
-                          {COUNTRY_FLAGS[loc.code] ?? ""} {loc.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {locationFilter !== "all" && (() => {
-                    const loc = locationTree.find((l) => l.code === locationFilter);
-                    return loc && loc.cities.length > 0 ? (
-                      <select
-                        aria-label="Filter clubs by city"
-                        value={cityFilter}
-                        onChange={(e) => setCityFilter(e.target.value)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium outline-none cursor-pointer appearance-none ${
-                          cityFilter !== "all"
-                            ? isDark
-                              ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
-                              : "bg-[#436850]/10 border-[#436850]/30 text-[#436850]"
-                            : isDark
-                              ? "bg-white/5 border-white/8 text-white/50"
-                              : "bg-white border-[#ADBC9F]/50 text-[#436850]"
-                        }`}
-                      >
-                        <option value="all">All Cities</option>
-                        {loc.cities.map((city) => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
-                      </select>
-                    ) : null;
-                  })()}
-                </>
-              )}
 
               {/* Clear all filters */}
               {activeFilterCount > 0 && (
