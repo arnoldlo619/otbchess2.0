@@ -292,6 +292,10 @@
 - [x] Training page: Verify the updated OTB Toolkit copy and remove the requested stale div target if present
 - [x] Training page: Add focused regression coverage, validate the simplified header, and checkpoint the visual edit
 
+- [x] Home page: Verify and update the requested Chess Club Starter Pack and Your Chess Club Website headings
+- [x] Home page: Transform the stale Tournament Director card into the requested OTB Studio content-creation card and external CTA
+- [x] Home page: Add regression coverage, validate the responsive layout and external OTB Studio link, then checkpoint
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation

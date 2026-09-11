@@ -1180,6 +1180,7 @@ interface BentoCardProps {
   description: string;
   cta: string;
   href: string;
+  external?: boolean;
   icon: React.ReactNode;
   screenshot?: string;
   screenshotAlt?: string;
@@ -1192,9 +1193,10 @@ interface BentoCardProps {
 }
 
 function BentoCard({
-  tag, title, description, cta, href, icon, screenshot, screenshotAlt, cardImage,
+  tag, title, description, cta, href, external = false, icon, screenshot, screenshotAlt, cardImage,
   isDark, inView, delay = 0, accent = false, className = "",
 }: BentoCardProps) {
+  const CardLink = external ? "a" : Link;
   const prefersReducedMotion = typeof window !== "undefined"
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;
@@ -1228,8 +1230,10 @@ function BentoCard({
       : "bg-[#EEF5EE] hover:bg-[#436850] hover:text-white text-[#12372A] border-[#ADBC9F]/50";
 
   return (
-    <Link
+    <CardLink
       href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
       className={`group relative rounded-2xl border overflow-hidden cursor-pointer flex flex-col transition-all duration-500 ${surface} ${className} ${
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
@@ -1339,7 +1343,7 @@ function BentoCard({
           {cta}
         </div>
       </div>
-    </Link>
+    </CardLink>
   );
 }
 
@@ -1364,9 +1368,7 @@ function Features() {
             className="text-2xl sm:text-3xl lg:text-5xl font-semibold tracking-tight text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            Everything a Chess Club{" "}
-            <br />
-            needs in one ecosystem.
+            The Chess Club Starter Pack
           </h2>
           <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${isDark ? "text-white/55" : "text-[#436850]"}`}>
             Manage your Club and Tournaments with our Suite of ChessOTB Tools
@@ -1393,7 +1395,7 @@ function Features() {
           />
           <BentoCard
             tag="Clubs & Community"
-            title="Club Roster & Events"
+            title="Your Chess Club Website"
             description="Manage your club roster, post events, run polls, and track every member's OTB ELO history in one place."
             cta="Explore Clubs"
             href="/clubs"
@@ -1409,12 +1411,13 @@ function Features() {
         {/* Row 2: League + Matchup Prep + Openings */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <BentoCard
-            tag="Tournament Director"
-            title="Intuitive Host Dashboard"
-            description="Run Swiss, Round Robin, or Elimination tournaments from one dashboard. Pairings, timers, results, and standings update in real time."
-            cta="Host a Tournament"
-            href={NAV_CTA_PRIMARY.path}
-            icon={<BarChart3 className="w-4 h-4" />}
+            tag="OTB Studio"
+            title="Create Chess Club Content"
+            description="Film and edit your clubs OTB game play clips on one platform."
+            cta="Create a Clip"
+            href="https://otbstudio.lovable.app"
+            external
+            icon={<_Video className="w-4 h-4" />}
             isDark={isDark}
             inView={inView}
             delay={240}
