@@ -130,6 +130,14 @@ export function joinDraftKey(code?: string): string {
   return `otb-join-draft-v1:${code || "manual"}`;
 }
 
+function getSafeSessionStorage(): Storage | null {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
 export function parseManualRating(value: string): number | null {
   const rating = Number(value);
   return Number.isInteger(rating) && rating >= 100 && rating <= 3500 ? rating : null;
@@ -497,6 +505,38 @@ interface EmbeddedTournamentMeta {
   clubName?: string;
 }
 
+interface ServerJoinResolution {
+  tournamentId: string;
+  name: string;
+  venue?: string | null;
+  format?: string | null;
+  rounds?: number | null;
+  date?: string | null;
+  inviteCode?: string | null;
+  customSlug?: string | null;
+}
+
+function configFromServerResolution(data: ServerJoinResolution, fallbackCode: string): TournamentConfig {
+  return {
+    id: data.tournamentId,
+    inviteCode: data.inviteCode ?? fallbackCode,
+    directorCode: "",
+    name: data.name,
+    venue: data.venue ?? "",
+    date: data.date ?? "",
+    description: "",
+    format: (data.format ?? "swiss") as TournamentConfig["format"],
+    rounds: data.rounds ?? 5,
+    maxPlayers: 64,
+    timeBase: 10,
+    timeIncrement: 0,
+    timePreset: "10+5",
+    ratingSystem: "chess.com",
+    customSlug: data.customSlug ?? undefined,
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
   try {
     const params = new URLSearchParams(search);
@@ -526,9 +566,14 @@ export function formatJoinDate(value?: string): string {
 export default function JoinPage() {
   const { code: urlCode } = useParams<{ code: string }>();
   const search = useSearch();
+  const [, navigate] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { triggerForJoin, canPromptNatively } = usePwaInstall();
+  const [serverJoinConfig, setServerJoinConfig] = useState<TournamentConfig | null>(null);
+  const [serverResolved, setServerResolved] = useState(() => !urlCode);
+  const [joinBootstrapError, setJoinBootstrapError] = useState("");
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
 
   // Decode embedded tournament metadata from ?t= query param (set by Director QR)
   const embeddedMeta = decodeEmbeddedMeta(search ?? "");
@@ -541,115 +586,47 @@ export default function JoinPage() {
   const currentJoinDraftKey = joinDraftKey(urlCode);
   const initialJoinDraftRef = useRef<JoinDraft | null | undefined>(undefined);
   if (initialJoinDraftRef.current === undefined && typeof window !== "undefined") {
-    const stored = readDraft<JoinDraft>(currentJoinDraftKey, window.sessionStorage);
+    const sessionStorage = getSafeSessionStorage();
+    const stored = sessionStorage ? readDraft<JoinDraft>(currentJoinDraftKey, sessionStorage) : null;
     initialJoinDraftRef.current = stored && (!urlCode || stored.tournamentCode === urlCode) ? stored : null;
   }
   const initialJoinDraft = initialJoinDraftRef.current ?? null;
 
-  // If the URL carries embedded metadata, bootstrap the registry on this device
-  // so resolveTournament() works even without the director's localStorage.
-  useEffect(() => {
-    if (!embeddedMeta) return;
-    const existing = resolveTournament(embeddedMeta.inviteCode);
-    if (existing) {
-      setServerResolved(true); // already in registry
-      return;
-    }
-    registerTournament({
-      id: embeddedMeta.id,
-      inviteCode: embeddedMeta.inviteCode,
-      directorCode: "", // not needed on player device
-      name: embeddedMeta.name,
-      venue: embeddedMeta.venue ?? "",
-      date: "",
-      description: "",
-      format: embeddedMeta.format as TournamentConfig["format"],
-      rounds: embeddedMeta.rounds,
-      maxPlayers: embeddedMeta.maxPlayers,
-      timeBase: 10,
-      timeIncrement: 0,
-      timePreset: embeddedMeta.timePreset,
-      ratingSystem: "chess.com",
-      createdAt: new Date().toISOString(),
-      clubId: embeddedMeta.clubId ?? null,
-      clubName: embeddedMeta.clubName ?? null,
-    });
-    setServerResolved(true); // bootstrapped from ?t= param
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Server-side fallback bootstrap: when there is no ?t= param (e.g. someone
-  // shared the short custom URL like /join/ThursdayOTBNight) and the tournament
-  // is not in localStorage (fresh device / Android), fetch from the server and
-  // register it locally so the join flow can proceed.
+  // QR joins always resolve the canonical tournament record from the server.
+  // The local registry is populated only as a best-effort cache after resolution.
   useEffect(() => {
     if (!urlCode) return;
-    // If already resolved locally (from ?t= bootstrap or existing localStorage), skip
-    if (resolveTournament(urlCode)) return;
-    // Fetch from server by inviteCode or customSlug
+    let cancelled = false;
+    setServerResolved(false);
+    setJoinBootstrapError("");
     authFetch(`/api/auth/join/resolve/${encodeURIComponent(urlCode)}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((data: {
-        tournamentId: string;
-        name: string;
-        venue?: string | null;
-        format?: string | null;
-        rounds?: number | null;
-        date?: string | null;
-        inviteCode?: string | null;
-        customSlug?: string | null;
-      } | null) => {
-        if (!data) { setServerResolved(true); return; } // 404 — not in server DB, proceed anyway
-        // Don’t re-register if it arrived via the ?t= bootstrap above
-        if (!resolveTournament(data.inviteCode ?? urlCode)) {
-          registerTournament({
-            id: data.tournamentId,
-            inviteCode: data.inviteCode ?? urlCode,
-            directorCode: "",
-            name: data.name,
-            venue: data.venue ?? "",
-            date: data.date ?? "",
-            description: "",
-            format: (data.format ?? "swiss") as TournamentConfig["format"],
-            rounds: data.rounds ?? 5,
-            maxPlayers: 64,
-            timeBase: 10,
-            timeIncrement: 0,
-            timePreset: "10+5",
-            ratingSystem: "chess.com",
-            customSlug: data.customSlug ?? undefined,
-            createdAt: new Date().toISOString(),
-          });
-        }
+      .then(async (response) => {
+        if (!response.ok) throw new Error(response.status === 404 ? "not_found" : "unavailable");
+        return response.json() as Promise<ServerJoinResolution>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const config = configFromServerResolution(data, urlCode);
+        setServerJoinConfig(config);
+        registerTournament(config);
         setServerResolved(true);
       })
       .catch(() => {
-        // Non-critical — player can still type the code manually
-        setServerResolved(true);
+        if (cancelled) return;
+        setServerJoinConfig(null);
+        setJoinBootstrapError("We couldn’t load this tournament. Check your connection, then try again or enter the invite code manually.");
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => { cancelled = true; };
+  }, [urlCode, bootstrapAttempt]);
 
-  // Auto-rejoin: if ?u= is present and the tournament is resolvable, skip the form
-  // and go straight to the player lobby. This runs after the bootstrap effect so
-  // the registry is populated before we try to resolve.
+  // Auto-rejoin only after the invite has resolved server-first, so a fresh device
+  // never depends on a client-local registry before opening the player lobby.
   useEffect(() => {
     if (!urlUsername || !urlCode) return;
-    const config = resolveTournament(urlCode) ??
-      (embeddedMeta ? resolveTournament(embeddedMeta.inviteCode) : null);
-    if (!config) return;
+    if (!serverJoinConfig) return;
     // Navigate immediately — no form needed
-    navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(urlUsername)}`);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Tracks whether the server-side tournament bootstrap has completed.
-  // On Android / fresh devices without localStorage, the join button should
-  // wait until this is true (or the ?t= bootstrap has already resolved it).
-  const [serverResolved, setServerResolved] = useState(() => {
-    // Already resolved if the tournament is in localStorage right now
-    return urlCode ? Boolean(resolveTournament(urlCode)) : false;
-  });
+    navigate(`/tournament/${serverJoinConfig.id}/play?username=${encodeURIComponent(urlUsername)}`);
+  }, [navigate, serverJoinConfig, urlCode, urlUsername]);
 
   const [step, setStep] = useState<Step>(() => urlCode ? "username" : initialJoinDraft?.step ?? "code");
   const [tournamentCode, setTournamentCode] = useState(() => urlCode ?? initialJoinDraft?.tournamentCode ?? "");
@@ -678,7 +655,6 @@ export default function JoinPage() {
   const [stepKey, setStepKey] = useState(0); // force re-mount for animation
   const [phone, setPhone] = useState(() => initialJoinDraft?.phone ?? "");
   const [email, setEmail] = useState(() => initialJoinDraft?.email ?? "");
-  const [, navigate] = useLocation();
   // QR mode: code came from URL — show single-screen streamlined join form
   const isQrMode = Boolean(urlCode);
 
@@ -704,6 +680,8 @@ export default function JoinPage() {
 
   useEffect(() => {
     if (step === "success") return;
+    const sessionStorage = getSafeSessionStorage();
+    if (!sessionStorage) return;
     writeDraft<JoinDraft>(currentJoinDraftKey, {
       step: step === "code" ? "code" : "username",
       tournamentCode,
@@ -713,7 +691,7 @@ export default function JoinPage() {
       platform,
       phone,
       email,
-    }, window.sessionStorage);
+    }, sessionStorage);
   }, [currentJoinDraftKey, step, tournamentCode, playerName, username, manualRating, platform, phone, email]);
 
   // Swipe-right to go back (native iOS/Android feel)
@@ -771,9 +749,8 @@ export default function JoinPage() {
   // Resolve the real tournament config from the registry (by invite code or slug).
   // After the useEffect above runs, embeddedMeta will have been registered so
   // resolveTournament will find it even on a fresh device.
-  const resolvedConfig: TournamentConfig | null = tournamentCode
-    ? resolveTournament(tournamentCode)
-    : null;
+  const resolvedConfig: TournamentConfig | null = serverJoinConfig
+    ?? (tournamentCode ? resolveTournament(tournamentCode) : null);
   const isDemoCode = tournamentCode.toUpperCase() === "OTB2026";
 
   // Server-side tournament status for completed/closed events (used when localStorage is empty)
@@ -876,13 +853,11 @@ export default function JoinPage() {
   })();
 
 
-  // Fetch server status when resolvedConfig is available — needed for fresh devices
-  // where localStorage is empty and we can't read status from director state
+  // Join status is sourced from the participant live-state endpoint. It remains
+  // available to invite holders even when the spectator dashboard is private.
   useEffect(() => {
     if (!resolvedConfig) return;
-    const localRaw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
-    if (localRaw) return; // localStorage has data, no need to fetch
-    authFetch(`/api/public/tournament/${encodeURIComponent(resolvedConfig.id)}`)
+    authFetch(`/api/tournament/${encodeURIComponent(resolvedConfig.id)}/live-state`)
       .then(r => r.ok ? r.json() : null)
       .then((d: { status?: string; players?: unknown[] } | null) => {
         if (!d) return;
@@ -923,37 +898,11 @@ export default function JoinPage() {
         setError("Invalid tournament code. Check with your host.");
         return;
       }
-      const data = await res.json() as {
-        tournamentId: string;
-        name: string;
-        venue?: string | null;
-        format?: string | null;
-        rounds?: number | null;
-        date?: string | null;
-        inviteCode?: string | null;
-        customSlug?: string | null;
-      };
+      const data = await res.json() as ServerJoinResolution;
       // Register the tournament locally so the rest of the flow works
-      if (!resolveTournament(data.inviteCode ?? code)) {
-        registerTournament({
-          id: data.tournamentId,
-          inviteCode: data.inviteCode ?? code,
-          directorCode: "",
-          name: data.name,
-          venue: data.venue ?? "",
-          date: data.date ?? "",
-          description: "",
-          format: (data.format ?? "swiss") as TournamentConfig["format"],
-          rounds: data.rounds ?? 5,
-          maxPlayers: 64,
-          timeBase: 10,
-          timeIncrement: 0,
-          timePreset: "10+5",
-          ratingSystem: "chess.com",
-          customSlug: data.customSlug ?? undefined,
-          createdAt: new Date().toISOString(),
-        });
-      }
+      const config = configFromServerResolution(data, code);
+      setServerJoinConfig(config);
+      registerTournament(config);
       setServerResolved(true);
       setCodeLoading(false);
       advanceStep("username");
@@ -1098,8 +1047,7 @@ export default function JoinPage() {
       const prof = raw as UnifiedProfile;
       setManualRatingUsed(Boolean(fallbackProfile));
       setUnifiedProfile(prof);
-      // Try registry first; fall back to embeddedMeta (bootstrapped from ?t= param)
-      const config = resolveTournament(tournamentCode);
+      const config = serverJoinConfig ?? resolvedConfig;
       if (config) {
         const player: Player = {
           id: `player-${prof.username}-${Date.now()}`,
@@ -1118,20 +1066,14 @@ export default function JoinPage() {
           ...(prof.manualRating ? { manualPairingRating: prof.elo, pairingRating: prof.elo, ratingSource: "manual" as const } : {}),
           joinedAt: Date.now(),
         };
-        const result = addPlayerToTournament(config.id, player);
-        if (!result.success) {
-          setConfirming(false);
-          showCapToast(mapAddPlayerIssue(result.reason));
-          return;
-        }
-        // Confirm the authoritative roster write before showing success.
+        // Confirm the authoritative roster write before touching the optional local cache.
         const sync = await postPlayerToServer(config.id, player);
         if (!sync.success) {
-          removeJoinedPlayerFromTournament(config.id, player.id);
           setConfirming(false);
           showCapToast(sync.reason, sync.retryAfterSeconds);
           return;
         }
+        try { addPlayerToTournament(config.id, player); } catch { /* local cache is optional */ }
         saveRegistration({
           tournamentId: tournamentCode,
           username: prof.username,
@@ -1143,57 +1085,6 @@ export default function JoinPage() {
         setConfirming(false);
         haptic([50, 60, 80]); // double-pulse — QR join success
         navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(prof.username)}&name=${encodeURIComponent(playerName.trim() || prof.name || prof.username)}`);
-      } else if (embeddedMeta) {
-        // embeddedMeta was registered in the bootstrap useEffect above;
-        // re-resolve now that the registry is populated.
-        const bootstrapped = resolveTournament(embeddedMeta.inviteCode);
-        if (bootstrapped) {
-          const player: Player = {
-            id: `player-${prof.username}-${Date.now()}`,
-            name: playerName.trim() || prof.name || prof.username,
-            username: prof.username,
-            elo: pickRating(prof, bootstrapped.ratingType ?? "rapid"),
-            ...(prof.platform === "chesscom" && prof.rapid ? { rapidElo: prof.rapid } : {}),
-            ...(prof.platform === "chesscom" && prof.blitz ? { blitzElo: prof.blitz } : {}),
-            title: prof.title as Player["title"] | undefined,
-            country: prof.country ?? "",
-            points: 0, wins: 0, draws: 0, losses: 0, buchholz: 0,
-            colorHistory: [],
-            platform: prof.platform,
-            avatarUrl: prof.platform === "chesscom" ? (prof as ChessComProfile).avatar : undefined,
-            flairEmoji: prof.platform === "lichess" ? (prof as LichessProfile).flairEmoji : undefined,
-            ...(prof.manualRating ? { manualPairingRating: prof.elo, pairingRating: prof.elo, ratingSource: "manual" as const } : {}),
-            joinedAt: Date.now(),
-          };
-          const result = addPlayerToTournament(bootstrapped.id, player);
-          if (!result.success) {
-            setConfirming(false);
-            showCapToast(mapAddPlayerIssue(result.reason));
-            return;
-          }
-          const sync = await postPlayerToServer(bootstrapped.id, player);
-          if (!sync.success) {
-            removeJoinedPlayerFromTournament(bootstrapped.id, player.id);
-            setConfirming(false);
-            showCapToast(sync.reason, sync.retryAfterSeconds);
-            return;
-          }
-          saveRegistration({
-            tournamentId: tournamentCode,
-            username: prof.username,
-            name: player.name,
-            rating: player.elo,
-            tournamentName: bootstrapped.name,
-            registeredAt: new Date().toISOString(),
-          });
-          setConfirming(false);
-          haptic([50, 60, 80]); // double-pulse — QR join success (embedded)
-          clearDraft(currentJoinDraftKey, window.sessionStorage);
-          navigate(`/tournament/${bootstrapped.id}/play?username=${encodeURIComponent(prof.username)}&name=${encodeURIComponent(playerName.trim() || prof.name || prof.username)}`);
-        } else {
-          setConfirming(false);
-          setError("Tournament not found. Ask the director to share the QR code again.");
-        }
       } else {
         setConfirming(false);
         setError("Tournament not found. Check the code and try again.");
@@ -1211,7 +1102,7 @@ export default function JoinPage() {
           : `${lookupError || "Rating unavailable."} Enter a manual pairing rating to continue.`,
       );
     }
-  }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, username, manualRating, platform, navigate, currentJoinDraftKey]);
+  }, [lookupStatus, isQrMode, confirming, active.profile, lookupError, tournamentCode, playerName, username, manualRating, platform, navigate, currentJoinDraftKey, serverJoinConfig, resolvedConfig]);
 
   async function handleConfirm() {
     if (isTournamentClosed) { showCapToast("closed"); return; }
@@ -1289,7 +1180,8 @@ export default function JoinPage() {
       });
       setExistingReg(getRegistration(tournamentCode));
     }
-    clearDraft(currentJoinDraftKey, window.sessionStorage);
+    const sessionStorage = getSafeSessionStorage();
+    if (sessionStorage) clearDraft(currentJoinDraftKey, sessionStorage);
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
     haptic([40, 50, 100]); // double-pulse — registration confirmed
@@ -1797,6 +1689,40 @@ export default function JoinPage() {
                   {tournamentDisplay.timeControl && <><span aria-hidden="true">·</span><span>{tournamentDisplay.timeControl}</span></>}
                 </div>
               </div>
+
+              {joinBootstrapError && (
+                <div
+                  className={`rounded-2xl border p-4 space-y-3 ${
+                    isDark ? "bg-amber-400/8 border-amber-300/25" : "bg-amber-50 border-amber-200"
+                  }`}
+                  role="alert"
+                  data-qr-resolve-recovery
+                >
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className={`mt-0.5 h-4 w-4 shrink-0 ${isDark ? "text-amber-300" : "text-amber-700"}`} />
+                    <p className={`text-sm leading-relaxed ${isDark ? "text-amber-100/85" : "text-amber-900"}`}>{joinBootstrapError}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBootstrapAttempt((attempt) => attempt + 1)}
+                      className={`min-h-10 rounded-xl px-3 text-sm font-semibold transition-colors ${
+                        isDark ? "bg-amber-300 text-[#18320f] hover:bg-amber-200" : "bg-amber-700 text-white hover:bg-amber-800"
+                      }`}
+                    >
+                      Try again
+                    </button>
+                    <Link
+                      href="/join"
+                      className={`inline-flex min-h-10 items-center rounded-xl border px-3 text-sm font-semibold transition-colors ${
+                        isDark ? "border-amber-300/35 text-amber-100 hover:bg-amber-300/10" : "border-amber-300 text-amber-900 hover:bg-amber-100"
+                      }`}
+                    >
+                      Enter code manually
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* Already registered banner */}
               {existingReg && (

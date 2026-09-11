@@ -10,6 +10,23 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function readStoredTheme(): Theme | null {
+  try {
+    const stored = window.localStorage.getItem("theme");
+    return stored === "light" || stored === "dark" ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistTheme(theme: Theme): void {
+  try {
+    window.localStorage.setItem("theme", theme);
+  } catch {
+    // Appearance preference is optional. QR join must stay usable when storage is blocked.
+  }
+}
+
 interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
@@ -23,8 +40,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      return readStoredTheme() ?? defaultTheme;
     }
     return defaultTheme;
   });
@@ -38,7 +54,7 @@ export function ThemeProvider({
     }
 
     if (switchable) {
-      localStorage.setItem("theme", theme);
+      persistTheme(theme);
     }
   }, [theme, switchable]);
 

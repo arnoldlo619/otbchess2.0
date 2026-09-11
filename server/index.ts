@@ -914,6 +914,7 @@ export function createApp() {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
     if (id === "otb-demo-2026") return res.status(404).json({ error: "demo" });
+    res.setHeader("Cache-Control", "no-store, max-age=0");
     try {
       const db = await getDb();
       const rows = await db

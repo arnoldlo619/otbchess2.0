@@ -4,8 +4,8 @@
  * Special handling for ChunkLoadError / dynamic import failures:
  *   - These happen when a new deployment replaces asset hashes while a user
  *     still has the old index.html in memory (or cached).
- *   - On first detection: auto-reload once (sessionStorage flag prevents loops).
- *   - If reload doesn't fix it: show a friendly "New version available" prompt.
+ *   - Render a deterministic recovery screen instead of relying on storage-backed
+ *     automatic reload behavior, which can fail in restricted mobile browsers.
  *
  * All other errors: show the standard error screen with a manual reload button.
  */
@@ -32,8 +32,6 @@ interface State {
   isChunkError: boolean;
   referenceId: string;
 }
-
-const CHUNK_RELOAD_KEY = "otb_chunk_reload_attempted";
 
 export function createClientErrorReference(): string {
   const time = Date.now().toString(36).toUpperCase();
@@ -62,26 +60,10 @@ class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     const chunkError = isChunkLoadError(error);
-
-    // Auto-reload once on chunk errors — clears stale cached chunks
-    if (chunkError) {
-      const alreadyTried = sessionStorage.getItem(CHUNK_RELOAD_KEY);
-      if (!alreadyTried) {
-        sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
-        // Hard reload bypasses service worker and browser cache
-        window.location.reload();
-        // Return a non-error state while reload is in progress
-        return { hasError: false, error: null, isChunkError: true, referenceId: "" };
-      }
-    }
-
     return { hasError: true, error, isChunkError: chunkError, referenceId: createClientErrorReference() };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Clear the reload flag after a successful mount so future deploys can
-    // trigger another auto-reload if needed.
-    sessionStorage.removeItem(CHUNK_RELOAD_KEY);
     reportClientError({
       eventType: "render_error",
       error,
@@ -91,7 +73,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleManualReload = () => {
-    sessionStorage.removeItem(CHUNK_RELOAD_KEY);
     window.location.reload();
   };
 
@@ -164,6 +145,19 @@ class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="w-4 h-4" />
                 Reload Now
               </button>
+              {window.location.pathname.startsWith("/join") && (
+                <a
+                  href="/join"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.97] hover:brightness-110"
+                  style={{
+                    background: "oklch(0.28 0.08 145)",
+                    color: "oklch(0.88 0.04 145)",
+                    border: "1px solid oklch(0.40 0.10 145)",
+                  }}
+                >
+                  Enter invite code instead
+                </a>
+              )}
               <a
                 href={SUPPORT_URL}
                 target="_blank"

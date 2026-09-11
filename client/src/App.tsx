@@ -89,6 +89,28 @@ function PageLoader() {
   );
 }
 
+/**
+ * This shell remains in the initial application bundle so a QR deep link always
+ * presents useful UI while the heavier Join page chunk is loading or recovering.
+ */
+function QrJoinEntryShell() {
+  const [location] = useLocation();
+  const code = location.startsWith("/join/") ? decodeURIComponent(location.slice("/join/".length)) : "";
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-5 bg-[#07140c] text-white" data-qr-entry-shell>
+      <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] px-6 py-8 text-center shadow-2xl">
+        <p className="text-[11px] font-black tracking-[0.22em] uppercase text-[#86dc78]">ChessOTB join</p>
+        <OTBLoader size={56} label="Loading your tournament" />
+        {code && <p className="mt-2 text-xs text-white/55">Invite code: <span className="font-semibold text-white/85">{code}</span></p>}
+        <a href="/join" className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-[#6fcf68]/45 px-4 text-sm font-semibold text-[#a6ec9e] transition-colors hover:bg-[#6fcf68]/10">
+          Enter a code manually
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function RouteFocusManager() {
   const [location] = useLocation();
   const isInitialRoute = useRef(true);
@@ -147,6 +169,8 @@ function HardRedirect({
 }
 
 function Router() {
+  const [location] = useLocation();
+  const isQrJoinRoute = location === "/join" || location.startsWith("/join/");
   // Show a toast if Google OAuth redirected back with an error
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -174,7 +198,7 @@ function Router() {
         Skip to main content
       </a>
       <main id="main-content" tabIndex={-1} aria-label="Main content">
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={isQrJoinRoute ? <QrJoinEntryShell /> : <PageLoader />}>
           <Switch>
         <Route path={"/auth"} component={AuthPage} />
         <Route path={"/"} component={Home} />

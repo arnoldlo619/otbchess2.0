@@ -1,6 +1,6 @@
 /** User-owned tournament registry and public join-link resolution routes. */
 import { Router } from "express";
-import { and, eq, ne, or } from "drizzle-orm";
+import { and, eq, ne, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getDb } from "./db.js";
 import { userTournaments } from "../shared/schema.js";
@@ -127,11 +127,14 @@ export function createUserTournamentRouter(): Router {
         rounds: userTournaments.rounds,
         inviteCode: userTournaments.inviteCode,
         customSlug: userTournaments.customSlug,
+        status: userTournaments.status,
       }).from(userTournaments).where(or(
         eq(userTournaments.inviteCode, codeOrSlug.toUpperCase()),
-        eq(userTournaments.customSlug, codeOrSlug),
+        sql`lower(${userTournaments.customSlug}) = lower(${codeOrSlug})`,
+        eq(userTournaments.tournamentId, codeOrSlug),
       )).limit(1);
       if (!tournament) return res.status(404).json({ error: "Tournament not found" });
+      res.setHeader("Cache-Control", "no-store, max-age=0");
       return res.json(tournament);
     } catch (error) {
       logger.error("[join] resolve error:", error);

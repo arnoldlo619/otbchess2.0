@@ -158,6 +158,11 @@ describe("Join reliability integration", () => {
   const directorSource = readFileSync(resolve(projectRoot, "client/src/pages/Director.tsx"), "utf8");
   const wizardSource = readFileSync(resolve(projectRoot, "client/src/components/TournamentWizard.tsx"), "utf8");
   const scannerSource = readFileSync(resolve(projectRoot, "client/src/components/QrScanner.tsx"), "utf8");
+  const appSource = readFileSync(resolve(projectRoot, "client/src/App.tsx"), "utf8");
+  const themeSource = readFileSync(resolve(projectRoot, "client/src/contexts/ThemeContext.tsx"), "utf8");
+  const boundarySource = readFileSync(resolve(projectRoot, "client/src/components/ErrorBoundary.tsx"), "utf8");
+  const mainSource = readFileSync(resolve(projectRoot, "client/src/main.tsx"), "utf8");
+  const serviceWorkerSource = readFileSync(resolve(projectRoot, "client/public/sw.js"), "utf8");
 
   it("enforces closed/full guards before QR and manual registration", () => {
     expect(joinSource.match(/if \(isTournamentClosed\) \{ showCapToast\("closed"\); return; \}/g)?.length).toBe(2);
@@ -167,10 +172,10 @@ describe("Join reliability integration", () => {
     expect(serverSource).toContain('error: "registration_closed"');
   });
 
-  it("awaits authoritative roster sync and rolls back optimistic local mutations", () => {
-    expect(joinSource.match(/await postPlayerToServer\(/g)?.length).toBe(4);
-    expect(joinSource.match(/removeJoinedPlayerFromTournament\(/g)?.length).toBe(3);
-    expect(joinSource).toContain("Confirm the authoritative roster write before showing success");
+  it("awaits authoritative roster sync before an optional local cache mutation", () => {
+    expect(joinSource.match(/await postPlayerToServer\(/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(joinSource).toContain("Confirm the authoritative roster write before touching the optional local cache.");
+    expect(joinSource).toContain("try { addPlayerToTournament(config.id, player); } catch");
     expect(directorStateSource).toContain("export function removeJoinedPlayerFromTournament");
   });
 
@@ -206,6 +211,34 @@ describe("Join reliability integration", () => {
     expect(joinSource).toContain('date: data.date ?? ""');
     expect(joinSource).toContain("date: formatJoinDate(");
     expect(joinSource.match(/tournamentDisplay\.date/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it("uses server-first invite metadata and never relies on public spectator visibility", () => {
+    expect(joinSource).toContain("configFromServerResolution");
+    expect(joinSource).toContain('authFetch(`/api/auth/join/resolve/${encodeURIComponent(urlCode)}`)');
+    expect(joinSource).toContain('authFetch(`/api/tournament/${encodeURIComponent(resolvedConfig.id)}/live-state`)');
+    expect(joinSource).not.toContain('authFetch(`/api/public/tournament/${encodeURIComponent(resolvedConfig.id)}`)');
+    expect(joinServerSource).toContain("eq(userTournaments.tournamentId, codeOrSlug)");
+    expect(joinServerSource).toContain("lower(${userTournaments.customSlug}) = lower(${codeOrSlug})");
+    expect(joinServerSource).toContain('res.setHeader("Cache-Control", "no-store, max-age=0")');
+    expect(serverSource).toContain('res.setHeader("Cache-Control", "no-store, max-age=0")');
+  });
+
+  it("keeps QR bootstrap recoverable when storage, routing, or chunk loading fails", () => {
+    expect(themeSource).toContain("function readStoredTheme");
+    expect(themeSource).toContain("function persistTheme");
+    expect(boundarySource).not.toContain("sessionStorage");
+    expect(boundarySource).toContain('href="/join"');
+    expect(appSource).toContain("function QrJoinEntryShell()");
+    expect(appSource).toContain("data-qr-entry-shell");
+    expect(appSource).toContain("isQrJoinRoute ? <QrJoinEntryShell /> : <PageLoader />");
+    expect(joinSource).toContain("function getSafeSessionStorage()");
+    expect(joinSource).toContain("data-qr-resolve-recovery");
+    expect(joinSource).toContain("setBootstrapAttempt((attempt) => attempt + 1)");
+    expect(mainSource).toContain('register("/sw.js?v=otb-chess-v7"');
+    expect(serviceWorkerSource).toContain('const CACHE_VERSION = "otb-chess-v7"');
+    expect(serviceWorkerSource).toContain("self.skipWaiting()");
+    expect(serviceWorkerSource).toContain("self.clients.claim()");
   });
 
   it("requests camera permission only after the user explicitly opens the scanner", () => {

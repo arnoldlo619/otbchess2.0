@@ -277,6 +277,11 @@
 
 - [x] Tournament QR join: Assess intermittent mobile blank-page failures and present a remediation plan for review without implementation
 
+- [x] Tournament QR join: Guard bootstrap storage and chunk-error recovery so QR entry never renders blank
+- [x] Tournament QR join: Resolve invite metadata server-first without depending on public spectator visibility
+- [x] Tournament QR join: Add deterministic recovery UI for lazy-route and interrupted-network failures
+- [x] Tournament QR join: Add QR resilience regressions and validate the mobile join-to-lobby path before checkpointing
+
 - [x] Tournament player lifecycle: Add a director-controlled withdrawal action that preserves prior results
 - [x] Tournament pairing: Exclude withdrawn players from all future Swiss, Double Swiss, and supported format pairings
 - [x] Tournament withdrawal: Add director UI, confirmation, accessible status, and restoration behavior where safe

@@ -14,7 +14,7 @@
 
 /* global self, caches, fetch, Response, AbortController, setTimeout, clearTimeout, URL */
 
-const CACHE_VERSION = "otb-chess-v6";
+const CACHE_VERSION = "otb-chess-v7";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 

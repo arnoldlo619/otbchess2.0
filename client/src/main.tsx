@@ -14,7 +14,7 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
     navigator.serviceWorker
       // Keep the registration URL versioned. Static CDNs can otherwise serve an
       // older worker long after the application bundle has updated its policy.
-      .register("/sw.js?v=otb-chess-v6", { scope: "/" })
+      .register("/sw.js?v=otb-chess-v7", { scope: "/" })
       .then((registration) => {
         // Check for updates every time the page loads
         registration.update();
