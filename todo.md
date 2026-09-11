@@ -282,6 +282,9 @@
 - [x] Tournament withdrawal: Add director UI, confirmation, accessible status, and restoration behavior where safe
 - [x] Tournament withdrawal: Add regression coverage and verify live-round safeguards before checkpointing
 
+- [x] Tournament withdrawal: Place the Player-tab Withdraw or Reinstate control directly beside Bye across responsive rows
+- [x] Tournament withdrawal: Verify the adjacent action order and preserve confirmation and future-pairing safeguards before checkpointing
+
 - [x] Matchup Prep: Map MP-01 through MP-18 to current request state, routes, cache identity, explorer, insights, exports, UI, and tests
 - [x] Matchup Prep: Create deterministic legal PGN, platform-isolation, evidence-threshold, and stale-history fixtures
 - [x] Matchup Prep: Capture expected failing regressions for verified release blockers before remediation

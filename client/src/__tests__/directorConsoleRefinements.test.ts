@@ -422,6 +422,18 @@ describe("Tournament withdrawal controls", () => {
     expect(directorSource).toContain("supportsPlayerWithdrawal");
   });
 
+  it("groups the Player-tab withdraw or reinstate control directly beside Bye across responsive rows", () => {
+    const playerTabStart = directorSource.indexOf('activeTab === "players"');
+    const playerTabSource = directorSource.slice(playerTabStart, directorSource.indexOf("/* ── Start Tournament CTA", playerTabStart));
+    const actionGroupCount = (playerTabSource.match(/Pairing actions for \$\{p\.name\}/g) ?? []).length;
+
+    expect(actionGroupCount).toBeGreaterThanOrEqual(2);
+    expect(playerTabSource).toContain("/* Bye button — only during active round");
+    expect(playerTabSource).toContain("/* Bye button — mobile");
+    expect(playerTabSource).toContain("<UserMinus className=\"w-3 h-3\" /> Withdraw");
+    expect(playerTabSource).toContain("<Undo2 className=\"w-3 h-3\" /> Reinstate");
+  });
+
   it("keeps a withdrawn participant out of check-in changes and manual-bye controls", () => {
     expect(directorSource).toContain("if (state.players.find((player) => player.id === playerId)?.withdrawn) return;");
     expect(directorSource).toContain('!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads"');

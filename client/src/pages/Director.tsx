@@ -6199,6 +6199,7 @@ export default function Director() {
                             }`} title={c === "W" ? "White" : "Black"} />)
                           )}
                         </div>
+                        <div className={`ml-1 flex items-center gap-1.5 border-l pl-2 ${isDark ? "border-white/10" : "border-[#ADBC9F]/70"}`} role="group" aria-label={`Pairing actions for ${p.name}`}>
                         {/* Bye button — only during active round, not for Quads (Quads has no byes) */}
                         {!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads" && (
                           byePlayerIds.has(p.id) ? (
@@ -6255,6 +6256,7 @@ export default function Director() {
                             <UserMinus className="w-3 h-3" /> Withdraw
                           </button>
                         ))}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -6351,6 +6353,7 @@ export default function Director() {
                         </div>
                         <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>colors</p>
                       </div>
+                      <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label={`Pairing actions for ${p.name}`}>
                       {/* Bye button — mobile (not for Quads, which has no byes) */}
                       {!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads" && (
                         byePlayerIds.has(p.id) ? (
@@ -6396,6 +6399,7 @@ export default function Director() {
                           <UserMinus className="w-3 h-3" /> Withdraw
                         </button>
                       ))}
+                      </div>
                     </div>
                   </div>
                 ))}
