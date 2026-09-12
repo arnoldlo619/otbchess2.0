@@ -242,7 +242,7 @@ const QUICKSTART_HERO = {
   hero: {
     eyebrow: "Quickstart",
     title: "Start in\nseconds",
-    body: "Just give your tournament a name and location. We'll set up Swiss pairings, 5 rounds, and 10+5 time control — you can adjust everything later.",
+    body: "Name, date, format, start!",
   },
 };
 
@@ -521,13 +521,11 @@ function HeroPanel({
         hero: {
           eyebrow: "Quickstart",
           title: formatConfig.wizardHeroTitle,
-          body: formatConfig.wizardHeroBody,
+          body: QUICKSTART_HERO.hero.body,
         },
       }
     : QUICKSTART_HERO;
   const s = mode === "quickstart" ? quickstartHero : SCHEDULE_STEPS[step];
-  const Icon = s.icon;
-  const iconImg = (s as { iconImg?: string }).iconImg;
 
   const dots = mode === "quickstart" ? 2 : SCHEDULE_STEPS.length; // quickstart: mode-select + quickstart form
   const activeDot = mode === "quickstart" ? 1 : step;
@@ -576,17 +574,7 @@ function HeroPanel({
         <p className="text-xs font-semibold tracking-widest uppercase text-white/68 mb-4">
           {s.hero.eyebrow}
         </p>
-        <div className="flex items-start gap-3 mb-6">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1"
-            style={{ background: "rgba(255,255,255,0.15)" }}
-          >
-            {iconImg ? (
-              <img loading="lazy" decoding="async" src={iconImg} alt="OTB" className="w-5 h-5 object-contain drop-shadow-sm" />
-            ) : (
-              <Icon className="w-5 h-5 text-white" strokeWidth={1.8} />
-            )}
-          </div>
+        <div className="mb-6">
           <h2
             className="text-4xl font-bold text-white leading-tight"
             style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}

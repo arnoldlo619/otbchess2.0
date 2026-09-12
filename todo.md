@@ -305,6 +305,10 @@
 - [x] Home page: Apply the requested check-in, pairing, and live-results messaging updates
 - [x] Home page: Add regression coverage, validate responsive copy layout, and checkpoint the edits
 
+- [x] Tournament Wizard: Verify the stale setup-copy and icon-container targets before manual cleanup
+- [x] Tournament Wizard: Apply the requested concise setup copy and remove the targeted icon container
+- [x] Tournament Wizard: Add regression coverage, validate responsive presentation, and checkpoint the cleanup
+
 - [x] My Clubs: Verify the stale filter and All Countries select targets before removing them
 - [x] My Clubs: Remove the requested select filters and any now-unused filter state safely
 - [x] My Clubs: Add regression coverage, validate responsive layout, and checkpoint the simplified filters
