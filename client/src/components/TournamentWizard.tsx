@@ -2996,7 +2996,7 @@ function SegmentedOnboardingStep({
         <div>
           <p className="text-sm font-semibold" style={{ color: T.green }}>Time control</p>
           <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            How fast will the clocks run?
+            What will you set your clocks to?
           </h3>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

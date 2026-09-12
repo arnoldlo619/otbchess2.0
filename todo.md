@@ -315,6 +315,9 @@
 - [x] Tournament Wizard onboarding: Preserve draft, validation, payment, club-link, and creation behavior through the segmented flow
 - [x] Tournament Wizard onboarding: Add regression coverage, validate responsive completion paths, and checkpoint the redesign
 
+- [x] Tournament Wizard: Verify the updated Time Control prompt in the active segmented onboarding step
+- [x] Tournament Wizard: Add regression coverage and validate the updated Time Control prompt before checkpointing
+
 - [x] My Clubs: Verify the stale filter and All Countries select targets before removing them
 - [x] My Clubs: Remove the requested select filters and any now-unused filter state safely
 - [x] My Clubs: Add regression coverage, validate responsive layout, and checkpoint the simplified filters

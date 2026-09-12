@@ -62,4 +62,9 @@ describe("Tournament Wizard segmented onboarding", () => {
     expect(wizardSource).toContain('aria-label="Maximum Players"');
     expect(wizardSource).toContain("selectFormat(event.target.value as WizardData");
   });
+
+  it("uses the requested Time Control question", () => {
+    expect(wizardSource).toContain("What will you set your clocks to?");
+    expect(wizardSource).not.toContain("How fast will the clocks run?");
+  });
 });
