@@ -22,10 +22,17 @@ Revisiting the local Home route restored the unfinished QA draft at its final pr
 
 The review session was closed without creation and the browser appearance was restored to its original light setting.
 
+After the typography refinement, the light Home entry rendered normally before reopening the unsubmitted Wizard draft for its final-preview review.
+
+The refreshed local Home route remained stable in light appearance with no new entry-surface errors before the final preview check.
+
+The pre-creation Structure preview remained balanced at desktop width after the refinement. The targeted typography block belongs to the post-creation share summary, which was not opened because this QA path intentionally did not create tournament data; its enlarged hierarchy is protected by the focused source contract.
+
 ## Automated validation
 
 - The active Time Control stage now asks, “What will you set your clocks to?” The legacy clock-speed wording is absent, while the preset grid, custom control inputs, and validation gate are unchanged. Focused coverage passed, TypeScript passed, and project lint completed with zero errors.
 - Focused segmented-onboarding source contracts passed: seven ordered stages, Schedule entry migration, server-safe draft continuation, final structure preview, required-field gates, and the requested Format, Rounds, and Max Players dropdowns.
 - TypeScript passed with zero errors. Changed-file lint passed with zero errors; the Wizard retains nine pre-existing warnings in inactive legacy and share-related code paths.
-- Project lint completed with zero errors. The full regression suite completed with 6,950 passing tests and 16 failures in ten existing unrelated files: accessibility overlay counts, a ClubDashboard form-label audit, obsolete Wizard payment-toggle source contract, and historical format-card source contracts.
+- Project lint completed with zero errors. The full regression suite completed with 6,951 passing tests and 16 failures in ten existing unrelated files: accessibility overlay counts, a ClubDashboard form-label audit, obsolete Wizard payment-toggle source contract, and historical format-card source contracts.
+- The post-creation share-summary typography contract passed: the welcome identity, three-column event summary, three-step guide, and QR guidance all use the enlarged readable hierarchy while preserving the existing light and dark visual tokens.
 - The development server restarted cleanly after the redesign. A transient stale Vite lazy-module error occurred during hot replacement, then cleared after restart; subsequent desktop and mobile captures rendered the application and Wizard entry normally.

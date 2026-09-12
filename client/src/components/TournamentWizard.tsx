@@ -3960,21 +3960,21 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     <div className="space-y-7">
 
       {/* ── Welcome header ──────────────────────────────────────────────── */}
-      <div className="text-center space-y-1.5">
+      <div className="text-center space-y-2">
         <p
-          className="text-xs font-bold tracking-[0.18em] uppercase"
+          className="text-sm font-bold tracking-[0.18em] uppercase"
           style={{ color: T.green }}
         >
           Welcome!
         </p>
         <h2
-          className="text-2xl font-black leading-tight tracking-tight"
+          className="text-3xl font-black leading-tight tracking-tight sm:text-4xl"
           style={{ color: isDark ? T.dText : T.lText }}
         >
           {data.name}
         </h2>
         {data.venue && (
-          <p className="text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          <p className="text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             {data.venue}
           </p>
         )}
@@ -3994,9 +3994,9 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
           { icon: Users, label: `${data.maxPlayers}`, sub: "max players" },
         ].map(({ icon: Icon, label, sub }) => (
           <div key={label} className="flex flex-col items-center gap-1 text-center">
-            <Icon className="w-4 h-4" style={{ color: T.green }} strokeWidth={1.8} />
-            <span className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>{label}</span>
-            <span className="text-[11px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>{sub}</span>
+            <Icon className="w-5 h-5" style={{ color: T.green }} strokeWidth={1.8} />
+            <span className="text-base font-bold" style={{ color: isDark ? T.dText : T.lText }}>{label}</span>
+            <span className="text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{sub}</span>
           </div>
         ))}
       </div>
@@ -4004,7 +4004,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
       {/* ── How it works — 3-step flow ──────────────────────────────────── */}
       <div className="space-y-2">
         <p
-          className="text-[11px] font-bold tracking-[0.14em] uppercase mb-3"
+          className="mb-3 text-sm font-bold tracking-[0.14em] uppercase"
           style={{ color: isDark ? T.dMuted : T.lMuted }}
         >
           How it works
@@ -4050,7 +4050,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
           ].map(({ step, icon, title, body }) => (
             <div
               key={step}
-              className="flex flex-col items-center text-center gap-2 rounded-2xl p-3"
+              className="flex flex-col items-center gap-2.5 rounded-2xl p-4 text-center"
               style={{
                 background: isDark ? "rgba(77,105,64,0.08)" : "#FBFADA",
                 border: `1.5px solid ${isDark ? "rgba(77,105,64,0.18)" : "#D4E6D8"}`,
@@ -4058,14 +4058,14 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
             >
               {/* Step number + icon */}
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
                 style={{ background: isDark ? "rgba(77,105,64,0.20)" : "#FFFFFF", color: T.green }}
               >
                 {icon}
               </div>
               <div>
-                <p className="text-xs font-bold" style={{ color: isDark ? T.dText : T.lText }}>{title}</p>
-                <p className="text-[10px] leading-snug mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>{body}</p>
+                <p className="text-sm font-bold sm:text-base" style={{ color: isDark ? T.dText : T.lText }}>{title}</p>
+                <p className="mt-1 text-xs leading-snug sm:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{body}</p>
               </div>
             </div>
           ))}
@@ -4081,7 +4081,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
         }}
       >
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+          className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
           style={{ background: isDark ? "rgba(77,105,64,0.25)" : "#FFFFFF", color: T.green }}
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -4090,10 +4090,10 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+          <p className="text-base font-semibold sm:text-lg" style={{ color: isDark ? T.dText : T.lText }}>
             QR code ready on the next screen
           </p>
-          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          <p className="mt-1 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             Once you tap <strong>Go to Tournament</strong>, a full-screen QR code will appear so players can scan and join instantly.
           </p>
         </div>

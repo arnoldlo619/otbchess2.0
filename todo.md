@@ -318,6 +318,9 @@
 - [x] Tournament Wizard: Verify the updated Time Control prompt in the active segmented onboarding step
 - [x] Tournament Wizard: Add regression coverage and validate the updated Time Control prompt before checkpointing
 
+- [x] Tournament Wizard: Inspect the stale typography target and increase its text hierarchy for readability
+- [x] Tournament Wizard: Add regression coverage, validate responsive visibility, and checkpoint the typography refinement
+
 - [x] My Clubs: Verify the stale filter and All Countries select targets before removing them
 - [x] My Clubs: Remove the requested select filters and any now-unused filter state safely
 - [x] My Clubs: Add regression coverage, validate responsive layout, and checkpoint the simplified filters

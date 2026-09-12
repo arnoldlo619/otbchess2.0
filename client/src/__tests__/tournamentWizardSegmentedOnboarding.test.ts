@@ -67,4 +67,16 @@ describe("Tournament Wizard segmented onboarding", () => {
     expect(wizardSource).toContain("What will you set your clocks to?");
     expect(wizardSource).not.toContain("How fast will the clocks run?");
   });
+
+  it("keeps the Tournament Structure preview readable at its active summary scale", () => {
+    const preview = wizardSource.slice(
+      wizardSource.indexOf("const formatLabel = getTournamentFormatLabel"),
+      wizardSource.indexOf("// ─── Brackets Step 1", wizardSource.indexOf("const formatLabel = getTournamentFormatLabel")),
+    );
+
+    expect(preview).toContain("text-3xl font-black leading-tight tracking-tight sm:text-4xl");
+    expect(preview).toContain("text-base font-bold");
+    expect(preview).toContain("text-sm font-bold sm:text-base");
+    expect(preview).toContain("text-base font-semibold sm:text-lg");
+  });
 });
