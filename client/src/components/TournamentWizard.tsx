@@ -58,7 +58,6 @@ import {
   Tv2,
   ExternalLink,
   Loader2,
-  AlertCircle,
   CheckCircle2,
   XCircle,
   Hash,
@@ -245,6 +244,37 @@ const QUICKSTART_HERO = {
     body: "Name, date, format, start!",
   },
 };
+
+const ONBOARDING_STEPS = [
+  {
+    label: "Name",
+    hero: { eyebrow: "Tournament setup · 1 of 7", title: "Name your\ntournament", body: "Start with the event players will recognize on their invite, pairings, and standings." },
+  },
+  {
+    label: "Date",
+    hero: { eyebrow: "Tournament setup · 2 of 7", title: "When are you\nplaying?", body: "Set the date now so the event and player join page are ready to share." },
+  },
+  {
+    label: "Location",
+    hero: { eyebrow: "Tournament setup · 3 of 7", title: "Set the\nlocation", body: "Give players a clear place to arrive. You can also link the event to one of your clubs." },
+  },
+  {
+    label: "Settings",
+    hero: { eyebrow: "Tournament setup · 4 of 7", title: "Shape the\ncompetition", body: "Choose the format, number of rounds, and player capacity for the tournament floor." },
+  },
+  {
+    label: "Time control",
+    hero: { eyebrow: "Tournament setup · 5 of 7", title: "Set the\nclock", body: "Choose a pace that fits the room and automatically aligns the default rating category." },
+  },
+  {
+    label: "Ratings",
+    hero: { eyebrow: "Tournament setup · 6 of 7", title: "Choose a\nrating source", body: "Use the platform and rating category that will make pairings meaningful for your players." },
+  },
+  {
+    label: "Preview",
+    hero: { eyebrow: "Tournament setup · 7 of 7", title: "Review the\nstructure", body: "See the tournament plan before creating it and inviting your players to check in." },
+  },
+] as const;
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -506,12 +536,16 @@ function HeroPanel({
   mode,
   format,
   onClose,
+  onboardingStep,
+  onboardingTotal,
 }: {
   step: number;
   isDark: boolean;
   mode: "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
   format?: string;
   onClose?: () => void;
+  onboardingStep?: (typeof ONBOARDING_STEPS)[number];
+  onboardingTotal?: number;
 }) {
   // For quickstart mode, use format-aware copy from FORMAT_REGISTRY
   const formatConfig = format ? getFormatConfig(format) : null;
@@ -525,10 +559,10 @@ function HeroPanel({
         },
       }
     : QUICKSTART_HERO;
-  const s = mode === "quickstart" ? quickstartHero : SCHEDULE_STEPS[step];
+  const s = onboardingStep ?? (mode === "quickstart" ? quickstartHero : SCHEDULE_STEPS[step]);
 
-  const dots = mode === "quickstart" ? 2 : SCHEDULE_STEPS.length; // quickstart: mode-select + quickstart form
-  const activeDot = mode === "quickstart" ? 1 : step;
+  const dots = onboardingTotal ?? (mode === "quickstart" ? 2 : SCHEDULE_STEPS.length);
+  const activeDot = onboardingStep ? step : mode === "quickstart" ? 1 : step;
 
   return (
     <div
@@ -1007,7 +1041,7 @@ function ModeSelect({
   );
 }
 
-// ─── Quickstart Form ──────────────────────────────────────────────────────────
+// ─── Legacy Quickstart Form (inactive; retained while schedule internals remain reusable) ───
 
 function QuickstartForm({
   data,
@@ -1073,7 +1107,7 @@ function QuickstartForm({
     }
   };
 
-  const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
+  const _ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
     { value: "lichess",   label: "Lichess",   sub: "Lichess rating" },
     { value: "fide",      label: "FIDE",      sub: "Classical rating" },
@@ -1110,7 +1144,7 @@ function QuickstartForm({
   const activeTime = timeControlOptions.find((o) => o.preset === data.timePreset);
   const isNonDefaultRating = data.ratingSystem !== "chess.com";
   const isNonDefaultRounds = data.rounds !== DEFAULT_ROUNDS;
-  const isNonDefaultTime = data.timePreset !== DEFAULT_TIME_PRESET;
+  const _isNonDefaultTime = data.timePreset !== DEFAULT_TIME_PRESET;
   const isNonDefaultCap = data.maxPlayers !== DEFAULT_CAP;
 
   // Recommended rounds hint — based on maxPlayers (default 16)
@@ -2790,6 +2824,288 @@ function QuadsEloPreview({
   );
 }
 
+// ─── Segmented Tournament Setup (Quickstart, Quads, and Large Event) ─────────
+
+function SegmentedOnboardingStep({
+  step,
+  data,
+  onChange,
+  isDark,
+  ownedClubs,
+  loadingClubs,
+}: {
+  step: number;
+  data: WizardData;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
+  ownedClubs: Club[];
+  loadingClubs: boolean;
+}) {
+  const formatOptions: { value: WizardData["format"]; label: string; detail: string }[] = [
+    { value: "swiss", label: "Swiss", detail: "Score-group pairings" },
+    { value: "doubleswiss", label: "Double Swiss", detail: "Both colors per round" },
+    { value: "roundrobin", label: "Round Robin", detail: "Everyone plays everyone" },
+    { value: "elimination", label: "Elimination", detail: "Single knockout" },
+    { value: "swiss_elim", label: "Swiss + Elim", detail: "Qualification then bracket" },
+    { value: "quads", label: "Quads", detail: "Four-player sections" },
+  ];
+  const playerOptions = data.format === "quads" ? [4, 8, 12, 16, 20, 24, 32, 40, 48, 100] : [8, 12, 16, 24, 32, 48, 64, 100];
+  const roundOptions = [3, 4, 5, 6, 7, 9, 11];
+  const isCustomTime = data.timePreset === "custom";
+  const activeTime = TIME_PRESETS.find((preset) => preset.sub === data.timePreset);
+  const sectionStyle = {
+    background: isDark ? "rgba(255,255,255,0.035)" : "#FFFFFF",
+    border: `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#E4E9E4"}`,
+    boxShadow: isDark ? "0 18px 42px rgba(0,0,0,0.16)" : "0 16px 34px rgba(32,61,42,0.07)",
+  };
+  const selectionStyle = (active: boolean) => ({
+    background: active ? (isDark ? "rgba(93,164,112,0.20)" : "#EEF6EF") : isDark ? "rgba(255,255,255,0.035)" : "#FBFCFB",
+    border: `1.5px solid ${active ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#E2E8E2"}`,
+    boxShadow: active ? `0 0 0 3px ${isDark ? "rgba(93,164,112,0.12)" : "rgba(67,104,80,0.10)"}` : "none",
+  });
+  const selectFormat = (format: WizardData["format"]) => {
+    const next: Partial<WizardData> = { format };
+    if (format === "quads") {
+      next.rounds = 3;
+      if (data.maxPlayers % 4 !== 0) next.maxPlayers = 16;
+    } else if (format === "roundrobin") {
+      next.rounds = Math.max(3, data.maxPlayers - 1);
+    } else if (format === "swiss" || format === "doubleswiss") {
+      next.rounds = recommendedRounds(data.maxPlayers);
+    }
+    onChange(next);
+  };
+
+  const card = (content: React.ReactNode) => (
+    <div className="mx-auto w-full max-w-2xl rounded-[24px] p-5 sm:p-8" style={sectionStyle}>
+      {content}
+    </div>
+  );
+
+  if (step === 0) {
+    return card(
+      <div className="space-y-7">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament name</p>
+          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+            What should players call this event?
+          </h3>
+        </div>
+        <div>
+          <Label isDark={isDark} hint="required">Tournament Name</Label>
+          <TextInput value={data.name} onChange={(name) => onChange({ name })} placeholder="e.g. Friday Night Blitz" icon={Trophy} autoFocus isDark={isDark} large />
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            This is what players will see on the join page, pairings, and standings.
+          </p>
+        </div>
+      </div>,
+    );
+  }
+
+  if (step === 1) {
+    return card(
+      <div className="space-y-7">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament date</p>
+          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+            When are you playing?
+          </h3>
+        </div>
+        <div>
+          <Label isDark={isDark}>Date</Label>
+          <TextInput value={data.date} onChange={(date) => onChange({ date })} type="date" icon={Calendar} isDark={isDark} large />
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            Players will see this date before they check in through your QR invite.
+          </p>
+        </div>
+      </div>,
+    );
+  }
+
+  if (step === 2) {
+    return card(
+      <div className="space-y-7">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: T.green }}>Location</p>
+          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+            Where will the boards be set?
+          </h3>
+        </div>
+        <div>
+          <Label isDark={isDark} hint="optional">Location</Label>
+          <TextInput value={data.venue} onChange={(venue) => onChange({ venue })} placeholder="e.g. Marshall Chess Club" icon={MapPin} isDark={isDark} large />
+        </div>
+        {(loadingClubs || ownedClubs.length > 0) && (
+          <ClubLinkDropdown data={data} onChange={onChange} isDark={isDark} ownedClubs={ownedClubs} loading={loadingClubs} />
+        )}
+        {!loadingClubs && ownedClubs.length === 0 && data.clubId && data.clubName && (
+          <div className="flex items-center gap-2.5 rounded-2xl border px-4 py-3" style={{ background: isDark ? "rgba(77,105,64,0.10)" : "#FBFADA", border: `1.5px solid ${isDark ? "rgba(77,105,64,0.30)" : "#C6D9C9"}` }}>
+            <Trophy className="h-4 w-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
+            <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>Linked to club:</span>
+            <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{data.clubName}</span>
+          </div>
+        )}
+      </div>,
+    );
+  }
+
+  if (step === 3) {
+    return card(
+      <div className="space-y-8">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament settings</p>
+          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+            Build the tournament structure.
+          </h3>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-3">
+          <div>
+            <Label isDark={isDark}>Format</Label>
+            <select aria-label="Tournament Format" value={data.format} onChange={(event) => selectFormat(event.target.value as WizardData["format"])} className="h-12 w-full appearance-none rounded-2xl px-4 text-sm font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
+              {formatOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{formatOptions.find((option) => option.value === data.format)?.detail}</p>
+          </div>
+          <div>
+            <Label isDark={isDark}># Rounds</Label>
+            <select aria-label="Tournament Rounds" value={data.format === "quads" ? 3 : data.rounds} disabled={data.format === "quads"} onChange={(event) => onChange({ rounds: Number(event.target.value) })} className="h-12 w-full appearance-none rounded-2xl px-4 text-sm font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-70" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
+              {(data.format === "quads" ? [3] : roundOptions).map((rounds) => <option key={rounds} value={rounds}>{rounds} rounds{data.format === "quads" ? " · fixed" : ""}</option>)}
+            </select>
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{data.format === "quads" ? "Three rounds is fixed for every quad." : "Choose the planned number of pairings."}</p>
+          </div>
+          <div>
+            <Label isDark={isDark}>Max Players</Label>
+            <select aria-label="Maximum Players" value={data.maxPlayers} onChange={(event) => onChange({ maxPlayers: Number(event.target.value) })} className="h-12 w-full appearance-none rounded-2xl px-4 text-sm font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
+              {playerOptions.map((maxPlayers) => <option key={maxPlayers} value={maxPlayers}>{maxPlayers} players</option>)}
+            </select>
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Registration closes once this capacity is reached.</p>
+          </div>
+        </div>
+        <div className="rounded-2xl px-4 py-3 text-sm leading-relaxed" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
+          {data.format === "quads"
+            ? `Your players will be grouped into ${Math.max(1, Math.floor(data.maxPlayers / 4))} rating-based quads of four.`
+            : `${getTournamentFormatLabel(data.format)} · ${data.rounds} rounds · up to ${data.maxPlayers} players.`}
+        </div>
+      </div>,
+    );
+  }
+
+  if (step === 4) {
+    return card(
+      <div className="space-y-8">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: T.green }}>Time control</p>
+          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+            How fast will the clocks run?
+          </h3>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {TIME_PRESETS.map((preset) => {
+            const active = data.timePreset === preset.sub;
+            return (
+              <button key={preset.sub} type="button" onClick={() => onChange(preset.base === -1 ? { timePreset: "custom" } : { timePreset: preset.sub, timeBase: preset.base, timeIncrement: preset.inc, ratingType: preset.label === "Bullet" || preset.label === "Blitz" ? "blitz" : "rapid" })} className="min-h-[78px] rounded-2xl px-3 py-3 text-left transition-all duration-200 active:scale-[0.99]" style={selectionStyle(active)}>
+                <span className="block text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{preset.sub === "custom" ? "Custom" : preset.sub}</span>
+                <span className="mt-1 block text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{preset.sub === "custom" ? "Set manually" : preset.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {isCustomTime && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label isDark={isDark}>Base time (min)</Label>
+              <input aria-label="Custom Base" type="number" min={1} max={180} value={data.timeBase} onChange={(event) => onChange({ timeBase: Math.max(1, Number(event.target.value) || 1) })} className="w-full rounded-2xl px-4 py-3 text-lg font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }} />
+            </div>
+            <div>
+              <Label isDark={isDark}>Increment (sec)</Label>
+              <input aria-label="Custom Inc" type="number" min={0} max={60} value={data.timeIncrement} onChange={(event) => onChange({ timeIncrement: Math.max(0, Number(event.target.value) || 0) })} className="w-full rounded-2xl px-4 py-3 text-lg font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }} />
+            </div>
+          </div>
+        )}
+        <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
+          {activeTime ? `${activeTime.sub} is a ${activeTime.label.toLowerCase()} time control.` : isCustomTime ? `${data.timeBase}+${data.timeIncrement} custom time control.` : "Choose a time control to continue."}
+        </div>
+      </div>,
+    );
+  }
+
+  if (step === 5) {
+    const platforms: { value: WizardData["ratingSystem"]; label: string; detail: string }[] = [
+      { value: "chess.com", label: "Chess.com", detail: "Live Rapid and Blitz ratings" },
+      { value: "lichess", label: "Lichess", detail: "Lichess rating source" },
+      { value: "fide", label: "FIDE", detail: "Classical rating source" },
+      { value: "unrated", label: "Unrated", detail: "No online rating required" },
+    ];
+    return card(
+      <div className="space-y-8">
+        <div>
+          <p className="text-sm font-semibold" style={{ color: T.green }}>Platform and ELO</p>
+          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+            What ratings should shape pairings?
+          </h3>
+        </div>
+        <div>
+          <Label isDark={isDark}>Platform</Label>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {platforms.map((platform) => {
+              const active = data.ratingSystem === platform.value;
+              return <button key={platform.value} type="button" onClick={() => onChange({ ratingSystem: platform.value })} className="rounded-2xl px-4 py-3 text-left transition-all" style={selectionStyle(active)}><span className="block text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{platform.label}</span><span className="mt-1 block text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{platform.detail}</span></button>;
+            })}
+          </div>
+        </div>
+        <div>
+          <Label isDark={isDark}>ELO Rating</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {(["rapid", "blitz"] as const).map((ratingType) => {
+              const active = data.ratingType === ratingType;
+              return <button key={ratingType} type="button" onClick={() => onChange({ ratingType })} className="rounded-2xl px-4 py-3 text-left transition-all" style={selectionStyle(active)}><span className="block text-sm font-semibold capitalize" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{ratingType}</span><span className="mt-1 block text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{ratingType === "rapid" ? "Longer online games" : "Faster online games"}</span></button>;
+            })}
+          </div>
+        </div>
+      </div>,
+    );
+  }
+
+  const stages = [
+    { label: "Event", detail: data.date ? new Date(`${data.date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "Date to be set", icon: Calendar },
+    { label: "Registration", detail: `Up to ${data.maxPlayers} players`, icon: Users2 },
+    { label: "Pairings", detail: `${getTournamentFormatLabel(data.format)} · ${data.rounds} rounds`, icon: Shuffle },
+    { label: "Live play", detail: data.timePreset || `${data.timeBase}+${data.timeIncrement}`, icon: Clock },
+  ];
+  return card(
+    <div className="space-y-7">
+      <div>
+        <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament structure</p>
+        <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+          {data.name.trim() || "Your tournament"} is ready to create.
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Review the plan below. You can always return to an earlier question to refine it.</p>
+      </div>
+      <div className="overflow-hidden rounded-[20px] border" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "#E2EAE2", background: isDark ? "rgba(0,0,0,0.13)" : "#F8FBF8" }}>
+        <div className="grid gap-px sm:grid-cols-2" style={{ background: isDark ? "rgba(255,255,255,0.10)" : "#E2EAE2" }}>
+          {stages.map((stage, index) => {
+            const Icon = stage.icon;
+            return (
+              <div key={stage.label} className="relative min-h-[116px] p-4" style={{ background: isDark ? "oklch(0.24 0.06 145)" : "#FFFFFF" }}>
+                <span className="absolute right-4 top-4 text-[10px] font-bold tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#96A59A" }}>0{index + 1}</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: isDark ? "rgba(93,164,112,0.16)" : "#EAF4EB", color: T.green }}><Icon className="h-4 w-4" /></div>
+                <p className="mt-3 text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{stage.label}</p>
+                <p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{stage.detail}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-4 py-3 text-sm" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F0F7F1", color: isDark ? T.dSub : T.lSub }}>
+        <span className="font-semibold" style={{ color: T.green }}>{data.ratingSystem === "chess.com" ? "Chess.com" : data.ratingSystem === "lichess" ? "Lichess" : data.ratingSystem === "fide" ? "FIDE" : "Unrated"}</span>
+        <span aria-hidden="true">•</span>
+        <span className="capitalize">{data.ratingType} ELO</span>
+        {data.venue && <><span aria-hidden="true">•</span><span>{data.venue}</span></>}
+      </div>
+    </div>,
+  );
+}
+
 // ─── Step 1: Details (Schedule path) ─────────────────────────────────────────
 
 function StepDetails({
@@ -4265,8 +4581,9 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   useEffect(() => {
     if (open) {
       const draft = readDraft<TournamentWizardDraft>(draftKey);
-      setMode(draft?.mode ?? "select");
-      setStep(draft?.step ?? 0);
+      const restoredMode = draft?.mode === "schedule" ? "quickstart" : draft?.mode ?? "select";
+      setMode(restoredMode);
+      setStep(draft?.mode === "schedule" ? 0 : draft?.step ?? 0);
       setDirection(1);
       setData(draft?.data ? sanitizeTournamentDraftData(draft.data) : {
         ...DEFAULT_DATA,
@@ -4308,10 +4625,15 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     });
   }, [open, draftKey, mode, step, data]);
 
-  // When entering quickstart mode, auto-fill today's date
+  // Standard setup paths share one segmented onboarding flow. Keep a legacy
+  // schedule draft's entered values, but restart it at the focused Name step.
   const handleSelectMode = (m: "quickstart" | "schedule" | "large_event" | "brackets" | "quads") => {
-    if (m === "quickstart") {
+    if (m === "quickstart" || m === "schedule") {
       setData((d) => ({ ...d, date: todayIso() }));
+      setMode("quickstart");
+      setStep(0);
+      setDirection(1);
+      return;
     }
     if (m === "large_event") {
       // Pre-configure swiss_elim defaults: 100 max, 3 Swiss rounds, top-64 cutoff
@@ -4357,10 +4679,10 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   };
 
   // ── Schedule path: 4 steps (0..3) ──────────────────────────────────────────
-  // ── Quickstart path: 1 step (0 = form) then directly to share (step 1) ───
+  // ── Quickstart path: 7 focused onboarding questions, then share ───────────
 
   const scheduleStepCount = SCHEDULE_STEPS.length; // 4
-  const quickstartStepCount = 2; // form + share
+  const quickstartStepCount = ONBOARDING_STEPS.length + 1; // focused questions + share
   const bracketsStepCount = 3; // details + bracket editor + share
 
   const totalSteps = mode === "brackets" ? bracketsStepCount : mode === "quickstart" ? quickstartStepCount : scheduleStepCount;
@@ -4375,6 +4697,10 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       : mode === "quickstart"
       ? step === 0
         ? data.name.trim().length > 0
+        : step === 1
+        ? data.date.trim().length > 0
+        : step === 4
+        ? data.timePreset.trim().length > 0
         : true
       // schedule / quads / large_event modes: step-specific validation
       : step === 0
@@ -4456,7 +4782,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       // When reaching the share step, register the tournament immediately so the
       // QR code is valid even before the director clicks "Go to Tournament".
       const reachingShareStep =
-        (mode === "quickstart" && next === 1) ||
+        (mode === "quickstart" && next === quickstartStepCount - 1) ||
         (mode === "schedule" && next === SCHEDULE_STEPS.length - 1) ||
         (mode === "brackets" && next === 2);
       if (reachingShareStep) {
@@ -4466,7 +4792,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     } else {
       commitTournament();
     }
-  }, [mode, step, totalSteps, fireConfetti, commitTournament, registerTournamentNow]);
+  }, [mode, step, totalSteps, quickstartStepCount, fireConfetti, commitTournament, registerTournamentNow]);
 
   const handleBack = useCallback(() => {
     if (mode === "select") {
@@ -4523,37 +4849,39 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
   // ── Determine which step component to render ──────────────────────────────
   const isShareStep =
-    (mode === "quickstart" && step === 1) ||
+    (mode === "quickstart" && step === quickstartStepCount - 1) ||
     (mode === "schedule" && step === SCHEDULE_STEPS.length - 1) ||
     (mode === "brackets" && step === 2);
 
-  const heroStep = mode === "schedule" ? step : 0;
+  const heroStep = mode === "schedule" ? step : Math.min(step, ONBOARDING_STEPS.length - 1);
+  const isOnboardingPreview = mode === "quickstart" && step === ONBOARDING_STEPS.length - 1;
+  const isQuickstartShare = mode === "quickstart" && step === quickstartStepCount - 1;
 
   const stepLabel =
     mode === "brackets"
       ? ["Details", "Brackets", "Share"][step]
       : mode === "quickstart"
-      ? step === 0
-        ? "Quickstart"
-        : "Share"
+      ? isQuickstartShare
+        ? "Share"
+        : ONBOARDING_STEPS[step]?.label ?? "Tournament setup"
       : SCHEDULE_STEPS[step].label;
 
   const stepEyebrow =
     mode === "brackets"
       ? `Step ${step + 1} of 3`
       : mode === "quickstart"
-      ? step === 0
-        ? "Quickstart"
-        : ""
+      ? isQuickstartShare
+        ? ""
+        : ONBOARDING_STEPS[step]?.hero.eyebrow ?? "Tournament setup"
       : SCHEDULE_STEPS[step].hero.eyebrow;
 
   const stepTitle =
     mode === "brackets"
       ? ["Name your event", "Define brackets", ""][step]
       : mode === "quickstart"
-      ? step === 0
-        ? "Start in\nseconds"
-        : ""
+      ? isQuickstartShare
+        ? ""
+        : ONBOARDING_STEPS[step]?.hero.title.replace("\n", " ") ?? "Tournament setup"
       : SCHEDULE_STEPS[step].hero.title.replace("\n", " ");
 
   return createPortal(
@@ -4568,7 +4896,15 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     >
       {/* ── Left hero panel (hidden on mobile) ── */}
       <div className="hidden lg:flex lg:w-[32%] xl:w-[34%] flex-shrink-0">
-        <HeroPanel step={heroStep} isDark={isDark} mode={mode} format={data.format} onClose={() => onClose()} />
+        <HeroPanel
+          step={heroStep}
+          isDark={isDark}
+          mode={mode}
+          format={data.format}
+          onClose={() => onClose()}
+          onboardingStep={mode === "quickstart" && !isQuickstartShare ? ONBOARDING_STEPS[heroStep] : undefined}
+          onboardingTotal={mode === "quickstart" && !isQuickstartShare ? ONBOARDING_STEPS.length : undefined}
+        />
       </div>
 
       {/* ── Right input panel ── */}
@@ -4656,8 +4992,17 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
             </h2>
 
             {/* Quickstart path */}
-            {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} onSubmit={canAdvance ? handleNext : undefined} ownedClubs={ownedClubs} loadingClubs={loadingClubs} />}
-            {mode === "quickstart" && step === 1 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
+            {mode === "quickstart" && step < ONBOARDING_STEPS.length && (
+              <SegmentedOnboardingStep
+                step={step}
+                data={data}
+                onChange={patch}
+                isDark={isDark}
+                ownedClubs={ownedClubs}
+                loadingClubs={loadingClubs}
+              />
+            )}
+            {mode === "quickstart" && isQuickstartShare && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
 
             {/* Schedule path */}
             {mode === "schedule" && step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} ownedClubs={ownedClubs} loadingClubs={loadingClubs} />}
@@ -4703,6 +5048,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
           >
             {isShareStep ? (
               <><ArrowRight className="w-5 h-5" /> Go to Tournament</>
+            ) : isOnboardingPreview ? (
+              <><CheckCircle2 className="w-5 h-5" /> Create Tournament</>
             ) : (
               <>Continue <ChevronRight className="w-5 h-5" /></>
             )}
@@ -4767,6 +5114,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
           >
             {isShareStep ? (
               <><ArrowRight className="w-4 h-4" /> Go to Tournament</>
+            ) : isOnboardingPreview ? (
+              <><CheckCircle2 className="w-4 h-4" /> Create Tournament</>
             ) : (
               <>Continue <ChevronRight className="w-4 h-4" /></>
             )}
