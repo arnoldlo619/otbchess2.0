@@ -18,6 +18,10 @@ The preserved draft reopened directly to the final preview after switching the a
 
 At 375px, the supported create-action route presents the existing full-screen format selection with large, vertically stacked touch cards and a visible close target. It provides a stable mobile entry to the segmented flow. The focused individual onboarding panels share the same responsive max-width and mobile padding primitives, while desktop interaction coverage exercised the completed draft through every question and preview stage.
 
+Revisiting the local Home route restored the unfinished QA draft at its final preview rather than creating an event, further confirming resume behavior. The draft remains intentionally unsubmitted.
+
+The review session was closed without creation and the browser appearance was restored to its original light setting.
+
 ## Automated validation
 
 - Focused segmented-onboarding source contracts passed: seven ordered stages, Schedule entry migration, server-safe draft continuation, final structure preview, required-field gates, and the requested Format, Rounds, and Max Players dropdowns.
