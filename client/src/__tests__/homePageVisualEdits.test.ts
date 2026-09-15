@@ -46,4 +46,20 @@ describe("Home page visual edits", () => {
       "Tournament players see their matchup and board assignment, while directors report board results with one click.",
     );
   });
+
+  it("uses a visible fallback and privacy-enhanced autoplay embed for the Chess.com Integration background", () => {
+    const integration = homeSource.slice(
+      homeSource.indexOf('id="chesscom-integration"'),
+      homeSource.indexOf("function Footer", homeSource.indexOf('id="chesscom-integration"')),
+    );
+
+    expect(integration).toContain("youtube-nocookie.com/embed/KEi0wr1vRG8");
+    expect(integration).toContain("autoplay=1&mute=1&loop=1");
+    expect(integration).toContain("playsinline=1");
+    expect(integration).toContain('loading="lazy"');
+    expect(integration).toContain('referrerPolicy="strict-origin-when-cross-origin"');
+    expect(integration).toContain("onLoad={() => setVideoLoaded(true)}");
+    expect(integration).toContain("maxresdefault.jpg");
+    expect(integration).toContain("videoLoaded ? (isDark ? 0.62 : 0.55) : 0");
+  });
 });

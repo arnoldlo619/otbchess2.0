@@ -1550,6 +1550,7 @@ function PlayerDemo() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [username, setUsername] = useState("");
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const { status, profile, error: lookupError, lookup, reset: _reset, analysisLoading } = useChessComProfile();
   const loading = status === "loading";
 
@@ -1564,14 +1565,35 @@ function PlayerDemo() {
       className={`py-12 sm:py-16 lg:py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#FBFADA]"}`}
       ref={ref}
     >
-      {/* YouTube video background */}
+      {/* The poster keeps the integration section intentional if a privacy tool blocks YouTube. */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        <iframe
-          src="https://www.youtube.com/embed/KEi0wr1vRG8?autoplay=1&mute=1&loop=1&playlist=KEi0wr1vRG8&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=0"
-          allow="autoplay; encrypted-media"
-          allowFullScreen={false}
-          title=""
+        <div
           aria-hidden="true"
+          className="absolute inset-0 transition-opacity duration-700"
+          style={{
+            background: isDark
+              ? "radial-gradient(circle at 50% 35%, rgba(75, 136, 89, 0.3), transparent 54%), linear-gradient(135deg, #12372A 0%, #092318 100%)"
+              : "radial-gradient(circle at 50% 35%, rgba(112, 164, 121, 0.28), transparent 54%), linear-gradient(135deg, #F3F8F3 0%, #E6F0E6 100%)",
+          }}
+        />
+        <img
+          src="https://i.ytimg.com/vi/KEi0wr1vRG8/maxresdefault.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+          style={{ opacity: videoLoaded ? 0.16 : 0.42 }}
+        />
+        <iframe
+          src={inView ? "https://www.youtube-nocookie.com/embed/KEi0wr1vRG8?autoplay=1&mute=1&loop=1&playlist=KEi0wr1vRG8&controls=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=0&iv_load_policy=3&disablekb=1" : undefined}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen={false}
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          tabIndex={-1}
+          title="ChessOTB tournament footage background"
+          aria-hidden="true"
+          onLoad={() => setVideoLoaded(true)}
+          onError={() => setVideoLoaded(false)}
           style={{
             position: "absolute",
             top: "50%",
@@ -1582,8 +1604,9 @@ function PlayerDemo() {
             minHeight: "100%",
             transform: "translate(-50%, -50%)",
             border: "none",
-            opacity: 0.35,
+            opacity: videoLoaded ? (isDark ? 0.62 : 0.55) : 0,
             pointerEvents: "none",
+            transition: "opacity 700ms ease",
           }}
         />
         {/* Dark overlay to ensure text readability */}
@@ -1592,8 +1615,8 @@ function PlayerDemo() {
             position: "absolute",
             inset: 0,
             background: isDark
-              ? "oklch(0.23 0.07 145 / 0.58)"
-              : "oklch(0.93 0.04 145 / 0.65)",
+              ? "oklch(0.23 0.07 145 / 0.44)"
+              : "oklch(0.93 0.04 145 / 0.45)",
           }}
         />
       </div>
