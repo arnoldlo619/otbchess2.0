@@ -1179,6 +1179,24 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
     const isDirector = membership?.role === "director" || membership?.role === "owner";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can create events" }); return; }
     const body = req.body as typeof clubEvents.$inferInsert;
+    if (body.tournamentId) {
+      const [linkedEvent] = await db.select().from(clubEvents)
+        .where(eq(clubEvents.tournamentId, body.tournamentId)).limit(1);
+      if (linkedEvent) {
+        if (linkedEvent.clubId !== id) {
+          res.status(409).json({ error: "Tournament is already linked to another club event" });
+          return;
+        }
+        res.json({
+          ...linkedEvent,
+          startAt: linkedEvent.startAt instanceof Date ? linkedEvent.startAt.toISOString() : String(linkedEvent.startAt),
+          endAt: linkedEvent.endAt instanceof Date ? linkedEvent.endAt.toISOString() : linkedEvent.endAt ? String(linkedEvent.endAt) : null,
+          createdAt: linkedEvent.createdAt instanceof Date ? linkedEvent.createdAt.toISOString() : String(linkedEvent.createdAt),
+          updatedAt: linkedEvent.updatedAt instanceof Date ? linkedEvent.updatedAt.toISOString() : String(linkedEvent.updatedAt),
+        });
+        return;
+      }
+    }
     const eventId = body.id ?? nanoid(16);
     await db.insert(clubEvents).values({
       id: eventId, clubId: id, title: body.title,
@@ -1197,6 +1215,7 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       recurrenceEndDate: body.recurrenceEndDate ?? null,
     });
     const [created] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
+    broadcastClubEvent(id, "event_created", { eventId, tournamentId: body.tournamentId ?? null });
     res.status(201).json({
       ...created,
       startAt: created.startAt instanceof Date ? created.startAt.toISOString() : String(created.startAt),

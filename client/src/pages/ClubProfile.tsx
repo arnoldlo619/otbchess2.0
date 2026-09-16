@@ -3705,7 +3705,7 @@ export default function ClubProfile() {
       {/* ── Tournament Wizard (owner-only, pre-linked to this club) ──────────── */}
       <TournamentWizard
         open={showWizard}
-        onClose={(createdTournamentId?: string, createdTournamentName?: string) => {
+        onClose={(createdTournamentId?: string, createdTournamentName?: string, createdClubEventId?: string) => {
           setShowWizard(false);
           if (club) {
             // Refresh live tournament list
@@ -3717,24 +3717,6 @@ export default function ClubProfile() {
             if (refreshed) setClub(refreshed);
             // Post a feed event and auto-create club event if a new tournament was created
             if (createdTournamentId && createdTournamentName) {
-              // Auto-create a club event linked to this tournament
-              const tCfg = getTournamentConfig(createdTournamentId);
-              const tournamentStartAt = tCfg?.date
-                ? new Date(tCfg.date + "T00:00:00").toISOString()
-                : new Date().toISOString();
-              const linkedEvent = createClubEvent({
-                clubId: club.id,
-                title: createdTournamentName,
-                description: `Club tournament hosted by ${club.name}. Join and track results live.`,
-                startAt: tournamentStartAt,
-                venue: tCfg?.venue ?? undefined,
-                creatorId: user?.id ?? "",
-                creatorName: user?.displayName ?? club.ownerName,
-                accentColor: club.accentColor,
-                isPublished: true,
-                eventType: "standard",
-                tournamentId: createdTournamentId,
-              });
               recordTournamentCreated(
                 club.id,
                 user?.displayName ?? club.ownerName,
@@ -3742,7 +3724,9 @@ export default function ClubProfile() {
                 createdTournamentId
               );
               setFeedEvents(listFeedEvents(club.id));
-              navigate(`/clubs/${club.id}/meetup/${linkedEvent.id}`);
+              if (createdClubEventId) {
+                navigate(`/clubs/${club.id}/meetup/${createdClubEventId}`);
+              }
             }
           }
         }}

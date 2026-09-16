@@ -28,6 +28,7 @@ import {
   postComment,
   getEventComments,
   deleteComment,
+  ensureTournamentClubEvent,
 } from "../lib/clubEventRegistry";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -99,6 +100,50 @@ describe("clubEventRegistry — Events", () => {
     makeEvent({ clubId: "club-2" });
     expect(listClubEvents("club-1").length).toBe(1);
     expect(listClubEvents("club-2").length).toBe(1);
+  });
+
+  it("persists a linked tournament event server-side and replaces stale local copies", async () => {
+    makeEvent({ id: "stale-event", tournamentId: "spring-open-2026", title: "Stale tournament" });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      id: "tournament-spring-open-2026",
+      clubId: "club-1",
+      title: "Spring Open 2026",
+      description: "Club tournament. Join and track results live.",
+      startAt: "2026-06-01T00:00:00.000Z",
+      endAt: null,
+      venue: "Community Hall",
+      address: null,
+      admissionNote: null,
+      coverImageUrl: null,
+      accentColor: "#4CAF50",
+      creatorId: "user-1",
+      creatorName: "Alice",
+      isPublished: 1,
+      eventType: "standard",
+      tournamentId: "spring-open-2026",
+      recurrence: "none",
+      recurrenceSeriesId: null,
+      recurrenceEndDate: null,
+      createdAt: "2026-05-01T00:00:00.000Z",
+      updatedAt: "2026-05-01T00:00:00.000Z",
+    }), { status: 201, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const event = await ensureTournamentClubEvent({
+      clubId: "club-1",
+      tournamentId: "spring-open-2026",
+      title: "Spring Open 2026",
+      startAt: "2026-06-01T00:00:00.000Z",
+      venue: "Community Hall",
+      creatorId: "user-1",
+      creatorName: "Alice",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/clubs/club-1/events", expect.objectContaining({ method: "POST" }));
+    expect(event?.id).toBe("tournament-spring-open-2026");
+    const linkedEvents = listClubEvents("club-1", true).filter((item) => item.tournamentId === "spring-open-2026");
+    expect(linkedEvents).toHaveLength(1);
+    expect(linkedEvents[0].title).toBe("Spring Open 2026");
   });
 });
 

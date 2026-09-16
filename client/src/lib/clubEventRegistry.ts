@@ -83,6 +83,17 @@ export interface ClubEvent {
   updatedAt: string;
 }
 
+export interface TournamentClubEventInput {
+  clubId: string;
+  tournamentId: string;
+  title: string;
+  startAt: string;
+  venue?: string;
+  creatorId: string;
+  creatorName: string;
+  accentColor?: string;
+}
+
 export interface ClubEventRSVP {
   id: string;
   eventId: string;
@@ -121,6 +132,68 @@ function loadEvents(): ClubEvent[] {
 }
 function saveEvents(events: ClubEvent[]): void {
   try { localStorage.setItem(EVENTS_KEY, JSON.stringify(events)); } catch { /* full */ }
+}
+
+function toClubEvent(row: Record<string, unknown>): ClubEvent {
+  return {
+    id: String(row.id),
+    clubId: String(row.clubId),
+    title: String(row.title),
+    description: typeof row.description === "string" ? row.description : undefined,
+    startAt: String(row.startAt),
+    endAt: typeof row.endAt === "string" ? row.endAt : undefined,
+    venue: typeof row.venue === "string" ? row.venue : undefined,
+    address: typeof row.address === "string" ? row.address : undefined,
+    admissionNote: typeof row.admissionNote === "string" ? row.admissionNote : undefined,
+    coverImageUrl: typeof row.coverImageUrl === "string" ? row.coverImageUrl : undefined,
+    accentColor: typeof row.accentColor === "string" ? row.accentColor : undefined,
+    creatorId: String(row.creatorId),
+    creatorName: String(row.creatorName ?? ""),
+    isPublished: row.isPublished === 1 || row.isPublished === true,
+    eventType: row.eventType === "meetup" ? "meetup" : "standard",
+    tournamentId: typeof row.tournamentId === "string" ? row.tournamentId : undefined,
+    recurrence: row.recurrence === "weekly" || row.recurrence === "biweekly" || row.recurrence === "monthly" ? row.recurrence : undefined,
+    recurrenceSeriesId: typeof row.recurrenceSeriesId === "string" ? row.recurrenceSeriesId : undefined,
+    recurrenceEndDate: typeof row.recurrenceEndDate === "string" ? row.recurrenceEndDate : undefined,
+    createdAt: String(row.createdAt),
+    updatedAt: String(row.updatedAt),
+  };
+}
+
+/**
+ * Persist the canonical Club Event for a linked tournament. The server
+ * guarantees uniqueness by tournament ID, so retries cannot duplicate a
+ * member-visible event and all setup entry points share one record.
+ */
+export async function ensureTournamentClubEvent(input: TournamentClubEventInput): Promise<ClubEvent | null> {
+  try {
+    const response = await authFetch(`/api/clubs/${encodeURIComponent(input.clubId)}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: `tournament-${input.tournamentId}`,
+        title: input.title,
+        description: "Club tournament. Join and track results live.",
+        startAt: input.startAt,
+        venue: input.venue ?? null,
+        accentColor: input.accentColor ?? "#4CAF50",
+        creatorName: input.creatorName,
+        eventType: "standard",
+        tournamentId: input.tournamentId,
+      }),
+    });
+    if (!response.ok) return null;
+
+    const event = toClubEvent(await response.json() as Record<string, unknown>);
+    const events = loadEvents().filter((item) =>
+      !(item.clubId === input.clubId && item.tournamentId === input.tournamentId)
+    );
+    events.push(event);
+    saveEvents(events);
+    return event;
+  } catch {
+    return null;
+  }
 }
 function loadRSVPs(): ClubEventRSVP[] {
   try { return JSON.parse(localStorage.getItem(RSVPS_KEY) || "[]"); } catch { return []; }

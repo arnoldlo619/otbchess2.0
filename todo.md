@@ -325,6 +325,10 @@
 - [x] Home video: Restore production-safe background playback with accessible fallback behavior
 - [x] Home video: Add regression coverage, validate deployed and local playback, and checkpoint the repair
 
+- [x] Club Events: Trace linked tournament persistence and Club Events dashboard retrieval
+- [x] Club Events: Repair missing linked-tournament event synchronization for owners and members
+- [x] Club Events: Add regression coverage, validate owner/member visibility, and checkpoint the repair
+
 - [x] My Clubs: Verify the stale filter and All Countries select targets before removing them
 - [x] My Clubs: Remove the requested select filters and any now-unused filter state safely
 - [x] My Clubs: Add regression coverage, validate responsive layout, and checkpoint the simplified filters

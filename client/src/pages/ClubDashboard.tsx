@@ -31,6 +31,7 @@ import {
 import {
   listClubEvents,
   syncEventsFromServer,
+  ensureTournamentClubEvent,
   getEventRSVPs,
   getUserRSVP,
   countRSVPs,
@@ -115,6 +116,7 @@ import {
   generateDirectorCode,
   grantDirectorSession,
   getTournamentConfig,
+  listTournamentsByClub,
   type TournamentConfig,
 } from "@/lib/tournamentRegistry";
 import { nanoid } from "nanoid";
@@ -2954,6 +2956,10 @@ export default function ClubDashboard() {
       }
     });
 
+    es.addEventListener("event_created", () => {
+      syncEventsFromServer(clubId).then(setEvents).catch(() => {});
+    });
+
     return () => es.close();
   }, [clubId]);
 
@@ -2974,6 +2980,34 @@ export default function ClubDashboard() {
     }, 30_000);
     return () => clearInterval(timer);
   }, [clubId]);
+
+  // Backfill tournaments linked before Club Events became server-authoritative.
+  // The server enforces one event per tournament, and the owner-triggered pass
+  // makes that canonical event available to every club member afterward.
+  useEffect(() => {
+    if (!club || !clubId || !user || club.ownerId !== user.id) return;
+    const linkedTournaments = listTournamentsByClub(clubId);
+    if (linkedTournaments.length === 0) return;
+    let cancelled = false;
+
+    Promise.all(linkedTournaments.map((tournament) => ensureTournamentClubEvent({
+      clubId,
+      tournamentId: tournament.id,
+      title: tournament.name,
+      startAt: tournament.date
+        ? new Date(`${tournament.date}T00:00:00`).toISOString()
+        : new Date().toISOString(),
+      venue: tournament.venue || undefined,
+      creatorId: user.id,
+      creatorName: user.displayName,
+      accentColor: club.accentColor,
+    }))).then((events) => {
+      if (cancelled || !events.some(Boolean)) return;
+      syncEventsFromServer(clubId).then(setEvents).catch(() => {});
+    });
+
+    return () => { cancelled = true; };
+  }, [club, clubId, user]);
 
   function refreshEvents() {
     if (!club) return;
@@ -7671,27 +7705,9 @@ export default function ClubDashboard() {
           open
           initialClubId={club.id}
           initialClubName={club.name}
-          onClose={(createdTournamentId, createdTournamentName) => {
+          onClose={(createdTournamentId, createdTournamentName, createdClubEventId) => {
             setShowTournamentWizard(false);
             if (createdTournamentId && createdTournamentName) {
-              // Use the tournament's scheduled date (not now) for the event startAt
-              const tCfg = getTournamentConfig(createdTournamentId);
-              const tournamentStartAt = tCfg?.date
-                ? new Date(tCfg.date + "T00:00:00").toISOString()
-                : new Date().toISOString();
-              const linkedEvent = createClubEvent({
-                clubId: club.id,
-                title: createdTournamentName,
-                description: `Club tournament hosted by ${club.name}. Join and track results live.`,
-                startAt: tournamentStartAt,
-                venue: tCfg?.venue ?? undefined,
-                creatorId: user.id,
-                creatorName: user.displayName,
-                accentColor: club.accentColor,
-                isPublished: true,
-                eventType: "standard",
-                tournamentId: createdTournamentId,
-              });
               recordTournamentCreated(
                 club.id,
                 user.displayName,
@@ -7701,7 +7717,9 @@ export default function ClubDashboard() {
               refreshEvents();
               refreshFeed();
               setTab("events");
-              navigate(`/clubs/${club.id}/meetup/${linkedEvent.id}`);
+              if (createdClubEventId) {
+                navigate(`/clubs/${club.id}/meetup/${createdClubEventId}`);
+              }
             }
           }}
         />

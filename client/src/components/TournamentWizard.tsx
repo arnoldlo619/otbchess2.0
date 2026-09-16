@@ -70,6 +70,7 @@ import { authFetch } from "@/lib/apiFetch";
 import { getFormatConfig, getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { apiListMyClubs } from "@/lib/clubsApi";
 import type { Club } from "@/lib/clubRegistry";
+import { ensureTournamentClubEvent } from "@/lib/clubEventRegistry";
 import { DEFAULT_PAYMENT_METHOD_ORDER, type PaymentMethod } from "@/lib/paymentLinks";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -4529,8 +4530,8 @@ function BracketsStepEditor({
 
 interface TournamentWizardProps {
   open: boolean;
-  /** Called when the wizard closes. If a tournament was created, the id and name are passed. */
-  onClose: (createdTournamentId?: string, createdTournamentName?: string) => void;
+  /** Called when the wizard closes. Created tournaments include the id, name, and linked Club Event id when applicable. */
+  onClose: (createdTournamentId?: string, createdTournamentName?: string, createdClubEventId?: string) => void;
   /** Pre-select a club when opening the wizard from a club profile page. */
   initialClubId?: string | null;
   initialClubName?: string | null;
@@ -4710,6 +4711,29 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       ? data.timePreset.trim().length > 0
       : true;
 
+  const persistLinkedClubEvent = useCallback(async (tournamentId: string): Promise<string | undefined> => {
+    if (!data.clubId || !user?.id) return undefined;
+    const linkedClub = ownedClubs.find((club) => club.id === data.clubId);
+    const startAt = data.date
+      ? new Date(`${data.date}T00:00:00`).toISOString()
+      : new Date().toISOString();
+    const event = await ensureTournamentClubEvent({
+      clubId: data.clubId,
+      tournamentId,
+      title: data.name,
+      startAt,
+      venue: data.venue || undefined,
+      creatorId: user.id,
+      creatorName: user.displayName,
+      accentColor: linkedClub?.accentColor,
+    });
+    if (!event) {
+      toast.error("Tournament created, but its Club Event could not be synced. Please retry from the club dashboard.");
+      return undefined;
+    }
+    return event.id;
+  }, [data.clubId, data.date, data.name, data.venue, ownedClubs, user?.displayName, user?.id]);
+
   // registerTournamentNow: persists the tournament config to localStorage immediately.
   // Called when the share step is shown so the QR code is valid before the director
   // clicks "Go to Tournament".
@@ -4762,15 +4786,16 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     }
   }, [data, user?.id]);
 
-  const commitTournament = useCallback(() => {
+  const commitTournament = useCallback(async () => {
     const slug = makeSlug(data.name, data.date);
     // registerTournamentNow may have already been called; registerTournament is idempotent.
     registerTournamentNow();
+    const clubEventId = await persistLinkedClubEvent(slug);
     clearDraft(draftKey);
-    // Pass the tournament id and name back so callers (e.g. ClubProfile) can post feed events.
-    onClose(slug, data.name);
+    // Pass the linked Club Event id back so club entry points do not create a duplicate local event.
+    onClose(slug, data.name, clubEventId);
     navigate(`/tournament/${slug}/manage`);
-  }, [data, draftKey, onClose, navigate, registerTournamentNow]);
+  }, [data, draftKey, navigate, onClose, persistLinkedClubEvent, registerTournamentNow]);
 
   const handleNext = useCallback(() => {
     if (mode === "select") return;
