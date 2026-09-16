@@ -3528,6 +3528,18 @@ export default function ClubDashboard() {
   }
 
   const accent = club.accentColor ?? "#4CAF50";
+  const composerTokens = {
+    surface: isDark ? "linear-gradient(145deg, oklch(0.17 0.045 145 / 0.98), oklch(0.135 0.035 145 / 0.98))" : "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(241,248,242,0.98))",
+    panel: isDark ? "rgba(5, 18, 8, 0.76)" : "rgba(255,255,255,0.88)",
+    border: isDark ? "rgba(255,255,255,0.095)" : "rgba(21,41,28,0.11)",
+    innerBorder: isDark ? "rgba(255,255,255,0.075)" : "rgba(21,41,28,0.10)",
+    primaryText: isDark ? "rgba(255,255,255,0.94)" : "#15291c",
+    secondaryText: isDark ? "rgba(255,255,255,0.60)" : "rgba(21,41,28,0.62)",
+    mutedText: isDark ? "rgba(255,255,255,0.42)" : "rgba(21,41,28,0.46)",
+    controlHover: isDark ? "rgba(255,255,255,0.07)" : "rgba(22,65,34,0.06)",
+    attachmentSurface: isDark ? "rgba(255,255,255,0.035)" : "rgba(22,65,34,0.045)",
+    shadow: isDark ? "0 18px 44px rgba(0, 0, 0, 0.22)" : "0 16px 36px rgba(33, 66, 42, 0.10)",
+  };
 
   // ── Banner image resize helper ─────────────────────────────────────────────
   // Crops to 16:4 landscape, outputs JPEG ≤ 45 KB to stay within DB TEXT limit.
@@ -5814,27 +5826,44 @@ export default function ClubDashboard() {
             {/* ── Composer (active members) ───────────────────────────────────── */}
             {isActiveClubMember && (
               <div
-                className="rounded-2xl border border-white/08 overflow-hidden"
-                style={{ background: "oklch(0.16 0.05 145)" }}
+                className="overflow-hidden rounded-2xl border transition-[border-color,box-shadow,background] duration-200"
+                style={{
+                  background: composerTokens.surface,
+                  borderColor: composerTokens.border,
+                  boxShadow: announcementComposerFocused ? composerTokens.shadow : "none",
+                }}
               >
-
-
                 {/* Announcement composer */}
-                  <form onSubmit={submitAnnouncement} className="flex items-start gap-3 p-4">
-                    <div className="mt-0.5 h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                  <form onSubmit={submitAnnouncement} className="p-3.5 sm:p-4">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="mt-1 h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-black/5 dark:ring-white/10">
                       <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={40} className="h-full w-full object-cover" />
                     </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                    <div className="flex min-w-0 flex-1 flex-col gap-3">
                       <label className="sr-only" htmlFor="club-announcement-composer">Post an announcement</label>
+                      {announcementComposerExpanded && (
+                        <div className="flex min-w-0 items-center justify-between gap-3 px-0.5">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold" style={{ color: composerTokens.primaryText }}>Share with your club</p>
+                            <p className="mt-0.5 truncate text-xs" style={{ color: composerTokens.mutedText }}>Your update will appear in the Club Feed.</p>
+                          </div>
+                          <span
+                            className="hidden shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:inline-flex"
+                            style={{ borderColor: `${accent}40`, background: `${accent}12`, color: accent }}
+                          >
+                            Members
+                          </span>
+                        </div>
+                      )}
                       <div
-                        className="relative rounded-[14px] p-px transition-[box-shadow,background] duration-300 ease-out"
+                        className="relative overflow-hidden rounded-2xl p-px transition-[box-shadow,background] duration-200 ease-out"
                         style={{
                           background: announcementComposerFocused
-                            ? `linear-gradient(135deg, ${accent}88, ${accent}2e 46%, rgba(255,255,255,0.14) 100%)`
-                            : "rgba(255,255,255,0.12)",
+                            ? `linear-gradient(135deg, ${accent}bb, ${accent}42 44%, ${isDark ? "rgba(255,255,255,0.17)" : "rgba(21,41,28,0.20)"} 100%)`
+                            : composerTokens.innerBorder,
                           boxShadow: announcementComposerFocused
-                            ? `0 0 0 1px ${accent}24, 0 12px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05)`
-                            : "inset 0 1px 0 rgba(255,255,255,0.025)",
+                            ? `0 0 0 3px ${accent}1c, inset 0 1px 0 ${isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.85)"}`
+                            : `inset 0 1px 0 ${isDark ? "rgba(255,255,255,0.035)" : "rgba(255,255,255,0.88)"}`,
                         }}
                       >
                         {announcementComposerFocused && (
@@ -5856,7 +5885,8 @@ export default function ClubDashboard() {
                           placeholder="What would you like to share with your club?"
                           maxLength={500}
                           autoFocus
-                          className="relative z-10 min-h-44 w-full resize-none rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 py-3 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-1 focus:ring-[#4CAF50]/55"
+                          className="relative z-10 min-h-40 w-full resize-none rounded-[15px] border-0 px-4 py-3.5 text-base leading-relaxed outline-none placeholder:text-[color:var(--composer-placeholder)] sm:min-h-44"
+                          style={{ background: composerTokens.panel, color: composerTokens.primaryText, caretColor: accent, "--composer-placeholder": composerTokens.mutedText } as React.CSSProperties}
                         /> : <input
                           id="club-announcement-composer"
                           aria-describedby="club-announcement-count"
@@ -5865,7 +5895,8 @@ export default function ClubDashboard() {
                           onFocus={() => { setAnnouncementComposerFocused(true); setAnnouncementComposerExpanded(true); }}
                           placeholder="Share an update with your club…"
                           maxLength={500}
-                          className="relative z-10 h-11 w-full rounded-[13px] border border-white/5 bg-[#0b180d] px-3.5 text-[15px] leading-relaxed text-white outline-none placeholder:text-white/35 focus:ring-1 focus:ring-[#4CAF50]/55"
+                          className="relative z-10 h-12 w-full rounded-[15px] border-0 px-4 text-base leading-relaxed outline-none placeholder:text-[color:var(--composer-placeholder)]"
+                          style={{ background: composerTokens.panel, color: composerTokens.primaryText, caretColor: accent, "--composer-placeholder": composerTokens.mutedText } as React.CSSProperties}
                         />}
                       </div>
                       {announcementComposerExpanded && (
@@ -5881,40 +5912,41 @@ export default function ClubDashboard() {
                             onChange={(event) => void handleAnnouncementAttachmentSelection(event.currentTarget.files)}
                           />
                           {announcementAttachments.length > 0 && (
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                               {announcementAttachments.map((attachment, index) => (
-                                <div key={`${attachment.fileName}-${index}`} className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.035]">
-                                  {attachment.previewUrl ? <img src={attachment.previewUrl} alt={`Selected ${attachment.fileName}`} className="aspect-square w-full object-cover" /> : <div className="flex aspect-square flex-col items-center justify-center gap-1.5 px-2 text-center"><FileText className="h-5 w-5 text-white/50" /><span className="line-clamp-2 text-[10px] font-semibold text-white/60">{attachment.fileName}</span></div>}
-                                  <button type="button" onClick={() => removeAnnouncementAttachment(index)} className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white shadow-sm transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-white" aria-label={`Remove ${attachment.fileName}`}><X className="h-3.5 w-3.5" /></button>
+                                <div key={`${attachment.fileName}-${index}`} className="group relative overflow-hidden rounded-xl border" style={{ borderColor: composerTokens.innerBorder, background: composerTokens.attachmentSurface }}>
+                                  {attachment.previewUrl ? <img src={attachment.previewUrl} alt={`Selected ${attachment.fileName}`} className="aspect-square w-full object-cover" /> : <div className="flex aspect-square flex-col items-center justify-center gap-1.5 px-2 text-center"><FileText className="h-5 w-5" style={{ color: composerTokens.secondaryText }} /><span className="line-clamp-2 text-[11px] font-semibold" style={{ color: composerTokens.secondaryText }}>{attachment.fileName}</span></div>}
+                                  <button type="button" onClick={() => removeAnnouncementAttachment(index)} className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-full border bg-black/75 text-white shadow-sm transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ borderColor: "rgba(255,255,255,0.18)", "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#0b180d" : "#ffffff" } as React.CSSProperties} aria-label={`Remove ${attachment.fileName}`}><X className="h-4 w-4" /></button>
                                 </div>
                               ))}
                             </div>
                           )}
-                          <p id="club-feed-attachment-help" className="text-[11px] leading-5 text-white/35">Up to four JPEG, PNG, WebP, GIF, PDF, or text files. Each file can be up to 6 MB.</p>
-                          {announcementAttachmentError && <p role="alert" className="text-xs font-medium text-red-300">{announcementAttachmentError}</p>}
+                          <p id="club-feed-attachment-help" className="text-xs leading-5" style={{ color: composerTokens.mutedText }}>Up to four JPEG, PNG, WebP, GIF, PDF, or text files. Each file can be up to 6 MB.</p>
+                          {announcementAttachmentError && <p role="alert" className="text-xs font-medium text-red-600 dark:text-red-300">{announcementAttachmentError}</p>}
                         </>
                       )}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3" style={{ borderColor: announcementComposerExpanded ? composerTokens.innerBorder : "transparent" }}>
+                        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                           {announcementComposerExpanded && <>
-                            <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold text-white/65 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"><Camera className="h-4 w-4" aria-hidden="true" />Photo / GIF</button>
-                            <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold text-white/65 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"><Paperclip className="h-4 w-4" aria-hidden="true" />Attach</button>
+                            <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-10 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ color: composerTokens.secondaryText, background: composerTokens.attachmentSurface, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}><Camera className="h-4 w-4" aria-hidden="true" />Photo / GIF</button>
+                            <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-10 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ color: composerTokens.secondaryText, background: composerTokens.attachmentSurface, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}><Paperclip className="h-4 w-4" aria-hidden="true" />Attach</button>
                           </>}
-                          <span id="club-announcement-count" className="text-[11px] tabular-nums text-white/35" aria-live="polite">{announcementText.length}/500</span>
+                          <span id="club-announcement-count" className="whitespace-nowrap text-xs tabular-nums" style={{ color: composerTokens.mutedText }} aria-live="polite">{announcementText.length}/500</span>
                         </div>
                         <div className="flex items-center gap-2">
-                        {announcementComposerExpanded && <button type="button" onClick={resetAnnouncementComposer} className="h-9 rounded-xl px-3 text-xs font-semibold text-white/60 transition hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">Discard</button>}
+                        {announcementComposerExpanded && <button type="button" onClick={resetAnnouncementComposer} className="h-10 rounded-xl px-3 text-xs font-semibold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ color: composerTokens.secondaryText, background: composerTokens.controlHover, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}>Discard</button>}
                         <button
                           type="submit"
                           disabled={!announcementText.trim() || postingAnnouncement}
-                          className="flex h-9 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
-                          style={{ background: accent, touchAction: "manipulation" }}
+                          className="flex h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                          style={{ background: accent, touchAction: "manipulation", "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}
                         >
-                          <Megaphone className="h-3.5 w-3.5" />
+                          <Megaphone className="h-4 w-4" />
                           {postingAnnouncement ? "Posting…" : "Post"}
                         </button>
                         </div>
                       </div>
+                    </div>
                     </div>
                   </form>
 
