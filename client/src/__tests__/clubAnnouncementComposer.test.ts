@@ -13,10 +13,10 @@ describe("club announcement composer", () => {
     expect(source).toContain('type="submit"');
   });
 
-  it("uses a restrained, reduced-motion-safe border treatment without changing the post contract", () => {
-    expect(source).toContain('import { BorderBeam } from "@/components/ui/border-beam"');
+  it("uses a static focus treatment without decorative border tracing or changing the post contract", () => {
     expect(source).toContain('announcementComposerFocused');
-    expect(source).toContain('motion-reduce:hidden');
+    expect(source).not.toContain('BorderBeam');
+    expect(source).not.toContain('motion-reduce:hidden');
     expect(source).toContain('apiCreateClubFeedPost(club.id, {');
     expect(source).toContain('attachments: announcementAttachments.map(({ dataUrl, fileName, mimeType }) => ({ dataUrl, fileName, mimeType }))');
   });
@@ -28,6 +28,9 @@ describe("club announcement composer", () => {
     expect(source).toContain('Share with your club');
     expect(source).toContain('Your update will appear in the Club Feed.');
     expect(source).toContain('placeholder:text-[color:var(--composer-placeholder)]');
+    expect(source).toContain('className="flex min-w-0 items-center gap-3"');
+    expect(source).toContain('className="min-h-40 w-full resize-none border-0 bg-transparent');
+    expect(source).toContain('className="flex items-center gap-3"');
   });
 
   it("keeps the real attachment workflow, limits, and keyboard discard path in the premium layout", () => {
