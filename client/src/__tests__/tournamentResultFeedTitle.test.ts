@@ -22,4 +22,15 @@ describe("automated tournament-result feed titles", () => {
   it("does not repeat the automated result post description in the Club Profile card body", () => {
     expect(clubProfileSource).toContain('event.type !== "tournament_completed" && (');
   });
+
+  it("keeps a completed result card to one title and one date marker", () => {
+    expect(clubDashboardSource).toContain('event.type !== "tournament_completed" && <span className="pt-0.5 text-xs sm:pt-1"');
+    expect(clubDashboardSource).toContain('event.type !== "tournament_completed" && (\n            <div className="mt-1 flex items-center gap-1.5 text-xs sm:text-sm"');
+    expect(clubDashboardSource).not.toContain('<span className="font-medium">{eventKind}</span>\n            {event.type !== "tournament_completed"');
+  });
+
+  it("uses the same responsive h2 scale as Club Overview activity titles", () => {
+    expect(clubDashboardSource).toContain('<h2 className="text-base font-bold leading-5 text-amber-300 sm:text-lg sm:leading-6">');
+    expect(clubDashboardSource).toContain('<h2 className="text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: primaryText }}>');
+  });
 });

@@ -1598,22 +1598,24 @@ export function FeedCard({
           <FeedIcon type={event.type} />
         )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
+          <div className="flex items-start gap-2 flex-wrap">
             {event.type === "tournament_completed" ? (
-              <span className="text-amber-300 text-sm font-bold">{formatTournamentResultFeedTitle(event.tournamentName)}</span>
+              <h2 className="text-base font-bold leading-5 text-amber-300 sm:text-lg sm:leading-6">{formatTournamentResultFeedTitle(event.tournamentName)}</h2>
             ) : (
-              <span className="text-sm font-bold" style={{ color: primaryText }}>{event.actorName}</span>
+              <h2 className="text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: primaryText }}>{event.actorName}</h2>
             )}
-            <span className="text-xs" style={{ color: mutedText }}>{timeAgo(event.createdAt)}</span>
+            {event.type !== "tournament_completed" && <span className="pt-0.5 text-xs sm:pt-1" style={{ color: mutedText }}>{timeAgo(event.createdAt)}</span>}
           </div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-xs" style={{ color: secondaryText }}>
-            <span className="font-medium">{eventKind}</span>
-            {event.type !== "tournament_completed" && event.description && (
+          {event.type !== "tournament_completed" && (
+            <div className="mt-1 flex items-center gap-1.5 text-xs sm:text-sm" style={{ color: secondaryText }}>
+              <span className="font-medium">{eventKind}</span>
+              {event.description && (
               <><span aria-hidden="true" style={{ color: mutedText }}>·</span><span className="truncate">{event.description}</span></>
-            )}
-          </div>
+              )}
+            </div>
+          )}
           {event.type === "tournament_completed" && event.tournamentFormat && (
-            <p className="mt-0.5 text-xs" style={{ color: secondaryText }}>{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
+            <p className="mt-1 text-xs sm:text-sm" style={{ color: secondaryText }}>{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
           )}
         </div>
         <div className="flex items-center gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
