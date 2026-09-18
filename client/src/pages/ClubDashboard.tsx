@@ -178,6 +178,13 @@ import {
   Bell as _Bell,
   Camera,
   Paperclip,
+  Bold,
+  Italic,
+  Underline,
+  List as ListIcon,
+  Quote,
+  Code2,
+  Eraser,
   Settings2,
   Minus,
   GanttChart,
@@ -224,6 +231,7 @@ import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, AlbumIcon, LeaguesIco
 import { TabTransition } from "@/components/TabTransition";
 import { ClubAlbumTab } from "@/components/club/ClubAlbumTab";
 import { ClubDashboardSidebar } from "@/components/club/ClubDashboardSidebar";
+import { applyClubFeedTextFormat, ClubFeedRichText, sanitizeClubFeedUrl, type ClubFeedTextFormat } from "@/components/club/ClubFeedRichText";
 const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
 const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
 const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
@@ -1718,7 +1726,10 @@ export function FeedCard({
       )}
       {!isPoll && !isRsvp && event.type !== "tournament_completed" && (event.detail || imageAttachments.length > 0 || documentAttachments.length > 0) && (
         <div className="px-4 pb-4 pt-3.5">
-          {event.detail && <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: secondaryText }}>{event.detail}</p>}
+          {event.detail && (event.type === "announcement"
+            ? <div style={{ color: secondaryText }}><ClubFeedRichText value={event.detail} accent={accent} className="text-sm" /></div>
+            : <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: secondaryText }}>{event.detail}</p>
+          )}
           {imageAttachments.length > 0 && (
             <div className={`mt-3 grid gap-2 ${imageAttachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
               {imageAttachments.map((attachment, index) => (
@@ -2643,6 +2654,7 @@ export default function ClubDashboard() {
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [announcementAttachments, setAnnouncementAttachments] = useState<Array<ClubFeedAttachmentInput & { previewUrl?: string; byteSize: number }>>([]);
   const [announcementAttachmentError, setAnnouncementAttachmentError] = useState<string | null>(null);
+  const announcementComposerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   // Post-type composer
   const [composerMode, setComposerMode] = useState<"announcement" | "poll" | "rsvp">("announcement");
@@ -3107,6 +3119,40 @@ export default function ClubDashboard() {
     setAnnouncementComposerExpanded(false);
     setAnnouncementComposerFocused(false);
     if (announcementAttachmentInputRef.current) announcementAttachmentInputRef.current.value = "";
+  }
+
+  function applyAnnouncementTextFormat(format: ClubFeedTextFormat) {
+    const textarea = announcementComposerTextareaRef.current;
+    if (!textarea) return;
+
+    let linkUrl: string | null | undefined;
+    if (format === "link") {
+      const requestedUrl = window.prompt("Paste the link destination", "https://");
+      if (requestedUrl === null) return;
+      linkUrl = sanitizeClubFeedUrl(requestedUrl);
+      if (!linkUrl) {
+        setAnnouncementAttachmentError("Add a valid http or https link.");
+        return;
+      }
+    }
+
+    const formatted = applyClubFeedTextFormat(
+      announcementText,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      format,
+      linkUrl,
+    );
+    if (formatted.value.length > 500) {
+      setAnnouncementAttachmentError("Formatting would exceed the 500-character post limit.");
+      return;
+    }
+    setAnnouncementText(formatted.value);
+    setAnnouncementAttachmentError(null);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(formatted.selectionStart, formatted.selectionEnd);
+    });
   }
 
   async function handleAnnouncementAttachmentSelection(files: FileList | null) {
@@ -5864,7 +5910,50 @@ export default function ClubDashboard() {
                             : `inset 0 1px 0 ${isDark ? "rgba(255,255,255,0.035)" : "rgba(255,255,255,0.88)"}`,
                         }}
                       >
+                        <div
+                          role="toolbar"
+                          aria-label="Club post formatting"
+                          className="flex items-center gap-1 overflow-x-auto border-b px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                          style={{ borderColor: composerTokens.innerBorder }}
+                        >
+                          {([
+                            { format: "bold", label: "Bold", icon: Bold },
+                            { format: "italic", label: "Italicize", icon: Italic },
+                            { format: "underline", label: "Underline", icon: Underline },
+                            { format: "bulletList", label: "Bullet list", icon: ListIcon },
+                            { format: "numberList", label: "Numbered list", icon: ListOrdered },
+                            { format: "quote", label: "Quote", icon: Quote },
+                            { format: "code", label: "Inline code", icon: Code2 },
+                            { format: "link", label: "Add link", icon: Link2 },
+                          ] as const).map(({ format, label, icon: Icon }) => (
+                            <button
+                              key={format}
+                              type="button"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => applyAnnouncementTextFormat(format)}
+                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.97]"
+                              style={{ color: composerTokens.secondaryText, background: "transparent", "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}
+                              aria-label={label}
+                              title={label}
+                            >
+                              <Icon className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          ))}
+                          <span className="mx-0.5 h-5 w-px shrink-0" style={{ background: composerTokens.innerBorder }} aria-hidden="true" />
+                          <button
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => applyAnnouncementTextFormat("clear")}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-red-500/10 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.97]"
+                            style={{ color: composerTokens.mutedText, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}
+                            aria-label="Clear formatting"
+                            title="Clear formatting"
+                          >
+                            <Eraser className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
                         <textarea
+                          ref={announcementComposerTextareaRef}
                           id="club-announcement-composer"
                           aria-describedby="club-announcement-count"
                           value={announcementText}

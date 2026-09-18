@@ -33,6 +33,23 @@ describe("club announcement composer", () => {
     expect(source).toContain('className="flex items-center gap-3"');
   });
 
+  it("exposes a fully functional, accessible formatting toolbar in the expanded composer", () => {
+    expect(source).toContain('role="toolbar"');
+    expect(source).toContain('aria-label="Club post formatting"');
+    expect(source).toContain('format: "bold", label: "Bold", icon: Bold');
+    expect(source).toContain('format: "italic", label: "Italicize", icon: Italic');
+    expect(source).toContain('format: "underline", label: "Underline", icon: Underline');
+    expect(source).toContain('format: "bulletList", label: "Bullet list", icon: ListIcon');
+    expect(source).toContain('format: "numberList", label: "Numbered list", icon: ListOrdered');
+    expect(source).toContain('format: "quote", label: "Quote", icon: Quote');
+    expect(source).toContain('format: "code", label: "Inline code", icon: Code2');
+    expect(source).toContain('format: "link", label: "Add link", icon: Link2');
+    expect(source).toContain('applyAnnouncementTextFormat(format)');
+    expect(source).toContain('applyAnnouncementTextFormat("clear")');
+    expect(source).toContain('ref={announcementComposerTextareaRef}');
+    expect(source).toContain('<ClubFeedRichText value={event.detail} accent={accent} className="text-sm" />');
+  });
+
   it("keeps the real attachment workflow, limits, and keyboard discard path in the premium layout", () => {
     expect(source).toContain('id="club-feed-attachments"');
     expect(source).toContain('accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain"');
