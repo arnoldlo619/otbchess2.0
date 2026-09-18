@@ -25,4 +25,15 @@ describe("My Clubs visual filter edits", () => {
     expect(myClubsSource).toContain("<MobileFilterDrawer");
     expect(myClubsSource).toContain("showMobileFilters");
   });
+
+  it("removes the requested club category badge from card media without removing functional owner or verification markers", () => {
+    const clubCard = myClubsSource.slice(
+      myClubsSource.indexOf("function ClubCard"),
+      myClubsSource.indexOf("// ── Mobile Filter Drawer"),
+    );
+    expect(clubCard).not.toContain("Bottom overlay — category only");
+    expect(clubCard).not.toContain("{CATEGORY_LABELS[club.category]}");
+    expect(clubCard).toContain("Owner");
+    expect(clubCard).toContain("Verified");
+  });
 });

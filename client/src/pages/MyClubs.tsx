@@ -191,13 +191,6 @@ function ClubCard({
               )}
             </div>
 
-            {/* Bottom overlay — category only */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-end">
-              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold bg-black/50 text-white backdrop-blur-md border border-white/10">
-                {CATEGORY_ICONS[club.category]}
-                {CATEGORY_LABELS[club.category]}
-              </div>
-            </div>
           </div>
 
           {/* Title below image */}
