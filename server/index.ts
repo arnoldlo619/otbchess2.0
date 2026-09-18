@@ -664,7 +664,7 @@ export function createApp() {
       res.json({ ok: true, username });
       // Fire-and-forget cache warm-up for chess.com players
       const platform = (player.platform as string | undefined) ?? "chesscom";
-      if (platform === "chesscom") {
+      if (platform === "chesscom" && player.ratingSource !== "manual") {
         warmChessPlayerCache([username]).catch(() => {});
       }
     } catch (err) {

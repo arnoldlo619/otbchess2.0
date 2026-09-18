@@ -378,20 +378,21 @@ function SparklineSection({
   visible: boolean;
 }) {
   const [tc, setTc] = useState<TimeControl>("all");
-  const platform = player.platform ?? "chesscom";
+  const isManualRating = player.ratingSource === "manual" || player.manualPairingRating !== undefined;
+  const platform = player.platform === "lichess" ? "lichess" : "chesscom";
   const { status, points } = useRatingHistory({
     username: player.username,
     platform,
     count: 10,
     timeControl: tc,
-    enabled: visible && !!player.username,
+    enabled: visible && !!player.username && !isManualRating,
   });
 
   const textSub = isDark ? "text-white/65" : "text-[#436850]";
   const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
 
   // Don't render the section at all if there's an error and no data
-  if (status === "error") return null;
+  if (isManualRating || status === "error") return null;
 
   // Compute trend label from filtered points
   let trendLabel = "";

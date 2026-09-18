@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createManualJoinProfile,
+  createManualJoinUsername,
   formatJoinDate,
   getRegistrationIssuePresentation,
   isRateLimitError,
@@ -74,6 +75,11 @@ describe("Join manual rating fallback", () => {
       platform: "lichess",
       manualRating: true,
     });
+  });
+
+  it("creates a readable unique roster handle for a player without a platform username", () => {
+    expect(createManualJoinUsername("  Ada Lovelace!  ", "invite-1")).toBe("manual-ada-lovelace-invite-1");
+    expect(createManualJoinUsername("", "invite-2")).toBe("manual-player-invite-2");
   });
 
   it("recognizes provider and HTTP rate-limit wording", () => {
@@ -276,6 +282,18 @@ describe("Join reliability integration", () => {
     expect(joinSource).toContain("Rating entered manually; not platform or federation verified");
     expect(joinSource).toContain('ratingSource: "manual" as const');
     expect(joinSource).toContain("Enter a manual pairing rating from 100 to 3500.");
+  });
+
+  it("offers a QR-only no-Chess.com opt-in before revealing direct manual ELO entry", () => {
+    expect(joinSource).toContain('id="qr-no-chesscom-username"');
+    expect(joinSource).toContain("I don&apos;t have a Chess.com username");
+    expect(joinSource).toContain("joiningWithoutChessCom");
+    expect(joinSource).toContain('variant="direct"');
+    expect(joinSource).toContain("Your ELO rating");
+    expect(joinSource).toContain("Used for tournament pairings; not platform or federation verified.");
+    expect(joinSource).toContain("createManualJoinUsername(playerName)");
+    expect(joinSource).toContain("or choose the manual ELO option");
+    expect(serverSource).toContain('platform === "chesscom" && player.ratingSource !== "manual"');
   });
 
   it("offers spectator recovery after registration closes and wait guidance after throttling", () => {

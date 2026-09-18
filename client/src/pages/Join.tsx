@@ -121,6 +121,7 @@ interface JoinDraft {
   playerName: string;
   username: string;
   manualRating: string;
+  joiningWithoutChessCom?: boolean;
   platform: Platform;
   phone: string;
   email: string;
@@ -164,6 +165,17 @@ export function createManualJoinProfile(
     platform,
     manualRating: true,
   };
+}
+
+/** Creates a local-only roster handle for a player who has no platform username. */
+export function createManualJoinUsername(name: string, suffix = Date.now().toString(36)): string {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24) || "player";
+  return `manual-${slug}-${suffix}`;
 }
 
 function eloTier(elo: number) {
@@ -265,6 +277,7 @@ function ManualRatingField({
   mutedClassName,
   providerLabel,
   inputId,
+  variant = "fallback",
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -273,14 +286,16 @@ function ManualRatingField({
   mutedClassName: string;
   providerLabel: string;
   inputId: string;
+  variant?: "fallback" | "direct";
 }) {
   const isInvalid = value.length > 0 && parseManualRating(value) === null;
   const helpId = `${inputId}-help`;
+  const isDirectEntry = variant === "direct";
 
   return (
     <div>
       <label htmlFor={inputId} className={`mobile-section-label block mb-2 ${labelClassName}`}>
-        Manual pairing rating <span className="normal-case tracking-normal opacity-70">(optional)</span>
+        {isDirectEntry ? "Your ELO rating" : <>Manual pairing rating <span className="normal-case tracking-normal opacity-70">(optional)</span></>}
       </label>
       <input
         id={inputId}
@@ -299,7 +314,9 @@ function ManualRatingField({
       <p id={helpId} className={`mt-1.5 text-xs ${isInvalid ? "text-red-500" : mutedClassName}`}>
         {isInvalid
           ? "Enter a whole-number rating from 100 to 3500."
-          : `Used only if ${providerLabel} cannot provide a rating.`}
+          : isDirectEntry
+            ? "Used for tournament pairings; not platform or federation verified."
+            : `Used only if ${providerLabel} cannot provide a rating.`}
       </p>
     </div>
   );
@@ -633,6 +650,7 @@ export default function JoinPage() {
   const [playerName, setPlayerName] = useState(() => initialJoinDraft?.playerName ?? "");
   const [username, setUsername] = useState(() => initialJoinDraft?.username ?? "");
   const [manualRating, setManualRating] = useState(() => initialJoinDraft?.manualRating ?? "");
+  const [joiningWithoutChessCom, setJoiningWithoutChessCom] = useState(() => initialJoinDraft?.joiningWithoutChessCom ?? false);
   const [manualRatingUsed, setManualRatingUsed] = useState(false);
   const [platform, setPlatform] = useState<Platform>(() => initialJoinDraft?.platform ?? "chesscom");
 
@@ -688,11 +706,12 @@ export default function JoinPage() {
       playerName,
       username,
       manualRating,
+      joiningWithoutChessCom,
       platform,
       phone,
       email,
     }, sessionStorage);
-  }, [currentJoinDraftKey, step, tournamentCode, playerName, username, manualRating, platform, phone, email]);
+  }, [currentJoinDraftKey, step, tournamentCode, playerName, username, manualRating, joiningWithoutChessCom, platform, phone, email]);
 
   // Swipe-right to go back (native iOS/Android feel)
   const [swipeProgress, _setSwipeProgress] = useState(0); // kept for the existing edge indicator
@@ -1019,7 +1038,19 @@ export default function JoinPage() {
   async function handleQrJoin() {
     if (isTournamentClosed) { showCapToast("closed"); return; }
     if (isTournamentFull) { showCapToast("full"); return; }
-    if (!username.trim()) { setError("Enter your chess.com username."); return; }
+    if (!playerName.trim()) { setError("Enter your name."); return; }
+    if (joiningWithoutChessCom) {
+      const rating = parseManualRating(manualRating);
+      if (rating === null) {
+        setError("Enter a manual pairing rating from 100 to 3500.");
+        return;
+      }
+      setUsername(createManualJoinUsername(playerName));
+      setConfirming(true);
+      setError("");
+      return;
+    }
+    if (!username.trim()) { setError("Enter your chess.com username, or choose the manual ELO option."); return; }
     if (manualRating.trim() && parseManualRating(manualRating) === null) {
       setError("Enter a manual pairing rating from 100 to 3500.");
       return;
@@ -1034,9 +1065,14 @@ export default function JoinPage() {
   useEffect(() => {
     if (!isQrMode || !confirming) return;
     const fallbackRating = parseManualRating(manualRating);
-    const fallbackProfile = (lookupStatus === "not_found" || lookupStatus === "error") && fallbackRating
+    const directManualProfile = joiningWithoutChessCom && fallbackRating
       ? createManualJoinProfile(username, playerName, fallbackRating, platform)
       : null;
+    const fallbackProfile = directManualProfile ?? (
+      (lookupStatus === "not_found" || lookupStatus === "error") && fallbackRating
+        ? createManualJoinProfile(username, playerName, fallbackRating, platform)
+        : null
+    );
     if (lookupStatus === "success" || fallbackProfile) {
       if (qrRegistrationInFlightRef.current) return;
       qrRegistrationInFlightRef.current = true;
@@ -1096,13 +1132,13 @@ export default function JoinPage() {
     } else if (lookupStatus === "not_found" || lookupStatus === "error") {
       setConfirming(false);
       if (isRateLimitError(lookupError)) showCapToast("rate_limited", 60);
-      setError(
-        isRateLimitError(lookupError)
-          ? "The profile provider is limiting requests. Wait 60 seconds or enter a manual pairing rating."
-          : `${lookupError || "Rating unavailable."} Enter a manual pairing rating to continue.`,
-      );
-    }
-  }, [lookupStatus, isQrMode, confirming, active.profile, lookupError, tournamentCode, playerName, username, manualRating, platform, navigate, currentJoinDraftKey, serverJoinConfig, resolvedConfig]);
+        setError(
+          isRateLimitError(lookupError)
+            ? "The profile provider is limiting requests. Wait 60 seconds or enter a manual pairing rating."
+          : `${lookupError || "Rating unavailable."} If you do not have a Chess.com username, use the manual ELO option to continue.`,
+        );
+      }
+  }, [lookupStatus, isQrMode, confirming, active.profile, lookupError, tournamentCode, playerName, username, manualRating, joiningWithoutChessCom, platform, navigate, currentJoinDraftKey, serverJoinConfig, resolvedConfig]);
 
   async function handleConfirm() {
     if (isTournamentClosed) { showCapToast("closed"); return; }
@@ -1771,38 +1807,64 @@ export default function JoinPage() {
                   </div>
                 </div>
 
-                {/* Chess.com username field */}
-                <div>
-                  <label className={`mobile-section-label block mb-2 ${labelCls}`}>Chess.com username</label>
-                  <div className="relative">
-                    <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none ${textMuted}`}>&#9812;</span>
-                    <input
-                      aria-label="Chesscom Username"
-                      ref={usernameRef}
-                      type="text"
-                      value={username}
-                      onChange={(e) => { setUsername(e.target.value); setError(""); }}
-                      placeholder="e.g. hikaru"
-                      className={`${inputBase} !pl-10 text-base`}
-                      autoComplete="off"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      inputMode="text"
-                    />
+                {!joiningWithoutChessCom && (
+                  <div>
+                    <label className={`mobile-section-label block mb-2 ${labelCls}`}>Chess.com username</label>
+                    <div className="relative">
+                      <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none ${textMuted}`}>&#9812;</span>
+                      <input
+                        aria-label="Chesscom Username"
+                        ref={usernameRef}
+                        type="text"
+                        value={username}
+                        onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                        placeholder="e.g. hikaru"
+                        className={`${inputBase} !pl-10 text-base`}
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        inputMode="text"
+                      />
+                    </div>
+                    <p className={`text-xs mt-1.5 ${textMuted}`}>We'll pull your ELO for optimal pairings</p>
                   </div>
-                  <p className={`text-xs mt-1.5 ${textMuted}`}>We'll pull your ELO for optimal pairings</p>
-                </div>
+                )}
 
-                <ManualRatingField
-                  inputId="qr-manual-pairing-rating"
-                  value={manualRating}
-                  onChange={(value) => { setManualRating(value); setError(""); }}
-                  inputClassName={inputBase}
-                  labelClassName={labelCls}
-                  mutedClassName={textMuted}
-                  providerLabel="Chess.com"
-                />
+                <label htmlFor="qr-no-chesscom-username" className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors ${
+                  joiningWithoutChessCom
+                    ? isDark ? "border-[#4CAF50]/50 bg-[#4CAF50]/10" : "border-[#436850]/35 bg-[#436850]/06"
+                    : isDark ? "border-white/10 bg-white/[0.025] hover:bg-white/[0.05]" : "border-[#ADBC9F]/70 bg-[#F7FAF8] hover:bg-[#436850]/05"
+                }`}>
+                  <input
+                    id="qr-no-chesscom-username"
+                    type="checkbox"
+                    checked={joiningWithoutChessCom}
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+                      setJoiningWithoutChessCom(checked);
+                      setUsername("");
+                      if (!checked) setManualRating("");
+                      active.reset();
+                      setError("");
+                    }}
+                    className="h-4 w-4 shrink-0 rounded border-[#ADBC9F] accent-[#4CAF50]"
+                  />
+                  <span className={`text-sm font-medium ${textMain}`}>I don&apos;t have a Chess.com username</span>
+                </label>
+
+                {joiningWithoutChessCom && (
+                  <ManualRatingField
+                    inputId="qr-manual-pairing-rating"
+                    value={manualRating}
+                    onChange={(value) => { setManualRating(value); setError(""); }}
+                    inputClassName={inputBase}
+                    labelClassName={labelCls}
+                    mutedClassName={textMuted}
+                    providerLabel="Chess.com"
+                    variant="direct"
+                  />
+                )}
 
                 {error && (
                   <div className={`flex items-start gap-2 text-sm px-3 py-2.5 rounded-xl border ${
@@ -2274,7 +2336,7 @@ export default function JoinPage() {
         {step === "username" && isQrMode && (
           <button
             onClick={handleQrJoin}
-            disabled={!username.trim() || confirming || !serverResolved}
+            disabled={!playerName.trim() || confirming || !serverResolved || (joiningWithoutChessCom ? parseManualRating(manualRating) === null : !username.trim())}
             className="mobile-cta disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {confirming ? (
