@@ -56,6 +56,17 @@ describe("Tournament Wizard segmented onboarding", () => {
     expect(validation).toContain("data.timePreset.trim().length > 0");
   });
 
+  it("keeps the name step concise without repeating its field label", () => {
+    const nameStep = wizardSource.slice(
+      wizardSource.indexOf("if (step === 0) {"),
+      wizardSource.indexOf("if (step === 1) {"),
+    );
+
+    expect(nameStep).toContain("What should players call this event?");
+    expect(nameStep).toContain('ariaLabel="Tournament name"');
+    expect(nameStep).not.toContain('<Label isDark={isDark} hint="required">Tournament Name</Label>');
+  });
+
   it("uses the requested three dropdowns for tournament settings", () => {
     expect(wizardSource).toContain('aria-label="Tournament Format"');
     expect(wizardSource).toContain('aria-label="Tournament Rounds"');

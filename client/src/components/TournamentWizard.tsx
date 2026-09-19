@@ -665,6 +665,7 @@ function TextInput({
   isDark,
   large,
   onKeyDown,
+  ariaLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -675,6 +676,7 @@ function TextInput({
   isDark: boolean;
   large?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  ariaLabel?: string;
 }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -698,7 +700,7 @@ function TextInput({
         />
       )}
       <input
-        aria-label={placeholder}
+        aria-label={ariaLabel ?? placeholder}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -2893,8 +2895,7 @@ function SegmentedOnboardingStep({
           </h3>
         </div>
         <div>
-          <Label isDark={isDark} hint="required">Tournament Name</Label>
-          <TextInput value={data.name} onChange={(name) => onChange({ name })} placeholder="e.g. Friday Night Blitz" icon={Trophy} autoFocus isDark={isDark} large />
+          <TextInput value={data.name} onChange={(name) => onChange({ name })} placeholder="e.g. Friday Night Blitz" ariaLabel="Tournament name" icon={Trophy} autoFocus isDark={isDark} large />
           <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             This is what players will see on the join page, pairings, and standings.
           </p>
