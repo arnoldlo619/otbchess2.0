@@ -212,6 +212,28 @@ describe("Check-In Roster", () => {
   });
 });
 
+describe("Players tab hierarchy", () => {
+  const playersTab = directorSource.slice(
+    directorSource.indexOf('{activeTab === "players" && ('),
+    directorSource.indexOf("/* ── Bracket Tab"),
+  );
+
+  it("removes the redundant capacity summary and retains the roster-owned count", () => {
+    expect(playersTab).not.toContain("Capacity + Attendance Summary");
+    expect(playersTab).not.toContain("capacityPct");
+    expect(playersTab).not.toContain("Check-in status");
+    expect(playersTab).toContain("{filteredPlayers.length}/{state.players.length}");
+  });
+
+  it("uses the larger Players tab type scale for controls and player identity", () => {
+    expect(playersTab).toContain("text-lg sm:text-xl font-semibold flex-shrink-0");
+    expect(playersTab).toContain("text-base rounded-lg border outline-none transition-colors");
+    expect(playersTab).toContain("text-lg font-bold cursor-default");
+    expect(playersTab).toContain("text-base text-center");
+    expect(playersTab).not.toContain("text-[11px] font-semibold px-1 py-0.5");
+  });
+});
+
 // ── Board Search & Jump-to-Unreported Tests ─────────────────────────────────
 
 describe("Board Search and Jump-to-Unreported", () => {

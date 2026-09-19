@@ -5558,116 +5558,7 @@ export default function Director() {
 
           {/* ── Players Tab ─────────────────────────────────────────────────── */}
           {activeTab === "players" && (
-            <div className="space-y-3">
-              {/* ── Capacity + Attendance Summary Strip ─────────────────────────── */}
-              {(() => {
-                const total = state.players.length;
-                const maxCap = tournamentConfig?.maxPlayers ?? 0;
-                const checkedIn = checkedInIds.size;
-                const capacityPct = maxCap > 0 ? Math.min(100, Math.round((total / maxCap) * 100)) : null;
-                const checkInPct = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
-                const isNearCapacity = capacityPct !== null && capacityPct >= 90;
-                const isFullCapacity = capacityPct !== null && capacityPct >= 100;
-                return (
-                  <div className={`rounded-xl border p-3 ${
-                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
-                  }`}>
-                    <div className="flex flex-wrap gap-3">
-                      {/* Registered players */}
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Users className={`w-3.5 h-3.5 flex-shrink-0 ${
-                          isDark ? "text-white/40" : "text-[#436850]"
-                        }`} />
-                        <div>
-                          <div className={`text-xs font-medium ${
-                            isDark ? "text-white/60" : "text-[#436850]/70"
-                          }`}>Registered</div>
-                          <div className={`text-sm font-bold tabular-nums ${
-                            isFullCapacity
-                              ? "text-red-400"
-                              : isNearCapacity
-                              ? "text-amber-400"
-                              : isDark ? "text-white/90" : "text-[#12372A]"
-                          }`}>
-                            {total}{maxCap > 0 ? ` / ${maxCap}` : ""}
-                            {isFullCapacity && <span className="ml-1 text-[10px] font-semibold text-red-400">• FULL</span>}
-                            {isNearCapacity && !isFullCapacity && <span className="ml-1 text-[10px] font-semibold text-amber-400">• NEAR FULL</span>}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Capacity progress bar */}
-                      {capacityPct !== null && (
-                        <div className="flex-1 min-w-[80px] flex flex-col justify-center gap-1">
-                          <div className={`text-[10px] font-medium ${
-                            isDark ? "text-white/40" : "text-[#436850]/60"
-                          }`}>{capacityPct}% capacity</div>
-                          <div className={`h-1.5 rounded-full overflow-hidden ${
-                            isDark ? "bg-white/10" : "bg-[#ADBC9F]/30"
-                          }`}>
-                            <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                isFullCapacity ? "bg-red-400" : isNearCapacity ? "bg-amber-400" : "bg-[#4CAF50]"
-                              }`}
-                              style={{ width: `${capacityPct}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Divider */}
-                      <div className={`w-px self-stretch ${
-                        isDark ? "bg-white/08" : "bg-[#ADBC9F]/40"
-                      }`} />
-
-                      {/* Check-in status */}
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 ${
-                          checkedIn === total && total > 0
-                            ? "text-[#4CAF50]"
-                            : isDark ? "text-white/40" : "text-[#436850]"
-                        }`} />
-                        <div>
-                          <div className={`text-xs font-medium ${
-                            isDark ? "text-white/60" : "text-[#436850]/70"
-                          }`}>Checked In</div>
-                          <div className={`text-sm font-bold tabular-nums ${
-                            checkedIn === total && total > 0
-                              ? "text-[#4CAF50]"
-                              : isDark ? "text-white/90" : "text-[#12372A]"
-                          }`}>
-                            {checkedIn} / {total}
-                            {total > 0 && (
-                              <span className={`ml-1 text-[10px] font-medium ${
-                                isDark ? "text-white/40" : "text-[#436850]/60"
-                              }`}>({checkInPct}%)</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Check-in progress bar */}
-                      {total > 0 && (
-                        <div className="flex-1 min-w-[80px] flex flex-col justify-center gap-1">
-                          <div className={`text-[10px] font-medium ${
-                            isDark ? "text-white/40" : "text-[#436850]/60"
-                          }`}>{checkInPct}% checked in</div>
-                          <div className={`h-1.5 rounded-full overflow-hidden ${
-                            isDark ? "bg-white/10" : "bg-[#ADBC9F]/30"
-                          }`}>
-                            <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                checkedIn === total ? "bg-[#4CAF50]" : "bg-blue-400"
-                              }`}
-                              style={{ width: `${checkInPct}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
+            <div className="space-y-4">
 
               {isRegistration && (
                 <section
@@ -5680,12 +5571,12 @@ export default function Director() {
                     <div>
                       <h2
                         id="walk-in-check-in-title"
-                        className={`text-sm font-semibold ${isDark ? "text-white/85" : "text-[#12372A]"}`}
+                        className={`text-base sm:text-lg font-semibold ${isDark ? "text-white/85" : "text-[#12372A]"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
                       >
                         Check in a walk-in
                       </h2>
-                      <p className={`mt-0.5 text-xs ${isDark ? "text-white/45" : "text-[#436850]"}`}>
+                      <p className={`mt-0.5 text-sm ${isDark ? "text-white/45" : "text-[#436850]"}`}>
                         Add them to the roster and mark them checked in immediately.
                       </p>
                     </div>
@@ -5703,7 +5594,7 @@ export default function Director() {
                         }}
                         placeholder="Walk-in name"
                         style={{ minHeight: "44px" }}
-                        className={`min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors ${
+                        className={`min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-base outline-none transition-colors ${
                           isDark
                             ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50"
                             : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
@@ -5713,7 +5604,7 @@ export default function Director() {
                         onClick={addWalkInPlayer}
                         disabled={!walkInName.trim()}
                         style={{ minHeight: "44px", touchAction: "manipulation" }}
-                        className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-all disabled:cursor-not-allowed ${
+                        className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2.5 text-base font-semibold transition-all disabled:cursor-not-allowed ${
                           walkInName.trim()
                             ? "bg-[#436850] text-white hover:bg-[#2d5235] active:scale-[0.98]"
                             : isDark ? "bg-white/06 text-white/20" : "bg-[#ADBC9F]/40 text-[#436850]/70"
@@ -5735,12 +5626,12 @@ export default function Director() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex items-center gap-2">
                     <h2
-                      className={`text-sm font-semibold flex-shrink-0 ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}
+                      className={`text-lg sm:text-xl font-semibold flex-shrink-0 ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}
                       style={{ fontFamily: "'Clash Display', sans-serif" }}
                     >
                       Roster
                     </h2>
-                    <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                    <span className={`text-sm font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${
                       isDark ? "bg-white/10 text-white/50" : "bg-[#FBFADA] text-[#6B7280]"
                     }`}>
                       {filteredPlayers.length}/{state.players.length}
@@ -5759,7 +5650,7 @@ export default function Director() {
                       onChange={(e) => setPlayerSearch(e.target.value)}
                       placeholder="Search name, username, ELO…"
                       style={{ minHeight: "44px" }}
-                      className={`w-full pl-8 pr-8 py-2.5 text-sm rounded-lg border outline-none transition-colors ${
+                      className={`w-full pl-8 pr-8 py-2.5 text-base rounded-lg border outline-none transition-colors ${
                         isDark
                           ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50 focus:bg-white/08"
                           : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
@@ -5782,7 +5673,7 @@ export default function Director() {
                     <button
                       onClick={() => setShowFilters((f) => !f)}
                       style={{ minHeight: "44px", touchAction: "manipulation" }}
-                      className={`flex items-center gap-1 min-[480px]:gap-1.5 text-xs font-medium px-2.5 min-[480px]:px-3 py-2 min-[480px]:py-2.5 rounded-lg border transition-all ${
+                      className={`flex items-center gap-1 min-[480px]:gap-1.5 text-sm font-medium px-2.5 min-[480px]:px-3 py-2 min-[480px]:py-2.5 rounded-lg border transition-all ${
                         showFilters || activeFilterCount > 0
                           ? isDark
                             ? "bg-[#436850]/30 border-[#4CAF50]/40 text-[#4CAF50]"
@@ -5810,7 +5701,7 @@ export default function Director() {
                       <button
                         onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
                         style={{ minHeight: "44px", touchAction: "manipulation" }}
-                        className={`flex items-center gap-1 text-xs font-medium px-2.5 py-2 rounded-lg border transition-all ${
+                        className={`flex items-center gap-1 text-sm font-medium px-2.5 py-2 rounded-lg border transition-all ${
                           isDark
                             ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
                             : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F]"
@@ -5827,7 +5718,7 @@ export default function Director() {
                       <button
                         onClick={refreshAllElo}
                         disabled={isRefreshingElo}
-                        className={`flex items-center gap-1 text-xs font-medium px-2.5 py-2 rounded-lg border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                        className={`flex items-center gap-1 text-sm font-medium px-2.5 py-2 rounded-lg border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
                           isDark
                             ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
                             : "border-[#436850]/30 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/50"
@@ -5845,7 +5736,7 @@ export default function Director() {
                       <>
                         <button
                           onClick={() => setShowUploadRSVP(true)}
-                          className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-2 rounded-lg border transition-all ${
+                          className={`flex items-center gap-1 text-sm font-semibold px-2.5 py-2 rounded-lg border transition-all ${
                             isDark
                               ? "border-[#4CAF50]/40 text-[#4CAF50] hover:bg-[#436850]/20"
                               : "border-[#436850]/40 text-[#436850] hover:bg-[#436850]/08"
@@ -5858,7 +5749,7 @@ export default function Director() {
                         </button>
                         <button
                           onClick={() => setShowAddPlayer(true)}
-                          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-2 rounded-lg transition-all"
+                          className="flex items-center gap-1 text-sm font-semibold px-2.5 py-2 rounded-lg transition-all"
                           style={{ background: "#436850", color: "#FFFFFF" }}
                           title="Add a player manually"
                         >
@@ -5894,7 +5785,7 @@ export default function Director() {
                     <div className="grid grid-cols-2 gap-3">
                       {/* Title filter */}
                       <div>
-                        <label className={`block text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
+                        <label className={`block text-xs font-semibold uppercase tracking-widest mb-1.5 ${
                           isDark ? "text-white/30" : "text-[#436850]"
                         }`}>Title</label>
                         <div className="flex flex-wrap gap-1.5">
@@ -5902,7 +5793,7 @@ export default function Director() {
                             <button
                               key={t}
                               onClick={() => setFilterTitle(t)}
-                              className={`text-xs px-2.5 py-1 rounded-md font-medium transition-all ${
+                              className={`text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
                                 filterTitle === t
                                   ? isDark
                                     ? "bg-[#436850] text-white"
@@ -5920,7 +5811,7 @@ export default function Director() {
 
                       {/* Country filter */}
                       <div>
-                        <label className={`block text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
+                        <label className={`block text-xs font-semibold uppercase tracking-widest mb-1.5 ${
                           isDark ? "text-white/30" : "text-[#436850]"
                         }`}>Country</label>
                         <div className="flex flex-wrap gap-1.5">
@@ -5928,7 +5819,7 @@ export default function Director() {
                             <button
                               key={c}
                               onClick={() => setFilterCountry(c)}
-                              className={`text-xs px-2.5 py-1 rounded-md font-medium transition-all ${
+                              className={`text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
                                 filterCountry === c
                                   ? isDark
                                     ? "bg-[#436850] text-white"
@@ -5949,7 +5840,7 @@ export default function Director() {
                     {activeFilterCount > 0 && (
                       <button
                         onClick={() => { setFilterTitle("all"); setFilterCountry("all"); }}
-                        className={`text-xs font-medium flex items-center gap-1 ${
+                        className={`text-sm font-medium flex items-center gap-1 ${
                           isDark ? "text-red-400 hover:text-red-300" : "text-red-500 hover:text-red-600"
                         }`}
                       >
@@ -5963,14 +5854,14 @@ export default function Director() {
                 <div className={`flex items-center gap-1.5 pt-2 border-t ${
                   isDark ? "border-white/06" : "border-[#ADBC9F]/50"
                 }`}>
-                  <span className={`text-[10px] font-semibold uppercase tracking-widest mr-1 ${
+                  <span className={`text-xs font-semibold uppercase tracking-widest mr-1 ${
                     isDark ? "text-white/30" : "text-[#436850]"
                   }`}>Sort</span>
                   {(["rank", "points", "elo", "name"] as const).map((key) => (
                     <button
                       key={key}
                       onClick={() => toggleSort(key)}
-                      className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-medium transition-all ${
+                      className={`flex items-center gap-1 text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
                         sortKey === key
                           ? isDark
                             ? "bg-[#436850]/40 text-[#4CAF50] border border-[#4CAF50]/30"
@@ -6000,16 +5891,16 @@ export default function Director() {
                     isDark ? "text-white/20" : "text-[#436850]/50"
                   }`} />
                   <div className="text-center">
-                    <p className={`text-sm font-medium ${
+                    <p className={`text-base font-medium ${
                       isDark ? "text-white/50" : "text-[#436850]"
                     }`}>No players found</p>
-                    <p className={`text-xs mt-0.5 ${
+                    <p className={`text-sm mt-0.5 ${
                       isDark ? "text-white/30" : "text-[#436850]"
                     }`}>Try adjusting your search or filters</p>
                   </div>
                   <button
                     onClick={() => { setPlayerSearch(""); setFilterTitle("all"); setFilterCountry("all"); }}
-                    className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                    className={`text-sm font-medium px-3 py-2 rounded-lg border transition-colors ${
                       isDark
                         ? "border-white/15 text-white/50 hover:bg-white/06"
                         : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"
@@ -6033,7 +5924,7 @@ export default function Director() {
                         if (sectionPlayers.length === 0) return null;
                         return (
                           <div key={section.id}>
-                            <div className={`px-5 py-2 text-[10px] font-bold uppercase tracking-widest ${
+                            <div className={`px-5 py-2.5 text-xs font-bold uppercase tracking-widest ${
                               isDark ? "bg-white/03 text-white/35" : "bg-[#FBFADA]/70 text-[#436850]"
                             }`}>
                               {section.name}
@@ -6045,31 +5936,31 @@ export default function Director() {
                                   isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]"
                                 }`}
                               >
-                                <span className={`w-6 text-center text-sm font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>
+                                <span className={`w-6 text-center text-base font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>
                                   {i + 1}
                                 </span>
                                 <PlayerAvatar username={p.username} name={p.name} size={36} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2">
                                     <PlayerHoverCard player={p} isDark={isDark}>
-                                      <span className={`text-base font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
+                                      <span className={`text-lg font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
                                     </PlayerHoverCard>
                                     {p.title && (
-                                      <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                                      <span className="text-sm font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                                     )}
                                     <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                                   </div>
-                                  <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>@{p.username} · {p.elo} ELO</span>
+                                  <span className={`text-base ${isDark ? "text-white/40" : "text-[#436850]"}`}>@{p.username} · {p.elo} ELO</span>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm text-center">
+                                <div className="flex items-center gap-4 text-base text-center">
                                   <div>
-                                    <p className={`font-bold text-lg ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.points}</p>
-                                    <p className={isDark ? "text-white/30" : "text-[#436850]"}>pts</p>
+                                    <p className={`font-bold text-xl ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.points}</p>
+                                    <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>pts</p>
                                   </div>
                                   <div className={`${isDark ? "text-white/30" : "text-[#436850]/70"}`}>|</div>
                                   <div>
                                     <p className={`font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
-                                    <p className={isDark ? "text-white/30" : "text-[#436850]"}>record</p>
+                                    <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>record</p>
                                   </div>
                                 </div>
                               </div>
@@ -6084,36 +5975,36 @@ export default function Director() {
                         isDark ? "hover:bg-white/03" : "hover:bg-[#FBFADA]"
                       }`}
                     >
-                      <span className={`w-6 text-center text-sm font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>
+                      <span className={`w-6 text-center text-base font-bold ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>
                         {i + 1}
                       </span>
                       <PlayerAvatar username={p.username} name={p.name} size={36} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <PlayerHoverCard player={p} isDark={isDark}>
-                            <span className={`text-base font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
+                            <span className={`text-lg font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
                           </PlayerHoverCard>
                           {p.title && (
-                            <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                            <span className="text-sm font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                           )}
                           {p.withdrawn && (
-                            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Withdrawn</span>
+                            <span className={`text-xs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Withdrawn</span>
                           )}
                           <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                           {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
                             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
                           )}
                         </div>
-                        <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+                        <span className={`text-base ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                           @{p.username}
                           {(p.rapidElo || p.blitzElo) ? (
                             <>
-                              {p.rapidElo ? <span className={`ml-1.5 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                              {p.rapidElo ? <span className={`ml-1.5 text-xs font-semibold px-1 py-0.5 rounded ${
                                 (tournamentConfig?.ratingType ?? "rapid") === "rapid"
                                   ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                   : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
                               }`}>⚡{p.rapidElo}</span> : null}
-                              {p.blitzElo ? <span className={`ml-1 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                              {p.blitzElo ? <span className={`ml-1 text-xs font-semibold px-1 py-0.5 rounded ${
                                 (tournamentConfig?.ratingType ?? "rapid") === "blitz"
                                   ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                   : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
@@ -6124,21 +6015,21 @@ export default function Director() {
                           )}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-center">
+                      <div className="flex items-center gap-4 text-base text-center">
                         <div>
-                          <p className={`font-bold text-lg ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.points}</p>
-                          <p className={isDark ? "text-white/30" : "text-[#436850]"}>pts</p>
+                          <p className={`font-bold text-xl ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.points}</p>
+                          <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>pts</p>
                         </div>
                         <div className={`${isDark ? "text-white/30" : "text-[#436850]/70"}`}>|</div>
                         <div>
                           <p className={`font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
-                          <p className={isDark ? "text-white/30" : "text-[#436850]"}>record</p>
+                          <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>record</p>
                         </div>
                         <div className={`hidden md:block ${isDark ? "text-white/30" : "text-[#436850]/70"}`}>|</div>
                         {state.format !== "quads" && (
                           <div className="hidden md:block">
                             <p className={`font-semibold ${isDark ? "text-white/70" : "text-[#436850]"}`}>{p.buchholz}</p>
-                            <p className={isDark ? "text-white/30" : "text-[#436850]"}>Buch.</p>
+                            <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>Buch.</p>
                           </div>
                         )}
                         <div className="flex gap-1 ml-1">
@@ -6159,7 +6050,7 @@ export default function Director() {
                                 revokeBye(p.id);
                                 toast.info(`${p.name}'s bye revoked`);
                               }}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all active:scale-95 ${
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
                                 isDark
                                   ? "bg-blue-500/15 border-blue-500/30 text-blue-400 hover:bg-blue-500/25"
                                   : "bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
@@ -6175,7 +6066,7 @@ export default function Director() {
                                 assignBye(p.id);
                                 toast.success(`${p.name} assigned a bye (+½pt)`);
                               }}
-                              className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${
+                              className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${
                                 isDark
                                   ? "bg-white/06 border-white/10 text-white/50 hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-400"
                                   : "bg-white border-[#ADBC9F] text-[#436850] hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600"
@@ -6191,7 +6082,7 @@ export default function Director() {
                         {supportsPlayerWithdrawal && (p.withdrawn ? (
                           <button
                             onClick={() => reinstateWithdrawnPlayer(p)}
-                            className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${isDark ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}
+                            className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${isDark ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}
                             title="Reinstate for future pairings"
                             aria-label={`Reinstate ${p.name} for future pairings`}
                           >
@@ -6200,7 +6091,7 @@ export default function Director() {
                         ) : (
                           <button
                             onClick={() => setPendingWithdrawId(p.id)}
-                            className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-[11px] font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15" : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"}`}
+                            className={`inline-flex min-h-11 items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold opacity-80 transition-all hover:opacity-100 focus-visible:opacity-100 active:scale-95 ${isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15" : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"}`}
                             title="Withdraw from future pairings"
                             aria-label={`Withdraw ${p.name} from future pairings`}
                           >
@@ -6236,29 +6127,29 @@ export default function Director() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <PlayerHoverCard player={p} isDark={isDark}>
-                              <span className={`text-base font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
+                              <span className={`text-lg font-bold cursor-default hover:text-[#436850] transition-colors ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</span>
                             </PlayerHoverCard>
                             {p.title && (
-                              <span className="text-xs font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                              <span className="text-sm font-bold text-[#436850] bg-[#436850]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                             )}
                             {p.withdrawn && (
-                              <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Withdrawn</span>
+                              <span className={`text-xs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Withdrawn</span>
                             )}
                             <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                             {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
                               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
                             )}
                           </div>
-                          <span className={`text-sm ${isDark ? "text-white/40" : "text-[#436850]"}`}>
+                          <span className={`text-base ${isDark ? "text-white/40" : "text-[#436850]"}`}>
                           @{p.username}
                           {(p.rapidElo || p.blitzElo) ? (
                             <>
-                              {p.rapidElo ? <span className={`ml-1.5 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                              {p.rapidElo ? <span className={`ml-1.5 text-xs font-semibold px-1 py-0.5 rounded ${
                                 (tournamentConfig?.ratingType ?? "rapid") === "rapid"
                                   ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                   : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
                               }`}>⚡{p.rapidElo}</span> : null}
-                              {p.blitzElo ? <span className={`ml-1 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                              {p.blitzElo ? <span className={`ml-1 text-xs font-semibold px-1 py-0.5 rounded ${
                                 (tournamentConfig?.ratingType ?? "rapid") === "blitz"
                                   ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                   : isDark ? "bg-white/06 text-white/35" : "bg-[#ADBC9F]/40 text-[#436850]"
@@ -6274,7 +6165,7 @@ export default function Director() {
                         <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-[#12372A]"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                           {p.points % 1 !== 0 ? `${Math.floor(p.points)}½` : p.points}
                         </p>
-                        <p className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>points</p>
+                        <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>points</p>
                       </div>
                     </div>
 
@@ -6283,13 +6174,13 @@ export default function Director() {
                       isDark ? "border-white/08" : "border-[#ADBC9F]/70"
                     }`}>
                       <div className="text-center">
-                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
-                        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>record</p>
+                        <p className={`text-base font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
+                        <p className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>record</p>
                       </div>
                       {state.format !== "quads" && (
                         <div className="text-center">
-                          <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.buchholz.toFixed(1)}</p>
-                          <p className={`text-[10px] ${isDark ? "text-white/30" : "text-[#436850]"}`}>Buchholz</p>
+                          <p className={`text-base font-semibold ${isDark ? "text-white/80" : "text-[#12372A]/85"}`}>{p.buchholz.toFixed(1)}</p>
+                          <p className={`text-xs ${isDark ? "text-white/30" : "text-[#436850]"}`}>Buchholz</p>
                         </div>
                       )}
                       <div className="text-center">
@@ -6302,7 +6193,7 @@ export default function Director() {
                             }`} />
                           ))}
                         </div>
-                        <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>colors</p>
+                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/30" : "text-[#436850]"}`}>colors</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label={`Pairing actions for ${p.name}`}>
                       {/* Bye button — mobile (not for Quads, which has no byes) */}
@@ -6310,7 +6201,7 @@ export default function Director() {
                         byePlayerIds.has(p.id) ? (
                           <button
                             onClick={() => { revokeBye(p.id); toast.info(`${p.name}'s bye revoked`); }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-semibold border transition-all active:scale-95 ${
                               isDark
                                 ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
                                 : "bg-blue-50 border-blue-200 text-blue-600"
@@ -6322,7 +6213,7 @@ export default function Director() {
                         ) : (
                           <button
                             onClick={() => { assignBye(p.id); toast.success(`${p.name} assigned a bye (+½pt)`); }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-semibold border transition-all active:scale-95 ${
                               isDark
                                 ? "bg-white/06 border-white/10 text-white/40 hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-400"
                                 : "bg-white border-[#ADBC9F] text-[#436850] hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600"
@@ -6336,7 +6227,7 @@ export default function Director() {
                       {supportsPlayerWithdrawal && (p.withdrawn ? (
                         <button
                           onClick={() => reinstateWithdrawnPlayer(p)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${isDark ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-semibold border transition-all active:scale-95 ${isDark ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}
                           aria-label={`Reinstate ${p.name} for future pairings`}
                         >
                           <Undo2 className="w-3 h-3" /> Reinstate
@@ -6344,7 +6235,7 @@ export default function Director() {
                       ) : (
                         <button
                           onClick={() => setPendingWithdrawId(p.id)}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${isDark ? "bg-amber-500/10 border-amber-500/30 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-semibold border transition-all active:scale-95 ${isDark ? "bg-amber-500/10 border-amber-500/30 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"}`}
                           aria-label={`Withdraw ${p.name} from future pairings`}
                         >
                           <UserMinus className="w-3 h-3" /> Withdraw
@@ -6378,7 +6269,7 @@ export default function Director() {
                     </div>
                     <div>
                       <p
-                        className={`text-sm font-bold ${
+                        className={`text-base font-bold ${
                           isDark ? "text-white" : "text-[#12372A]"
                         }`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -6387,7 +6278,7 @@ export default function Director() {
                           ? (state.players.length < 2 ? "Add players first" : "Step 2: Assign Rating Brackets")
                           : (canStart ? "Ready to start" : "Waiting for players")}
                       </p>
-                      <p className={`text-xs ${
+                      <p className={`text-sm ${
                         isDark ? "text-white/40" : "text-[#436850]"
                       }`}>
                         {isBracketParent && childBrackets.length === 0
@@ -6411,7 +6302,7 @@ export default function Director() {
                         }, 100);
                       }}
                       disabled={state.players.length < 2}
-                      className="flex items-center gap-2 text-sm font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
+                      className="flex items-center gap-2 text-base font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
                       style={{
                         padding: "11px 24px",
                         background: state.players.length >= 2 ? "#d97706" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
@@ -6427,7 +6318,7 @@ export default function Director() {
                     <button
                       onClick={() => canStart && setShowStartConfirm(true)}
                       disabled={!canStart}
-                      className="flex items-center gap-2 text-sm font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
+                      className="flex items-center gap-2 text-base font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
                       style={{
                         padding: "11px 24px",
                         background: canStart ? "#436850" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
