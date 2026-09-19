@@ -39,9 +39,6 @@ export function HeroDashboardMockup({
   const colorFrom = isDark ? "oklch(0.65 0.14 145)" : "oklch(0.55 0.13 145)";
   const colorTo = isDark ? "oklch(0.44 0.12 145)" : "oklch(0.41 0.09 152)";
 
-  // Background color for the fade-out gradient (must match hero section bg)
-  const heroBg = isDark ? "oklch(0.20 0.06 145)" : "#F5F8F5";
-
   // Glow color for hover intensification
   const glowColor = isDark
     ? "oklch(0.55 0.14 145 / 0.55)"
@@ -53,7 +50,8 @@ export function HeroDashboardMockup({
   return (
     <div
       ref={ref}
-      className="relative mt-[5rem] mb-8 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-0 group hidden md:block"
+      data-hero-dashboard-mockup
+      className="relative left-1/2 mt-[5rem] mb-8 w-[calc(100vw-2rem)] max-w-[82rem] -translate-x-1/2 sm:w-[calc(100vw-3rem)] lg:mt-20 lg:w-[calc(100vw-4rem)] group hidden md:block"
       style={{ perspective: "2000px" }}
     >
 
@@ -74,6 +72,7 @@ export function HeroDashboardMockup({
 
       {/* Inner frame — scales up on hover */}
       <motion.div
+        data-hero-dashboard-mockup-frame
         className={`relative rounded-xl border border-border bg-white/[0.01] overflow-hidden
           before:absolute before:bottom-1/2 before:left-0 before:top-0
           before:h-full before:w-full before:opacity-0
