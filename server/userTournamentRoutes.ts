@@ -41,13 +41,14 @@ export function createUserTournamentRouter(): Router {
   router.post("/user/tournaments", async (req, res) => {
     const userId = requireUserId(req, res);
     if (!userId) return;
-    const { tournamentId, name, venue, date, format, rounds, inviteCode, status } = req.body as {
+    const { tournamentId, name, venue, date, format, rounds, maxPlayers, inviteCode, status } = req.body as {
       tournamentId: string;
       name: string;
       venue?: string;
       date?: string;
       format?: string;
       rounds?: number;
+      maxPlayers?: number;
       inviteCode?: string;
       status?: string;
     };
@@ -60,11 +61,18 @@ export function createUserTournamentRouter(): Router {
         await db.insert(userTournaments).values({
           id: nanoid(), userId, tournamentId, name,
           venue: venue ?? null, date: date ?? null, format: format ?? null,
-          rounds: rounds ?? null, inviteCode: inviteCode ?? null,
+          rounds: rounds ?? null,
+          maxPlayers: Number.isInteger(maxPlayers) && maxPlayers! > 0 ? maxPlayers : null,
+          inviteCode: inviteCode ?? null,
           status: status ?? "registration",
         });
-      } else if (status) {
-        await db.update(userTournaments).set({ status }).where(eq(userTournaments.tournamentId, tournamentId));
+      } else if (existing.userId !== userId) {
+        return res.status(403).json({ error: "Not authorised to update this tournament" });
+      } else if (status || (Number.isInteger(maxPlayers) && maxPlayers! > 0)) {
+        await db.update(userTournaments).set({
+          ...(status ? { status } : {}),
+          ...(Number.isInteger(maxPlayers) && maxPlayers! > 0 ? { maxPlayers } : {}),
+        }).where(eq(userTournaments.tournamentId, tournamentId));
       }
       return res.json({ ok: true });
     } catch (error) {
@@ -125,6 +133,7 @@ export function createUserTournamentRouter(): Router {
         date: userTournaments.date,
         format: userTournaments.format,
         rounds: userTournaments.rounds,
+        maxPlayers: userTournaments.maxPlayers,
         inviteCode: userTournaments.inviteCode,
         customSlug: userTournaments.customSlug,
         status: userTournaments.status,

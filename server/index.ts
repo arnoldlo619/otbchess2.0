@@ -7,10 +7,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
-import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
+import { eq, and, or, inArray, desc, lt, sql } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
+import { getTokenPayload } from "./authCore.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState, userTournaments, tournamentAnalytics, chessPlayerCache, tournamentBroadcastSettings, dbClubs } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
@@ -43,6 +44,31 @@ export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Protect lifecycle mutations when a tournament has a persisted host record.
+ * Legacy local-only events retain compatibility until their host creates a
+ * server registry row; modern wizard-created events are always owner-checked.
+ */
+async function requireTournamentLifecycleOwner(req: Request, res: express.Response, tournamentId: string): Promise<boolean> {
+  const db = await getDb();
+  const [record] = await db
+    .select({ userId: userTournaments.userId })
+    .from(userTournaments)
+    .where(eq(userTournaments.tournamentId, tournamentId))
+    .limit(1);
+  if (!record) return true;
+  const actorId = getTokenPayload(req)?.sub;
+  if (!actorId) {
+    res.status(401).json({ error: "Not authenticated" });
+    return false;
+  }
+  if (record.userId !== actorId) {
+    res.status(403).json({ error: "Not the tournament owner" });
+    return false;
+  }
+  return true;
+}
 
 // ─── VAPID Configuration ──────────────────────────────────────────────────────
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY ?? "";
@@ -628,37 +654,77 @@ export function createApp() {
     const registrationPlayer = { ...player, username };
     try {
       const db = await getDb();
-      // Lifecycle guard: reject registrations when the tournament has started or completed.
-      // This prevents late registrations from corrupting pairings.
-      const stateRows = await db
-        .select({ stateJson: tournamentState.stateJson })
-        .from(tournamentState)
-        .where(eq(tournamentState.tournamentId, id));
-      if (stateRows.length > 0) {
-        try {
-          const ts = JSON.parse(stateRows[0].stateJson) as { status?: string };
-          const status = ts?.status ?? "";
-          if (status === "completed" || status === "in_progress" || status === "paused") {
-            return res.status(409).json({ error: "registration_closed", message: "Tournament registration is closed" });
+      const registration = await db.transaction(async (tx) => {
+        // Serialise registration decisions on the host's tournament record so
+        // concurrent QR scans cannot both consume the final available place.
+        await tx.execute(sql`SELECT tournament_id FROM user_tournaments WHERE tournament_id = ${id} FOR UPDATE`);
+        const [policy] = await tx
+          .select({ status: userTournaments.status, maxPlayers: userTournaments.maxPlayers })
+          .from(userTournaments)
+          .where(eq(userTournaments.tournamentId, id))
+          .limit(1);
+
+        if (policy) {
+          const lifecycle = policy.status ?? "registration";
+          if (lifecycle !== "registration") {
+            return { error: "registration_closed" as const };
           }
-        } catch {
-          // If stateJson is malformed, allow the registration to proceed
+
+          const [existing] = await tx
+            .select({ id: tournamentPlayers.id })
+            .from(tournamentPlayers)
+            .where(and(eq(tournamentPlayers.tournamentId, id), eq(tournamentPlayers.username, username)))
+            .limit(1);
+          if (!existing && policy.maxPlayers && policy.maxPlayers > 0) {
+            const [countRow] = await tx
+              .select({ count: sql<number>`count(*)` })
+              .from(tournamentPlayers)
+              .where(eq(tournamentPlayers.tournamentId, id));
+            if (Number(countRow?.count ?? 0) >= policy.maxPlayers) {
+              return { error: "registration_full" as const };
+            }
+          }
+        } else {
+          // Compatibility fallback for legacy, pre-policy events. New events
+          // always have a user_tournaments policy row. A malformed state never
+          // reopens a terminal legacy event.
+          const [stateRow] = await tx
+            .select({ stateJson: tournamentState.stateJson })
+            .from(tournamentState)
+            .where(eq(tournamentState.tournamentId, id))
+            .limit(1);
+          if (stateRow) {
+            try {
+              const lifecycle = (JSON.parse(stateRow.stateJson) as { status?: string }).status ?? "registration";
+              if (lifecycle !== "registration") return { error: "registration_closed" as const };
+            } catch {
+              return { error: "registration_closed" as const };
+            }
+          }
         }
-      }
-      await db
-        .insert(tournamentPlayers)
-        .values({
-          id: nanoid(),
-          tournamentId: id,
-          username,
-          playerJson: JSON.stringify(registrationPlayer),
-        })
-        .onDuplicateKeyUpdate({
-          set: {
-            // Preserve original joinedAt/id while refreshing player details.
+
+        await tx
+          .insert(tournamentPlayers)
+          .values({
+            id: nanoid(),
+            tournamentId: id,
+            username,
             playerJson: JSON.stringify(registrationPlayer),
-          },
-        });
+          })
+          .onDuplicateKeyUpdate({
+            set: {
+              // Preserve original joinedAt/id while refreshing player details.
+              playerJson: JSON.stringify(registrationPlayer),
+            },
+          });
+        return { error: null };
+      });
+      if (registration.error === "registration_closed") {
+        return res.status(409).json({ error: "registration_closed", message: "Tournament registration is closed" });
+      }
+      if (registration.error === "registration_full") {
+        return res.status(409).json({ error: "registration_full", message: "Tournament registration is full" });
+      }
       // Broadcast the new/updated player to all connected SSE director clients
       broadcastPlayerJoined(id, registrationPlayer);
       res.json({ ok: true, username });
@@ -818,6 +884,7 @@ export function createApp() {
     const { id } = req.params;
     const { state, baseRevision } = req.body as { state: unknown; baseRevision?: unknown };
     if (!id || !state) return res.status(400).json({ error: "Missing tournament id or state" });
+    if (!(await requireTournamentLifecycleOwner(req, res, id))) return;
     if (baseRevision !== undefined && (typeof baseRevision !== "number" || !Number.isInteger(baseRevision) || baseRevision < 0)) {
       return res.status(400).json({ error: "baseRevision must be a non-negative integer" });
     }
@@ -934,6 +1001,18 @@ export function createApp() {
         swissRounds?: number;
         format?: string;
         elimCutoff?: number;
+        quadSections?: Array<{
+          id: string;
+          name: string;
+          type: "quad" | "bottom_swiss";
+          orderIndex?: number;
+          ratingMin?: number;
+          ratingMax?: number;
+          playerIds: string[];
+          localSeeds?: Record<string, number>;
+          status?: string;
+        }>;
+        quadSettings?: { tiebreakOrder?: string[] };
         bracketLabel?: string;
         parentBracketGroupId?: string;
         parentTournamentId?: string;
@@ -955,6 +1034,11 @@ export function createApp() {
         swissRounds: s.swissRounds ?? null,
         format: s.format ?? null,
         elimCutoff: s.elimCutoff ?? null,
+        // Completed Quads must retain their persisted section membership and
+        // tiebreak settings on fresh devices. These are read-only projections;
+        // clients never regenerate or repartition sections from this response.
+        quadSections: s.quadSections ?? [],
+        quadSettings: s.quadSettings ?? null,
         // Bracket metadata for child bracket-tournaments
         bracketLabel: s.bracketLabel ?? null,
         parentBracketGroupId: s.parentBracketGroupId ?? null,
@@ -1012,6 +1096,7 @@ export function createApp() {
           players?: BuildSnapshotInput["players"];
           rounds?: BuildSnapshotInput["rounds"];
           quadSections?: Array<{ id: string; name: string; type: string; playerIds: string[] }>;
+          quadSettings?: { tiebreakOrder?: string[] };
         };
         const snapshot = buildSnapshot({
           tournamentId: ut.tournamentId,
@@ -1025,6 +1110,7 @@ export function createApp() {
           players: s.players ?? [],
           rounds: s.rounds ?? [],
           quadSections: s.quadSections,
+          quadSettings: s.quadSettings,
           updatedAt: stateRows[0].updatedAt?.toISOString?.() ?? new Date().toISOString(),
         });
         cached = setSnapshotCache(ut.tournamentId, snapshot);
@@ -1660,6 +1746,7 @@ export function createApp() {
   app.post("/api/tournament/:id/start", async (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    if (!(await requireTournamentLifecycleOwner(req, res, id))) return;
     const { round, games, players } = req.body as {
       round: number;
       games: unknown[];
@@ -1668,8 +1755,6 @@ export function createApp() {
     if (!round || !games || !players) {
       return res.status(400).json({ error: "Missing round, games, or players" });
     }
-    // Broadcast SSE immediately so connected players transition right away
-    broadcastTournamentStarted(id, { round, games, players });
     try {
       const db = await getDb();
       // 1. Immediately patch tournamentState so the polling fallback (/live-state)
@@ -1719,12 +1804,14 @@ export function createApp() {
       await db
         .update(userTournaments)
         .set({ startedAt: new Date(), status: "in_progress" })
-        .where(and(
-          eq(userTournaments.tournamentId, id),
-          isNull(userTournaments.startedAt)
-        ));
+        .where(eq(userTournaments.tournamentId, id));
+      invalidateSnapshotCache(id);
+      // Observers receive an event only after both the state and registration
+      // policy are durable, avoiding a stale public/read-model race.
+      broadcastTournamentStarted(id, { round, games, players });
     } catch (e) {
       logger.warn("[start] Failed to update tournament state/startedAt:", e);
+      return res.status(500).json({ error: "Failed to start tournament" });
     }
     res.json({ ok: true });
   });
@@ -1789,24 +1876,61 @@ export function createApp() {
   // Broadcasts a tournament_ended SSE event with the final sorted standings
   // so all connected player screens transition to the Tournament Complete view.
   // Body: { players: Player[]; tournamentName?: string }
-  app.post("/api/tournament/:id/end", (req, res) => {
+  app.post("/api/tournament/:id/end", async (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
-    const { players, tournamentName } = req.body as {
+    if (!(await requireTournamentLifecycleOwner(req, res, id))) return;
+    const { players, tournamentName, state, baseRevision } = req.body as {
       players: unknown[];
       tournamentName?: string;
+      state?: Record<string, unknown>;
+      baseRevision?: number;
     };
-    if (!players || !Array.isArray(players)) {
+    if (!players || !Array.isArray(players) || !state) {
       return res.status(400).json({ error: "Missing players array" });
     }
-    const subs = sseSubscribers.get(id);
-    if (subs && subs.size > 0) {
-      const data = `event: tournament_ended\ndata: ${JSON.stringify({ players, tournamentName: tournamentName ?? "Tournament" })}\n\n`;
-      for (const sub of Array.from(subs)) {
-        try { sub.write(data); } catch { /* disconnected */ }
+    try {
+      const db = await getDb();
+      const [existing] = await db
+        .select({ revision: tournamentState.revision })
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id))
+        .limit(1);
+      if (existing && (baseRevision === undefined || baseRevision !== existing.revision)) {
+        return res.status(409).json({ error: "revision_conflict", currentRevision: existing.revision });
       }
+      const finalState = {
+        ...state,
+        status: "completed",
+        players,
+        rounds: Array.isArray(state.rounds)
+          ? state.rounds.map((round) => ({ ...(round as Record<string, unknown>), status: "completed" }))
+          : state.rounds,
+        quadSections: Array.isArray(state.quadSections)
+          ? state.quadSections.map((section) => ({ ...(section as Record<string, unknown>), status: "completed" }))
+          : state.quadSections,
+      };
+      const nextRevision = (existing?.revision ?? 0) + 1;
+      if (existing) {
+        await db.update(tournamentState).set({ stateJson: JSON.stringify(finalState), revision: nextRevision, updatedAt: new Date() })
+          .where(and(eq(tournamentState.tournamentId, id), eq(tournamentState.revision, existing.revision)));
+      } else {
+        await db.insert(tournamentState).values({ tournamentId: id, stateJson: JSON.stringify(finalState), revision: nextRevision });
+      }
+      await db.update(userTournaments).set({ status: "completed" }).where(eq(userTournaments.tournamentId, id));
+      invalidateSnapshotCache(id);
+      const subs = sseSubscribers.get(id);
+      if (subs && subs.size > 0) {
+        const data = `event: tournament_ended\ndata: ${JSON.stringify({ players, tournamentName: tournamentName ?? "Tournament", revision: nextRevision })}\n\n`;
+        for (const sub of Array.from(subs)) {
+          try { sub.write(data); } catch { /* disconnected */ }
+        }
+      }
+      res.json({ ok: true, revision: nextRevision, state: finalState });
+    } catch (error) {
+      logger.error("[end] Failed to persist final tournament state:", error);
+      res.status(500).json({ error: "Failed to finalize tournament" });
     }
-    res.json({ ok: true });
   });
 
   // ─── Board Broadcast Settings ────────────────────────────────────────────────

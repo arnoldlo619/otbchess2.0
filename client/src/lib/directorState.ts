@@ -217,6 +217,25 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
   };
 }
 
+/**
+ * Safe temporary state for a real tournament before its authoritative server
+ * snapshot arrives. Unknown IDs must never render the demo tournament's roster,
+ * rounds, standings, or name under a historical/public route.
+ */
+function getUnresolvedInitialState(tournamentId: string): DirectorState {
+  return {
+    tournamentId,
+    tournamentName: "Tournament",
+    totalRounds: 0,
+    format: "swiss",
+    players: [],
+    rounds: [],
+    currentRound: 0,
+    status: "registration",
+    roundMinutes: 25,
+  };
+}
+
 function loadFromStorage(tournamentId: string): DirectorState | null {
   try {
     const raw = localStorage.getItem(storageKey(tournamentId));
@@ -337,8 +356,8 @@ function resolveInitialState(tournamentId: string): DirectorState {
     return getNewTournamentState(config);
   }
 
-  // 4. Unknown ID — fall back to demo
-  return getDemoInitialState();
+  // 4. Unknown ID — wait for server hydration without impersonating the demo.
+  return getUnresolvedInitialState(tournamentId);
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -424,6 +443,31 @@ export function useDirectorState(
       if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
     };
   }, [state, tournamentId, isDemo]);
+
+  /**
+   * Sends a current state snapshot using the same optimistic revision contract
+   * as the debounced writer. Result entry paths use this to publish public
+   * standings without issuing an intentionally doomed revision-less PUT.
+   */
+  const flushStateToServer = useCallback(async (nextState: DirectorState): Promise<boolean> => {
+    if (isDemo) return true;
+    const requestBody = serverRevisionRef.current === null
+      ? { state: nextState }
+      : { state: nextState, baseRevision: serverRevisionRef.current };
+    try {
+      const response = await fetch(`/api/tournament/${tournamentId}/state`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      if (!response.ok) return false;
+      const saved = await response.json().catch(() => null) as { revision?: number } | null;
+      if (typeof saved?.revision === "number") serverRevisionRef.current = saved.revision;
+      return true;
+    } catch {
+      return false;
+    }
+  }, [isDemo, tournamentId]);
 
   // Re-sync from localStorage when the tab regains visibility (phone unlock, app switch)
   useVisibilitySync(() => {
@@ -1250,6 +1294,7 @@ export function useDirectorState(
     swapQuadPlayers,
     renameQuadSection,
     updateSettings,
+    flushStateToServer,
     loadMockQuadsState,
   };
 }

@@ -13,7 +13,8 @@
  */
 
 import { getStandings } from "./tournamentData";
-import type { Player, Round, Result } from "./tournamentData";
+import type { Player, Result, Round } from "./tournamentData";
+import { calculateQuadStandings, type QuadSettings } from "./quads";
 
 // ─── Brand colours ────────────────────────────────────────────────────────────
 const GREEN_DARK  = [61, 107, 71]   as [number, number, number]; // #3D6B47
@@ -524,15 +525,129 @@ export interface PdfOptions {
   clubName?: string;
   /** Optional club logo URL — rendered as a small image in the header */
   clubLogoUrl?: string;
+  /** Persisted section membership for a Quads export. No global Quads table is emitted. */
+  quadSections?: Array<{
+    id: string;
+    name: string;
+    type: "quad" | "bottom_swiss";
+    playerIds: string[];
+    orderIndex?: number;
+    ratingMin?: number;
+    ratingMax?: number;
+    localSeeds?: Record<string, number>;
+    status?: "pending" | "in_progress" | "completed";
+  }>;
+  quadSettings?: Pick<QuadSettings, "tiebreakOrder">;
+}
+
+/** Creates an independent standings and cross-table page for every Quads section. */
+async function buildQuadsResultsPdf(
+  opts: PdfOptions,
+  jsPDF: typeof import("jspdf").default,
+  autoTable: typeof import("jspdf-autotable").default,
+) {
+  const clubLogoBase64 = opts.clubLogoUrl ? await fetchImageAsBase64(opts.clubLogoUrl) : undefined;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const margin = 14;
+  const sections = [...(opts.quadSections ?? [])].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  const games = opts.rounds.flatMap((round) => round.games);
+
+  sections.forEach((section, sectionIndex) => {
+    if (sectionIndex > 0) doc.addPage("a4", "portrait");
+    const pageW = doc.internal.pageSize.getWidth();
+    drawPageHeader(doc, opts.tournamentName, pageW, opts.clubName, clubLogoBase64);
+    const sectionPlayers = opts.players.filter((player) => section.playerIds.includes(player.id));
+    const canonicalSection = {
+      ...section,
+      orderIndex: section.orderIndex ?? sectionIndex,
+      ratingMin: section.ratingMin ?? 0,
+      ratingMax: section.ratingMax ?? 0,
+      localSeeds: section.localSeeds ?? {},
+      status: section.status ?? "completed",
+    };
+    const rows = calculateQuadStandings(canonicalSection, games, sectionPlayers, opts.quadSettings?.tiebreakOrder);
+
+    doc.setTextColor(...TEXT_MID);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    const meta = [opts.date ? `Date: ${opts.date}` : "", opts.location ? `Venue: ${opts.location}` : "", opts.timeControl ? `Time Control: ${opts.timeControl}` : "", `${sectionPlayers.length} players`].filter(Boolean);
+    doc.text(meta.join("   •   "), margin, 30);
+    doc.setDrawColor(...GREY_MED);
+    doc.line(margin, 33, pageW - margin, 33);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...GREEN_DARK);
+    doc.text(`${section.name} — Final Standings`, margin, 41);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...TEXT_MID);
+    doc.text(section.type === "bottom_swiss" ? "Bottom Swiss section · independent standings" : "Round-robin Quad · independent standings", margin, 46);
+
+    autoTable(doc, {
+      startY: 51,
+      head: [["#", "Player", "Rating", "W", "D", "L", "Pts", "SB"]],
+      body: rows.map((row) => {
+        const player = sectionPlayers.find((candidate) => candidate.id === row.playerId);
+        return [String(row.finalRank), player?.name ?? player?.username ?? row.playerId, String(player?.elo ?? 0), String(row.wins), String(row.draws), String(row.losses), row.score % 1 === 0 ? String(row.score) : `${Math.floor(row.score)}½`, row.sonnebornBerger.toFixed(2)];
+      }),
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 8.5, cellPadding: 2.8, font: "helvetica", textColor: TEXT_DARK },
+      headStyles: { fillColor: GREEN_DARK, textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+      alternateRowStyles: { fillColor: GREY_LIGHT },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.row.index === 0 && data.column.index === 0) data.cell.styles.fillColor = GOLD;
+        if (data.section === "body" && data.column.index === 6) data.cell.styles.fontStyle = "bold";
+      },
+    });
+
+    const finalY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 115;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...GREEN_DARK);
+    doc.text(`${section.name} Cross-Table`, margin, finalY + 11);
+    const sectionRounds = opts.rounds.map((round) => ({
+      ...round,
+      games: round.games.filter((game) => game.sectionId === section.id),
+    }));
+    const orderedPlayers = rows.flatMap((row) => sectionPlayers
+      .filter((player) => player.id === row.playerId)
+      .map((player) => ({ ...player, points: row.score }))
+    );
+    const crossTable = buildCrossTableMatrix(orderedPlayers, sectionRounds);
+    autoTable(doc, {
+      startY: finalY + 15,
+      head: [crossTable.headers],
+      body: crossTable.rows,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 7.5, cellPadding: 2, font: "helvetica", textColor: TEXT_DARK },
+      headStyles: { fillColor: GREEN_DARK, textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+      alternateRowStyles: { fillColor: GREY_LIGHT },
+    });
+  });
+
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    drawFooter(doc, page, totalPages);
+  }
+  return doc;
 }
 
 export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
-  const includeBuchholz = usesBuchholzPdfTiebreak(opts.format);
   // Dynamic imports keep jsPDF + autoTable out of the initial bundle
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
   ]);
+
+  if (opts.format === "quads" && opts.quadSections?.length) {
+    const doc = await buildQuadsResultsPdf(opts, jsPDF, autoTable);
+    const safeName = opts.tournamentName.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+    doc.save(`otb-${safeName}-quads-results.pdf`);
+    return;
+  }
+
+  const includeBuchholz = usesBuchholzPdfTiebreak(opts.format);
 
   const {
     tournamentName,
@@ -731,11 +846,17 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
  * server-side emails via the SMTP system.
  */
 export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string> {
-  const includeBuchholz = usesBuchholzPdfTiebreak(opts.format);
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
   ]);
+
+  if (opts.format === "quads" && opts.quadSections?.length) {
+    const doc = await buildQuadsResultsPdf(opts, jsPDF, autoTable);
+    return doc.output("datauristring").split(",")[1];
+  }
+
+  const includeBuchholz = usesBuchholzPdfTiebreak(opts.format);
 
   const {
     tournamentName,

@@ -63,7 +63,14 @@ interface PublicTournamentData {
   players: Player[];
   rounds: Round[];
   standings: PublicStandingRow[];
-  quadSections?: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
+  quadSections?: {
+    id: string;
+    name: string;
+    type: "quad" | "bottom_swiss";
+    playerIds: string[];
+    /** Quads standings are intentionally section-scoped in the public contract. */
+    standings: PublicStandingRow[];
+  }[];
   updatedAt: string;
 }
 
@@ -846,20 +853,20 @@ function CompletedHero({
   data: PublicTournamentData;
   standings: PublicStandingRow[];
   isDark: boolean;
-  quadSections?: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
+  quadSections?: {
+    id: string;
+    name: string;
+    type: "quad" | "bottom_swiss";
+    playerIds: string[];
+    standings: PublicStandingRow[];
+  }[];
 }) {
   const isQuadsFormat = data.format === "quads" && quadSections && quadSections.length > 0;
-  // For Quads: compute per-section champions using SB tiebreak (server already sorted by SB)
+  // Quads have no global podium. The server returns one canonical ordered table
+  // per section; retain it rather than filtering an intentionally empty global list.
   const sectionChampions = isQuadsFormat
     ? quadSections.map(s => {
-        const sectionStandings = standings
-          .filter(r => new Set(s.playerIds).has(r.playerId))
-          .sort((a, b) => {
-            if (b.points !== a.points) return b.points - a.points;
-            if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
-            return b.elo - a.elo;
-          });
-        return { section: s, champion: sectionStandings[0] ?? null };
+        return { section: s, champion: s.standings[0] ?? null };
       }).filter(x => x.champion !== null)
     : [];
   const podium = standings.slice(0, 3);
@@ -1594,7 +1601,9 @@ export default function PublicTournament() {
     [data, followedPlayerId, track]
   );
 
-    // Standings are precomputed server-side — no client computation needed
+  // Standings are precomputed server-side — no client computation needed.
+  // Quads deliberately keep this global collection empty to prevent a fabricated
+  // tournament-wide rank; their rows live in section.standings.
   const standings = useMemo(() => data?.standings ?? [], [data?.standings]);
   const quadSections = useMemo(() => data?.quadSections ?? [], [data?.quadSections]);
   const isQuads = data?.format === "quads" && quadSections.length > 0;
@@ -1605,25 +1614,14 @@ export default function PublicTournament() {
     if (!isQuads || activeQuadSection === "all") return standings;
     const section = quadSections.find(s => s.id === activeQuadSection);
     if (!section) return standings;
-    const playerIdSet = new Set(section.playerIds);
-    return standings
-      .filter(r => playerIdSet.has(r.playerId))
-      .map((r, i) => ({ ...r, rank: i + 1 }));
+    return section.standings;
   }, [isQuads, activeQuadSection, standings, quadSections]);
 
   const getPlayerSectionStandings = useCallback((playerId: string) => {
     if (!isQuads) return standings;
     const playerSection = quadSections.find((section) => section.playerIds.includes(playerId));
     if (!playerSection) return standings;
-    const playerIdSet = new Set(playerSection.playerIds);
-    return standings
-      .filter((row) => playerIdSet.has(row.playerId))
-      .sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if ((b.sonnebornBerger ?? 0) !== (a.sonnebornBerger ?? 0)) return (b.sonnebornBerger ?? 0) - (a.sonnebornBerger ?? 0);
-        return b.elo - a.elo;
-      })
-      .map((row, index) => ({ ...row, rank: index + 1 }));
+    return playerSection.standings;
   }, [isQuads, quadSections, standings]);
 
   const followedPlayer = useMemo(
@@ -1862,14 +1860,7 @@ export default function PublicTournament() {
               <p className="text-sm text-muted-foreground">Each quad is an independent competition. Click a section tab to see its full standings.</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {quadSections.map((s) => {
-                  const sectionRows = standings
-                    .filter(r => new Set(s.playerIds).has(r.playerId))
-                    .sort((a, b) => {
-                      if (b.points !== a.points) return b.points - a.points;
-                      if ((b.sonnebornBerger ?? 0) !== (a.sonnebornBerger ?? 0)) return (b.sonnebornBerger ?? 0) - (a.sonnebornBerger ?? 0);
-                      return b.elo - a.elo;
-                    })
-                    .map((r, i) => ({ ...r, rank: i + 1 }));
+                  const sectionRows = s.standings;
                   const champion = sectionRows[0];
                   return (
                     <div

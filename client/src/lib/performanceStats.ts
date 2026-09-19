@@ -15,6 +15,7 @@
  */
 import type { Player, Game, Round } from "./tournamentData";
 import { computeStandings } from "./swiss";
+import { calculateQuadStandings, type QuadSettings } from "./quads";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -361,9 +362,21 @@ export interface QuadSectionPerformances {
 export function computeQuadSectionPerformances(
   players: Player[],
   rounds: Round[],
-  quadSections: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[]
+  quadSections: Array<{
+    id: string;
+    name: string;
+    type: "quad" | "bottom_swiss";
+    playerIds: string[];
+    orderIndex?: number;
+    ratingMin?: number;
+    ratingMax?: number;
+    localSeeds?: Record<string, number>;
+    status?: "pending" | "in_progress" | "completed";
+  }>,
+  quadSettings?: Pick<QuadSettings, "tiebreakOrder">
 ): QuadSectionPerformances[] {
-  return quadSections.map((section) => {
+  const games = rounds.flatMap((round) => round.games);
+  return [...quadSections].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)).map((section, sectionIndex) => {
     // Filter players to this section
     const sectionPlayerIds = new Set(section.playerIds);
     const sectionPlayers = players.filter((p) => sectionPlayerIds.has(p.id));
@@ -377,8 +390,38 @@ export function computeQuadSectionPerformances(
       ),
     }));
 
-    // Compute performances within section scope
-    const perfs = computeAllPerformances(sectionPlayers, sectionRounds);
+    // Keep the rich performance metrics, but replace Swiss-derived rows with
+    // the configured canonical Quads ranks and score values.
+    const performanceByPlayerId = new Map(
+      computeAllPerformances(sectionPlayers, sectionRounds).map((performance) => [performance.player.id, performance])
+    );
+    const canonicalSection = {
+      ...section,
+      orderIndex: section.orderIndex ?? sectionIndex,
+      ratingMin: section.ratingMin ?? 0,
+      ratingMax: section.ratingMax ?? 0,
+      localSeeds: section.localSeeds ?? {},
+      status: section.status ?? "completed",
+    };
+    const perfs = calculateQuadStandings(
+      canonicalSection,
+      games,
+      sectionPlayers,
+      quadSettings?.tiebreakOrder,
+    ).flatMap((standing) => {
+      const performance = performanceByPlayerId.get(standing.playerId);
+      if (!performance) return [];
+      return [{
+        ...performance,
+        rank: standing.finalRank,
+        points: standing.score,
+        wins: standing.wins,
+        draws: standing.draws,
+        losses: standing.losses,
+        buchholz: 0,
+        sonnebornBerger: standing.sonnebornBerger,
+      }];
+    });
 
     // Detect co-champions: multiple players sharing rank 1
     const champCount = perfs.filter((p) => p.rank === 1).length;

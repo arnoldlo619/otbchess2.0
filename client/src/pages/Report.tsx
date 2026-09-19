@@ -713,7 +713,12 @@ export default function ReportPage() {
 
   const players = isDemo ? DEMO_TOURNAMENT.players : (rawState?.players ?? []);
   const rounds = isDemo ? DEMO_TOURNAMENT.roundData : (rawState?.rounds ?? []);
-  const tournamentName = config?.name ?? rawState?.tournamentName ?? DEMO_TOURNAMENT.name;
+  // Only the explicit demo route may render demo metadata. A historical or
+  // unavailable tournament must remain empty/loading rather than briefly
+  // presenting the OTB demo as its own report.
+  const tournamentName = isDemo
+    ? DEMO_TOURNAMENT.name
+    : config?.name ?? rawState?.tournamentName ?? "Tournament";
   const tournamentDate = config?.date ?? "";
 
   // ── Multi-Tournament Bracket context ────────────────────────────────────────
@@ -748,10 +753,10 @@ export default function ReportPage() {
   const urlSearch = useSearch();
   const sectionParam = new URLSearchParams(urlSearch).get("section");
   const isQuads = !isDemo && rawState?.format === "quads";
-  const quadSections = (rawState?.quadSections ?? []) as { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[] }[];
+  const quadSections = (rawState?.quadSections ?? []) as Parameters<typeof computeQuadSectionPerformances>[2];
 
   const quadSectionPerfs: QuadSectionPerformances[] = isQuads
-    ? computeQuadSectionPerformances(players, rounds, quadSections)
+    ? computeQuadSectionPerformances(players, rounds, quadSections, rawState?.quadSettings)
     : [];
 
   const [activeSection, setActiveSection] = useState<string>(sectionParam ?? "all");
@@ -920,8 +925,11 @@ export default function ReportPage() {
         location: config?.venue,
         date: config?.date,
         timeControl: config?.timePreset,
+        format: rawState?.format ?? config?.format,
         players,
         rounds,
+        quadSections: isQuads ? quadSections : undefined,
+        quadSettings: isQuads ? rawState?.quadSettings : undefined,
         clubName: config?.clubName ?? undefined,
         clubLogoUrl: clubAvatarUrl ?? undefined,
       });

@@ -22,6 +22,7 @@ import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { useTheme } from "@/contexts/ThemeContext";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
 import type { Player, Round } from "@/lib/tournamentData";
+import { calculateQuadStandings, type QuadSection, type QuadSettings, type QuadStanding } from "@/lib/quads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
@@ -40,6 +41,13 @@ interface TournamentMeta {
   format?: string;
   swissRounds?: number;
   elimCutoff?: number;
+  quadSections?: QuadSection[];
+  quadSettings?: QuadSettings;
+}
+
+interface QuadFinalSection {
+  section: QuadSection;
+  rows: Array<QuadStanding & { player: Player }>;
 }
 
 function rankColor(rank: number, isDark: boolean): string {
@@ -389,6 +397,93 @@ function Skeleton({ isDark }: { isDark: boolean }) {
   );
 }
 
+function QuadsFinalResults({
+  id,
+  meta,
+  sections,
+  isDark,
+}: {
+  id: string | undefined;
+  meta: TournamentMeta;
+  sections: QuadFinalSection[];
+  isDark: boolean;
+}) {
+  const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F7FAF7]";
+  const cardBg = isDark ? "bg-[#111f14]" : "bg-white";
+  const border = isDark ? "border-white/08" : "border-[#E8F0E8]";
+  const textMain = isDark ? "text-white" : "text-[#1a1a1a]";
+  const textMuted = isDark ? "text-white/40" : "text-[#436850]";
+  const headerBg = isDark ? "bg-[#0a1a0d]" : "bg-white";
+  const thBg = isDark ? "bg-[#0f1f12]" : "bg-[#FBFADA]";
+
+  return (
+    <div className={`min-h-screen ${bg} flex flex-col`}>
+      <header className={`sticky top-0 z-30 otb-header-safe ${headerBg} border-b ${border} backdrop-blur-sm`}>
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          <Link href={`/tournament/${id}`} className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-white/60 hover:text-white" : "text-[#436850] hover:text-[#436850]"}`}>
+            <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Tournament</span>
+          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <Trophy className="w-4 h-4 shrink-0 text-[#436850]" />
+            <span className={`text-sm font-bold truncate ${textMain}`}>{meta.name}</span>
+          </div>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-5xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8 space-y-5">
+        <section className={`${cardBg} rounded-2xl border ${border} px-5 py-6 sm:px-7 sm:py-8`}>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#436850] mb-1">Final Results</p>
+          <h1 className={`text-2xl sm:text-3xl font-black tracking-tight ${textMain}`}>{meta.name}</h1>
+          {(meta.location || meta.date) && <p className={`mt-1 text-sm ${textMuted}`}>{[meta.location, meta.date].filter(Boolean).join(" · ")}</p>}
+          <p className={`mt-4 text-sm leading-6 ${textMuted}`}>
+            Each Quad is an independent section with its own champion and tiebreak order.
+          </p>
+        </section>
+
+        {sections.map(({ section, rows }) => {
+          const champion = rows[0];
+          return (
+            <section key={section.id} className={`${cardBg} rounded-2xl border ${border} overflow-hidden`}>
+              <div className={`px-4 sm:px-5 py-4 border-b ${border} flex flex-wrap items-center justify-between gap-3`}>
+                <div>
+                  <h2 className={`text-lg font-black ${textMain}`}>{section.name}</h2>
+                  <p className={`mt-0.5 text-xs ${textMuted}`}>{section.type === "bottom_swiss" ? "Bottom Swiss section" : "Round-robin Quad"}</p>
+                </div>
+                {champion && <div className={`text-right text-xs ${textMuted}`}><span className="block font-bold text-amber-500">Section Champion</span>{champion.player.name}</div>}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[540px] border-collapse">
+                  <caption className="sr-only">{section.name} final standings</caption>
+                  <thead><tr className={thBg}>
+                    {[["#", "text-left"], ["Player", "text-left"], ["Rating", "text-right"], ["W", "text-right"], ["D", "text-right"], ["L", "text-right"], ["Pts", "text-right"], ["SB", "text-right"]].map(([label, alignment]) => (
+                      <th key={label} scope="col" className={`px-3 sm:px-4 py-2.5 text-xs font-bold uppercase tracking-wider ${alignment} ${textMuted}`}>{label}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr key={row.playerId} className={`border-t ${border} ${row.finalRank === 1 ? (isDark ? "bg-amber-500/08" : "bg-amber-50/70") : ""}`}>
+                        <td className={`px-3 sm:px-4 py-3 text-sm font-black ${row.finalRank === 1 ? "text-amber-500" : textMuted}`}>{row.finalRank}</td>
+                        <th scope="row" className="px-3 sm:px-4 py-3 text-left font-normal"><div className="flex items-center gap-2.5"><PlayerAvatar username={row.player.username} name={row.player.name} platform={row.player.platform ?? "chesscom"} avatarUrl={row.player.avatarUrl} size={30} /><div className="min-w-0"><p className={`truncate text-sm font-bold ${textMain}`}>{row.player.name || row.player.username}</p><p className={`truncate text-xs ${textMuted}`}>@{row.player.username}</p></div></div></th>
+                        <td className={`px-3 sm:px-4 py-3 text-right text-sm tabular-nums ${textMuted}`}>{row.player.elo}</td>
+                        <td className="px-3 sm:px-4 py-3 text-right text-sm font-semibold tabular-nums text-emerald-500">{row.wins}</td>
+                        <td className={`px-3 sm:px-4 py-3 text-right text-sm font-semibold tabular-nums ${textMuted}`}>{row.draws}</td>
+                        <td className={`px-3 sm:px-4 py-3 text-right text-sm font-semibold tabular-nums ${textMuted}`}>{row.losses}</td>
+                        <td className={`px-3 sm:px-4 py-3 text-right text-sm font-black tabular-nums ${textMain}`}>{row.score % 1 === 0 ? row.score : `${Math.floor(row.score)}½`}</td>
+                        <td className={`px-3 sm:px-4 py-3 text-right text-sm tabular-nums ${textMuted}`}>{row.sonnebornBerger.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          );
+        })}
+      </main>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function FinalStandings() {
@@ -400,6 +495,7 @@ export default function FinalStandings() {
 
   const [meta, setMeta] = useState<TournamentMeta | null>(null);
   const [rows, setRows] = useState<StandingRow[]>([]);
+  const [quadFinalSections, setQuadFinalSections] = useState<QuadFinalSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCarousel, setShowCarousel] = useState(false);
@@ -430,6 +526,8 @@ export default function FinalStandings() {
         format?: string;
         swissRounds?: number;
         elimCutoff?: number;
+        quadSections?: QuadSection[];
+        quadSettings?: QuadSettings;
       };
 
       const players: Player[] = Array.isArray(data.players) ? data.players : [];
@@ -440,9 +538,31 @@ export default function FinalStandings() {
       const isSwissElim = data.format === "swiss_elim" && (data.swissRounds ?? 0) > 0;
       let standings: StandingRow[];
 
-      if (isSwissElim) {
+      if (data.format === "quads" && Array.isArray(data.quadSections) && data.quadSections.length > 0) {
+        const games = rounds.flatMap((round) => round.games);
+        const sections = [...data.quadSections]
+          .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+          .map((section) => {
+            const sectionPlayers = players.filter((player) => section.playerIds.includes(player.id));
+            const playerById = new Map(sectionPlayers.map((player) => [player.id, player]));
+            const sectionRows = calculateQuadStandings(
+              section,
+              games,
+              sectionPlayers,
+              data.quadSettings?.tiebreakOrder,
+            ).flatMap((row) => {
+              const player = playerById.get(row.playerId);
+              return player ? [{ ...row, player }] : [];
+            });
+            return { section, rows: sectionRows };
+          });
+        setQuadFinalSections(sections);
+        standings = [];
+      } else if (isSwissElim) {
+        setQuadFinalSections([]);
         standings = buildSwissElimRows(players, rounds, data.swissRounds!);
       } else {
+        setQuadFinalSections([]);
         standings = computeStandings(players, completedRounds);
       }
 
@@ -458,6 +578,8 @@ export default function FinalStandings() {
         format: data.format ?? undefined,
         swissRounds: data.swissRounds ?? undefined,
         elimCutoff: data.elimCutoff ?? undefined,
+        quadSections: data.quadSections ?? undefined,
+        quadSettings: data.quadSettings ?? undefined,
       });
     } catch {
       setError("Network error — please try again.");
@@ -506,6 +628,10 @@ export default function FinalStandings() {
         <Link href="/" className="text-sm font-semibold text-[#436850] underline">Go home</Link>
       </div>
     );
+  }
+
+  if (!loading && meta?.format === "quads") {
+    return <QuadsFinalResults id={id} meta={meta} sections={quadFinalSections} isDark={isDark} />;
   }
 
   // ── Podium top-3 ────────────────────────────────────────────────────────────

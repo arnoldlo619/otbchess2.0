@@ -1,0 +1,1 @@
+ALTER TABLE `user_tournaments` ADD `max_players` int;

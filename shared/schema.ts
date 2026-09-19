@@ -203,6 +203,8 @@ export const userTournaments = mysqlTable(
     date: varchar("date", { length: 20 }),
     format: varchar("format", { length: 50 }),
     rounds: int("rounds"),
+    /** Server-enforced registration capacity. Nullable for pre-policy legacy events. */
+    maxPlayers: int("max_players"),
     inviteCode: varchar("invite_code", { length: 20 }),
     // Tournament lifecycle status: registration | in_progress | completed | paused
     status: varchar("status", { length: 20 }).default("registration"),

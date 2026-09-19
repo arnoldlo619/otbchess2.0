@@ -531,6 +531,8 @@ interface ServerJoinResolution {
   date?: string | null;
   inviteCode?: string | null;
   customSlug?: string | null;
+  status?: string | null;
+  maxPlayers?: number | null;
 }
 
 function configFromServerResolution(data: ServerJoinResolution, fallbackCode: string): TournamentConfig {
@@ -544,7 +546,7 @@ function configFromServerResolution(data: ServerJoinResolution, fallbackCode: st
     description: "",
     format: (data.format ?? "swiss") as TournamentConfig["format"],
     rounds: data.rounds ?? 5,
-    maxPlayers: 64,
+    maxPlayers: data.maxPlayers && data.maxPlayers > 0 ? data.maxPlayers : 64,
     timeBase: 10,
     timeIncrement: 0,
     timePreset: "10+5",
@@ -588,6 +590,7 @@ export default function JoinPage() {
   const isDark = theme === "dark";
   const { triggerForJoin, canPromptNatively } = usePwaInstall();
   const [serverJoinConfig, setServerJoinConfig] = useState<TournamentConfig | null>(null);
+  const [serverJoinStatus, setServerJoinStatus] = useState<string | null>(null);
   const [serverResolved, setServerResolved] = useState(() => !urlCode);
   const [joinBootstrapError, setJoinBootstrapError] = useState("");
   const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
@@ -625,12 +628,14 @@ export default function JoinPage() {
         if (cancelled) return;
         const config = configFromServerResolution(data, urlCode);
         setServerJoinConfig(config);
+        setServerJoinStatus(data.status ?? null);
         registerTournament(config);
         setServerResolved(true);
       })
       .catch(() => {
         if (cancelled) return;
         setServerJoinConfig(null);
+        setServerJoinStatus(null);
         setJoinBootstrapError("We couldn’t load this tournament. Check your connection, then try again or enter the invite code manually.");
       });
     return () => { cancelled = true; };
@@ -829,6 +834,12 @@ export default function JoinPage() {
   // accepting players. Reads from the same localStorage key as isTournamentFull.
   const isTournamentClosed = (() => {
     if (!resolvedConfig || isDemoCode) return false;
+    // The resolver is the canonical policy source on fresh devices. Live state
+    // remains useful for roster updates, but may be absent while an event is
+    // already closed in the host registry.
+    if (serverJoinStatus) {
+      return serverJoinStatus === "completed" || serverJoinStatus === "in_progress" || serverJoinStatus === "paused";
+    }
     try {
       const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
       if (raw) {

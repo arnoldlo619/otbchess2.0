@@ -27,7 +27,7 @@ describe("Quads P0 section awareness", () => {
   it("auto-finalizes Quads independently using section-local champions", () => {
     expect(directorSource).toContain("const autoCompletedQuadsRef = useRef(false)");
     expect(directorSource).toContain('const isQuads = state.format === "quads"');
-    expect(directorSource).toContain("getSectionWinners(calculateQuadStandings(section, games, state.players))");
+    expect(directorSource).toContain("getSectionWinners(calculateQuadStandings(section, games, state.players, state.quadSettings?.tiebreakOrder))");
     expect(directorSource).toContain("section champions confirmed");
     expect(directorSource).not.toContain('const isSwissLike = state.format === "swiss" || state.format === "roundrobin" || state.format === "doubleswiss" || state.format === "quads"');
   });

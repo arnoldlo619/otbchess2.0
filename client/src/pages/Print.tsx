@@ -23,6 +23,7 @@ import {
 } from "@/lib/tournamentData";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
+import { calculateQuadStandings, type QuadSettings } from "@/lib/quads";
 import { getTournamentConfig, registerTournament } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import {
@@ -568,8 +569,44 @@ function WallChart({
 }
 
 // ─── Standings Table ──────────────────────────────────────────────────────────
-function StandingsTable({ players, rounds, isDark, isQuads = false }: { players: Player[]; rounds: Round[]; isDark: boolean; isQuads?: boolean }) {
-  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
+function StandingsTable({ players, rounds, isDark, isQuads = false, quadSection, quadSettings }: {
+  players: Player[];
+  rounds: Round[];
+  isDark: boolean;
+  isQuads?: boolean;
+  quadSection?: { id: string; name: string; type: "quad" | "bottom_swiss"; playerIds: string[]; orderIndex?: number; ratingMin?: number; ratingMax?: number; localSeeds?: Record<string, number>; status?: "pending" | "in_progress" | "completed" };
+  quadSettings?: Pick<QuadSettings, "tiebreakOrder">;
+}) {
+  const standingRows = useMemo(() => {
+    if (!isQuads || !quadSection) return computeStandings(players, rounds);
+    const games = rounds.flatMap((round) => round.games);
+    const section = {
+      ...quadSection,
+      orderIndex: quadSection.orderIndex ?? 0,
+      ratingMin: quadSection.ratingMin ?? 0,
+      ratingMax: quadSection.ratingMax ?? 0,
+      localSeeds: quadSection.localSeeds ?? {},
+      status: quadSection.status ?? "completed",
+    };
+    const playerById = new Map(players.map((player) => [player.id, player]));
+    return calculateQuadStandings(section, games, players, quadSettings?.tiebreakOrder).flatMap((row) => {
+      const player = playerById.get(row.playerId);
+      return player ? [{
+        player,
+        rank: row.finalRank,
+        points: row.score,
+        buchholz: 0,
+        buchholzCut1: 0,
+        sonnebornBerger: row.sonnebornBerger,
+        wins: row.wins,
+        draws: row.draws,
+        losses: row.losses,
+        matchW: 0,
+        matchD: 0,
+        matchL: 0,
+      }] : [];
+    });
+  }, [isQuads, players, quadSection, quadSettings?.tiebreakOrder, rounds]);
   const medals = ["🥇", "🥈", "🥉"];
   const borderColor = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
   const textMuted = isDark ? "text-white/40" : "text-[#436850]";
@@ -603,7 +640,7 @@ function StandingsTable({ players, rounds, isDark, isQuads = false }: { players:
                 {i < 3 ? (
                   <span className="text-base">{medals[i]}</span>
                 ) : (
-                  <span className={`text-xs font-bold ${textMuted}`}>{i + 1}</span>
+                  <span className={`text-xs font-bold ${textMuted}`}>{row.rank}</span>
                 )}
               </td>
               <th scope="row" className={`px-4 py-3 border-b text-left font-normal ${borderColor}`}>
@@ -660,7 +697,19 @@ export default function PrintPage() {
   const isDemo = tournamentId === "otb-demo-2026";
 
   // Server-fetched state for tournaments not in localStorage
-  const [serverState, setServerState] = useState<{ players: Player[]; rounds: Round[]; currentRound: number; totalRounds: number; format: string; name: string; venue: string; date: string; status: string } | null>(null);
+  const [serverState, setServerState] = useState<{
+    players: Player[];
+    rounds: Round[];
+    currentRound: number;
+    totalRounds: number;
+    format: string;
+    name: string;
+    venue: string;
+    date: string;
+    status: string;
+    quadSections?: NonNullable<import("@/lib/directorState").DirectorState["quadSections"]>;
+    quadSettings?: import("@/lib/quads").QuadSettings;
+  } | null>(null);
   const [serverLoading, setServerLoading] = useState(false);
   const [serverNotFound, setServerNotFound] = useState(false);
 
@@ -674,7 +723,7 @@ export default function PrintPage() {
     setServerLoading(true);
     fetch(`/api/public/tournament/${encodeURIComponent(tournamentId)}`)
       .then(r => r.ok ? r.json() : null)
-      .then((data: { players?: Player[]; rounds?: Round[]; currentRound?: number; totalRounds?: number; format?: string; tournamentName?: string; venue?: string; date?: string; status?: string } | null) => {
+      .then((data: { players?: Player[]; rounds?: Round[]; currentRound?: number; totalRounds?: number; format?: string; tournamentName?: string; venue?: string; date?: string; status?: string; quadSections?: NonNullable<import("@/lib/directorState").DirectorState["quadSections"]>; quadSettings?: import("@/lib/quads").QuadSettings } | null) => {
         if (!data) { setServerNotFound(true); setServerLoading(false); return; }
         setServerState({
           players: (data.players ?? []) as Player[],
@@ -686,6 +735,8 @@ export default function PrintPage() {
           venue: data.venue ?? "",
           date: data.date ?? "",
           status: data.status ?? "completed",
+          quadSections: data.quadSections,
+          quadSettings: data.quadSettings,
         });
         setServerLoading(false);
       })
@@ -704,12 +755,15 @@ export default function PrintPage() {
 
   // Determine the effective state: localStorage > server fetch > demo (demo only)
   const effectiveState = realState ?? serverState;
+  const effectiveFormat = realConfig?.format ?? effectiveState?.format ?? "swiss";
+  const effectiveQuadSections = realState?.quadSections ?? serverState?.quadSections ?? [];
+  const effectiveQuadSettings = realState?.quadSettings ?? serverState?.quadSettings;
   const tournament = isDemo ? DEMO_TOURNAMENT : effectiveState ? {
     name: realConfig?.name ?? (effectiveState as { name?: string }).name ?? "Tournament",
     venue: realConfig?.venue ?? (effectiveState as { venue?: string }).venue ?? "",
     date: realConfig?.date ?? (effectiveState as { date?: string }).date ?? new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
     timeControl: realConfig?.timePreset ?? "Standard",
-    format: realConfig?.format ?? effectiveState.format ?? "swiss",
+    format: effectiveFormat,
     rounds: realConfig?.rounds ?? effectiveState.totalRounds,
     currentRound: effectiveState.currentRound,
     players: effectiveState.players,
@@ -1067,16 +1121,16 @@ export default function PrintPage() {
                   Current Standings
                 </h2>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-[#436850]"}`}>
-                  {realConfig?.format === "quads"
+                  {effectiveFormat === "quads"
                     ? `Sorted by points, then Head-to-Head, then Sonneborn-Berger. Updated after Round ${safeTournament.currentRound - 1}.`
                     : `Sorted by points, then Buchholz tiebreak, then ${ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round ${safeTournament.currentRound - 1}.`
                   }
                 </p>
               </div>
-              {realConfig?.format === "quads" && realState?.quadSections && realState.quadSections.length > 0 ? (
+              {effectiveFormat === "quads" && effectiveQuadSections.length > 0 ? (
                 // Quads: render independent per-section standings tables
                 <div className="space-y-6">
-                  {realState.quadSections.map((section) => {
+                  {effectiveQuadSections.map((section) => {
                     const sectionPlayerIds = new Set(section.playerIds);
                     const sectionPlayers = players.filter(p => sectionPlayerIds.has(p.id));
                     const sectionRounds = (safeTournament.roundData as Round[]).map(r => ({
@@ -1091,7 +1145,14 @@ export default function PrintPage() {
                           style={{ fontFamily: "'Clash Display', sans-serif" }}>
                           {section.name}
                         </h3>
-                        <StandingsTable players={sectionPlayers} rounds={sectionRounds} isDark={isDark} isQuads />
+                        <StandingsTable
+                          players={sectionPlayers}
+                          rounds={sectionRounds}
+                          isDark={isDark}
+                          isQuads
+                          quadSection={section}
+                          quadSettings={effectiveQuadSettings}
+                        />
                       </div>
                     );
                   })}
@@ -1101,9 +1162,9 @@ export default function PrintPage() {
                 </div>
               ) : (
                 <>
-                  <StandingsTable players={players} rounds={safeTournament.roundData as Round[]} isDark={isDark} isQuads={realConfig?.format === "quads"} />
+                  <StandingsTable players={players} rounds={safeTournament.roundData as Round[]} isDark={isDark} isQuads={effectiveFormat === "quads"} />
                   <p className={`text-xs ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>
-                    {realConfig?.format === "quads"
+                    {effectiveFormat === "quads"
                       ? "Tiebreak: Sonneborn-Berger (opponent scores weighted by result) · W = Wins · D = Draws · L = Losses"
                       : "Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses"
                     }

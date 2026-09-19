@@ -2276,6 +2276,7 @@ export default function Director() {
     renameQuadSection,
     completeTournament,
     updateSettings,
+    flushStateToServer,
     isSwissElimCutoff: _isSwissElimCutoff,
     isSwissElimSwissPhaseComplete,
     isElimBracketComplete,
@@ -2306,28 +2307,9 @@ export default function Director() {
     if (tournamentId === "otb-demo-2026") return;
     // Use a short delay so React has flushed the setState from enterResult before we read stateRef.
     setTimeout(() => {
-      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: stateRef.current }),
-      }).catch(() => { /* fire-and-forget */ });
+      void flushStateToServer(stateRef.current);
     }, 50); // 50ms is enough for React to flush the state update
-  }, [tournamentId]);
-
-  // ── Sync tournament status to server (for My Tournaments status pills) ──
-  const syncStatusToServer = useCallback((newStatus: string) => {
-    if (!user?.id || tournamentId === "otb-demo-2026") return;
-    fetch("/api/auth/user/tournaments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        tournamentId,
-        name: state.tournamentName,
-        status: newStatus,
-      }),
-    }).catch(() => { /* non-critical */ });
-  }, [user?.id, tournamentId, state.tournamentName]);
+  }, [flushStateToServer, tournamentId]);
 
   const publishFinalTournamentState = useCallback(async () => {
     if (tournamentId === "otb-demo-2026") {
@@ -2338,9 +2320,12 @@ export default function Director() {
     try {
       await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
         method: "POST",
-        body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
+        body: JSON.stringify({
+          players: state.players,
+          tournamentName: state.tournamentName,
+          state,
+        }),
       });
-      syncStatusToServer("completed");
       setFinalizationStatus("success");
       return true;
     } catch (error) {
@@ -2348,7 +2333,7 @@ export default function Director() {
       setFinalizationStatus("error");
       return false;
     }
-  }, [state.players, state.tournamentName, syncStatusToServer, tournamentId]);
+  }, [state, tournamentId]);
 
   const [resetConfirm, setResetConfirm] = useState(false);
   // Club event lookup — fetched when tournament has a clubId
@@ -2387,8 +2372,6 @@ export default function Director() {
   const [showAnnounce, setShowAnnounce] = useState(false);
   const [showSpectatorShare, setShowSpectatorShare] = useState(false);
   const [showSpectatorQR, setShowSpectatorQR] = useState(false);
-  // Spectator URL — public live view, no auth required
-  const spectatorUrl = `${window.location.origin}/tournament/${tournamentId}`;
   const [_showOverflow, _setShowOverflow] = useState(false);
   // Board assignment editing state
   const [editBoardsMode, setEditBoardsMode] = useState(false);
@@ -2402,6 +2385,11 @@ export default function Director() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tournamentId, configVersion]
   );
+  // Public spectators must receive the server-backed /live route rather than
+  // the participant dashboard's separate state reader. Prefer a custom slug
+  // when the host has configured one, then fall back to the canonical ID.
+  const spectatorSlug = tournamentConfig?.customSlug || tournamentId;
+  const spectatorUrl = `${window.location.origin}/live/${encodeURIComponent(spectatorSlug)}`;
 
   // Fetch club avatar for PDF branding (best-effort, non-blocking)
   const { avatarUrl: clubAvatarUrl } = useClubAvatar(tournamentConfig?.clubId ?? null);
@@ -3075,7 +3063,7 @@ export default function Director() {
       const games = state.rounds.flatMap((round) => round.games);
       const sectionChampionGroups = sections.map((section) => ({
         section,
-        champions: getSectionWinners(calculateQuadStandings(section, games, state.players)),
+        champions: getSectionWinners(calculateQuadStandings(section, games, state.players, state.quadSettings?.tiebreakOrder)),
       }));
       const championEntries = sectionChampionGroups.flatMap(({ section, champions }) =>
         champions.map((champion) => ({
@@ -3088,33 +3076,35 @@ export default function Director() {
       const winnerLabel = championNames.length > 0 ? championNames.join(", ") : "Section champions";
 
       completeTournament();
-      broadcastTournamentComplete(winnerLabel);
-
-      if (tournamentConfig?.clubId) {
-        const podium = championEntries.slice(0, 3).map(({ player, champion }) => ({
-          rank: 1,
-          playerName: player!.name,
-          score: champion.score,
-          totalRounds: state.totalRounds,
-        }));
-        recordTournamentCompleted(
-          tournamentConfig.clubId,
-          state.tournamentName,
-          winnerLabel,
-          tournamentId,
-          championEntries[0]?.champion.score,
-          state.totalRounds,
-          podium,
-          state.players.length,
-          getDirectorFormatSummary("quads", state.totalRounds, state.players.length, sections.length),
-        );
-      }
 
       void publishFinalTournamentState().then((published) => {
         if (!published) {
           autoCompletedQuadsRef.current = false;
           toast.error("Results are saved locally. Retry finalization when the connection recovers.");
           return;
+        }
+        // The end command has now persisted terminal state, updated the
+        // registration policy, and invalidated public snapshots. Only then do
+        // downstream notifications/cards describe the per-section outcome.
+        broadcastTournamentComplete(winnerLabel);
+        if (tournamentConfig?.clubId) {
+          const podium = championEntries.slice(0, 3).map(({ player, champion }) => ({
+            rank: 1,
+            playerName: player!.name,
+            score: champion.score,
+            totalRounds: state.totalRounds,
+          }));
+          recordTournamentCompleted(
+            tournamentConfig.clubId,
+            state.tournamentName,
+            winnerLabel,
+            tournamentId,
+            championEntries[0]?.champion.score,
+            state.totalRounds,
+            podium,
+            state.players.length,
+            getDirectorFormatSummary("quads", state.totalRounds, state.players.length, sections.length),
+          );
         }
         toast.success(
           championNames.length > 1
@@ -4699,18 +4689,23 @@ export default function Director() {
 
                   {/* Tournament complete celebration banner */}
                   {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (() => {
-                    const finalStandings = getStandings(state.players);
                     const isQuadsFormat = state.format === "quads" && state.quadSections && state.quadSections.length > 0;
-                    // For Quads: compute per-section champions (supports co-champions when tied on points)
+                    const finalStandings = isQuadsFormat ? [] : getStandings(state.players);
+                    const completedGames = state.rounds.flatMap((round) => round.games);
+                    // Quads champions must be read from their own configured section
+                    // projection, never from stale player.points or a global table.
                     const sectionChampions = isQuadsFormat
                       ? state.quadSections!.map(section => {
-                          const sectionPlayerIds = new Set(section.playerIds);
-                          const sectionStandings = finalStandings.filter(s => sectionPlayerIds.has(s.id));
+                          const sectionStandings = calculateQuadStandings(
+                            section,
+                            completedGames,
+                            state.players,
+                            state.quadSettings?.tiebreakOrder,
+                          );
                           if (sectionStandings.length === 0) return null;
-                          const topPoints = sectionStandings[0].points;
-                          const champions = sectionStandings.filter(s => s.points === topPoints);
+                          const champions = getSectionWinners(sectionStandings);
                           return { section, champions };
-                        }).filter((x): x is { section: QuadSection; champions: typeof finalStandings } => x !== null && x.champions.length > 0)
+                        }).filter((x): x is { section: QuadSection; champions: ReturnType<typeof getSectionWinners> } => x !== null && x.champions.length > 0)
                       : [];
                     // Podium config: rank index, medal colours, score size
                     const podiumConfig = [
@@ -4753,13 +4748,13 @@ export default function Director() {
                                     {isCo && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${ isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-600"}`}>Co-Champions</span>}
                                   </div>
                                   {champions.map(champ => {
-                                    const player = state.players.find(p => p.id === champ.id);
+                                    const player = state.players.find(p => p.id === champ.playerId);
                                     if (!player) return null;
-                                    const pts = champ.points % 1 !== 0
-                                      ? `${Math.floor(champ.points)}\u00BD`
-                                      : String(champ.points);
+                                    const pts = champ.score % 1 !== 0
+                                      ? `${Math.floor(champ.score)}\u00BD`
+                                      : String(champ.score);
                                     return (
-                                      <div key={champ.id} className="flex items-center gap-3">
+                                      <div key={champ.playerId} className="flex items-center gap-3">
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm ${
                                           isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-500 border border-amber-200"
                                         }`}>\uD83C\uDFC6</div>
@@ -6822,8 +6817,11 @@ export default function Director() {
                         location: tournamentConfig?.venue,
                         date: tournamentConfig?.date,
                         timeControl: tournamentConfig?.timePreset,
+                        format: state.format,
                         players: state.players,
                         rounds: state.rounds,
+                        quadSections: state.format === "quads" ? state.quadSections : undefined,
+                        quadSettings: state.format === "quads" ? state.quadSettings : undefined,
                         clubName: tournamentConfig?.clubName ?? undefined,
                         clubLogoUrl: clubAvatarUrl ?? undefined,
                         });
@@ -7583,7 +7581,6 @@ export default function Director() {
                   // so we can fire the SSE broadcast immediately without any setTimeout/localStorage race.
                   const started = startTournament();
                   setShowStartConfirm(false);
-                  syncStatusToServer("in_progress");
                   toast.success("Round 1 pairings generated! Tournament is live.");
                   // For Quads: auto-navigate to Home tab so the director immediately
                   // sees the board assignments without needing to manually switch tabs.

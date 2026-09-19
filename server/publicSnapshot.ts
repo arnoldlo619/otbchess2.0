@@ -12,6 +12,7 @@
  */
 
 import { createHash } from "crypto";
+import { projectQuadSectionStandings } from "../shared/quadsProjection.js";
 
 // ─── Types (public-facing, stripped) ─────────────────────────────────────────
 
@@ -301,42 +302,47 @@ export interface BuildSnapshotInput {
   players: RawPlayer[];
   rounds: RawRound[];
   quadSections?: { id: string; name: string; type: string; playerIds: string[] }[];
+  /** Persisted Quads tiebreak configuration. Legacy events use the canonical default. */
+  quadSettings?: { tiebreakOrder?: string[] };
   updatedAt: string;
 }
 
 export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
   const isQuads = input.format === "quads";
 
-  // For Quads: compute standings globally but pass section scope for SB computation.
-  // Since all games in rounds are already section-scoped (each section has its own games),
-  // we compute standings per-section and then merge with global rank based on points.
-  // The global standings array contains all players; section filtering happens client-side.
-  // However, SB must be section-scoped: each player's SB only counts opponents in their section.
+  // Quads have independent sections. Build each section with the same read-only
+  // tiebreak projection used by every corrected consumer; do not manufacture a
+  // tournament-wide rank from those rows.
   let allRows: StandingRow[] = [];
   let standings: StandingRow[];
   if (isQuads && input.quadSections && input.quadSections.length > 0) {
-    // Build a map of playerId → sectionPlayerIds for SB scoping
-    const playerSectionMap = new Map<string, Set<string>>();
-    for (const section of input.quadSections) {
-      const sectionSet = new Set(section.playerIds);
-      for (const pid of section.playerIds) {
-        playerSectionMap.set(pid, sectionSet);
-      }
-    }
-    // Compute standings per section, then merge into a single sorted array
+    const games = input.rounds.flatMap((round) => round.games);
     for (const section of input.quadSections) {
       const sectionPlayers = input.players.filter(p => section.playerIds.includes(p.id));
-      // Filter rounds to only include games involving this section's players
-      const sectionPlayerSet = new Set(section.playerIds);
-      const sectionRounds: RawRound[] = input.rounds.map(r => ({
-        ...r,
-        games: r.games.filter(g =>
-          sectionPlayerSet.has(g.whiteId) || sectionPlayerSet.has(g.blackId)
-        ),
-      }));
-      const sectionRows = computeStandingsServer(sectionPlayers, sectionRounds, {
-        format: "quads",
-        sectionPlayerIds: sectionPlayerSet,
+      const playerById = new Map(sectionPlayers.map((player) => [player.id, player]));
+      const sectionRows = projectQuadSectionStandings(
+        section,
+        games,
+        sectionPlayers,
+        input.quadSettings?.tiebreakOrder,
+      ).flatMap((row) => {
+        const player = playerById.get(row.playerId);
+        if (!player) return [];
+        return [{
+          playerId: row.playerId,
+          name: player.name,
+          username: player.username,
+          elo: player.elo,
+          title: player.title,
+          avatarUrl: player.avatarUrl,
+          rank: row.finalRank,
+          points: row.score,
+          buchholz: 0,
+          sonnebornBerger: row.sonnebornBerger,
+          wins: row.wins,
+          draws: row.draws,
+          losses: row.losses,
+        }];
       });
       allRows.push(...sectionRows);
     }
@@ -370,14 +376,7 @@ export function buildSnapshot(input: BuildSnapshotInput): PublicSnapshot {
           // standings[] is intentionally empty for Quads; allRows has the correct data
           return input.quadSections!.map(s => {
             const sectionSet = new Set(s.playerIds);
-            const sectionRows = allRows.filter(r => sectionSet.has(r.playerId));
-            const ranked = [...sectionRows]
-              .sort((a, b) => {
-                if (b.points !== a.points) return b.points - a.points;
-                if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
-                return b.elo - a.elo;
-              })
-              .map((r, i) => ({ ...r, rank: i + 1 }));
+            const ranked = allRows.filter(r => sectionSet.has(r.playerId));
             return {
               id: s.id,
               name: s.name,

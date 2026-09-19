@@ -4737,6 +4737,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
           date: data.date,
           format: data.format,
           rounds: data.rounds,
+          maxPlayers: data.maxPlayers,
           inviteCode: data.inviteCode,
         }),
       }).catch(() => { /* non-critical — localStorage is the source of truth */ });

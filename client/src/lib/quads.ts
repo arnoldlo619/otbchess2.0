@@ -19,6 +19,7 @@
 
 import type { Player, Game, Result } from "./tournamentData";
 import { resolvePairingRating } from "./swiss";
+import { projectQuadSectionStandings } from "@shared/quadsProjection";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -501,90 +502,7 @@ export function calculateQuadStandings(
   players: Player[],
   tiebreakOrder: string[] = DEFAULT_TIEBREAK_ORDER
 ): QuadStanding[] {
-  const sectionGames = games.filter(
-    (g) => g.sectionId === section.id && g.result !== "*" && g.blackId !== "BYE"
-  );
-  const byeGames = games.filter(
-    (g) => g.sectionId === section.id && g.blackId === "BYE" && g.result !== "*"
-  );
-
-  const standings: Record<string, QuadStanding> = {};
-
-  // Initialize standings for all players in section
-  for (const playerId of section.playerIds) {
-    standings[playerId] = {
-      playerId,
-      sectionId: section.id,
-      score: 0,
-      wins: 0,
-      draws: 0,
-      losses: 0,
-      blackGames: 0,
-      sonnebornBerger: 0,
-      directEncounterScore: 0,
-      finalRank: 0,
-    };
-  }
-
-  // Process completed games using integer half-points (win=2, draw=1, loss=0)
-  // to avoid floating-point drift. Converted to 0/0.5/1 only for display.
-  const halfPoints: Record<string, number> = {};
-  for (const playerId of section.playerIds) halfPoints[playerId] = 0;
-
-  for (const game of sectionGames) {
-    const white = standings[game.whiteId];
-    const black = standings[game.blackId];
-    if (!white || !black) continue;
-
-    black.blackGames++;
-
-    if (game.result === "1-0") {
-      halfPoints[game.whiteId] = (halfPoints[game.whiteId] ?? 0) + 2;
-      white.wins++;
-      black.losses++;
-    } else if (game.result === "0-1") {
-      halfPoints[game.blackId] = (halfPoints[game.blackId] ?? 0) + 2;
-      black.wins++;
-      white.losses++;
-    } else if (game.result === "½-½") {
-      halfPoints[game.whiteId] = (halfPoints[game.whiteId] ?? 0) + 1;
-      halfPoints[game.blackId] = (halfPoints[game.blackId] ?? 0) + 1;
-      white.draws++;
-      black.draws++;
-    }
-  }
-
-  // Convert integer half-points to display score (÷2)
-  for (const playerId of section.playerIds) {
-    standings[playerId].score = (halfPoints[playerId] ?? 0) / 2;
-  }
-
-  // Process bye games (Bottom Swiss only)
-  for (const game of byeGames) {
-    const player = standings[game.whiteId];
-    if (player) {
-      player.score += 1;
-      player.wins++;
-    }
-  }
-
-  // Calculate Sonneborn-Berger
-  for (const playerId of section.playerIds) {
-    standings[playerId].sonnebornBerger = calculateSonnebornBerger(
-      playerId,
-      sectionGames,
-      standings
-    );
-  }
-
-  // Calculate direct encounter scores (for tiebreaks among tied players)
-  // This is computed during ranking below
-
-  // Sort and assign ranks
-  const standingsArr = Object.values(standings);
-  rankStandings(standingsArr, sectionGames, standings, players, tiebreakOrder);
-
-  return standingsArr;
+  return projectQuadSectionStandings(section, games, players, tiebreakOrder);
 }
 
 /**
@@ -657,67 +575,6 @@ export function calculateDirectEncounter(
   }
 
   return score;
-}
-
-/**
- * Rank standings using the configured tiebreak order.
- */
-function rankStandings(
-  standings: QuadStanding[],
-  games: Game[],
-  standingsMap: Record<string, QuadStanding>,
-  players: Player[],
-  tiebreakOrder: string[]
-): void {
-  const playerMap = new Map(players.map((p) => [p.id, p]));
-
-  standings.sort((a, b) => {
-    for (const tb of tiebreakOrder) {
-      switch (tb) {
-        case "score":
-          if (b.score !== a.score) return b.score - a.score;
-          break;
-        case "direct": {
-          // Only apply H2H when exactly these two players are tied in score
-          // (spec: "Head-to-head when exactly two players are tied")
-          // For multi-way ties, still compute H2H among the tied group
-          if (a.score === b.score) {
-            const tiedIds = standings
-              .filter((s) => s.score === a.score)
-              .map((s) => s.playerId);
-            if (tiedIds.length >= 2) {
-              const deA = calculateDirectEncounter(a.playerId, tiedIds, games);
-              const deB = calculateDirectEncounter(b.playerId, tiedIds, games);
-              if (deB !== deA) return deB - deA;
-            }
-          }
-          break;
-        }
-        case "sonnebornBerger":
-          if (b.sonnebornBerger !== a.sonnebornBerger)
-            return b.sonnebornBerger - a.sonnebornBerger;
-          break;
-        case "wins":
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          break;
-        case "blackGames":
-          if (b.blackGames !== a.blackGames) return b.blackGames - a.blackGames;
-          break;
-        case "rating": {
-          const rA = playerMap.get(a.playerId)?.elo ?? 0;
-          const rB = playerMap.get(b.playerId)?.elo ?? 0;
-          if (rB !== rA) return rB - rA;
-          break;
-        }
-      }
-    }
-    return 0;
-  });
-
-  // Assign final ranks
-  standings.forEach((s, i) => {
-    s.finalRank = i + 1;
-  });
 }
 
 // ─── Full Tournament Generation ───────────────────────────────────────────────
