@@ -2889,12 +2889,6 @@ function SegmentedOnboardingStep({
     return card(
       <div className="space-y-7">
         <div>
-          <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament name</p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            What should players call this event?
-          </h3>
-        </div>
-        <div>
           <TextInput value={data.name} onChange={(name) => onChange({ name })} placeholder="e.g. Friday Night Blitz" ariaLabel="Tournament name" icon={Trophy} autoFocus isDark={isDark} large />
           <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             This is what players will see on the join page, pairings, and standings.
@@ -2908,14 +2902,7 @@ function SegmentedOnboardingStep({
     return card(
       <div className="space-y-7">
         <div>
-          <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament date</p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            When are you playing?
-          </h3>
-        </div>
-        <div>
-          <Label isDark={isDark}>Date</Label>
-          <TextInput value={data.date} onChange={(date) => onChange({ date })} type="date" icon={Calendar} isDark={isDark} large />
+          <TextInput value={data.date} onChange={(date) => onChange({ date })} type="date" ariaLabel="Tournament date" icon={Calendar} isDark={isDark} large />
           <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             Players will see this date before they check in through your QR invite.
           </p>
@@ -2928,14 +2915,7 @@ function SegmentedOnboardingStep({
     return card(
       <div className="space-y-7">
         <div>
-          <p className="text-sm font-semibold" style={{ color: T.green }}>Location</p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            Where will the boards be set?
-          </h3>
-        </div>
-        <div>
-          <Label isDark={isDark} hint="optional">Location</Label>
-          <TextInput value={data.venue} onChange={(venue) => onChange({ venue })} placeholder="e.g. Marshall Chess Club" icon={MapPin} isDark={isDark} large />
+          <TextInput value={data.venue} onChange={(venue) => onChange({ venue })} placeholder="e.g. Marshall Chess Club" ariaLabel="Tournament location" icon={MapPin} isDark={isDark} large />
         </div>
         {(loadingClubs || ownedClubs.length > 0) && (
           <ClubLinkDropdown data={data} onChange={onChange} isDark={isDark} ownedClubs={ownedClubs} loading={loadingClubs} />
@@ -2954,12 +2934,6 @@ function SegmentedOnboardingStep({
   if (step === 3) {
     return card(
       <div className="space-y-8">
-        <div>
-          <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament settings</p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            Build the tournament structure.
-          </h3>
-        </div>
         <div className="grid gap-5 sm:grid-cols-3">
           <div>
             <Label isDark={isDark}>Format</Label>
@@ -2995,12 +2969,6 @@ function SegmentedOnboardingStep({
   if (step === 4) {
     return card(
       <div className="space-y-8">
-        <div>
-          <p className="text-sm font-semibold" style={{ color: T.green }}>Time control</p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            What will you set your clocks to?
-          </h3>
-        </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {TIME_PRESETS.map((preset) => {
             const active = data.timePreset === preset.sub;
@@ -3041,12 +3009,6 @@ function SegmentedOnboardingStep({
     return card(
       <div className="space-y-8">
         <div>
-          <p className="text-sm font-semibold" style={{ color: T.green }}>Platform and ELO</p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-            What ratings should shape pairings?
-          </h3>
-        </div>
-        <div>
           <Label isDark={isDark}>Platform</Label>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {platforms.map((platform) => {
@@ -3076,13 +3038,7 @@ function SegmentedOnboardingStep({
   ];
   return card(
     <div className="space-y-7">
-      <div>
-        <p className="text-sm font-semibold" style={{ color: T.green }}>Tournament structure</p>
-        <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
-          {data.name.trim() || "Your tournament"} is ready to create.
-        </h3>
-        <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Review the plan below. You can always return to an earlier question to refine it.</p>
-      </div>
+      <p className="text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Review the plan below. You can always return to an earlier question to refine it.</p>
       <div className="overflow-hidden rounded-[20px] border" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "#E2EAE2", background: isDark ? "rgba(0,0,0,0.13)" : "#F8FBF8" }}>
         <div className="grid gap-px sm:grid-cols-2" style={{ background: isDark ? "rgba(255,255,255,0.10)" : "#E2EAE2" }}>
           {stages.map((stage, index) => {

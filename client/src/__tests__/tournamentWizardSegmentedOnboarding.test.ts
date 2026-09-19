@@ -38,9 +38,8 @@ describe("Tournament Wizard segmented onboarding", () => {
   });
 
   it("creates a reviewable tournament structure before the share handoff", () => {
-    expect(wizardSource).toContain("Tournament structure");
-    expect(wizardSource).toContain('data.name.trim() || "Your tournament"');
-    expect(wizardSource).toContain("is ready to create.");
+    expect(wizardSource).toContain('{ label: "Event"');
+    expect(wizardSource).toContain("Review the plan below.");
     expect(wizardSource).toContain("Create Tournament");
     expect(wizardSource).toContain("quickstartStepCount - 1");
   });
@@ -56,15 +55,55 @@ describe("Tournament Wizard segmented onboarding", () => {
     expect(validation).toContain("data.timePreset.trim().length > 0");
   });
 
-  it("keeps the name step concise without repeating its field label", () => {
+  it("keeps single-field stages concise without repeating their field labels", () => {
     const nameStep = wizardSource.slice(
       wizardSource.indexOf("if (step === 0) {"),
       wizardSource.indexOf("if (step === 1) {"),
     );
+    const dateStep = wizardSource.slice(
+      wizardSource.indexOf("if (step === 1) {"),
+      wizardSource.indexOf("if (step === 2) {"),
+    );
+    const locationStep = wizardSource.slice(
+      wizardSource.indexOf("if (step === 2) {"),
+      wizardSource.indexOf("if (step === 3) {"),
+    );
 
-    expect(nameStep).toContain("What should players call this event?");
     expect(nameStep).toContain('ariaLabel="Tournament name"');
     expect(nameStep).not.toContain('<Label isDark={isDark} hint="required">Tournament Name</Label>');
+    expect(dateStep).toContain('ariaLabel="Tournament date"');
+    expect(dateStep).not.toContain('<Label isDark={isDark}>Date</Label>');
+    expect(locationStep).toContain('ariaLabel="Tournament location"');
+    expect(locationStep).not.toContain('<Label isDark={isDark} hint="optional">Location</Label>');
+  });
+
+  it("uses the shell step context instead of repeating card-level titles or eyebrows", () => {
+    const segmentedSteps = wizardSource.slice(
+      wizardSource.indexOf("function SegmentedOnboardingStep"),
+      wizardSource.indexOf("// ─── Step 1: Details"),
+    );
+
+    expect(segmentedSteps).not.toContain(">Tournament name</p>");
+    expect(segmentedSteps).not.toContain(">Tournament date</p>");
+    expect(segmentedSteps).not.toContain(">Location</p>");
+    expect(segmentedSteps).not.toContain(">Tournament settings</p>");
+    expect(segmentedSteps).not.toContain(">Time control</p>");
+    expect(segmentedSteps).not.toContain(">Platform and ELO</p>");
+    expect(segmentedSteps).not.toContain(">Tournament structure</p>");
+    expect(segmentedSteps).not.toContain("<h3");
+    expect(segmentedSteps).not.toContain("What should players call this event?");
+    expect(segmentedSteps).not.toContain("When are you playing?");
+    expect(segmentedSteps).not.toContain("Where will the boards be set?");
+    expect(segmentedSteps).not.toContain("Build the tournament structure.");
+    expect(segmentedSteps).not.toContain("What will you set your clocks to?");
+    expect(segmentedSteps).not.toContain("What ratings should shape pairings?");
+    expect(wizardSource).toContain('title: "Name your\\ntournament"');
+    expect(wizardSource).toContain('title: "When are you\\nplaying?"');
+    expect(wizardSource).toContain('title: "Set the\\nlocation"');
+    expect(wizardSource).toContain('title: "Shape the\\ncompetition"');
+    expect(wizardSource).toContain('title: "Set the\\nclock"');
+    expect(wizardSource).toContain('title: "Choose a\\nrating source"');
+    expect(wizardSource).toContain('title: "Review the\\nstructure"');
   });
 
   it("uses the requested three dropdowns for tournament settings", () => {
@@ -74,8 +113,9 @@ describe("Tournament Wizard segmented onboarding", () => {
     expect(wizardSource).toContain("selectFormat(event.target.value as WizardData");
   });
 
-  it("uses the requested Time Control question", () => {
-    expect(wizardSource).toContain("What will you set your clocks to?");
+  it("uses the streamlined Time Control shell title", () => {
+    expect(wizardSource).toContain('title: "Set the\\nclock"');
+    expect(wizardSource).not.toContain("What will you set your clocks to?");
     expect(wizardSource).not.toContain("How fast will the clocks run?");
   });
 
