@@ -2579,6 +2579,30 @@ export default function Director() {
     });
   }, [checkInKey, state.players]);
 
+  const addWalkInPlayer = useCallback(() => {
+    const name = walkInName.trim();
+    if (!name) return;
+    const newPlayer = {
+      id: `walkin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      username: name.toLowerCase().replace(/\s+/g, ""),
+      elo: 800,
+      country: "",
+      title: undefined,
+      points: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      buchholz: 0,
+      colorHistory: [],
+      platform: "chesscom" as const,
+    };
+    addPlayer(newPlayer);
+    toggleCheckIn(newPlayer.id);
+    toast.success(`Walk-in: ${name} added & checked in`);
+    setWalkInName("");
+  }, [addPlayer, toggleCheckIn, walkInName]);
+
   // ── Board search filter state ───────────────────────────────────────────────────────
   const [boardSearch, setBoardSearch] = useState("");
   const [showNextRoundConfirm, setShowNextRoundConfirm] = useState(false);
@@ -4330,130 +4354,6 @@ export default function Director() {
                       );
                     })()}
 
-                    {/* Walk-in quick-add + Actions footer */}
-                    <div className={`px-4 sm:px-6 py-4 border-t space-y-3 ${
-                      isDark ? "border-white/06" : "border-[#ADBC9F]/70"
-                    }`}>
-                      {/* Walk-in quick-add form */}
-                      <div className="flex items-center gap-2">
-                        <input
-                          aria-label="Walk-in name"
-                          type="text"
-                          value={walkInName}
-                          onChange={(e) => setWalkInName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && walkInName.trim()) {
-                              const name = walkInName.trim();
-                              const newPlayer = {
-                                id: `walkin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                                name,
-                                username: name.toLowerCase().replace(/\s+/g, ""),
-                                elo: 800,
-                                country: "",
-                                title: undefined,
-                                points: 0,
-                                wins: 0,
-                                draws: 0,
-                                losses: 0,
-                                buchholz: 0,
-                                colorHistory: [],
-                                platform: "chesscom" as const,
-                              };
-                              addPlayer(newPlayer);
-                              toggleCheckIn(newPlayer.id);
-                              toast.success(`Walk-in: ${name} added & checked in`);
-                              setWalkInName("");
-                            }
-                          }}
-                          placeholder="Walk-in name (press Enter)"
-                          style={{ minHeight: "44px" }}
-                          className={`flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none transition-colors ${
-                            isDark
-                              ? "bg-white/04 border-white/08 text-white placeholder:text-white/25 focus:border-[#4CAF50]/40"
-                              : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40"
-                          }`}
-                        />
-                        <button
-                          onClick={() => {
-                            if (!walkInName.trim()) return;
-                            const name = walkInName.trim();
-                            const newPlayer = {
-                              id: `walkin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                              name,
-                              username: name.toLowerCase().replace(/\s+/g, ""),
-                              elo: 800,
-                              country: "",
-                              title: undefined,
-                              points: 0,
-                              wins: 0,
-                              draws: 0,
-                              losses: 0,
-                              buchholz: 0,
-                              colorHistory: [],
-                              platform: "chesscom" as const,
-                            };
-                            addPlayer(newPlayer);
-                            toggleCheckIn(newPlayer.id);
-                            toast.success(`Walk-in: ${name} added & checked in`);
-                            setWalkInName("");
-                          }}
-                          disabled={!walkInName.trim()}
-                          style={{ minHeight: "44px", touchAction: "manipulation" }}
-                          className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                            walkInName.trim()
-                              ? isDark ? "bg-[#436850]/30 text-[#4CAF50] hover:bg-[#436850]/50" : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/20"
-                              : isDark ? "bg-white/04 text-white/20" : "bg-[#ADBC9F]/40 text-[#436850]/70"
-                          }`}
-                        >
-                          <UserPlus className="w-3.5 h-3.5" />
-                          Walk-in
-                        </button>
-                      </div>
-                      {/* Action buttons */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <button
-                          onClick={() => setShowAddPlayer(true)}
-                          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                            isDark
-                              ? "border-white/10 text-white/60 hover:bg-white/06 hover:text-white/80"
-                              : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA] hover:text-[#12372A]"
-                          }`}
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          Add Player
-                        </button>
-                        {/* Bracket-parent: hide Start and show scroll-to-assign hint */}
-                        {isBracketParent && childBrackets.length === 0 ? (
-                          <div className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm ${
-                            isDark ? "bg-amber-500/10 text-amber-300 border border-amber-500/25" : "bg-amber-50 text-amber-700 border border-amber-200"
-                          }`}>
-                            <BarChart3 className="w-4 h-4" />
-                            {state.players.length < 2 ? "Add players, then assign brackets" : "↑ Assign brackets above to continue"}
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => canStart && setShowStartConfirm(true)}
-                            disabled={!canStart}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
-                              canStart
-                                ? "bg-[#436850] hover:bg-[#2d5235] text-white shadow-lg shadow-[#436850]/25 active:scale-[0.98]"
-                                : isDark
-                                ? "bg-white/06 text-white/20 cursor-not-allowed"
-                                : "bg-[#ADBC9F]/40 text-[#436850]/70 cursor-not-allowed"
-                            }`}
-                          >
-                            <Zap className="w-4 h-4" />
-                            {canStart
-                              ? `Start Tournament — Generate Round 1`
-                              : state.players.length === 0
-                              ? "Add players to start"
-                              : state.players.length === 1
-                              ? "Need at least 2 players"
-                              : "Need at least 2 players"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </>
               )}
@@ -5768,6 +5668,64 @@ export default function Director() {
                   </div>
                 );
               })()}
+
+              {isRegistration && (
+                <section
+                  aria-labelledby="walk-in-check-in-title"
+                  className={`rounded-xl border p-3 sm:p-4 ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
+                  }`}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2
+                        id="walk-in-check-in-title"
+                        className={`text-sm font-semibold ${isDark ? "text-white/85" : "text-[#12372A]"}`}
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        Check in a walk-in
+                      </h2>
+                      <p className={`mt-0.5 text-xs ${isDark ? "text-white/45" : "text-[#436850]"}`}>
+                        Add them to the roster and mark them checked in immediately.
+                      </p>
+                    </div>
+                    <div className="flex w-full gap-2 sm:max-w-md">
+                      <input
+                        aria-label="Walk-in name"
+                        type="text"
+                        value={walkInName}
+                        onChange={(e) => setWalkInName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addWalkInPlayer();
+                          }
+                        }}
+                        placeholder="Walk-in name"
+                        style={{ minHeight: "44px" }}
+                        className={`min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-sm outline-none transition-colors ${
+                          isDark
+                            ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50"
+                            : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
+                        }`}
+                      />
+                      <button
+                        onClick={addWalkInPlayer}
+                        disabled={!walkInName.trim()}
+                        style={{ minHeight: "44px", touchAction: "manipulation" }}
+                        className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-all disabled:cursor-not-allowed ${
+                          walkInName.trim()
+                            ? "bg-[#436850] text-white hover:bg-[#2d5235] active:scale-[0.98]"
+                            : isDark ? "bg-white/06 text-white/20" : "bg-[#ADBC9F]/40 text-[#436850]/70"
+                        }`}
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Check in
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* ── Search + Filter Toolbar ─────────────────────────────────────── */}
               <div className={`rounded-xl border p-3 space-y-3 ${

@@ -159,6 +159,24 @@ describe("Check-In Roster", () => {
   });
 
   describe("Walk-in player creation", () => {
+    it("keeps walk-in enrollment in the Players tab, not the Home check-in roster", () => {
+      const homeTab = directorSource.slice(
+        directorSource.indexOf('{activeTab === "home" && ('),
+        directorSource.indexOf('{activeTab === "players" && ('),
+      );
+      const playersTab = directorSource.slice(
+        directorSource.indexOf('{activeTab === "players" && ('),
+        directorSource.indexOf('{activeTab === "settings" && ('),
+      );
+
+      expect(playersTab).toContain('aria-labelledby="walk-in-check-in-title"');
+      expect(playersTab).toContain("Check in a walk-in");
+      expect(playersTab).toContain("addWalkInPlayer");
+      expect(homeTab).not.toContain("Walk-in name");
+      expect(homeTab).not.toContain("Add players to start");
+      expect(homeTab).not.toContain("Add players, then assign brackets");
+    });
+
     it("creates walk-in with correct defaults", () => {
       const player = {
         id: "walkin-123",
