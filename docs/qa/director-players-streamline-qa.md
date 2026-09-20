@@ -43,3 +43,21 @@ The 375px route shell remains free of horizontal overflow. Because the isolated 
 | Project lint | 0 errors; 235 established repository warnings remain. |
 | Full Vitest suite | 6,979 passing, 2 skipped, 20 failures in 14 unrelated established baseline source-contract/UI suites. |
 | Diff integrity | Passed: `git diff --check`. |
+
+## Registration-action alignment refinement
+
+The Add Player and Upload RSVPs action group now uses `self-end sm:ml-auto`, anchoring it to the far right of the roster header at desktop widths, in line with the Refresh ELO and CSV group below. On compact widths it remains independently right-aligned and continues to wrap without squeezing the search field or reducing control touch targets.
+
+A sandbox-only registration-state review with 18 players confirmed Upload RSVPs and Add Player now land at the same far-right edge as the lower Refresh ELO and CSV controls. The search field retains its constrained reading width, and the two action rows form a clean vertical right alignment. The temporary browser state was restored after review.
+
+## Alignment validation update
+
+| Check | Result |
+|---|---|
+| Focused Director and CSV tests | Passed: 118 tests across console refinement, editing, scoring, and roster CSV coverage. |
+| TypeScript | Passed: `pnpm exec tsc --noEmit`. |
+| Changed-file lint | 0 errors; six established unused-variable warnings in `Director.tsx` remain unchanged. |
+| Production build | Passed: `pnpm build`. |
+| Project lint | 0 errors; 235 established repository warnings remain. |
+| Full Vitest suite | 6,980 passing, 2 skipped, 20 failures in 14 unrelated established baseline source-contract/UI suites. |
+| Diff integrity | Passed: `git diff --check`. |

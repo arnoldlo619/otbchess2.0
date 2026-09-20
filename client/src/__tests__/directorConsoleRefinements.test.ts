@@ -188,6 +188,15 @@ describe("Players tab hierarchy", () => {
     expect(playersTab).not.toContain("addWalkInPlayer");
   });
 
+  it("aligns top-row registration actions with the lower roster action group", () => {
+    const topRowStart = playersTab.indexOf("Top row: roster identity, search, and direct actions");
+    const topRowSource = playersTab.slice(topRowStart, playersTab.indexOf("Sort controls and roster export", topRowStart));
+
+    expect(topRowSource).toContain("self-end sm:ml-auto");
+    expect(topRowSource).toContain("setShowUploadRSVP(true)");
+    expect(topRowSource).toContain("setShowAddPlayer(true)");
+  });
+
   it("keeps search and sorting while grouping roster actions at the far end of the sort row", () => {
     const sortStart = playersTab.indexOf("Sort controls and roster export");
     const sortSource = playersTab.slice(sortStart, playersTab.indexOf("{/* Empty state */", sortStart));

@@ -5574,7 +5574,7 @@ export default function Director() {
                   </div>
 
                   {/* Roster actions */}
-                  <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0">
+                  <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0 self-end sm:ml-auto">
                     {/* Add Player + Upload RSVPs buttons — registration phase */}
                   {isRegistration && (
                       <>
