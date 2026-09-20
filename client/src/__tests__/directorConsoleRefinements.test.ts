@@ -158,58 +158,6 @@ describe("Check-In Roster", () => {
     });
   });
 
-  describe("Walk-in player creation", () => {
-    it("keeps walk-in enrollment in the Players tab, not the Home check-in roster", () => {
-      const homeTab = directorSource.slice(
-        directorSource.indexOf('{activeTab === "home" && ('),
-        directorSource.indexOf('{activeTab === "players" && ('),
-      );
-      const playersTab = directorSource.slice(
-        directorSource.indexOf('{activeTab === "players" && ('),
-        directorSource.indexOf('{activeTab === "settings" && ('),
-      );
-
-      expect(playersTab).toContain('aria-labelledby="walk-in-check-in-title"');
-      expect(playersTab).toContain("Check in a walk-in");
-      expect(playersTab).toContain("addWalkInPlayer");
-      expect(homeTab).not.toContain("Walk-in name");
-      expect(homeTab).not.toContain("Add players to start");
-      expect(homeTab).not.toContain("Add players, then assign brackets");
-    });
-
-    it("creates walk-in with correct defaults", () => {
-      const player = {
-        id: "walkin-123",
-        name: "John Walk-In",
-        chessUsername: "johnwalkin",
-        rating: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        score: 0,
-        buchholz: 0,
-        opponents: [] as string[],
-        colorHistory: [] as string[],
-        title: undefined,
-      };
-      expect(player.name).toBe("John Walk-In");
-      expect(player.chessUsername).toBe("johnwalkin");
-      expect(player.rating).toBe(0);
-      expect(player.score).toBe(0);
-      expect(player.opponents).toEqual([]);
-    });
-
-    it("creates walk-in with empty username when not provided", () => {
-      const player = {
-        id: "walkin-456",
-        name: "Jane Walk-In",
-        chessUsername: "",
-        rating: 0,
-      };
-      expect(player.name).toBe("Jane Walk-In");
-      expect(player.chessUsername).toBe("");
-    });
-  });
 });
 
 describe("Players tab hierarchy", () => {
@@ -231,6 +179,24 @@ describe("Players tab hierarchy", () => {
     expect(playersTab).toContain("text-lg font-bold cursor-default");
     expect(playersTab).toContain("text-base text-center");
     expect(playersTab).not.toContain("text-[11px] font-semibold px-1 py-0.5");
+  });
+
+  it("keeps enrollment in the Add Player flow and removes redundant walk-in entry", () => {
+    expect(playersTab).toContain("setShowAddPlayer(true)");
+    expect(playersTab).not.toContain("walk-in-check-in-title");
+    expect(playersTab).not.toContain("Check in a walk-in");
+    expect(playersTab).not.toContain("addWalkInPlayer");
+  });
+
+  it("keeps search and sorting while placing CSV export at the far end of the sort row", () => {
+    const sortStart = playersTab.indexOf("Sort controls and roster export");
+    const sortSource = playersTab.slice(sortStart, playersTab.indexOf("{/* Empty state */", sortStart));
+
+    expect(playersTab).not.toContain("setShowFilters");
+    expect(playersTab).not.toContain("Expanded filter panel");
+    expect(sortSource).toContain("justify-between");
+    expect(sortSource).toContain("ml-auto inline-flex");
+    expect(sortSource).toContain("exportPlayersCSV(state.players, state.tournamentName, checkedInIds)");
   });
 });
 

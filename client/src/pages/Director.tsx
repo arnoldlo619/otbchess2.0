@@ -69,7 +69,6 @@ import {
   X,
   SortAsc,
   SortDesc,
-  Filter,
   ChevronDown,
   MapPin as _MapPin,
   UserPlus,
@@ -2472,13 +2471,10 @@ export default function Director() {
   // Settings are locked once any round has been generated
   const isSettingsLocked = state.rounds.length > 0 || state.status !== "registration";
 
-  // ── Player search / filter / sort state ─────────────────────────────────
+  // ── Player search and sort state ─────────────────────────────────────────
   const [playerSearch, setPlayerSearch] = useState("");
-  const [filterTitle, setFilterTitle] = useState<string>("all");
-  const [filterCountry, setFilterCountry] = useState<string>("all");
   const [sortKey, setSortKey] = useState<"rank" | "elo" | "name" | "points">("rank");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [showFilters, setShowFilters] = useState(false);
   const [showCutoffOverride, setShowCutoffOverride] = useState(false);
   const [showBracketGenerateModal, setShowBracketGenerateModal] = useState(false);
   const [showSwissSummaryModal, setShowSwissSummaryModal] = useState(false);
@@ -2560,7 +2556,6 @@ export default function Director() {
 
   // ── Check-in roster state ─────────────────────────────────────────────────
   const [rosterSearch, setRosterSearch] = useState("");
-  const [walkInName, setWalkInName] = useState("");
   const checkInKey = `otb-checkin-${tournamentId}`;
   const [checkedInIds, setCheckedInIds] = useState<Set<string>>(() => {
     try {
@@ -2578,30 +2573,6 @@ export default function Director() {
       return next;
     });
   }, [checkInKey, state.players]);
-
-  const addWalkInPlayer = useCallback(() => {
-    const name = walkInName.trim();
-    if (!name) return;
-    const newPlayer = {
-      id: `walkin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      name,
-      username: name.toLowerCase().replace(/\s+/g, ""),
-      elo: 800,
-      country: "",
-      title: undefined,
-      points: 0,
-      wins: 0,
-      draws: 0,
-      losses: 0,
-      buchholz: 0,
-      colorHistory: [],
-      platform: "chesscom" as const,
-    };
-    addPlayer(newPlayer);
-    toggleCheckIn(newPlayer.id);
-    toast.success(`Walk-in: ${name} added & checked in`);
-    setWalkInName("");
-  }, [addPlayer, toggleCheckIn, walkInName]);
 
   // ── Board search filter state ───────────────────────────────────────────────────────
   const [boardSearch, setBoardSearch] = useState("");
@@ -3162,9 +3133,7 @@ export default function Director() {
     prevElimPhaseRef.current = curr;
   }, [state.elimPhase, state.format, state.elimCutoff, state.elimPlayers, broadcastBracketLive, tournamentId]);
 
-  // Derived: filtered + sorted player list
-  const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
-  const allCountries = Array.from(new Set(standings.map((p) => p.country)));
+  // Derived: searched and sorted player list
   const existingUsernames = state.players.map((p) => p.username);
 
   // Set of player IDs that have a manual bye in the current round
@@ -3182,9 +3151,7 @@ export default function Director() {
         p.name.toLowerCase().includes(q) ||
         p.username.toLowerCase().includes(q) ||
         String(p.elo).includes(q);
-      const matchesTitle = filterTitle === "all" || p.title === filterTitle || (filterTitle === "untitled" && !p.title);
-      const matchesCountry = filterCountry === "all" || p.country === filterCountry;
-      return matchesSearch && matchesTitle && matchesCountry;
+      return matchesSearch;
     })
     .sort((a, b) => {
       let cmp = 0;
@@ -3194,9 +3161,6 @@ export default function Director() {
       if (sortKey === "points") cmp = b.points - a.points;
       return sortDir === "asc" ? cmp : -cmp;
     });
-
-  const activeFilterCount = (filterTitle !== "all" ? 1 : 0) + (filterCountry !== "all" ? 1 : 0);
-
   const supportsPlayerWithdrawal =
     !isRegistration &&
     state.status !== "completed" &&
@@ -5559,70 +5523,11 @@ export default function Director() {
           {/* ── Players Tab ─────────────────────────────────────────────────── */}
           {activeTab === "players" && (
             <div className="space-y-4">
-
-              {isRegistration && (
-                <section
-                  aria-labelledby="walk-in-check-in-title"
-                  className={`rounded-xl border p-3 sm:p-4 ${
-                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
-                  }`}
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h2
-                        id="walk-in-check-in-title"
-                        className={`text-base sm:text-lg font-semibold ${isDark ? "text-white/85" : "text-[#12372A]"}`}
-                        style={{ fontFamily: "'Clash Display', sans-serif" }}
-                      >
-                        Check in a walk-in
-                      </h2>
-                      <p className={`mt-0.5 text-sm ${isDark ? "text-white/45" : "text-[#436850]"}`}>
-                        Add them to the roster and mark them checked in immediately.
-                      </p>
-                    </div>
-                    <div className="flex w-full gap-2 sm:max-w-md">
-                      <input
-                        aria-label="Walk-in name"
-                        type="text"
-                        value={walkInName}
-                        onChange={(e) => setWalkInName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addWalkInPlayer();
-                          }
-                        }}
-                        placeholder="Walk-in name"
-                        style={{ minHeight: "44px" }}
-                        className={`min-w-0 flex-1 rounded-lg border px-3 py-2.5 text-base outline-none transition-colors ${
-                          isDark
-                            ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50"
-                            : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
-                        }`}
-                      />
-                      <button
-                        onClick={addWalkInPlayer}
-                        disabled={!walkInName.trim()}
-                        style={{ minHeight: "44px", touchAction: "manipulation" }}
-                        className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2.5 text-base font-semibold transition-all disabled:cursor-not-allowed ${
-                          walkInName.trim()
-                            ? "bg-[#436850] text-white hover:bg-[#2d5235] active:scale-[0.98]"
-                            : isDark ? "bg-white/06 text-white/20" : "bg-[#ADBC9F]/40 text-[#436850]/70"
-                        }`}
-                      >
-                        <UserPlus className="h-3.5 w-3.5" />
-                        Check in
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {/* ── Search + Filter Toolbar ─────────────────────────────────────── */}
+              {/* ── Search + roster actions ─────────────────────────────────────── */}
               <div className={`rounded-xl border p-3 space-y-3 ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
               }`}>
-                {/* Top row: title + search + filter toggle */}
+                {/* Top row: roster identity, search, and direct actions */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex items-center gap-2">
                     <h2
@@ -5668,51 +5573,8 @@ export default function Director() {
                     )}
                   </div>
 
-                  {/* Filter + Add Player row */}
+                  {/* Roster actions */}
                   <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0">
-                    <button
-                      onClick={() => setShowFilters((f) => !f)}
-                      style={{ minHeight: "44px", touchAction: "manipulation" }}
-                      className={`flex items-center gap-1 min-[480px]:gap-1.5 text-sm font-medium px-2.5 min-[480px]:px-3 py-2 min-[480px]:py-2.5 rounded-lg border transition-all ${
-                        showFilters || activeFilterCount > 0
-                          ? isDark
-                            ? "bg-[#436850]/30 border-[#4CAF50]/40 text-[#4CAF50]"
-                            : "bg-[#436850]/08 border-[#436850]/30 text-[#436850]"
-                          : isDark
-                          ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
-                          : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F]"
-                      }`}
-                    >
-                      <Filter className="w-3.5 h-3.5" />
-                      Filters
-                      {activeFilterCount > 0 && (
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                          isDark ? "bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#436850] text-white"
-                        }`}>
-                          {activeFilterCount}
-                        </span>
-                      )}
-                      <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${
-                        showFilters ? "rotate-180" : ""
-                      }`} />
-                    </button>
-                    {/* Export players CSV — always visible when roster has players */}
-                    {state.players.length > 0 && (
-                      <button
-                        onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
-                        style={{ minHeight: "44px", touchAction: "manipulation" }}
-                        className={`flex items-center gap-1 text-sm font-medium px-2.5 py-2 rounded-lg border transition-all ${
-                          isDark
-                            ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
-                            : "border-[#ADBC9F] text-[#436850] hover:text-[#12372A] hover:border-[#ADBC9F]"
-                        }`}
-                        title="Download player roster as CSV (includes check-in & payment status)"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span className="hidden min-[480px]:inline">Download CSV</span>
-                        <span className="min-[480px]:hidden">CSV</span>
-                      </button>
-                    )}
                     {/* Refresh All ELO — re-fetches ratings for all players with usernames */}
                     {state.players.length > 0 && (
                       <button
@@ -5777,108 +5639,53 @@ export default function Director() {
                   </div>
                 </div>
 
-                {/* Expanded filter panel */}
-                {showFilters && (
-                  <div className={`pt-3 border-t space-y-3 ${
-                    isDark ? "border-white/08" : "border-[#ADBC9F]/70"
-                  }`}>
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Title filter */}
-                      <div>
-                        <label className={`block text-xs font-semibold uppercase tracking-widest mb-1.5 ${
-                          isDark ? "text-white/30" : "text-[#436850]"
-                        }`}>Title</label>
-                        <div className="flex flex-wrap gap-1.5">
-                          {["all", ...allTitles, "untitled"].map((t) => (
-                            <button
-                              key={t}
-                              onClick={() => setFilterTitle(t)}
-                              className={`text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
-                                filterTitle === t
-                                  ? isDark
-                                    ? "bg-[#436850] text-white"
-                                    : "bg-[#436850] text-white"
-                                  : isDark
-                                  ? "bg-white/06 text-white/50 hover:bg-white/10 hover:text-white/70"
-                                  : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] hover:text-[#12372A]"
-                              }`}
-                            >
-                              {t === "all" ? "All titles" : t === "untitled" ? "Untitled" : t}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Country filter */}
-                      <div>
-                        <label className={`block text-xs font-semibold uppercase tracking-widest mb-1.5 ${
-                          isDark ? "text-white/30" : "text-[#436850]"
-                        }`}>Country</label>
-                        <div className="flex flex-wrap gap-1.5">
-                          {["all", ...allCountries].map((c) => (
-                            <button
-                              key={c}
-                              onClick={() => setFilterCountry(c)}
-                              className={`text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
-                                filterCountry === c
-                                  ? isDark
-                                    ? "bg-[#436850] text-white"
-                                    : "bg-[#436850] text-white"
-                                  : isDark
-                                  ? "bg-white/06 text-white/50 hover:bg-white/10 hover:text-white/70"
-                                  : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F] hover:text-[#12372A]"
-                              }`}
-                            >
-                              {c === "all" ? "All countries" : `${FLAG_EMOJI[c] ?? ""} ${c}`}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Clear filters */}
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={() => { setFilterTitle("all"); setFilterCountry("all"); }}
-                        className={`text-sm font-medium flex items-center gap-1 ${
-                          isDark ? "text-red-400 hover:text-red-300" : "text-red-500 hover:text-red-600"
-                        }`}
-                      >
-                        <X className="w-3 h-3" /> Clear all filters
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Sort controls */}
-                <div className={`flex items-center gap-1.5 pt-2 border-t ${
+                {/* Sort controls and roster export */}
+                <div className={`flex flex-wrap items-center justify-between gap-2 pt-3 border-t ${
                   isDark ? "border-white/06" : "border-[#ADBC9F]/50"
                 }`}>
-                  <span className={`text-xs font-semibold uppercase tracking-widest mr-1 ${
-                    isDark ? "text-white/30" : "text-[#436850]"
-                  }`}>Sort</span>
-                  {(["rank", "points", "elo", "name"] as const).map((key) => (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={`text-xs font-semibold uppercase tracking-widest mr-1 ${
+                      isDark ? "text-white/30" : "text-[#436850]"
+                    }`}>Sort</span>
+                    {(["rank", "points", "elo", "name"] as const).map((key) => (
+                      <button
+                        key={key}
+                        onClick={() => toggleSort(key)}
+                        className={`flex items-center gap-1 text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
+                          sortKey === key
+                            ? isDark
+                              ? "bg-[#436850]/40 text-[#4CAF50] border border-[#4CAF50]/30"
+                              : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20"
+                            : isDark
+                            ? "text-white/40 hover:text-white/60 border border-transparent hover:border-white/10"
+                            : "text-[#436850] hover:text-[#436850] border border-transparent hover:border-[#ADBC9F]"
+                        }`}
+                      >
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                        {sortKey === key && (
+                          sortDir === "asc"
+                            ? <SortAsc className="w-3 h-3" />
+                            : <SortDesc className="w-3 h-3" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  {state.players.length > 0 && (
                     <button
-                      key={key}
-                      onClick={() => toggleSort(key)}
-                      className={`flex items-center gap-1 text-sm px-2.5 py-1.5 rounded-md font-medium transition-all ${
-                        sortKey === key
-                          ? isDark
-                            ? "bg-[#436850]/40 text-[#4CAF50] border border-[#4CAF50]/30"
-                            : "bg-[#436850]/10 text-[#436850] border border-[#436850]/20"
-                          : isDark
-                          ? "text-white/40 hover:text-white/60 border border-transparent hover:border-white/10"
-                          : "text-[#436850] hover:text-[#436850] border border-transparent hover:border-[#ADBC9F]"
+                      onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
+                      style={{ minHeight: "44px", touchAction: "manipulation" }}
+                      className={`ml-auto inline-flex items-center gap-1 rounded-lg border px-2.5 py-2 text-sm font-medium transition-all ${
+                        isDark
+                          ? "border-white/10 text-white/50 hover:border-white/20 hover:text-white/70"
+                          : "border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F] hover:text-[#12372A]"
                       }`}
+                      title="Download player roster as CSV (includes check-in & payment status)"
                     >
-                      {key.charAt(0).toUpperCase() + key.slice(1)}
-                      {sortKey === key && (
-                        sortDir === "asc"
-                          ? <SortAsc className="w-3 h-3" />
-                          : <SortDesc className="w-3 h-3" />
-                      )}
+                      <Download className="w-3.5 h-3.5" />
+                      <span className="hidden min-[480px]:inline">Download CSV</span>
+                      <span className="min-[480px]:hidden">CSV</span>
                     </button>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -5896,17 +5703,17 @@ export default function Director() {
                     }`}>No players found</p>
                     <p className={`text-sm mt-0.5 ${
                       isDark ? "text-white/30" : "text-[#436850]"
-                    }`}>Try adjusting your search or filters</p>
+                    }`}>Try a different search</p>
                   </div>
                   <button
-                    onClick={() => { setPlayerSearch(""); setFilterTitle("all"); setFilterCountry("all"); }}
+                    onClick={() => setPlayerSearch("")}
                     className={`text-sm font-medium px-3 py-2 rounded-lg border transition-colors ${
                       isDark
                         ? "border-white/15 text-white/50 hover:bg-white/06"
                         : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"
                     }`}
                   >
-                    Clear search &amp; filters
+                    Clear search
                   </button>
                 </div>
               )}
