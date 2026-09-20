@@ -56,6 +56,7 @@ export function ClubDashboardSidebar({
     const Icon = item.icon;
     const active = activeId === item.id;
     const badge = item.badge ?? 0;
+    const compact = !expanded;
     const button = (
       <button
         type="button"
@@ -71,31 +72,38 @@ export function ClubDashboardSidebar({
           justifyContent: expanded ? "flex-start" : "center",
           gap: expanded ? "12px" : 0,
           paddingInline: expanded ? "12px" : 0,
-          width: expanded ? "calc(100% - 4px)" : "42px",
-          height: "42px",
+          width: expanded ? "calc(100% - 4px)" : "46px",
+          height: expanded ? "42px" : "46px",
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
           background: active ? `color-mix(in srgb, ${accent} 11%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 5%, transparent)` : "transparent",
+          border: active && compact ? `1px solid color-mix(in srgb, ${accent} 52%, transparent)` : "1px solid transparent",
+          boxShadow: active && compact ? `inset 0 1px 0 color-mix(in srgb, ${accent} 28%, transparent), 0 5px 14px rgb(0 0 0 / 0.13)` : "none",
           // @ts-expect-error CSS custom property is supported by React at runtime.
           "--tw-ring-color": accent,
         }}
       >
         <span
           aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-[background-color,color,transform,opacity] duration-200 ease-out motion-reduce:transition-none"
+          className="flex shrink-0 items-center justify-center rounded-xl transition-[background-color,border-color,color,transform,opacity] duration-200 ease-out motion-reduce:transition-none"
           style={{
+            width: compact ? "36px" : "32px",
+            height: compact ? "36px" : "32px",
             color: active ? accent : "inherit",
             background: active ? `color-mix(in srgb, ${accent} 15%, transparent)` : hoveredItemId === item.id ? "rgba(255,255,255,0.045)" : "transparent",
+            border: active && compact ? `1px solid color-mix(in srgb, ${accent} 24%, transparent)` : "1px solid transparent",
             opacity: active ? 1 : hoveredItemId === item.id ? 0.95 : 0.82,
             transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.02)" : "scale(1)",
           }}
         >
-          <Icon size={19} strokeWidth={active ? 2 : 1.7} />
+          <Icon size={compact ? 21 : 19} strokeWidth={active ? 2 : 1.7} />
         </span>
         <span
           className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
           style={{
+            flex: expanded ? "1 1 0%" : "0 0 0",
+            overflow: expanded ? "visible" : "hidden",
             opacity: expanded ? 1 : 0,
             transform: expanded ? "translateX(0)" : "translateX(-5px)",
             transitionDelay: expanded ? "95ms" : "0ms",

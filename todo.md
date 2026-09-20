@@ -237,8 +237,8 @@
 - [x] Matchup Prep launch: Preserve dynamic dual-color opponent summary and confine player-color state to Legal Line Explorer only
 - [x] Matchup Prep launch: Verify full-width Legal Line Explorer legal replay, accessibility, themes, and responsive breakpoints
 - [x] Matchup Prep launch: Execute live provider smoke tests, complete the acceptance matrix, and checkpoint only passing release criteria
-- [ ] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
-- [ ] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
+- [x] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
+- [x] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
 - [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
 - [ ] Club Dashboard: Verify hover contrast remains distinct from active, focus, touch, and reduced-motion states
 - [ ] Club Dashboard: Increase the compact sidebar club avatar button for stronger visibility
