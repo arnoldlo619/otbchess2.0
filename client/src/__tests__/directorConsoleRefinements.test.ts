@@ -296,7 +296,8 @@ describe("Director Home and Standings readability", () => {
     standingsStart,
     directorSource.indexOf("/* ── Players Tab", standingsStart),
   );
-  const rosterStart = homeSource.indexOf("Check-In Roster");
+  const lobbyStart = homeSource.indexOf("/* ── Lobby Hero Card");
+  const rosterStart = homeSource.indexOf("/* Header row */", lobbyStart);
   const checkInRosterSource = homeSource.slice(
     rosterStart,
     homeSource.indexOf("/* Payment summary footer", rosterStart),
@@ -310,9 +311,19 @@ describe("Director Home and Standings readability", () => {
   });
 
   it("keeps Home roster names and usernames readable during registration", () => {
-    expect(homeSource.match(/text-base font-semibold truncate/g)?.length).toBeGreaterThanOrEqual(2);
-    expect(homeSource.match(/text-sm truncate/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(homeSource.match(/text-lg font-bold truncate/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(homeSource.match(/text-base truncate/g)?.length).toBeGreaterThanOrEqual(2);
     expect(homeSource).toContain("text-base sm:text-lg font-black tracking-tight");
+  });
+
+  it("scales the Home check-in roster to the Players and Standings readability hierarchy", () => {
+    expect(checkInRosterSource).toContain("text-lg sm:text-xl font-semibold");
+    expect(checkInRosterSource).toContain("px-3 py-2 rounded-full text-sm font-bold");
+    expect(checkInRosterSource).toContain('style={{ minHeight: "44px", touchAction: "manipulation" }}');
+    expect(checkInRosterSource.match(/text-lg font-bold truncate/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(checkInRosterSource.match(/text-base truncate/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(checkInRosterSource).toContain('style={{ minHeight: "76px", touchAction: "manipulation" }}');
+    expect(checkInRosterSource).toContain("min-h-11 text-xs font-bold");
   });
 
   it("matches Standings player identity and key data to the Players-tab readable scale", () => {
@@ -374,11 +385,11 @@ describe("Director Home and Standings readability", () => {
     expect(checkInRosterSource).toContain('className={`hidden md:grid grid-cols-[');
   });
 
-  it("uses compact accessible payment segments and paired rapid or blitz rating labels", () => {
+  it("uses accessible payment segments and paired rapid or blitz rating labels", () => {
     expect(checkInRosterSource).toContain('aria-pressed={p.paymentStatus === "cash"}');
     expect(checkInRosterSource).toContain('aria-pressed={p.paymentStatus === "card"}');
-    expect(checkInRosterSource).toContain("<Banknote className=\"w-3 h-3\"");
-    expect(checkInRosterSource).toContain("<CreditCard className=\"w-3 h-3\"");
+    expect(checkInRosterSource).toContain("<Banknote className=\"w-3.5 h-3.5\"");
+    expect(checkInRosterSource).toContain("<CreditCard className=\"w-3.5 h-3.5\"");
     expect(checkInRosterSource).toContain(">R</span>{p.rapidElo}");
     expect(checkInRosterSource).toContain(">B</span>{p.blitzElo}");
     expect(checkInRosterSource).not.toContain("💵 Cash");

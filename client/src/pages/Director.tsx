@@ -3801,26 +3801,26 @@ export default function Director() {
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-[#ADBC9F]/70"
                   }`}>
                     {/* Header row */}
-                    <div className={`flex items-center justify-between px-4 sm:px-6 py-4 border-b ${
+                    <div className={`flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b ${
                       isDark ? "border-white/06" : "border-[#ADBC9F]/70"
                     }`}>
                       <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full ${
+                        <div className={`w-3 h-3 rounded-full ${
                           isDark ? "bg-[#4CAF50]/60" : "bg-[#436850]/50"
                         } animate-pulse`} />
-                        <span className={`text-sm font-bold ${isDark ? "text-white" : "text-[#12372A]"}`}
+                        <span className={`text-lg sm:text-xl font-semibold ${isDark ? "text-white" : "text-[#12372A]"}`}
                           style={{ fontFamily: "'Clash Display', sans-serif" }}>
                           Check-In Roster
                         </span>
                       </div>
                       {/* Check-in + Payment count badges + batch actions */}
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+                        <div className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold ${
                           checkedInIds.size === state.players.length && state.players.length > 0
                             ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
                             : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
                         }`}>
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <CheckCircle2 className="w-4 h-4" />
                           <span>{checkedInIds.size} / {state.players.length} checked in</span>
                         </div>
                         {/* Batch check-in / uncheck-all */}
@@ -3833,12 +3833,13 @@ export default function Director() {
                                 try { localStorage.setItem(checkInKey, JSON.stringify(Array.from(all))); } catch {}
                                 toast.success(`All ${state.players.length} players checked in`);
                               }}
-                              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                              style={{ minHeight: "44px", touchAction: "manipulation" }}
+                              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm font-bold transition-all active:scale-95 ${
                                 isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25" : "bg-green-100 text-green-700 hover:bg-green-200"
                               }`}
                               title="Check in all players"
                             >
-                              <CheckCircle2 className="w-3 h-3" />
+                              <CheckCircle2 className="w-3.5 h-3.5" />
                               Check In All
                             </button>
                           ) : (
@@ -3848,12 +3849,13 @@ export default function Director() {
                                 try { localStorage.setItem(checkInKey, JSON.stringify([])); } catch {}
                                 toast.success("All players unchecked");
                               }}
-                              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                              style={{ minHeight: "44px", touchAction: "manipulation" }}
+                              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm font-bold transition-all active:scale-95 ${
                                 isDark ? "bg-white/08 text-white/50 hover:bg-white/12" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]/60"
                               }`}
                               title="Uncheck all players"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="w-3.5 h-3.5" />
                               Uncheck All
                             </button>
                           )
@@ -3861,12 +3863,12 @@ export default function Director() {
                         {state.players.length > 0 && (() => {
                           const paid = state.players.filter((p) => p.paymentStatus === "cash" || p.paymentStatus === "card").length;
                           return (
-                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+                            <div className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold ${
                               paid === state.players.length
                                 ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-700"
                                 : isDark ? "bg-white/08 text-white/70" : "bg-[#ADBC9F]/40 text-[#436850]"
                             }`}>
-                              <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
+                              <CreditCard className="w-4 h-4" aria-hidden="true" />
                               <span>{paid} / {state.players.length} paid</span>
                             </div>
                           );
@@ -3876,10 +3878,10 @@ export default function Director() {
 
                     {/* Rating type selector — shown when players have dual ratings */}
                     {state.players.some((p) => p.rapidElo || p.blitzElo) && (
-                      <div className={`px-4 sm:px-6 py-3 border-b flex items-center justify-between gap-3 ${
+                      <div className={`px-4 sm:px-6 py-3.5 border-b flex items-center justify-between gap-3 ${
                         isDark ? "border-white/06" : "border-[#ADBC9F]/70"
                       }`}>
-                        <span className={`text-xs font-semibold ${
+                        <span className={`text-sm font-semibold ${
                           isDark ? "text-white/40" : "text-[#436850]"
                         }`}>Pairing Rating</span>
                         <div className="flex gap-1.5">
@@ -3913,7 +3915,7 @@ export default function Director() {
                                   toast.success(`Pairings will use ${rt === "blitz" ? "Blitz" : "Rapid"} ratings`);
                                 }}
                                 style={{ minHeight: "44px", touchAction: "manipulation" }}
-                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
                                   active
                                     ? isDark ? "bg-[#436850]/25 text-[#6FCF7F] border border-[#436850]/40" : "bg-[#436850]/10 text-[#436850] border border-[#436850]/25"
                                     : isDark ? "bg-white/05 text-white/40 border border-transparent" : "bg-[#ADBC9F]/40 text-[#436850] border border-transparent"
@@ -3931,24 +3933,24 @@ export default function Director() {
 
                     {/* Inline search bar */}
                     {state.players.length > 4 && (
-                      <div className={`px-4 sm:px-6 pt-3 pb-1`}>
-                        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                      <div className={`px-4 sm:px-6 pt-4 pb-1`}>
+                        <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
                           isDark ? "bg-white/04 border-white/08" : "bg-[#FBFADA]/70 border-[#ADBC9F]"
                         }`}>
-                          <Search className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
+                          <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/30" : "text-[#436850]"}`} />
                           <input
                             aria-label="Search by name or username"
                             type="text"
                             value={rosterSearch}
                             onChange={(e) => setRosterSearch(e.target.value)}
                             placeholder="Search by name or username..."
-                            className={`flex-1 bg-transparent text-sm outline-none placeholder:text-current/40 ${
+                            className={`flex-1 bg-transparent text-base outline-none placeholder:text-current/40 ${
                               isDark ? "text-white/80 placeholder:text-white/25" : "text-[#12372A] placeholder:text-[#436850]/60"
                             }`}
                           />
                           {rosterSearch && (
                             <button onClick={() => setRosterSearch("")} className={`p-0.5 rounded ${isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-[#ADBC9F] text-[#436850]"}`}>
-                              <X className="w-3 h-3" />
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
@@ -3963,10 +3965,10 @@ export default function Director() {
                           isDark ? "border-white/08" : "border-[#ADBC9F]"
                         }`}>
                           <div />
-                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Player</span>
-                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Check-in</span>
-                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] text-right ${isDark ? "text-white/35" : "text-[#436850]"}`}>Rating</span>
-                          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Payment</span>
+                          <span className={`text-xs font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Player</span>
+                          <span className={`text-xs font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Check-in</span>
+                          <span className={`text-xs font-bold uppercase tracking-[0.12em] text-right ${isDark ? "text-white/35" : "text-[#436850]"}`}>Rating</span>
+                          <span className={`text-xs font-bold uppercase tracking-[0.12em] ${isDark ? "text-white/35" : "text-[#436850]"}`}>Payment</span>
                           <span className="sr-only">Roster actions</span>
                         </div>
                       )}
@@ -3975,7 +3977,7 @@ export default function Director() {
                           isDark ? "text-white/20" : "text-[#436850]/70"
                         }`}>
                           <Users className="w-8 h-8" />
-                          <p className="text-sm">No players yet, share the QR code or join link</p>
+                          <p className="text-base">No players yet, share the QR code or join link</p>
                         </div>
                       ) : (
                         <div className="space-y-1">
@@ -4005,13 +4007,13 @@ export default function Director() {
                                   >
                                     {/* Top row: check-in + avatar + name + status */}
                                     <div
-                                      className={`flex items-center gap-2.5 px-3 py-2.5 ${isWithdrawn ? "cursor-default" : "cursor-pointer"}`}
+                                      className={`flex items-center gap-3 px-3.5 py-3 ${isWithdrawn ? "cursor-default" : "cursor-pointer"}`}
                                       style={{ touchAction: "manipulation" }}
                                       onClick={isWithdrawn ? undefined : () => toggleCheckIn(p.id)}
                                     >
                                       <button
                                         disabled={isWithdrawn}
-                                        className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all disabled:cursor-not-allowed ${
+                                        className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all disabled:cursor-not-allowed ${
                                           isCheckedIn
                                             ? "bg-[#436850] text-white"
                                             : isDark ? "border border-white/15" : "border border-[#ADBC9F]"
@@ -4019,20 +4021,20 @@ export default function Director() {
                                         onClick={(e) => { e.stopPropagation(); if (!isWithdrawn) toggleCheckIn(p.id); }}
                                         aria-label={isWithdrawn ? `${p.name} is withdrawn` : isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
                                       >
-                                        {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                        {isCheckedIn && <CheckCircle2 className="w-4 h-4" />}
                                       </button>
-                                      <PlayerAvatar username={p.username} name={p.name} size={32} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
+                                      <PlayerAvatar username={p.username} name={p.name} size={36} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                                       <div className="flex-1 min-w-0">
-                                        <p className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
-                                        {p.username && <p className={`text-sm truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>}
+                                        <p className={`text-lg font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
+                                        {p.username && <p className={`text-base truncate ${isDark ? "text-white/45" : "text-[#436850]"}`}>@{p.username}</p>}
                                       </div>
                                       <div className="flex items-center gap-1.5 flex-shrink-0">
                                         {elo != null && (
-                                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                          <span className={`text-xs font-bold px-2 py-1 rounded ${
                                             isDark ? "bg-white/06 text-white/60" : "bg-[#ADBC9F]/40 text-[#436850]"
                                           }`}>{elo}</span>
                                         )}
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                                           isWithdrawn
                                             ? isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"
                                             : isCheckedIn
@@ -4043,7 +4045,7 @@ export default function Director() {
                                     </div>
                                     {/* Bottom row: payment + actions */}
                                     <div
-                                      className={`flex items-center justify-between gap-2 px-3 pb-2.5 border-t ${
+                                      className={`flex items-center justify-between gap-2 px-3.5 pb-3 border-t ${
                                         isDark ? "border-white/05" : "border-[#ADBC9F]/30"
                                       }`}
                                       onClick={(e) => e.stopPropagation()}
@@ -4051,24 +4053,24 @@ export default function Director() {
                                       <div className="flex items-center gap-1.5 pt-2">
                                         <button
                                           onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
-                                          style={{ minHeight: "36px" }}
+                                          style={{ minHeight: "44px", touchAction: "manipulation" }}
                                         aria-pressed={p.paymentStatus === "cash"}
-                                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                                        className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded transition-all ${
                                           p.paymentStatus === "cash"
                                             ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
                                             : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
                                           }`}
-                                        ><Banknote className="w-3 h-3" aria-hidden="true" />Cash</button>
+                                        ><Banknote className="w-3.5 h-3.5" aria-hidden="true" />Cash</button>
                                         <button
                                           onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
-                                          style={{ minHeight: "36px" }}
+                                          style={{ minHeight: "44px", touchAction: "manipulation" }}
                                         aria-pressed={p.paymentStatus === "card"}
-                                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                                        className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded transition-all ${
                                           p.paymentStatus === "card"
                                             ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
                                             : isDark ? "bg-white/05 text-white/25" : "bg-[#ADBC9F]/40 text-[#436850]/70"
                                           }`}
-                                        ><CreditCard className="w-3 h-3" aria-hidden="true" />Card</button>
+                                        ><CreditCard className="w-3.5 h-3.5" aria-hidden="true" />Card</button>
                                       </div>
                                       {isRegistration && pendingRemoveId === p.id ? (
                                         <div className={`flex items-center gap-1.5 px-2 py-1 rounded-xl text-xs font-bold mt-2 ${
@@ -4094,8 +4096,8 @@ export default function Director() {
                                   </div>
                                   {/* ── Desktop row (≥640px) ─────────────────────────────────────────────────────────── */}
                                   <div
-                                    style={{ minHeight: "68px", touchAction: "manipulation" }}
-                                    className={`hidden md:grid grid-cols-[2.5rem_minmax(0,1fr)_7.5rem_7.5rem_8.5rem_5.5rem] items-center gap-3 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
+                                    style={{ minHeight: "76px", touchAction: "manipulation" }}
+                                    className={`hidden md:grid grid-cols-[2.5rem_minmax(0,1fr)_7.5rem_7.5rem_8.5rem_5.5rem] items-center gap-3 px-3 py-2.5 rounded-xl transition-all group cursor-pointer ${
                                       isWithdrawn
                                         ? isDark ? "bg-amber-500/08 hover:bg-amber-500/12" : "bg-amber-50/60 hover:bg-amber-50"
                                         : isCheckedIn
@@ -4107,7 +4109,7 @@ export default function Director() {
                                   <div className="flex items-center gap-2">
                                     <button
                                       disabled={isWithdrawn}
-                                      className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                                      className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
                                         isCheckedIn
                                           ? "bg-[#436850] text-white"
                                           : isDark ? "border border-white/15 hover:border-white/30" : "border border-[#ADBC9F] hover:border-[#436850]/40"
@@ -4115,27 +4117,27 @@ export default function Director() {
                                       onClick={(e) => { e.stopPropagation(); if (!isWithdrawn) toggleCheckIn(p.id); }}
                                       aria-label={isWithdrawn ? `${p.name} is withdrawn` : isCheckedIn ? `Uncheck ${p.name}` : `Check in ${p.name}`}
                                     >
-                                      {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                      {isCheckedIn && <CheckCircle2 className="w-4 h-4" />}
                                     </button>
-                                    <span className={`text-xs font-mono w-3 text-right ${isDark ? "text-white/25" : "text-[#436850]/70"}`}>{idx + 1}</span>
+                                    <span className={`text-sm font-mono w-3 text-right ${isDark ? "text-white/35" : "text-[#436850]/70"}`}>{idx + 1}</span>
                                   </div>
                                   <div className="flex items-center gap-2.5 min-w-0">
                                     <PlayerAvatar
                                       username={p.username}
                                       name={p.name}
-                                      size={30}
+                                      size={36}
                                       showBadge
                                       platform={p.platform}
                                       avatarUrl={p.avatarUrl}
                                       flairEmoji={p.flairEmoji}
                                     />
                                     <div className="min-w-0">
-                                      <p className={`text-base font-semibold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
-                                      {p.username && <p className={`text-sm truncate ${isDark ? "text-white/35" : "text-[#436850]"}`}>@{p.username}</p>}
+                                      <p className={`text-lg font-bold truncate ${isDark ? "text-white" : "text-[#12372A]"}`}>{p.name}</p>
+                                      {p.username && <p className={`text-base truncate ${isDark ? "text-white/45" : "text-[#436850]"}`}>@{p.username}</p>}
                                     </div>
                                   </div>
                                   {/* Status chip */}
-                                  <span className={`inline-flex w-fit items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${
+                                  <span className={`inline-flex w-fit items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full ${
                                     isWithdrawn
                                       ? isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"
                                       : isCheckedIn
@@ -4149,22 +4151,22 @@ export default function Director() {
                                   {(p.rapidElo || p.blitzElo) ? (
                                     <div className="flex items-center justify-end gap-1.5 min-w-0">
                                       {p.rapidElo ? (
-                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold tabular-nums px-2 py-1 rounded-md whitespace-nowrap ${
+                                        <span className={`inline-flex items-center gap-1 text-sm font-bold tabular-nums px-2.5 py-1.5 rounded-md whitespace-nowrap ${
                                           (tournamentConfig?.ratingType ?? "rapid") === "rapid"
                                             ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                             : isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
-                                        }`}><span className="text-[9px] uppercase tracking-wide opacity-70">R</span>{p.rapidElo}</span>
+                                        }`}><span className="text-xs uppercase tracking-wide opacity-70">R</span>{p.rapidElo}</span>
                                       ) : null}
                                       {p.blitzElo ? (
-                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold tabular-nums px-2 py-1 rounded-md whitespace-nowrap ${
+                                        <span className={`inline-flex items-center gap-1 text-sm font-bold tabular-nums px-2.5 py-1.5 rounded-md whitespace-nowrap ${
                                           (tournamentConfig?.ratingType ?? "rapid") === "blitz"
                                             ? isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
                                             : isDark ? "bg-white/06 text-white/40" : "bg-[#ADBC9F]/40 text-[#436850]"
-                                        }`}><span className="text-[9px] uppercase tracking-wide opacity-70">B</span>{p.blitzElo}</span>
+                                        }`}><span className="text-xs uppercase tracking-wide opacity-70">B</span>{p.blitzElo}</span>
                                       ) : null}
                                     </div>
                                   ) : p.elo != null ? (
-                                    <span className={`justify-self-end text-xs font-bold tabular-nums px-2.5 py-1 rounded-md ${
+                                    <span className={`justify-self-end text-sm font-bold tabular-nums px-3 py-1.5 rounded-md ${
                                       isDark ? "bg-white/08 text-white/80" : "bg-[#ADBC9F]/40 text-[#12372A]"
                                     }`}>{p.elo}</span>
                                   ) : null}
@@ -4173,26 +4175,26 @@ export default function Director() {
                                     <button
                                       onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
                                       aria-pressed={p.paymentStatus === "cash"}
-                                      className={`inline-flex items-center justify-center gap-1 min-h-8 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
+                                      className={`inline-flex items-center justify-center gap-1 min-h-11 text-xs font-bold px-2 py-1.5 rounded-md transition-all ${
                                         p.paymentStatus === "cash"
                                           ? isDark ? "bg-emerald-500/25 text-emerald-300" : "bg-emerald-100 text-emerald-700"
                                           : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#F6F8F4] text-[#436850] hover:bg-[#EAF0E7]"
                                       }`}
                                       title="Toggle cash payment"
                                     >
-                                      <Banknote className="w-3 h-3" aria-hidden="true" /> Cash
+                                      <Banknote className="w-3.5 h-3.5" aria-hidden="true" /> Cash
                                     </button>
                                     <button
                                       onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
                                       aria-pressed={p.paymentStatus === "card"}
-                                      className={`inline-flex items-center justify-center gap-1 min-h-8 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
+                                      className={`inline-flex items-center justify-center gap-1 min-h-11 text-xs font-bold px-2 py-1.5 rounded-md transition-all ${
                                         p.paymentStatus === "card"
                                           ? isDark ? "bg-blue-500/25 text-blue-300" : "bg-blue-100 text-blue-700"
                                           : isDark ? "bg-white/08 text-white/60 hover:text-white/90" : "bg-[#F6F8F4] text-[#436850] hover:bg-[#EAF0E7]"
                                       }`}
                                       title="Toggle card payment"
                                     >
-                                      <CreditCard className="w-3 h-3" aria-hidden="true" /> Card
+                                      <CreditCard className="w-3.5 h-3.5" aria-hidden="true" /> Card
                                     </button>
                                   </div>
                                   {/* Edit + Remove action buttons — always visible on mobile, hover-reveal on desktop */}
@@ -4286,29 +4288,29 @@ export default function Director() {
                       const totalPaid = paidCash + paidCard;
                       const unpaid = state.players.length - totalPaid;
                       return (
-                        <div className={`mx-4 sm:mx-6 mb-2 px-4 py-2.5 rounded-xl flex items-center justify-between gap-3 ${
+                        <div className={`mx-4 sm:mx-6 mb-3 px-4 py-3 rounded-xl flex flex-wrap items-center justify-between gap-3 ${
                           isDark ? "bg-white/04 border border-white/06" : "bg-[#FBFADA]/70 border border-[#ADBC9F]/70"
                         }`}>
-                          <span className={`text-[11px] font-semibold uppercase tracking-widest ${
+                          <span className={`text-xs font-semibold uppercase tracking-widest ${
                             isDark ? "text-white/35" : "text-[#436850]"
                           }`}>Payments</span>
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                             {paidCash > 0 && (
-                              <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
+                              <span className={`inline-flex items-center gap-1 text-sm font-bold ${
                                 isDark ? "text-emerald-400" : "text-emerald-600"
-                              }`}><Banknote className="w-3 h-3" aria-hidden="true" />{paidCash} cash</span>
+                              }`}><Banknote className="w-3.5 h-3.5" aria-hidden="true" />{paidCash} cash</span>
                             )}
                             {paidCard > 0 && (
-                              <span className={`inline-flex items-center gap-1 text-[11px] font-bold ${
+                              <span className={`inline-flex items-center gap-1 text-sm font-bold ${
                                 isDark ? "text-blue-400" : "text-blue-600"
-                              }`}><CreditCard className="w-3 h-3" aria-hidden="true" />{paidCard} card</span>
+                              }`}><CreditCard className="w-3.5 h-3.5" aria-hidden="true" />{paidCard} card</span>
                             )}
                             {unpaid > 0 && (
-                              <span className={`text-[11px] font-bold ${
+                              <span className={`text-sm font-bold ${
                                 isDark ? "text-white/30" : "text-[#436850]"
                               }`}>{unpaid} unpaid</span>
                             )}
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                            <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${
                               totalPaid === state.players.length
                                 ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
                                 : isDark ? "bg-white/08 text-white/50" : "bg-[#ADBC9F] text-[#436850]"
