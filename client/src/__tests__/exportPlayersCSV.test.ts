@@ -283,8 +283,10 @@ describe("exportPlayersCSV — source code verification", () => {
     expect(src).toContain("exportPlayersCSV(state.players, state.tournamentName, checkedInIds)");
   });
 
-  it("Director.tsx button label is 'Download CSV'", () => {
+  it("Director.tsx uses an accessible icon-only CSV action", () => {
     const src = readFileSync(resolve(ROOT, "client/src/pages/Director.tsx"), "utf8");
-    expect(src).toContain("Download CSV");
+    expect(src).toContain('aria-label="Download player roster as CSV"');
+    expect(src).toContain('<Download aria-hidden="true" className="h-4 w-4" />');
+    expect(src).not.toContain("<span className=\"hidden min-[480px]:inline\">Download CSV</span>");
   });
 });

@@ -5575,24 +5575,6 @@ export default function Director() {
 
                   {/* Roster actions */}
                   <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0">
-                    {/* Refresh All ELO — re-fetches ratings for all players with usernames */}
-                    {state.players.length > 0 && (
-                      <button
-                        onClick={refreshAllElo}
-                        disabled={isRefreshingElo}
-                        className={`flex items-center gap-1 text-sm font-medium px-2.5 py-2 rounded-lg border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
-                          isDark
-                            ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
-                            : "border-[#436850]/30 text-[#436850] hover:bg-[#436850]/08 hover:border-[#436850]/50"
-                        }`}
-                        title="Re-fetch ELO ratings from chess.com / Lichess for all players"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingElo ? "animate-spin" : ""}`} />
-                        {isRefreshingElo && eloRefreshProgress
-                          ? `${eloRefreshProgress.done}/${eloRefreshProgress.total}`
-                          : <><span className="hidden min-[480px]:inline">Refresh ELO</span><span className="min-[480px]:hidden">ELO</span></>}
-                      </button>
-                    )}
                     {/* Add Player + Upload RSVPs buttons — registration phase */}
                   {isRegistration && (
                       <>
@@ -5671,20 +5653,37 @@ export default function Director() {
                     ))}
                   </div>
                   {state.players.length > 0 && (
-                    <button
-                      onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
-                      style={{ minHeight: "44px", touchAction: "manipulation" }}
-                      className={`ml-auto inline-flex items-center gap-1 rounded-lg border px-2.5 py-2 text-sm font-medium transition-all ${
-                        isDark
-                          ? "border-white/10 text-white/50 hover:border-white/20 hover:text-white/70"
-                          : "border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F] hover:text-[#12372A]"
-                      }`}
-                      title="Download player roster as CSV (includes check-in & payment status)"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span className="hidden min-[480px]:inline">Download CSV</span>
-                      <span className="min-[480px]:hidden">CSV</span>
-                    </button>
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <button
+                        onClick={refreshAllElo}
+                        disabled={isRefreshingElo}
+                        style={{ minHeight: "44px", touchAction: "manipulation" }}
+                        className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                          isDark
+                            ? "border-emerald-500/30 text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                            : "border-[#436850]/30 text-[#436850] hover:border-[#436850]/50 hover:bg-[#436850]/08"
+                        }`}
+                        title="Re-fetch ELO ratings from chess.com / Lichess for all players"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${isRefreshingElo ? "animate-spin" : ""}`} />
+                        {isRefreshingElo && eloRefreshProgress
+                          ? `${eloRefreshProgress.done}/${eloRefreshProgress.total}`
+                          : <><span className="hidden min-[480px]:inline">Refresh ELO</span><span className="min-[480px]:hidden">ELO</span></>}
+                      </button>
+                      <button
+                        aria-label="Download player roster as CSV"
+                        onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
+                        style={{ minHeight: "44px", minWidth: "44px", touchAction: "manipulation" }}
+                        className={`inline-flex items-center justify-center rounded-lg border p-2 text-sm transition-all ${
+                          isDark
+                            ? "border-white/10 text-white/50 hover:border-white/20 hover:text-white/70"
+                            : "border-[#ADBC9F] text-[#436850] hover:border-[#ADBC9F] hover:text-[#12372A]"
+                        }`}
+                        title="Download player roster as CSV (includes check-in & payment status)"
+                      >
+                        <Download aria-hidden="true" className="h-4 w-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

@@ -188,15 +188,21 @@ describe("Players tab hierarchy", () => {
     expect(playersTab).not.toContain("addWalkInPlayer");
   });
 
-  it("keeps search and sorting while placing CSV export at the far end of the sort row", () => {
+  it("keeps search and sorting while grouping roster actions at the far end of the sort row", () => {
     const sortStart = playersTab.indexOf("Sort controls and roster export");
     const sortSource = playersTab.slice(sortStart, playersTab.indexOf("{/* Empty state */", sortStart));
 
     expect(playersTab).not.toContain("setShowFilters");
     expect(playersTab).not.toContain("Expanded filter panel");
     expect(sortSource).toContain("justify-between");
-    expect(sortSource).toContain("ml-auto inline-flex");
+    expect(sortSource).toContain("ml-auto flex items-center gap-1.5");
+    expect(sortSource).toContain("onClick={refreshAllElo}");
     expect(sortSource).toContain("exportPlayersCSV(state.players, state.tournamentName, checkedInIds)");
+    expect(sortSource.indexOf("onClick={refreshAllElo}")).toBeLessThan(
+      sortSource.indexOf("exportPlayersCSV(state.players, state.tournamentName, checkedInIds)"),
+    );
+    expect(sortSource).toContain('aria-label="Download player roster as CSV"');
+    expect(sortSource).not.toContain("Download CSV");
   });
 });
 

@@ -23,3 +23,23 @@ The 375px Director route renders without horizontal overflow. The active tab is 
 | Project lint | 0 errors; 235 established repository warnings remain. |
 | Full Vitest suite | 6,979 passing, 2 skipped, 20 failures in 14 unrelated established baseline source-contract/UI suites. |
 | Diff integrity | Passed: `git diff --check`. |
+
+## Action-row refinement
+
+The refresh action was moved from the roster header to the sort row, directly beside the CSV export. The CSV control is now visually icon-only while retaining a 44px minimum touch target, tooltip, and explicit accessible name.
+
+A live desktop review of the 18-player Director roster confirms that the top row now contains only roster identity and search. The lower row groups Sort controls on the left with Refresh ELO and a compact download icon on the right; the icon exposes **Download player roster as CSV** to assistive technology.
+
+The 375px route shell remains free of horizontal overflow. Because the isolated capture starts at the route’s default Home tab and tab state is not URL-addressable, the updated Players row was verified directly in the live desktop browser; its wrapping flex container and retained 44px action targets protect the compact layout.
+
+## Validation update
+
+| Check | Result |
+|---|---|
+| Focused Director and CSV tests | Passed: 117 tests across console refinement, editing, scoring, and roster CSV coverage. |
+| TypeScript | Passed: `pnpm exec tsc --noEmit`. |
+| Changed-file lint | 0 errors; six established unused-variable warnings in `Director.tsx` remain unchanged. |
+| Production build | Passed: `pnpm build`. |
+| Project lint | 0 errors; 235 established repository warnings remain. |
+| Full Vitest suite | 6,979 passing, 2 skipped, 20 failures in 14 unrelated established baseline source-contract/UI suites. |
+| Diff integrity | Passed: `git diff --check`. |
