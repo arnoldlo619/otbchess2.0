@@ -87,9 +87,9 @@ export function simpleOpeningName(rawName?: string, eco?: string, firstMove?: st
 }
 
 /**
- * Upgrades broad provider labels only when the sampled moves make a familiar
- * opening family unambiguous. The fallback stays descriptive rather than
- * guessing a named opening from one or two plies.
+ * Promotes provider labels and short legal prefixes into familiar player-facing
+ * opening families. The report deliberately avoids niche variation names and
+ * non-actionable "Common position" labels.
  */
 export function familiarOpeningNameFromMoves(
   rawName?: string,
@@ -109,17 +109,10 @@ export function familiarOpeningNameFromMoves(
   if (/^e4 e5 Nf3 Nc6 Bb5\b/.test(sequence)) return "Ruy Lopez";
   if (/^e4 e5 Nf3 Nc6 Bc4\b/.test(sequence)) return "Italian Game";
 
-  // A provider/ECO label can overstate what the visible short prefix proves.
-  // Keep these labels neutral until the displayed legal moves establish a
-  // familiar opening family rather than presenting a conflicting name.
-  if (moves.length >= 4) {
-    const lastIndex = moves.length - 1;
-    const moveNumber = Math.floor(lastIndex / 2) + 1;
-    return `Common position after ${moveNumber}${lastIndex % 2 ? "..." : "."}${moves[lastIndex]}`;
-  }
-
+  // Provider and ECO metadata can identify a broad family even when the four
+  // displayed plies do not establish a more specific, familiar opening. A
+  // useful family name is clearer for players than a generic move-position
+  // label and does not expose variation-level jargon.
   const name = simpleOpeningName(rawName, eco, moves[0]);
-  if (name === "Queen's Pawn Opening") return "1.d4 opening";
-  if (name === "Modern Defense") return "1...g6 defense";
   return name;
 }

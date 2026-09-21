@@ -24,7 +24,9 @@ import { sample } from "./facts.js";
 import { runGuards } from "./guards.js";
 import { buildScoutBrief, classifyFreshness, headlineInsightEligible, type ScoutBriefFallback } from "./evidencePolicy.js";
 
-export const ENGINE_VERSION = "5.0.0-launch-remediation";
+// Bump whenever a player-facing report projection changes so cached reports
+// cannot keep obsolete opening labels for the cache TTL.
+export const ENGINE_VERSION = "5.0.1-opening-labels";
 
 /** Provider timestamps are UTC instants; render calendar dates explicitly in UTC to avoid local timezone drift. */
 const dateOf = (t: number): string => {

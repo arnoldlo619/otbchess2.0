@@ -36,10 +36,12 @@ describe("Matchup Prep launch identity and opening-label contracts", () => {
     expect(scoutRequestSearchParams(request).toString()).toBe("provider=chesscom&tc=rapid");
   });
 
-  it("OPEN-01: uses neutral legal-position labels when the visible prefix does not establish a named opening", () => {
-    expect(familiarOpeningNameFromMoves("Queen's Pawn Opening", "D00", ["Nf3", "d5", "g3", "Nf6"])).toBe("Common position after 2...Nf6");
-    expect(familiarOpeningNameFromMoves("Italian Game", "C50", ["e4", "e5", "Nf3", "d5"])).toBe("Common position after 2...d5");
-    expect(familiarOpeningNameFromMoves("King's Pawn Opening", "C20", ["e4", "e5", "Bc4", "Bc5"])).toBe("Common position after 2...Bc5");
+  it("OPEN-01: uses familiar opening-family labels when a short legal prefix is not specific", () => {
+    expect(familiarOpeningNameFromMoves("Queen's Pawn Opening", "D00", ["Nf3", "d5", "g3", "Nf6"])).toBe("Queen's Pawn Opening");
+    expect(familiarOpeningNameFromMoves("Italian Game", "C50", ["e4", "e5", "Nf3", "d5"])).toBe("Italian Game");
+    expect(familiarOpeningNameFromMoves("King's Pawn Opening", "C20", ["e4", "e5", "Bc4", "Bc5"])).toBe("King's Pawn Opening");
+    expect(familiarOpeningNameFromMoves("Modern Defense", "B06", ["d4", "g6", "Nc3", "Bg7"])).toBe("Modern Defense");
+    expect(familiarOpeningNameFromMoves("Queen's Pawn Opening", "D00", ["d4", "d5", "Nc3", "Nf6"])).toBe("Queen's Pawn Opening");
   });
 
   it("DATE-01/DATA-01: preserves UTC calendar dates and withholds practical actions below eight eligible games", () => {

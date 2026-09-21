@@ -368,10 +368,10 @@
 - [x] Matchup Prep: Diagnose and resolve the reported Chess.com scouting-report generation regression on `/prep`
 - [x] Matchup Prep: Add a regression for the root cause and verify report generation in the browser
 - [x] Matchup Prep: Bound Chess.com provider requests so an upstream stall resolves to recoverable user feedback instead of indefinite report-building state
-- [ ] Matchup Prep: Diagnose the false “not enough eligible recent games” result for valid Chess.com usernames
-- [ ] Matchup Prep: Repair valid-game eligibility handling without lowering data-integrity safeguards
-- [ ] Matchup Prep: Add deterministic regression coverage for the reported Chess.com eligible-game incident
-- [ ] Matchup Prep: Prove blank `/prep` to completed report generation for the reported public account before checkpointing
+- [x] Matchup Prep: Diagnose the false “not enough eligible recent games” result for valid Chess.com usernames
+- [x] Matchup Prep: Repair valid-game eligibility handling without lowering data-integrity safeguards
+- [x] Matchup Prep: Add deterministic regression coverage for the reported Chess.com eligible-game incident
+- [x] Matchup Prep: Prove blank `/prep` to completed report generation for the reported public account before checkpointing
 - [x] Matchup Prep: Verify the repaired blank `/prep` to completed Chess.com report browser flow
 - [x] Platform Loader: Replace “Preparing the Page” with “Preparing the Board” across shared loading states
 - [x] Platform Loader: Verify the new loader copy and accessibility announcement before checkpointing

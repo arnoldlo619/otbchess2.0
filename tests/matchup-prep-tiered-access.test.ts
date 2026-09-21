@@ -38,7 +38,7 @@ describe("tiered Matchup Prep access", () => {
     expect(simpleOpeningName("Main Setup: d4-Nc3-Bf4", "D02", "d4")).toBe("Queen's Pawn Opening");
     expect(familiarOpeningNameFromMoves("Queen's Pawn Opening", "D00", ["d4", "d5", "c4", "e6"])).toBe("Queen's Gambit");
     expect(familiarOpeningNameFromMoves("Modern Defense", "B06", ["e4", "d6", "d4", "Nf6"])).toBe("Pirc Defense");
-    expect(familiarOpeningNameFromMoves("Modern Defense", "B06", ["d4", "g6", "c4", "Bg7"])).toBe("Common position after 2...Bg7");
+    expect(familiarOpeningNameFromMoves("Modern Defense", "B06", ["d4", "g6", "c4", "Bg7"])).toBe("Modern Defense");
   });
 
   it("builds familiar opening summaries plus a complete evidence-backed Pro Scout Brief from eligible games", () => {
