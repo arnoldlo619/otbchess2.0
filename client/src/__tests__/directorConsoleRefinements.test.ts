@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { describe, it, expect, beforeEach } from "vitest";
 
 const directorSource = readFileSync(resolve(process.cwd(), "client/src/pages/Director.tsx"), "utf8");
+const addPlayerSource = readFileSync(resolve(process.cwd(), "client/src/components/AddPlayerModal.tsx"), "utf8");
 
 // ── Command Center Strip Tests ──────────────────────────────────────────────
 
@@ -188,13 +189,18 @@ describe("Players tab hierarchy", () => {
     expect(playersTab).not.toContain("addWalkInPlayer");
   });
 
-  it("aligns top-row registration actions with the lower roster action group", () => {
+  it("keeps registration intake to the single Add Player action", () => {
     const topRowStart = playersTab.indexOf("Top row: roster identity, search, and direct actions");
     const topRowSource = playersTab.slice(topRowStart, playersTab.indexOf("Sort controls and roster export", topRowStart));
 
     expect(topRowSource).toContain("self-end sm:ml-auto");
-    expect(topRowSource).toContain("setShowUploadRSVP(true)");
     expect(topRowSource).toContain("setShowAddPlayer(true)");
+    expect(topRowSource).toContain("Registration intake, including CSV import, lives in Add Player.");
+    expect(topRowSource).not.toContain("setShowUploadRSVP");
+    expect(topRowSource).not.toContain("Upload RSVPs");
+    expect(directorSource).not.toContain("UploadRSVPModal");
+    expect(addPlayerSource).toContain('csv: "Import CSV"');
+    expect(addPlayerSource).toContain("<CsvPanel");
   });
 
   it("keeps search and sorting while grouping roster actions at the far end of the sort row", () => {

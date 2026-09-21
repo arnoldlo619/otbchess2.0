@@ -12,7 +12,6 @@ describe("Director route code splitting", () => {
     const lazyModules = [
       "@/components/InstagramCarouselModal",
       "@/components/AddPlayerModal",
-      "@/components/UploadRSVPModal",
       "@/components/EditPlayerModal",
       "@/components/SpectatorQRScreen",
       "@/components/TournamentSettingsPanel",
@@ -33,8 +32,9 @@ describe("Director route code splitting", () => {
     expect(source).toContain("{showSpectatorQR && (");
     expect(source).toContain("{showAddPlayer && (");
     expect(source).toContain("{showCarousel && (");
-    expect(source).toContain("{showUploadRSVP && (");
     expect(source).toContain("{editingPlayer && (");
+    expect(source).not.toContain("showUploadRSVP");
+    expect(source).not.toContain("UploadRSVPModal");
   });
 
   it("provides local loading feedback instead of blanking the Director route", () => {

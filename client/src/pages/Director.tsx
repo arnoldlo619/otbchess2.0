@@ -82,7 +82,6 @@ import {
   Tv2,
   Undo2,
   Info,
-  FileSpreadsheet,
   ArrowLeftRight,
   GripVertical,
   Pencil,
@@ -108,7 +107,6 @@ import { fetchFromChessCom } from "@/hooks/useChessComProfile";
 import { fetchFromLichess } from "@/hooks/useLichessProfile";
 
 const AddPlayerModal = lazy(() => import("@/components/AddPlayerModal").then((module) => ({ default: module.AddPlayerModal })));
-const UploadRSVPModal = lazy(() => import("@/components/UploadRSVPModal").then((module) => ({ default: module.UploadRSVPModal })));
 const InstagramCarouselModal = lazy(() => import("@/components/InstagramCarouselModal").then((module) => ({ default: module.InstagramCarouselModal })));
 const EditPlayerModal = lazy(() => import("@/components/EditPlayerModal").then((module) => ({ default: module.EditPlayerModal })));
 const SpectatorQRScreen = lazy(() => import("@/components/SpectatorQRScreen").then((module) => ({ default: module.SpectatorQRScreen })));
@@ -2479,7 +2477,6 @@ export default function Director() {
   const [showBracketGenerateModal, setShowBracketGenerateModal] = useState(false);
   const [showSwissSummaryModal, setShowSwissSummaryModal] = useState(false);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
-  const [showUploadRSVP, setShowUploadRSVP] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
   const [showSecondaryActions, setShowSecondaryActions] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
@@ -5577,33 +5574,18 @@ export default function Director() {
 
                   {/* Roster actions */}
                   <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0 self-end sm:ml-auto">
-                    {/* Add Player + Upload RSVPs buttons — registration phase */}
-                  {isRegistration && (
-                      <>
-                        <button
-                          onClick={() => setShowUploadRSVP(true)}
-                          className={`flex items-center gap-1 text-sm font-semibold px-2.5 py-2 rounded-lg border transition-all ${
-                            isDark
-                              ? "border-[#4CAF50]/40 text-[#4CAF50] hover:bg-[#436850]/20"
-                              : "border-[#436850]/40 text-[#436850] hover:bg-[#436850]/08"
-                          }`}
-                          title="Upload RSVPs from spreadsheet"
-                        >
-                          <FileSpreadsheet className="w-3.5 h-3.5" />
-                          <span className="hidden min-[480px]:inline">Upload RSVPs</span>
-                          <span className="min-[480px]:hidden">RSVPs</span>
-                        </button>
-                        <button
-                          onClick={() => setShowAddPlayer(true)}
-                          className="flex items-center gap-1 text-sm font-semibold px-2.5 py-2 rounded-lg transition-all"
-                          style={{ background: "#436850", color: "#FFFFFF" }}
-                          title="Add a player manually"
-                        >
-                          <UserPlus className="w-3.5 h-3.5" />
-                          <span className="hidden min-[480px]:inline">Add Player</span>
-                          <span className="min-[480px]:hidden">Add</span>
-                        </button>
-                      </>
+                    {/* Registration intake, including CSV import, lives in Add Player. */}
+                    {isRegistration && (
+                      <button
+                        onClick={() => setShowAddPlayer(true)}
+                        className="flex items-center gap-1 text-sm font-semibold px-2.5 py-2 rounded-lg transition-all"
+                        style={{ background: "#436850", color: "#FFFFFF" }}
+                        title="Add a player or import a CSV"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span className="hidden min-[480px]:inline">Add Player</span>
+                        <span className="min-[480px]:hidden">Add</span>
+                      </button>
                     )}
                     {/* Late Registration button — only during Round 1 */}
                     {!isRegistration && state.currentRound === 1 && !allResultsIn && state.format !== "quads" && (
@@ -7077,21 +7059,6 @@ export default function Director() {
             totalRounds={state.totalRounds}
             rounds={state.rounds}
             clubLogoUrl={clubAvatarUrl}
-          />
-        </Suspense>
-      )}
-
-      {/* ── Upload RSVP Modal ────────────────────────────────────────────── */}
-      {showUploadRSVP && (
-        <Suspense fallback={<DirectorFeatureFallback overlay />}>
-          <UploadRSVPModal
-            open
-            onClose={() => setShowUploadRSVP(false)}
-            onAdd={(player) => {
-              addPlayer(player);
-            }}
-            existingUsernames={existingUsernames}
-            tournamentId={tournamentId}
           />
         </Suspense>
       )}
