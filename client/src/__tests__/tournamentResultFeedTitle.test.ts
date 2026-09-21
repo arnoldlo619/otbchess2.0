@@ -30,7 +30,8 @@ describe("automated tournament-result feed titles", () => {
   });
 
   it("uses the same responsive h2 scale as Club Overview activity titles", () => {
-    expect(clubDashboardSource).toContain('<h2 className="text-base font-bold leading-5 text-amber-300 sm:text-lg sm:leading-6">');
+    expect(clubDashboardSource).toContain('<h2 className="text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: completedResultAccent }}>');
+    expect(clubDashboardSource).toContain('const completedResultAccent = isDark ? "oklch(0.84 0.15 80)" : "oklch(0.45 0.13 80)";');
     expect(clubDashboardSource).toContain('<h2 className="text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: primaryText }}>');
   });
 });

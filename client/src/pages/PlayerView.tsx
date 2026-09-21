@@ -842,7 +842,6 @@ function MyBoardScreen({
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#436850]/08";
   const divider = isDark ? "border-white/08" : "border-[#ADBC9F]/70";
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
-  const colorLabel = myColor === "white" ? "White ♔" : "Black ♚";
   const rank = myRank(username, players);
 
   // ── Opponent history derived from allRounds ─────────────────────────────
@@ -901,12 +900,6 @@ function MyBoardScreen({
         {/* Top row: name + round badge + connection */}
         <div className="flex items-center gap-2.5 px-4 pt-3 pb-1">
           <div className="flex-1 min-w-0">
-            <p
-              className="text-[10px] font-black uppercase tracking-[0.18em] mb-0.5"
-              style={{ color: isDark ? "oklch(0.50 0.10 145)" : "oklch(0.44 0.10 145)" }}
-            >
-              OTB!! · Live
-            </p>
             <h1
               className="text-base font-black leading-tight truncate"
               style={{ color: isDark ? "oklch(0.96 0.02 145)" : "oklch(0.15 0.06 145)" }}
@@ -1008,26 +1001,9 @@ function MyBoardScreen({
                   >
                     Board {game.board}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span
-                      className="text-xs font-black px-2.5 py-1 rounded-full"
-                      style={{
-                        background: myColor === "white" ? "oklch(1 0 0 / 0.30)" : "oklch(0 0 0 / 0.50)",
-                        color: "white",
-                        border: "1px solid oklch(1 0 0 / 0.35)",
-                      }}
-                    >
-                      {colorLabel}
-                    </span>
-                    {rank > 0 && (
-                      <span
-                        className="text-xs font-semibold px-2 py-1 rounded-full"
-                        style={{ background: "oklch(1 0 0 / 0.20)", color: "oklch(1 0 0 / 0.95)" }}
-                      >
-                        Rank #{rank}
-                      </span>
-                    )}
-                  </div>
+                  <p className="mt-2 text-sm font-bold" style={{ color: "oklch(0.94 0.02 145)" }}>
+                    Playing as {myColor === "white" ? "White" : "Black"}
+                  </p>
                 </div>
                 <div
                   className="w-20 h-20 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0"

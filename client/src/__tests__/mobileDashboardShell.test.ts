@@ -19,6 +19,6 @@ describe("mobile dashboard shells", () => {
 
   it.each(dashboardFiles)("reserves bottom-nav plus device safe-area space in %s", (relativePath) => {
     const source = readFileSync(resolve(projectRoot, relativePath), "utf8");
-    expect(source).toMatch(/pb-\[calc\((5rem|7rem)\+env\(safe-area-inset-bottom,0px\)\)\]/);
+    expect(source).toMatch(/pb-\[calc\((1rem|5rem|7rem)\+env\(safe-area-inset-bottom,0px\)\)\]/);
   });
 });
