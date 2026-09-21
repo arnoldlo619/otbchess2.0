@@ -4209,43 +4209,7 @@ export default function ClubDashboard() {
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (
           <div className="space-y-5">
-  {/* ── 1. Tasks Needing Attention — only when there are actionable items ── */}
-            {false && (pendingInvites.length > 0 || !club?.description || !club?.avatarUrl || upcomingEvents.length === 0) && (
-              <div className="rounded-2xl border border-amber-500/20 p-4" style={{ background: "oklch(0.16 0.06 85 / 0.12)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
-                  <h3 className="text-amber-300 text-sm font-bold">Needs Attention</h3>
-                </div>
-                <div className="space-y-2">
-                  {pendingInvites.length > 0 && (
-                    <button onClick={() => setTab("members")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
-                      <span>{pendingInvites.length} pending invite{pendingInvites.length > 1 ? "s" : ""} awaiting response</span>
-                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
-                    </button>
-                  )}
-                  {!club?.description && (
-                    <button onClick={() => setTab("settings")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
-                      <span>Missing club description — add one to attract members</span>
-                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
-                    </button>
-                  )}
-                  {!club?.avatarUrl && (
-                    <button onClick={() => setTab("settings")} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
-                      <span>No club logo uploaded</span>
-                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
-                    </button>
-                  )}
-                  {upcomingEvents.length === 0 && (
-                    <button onClick={() => setShowMeetupWizard(true)} className="w-full flex items-center justify-between text-sm text-amber-200/80 hover:text-amber-100 transition-colors text-left">
-                      <span>No upcoming events — create one to keep members engaged</span>
-                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ── 3. Upcoming Event (next one, prominent) ── */}
+            {/* ── Upcoming Event (next one, prominent) ── */}
             {upcomingEvents.length > 0 && (() => {
               const next = upcomingEvents[0];
               const dateStr = new Date(next.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -4278,7 +4242,7 @@ export default function ClubDashboard() {
               );
             })()}
 
-            {/* ── 4. Quick Actions — centered owner controls ── */}
+            {/* ── Quick Actions — centered owner controls ── */}
             <section aria-labelledby="overview-quick-actions">
               <h3 id="overview-quick-actions" className="mb-3 text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
               <div className="mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3">
@@ -4290,7 +4254,7 @@ export default function ClubDashboard() {
                   <button
                     key={label}
                     onClick={action}
-                    className="group flex min-h-12 items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0 active:scale-[0.98]"
+                    className="group flex min-h-14 items-center justify-center gap-2 rounded-xl border px-3 py-3 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0 active:scale-[0.98] sm:min-h-16"
                     style={{
                       background: isDark ? "oklch(0.14 0.04 145)" : "rgba(255,255,255,0.72)",
                       borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
@@ -4300,10 +4264,10 @@ export default function ClubDashboard() {
                       "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3",
                     } as React.CSSProperties}
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200" style={{ background: isDark ? "rgba(255,255,255,0.07)" : `${accent}13` }}>
-                      <Icon className="h-4 w-4" style={{ color: isDark ? "rgba(255,255,255,0.82)" : accent }} aria-hidden="true" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 sm:h-10 sm:w-10" style={{ background: isDark ? "rgba(255,255,255,0.075)" : "rgba(21,41,28,0.055)" }}>
+                      <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" style={{ color: isDark ? "rgba(255,255,255,0.88)" : "#15291c" }} aria-hidden="true" />
                     </div>
-                    <span className="whitespace-nowrap text-[11px] font-semibold sm:text-sm">{label}</span>
+                    <span className="whitespace-nowrap text-sm font-semibold sm:text-[15px]">{label}</span>
                   </button>
                 ))}
               </div>

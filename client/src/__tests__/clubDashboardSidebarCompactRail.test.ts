@@ -30,6 +30,22 @@ describe("Club Dashboard compact sidebar rail", () => {
     expect(sidebarSource).toContain("motion-reduce:transition-none");
   });
 
+  it("keeps hover feedback visible but subordinate to active, focus, touch, and reduced-motion states", () => {
+    expect(sidebarSource).toContain("event.pointerType !== \"touch\"");
+    expect(sidebarSource).toContain("color-mix(in srgb, ${accent} 8%, transparent)");
+    expect(sidebarSource).toContain("hoveredItemId === item.id && compact ? `1px solid color-mix(in srgb, ${accent} 27%, transparent)`");
+    expect(sidebarSource).toContain('transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.04)" : "scale(1)"');
+    expect(sidebarSource).toContain("focus-visible:ring-2");
+    expect(sidebarSource).toContain("active:scale-[0.98]");
+    expect(sidebarSource).toContain("motion-reduce:transition-none");
+  });
+
+  it("uses a larger centered brand trigger without changing its accessible back-to-clubs action", () => {
+    expect(sidebarSource).toContain('className="group/brand flex h-16 w-16 shrink-0 items-center justify-center');
+    expect(sidebarSource).toContain('className="h-16 w-16 origin-center object-contain');
+    expect(sidebarSource).toContain('aria-label="Back to all clubs"');
+  });
+
   it("keeps compact navigation centered within the usable rail and labels available through tooltips", () => {
     expect(sidebarSource).toContain('className="flex flex-1 flex-col justify-center overflow-y-auto px-3 py-5"');
     expect(sidebarSource).toContain("if (expanded) return <div key={item.id}>{button}</div>;");

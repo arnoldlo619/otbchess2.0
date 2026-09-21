@@ -239,15 +239,15 @@
 - [x] Matchup Prep launch: Execute live provider smoke tests, complete the acceptance matrix, and checkpoint only passing release criteria
 - [x] Club Dashboard: Increase compact rail icon scale and center icons precisely inside active border frames
 - [x] Club Dashboard: Verify selected compact sidebar icon alignment and visual scale before checkpointing
-- [ ] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
-- [ ] Club Dashboard: Verify hover contrast remains distinct from active, focus, touch, and reduced-motion states
-- [ ] Club Dashboard: Increase the compact sidebar club avatar button for stronger visibility
-- [ ] Club Dashboard: Remove the overview Needs Attention block for a more minimal dashboard
-- [ ] Club Dashboard: Make overview quick-action icons monochrome and increase action-label typography
-- [ ] Club Dashboard: Verify the combined dashboard visual cleanup at desktop and mobile widths
+- [x] Club Dashboard: Make sidebar button hover feedback more visible while preserving premium restraint
+- [x] Club Dashboard: Verify hover contrast remains distinct from active, focus, touch, and reduced-motion states
+- [x] Club Dashboard: Increase the compact sidebar club avatar button for stronger visibility
+- [x] Club Dashboard: Remove the overview Needs Attention block for a more minimal dashboard
+- [x] Club Dashboard: Make overview quick-action icons monochrome and increase action-label typography
+- [x] Club Dashboard: Verify the combined dashboard visual cleanup at desktop and mobile widths
 - [x] Club Dashboard: Remove the Quick Actions QR Tools button and clean the QR action color declaration
 - [x] Club Dashboard: Verify the reduced quick-action layout and accessible QR action contrast before checkpointing
-- [ ] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
+- [x] Club Dashboard: Add behavioral interaction coverage for focus, active, and reduced-motion safeguards after the sidebar icon hover refinement
 - [x] Club Dashboard: Capture the expanded-hover state and rerun mobile QA after the final geometry correction
 
 - [x] Tournament QR join: Trace player registration persistence and Director dashboard roster synchronization
