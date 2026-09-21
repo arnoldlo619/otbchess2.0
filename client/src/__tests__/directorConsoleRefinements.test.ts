@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 
 const directorSource = readFileSync(resolve(process.cwd(), "client/src/pages/Director.tsx"), "utf8");
 const addPlayerSource = readFileSync(resolve(process.cwd(), "client/src/components/AddPlayerModal.tsx"), "utf8");
+const directorStateSource = readFileSync(resolve(process.cwd(), "client/src/lib/directorState.ts"), "utf8");
 
 // ── Command Center Strip Tests ──────────────────────────────────────────────
 
@@ -201,6 +202,26 @@ describe("Players tab hierarchy", () => {
     expect(directorSource).not.toContain("UploadRSVPModal");
     expect(addPlayerSource).toContain('csv: "Import CSV"');
     expect(addPlayerSource).toContain("<CsvPanel");
+  });
+
+  it("provides a guarded pre-start roster edit mode with explicit removal confirmation", () => {
+    const topRowStart = playersTab.indexOf("Top row: roster identity, search, and direct actions");
+    const topRowSource = playersTab.slice(topRowStart, playersTab.indexOf("Sort controls and roster export", topRowStart));
+
+    expect(topRowSource).toContain("Edit Players");
+    expect(topRowSource).toContain("setIsEditingRoster((editing) => !editing)");
+    expect(topRowSource).toContain("aria-pressed={isEditingRoster}");
+    expect(playersTab).toContain("isRegistration && isEditingRoster");
+    expect(playersTab).toContain("<RegistrationRemoveControl");
+    expect(directorSource).toContain("Remove {playerName}?");
+    expect(directorSource).toContain("They will not be paired when the tournament begins.");
+    expect(directorSource).toContain("const removeRegistrationPlayer");
+    expect(directorSource).toContain("next.delete(playerId)");
+  });
+
+  it("keeps provisional Quads section references aligned with pre-start roster removals", () => {
+    expect(directorStateSource).toContain('if (prev.status !== "registration") return prev;');
+    expect(directorStateSource).toContain("playerIds: section.playerIds.filter((id) => id !== playerId)");
   });
 
   it("keeps search and sorting while grouping roster actions at the far end of the sort row", () => {

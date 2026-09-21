@@ -45,6 +45,16 @@ import { PairingSwapModal } from "@/components/PairingSwapModal";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Crown,
   ChevronLeft,
   ChevronRight as _ChevronRight,
@@ -207,6 +217,61 @@ function resultBadgeClass(result: Result, isDark: boolean): string {
   return isDark
     ? "bg-blue-500/20 text-blue-300 border border-blue-400/25"
     : "bg-sky-100 text-sky-800 border border-sky-300";
+}
+
+interface RegistrationRemoveControlProps {
+  playerName: string;
+  isDark: boolean;
+  isConfirming: boolean;
+  onRequest: () => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+  fullWidth?: boolean;
+}
+
+/** Registration-only roster removal with an explicit destructive confirmation. */
+function RegistrationRemoveControl({
+  playerName,
+  isDark,
+  isConfirming,
+  onRequest,
+  onCancel,
+  onConfirm,
+  fullWidth = false,
+}: RegistrationRemoveControlProps) {
+  return (
+    <AlertDialog open={isConfirming} onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <button
+        type="button"
+        onClick={onRequest}
+        className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-all active:scale-95 ${
+          isDark
+            ? "border-red-500/35 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+            : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+        } ${fullWidth ? "w-full" : "flex-shrink-0"}`}
+        aria-label={`Remove ${playerName} from the roster`}
+      >
+        <UserMinus className="h-3.5 w-3.5" aria-hidden="true" />
+        Remove
+      </button>
+      <AlertDialogContent className={isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)] text-white" : "border-[#ADBC9F] bg-white text-[#12372A]"}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove {playerName}?</AlertDialogTitle>
+          <AlertDialogDescription className={isDark ? "text-white/55" : "text-[#436850]"}>
+            This removes them from the pre-start roster. They will not be paired when the tournament begins.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel} className={isDark ? "border-white/15 bg-white/05 text-white hover:bg-white/10 hover:text-white" : "border-[#ADBC9F] text-[#436850] hover:bg-[#FBFADA]"}>
+            Keep player
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className="bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500">
+            Remove player
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 function pointsFor(result: Result, side: "white" | "black"): string {
@@ -2571,6 +2636,18 @@ export default function Director() {
     });
   }, [checkInKey, state.players]);
 
+  const removeRegistrationPlayer = useCallback((playerId: string, playerName: string) => {
+    removePlayer(playerId);
+    setCheckedInIds((prev) => {
+      const next = new Set(prev);
+      next.delete(playerId);
+      try { localStorage.setItem(checkInKey, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+    setPendingRemoveId(null);
+    toast.success(`${playerName} removed from the roster`);
+  }, [checkInKey, removePlayer]);
+
   // ── Board search filter state ───────────────────────────────────────────────────────
   const [boardSearch, setBoardSearch] = useState("");
   const [showNextRoundConfirm, setShowNextRoundConfirm] = useState(false);
@@ -2584,6 +2661,7 @@ export default function Director() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // ── Player removal confirmation (registration phase) ─────────────────────
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [isEditingRoster, setIsEditingRoster] = useState(false);
   const [pendingWithdrawId, setPendingWithdrawId] = useState<string | null>(null);
   const withdrawalDialogRef = useRef<HTMLDivElement>(null);
   const withdrawalCancelRef = useRef<HTMLButtonElement>(null);
@@ -2594,6 +2672,13 @@ export default function Director() {
     containerRef: withdrawalDialogRef,
     initialFocusRef: withdrawalCancelRef,
   });
+
+  useEffect(() => {
+    if (!isRegistration) {
+      setIsEditingRoster(false);
+      setPendingRemoveId(null);
+    }
+  }, [isRegistration]);
   const [isDeleting, setIsDeleting] = useState(false);
   // ── Bulk ELO refresh state ────────────────────────────────────────────────
   const [isRefreshingElo, setIsRefreshingElo] = useState(false);
@@ -5587,6 +5672,31 @@ export default function Director() {
                         <span className="min-[480px]:hidden">Add</span>
                       </button>
                     )}
+                    {isRegistration && state.players.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingRemoveId(null);
+                          setIsEditingRoster((editing) => !editing);
+                        }}
+                        aria-pressed={isEditingRoster}
+                        aria-label={isEditingRoster ? "Finish editing players" : "Edit players"}
+                        className={`flex min-h-11 items-center gap-1 rounded-lg border px-2.5 py-2 text-sm font-semibold transition-all active:scale-95 ${
+                          isEditingRoster
+                            ? isDark
+                              ? "border-amber-500/35 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                              : "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                            : isDark
+                            ? "border-white/12 bg-white/04 text-white/70 hover:bg-white/08 hover:text-white"
+                            : "border-[#ADBC9F] bg-white text-[#436850] hover:bg-[#FBFADA] hover:text-[#12372A]"
+                        }`}
+                        title={isEditingRoster ? "Finish roster editing" : "Remove players before the tournament starts"}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span className="hidden min-[480px]:inline">{isEditingRoster ? "Done" : "Edit Players"}</span>
+                        <span className="min-[480px]:hidden">{isEditingRoster ? "Done" : "Edit"}</span>
+                      </button>
+                    )}
                     {/* Late Registration button — only during Round 1 */}
                     {!isRegistration && state.currentRound === 1 && !allResultsIn && state.format !== "quads" && (
                       <button
@@ -5753,6 +5863,16 @@ export default function Director() {
                                     <p className={`text-sm ${isDark ? "text-white/30" : "text-[#436850]"}`}>record</p>
                                   </div>
                                 </div>
+                                {isRegistration && isEditingRoster && (
+                                  <RegistrationRemoveControl
+                                    playerName={p.name}
+                                    isDark={isDark}
+                                    isConfirming={pendingRemoveId === p.id}
+                                    onRequest={() => setPendingRemoveId(p.id)}
+                                    onCancel={() => setPendingRemoveId(null)}
+                                    onConfirm={() => removeRegistrationPlayer(p.id, p.name)}
+                                  />
+                                )}
                               </div>
                             ))}
                           </div>
@@ -5831,6 +5951,16 @@ export default function Director() {
                             }`} title={c === "W" ? "White" : "Black"} />)
                           )}
                         </div>
+                        {isRegistration && isEditingRoster && (
+                          <RegistrationRemoveControl
+                            playerName={p.name}
+                            isDark={isDark}
+                            isConfirming={pendingRemoveId === p.id}
+                            onRequest={() => setPendingRemoveId(p.id)}
+                            onCancel={() => setPendingRemoveId(null)}
+                            onConfirm={() => removeRegistrationPlayer(p.id, p.name)}
+                          />
+                        )}
                         <div className={`ml-1 flex items-center gap-1.5 border-l pl-2 ${isDark ? "border-white/10" : "border-[#ADBC9F]/70"}`} role="group" aria-label={`Pairing actions for ${p.name}`}>
                         {/* Bye button — only during active round, not for Quads (Quads has no byes) */}
                         {!p.withdrawn && !isRegistration && currentRoundData && state.format !== "quads" && (
@@ -6033,6 +6163,19 @@ export default function Director() {
                       ))}
                       </div>
                     </div>
+                    {isRegistration && isEditingRoster && (
+                      <div className={`mt-3 border-t pt-3 ${isDark ? "border-white/08" : "border-[#ADBC9F]/70"}`}>
+                        <RegistrationRemoveControl
+                          playerName={p.name}
+                          isDark={isDark}
+                          isConfirming={pendingRemoveId === p.id}
+                          onRequest={() => setPendingRemoveId(p.id)}
+                          onCancel={() => setPendingRemoveId(null)}
+                          onConfirm={() => removeRegistrationPlayer(p.id, p.name)}
+                          fullWidth
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

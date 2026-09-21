@@ -590,7 +590,21 @@ export function useDirectorState(
   const removePlayer = useCallback((playerId: string) => {
     setState((prev) => {
       if (prev.status !== "registration") return prev;
-      return { ...prev, players: prev.players.filter((p) => p.id !== playerId) };
+      return {
+        ...prev,
+        players: prev.players.filter((p) => p.id !== playerId),
+        // A pre-start Quads roster can already have provisional sections. Keep
+        // those references in sync so the later pairing flow never sees a
+        // player who has been removed from the registration roster.
+        ...(prev.quadSections
+          ? {
+              quadSections: prev.quadSections.map((section) => ({
+                ...section,
+                playerIds: section.playerIds.filter((id) => id !== playerId),
+              })),
+            }
+          : {}),
+      };
     });
   }, []);
 
