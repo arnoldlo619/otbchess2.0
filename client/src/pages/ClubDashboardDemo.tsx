@@ -8,7 +8,6 @@
 import { useState, type ElementType } from "react";
 import { Link, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { NavLogo } from "@/components/NavLogo";
 import { ShaderBackground } from "@/components/ui/shader-r";
 import { ClubDashboardSidebar } from "@/components/club/ClubDashboardSidebar";
 import { TabTransition } from "@/components/TabTransition";
@@ -434,7 +433,6 @@ export default function ClubDashboardDemo() {
           <header className="otb-header-safe relative flex min-h-[52px] flex-shrink-0 items-center gap-2 px-2 py-1 lg:px-5 lg:py-2.5" style={{ background: topBarBackground, backdropFilter: "blur(16px)", borderBottom: `1px solid ${NAV_BORDER}` }}>
             <Link href="/clubs" aria-label="Back to clubs" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[oklch(0.65_0.12_145)] transition-transform active:scale-95 lg:hidden"><ChevronLeft size={20} strokeWidth={2.5} /></Link>
             <div className="min-w-0 flex-1 lg:hidden"><p className="truncate text-[15px] font-bold leading-tight text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Harbor Chess Club</p><p className="text-[10px] font-medium text-[oklch(0.55_0.08_145)]">84 members</p></div>
-            <div className="hidden items-center gap-2 lg:flex"><NavLogo className="h-7" /><span className="rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/48" style={{ borderColor: "rgba(255,255,255,0.12)" }}>Club workspace demo</span></div>
             <div className="ml-auto flex items-center gap-2"><span className="hidden items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold sm:inline-flex" style={{ background: `${DEMO_ACCENT}14`, borderColor: `${DEMO_ACCENT}38`, color: "#a8ee9d" }}><Eye className="h-3.5 w-3.5" aria-hidden="true" />Read-only demo</span><button type="button" onClick={() => setMobileNavOpen((open) => !open)} aria-label={mobileNavOpen ? "Close club navigation" : "Open club navigation"} aria-expanded={mobileNavOpen} aria-haspopup="dialog" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform active:scale-95 lg:hidden" style={{ color: "rgba(255,255,255,0.88)", background: `${DEMO_ACCENT}22`, border: `1px solid ${DEMO_ACCENT}55`, boxShadow: mobileNavOpen ? `0 0 0 3px ${DEMO_ACCENT}20` : "none" }}>{mobileNavOpen ? <X size={20} strokeWidth={2.25} /> : <Menu size={21} strokeWidth={2.25} />}</button></div>
           </header>
 
