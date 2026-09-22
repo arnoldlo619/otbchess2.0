@@ -29,6 +29,17 @@ describe("private Club workspace model", () => {
     expect(demo).not.toContain("/api/clubs");
   });
 
+  it("uses the real Club Dashboard shell and chess-native icon system", () => {
+    expect(demo).toContain('import { ShaderBackground } from "@/components/ui/shader-r";');
+    expect(demo).toContain('import { ClubDashboardSidebar } from "@/components/club/ClubDashboardSidebar";');
+    expect(demo).toContain('import { TabTransition } from "@/components/TabTransition";');
+    expect(demo).toContain('from "@/components/OtbIcons";');
+    expect(demo).toContain("<ClubDashboardSidebar");
+    expect(demo).toContain("<ShaderBackground");
+    expect(demo).toContain("<DemoMobileDrawer");
+    expect(demo).not.toMatch(/[🏆🌍🥇🥈🥉🔥]/u);
+  });
+
   it("renders only personal memberships in the Club index", () => {
     expect(index).toContain("apiListMyClubs()");
     expect(index).toContain("listMyClubs(user.id)");
