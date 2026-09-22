@@ -701,7 +701,7 @@ export type NewClubBattleRow = typeof clubBattles.$inferInsert;
 
 // ── Clubs ─────────────────────────────────────────────────────────────────────
 // Mirrors the Club interface in client/src/lib/clubRegistry.ts.
-// Clubs default to isPublic=1 so they appear in Discover immediately.
+// Clubs are private workspaces by default and never enter public discovery.
 export const dbClubs = mysqlTable(
   "clubs",
   {
@@ -725,7 +725,7 @@ export const dbClubs = mysqlTable(
     memberCount: int("member_count").notNull().default(1),
     tournamentCount: int("tournament_count").notNull().default(0),
     followerCount: int("follower_count").notNull().default(0),
-    isPublic: tinyint("is_public").notNull().default(1),
+    isPublic: tinyint("is_public").notNull().default(0),
     website: varchar("website", { length: 300 }),
     twitter: varchar("twitter", { length: 100 }),
     discord: varchar("discord", { length: 300 }),

@@ -95,14 +95,13 @@ describe("clubRegistry", () => {
     expect(getClubBySlug(club.slug)).toMatchObject({ id: club.id });
   });
 
-  // ── listAllClubs / listMyClubs ──────────────────────────────────────────────
+  // ── private workspace index / listMyClubs ───────────────────────────────────
 
-  it("listAllClubs returns only public clubs", () => {
+  it("normalises even a legacy public input to a private workspace", () => {
     createClub(BASE_CLUB, CREATOR);
-    createClub({ ...BASE_CLUB, name: "Private Club", isPublic: false }, CREATOR);
+    createClub({ ...BASE_CLUB, name: "Second Club", isPublic: false }, CREATOR);
     const all = listAllClubs();
-    expect(all.length).toBe(1);
-    expect(all[0].name).toBe("Test Chess Club");
+    expect(all).toEqual([]);
   });
 
   it("listMyClubs returns clubs the user has joined", () => {

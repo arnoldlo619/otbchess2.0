@@ -13,7 +13,6 @@ import { useAuthContext } from "@/context/AuthContext";
 import { apiGetClub, apiListClubMembers } from "@/lib/clubsApi";
 import { authFetch } from "@/lib/apiFetch";
 import type { Club, ClubMember } from "@/lib/clubRegistry";
-import { getClub, getClubBySlug, getClubMembers, isMember } from "@/lib/clubRegistry";
 import { listClubEvents, type ClubEvent } from "@/lib/clubEventRegistry";
 import { listFeedEvents, type FeedEvent } from "@/lib/clubFeedRegistry";
 import {
@@ -119,50 +118,31 @@ export default function ClubManage() {
 
   // ── Load club data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!id) { navigate("/clubs"); return; }
+    if (!id || !user) { navigate("/clubs"); return; }
+    const currentUser = user;
 
     async function loadClub() {
-      let found: Club | null = getClub(id!) ?? getClubBySlug(id!);
-      if (!found) {
-        try {
-          const serverClub = await apiGetClub(id!);
-          if (serverClub) found = serverClub;
-        } catch { /* fall through */ }
-      }
+      let found: Club | null = null;
+      try { found = await apiGetClub(id!); } catch { /* unavailable is treated as inaccessible */ }
       if (!found) { navigate("/clubs"); return; }
 
-      // Permission guard — only owner/admin
-      if (user) {
-        const isOwner = found.ownerId === user.id;
-        if (!isOwner) {
-          let localMember = isMember(found.id, user.id);
-          if (!localMember) {
-            try {
-              const serverMembers = await apiListClubMembers(found.id);
-              const sm = serverMembers.find((m) => m.userId === user.id);
-              if (sm && (sm.role === "owner" || sm.role === "director")) localMember = true;
-            } catch { /* deny */ }
-          } else {
-            const memberList = getClubMembers(found.id);
-            const me = memberList.find((m) => m.userId === user.id);
-            if (!me || me.role === "member") {
-              navigate(`/clubs/${id}`);
-              return;
-            }
-          }
-          if (!localMember) {
-            navigate(`/clubs/${id}`);
-            return;
-          }
-        }
-      } else {
-        navigate(`/clubs/${id}`);
+      // Access to the workspace itself is authorised by apiGetClub. Management
+      // still requires an owner/director role from the authoritative roster.
+      let memberList: ClubMember[] = [];
+      try {
+        memberList = await apiListClubMembers(found.id);
+      } catch {
+        navigate("/clubs");
+        return;
+      }
+      const myMembership = memberList.find((member) => member.userId === currentUser.id);
+      if (found.ownerId !== currentUser.id && !["owner", "director"].includes(myMembership?.role ?? "member")) {
+        navigate(`/clubs/${found.id}/home`);
         return;
       }
 
       setClub(found);
-      const memberList = getClubMembers(found.id);
-      setMembers(memberList.length > 0 ? memberList : await apiListClubMembers(found.id));
+      setMembers(memberList);
       setEvents(listClubEvents(found.id, true));
       setFeedEvents(listFeedEvents(found.id, 20));
       setLoading(false);

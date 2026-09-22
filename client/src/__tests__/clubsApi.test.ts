@@ -66,10 +66,10 @@ describe("clubsApi URL construction", () => {
   });
 });
 
-// ── Default visibility tests ──────────────────────────────────────────────────
+// ── Private workspace tests ───────────────────────────────────────────────────
 
-describe("club default visibility", () => {
-  it("clubs default to isPublic = true when created", () => {
+describe("club workspace visibility", () => {
+  it("clubs default to isPublic = false when created", () => {
     const clubData = {
       name: "New Club",
       tagline: "A new club",
@@ -83,25 +83,16 @@ describe("club default visibility", () => {
       ownerId: "user-1",
       ownerName: "Alice",
     };
-    // isPublic should default to true when not specified
-    const withDefaults = { isPublic: true, ...clubData };
-    expect(withDefaults.isPublic).toBe(true);
+    const withDefaults = { isPublic: false, ...clubData };
+    expect(withDefaults.isPublic).toBe(false);
   });
 
-  it("clubs can be explicitly set to private", () => {
-    const clubData = { isPublic: false, name: "Private Club" };
-    expect(clubData.isPublic).toBe(false);
-  });
-
-  it("only public clubs appear in the discover list", () => {
+  it("does not surface a public discovery collection", () => {
     const clubs = [
-      makeClubRow({ id: "c1", isPublic: true }),
+      makeClubRow({ id: "c1", isPublic: false }),
       makeClubRow({ id: "c2", isPublic: false }),
-      makeClubRow({ id: "c3", isPublic: true }),
     ];
-    const publicClubs = clubs.filter((c) => c.isPublic);
-    expect(publicClubs).toHaveLength(2);
-    expect(publicClubs.map((c) => c.id)).toEqual(["c1", "c3"]);
+    expect(clubs.filter((club) => club.isPublic)).toHaveLength(0);
   });
 });
 
@@ -224,16 +215,16 @@ describe("localStorage to server migration", () => {
     expect(user1Key).not.toBe(user2Key);
   });
 
-  it("clubs with isPublic=false are not sent to the server during migration", () => {
+  it("migrates every owned legacy club while the server normalises visibility", () => {
     const localClubs = [
       makeClubRow({ id: "c1", isPublic: true }),
       makeClubRow({ id: "c2", isPublic: false }),
       makeClubRow({ id: "c3", isPublic: true }),
     ];
-    // Only public clubs should be migrated
-    const toMigrate = localClubs.filter((c) => c.isPublic);
-    expect(toMigrate).toHaveLength(2);
-    expect(toMigrate.map((c) => c.id)).toEqual(["c1", "c3"]);
+    const ownedLegacyClubs = localClubs.filter((club) => club.ownerId === "user-1");
+    const normalised = ownedLegacyClubs.map((club) => ({ ...club, isPublic: false }));
+    expect(normalised).toHaveLength(3);
+    expect(normalised.every((club) => !club.isPublic)).toBe(true);
   });
 });
 

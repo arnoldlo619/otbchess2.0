@@ -15,7 +15,7 @@ import { NavLogo } from "@/components/NavLogo";
 import AuthModal from "@/components/AuthModal";
 import { useAuthContext } from "@/context/AuthContext";
 import { apiJoinClub } from "@/lib/clubsApi";
-import { joinClub, getClub, getClubBySlug } from "@/lib/clubRegistry";
+import { joinClub } from "@/lib/clubRegistry";
 import { toast } from "sonner";
 import { Users, CheckCircle2, Loader2 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -57,13 +57,11 @@ export default function JoinClub() {
   useEffect(() => {
     async function resolveClub() {
       if (!clubId) { setPhase("error"); setErrorMsg("No club ID provided."); return; }
-      let found = getClub(clubId) ?? getClubBySlug(clubId) ?? null;
-      if (!found) {
-        try {
-          const res = await fetch(`/api/clubs/${clubId}`);
-          if (res.ok) found = await res.json();
-        } catch { /* ignore */ }
-      }
+      let found: { id: string; name: string; avatarUrl?: string | null; accentColor?: string | null } | null = null;
+      try {
+        const res = await fetch(`/api/clubs/join-preview/${encodeURIComponent(clubId)}`);
+        if (res.ok) found = await res.json();
+      } catch { /* the QR entry page renders its existing recovery state */ }
       if (!found) { setPhase("error"); setErrorMsg("Club not found."); return; }
       setClub(found);
       if (user) {

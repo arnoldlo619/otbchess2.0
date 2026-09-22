@@ -111,7 +111,7 @@ const DEFAULT_DATA: WizardData = {
   joinPolicy: "public",
   intakeQuestions: "",
   status: "published",
-  isPublic: true,
+  isPublic: false,
   avatarUrl: null,
   backgroundImage: null,
 };
@@ -452,7 +452,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
           { userId: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl }
         );
 
-        // 3. Persist to server (required so club appears in Discover for all users)
+        // 3. Persist the private workspace and its owner membership on the server.
         const serverClub = await apiCreateClub({ ...clubData, id: localClub.id });
         if (!serverClub) {
           setCreating(false);
@@ -850,34 +850,17 @@ function Step1Identity({
         </p>
       </div>
 
-      {/* Visibility toggle */}
+      {/* Private workspace policy */}
       <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl border ${isDark ? "border-white/8 bg-white/3" : "border-[#ADBC9F]/70 bg-[#FBFADA]/70"}`}>
         <div className="min-w-0">
           <p className={`text-sm font-semibold ${textMain}`}>
-            {data.isPublic ? "Public club" : "Private club"}
+            Private club
           </p>
           <p className={`text-xs mt-0.5 ${textMuted}`}>
-            {data.isPublic ? "Visible in discovery and search" : "Invite-only — not listed publicly"}
+            Only members can access the workspace. Invite players by QR code or a direct invite.
           </p>
         </div>
-        {/* Clean iOS-style pill toggle */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={data.isPublic}
-          onClick={() => patch({ isPublic: !data.isPublic })}
-          className={`relative flex-shrink-0 w-12 h-7 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
-            data.isPublic
-              ? "bg-[#4CAF50]"
-              : isDark ? "bg-white/20" : "bg-[#ADBC9F]"
-          }`}
-        >
-          <span
-            className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-              data.isPublic ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
-        </button>
+        <KeyRound className={`h-5 w-5 flex-shrink-0 ${isDark ? "text-[#a5e999]" : "text-[#436850]"}`} aria-hidden="true" />
       </div>
     </div>
   );
@@ -1408,24 +1391,14 @@ function Step6Membership({
         </div>
       </div>
 
-      {/* Visibility */}
+      {/* Workspace visibility */}
       <div className={`pt-4 border-t ${divider}`}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className={`text-sm font-semibold ${textMain}`}>Public Club</p>
-            <p className={`text-xs mt-0.5 ${textMuted}`}>Visible in search and the Clubs directory</p>
+            <p className={`text-sm font-semibold ${textMain}`}>Private workspace</p>
+            <p className={`text-xs mt-0.5 ${textMuted}`}>Your club will only appear for players who join or are invited.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => patch({ isPublic: !data.isPublic })}
-            className={`relative w-11 h-6 rounded-full transition-colors ${
-              data.isPublic ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-[#ADBC9F]"
-            }`}
-          >
-            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-              data.isPublic ? "translate-x-5" : "translate-x-0"
-            }`} />
-          </button>
+          <KeyRound className={`h-5 w-5 flex-shrink-0 ${isDark ? "text-[#a5e999]" : "text-[#436850]"}`} aria-hidden="true" />
         </div>
       </div>
 

@@ -19,12 +19,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import {
-  getClub,
-  getClubBySlug,
-  getClubMembers,
-  isMember,
   updateClub,
-  seedClubsIfEmpty,
   type Club,
   type ClubMember,
 } from "@/lib/clubRegistry";
@@ -45,7 +40,6 @@ import {
   createClubEvent,
   updateClubEvent,
   deleteClubEvent,
-  seedClubEventsIfEmpty,
   type ClubEvent,
   type ClubEventRSVP,
   type ClubEventComment,
@@ -2843,78 +2837,34 @@ export default function ClubDashboard() {
 
   // Seed and load
   useEffect(() => {
-    if (!id) { navigate("/clubs"); return; }
-    seedClubsIfEmpty();
-    seedClubEventsIfEmpty();
+    if (!id || !user) { navigate("/clubs"); return; }
 
     async function loadClub() {
-      // ── Step 1: Resolve club (server-first, localStorage fallback) ────────
-      // Always fetch from server to avoid stale localStorage seed data returning
-      // the wrong club (seed IDs may not match the DB after re-seeding).
+      // The server is the privacy authority. Never hydrate a private workspace
+      // from localStorage after an unavailable/unauthorised server response.
       let found: Club | null = null;
       try {
         const serverClub = await apiGetClub(id!);
         if (serverClub) {
-          // Always overwrite localStorage with fresh server data (fixes stale memberCount, backgroundImage, etc.)
+          // Keep a local cache for offline display only after authorisation.
           const clubs = (JSON.parse(localStorage.getItem("otb-clubs-v1") || "[]") as Club[]);
           const updatedClubs = clubs.filter((c) => c.id !== serverClub.id).concat(serverClub);
           localStorage.setItem("otb-clubs-v1", JSON.stringify(updatedClubs));
           found = serverClub;
         }
-      } catch { /* network error — fall back to localStorage */ }
-      // Offline / network error fallback
-      if (!found) {
-        found = getClub(id!) ?? getClubBySlug(id!);
-      }
+      } catch { /* unavailable private resources resolve to the private index */ }
       if (!found) { navigate("/clubs"); return; }
 
-      // ── Step 2: Membership guard (localStorage first, server fallback) ───
-      if (user) {
-        let localMember = isMember(found.id, user.id);
-        const isOwner = found.ownerId === user.id;
-        if (!localMember && !isOwner) {
-          // Not in localStorage — check server members
-          try {
-            const serverMembers = await apiListClubMembers(found.id);
-            const serverMember = serverMembers.find((m) => m.userId === user.id);
-            if (serverMember) {
-              // Hydrate localStorage so subsequent checks are instant
-              const existingMembers = (JSON.parse(localStorage.getItem("otb-club-members-v1") || "[]") as ClubMember[]);
-              if (!existingMembers.find((m) => m.clubId === found!.id && m.userId === user.id)) {
-                localStorage.setItem("otb-club-members-v1", JSON.stringify([...existingMembers, serverMember]));
-              }
-              localMember = true;
-            }
-          } catch { /* network error — deny access */ }
-        }
-        // Final fallback: check /mine (covers clubs where ownerId in DB may not match user.id
-        // e.g. clubs inserted via SQL or migrated from seed data)
-        if (!localMember && !isOwner) {
-          try {
-            const myClubs = await apiListMyClubs();
-            if (myClubs.find((c) => c.id === found!.id)) {
-              localMember = true;
-            }
-          } catch { /* network error — deny access */ }
-        }
-        if (!localMember && !isOwner) {
-          navigate(`/clubs/${id}`);
-          return;
-        }
-      }
-
-      // ── Step 3: Populate state ────────────────────────────────────────────
+      // The authorised details response proves the current user is a member or owner.
       setClub(found);
-      // Always load members from server to ensure real-time accuracy (not stale localStorage)
       try {
         const serverMembers = await apiListClubMembers(found.id);
         setMembers(serverMembers);
-        // Sync to localStorage for offline fallback
         const allLocal = JSON.parse(localStorage.getItem("otb-club-members-v1") || "[]") as ClubMember[];
         const otherClubMembers = allLocal.filter((m) => m.clubId !== found!.id);
         localStorage.setItem("otb-club-members-v1", JSON.stringify([...otherClubMembers, ...serverMembers]));
       } catch {
-        setMembers(getClubMembers(found.id));
+        setMembers([]);
       }
       setEvents(listClubEvents(found.id, true));
       setFeedEvents(listFeedEvents(found.id, 50));
@@ -6172,7 +6122,8 @@ export default function ClubDashboard() {
                 <button
                   onClick={async () => {
                     if (!club) return;
-                    setMembers(getClubMembers(club.id));
+                    const freshMembers = await apiListClubMembers(club.id);
+                    setMembers(freshMembers);
                     setFeedEvents(listFeedEvents(club.id, 50));
                     await refreshBattles();
                     toast.success("Analytics refreshed");

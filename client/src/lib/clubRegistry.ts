@@ -244,6 +244,9 @@ export function createClub(
   const slug = slugify(input.name);
   const club: Club = {
     ...input,
+    // The server applies the same invariant. This cache must not create a
+    // discoverable local-only exception while a save is in flight.
+    isPublic: false,
     id,
     slug,
     memberCount: 1,
@@ -282,7 +285,7 @@ export function getClubBySlug(slug: string): Club | null {
   return loadClubs().find((c) => c.slug === slug) ?? null;
 }
 
-/** List all public clubs (for discovery). */
+/** Legacy public list retained for older local records; new Clubs are private. */
 export function listAllClubs(): Club[] {
   return loadClubs().filter((c) => c.isPublic);
 }
@@ -358,11 +361,12 @@ export function updateClub(id: string, patch: Partial<Omit<Club, "id" | "slug" |
   const clubs = loadClubs();
   const idx = clubs.findIndex((c) => c.id === id);
   if (idx === -1) return null;
-  const updated = { ...clubs[idx], ...patch };
+  const { isPublic: _ignoredVisibilityChange, ...safePatch } = patch;
+  const updated = { ...clubs[idx], ...safePatch, isPublic: false };
   clubs[idx] = updated;
   saveClubs(clubs);
   // Notify all in-tab subscribers (e.g. ClubProfile) so they re-render immediately
-  notifyClubChange(id, patch);
+  notifyClubChange(id, { ...safePatch, isPublic: false });
   return updated;
 }
 
@@ -475,7 +479,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#2233CC",
     ownerId: "seed",
     ownerName: "Knight Club Chess",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.instagram.com/knightclubchess/",
     announcement: "♟️ Next event: Seoul to London collab night — chess, live DJs, all levels welcome. Follow @knightclubchess for tickets.",
   },
@@ -492,7 +496,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#8B1A1A",
     ownerId: "seed",
     ownerName: "Maria Santos",
-    isPublic: true,
+    isPublic: false,
     discord: "https://discord.gg/nycchess",
   },
   {
@@ -508,7 +512,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#A51C30",
     ownerId: "seed",
     ownerName: "Harvard Chess Club",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.harvardchess.com",
     announcement: "\u265f\ufe0f Harvard Open 2026 registration is open. All skill levels welcome.",
   },
@@ -525,7 +529,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#2D4A22",
     ownerId: "seed",
     ownerName: "Klaus Müller",
-    isPublic: true,
+    isPublic: false,
     website: "https://berlinschachclub.de",
   },
   {
@@ -541,7 +545,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#CC2222",
     ownerId: "seed",
     ownerName: "Koenji Chess Club",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.instagram.com/p/DaG5lKBAf5t/",
     announcement: "\u265f\ufe0f Next event: July 1 — The Den, 4-25-8 Koenjiminami, Suginami-ku. 6\u201310pm. All levels welcome.",
   },
@@ -559,7 +563,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#E8C547",
     ownerId: "seed",
     ownerName: "Ismu Isamu",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.instagram.com/pawnchessclub/",
     announcement: "🎉 Speed Dating Chess Night — every Friday 7–9pm. All levels welcome. Limited tickets.",
   },
@@ -576,7 +580,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#9B59B6",
     ownerId: "seed",
     ownerName: "Luke Quietman",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.instagram.com/clubchess.club/",
     announcement: "♟️ Next event: Chess Night at The Monroe — live DJ, all levels. RSVP via Instagram.",
   },
@@ -593,7 +597,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#1A3A5C",
     ownerId: "seed",
     ownerName: "Marshall Chess Club",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.marshallchessclub.org",
     announcement: "🏛️ The Marshall Chess Club Library is now open to members. Visit the club office for more info.",
   },
@@ -610,7 +614,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#C41E3A",
     ownerId: "seed",
     ownerName:"Saint Louis Chess Club",
-    isPublic: true,
+    isPublic: false,
     website: "https://saintlouischessclub.org",
     announcement: "🏆 2025 U.S. National Championships — registrations open now. FIDE-rated. All levels.",
   },
@@ -627,7 +631,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     accentColor: "#0066CC",
     ownerId: "seed",
     ownerName: "Charlotte Chess Center",
-    isPublic: true,
+    isPublic: false,
     website: "https://www.charlottechesscenter.org",
     announcement: "📅 Sunday Action Quads — every Sunday afternoon. Youth USCF-rated. Register online.",
   },

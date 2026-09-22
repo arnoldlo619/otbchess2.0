@@ -50,9 +50,10 @@ This inventory documents the production-facing route contract. Static pages shou
 
 | Canonical route | Surface | Access or fallback expectation |
 |---|---|---|
-| `/clubs` | Club discovery and memberships | Public with auth-aware controls |
+| `/clubs` | Private Club memberships | Lists only owned or joined Club workspaces |
+| `/clubs/demo` | Read-only Club dashboard demo | Public fixture data only; no real Club data |
 | `/clubs/leaderboard` | Club leaderboard | Public |
-| `/clubs/:id` | Public club profile | Invalid club recovery state |
+| `/clubs/:id` | Member Club profile | Membership gate and private-index recovery |
 | `/clubs/:id/home` | Member club dashboard | Membership gate |
 | `/clubs/:id/manage` | Club management | Owner/admin gate |
 | `/clubs/:id/messages` | Club messages | Membership gate |

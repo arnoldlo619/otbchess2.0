@@ -18,7 +18,7 @@ const VALID = {
   accentColor: "#3D6B47",
   website: "",
   discord: "",
-  isPublic: true,
+  isPublic: false,
 };
 
 // ── Step 1: Identity ──────────────────────────────────────────────────────────

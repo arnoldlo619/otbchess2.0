@@ -289,7 +289,7 @@ describe("PATCH allowed fields — avatarUrl and bannerUrl", () => {
     // This test documents the server-side fix: avatarUrl must be in the allowed list
     const allowed = [
       "name", "tagline", "description", "location", "country", "category",
-      "accentColor", "isPublic", "website", "twitter", "discord", "announcement",
+      "accentColor", "website", "twitter", "discord", "announcement",
       "avatarUrl", "bannerUrl",
     ];
     expect(allowed).toContain("avatarUrl");
@@ -299,7 +299,7 @@ describe("PATCH allowed fields — avatarUrl and bannerUrl", () => {
   it("avatarUrl and bannerUrl are the last two entries (added in the fix)", () => {
     const allowed = [
       "name", "tagline", "description", "location", "country", "category",
-      "accentColor", "isPublic", "website", "twitter", "discord", "announcement",
+      "accentColor", "website", "twitter", "discord", "announcement",
       "avatarUrl", "bannerUrl",
     ];
     const last2 = allowed.slice(-2);

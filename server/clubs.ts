@@ -98,6 +98,45 @@ function getUserId(req: Request, res: Response): string | null {
   return userId;
 }
 
+/**
+ * Resolves a private Club workspace only for its owner or an active member.
+ * Private resources intentionally use a generic not-found response so a valid
+ * club ID cannot be used to enumerate a real club, its roster, or its activity.
+ */
+async function getAuthorizedClub(req: Request, res: Response, idOrSlug: string) {
+  const userId = (req as Request & { userId?: string }).userId;
+  if (!userId) {
+    res.status(404).json({ error: "Club not found" });
+    return null;
+  }
+
+  const db = await getDb();
+  const [club] = await db
+    .select()
+    .from(dbClubs)
+    .where(or(eq(dbClubs.id, idOrSlug), eq(dbClubs.slug, idOrSlug)))
+    .limit(1);
+
+  if (!club) {
+    res.status(404).json({ error: "Club not found" });
+    return null;
+  }
+
+  if (club.ownerId !== userId) {
+    const [membership] = await db
+      .select({ id: dbClubMembers.id })
+      .from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, club.id), eq(dbClubMembers.userId, userId)))
+      .limit(1);
+    if (!membership) {
+      res.status(404).json({ error: "Club not found" });
+      return null;
+    }
+  }
+
+  return { db, club, userId };
+}
+
 function dbRowToClub(row: typeof dbClubs.$inferSelect) {
   return {
     id: row.id,
@@ -260,6 +299,34 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
   } catch (err) {
     logger.error("[clubs] GET / error:", err);
     res.status(500).json({ error: "Failed to list clubs" });
+  }
+});
+
+// ── GET /api/clubs/join-preview/:id — minimal direct QR join preview ─────────
+// This is intentionally narrower than a Club workspace read: it exists only so
+// a shared QR code can identify the club before a signed-in player joins.
+clubsRouter.get("/join-preview/:id", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const [club] = await db
+      .select({
+        id: dbClubs.id,
+        name: dbClubs.name,
+        avatarUrl: dbClubs.avatarUrl,
+        accentColor: dbClubs.accentColor,
+        joinPolicy: dbClubs.joinPolicy,
+      })
+      .from(dbClubs)
+      .where(or(eq(dbClubs.id, req.params.id), eq(dbClubs.slug, req.params.id)))
+      .limit(1);
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    res.json(club);
+  } catch (error) {
+    logger.error("club_join_preview_failed", { clubId: req.params.id, error });
+    res.status(500).json({ error: "Failed to load club join preview" });
   }
 });
 
@@ -473,7 +540,6 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
       backgroundImage = null,
       accentColor = "#4CAF50",
       ownerName = "",
-      isPublic = true,
       website,
       twitter,
       discord,
@@ -525,7 +591,7 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
       memberCount: 1,
       tournamentCount: 0,
       followerCount: 0,
-      isPublic: isPublic ? 1 : 0,
+      isPublic: 0,
       website: website || null,
       twitter: twitter || null,
       discord: discord || null,
@@ -644,7 +710,7 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
             memberCount: Number(c.memberCount) || 1,
             tournamentCount: Number(c.tournamentCount) || 0,
             followerCount: Number(c.followerCount) || 0,
-            isPublic: c.isPublic === false ? 0 : 1,
+            isPublic: 0,
             website: c.website ? String(c.website) : null,
             twitter: c.twitter ? String(c.twitter) : null,
             discord: c.discord ? String(c.discord) : null,
@@ -658,7 +724,7 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
               description: String(c.description || ""),
               location: String(c.location || ""),
               memberCount: Number(c.memberCount) || 1,
-              isPublic: c.isPublic === false ? 0 : 1,
+              isPublic: 0,
               announcement: c.announcement ? String(c.announcement) : null,
             },
           });
@@ -674,22 +740,12 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
   }
 });
 
-// ── GET /api/clubs/:id — get a single club by ID or slug ─────────────────────
-clubsRouter.get("/:id", async (req: Request, res: Response) => {
+// ── GET /api/clubs/:id — member-only Club workspace details ──────────────────
+clubsRouter.get("/:id", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
-    const { id } = req.params;
-    // Resolve by ID first, then by slug — so chessotb.club/clubs/my-club-name works
-    const [row] = await db
-      .select()
-      .from(dbClubs)
-      .where(or(eq(dbClubs.id, id), eq(dbClubs.slug, id)))
-      .limit(1);
-    if (!row) {
-      res.status(404).json({ error: "Club not found" });
-      return;
-    }
-    res.json(dbRowToClub(row));
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    res.json(dbRowToClub(access.club));
   } catch (err) {
     logger.error("[clubs] GET /:id error:", err);
     res.status(500).json({ error: "Failed to get club" });
@@ -730,7 +786,6 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
       "country",
       "category",
       "accentColor",
-      "isPublic",
       "website",
       "twitter",
       "discord",
@@ -783,7 +838,7 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
     const updates: Record<string, unknown> = {};
     for (const key of allowed) {
       if (key in req.body) {
-        updates[key] = key === "isPublic" ? (req.body[key] ? 1 : 0) : req.body[key];
+        updates[key] = req.body[key];
       }
     }
 
@@ -927,15 +982,15 @@ clubsRouter.delete("/:id", requireFullAuth, async (req: Request, res: Response) 
   }
 });
 
-// ── GET /api/clubs/:id/members — list club members ────────────────────────────
-clubsRouter.get("/:id/members", async (req: Request, res: Response) => {
+// ── GET /api/clubs/:id/members — member-only roster ───────────────────────────
+clubsRouter.get("/:id/members", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
-    const { id } = req.params;
-    const rows = await db
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const rows = await access.db
       .select()
       .from(dbClubMembers)
-      .where(eq(dbClubMembers.clubId, id));
+      .where(eq(dbClubMembers.clubId, access.club.id));
     res.json(rows.map(dbMemberToMember));
   } catch (err) {
     logger.error("[clubs] GET /:id/members error:", err);
@@ -1018,15 +1073,15 @@ clubsRouter.post("/:id/heartbeat", authMiddleware, async (req: Request, res: Res
   }
 });
 
-// ── GET /api/clubs/:id/presence — get online member count ────────────────────
-clubsRouter.get("/:id/presence", async (req: Request, res: Response) => {
+// ── GET /api/clubs/:id/presence — member-only online count ───────────────────
+clubsRouter.get("/:id/presence", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
-    const { id } = req.params;
-    const allMembers = await db
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const allMembers = await access.db
       .select({ lastSeenAt: dbClubMembers.lastSeenAt })
       .from(dbClubMembers)
-      .where(eq(dbClubMembers.clubId, id));
+      .where(eq(dbClubMembers.clubId, access.club.id));
     const totalMembers = allMembers.length;
     const onlineCount = allMembers.filter((m) =>
       isOnlineNow(m.lastSeenAt as Date | null)
@@ -1141,15 +1196,15 @@ clubsRouter.get("/event/:eventId", async (req: Request, res: Response) => {
   }
 });
 
-/** GET /api/clubs/:id/events — list all events for a club */
-clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
-  const { id } = req.params;
+/** GET /api/clubs/:id/events — member-only event list */
+clubsRouter.get("/:id/events", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
-    const rows = await db
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const rows = await access.db
       .select()
       .from(clubEvents)
-      .where(eq(clubEvents.clubId, id))
+      .where(eq(clubEvents.clubId, access.club.id))
       .orderBy(desc(clubEvents.startAt));
     res.json(rows.map((r: typeof clubEvents.$inferSelect) => ({
       ...r,
@@ -1315,12 +1370,14 @@ function feedAttachmentResponse(clubId: string, feedId: string, attachment: type
   };
 }
 
-/** GET /api/clubs/:id/feed — list feed posts */
-clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
-  const { id } = req.params;
+/** GET /api/clubs/:id/feed — member-only feed posts */
+clubsRouter.get("/:id/feed", authMiddleware, async (req: Request, res: Response) => {
   const limit = Math.min(parseInt((req.query.limit as string) ?? "50", 10), 100);
   try {
-    const db = await getDb();
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
+    const id = access.club.id;
     const rows = await db.select().from(clubFeed)
       .where(eq(clubFeed.clubId, id))
       .orderBy(desc(clubFeed.isPinned), desc(clubFeed.createdAt))
@@ -1479,11 +1536,14 @@ clubsRouter.delete("/:id/feed/:feedId", authMiddleware, async (req: Request, res
 
 // ── RSVP routes ───────────────────────────────────────────────────────────────
 
-/** GET /api/clubs/:id/events/:eventId/rsvps — list all RSVPs for an event */
-clubsRouter.get("/:id/events/:eventId/rsvps", async (req: Request, res: Response) => {
-  const { id, eventId } = req.params;
+/** GET /api/clubs/:id/events/:eventId/rsvps — member-only RSVP list */
+clubsRouter.get("/:id/events/:eventId/rsvps", authMiddleware, async (req: Request, res: Response) => {
+  const { eventId } = req.params;
   try {
-    const db = await getDb();
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
+    const id = access.club.id;
     const { clubEventRsvps } = await import("../shared/schema.js");
     const rows = await db.select().from(clubEventRsvps)
       .where(and(eq(clubEventRsvps.clubId, id), eq(clubEventRsvps.eventId, eventId)));
@@ -1683,14 +1743,17 @@ clubsRouter.post("/:id/events/:eventId/checkin", authMiddleware, async (req: Req
   }
 });
 
-/** GET /api/clubs/:id/events/:eventId/checkins — list all check-ins for an event */
-clubsRouter.get("/:id/events/:eventId/checkins", async (req: Request, res: Response) => {
+/** GET /api/clubs/:id/events/:eventId/checkins — member-only attendance list */
+clubsRouter.get("/:id/events/:eventId/checkins", authMiddleware, async (req: Request, res: Response) => {
   const { eventId } = req.params;
   try {
-    const db = await getDb();
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
+    const id = access.club.id;
     const { meetupCheckins } = await import("../shared/schema.js");
     const rows = await db.select().from(meetupCheckins)
-      .where(eq(meetupCheckins.eventId, eventId));
+      .where(and(eq(meetupCheckins.clubId, id), eq(meetupCheckins.eventId, eventId)));
     return res.json(rows.map((r: typeof meetupCheckins.$inferSelect) => ({
       ...r,
       checkedInAt: r.checkedInAt instanceof Date ? r.checkedInAt.toISOString() : String(r.checkedInAt),
@@ -1966,11 +2029,13 @@ clubsRouter.get("/:id/growth/members", requireFullAuth, async (req: Request, res
   }
 });
 
-/** GET /api/clubs/:id/seasons — list club seasons */
-clubsRouter.get("/:id/seasons", async (req: Request, res: Response) => {
+/** GET /api/clubs/:id/seasons — member-only season list */
+clubsRouter.get("/:id/seasons", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
-    const { id } = req.params;
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
+    const id = access.club.id;
     const { clubSeasons } = await import("../shared/schema.js");
     const seasons = await db.select().from(clubSeasons)
       .where(eq(clubSeasons.clubId, id))
@@ -2024,10 +2089,12 @@ clubsRouter.post("/:id/seasons", requireFullAuth, async (req: Request, res: Resp
   }
 });
 
-/** GET /api/clubs/:id/seasons/:seasonId/standings — season standings */
-clubsRouter.get("/:id/seasons/:seasonId/standings", async (req: Request, res: Response) => {
+/** GET /api/clubs/:id/seasons/:seasonId/standings — member-only season standings */
+clubsRouter.get("/:id/seasons/:seasonId/standings", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
     const { seasonId } = req.params;
     const { clubSeasonStandings } = await import("../shared/schema.js");
     const standings = await db.select().from(clubSeasonStandings)
@@ -2040,11 +2107,13 @@ clubsRouter.get("/:id/seasons/:seasonId/standings", async (req: Request, res: Re
   }
 });
 
-/** GET /api/clubs/:id/announcements — list announcements (public) */
-clubsRouter.get("/:id/announcements", async (req: Request, res: Response) => {
+/** GET /api/clubs/:id/announcements — member-only announcements */
+clubsRouter.get("/:id/announcements", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const db = await getDb();
-    const { id } = req.params;
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
+    const id = access.club.id;
     const { clubAnnouncements } = await import("../shared/schema.js");
     const rows = await db.select().from(clubAnnouncements)
       .where(eq(clubAnnouncements.clubId, id))
@@ -2225,9 +2294,10 @@ clubsRouter.post("/:id/events/:eventId/engagement-sync", requireFullAuth, async 
 // ── GET /api/clubs/:id/stream — SSE stream for real-time club updates ─────────
 // Clients connect once; server pushes member_joined / member_left / club_updated
 // events so all open dashboards stay in sync without polling.
-clubsRouter.get("/:id/stream", (req: Request, res: Response) => {
-  const { id } = req.params;
-  if (!id) { res.status(400).end(); return; }
+clubsRouter.get("/:id/stream", authMiddleware, async (req: Request, res: Response) => {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return;
+  const id = access.club.id;
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -2334,11 +2404,13 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
   }
 });
 
-/** GET /api/clubs/:id/events/:eventId/rsvp-form — get the RSVP form for an event */
-clubsRouter.get("/:id/events/:eventId/rsvp-form", async (req: Request, res: Response) => {
+/** GET /api/clubs/:id/events/:eventId/rsvp-form — member-only form editor read */
+clubsRouter.get("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: Request, res: Response) => {
   const { eventId } = req.params;
   try {
-    const db = await getDb();
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db } = access;
     const [form] = await db.select().from(rsvpForms).where(eq(rsvpForms.eventId, eventId));
     if (!form) { res.status(404).json({ error: "No RSVP form found for this event" }); return; }
     const responses = await db.select().from(rsvpFormResponses).where(eq(rsvpFormResponses.formId, form.id));
@@ -2478,13 +2550,11 @@ function albumDate(value: Date | string) {
   return value instanceof Date ? value.toISOString() : String(value);
 }
 
-clubsRouter.get("/:id/albums", async (req: Request, res: Response) => {
+clubsRouter.get("/:id/albums", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { db, club } = await resolveClubForAlbums(req.params.id);
-    if (!club || club.isPublic !== 1) {
-      res.status(404).json({ error: "Club not found" });
-      return;
-    }
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db, club } = access;
 
     const albums = await db
       .select()
@@ -2533,13 +2603,11 @@ clubsRouter.get("/:id/albums", async (req: Request, res: Response) => {
   }
 });
 
-clubsRouter.get("/:id/albums/:albumId/photos/:photoId/file", async (req: Request, res: Response) => {
+clubsRouter.get("/:id/albums/:albumId/photos/:photoId/file", authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { db, club } = await resolveClubForAlbums(req.params.id);
-    if (!club || club.isPublic !== 1) {
-      res.status(404).send("Photo not found");
-      return;
-    }
+    const access = await getAuthorizedClub(req, res, req.params.id);
+    if (!access) return;
+    const { db, club } = access;
     const [photo] = await db
       .select({ storageKey: clubAlbumPhotos.storageKey })
       .from(clubAlbumPhotos)

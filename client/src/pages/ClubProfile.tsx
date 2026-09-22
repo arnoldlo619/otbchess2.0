@@ -18,7 +18,6 @@ import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { clubProfileNavigationTabs, type ClubProfileTabId } from "@/lib/clubProfileNavigation";
 import {
   getClub,
-  getClubBySlug,
   getClubMembers,
   getClubTournaments,
   joinClub,
@@ -27,7 +26,6 @@ import {
   getMembership,
   updateClub,
   syncClubTournamentCount,
-  seedClubsIfEmpty,
   followClub,
   unfollowClub,
   isFollowing,
@@ -37,7 +35,7 @@ import {
   type ClubMember,
   type ClubTournament,
 } from "@/lib/clubRegistry";
-import { apiJoinClub, apiLeaveClub, apiUpdateClub } from "@/lib/clubsApi";
+import { apiGetClub, apiJoinClub, apiLeaveClub, apiUpdateClub } from "@/lib/clubsApi";
 import { useClubPresence } from "@/hooks/useClubPresence";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
@@ -1048,9 +1046,13 @@ export default function ClubProfile() {
     return unsub;
   }, [club?.id]);
 
-  // Seed and load
+  // Private Club workspaces always resolve through the authorised server route.
+  // Cached records are never used to resurrect an unavailable club page.
   useEffect(() => {
-    seedClubsIfEmpty();
+    if (!user) {
+      navigate("/clubs");
+      return;
+    }
     const id = params.id;
 
     const loadClubData = (found: Club) => {
@@ -1100,27 +1102,13 @@ export default function ClubProfile() {
         .catch(() => {});
     };
 
-    // Always fetch from server first — localStorage seed data can be stale
-    // (IDs may not match the DB), so we only fall back to it when the server
-    // is unreachable (offline / network error) or returns a 404 (local-only club).
-    fetch(`/api/clubs/${encodeURIComponent(id)}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((serverClub: Club | null) => {
-        if (serverClub) {
-          loadClubData(serverClub);
-        } else {
-          // Server returned 404 — fall back to localStorage (local-only clubs)
-          const local = getClub(id) ?? getClubBySlug(id);
-          if (local) loadClubData(local);
-          // If still null, the "Club not found" UI will render
-        }
+    apiGetClub(id)
+      .then((serverClub) => {
+        if (serverClub) loadClubData(serverClub);
+        else navigate("/clubs");
       })
-      .catch(() => {
-        // Network error — fall back to localStorage (offline support)
-        const local = getClub(id) ?? getClubBySlug(id);
-        if (local) loadClubData(local);
-      });
-  }, [params.id, user]);
+      .catch(() => navigate("/clubs"));
+  }, [params.id, user, navigate]);
 
   // Poll-close + scheduled-publish interval: check every 30 seconds
   // MUST be declared before any early return to comply with Rules of Hooks

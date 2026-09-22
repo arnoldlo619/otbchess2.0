@@ -134,6 +134,13 @@
       "when": 1789800718974,
       "tag": "0018_yummy_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1790065908138,
+      "tag": "0019_light_inertia",
+      "breakpoints": true
     }
   ]
 }
