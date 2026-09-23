@@ -7,33 +7,44 @@ const myClubsSource = readFileSync(
   "utf8",
 );
 
-const desktopFilterBar = myClubsSource.slice(
-  myClubsSource.indexOf("{/* ── Search & Filter Bar"),
-  myClubsSource.indexOf("{/* Result count */}"),
+const clubCard = myClubsSource.slice(
+  myClubsSource.indexOf("function ClubCard"),
+  myClubsSource.indexOf("function PrivateClubEmptyState"),
 );
 
-describe("My Clubs visual filter edits", () => {
-  it("removes the requested desktop sort and country select controls", () => {
-    expect(desktopFilterBar).not.toContain('aria-label="Sort clubs"');
-    expect(desktopFilterBar).not.toContain('aria-label="Filter clubs by country"');
-    expect(desktopFilterBar).not.toContain("All Countries");
-    expect(desktopFilterBar).toContain("{/* Desktop category filters */}");
-  });
+const emptyState = myClubsSource.slice(
+  myClubsSource.indexOf("function PrivateClubEmptyState"),
+  myClubsSource.indexOf("export default function MyClubs"),
+);
 
-  it("retains responsive mobile filter access without restoring desktop selects", () => {
-    expect(myClubsSource).toContain("setShowMobileFilters(true)");
-    expect(myClubsSource).toContain("<MobileFilterDrawer");
-    expect(myClubsSource).toContain("showMobileFilters");
-  });
+const membershipSection = myClubsSource.slice(
+  myClubsSource.indexOf('<section className="mt-10">'),
+  myClubsSource.indexOf("{loading ? ("),
+);
 
-  it("removes the requested club category badge from card media without removing functional owner or verification markers", () => {
-    const clubCard = myClubsSource.slice(
-      myClubsSource.indexOf("function ClubCard"),
-      myClubsSource.indexOf("// ── Mobile Filter Drawer"),
-    );
-    expect(clubCard).not.toContain("Bottom overlay — category only");
-    expect(clubCard).not.toContain("{CATEGORY_LABELS[club.category]}");
+describe("My Clubs visual cleanup", () => {
+  it("removes redundant private-workspace badges while retaining the meaningful owner marker", () => {
+    expect(myClubsSource).not.toContain("Private club workspaces");
+    expect(clubCard).not.toContain(">\n            Private\n");
+    expect(clubCard).not.toContain("FolderLock");
     expect(clubCard).toContain("Owner");
-    expect(clubCard).toContain("Verified");
+  });
+
+  it("uses the concise personal hub message", () => {
+    expect(myClubsSource).toContain('user ? "Your chess clubs hub."');
+    expect(myClubsSource).not.toContain("Only clubs you own or belong to appear here.");
+  });
+
+  it("promotes the My Clubs heading without adding a second h1 landmark", () => {
+    expect(membershipSection).toContain('<h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`}');
+    expect(membershipSection).toContain(">My clubs</h2>");
+    expect(membershipSection).not.toContain("<h1");
+  });
+
+  it("keeps the demo affordance for an empty state but removes it from existing memberships", () => {
+    expect(emptyState).toContain('href="/clubs/demo"');
+    expect(emptyState).toContain("View demo dashboard");
+    expect(membershipSection).not.toContain('href="/clubs/demo"');
+    expect(myClubsSource).not.toContain("Preview demo");
   });
 });

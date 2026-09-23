@@ -43,7 +43,7 @@ describe("private Club workspace model", () => {
   it("renders only personal memberships in the Club index", () => {
     expect(index).toContain("apiListMyClubs()");
     expect(index).toContain("listMyClubs(user.id)");
-    expect(index).toContain("Only clubs you own or belong to appear here.");
+    expect(index).toContain("Your chess clubs hub.");
     expect(index).not.toContain("apiListPublicClubs");
   });
 

@@ -24,7 +24,6 @@ import {
   Eye,
   FolderLock,
   Plus,
-  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -62,10 +61,6 @@ function ClubCard({ club, isDark, isOwned }: { club: Club; isDark: boolean; isOw
             </>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/20 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
-            <FolderLock className="h-3.5 w-3.5" aria-hidden="true" />
-            Private
-          </div>
           {isOwned && (
             <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-[#17321d] shadow-sm">
               <Crown className="h-3.5 w-3.5 text-amber-600" aria-hidden="true" />
@@ -232,15 +227,11 @@ export default function MyClubs() {
 
       <main className="mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-6 sm:pt-12">
         <section className="max-w-2xl">
-          <div className={`mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${isDark ? "border-[#79c76f]/30 bg-[#79c76f]/10 text-[#a6e79e]" : "border-[#a9c9a7] bg-[#eaf6e8] text-[#356d3c]"}`}>
-            <FolderLock className="h-3.5 w-3.5" aria-hidden="true" />
-            Private club workspaces
-          </div>
           <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
             {user ? `Welcome back, ${user.displayName?.split(" ")[0] || "Player"}` : "Your club space"}
           </h1>
           <p className={`mt-3 text-base leading-7 ${textMuted}`}>
-            {user ? "Only clubs you own or belong to appear here." : "Club members keep their events, conversations, and media inside a private workspace."}
+            {user ? "Your chess clubs hub." : "Club members keep their events, conversations, and media inside a private workspace."}
           </p>
         </section>
 
@@ -272,17 +263,11 @@ export default function MyClubs() {
         )}
 
         <section className="mt-10">
-          <div className="mb-4 flex items-end justify-between gap-3">
+          <div className="mb-5">
             <div>
-              <h2 className={`text-lg font-bold ${textMain}`}>My clubs</h2>
+              <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>My clubs</h2>
               <p className={`mt-1 text-sm ${textMuted}`}>{loading ? "Loading your memberships…" : `${orderedClubs.length} private workspace${orderedClubs.length === 1 ? "" : "s"}`}</p>
             </div>
-            {orderedClubs.length > 0 && (
-              <Link href="/clubs/demo" className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${isDark ? "text-[#a6e79e] hover:bg-white/7" : "text-[#376d3d] hover:bg-[#e8f2e6]"}`}>
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                Preview demo
-              </Link>
-            )}
           </div>
 
           {loading ? (
