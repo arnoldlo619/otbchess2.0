@@ -2,11 +2,13 @@
 
 ## Scope
 
-This refinement completes the compact-rail visibility task. The 72px desktop Club Dashboard rail now uses 46px icon controls with a 36px centered inner frame and 21px icon. The selected compact destination receives a static, brand-toned outer and inner border frame rather than a tracing animation. Expanded controls retain the previous label-first geometry.
+This refinement completes the compact-rail visibility task. The 72px desktop Club Dashboard rail uses 46px icon controls with a 36px centered inner frame and 21px icon. The selected compact destination receives a static, brand-toned outer and inner border frame rather than a tracing animation. Hover- or keyboard-expanded navigation now retains the same 46px control height, 36px icon frame, and 21px icon, so its visual scale does not contract while labels appear. Expanded labels use the 16px system text size for improved visibility.
 
 ## Direct browser review
 
 A live Club Dashboard review at `/clubs/w3m342vs/home` confirmed the compact sidebar renders with the requested scale. A DOM geometry check verified each compact control is **46×46px**, the inner frame is **36×36px**, and both horizontal and vertical centering deltas are **0px**. The active destination retains `aria-current="page"`, a 1px outer brand frame, and a 1px inner frame. Existing tooltips retain the accessible names for compact controls.
+
+The shared sidebar was subsequently reviewed in the public Club demo at desktop width with its pointer-triggered expanded state active. The expanded controls retain the same **46px** row height, **36px** icon frame, and **21px** SVG icon as the compact rail; only the sidebar width and label visibility change. The enlarged 16px labels remain clear without affecting the retained compact-only tooltip behavior.
 
 ## Preserved behavior
 

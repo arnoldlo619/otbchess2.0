@@ -8,16 +8,17 @@ const sidebarSource = readFileSync(
 );
 
 describe("Club Dashboard compact sidebar rail", () => {
-  it("uses enlarged centered icon controls that fit within the 72px compact rail", () => {
+  it("keeps icon controls at a consistent scale between compact and expanded sidebar states", () => {
     expect(sidebarSource).toContain('width: expanded ? "264px" : "72px"');
     expect(sidebarSource).toContain('width: expanded ? "calc(100% - 4px)" : "46px"');
-    expect(sidebarSource).toContain('height: expanded ? "42px" : "46px"');
-    expect(sidebarSource).toContain('width: compact ? "36px" : "32px"');
-    expect(sidebarSource).toContain('height: compact ? "36px" : "32px"');
+    expect(sidebarSource).toContain('height: "46px"');
+    expect(sidebarSource).toContain('width: "36px"');
+    expect(sidebarSource).toContain('height: "36px"');
     expect(sidebarSource).toContain("alignSelf: \"center\"");
-    expect(sidebarSource).toContain("<Icon size={compact ? 21 : 19}");
+    expect(sidebarSource).toContain("<Icon size={21}");
     expect(sidebarSource).toContain('flex: expanded ? "1 1 0%" : "0 0 0"');
     expect(sidebarSource).toContain('overflow: expanded ? "visible" : "hidden"');
+    expect(sidebarSource).toContain('text-base font-semibold');
   });
 
   it("gives the selected compact item a static brand border frame without replacing accessible navigation states", () => {

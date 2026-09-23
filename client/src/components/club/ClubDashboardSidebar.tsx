@@ -73,7 +73,7 @@ export function ClubDashboardSidebar({
           gap: expanded ? "12px" : 0,
           paddingInline: expanded ? "12px" : 0,
           width: expanded ? "calc(100% - 4px)" : "46px",
-          height: expanded ? "42px" : "46px",
+          height: "46px",
           alignSelf: "center",
           marginInlineStart: expanded ? "2px" : 0,
           color: active ? "#ffffff" : "rgba(229, 238, 232, 0.68)",
@@ -88,8 +88,8 @@ export function ClubDashboardSidebar({
           aria-hidden="true"
           className="flex shrink-0 items-center justify-center rounded-xl transition-[background-color,border-color,color,transform,opacity] duration-200 ease-out motion-reduce:transition-none"
           style={{
-            width: compact ? "36px" : "32px",
-            height: compact ? "36px" : "32px",
+            width: "36px",
+            height: "36px",
             color: active || hoveredItemId === item.id ? accent : "inherit",
             background: active ? `color-mix(in srgb, ${accent} 17%, transparent)` : hoveredItemId === item.id ? `color-mix(in srgb, ${accent} 8%, rgba(255,255,255,0.045))` : "transparent",
             border: active && compact ? `1px solid color-mix(in srgb, ${accent} 24%, transparent)` : "1px solid transparent",
@@ -97,10 +97,10 @@ export function ClubDashboardSidebar({
             transform: hoveredItemId === item.id ? "translateY(-1px) scale(1.04)" : "scale(1)",
           }}
         >
-          <Icon size={compact ? 21 : 19} strokeWidth={active ? 2 : 1.7} />
+          <Icon size={21} strokeWidth={active ? 2 : 1.7} />
         </span>
         <span
-          className="min-w-0 flex-1 truncate text-sm font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+          className="min-w-0 flex-1 truncate text-base font-semibold tracking-[-0.01em] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
           style={{
             flex: expanded ? "1 1 0%" : "0 0 0",
             overflow: expanded ? "visible" : "hidden",
