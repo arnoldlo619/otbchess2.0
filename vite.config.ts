@@ -16,23 +16,6 @@ const LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
 const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024; // 1MB per log file
 const TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6); // Trim to 60% to avoid constant re-trimming
 
-/**
- * React Three Fiber interprets unknown JSX props as Three object properties.
- * Keep the development-only JSX location attribute off the isolated lanyard
- * scene so it cannot attempt to apply `data-loc` to R3F primitives.
- */
-function jsxLocPluginExcludingWebgl(): Plugin {
-  const plugin = jsxLocPlugin();
-  return {
-    ...plugin,
-    transform: async (code, id, options) => {
-      if (id.includes("club-player-lanyard-scene.runtime.jsx")) return null;
-      if (typeof plugin.transform === "function") return plugin.transform(code, id, options);
-      return null;
-    },
-  };
-}
-
 type LogSource = "browserConsole" | "networkRequests" | "sessionReplay";
 
 function ensureLogDir() {
@@ -358,12 +341,10 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPluginExcludingWebgl(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginExpressApi(), vitePluginStorageProxy()];
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginExpressApi(), vitePluginStorageProxy()];
 
 export default defineConfig({
   plugins,
-  // The desktop-only ReactBits Club Player lanyard uses the published card model.
-  assetsInclude: ["**/*.glb"],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),

@@ -1,7 +1,6 @@
 /**
  * Silk — WebGL shader animated background component.
- * Implements the React Bits Silk shader using raw WebGL (no Three.js dependency)
- * to avoid JSX namespace conflicts with @react-three/fiber.
+ * Implements the React Bits Silk shader using raw WebGL without a Three.js dependency.
  *
  * Props match the React Bits Silk component API exactly.
  */

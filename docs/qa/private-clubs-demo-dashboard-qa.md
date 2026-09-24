@@ -35,6 +35,10 @@ The `/clubs` index was reviewed at **1440 × 960** and **375 × 812**. The signe
 | Diff integrity | **Passed** (`git diff --check`) |
 | Database migration | **Applied successfully** |
 
+## Subsequent visual refinement
+
+The experimental **Chess Club Player** lanyard has been removed at the request of the product owner. The public `/clubs` gateway now restores a single centered **Chess Clubs** heading over the photographic hero while retaining the footer action group and its mobile install-banner clearance. The unused ReactBits scene, Three.js/Rapier dependencies, card textures, asset handling, and focused badge test were removed with it, eliminating the optional multi-megabyte desktop physics bundle rather than merely hiding it.
+
 ## Remaining scope boundary
 
 The existing `/clubs/leaderboard` page remains registered but the public Club index now has no records because all real Clubs are private. A future dedicated privacy decision can either retire that surface or redefine it as an opt-in, anonymized product metric; it is not used by the new `/clubs` experience.
