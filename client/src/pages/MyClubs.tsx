@@ -22,8 +22,6 @@ import {
   ChevronRight,
   Crown,
   Eye,
-  ImageIcon,
-  MessageSquare,
   Plus,
   Users,
 } from "lucide-react";
@@ -108,62 +106,43 @@ function PrivateClubEmptyState({ isDark, onCreate }: { isDark: boolean; onCreate
   );
 }
 
-function GuestClubLanding({ isDark, onCreate }: { isDark: boolean; onCreate: () => void }) {
-  const textMain = isDark ? "text-white" : "text-[#15291c]";
-  const textMuted = isDark ? "text-white/60" : "text-[#516555]";
-  const rule = isDark ? "border-white/10" : "border-[#dbe6d9]";
-  const previewRows = [
-    { label: "Events", detail: "Plan the next round", icon: CalendarDays },
-    { label: "Feed", detail: "Keep everyone in sync", icon: MessageSquare },
-    { label: "Album", detail: "Keep the moments close", icon: ImageIcon },
-  ];
-
+function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
   return (
-    <section className={`relative isolate overflow-hidden border-y py-10 sm:py-14 lg:py-20 ${rule}`}>
-      <div className="pointer-events-none absolute inset-0 chess-board-bg opacity-[0.025]" aria-hidden="true" />
-      <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)] lg:gap-16">
-        <div className="max-w-2xl">
-          <p className={`text-sm font-medium ${isDark ? "text-[#9ce891]" : "text-[#356d3c]"}`}>Club spaces</p>
-          <h1 className={`mt-4 max-w-xl text-4xl font-bold tracking-[-0.045em] sm:text-5xl lg:text-[3.5rem] lg:leading-[1.02] ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            A home for every game.
-          </h1>
-          <p className={`mt-5 max-w-lg text-base leading-7 sm:text-lg ${textMuted}`}>
-            Bring events, updates, and the people who make your club matter into one considered place.
-          </p>
-          <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+    <section className="relative isolate flex min-h-[calc(100dvh-3.75rem)] overflow-hidden sm:min-h-[calc(100dvh-4rem)]">
+      <img
+        src="/club-assets/club-space-otb-table.webp"
+        alt=""
+        aria-hidden="true"
+        fetchPriority="high"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(3,13,7,0.86)_0%,rgba(4,16,9,0.71)_48%,rgba(3,12,6,0.82)_100%)]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,11,6,0.34)_0%,rgba(2,10,5,0.12)_43%,rgba(2,10,5,0.68)_100%)]" aria-hidden="true" />
+      <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center px-5 py-16 text-center sm:px-8 sm:py-20">
+        <p className="text-sm font-semibold tracking-[0.04em] text-[#b4eea8]">ChessOTB Club Spaces</p>
+        <h1 className="mt-5 max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl lg:leading-[0.98]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          A home for every game.
+        </h1>
+        <p className="mt-5 max-w-xl text-base leading-7 text-white/76 sm:text-lg sm:leading-8">
+          Private spaces for the people who meet, play, and keep their club moving.
+        </p>
+        <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
             <button
               type="button"
               onClick={onCreate}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-5 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[#345c38] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
+              className="inline-flex min-h-12 min-w-40 items-center justify-center gap-2 rounded-xl bg-[#5c9a60] px-5 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(0,0,0,0.22)] transition-[background-color,transform] hover:bg-[#6eac70] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
             >
               Start a club
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <Link
               href="/clubs/demo"
-              className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
-                isDark ? "text-white/74 hover:text-white" : "text-[#315c38] hover:text-[#17321d]"
-              }`}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
             >
               <Eye className="h-4 w-4" aria-hidden="true" />
               Explore the workspace
             </Link>
-          </div>
-        </div>
-
-        <div className={`self-end border-t lg:border-l lg:border-t-0 lg:pl-10 ${rule}`}>
-          <p className={`pt-5 text-sm leading-6 lg:pt-0 ${textMuted}`}>Built for the rhythm between rounds.</p>
-          <dl className={`mt-6 divide-y ${rule}`}>
-            {previewRows.map(({ label, detail, icon: Icon }) => (
-              <div key={label} className="flex items-center gap-4 py-4 first:pt-0">
-                <Icon className={`h-4 w-4 shrink-0 ${isDark ? "text-[#9ce891]" : "text-[#356d3c]"}`} strokeWidth={1.8} aria-hidden="true" />
-                <div className="min-w-0">
-                  <dt className={`text-sm font-semibold ${textMain}`}>{label}</dt>
-                  <dd className={`mt-0.5 text-sm ${textMuted}`}>{detail}</dd>
-                </div>
-              </div>
-            ))}
-          </dl>
         </div>
       </div>
     </section>
@@ -242,13 +221,13 @@ export default function MyClubs() {
     }))).sort((a, b) => a.startAt.localeCompare(b.startAt)).slice(0, 4);
   }, [myClubs]);
 
-  const shell = isDark ? "bg-[#0d1a0f]" : "bg-[#f5f7f2]";
+  const shell = !user ? "bg-[#061008]" : isDark ? "bg-[#0d1a0f]" : "bg-[#f5f7f2]";
   const textMain = isDark ? "text-white" : "text-[#15291c]";
   const textMuted = isDark ? "text-white/60" : "text-[#516555]";
 
   return (
     <div className={`min-h-[100dvh] ${shell}`}>
-      <header className={`sticky top-0 z-30 border-b backdrop-blur-xl ${isDark ? "border-white/8 bg-[#0d1a0f]/92" : "border-[#dce7da] bg-[#f5f7f2]/92"}`}>
+      <header className={`sticky top-0 z-30 border-b backdrop-blur-xl ${!user ? "border-white/12 bg-[#061008]/58" : isDark ? "border-white/8 bg-[#0d1a0f]/92" : "border-[#dce7da] bg-[#f5f7f2]/92"}`}>
         <div className="mx-auto flex h-15 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
@@ -269,8 +248,8 @@ export default function MyClubs() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-6 sm:pt-12">
-        {!user ? <GuestClubLanding isDark={isDark} onCreate={openCreateClub} /> : <>
+      <main className={!user ? "" : "mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-6 sm:pt-12"}>
+        {!user ? <GuestClubLanding onCreate={openCreateClub} /> : <>
           <section className="max-w-2xl">
             <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {`Welcome back, ${user.displayName?.split(" ")[0] || "Player"}`}

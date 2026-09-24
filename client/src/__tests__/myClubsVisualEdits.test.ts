@@ -30,28 +30,32 @@ describe("My Clubs visual system", () => {
     expect(clubCard).toContain("Owner");
   });
 
-  it("renders the Mobbin-informed guest landing instead of a dashboard empty-state stack", () => {
+  it("renders the signed-out Club gateway as a photographic hero using the supplied OTB community image", () => {
     expect(myClubsSource).toContain("!user ? <GuestClubLanding");
+    expect(guestLanding).toContain('src="/club-assets/club-space-otb-table.webp"');
+    expect(guestLanding).toContain('fetchPriority="high"');
+    expect(guestLanding).toContain('aria-hidden="true"');
+    expect(guestLanding).toContain("bg-[linear-gradient(90deg");
     expect(guestLanding).toContain("A home for every game.");
     expect(guestLanding).toContain("Start a club");
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
-    expect(guestLanding).not.toContain("A private home for every club");
-    expect(guestLanding).not.toContain("Ready to bring your club together?");
   });
 
-  it("uses one conversion moment for visitors and retains the functional membership index for signed-in users", () => {
+  it("uses one considered conversion moment for visitors without dashboard-derived feature scaffolding", () => {
+    expect(guestLanding).not.toContain("previewRows");
+    expect(guestLanding).not.toContain("Events");
+    expect(guestLanding).not.toContain("Feed");
+    expect(guestLanding).not.toContain("Album");
+    expect(guestLanding).not.toContain("Ready to bring your club together?");
+    expect(guestLanding).not.toMatch(/[🏆🌍🥇🥈🥉🔥✨]/u);
+  });
+
+  it("retains the functional membership index and minimal no-clubs state for signed-in users", () => {
     expect(myClubsSource).toContain("{user && (");
     expect(memberIndex).toContain("Welcome back");
     expect(memberIndex).toContain("Your chess clubs hub.");
     expect(memberIndex).toContain("<PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />");
     expect(memberIndex).not.toContain('href="/clubs/demo"');
-  });
-
-  it("uses the OTB icon system without emoji-derived visual language", () => {
-    expect(guestLanding).toContain("CalendarDays");
-    expect(guestLanding).toContain("MessageSquare");
-    expect(guestLanding).toContain("ImageIcon");
-    expect(guestLanding).not.toMatch(/[🏆🌍🥇🥈🥉🔥✨]/u);
   });
 });
