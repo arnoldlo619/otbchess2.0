@@ -39,6 +39,10 @@ The `/clubs` index was reviewed at **1440 × 960** and **375 × 812**. The signe
 
 The experimental **Chess Club Player** lanyard has been removed at the request of the product owner. The public `/clubs` gateway now restores a single centered **Chess Clubs** heading over the photographic hero. The two actions are stacked directly beneath that heading, staying horizontal on larger screens and vertical on mobile, so the title and its actions read as one centered conversion group. The unused ReactBits scene, Three.js/Rapier dependencies, card textures, asset handling, and focused badge test were removed with it, eliminating the optional multi-megabyte desktop physics bundle rather than merely hiding it.
 
+## Subsequent authentication refinement
+
+The public **Start a club** action no longer opens an intermediate Club-specific modal. It now sends visitors directly to the dedicated authentication page with the **Create account** tab selected and a preserved `/clubs?create=1` return path. After a successful full-account sign-in or registration, the existing Club-index URL handler clears the parameter and opens the real Club creation wizard. Browser QA confirmed that the visitor action arrives at `/auth?tab=signup&redirect=%2Fclubs%3Fcreate%3D1`, with no preview or modal step. The retired `CreateClubAuthGate` component and its overlay inventory coverage were removed.
+
 ## Remaining scope boundary
 
 The existing `/clubs/leaderboard` page remains registered but the public Club index now has no records because all real Clubs are private. A future dedicated privacy decision can either retire that surface or redefine it as an opt-in, anonymized product metric; it is not used by the new `/clubs` experience.

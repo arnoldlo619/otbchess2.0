@@ -9,7 +9,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
-import { CreateClubAuthGate } from "@/components/CreateClubAuthGate";
 import { CreateClubWizard, CREATE_CLUB_WIZARD_ACTIVE_KEY } from "@/components/CreateClubWizard";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { useAuthContext } from "@/context/AuthContext";
@@ -31,6 +30,8 @@ interface EnrichedEvent extends ClubEvent {
   clubName: string;
   clubAccent: string;
 }
+
+const CLUB_CREATE_AUTH_ROUTE = "/auth?tab=signup&redirect=%2Fclubs%3Fcreate%3D1";
 
 function ClubCard({ club, isDark, isOwned }: { club: Club; isDark: boolean; isOwned: boolean }) {
   const initial = club.name.charAt(0).toUpperCase();
@@ -153,7 +154,6 @@ export default function MyClubs() {
   const [myClubs, setMyClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(Boolean(user));
   const [showWizard, setShowWizard] = useState(() => typeof window !== "undefined" && window.sessionStorage.getItem(CREATE_CLUB_WIZARD_ACTIVE_KEY) === "1");
-  const [showAuthGate, setShowAuthGate] = useState(false);
 
   const closeWizard = useCallback(() => {
     try { window.sessionStorage.removeItem(CREATE_CLUB_WIZARD_ACTIVE_KEY); } catch { /* storage unavailable */ }
@@ -162,12 +162,12 @@ export default function MyClubs() {
 
   const openCreateClub = useCallback(() => {
     if (!user) {
-      setShowAuthGate(true);
+      navigate(CLUB_CREATE_AUTH_ROUTE);
       return;
     }
     try { window.sessionStorage.setItem(CREATE_CLUB_WIZARD_ACTIVE_KEY, "1"); } catch { /* storage unavailable */ }
     setShowWizard(true);
-  }, [user]);
+  }, [navigate, user]);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("create") !== "1") return;
@@ -304,7 +304,6 @@ export default function MyClubs() {
       </main>
 
       {showWizard && <CreateClubWizard onClose={closeWizard} />}
-      {showAuthGate && <CreateClubAuthGate onClose={() => setShowAuthGate(false)} onAuthenticated={() => { setShowAuthGate(false); openCreateClub(); }} onPreview={() => { setShowAuthGate(false); navigate("/clubs/demo"); }} />}
     </div>
   );
 }

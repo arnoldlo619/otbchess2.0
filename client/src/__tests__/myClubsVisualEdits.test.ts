@@ -62,6 +62,14 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).not.toMatch(/[🏆🌍🥇🥈🥉🔥✨]/u);
   });
 
+  it("sends signed-out Club creation directly to the dedicated sign-up page and resumes the wizard after auth", () => {
+    expect(myClubsSource).toContain('const CLUB_CREATE_AUTH_ROUTE = "/auth?tab=signup&redirect=%2Fclubs%3Fcreate%3D1"');
+    expect(myClubsSource).toContain("navigate(CLUB_CREATE_AUTH_ROUTE)");
+    expect(myClubsSource).toContain('new URLSearchParams(window.location.search).get("create") !== "1"');
+    expect(myClubsSource).not.toContain("CreateClubAuthGate");
+    expect(myClubsSource).not.toContain("showAuthGate");
+  });
+
   it("retains the functional membership index and minimal no-clubs state for signed-in users", () => {
     expect(myClubsSource).toContain("{user && (");
     expect(memberIndex).toContain("Welcome back");
