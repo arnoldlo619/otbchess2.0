@@ -11,6 +11,7 @@ import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { CreateClubAuthGate } from "@/components/CreateClubAuthGate";
 import { CreateClubWizard, CREATE_CLUB_WIZARD_ACTIVE_KEY } from "@/components/CreateClubWizard";
+import { ClubPlayerIdBadge } from "@/components/ui/club-player-id-badge";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -120,18 +121,19 @@ function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
       />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(3,13,7,0.86)_0%,rgba(4,16,9,0.71)_48%,rgba(3,12,6,0.82)_100%)]" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,11,6,0.34)_0%,rgba(2,10,5,0.12)_43%,rgba(2,10,5,0.68)_100%)]" aria-hidden="true" />
-      <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center px-5 py-16 text-center sm:px-8 sm:py-20">
-        <h1 className="max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl lg:leading-[0.98]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-          Chess Clubs
-        </h1>
-        <p className="mt-5 max-w-xl text-base leading-7 text-white/76 sm:text-lg sm:leading-8">
-          By ChessOTB.Club
-        </p>
-        <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
-          <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
-            Start a club
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </SpinBorderButton>
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1fr)_14.5rem] lg:gap-16">
+        <div className="flex flex-col items-center text-center lg:items-start lg:pl-[18%] lg:text-left">
+          <h1 className="max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl lg:leading-[0.98]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            Chess Clubs
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-white/76 sm:text-lg sm:leading-8">
+            By ChessOTB.Club
+          </p>
+          <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:items-start">
+            <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
+              Start a club
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </SpinBorderButton>
             <Link
               href="/clubs/demo"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
@@ -139,7 +141,9 @@ function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
               <Eye className="h-4 w-4" aria-hidden="true" />
               Explore the workspace
             </Link>
+          </div>
         </div>
+        <ClubPlayerIdBadge className="hidden lg:flex lg:justify-self-start" />
       </div>
     </section>
   );

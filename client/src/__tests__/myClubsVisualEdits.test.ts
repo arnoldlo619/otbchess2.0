@@ -41,17 +41,19 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain("Start a club");
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
+    expect(myClubsSource).toContain('import { ClubPlayerIdBadge } from "@/components/ui/club-player-id-badge"');
+    expect(guestLanding).toContain('<ClubPlayerIdBadge className="hidden lg:flex lg:justify-self-start" />');
   });
 
-  it("uses the shared premium landing CTA and removes the redundant hero eyebrow", () => {
+  it("uses the shared premium landing CTA and removes the retired dashboard feature rail", () => {
     expect(myClubsSource).toContain('import { SpinBorderButton } from "@/components/ui/spin-border-button"');
     expect(guestLanding).toContain('<SpinBorderButton variant="solid" type="button" onClick={onCreate}>');
     expect(guestLanding).not.toContain("ChessOTB Club Spaces");
     expect(guestLanding).not.toContain("A home for every game.");
     expect(guestLanding).not.toContain("previewRows");
-    expect(guestLanding).not.toContain("Events");
-    expect(guestLanding).not.toContain("Feed");
-    expect(guestLanding).not.toContain("Album");
+    expect(guestLanding).not.toContain("Plan the next round");
+    expect(guestLanding).not.toContain("Keep everyone in sync");
+    expect(guestLanding).not.toContain("Keep the moments close");
     expect(guestLanding).not.toContain("Ready to bring your club together?");
     expect(guestLanding).not.toMatch(/[🏆🌍🥇🥈🥉🔥✨]/u);
   });
