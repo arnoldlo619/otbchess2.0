@@ -42,7 +42,8 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
     expect(myClubsSource).toContain('import { ClubPlayerIdBadge } from "@/components/ui/club-player-id-badge"');
-    expect(guestLanding).toContain('<ClubPlayerIdBadge className="hidden lg:flex lg:justify-self-start" />');
+    expect(guestLanding).toContain('<ClubPlayerIdBadge className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 lg:flex" />');
+    expect(guestLanding).toContain("lg:pt-[25rem]");
   });
 
   it("uses the shared premium landing CTA and removes the retired dashboard feature rail", () => {
