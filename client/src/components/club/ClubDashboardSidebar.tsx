@@ -168,16 +168,19 @@ export function ClubDashboardSidebar({
         borderColor,
         boxShadow: expanded && collapsed ? "12px 0 36px rgba(0,0,0,0.26)" : "none",
       }}
-    >
+      >
       <div className="border-b border-white/[0.065] px-1 py-3">
-        <div className="flex h-16 items-center justify-center overflow-hidden">
+        <div
+          className="flex h-16 items-center overflow-hidden"
+          style={{ justifyContent: expanded ? "flex-start" : "center" }}
+        >
           <button
             type="button"
             onClick={onBackToClubs}
             aria-label="Back to all clubs"
-            className="group/brand relative flex h-16 shrink-0 items-center justify-center overflow-hidden bg-transparent outline-none transition-[width,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
+            className="group/brand relative flex h-16 shrink-0 items-center justify-center overflow-hidden bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
             style={{
-              width: expanded ? "152px" : "64px",
+              width: expanded ? "136px" : "64px",
               color: accent,
               // @ts-expect-error CSS custom property is supported by React at runtime.
               "--tw-ring-color": accent,
@@ -198,7 +201,7 @@ export function ClubDashboardSidebar({
               src="/club-assets/otb-wordmark-brilliant.webp"
               alt=""
               aria-hidden="true"
-              className="absolute h-16 w-[152px] object-contain mix-blend-screen transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+              className="absolute h-14 w-[136px] object-contain mix-blend-screen transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
               style={{
                 opacity: expanded ? 1 : 0,
                 transform: expanded ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.96)",
