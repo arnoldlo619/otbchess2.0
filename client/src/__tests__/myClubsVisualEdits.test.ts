@@ -40,12 +40,11 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
     expect(myClubsSource).not.toContain("ClubPlayerIdBadge");
-    expect(guestLanding).toContain("<h1");
-    expect(guestLanding).toContain("Chess Clubs");
-    expect(guestLanding).toContain("top-[26%]");
-    expect(guestLanding).toContain('flex w-full -translate-x-1/2 flex-col items-center');
-    expect(guestLanding).toContain('Chess Clubs\n        </h1>\n        <div className="mt-6 flex w-full flex-col items-center justify-center gap-3 sm:mt-7 sm:flex-row">');
-    expect(guestLanding).not.toContain('justify-end px-5 pb-36');
+    expect(guestLanding).not.toContain("<h1");
+    expect(guestLanding).not.toContain("Chess Clubs");
+    expect(guestLanding).toContain('absolute inset-0 z-20 flex w-full items-center justify-center');
+    expect(guestLanding).toContain('className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row"');
+    expect(guestLanding).not.toContain("top-[26%]");
     expect(guestLanding).not.toContain("By ChessOTB.Club");
   });
 

@@ -121,14 +121,8 @@ function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
       />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(3,13,7,0.86)_0%,rgba(4,16,9,0.71)_48%,rgba(3,12,6,0.82)_100%)]" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,11,6,0.34)_0%,rgba(2,10,5,0.12)_43%,rgba(2,10,5,0.68)_100%)]" aria-hidden="true" />
-      <div className="absolute left-1/2 top-[26%] z-20 flex w-full -translate-x-1/2 flex-col items-center px-5 text-center sm:px-8">
-        <h1
-          className="text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl"
-          style={{ fontFamily: "'Clash Display', sans-serif" }}
-        >
-          Chess Clubs
-        </h1>
-        <div className="mt-6 flex w-full flex-col items-center justify-center gap-3 sm:mt-7 sm:flex-row">
+      <div className="absolute inset-0 z-20 flex w-full items-center justify-center px-5 pt-8 text-center sm:px-8">
+        <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
           <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
             Start a club
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
