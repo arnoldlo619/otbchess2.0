@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Crown,
   Eye,
-  FolderLock,
+  ImageIcon,
+  MessageSquare,
   Plus,
   Users,
 } from "lucide-react";
@@ -86,42 +87,83 @@ function ClubCard({ club, isDark, isOwned }: { club: Club; isDark: boolean; isOw
   );
 }
 
-function PrivateClubEmptyState({ isDark, signedIn, onCreate }: { isDark: boolean; signedIn: boolean; onCreate: () => void }) {
-  const surface = isDark ? "border-white/10 bg-white/[0.045]" : "border-[#dbe6d9] bg-white";
+function PrivateClubEmptyState({ isDark, onCreate }: { isDark: boolean; onCreate: () => void }) {
+  const rule = isDark ? "border-white/10" : "border-[#dbe6d9]";
   const textMain = isDark ? "text-white" : "text-[#15291c]";
   const textMuted = isDark ? "text-white/60" : "text-[#516555]";
 
   return (
-    <section className={`relative overflow-hidden rounded-3xl border p-6 sm:p-9 ${surface}`}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_88%_5%,rgba(76,175,80,0.16),transparent_33%)]" />
-      <div className="relative max-w-xl">
-        <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl ${isDark ? "bg-[#75c96a]/15 text-[#9ce891]" : "bg-[#e7f3e5] text-[#336d3e]"}`}>
-          <FolderLock className="h-6 w-6" aria-hidden="true" />
+    <section className={`max-w-xl border-t pt-6 ${rule}`}>
+      <p className={`text-base font-semibold ${textMain}`}>No clubs yet</p>
+      <p className={`mt-1 max-w-lg text-sm leading-6 ${textMuted}`}>Create a home for your players, or join a club with an invitation.</p>
+      <button
+        type="button"
+        onClick={onCreate}
+        className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#345c38] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        Create a club
+      </button>
+    </section>
+  );
+}
+
+function GuestClubLanding({ isDark, onCreate }: { isDark: boolean; onCreate: () => void }) {
+  const textMain = isDark ? "text-white" : "text-[#15291c]";
+  const textMuted = isDark ? "text-white/60" : "text-[#516555]";
+  const rule = isDark ? "border-white/10" : "border-[#dbe6d9]";
+  const previewRows = [
+    { label: "Events", detail: "Plan the next round", icon: CalendarDays },
+    { label: "Feed", detail: "Keep everyone in sync", icon: MessageSquare },
+    { label: "Album", detail: "Keep the moments close", icon: ImageIcon },
+  ];
+
+  return (
+    <section className={`relative isolate overflow-hidden border-y py-10 sm:py-14 lg:py-20 ${rule}`}>
+      <div className="pointer-events-none absolute inset-0 chess-board-bg opacity-[0.025]" aria-hidden="true" />
+      <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)] lg:gap-16">
+        <div className="max-w-2xl">
+          <p className={`text-sm font-medium ${isDark ? "text-[#9ce891]" : "text-[#356d3c]"}`}>Club spaces</p>
+          <h1 className={`mt-4 max-w-xl text-4xl font-bold tracking-[-0.045em] sm:text-5xl lg:text-[3.5rem] lg:leading-[1.02] ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            A home for every game.
+          </h1>
+          <p className={`mt-5 max-w-lg text-base leading-7 sm:text-lg ${textMuted}`}>
+            Bring events, updates, and the people who make your club matter into one considered place.
+          </p>
+          <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={onCreate}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-5 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[#345c38] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
+            >
+              Start a club
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <Link
+              href="/clubs/demo"
+              className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
+                isDark ? "text-white/74 hover:text-white" : "text-[#315c38] hover:text-[#17321d]"
+              }`}
+            >
+              <Eye className="h-4 w-4" aria-hidden="true" />
+              Explore the workspace
+            </Link>
+          </div>
         </div>
-        <p className={`text-sm font-semibold ${textMain}`}>{signedIn ? "Your private club space starts here" : "A private home for every club"}</p>
-        <p className={`mt-2 max-w-lg text-sm leading-6 ${textMuted}`}>
-          {signedIn
-            ? "Clubs you create or join will appear here. Their members, events, feed, and albums stay inside the community."
-            : "Club workspaces are visible only to their members. Explore the experience with a safe product demo, or sign in to create your own."}
-        </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/clubs/demo"
-            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
-              isDark ? "border-white/16 text-white hover:bg-white/8" : "border-[#aac7aa] text-[#254d2b] hover:bg-[#f1f8ef]"
-            }`}
-          >
-            <Eye className="h-4 w-4" aria-hidden="true" />
-            View demo dashboard
-          </Link>
-          <button
-            type="button"
-            onClick={onCreate}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#345c38] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            {signedIn ? "Create a club" : "Sign in to create"}
-          </button>
+
+        <div className={`self-end border-t lg:border-l lg:border-t-0 lg:pl-10 ${rule}`}>
+          <p className={`pt-5 text-sm leading-6 lg:pt-0 ${textMuted}`}>Built for the rhythm between rounds.</p>
+          <dl className={`mt-6 divide-y ${rule}`}>
+            {previewRows.map(({ label, detail, icon: Icon }) => (
+              <div key={label} className="flex items-center gap-4 py-4 first:pt-0">
+                <Icon className={`h-4 w-4 shrink-0 ${isDark ? "text-[#9ce891]" : "text-[#356d3c]"}`} strokeWidth={1.8} aria-hidden="true" />
+                <div className="min-w-0">
+                  <dt className={`text-sm font-semibold ${textMain}`}>{label}</dt>
+                  <dd className={`mt-0.5 text-sm ${textMuted}`}>{detail}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
     </section>
@@ -210,30 +252,31 @@ export default function MyClubs() {
         <div className="mx-auto flex h-15 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:px-6">
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={openCreateClub}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold transition-colors active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
-                isDark ? "border border-white/12 bg-white/8 text-white hover:bg-white/12" : "bg-[#426f45] text-white hover:bg-[#345c38]"
-              }`}
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Create club</span>
-            </button>
+            {user && (
+              <button
+                type="button"
+                onClick={openCreateClub}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold transition-colors active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
+                  isDark ? "border border-white/12 bg-white/8 text-white hover:bg-white/12" : "bg-[#426f45] text-white hover:bg-[#345c38]"
+                }`}
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Create club</span>
+              </button>
+            )}
             <AvatarNavDropdown currentPage="Clubs" />
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-6 sm:pt-12">
-        <section className="max-w-2xl">
-          <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            {user ? `Welcome back, ${user.displayName?.split(" ")[0] || "Player"}` : "Your club space"}
-          </h1>
-          <p className={`mt-3 text-base leading-7 ${textMuted}`}>
-            {user ? "Your chess clubs hub." : "Club members keep their events, conversations, and media inside a private workspace."}
-          </p>
-        </section>
+        {!user ? <GuestClubLanding isDark={isDark} onCreate={openCreateClub} /> : <>
+          <section className="max-w-2xl">
+            <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {`Welcome back, ${user.displayName?.split(" ")[0] || "Player"}`}
+            </h1>
+            <p className={`mt-3 text-base leading-7 ${textMuted}`}>Your chess clubs hub.</p>
+          </section>
 
         {user && upcomingEvents.length > 0 && (
           <section className="mt-10">
@@ -275,25 +318,14 @@ export default function MyClubs() {
               {Array.from({ length: 3 }).map((_, index) => <div key={index} className={`h-64 animate-pulse rounded-2xl ${isDark ? "bg-white/[0.055]" : "bg-[#e6eee3]"}`} />)}
             </div>
           ) : orderedClubs.length === 0 ? (
-            <PrivateClubEmptyState isDark={isDark} signedIn={Boolean(user)} onCreate={openCreateClub} />
+            <PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {orderedClubs.map((club) => <ClubCard key={club.id} club={club} isDark={isDark} isOwned={club.ownerId === user?.id} />)}
             </div>
           )}
         </section>
-
-        {!user && (
-          <section className="mt-10 flex flex-col justify-between gap-4 rounded-2xl border border-dashed p-5 sm:flex-row sm:items-center sm:p-6" style={{ borderColor: isDark ? "rgba(255,255,255,0.15)" : "#b7cfb5" }}>
-            <div>
-              <p className={`font-semibold ${textMain}`}>Ready to bring your club together?</p>
-              <p className={`mt-1 text-sm ${textMuted}`}>Create a private home for the players who already belong in your community.</p>
-            </div>
-            <button type="button" onClick={() => navigate("/auth")} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#426f45] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#345c38] active:scale-[0.98]">
-              Sign in <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </section>
-        )}
+        </>}
       </main>
 
       {showWizard && <CreateClubWizard onClose={closeWizard} />}

@@ -17,13 +17,14 @@ This change converts the Club surface from a public directory into private membe
 
 ## UI review
 
-The `/clubs` index was reviewed at **1440 × 960** and **375 × 812**. The signed-out state explains the private-workspace model, provides a direct demo entry point, and keeps the sign-in/create action clear. The demo was then rebuilt around the production Club workspace primitives: the shared shader background, compact desktop `ClubDashboardSidebar`, banner hierarchy, tab transition, card system, and a matching mobile hamburger drawer. It now uses only the established OTB SVG icon system and Lucide utility icons; it has no emoji-derived interface icons. Fixture-only content demonstrates Overview, Feed, Album, Events, Members, and Settings without making Club API requests or presenting writable controls. The mobile quick actions stack icon and label within their compact cards to avoid text collision at 375 px. The existing install banner appears at the bottom of the mobile preview and is outside this change.
+The `/clubs` index was reviewed at **1440 × 960** and **375 × 812**. The signed-out state is now a purpose-built, Mobbin-informed conversion surface rather than a dashboard empty-state stack: it has a single primary **Start a club** action, a restrained **Explore the workspace** secondary path, and a concise three-part feature rail for Events, Feed, and Album. The guest header no longer duplicates the primary create action; the previous count, nested empty-state card, and second sign-in callout are absent. It uses only established OTB/Lucide SVG icons and no emoji-derived interface imagery. Signed-in users retain their functional personal-club index and a distinct, minimal no-clubs state. The demo was then rebuilt around the production Club workspace primitives: the shared shader background, compact desktop `ClubDashboardSidebar`, banner hierarchy, tab transition, card system, and a matching mobile hamburger drawer. Fixture-only content demonstrates Overview, Feed, Album, Events, Members, and Settings without making Club API requests or presenting writable controls. The mobile quick actions stack icon and label within their compact cards to avoid text collision at 375 px. The existing install banner appears at the bottom of the mobile preview and is outside this change.
 
 ## Automated checks
 
 | Check | Result |
 |---|---|
-| Focused private Club regression suite | **15 passing tests** across 2 route and workspace-contract files |
+| Focused private Club regression suite | **19 passing tests** across guest-landing, private-workspace, and route-contract files |
+| Guest landing visual QA | **Passed** — desktop 1440 × 960 and mobile 375 × 812 reviews confirmed responsive hierarchy, visible CTA text, and no horizontal overflow |
 | Demo navigation interaction | **Passed** — desktop Overview-to-Feed interaction rendered the read-only Feed state |
 | Desktop visual QA | **Passed** — 1440 × 960 workspace shell aligned with the production sidebar and card hierarchy |
 | Mobile visual QA | **Passed** — 375 × 812 hamburger header, banner, quick actions, and timeline showed no horizontal overflow or clipped labels |
