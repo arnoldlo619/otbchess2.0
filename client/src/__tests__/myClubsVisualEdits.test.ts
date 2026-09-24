@@ -36,13 +36,18 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain('fetchPriority="high"');
     expect(guestLanding).toContain('aria-hidden="true"');
     expect(guestLanding).toContain("bg-[linear-gradient(90deg");
-    expect(guestLanding).toContain("A home for every game.");
+    expect(guestLanding).toContain("Chess Clubs");
+    expect(guestLanding).toContain("By ChessOTB.Club");
     expect(guestLanding).toContain("Start a club");
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
   });
 
-  it("uses one considered conversion moment for visitors without dashboard-derived feature scaffolding", () => {
+  it("uses the shared premium landing CTA and removes the redundant hero eyebrow", () => {
+    expect(myClubsSource).toContain('import { SpinBorderButton } from "@/components/ui/spin-border-button"');
+    expect(guestLanding).toContain('<SpinBorderButton variant="solid" type="button" onClick={onCreate}>');
+    expect(guestLanding).not.toContain("ChessOTB Club Spaces");
+    expect(guestLanding).not.toContain("A home for every game.");
     expect(guestLanding).not.toContain("previewRows");
     expect(guestLanding).not.toContain("Events");
     expect(guestLanding).not.toContain("Feed");

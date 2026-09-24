@@ -11,6 +11,7 @@ import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { CreateClubAuthGate } from "@/components/CreateClubAuthGate";
 import { CreateClubWizard, CREATE_CLUB_WIZARD_ACTIVE_KEY } from "@/components/CreateClubWizard";
+import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { listMyClubs, type Club } from "@/lib/clubRegistry";
@@ -120,22 +121,17 @@ function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(3,13,7,0.86)_0%,rgba(4,16,9,0.71)_48%,rgba(3,12,6,0.82)_100%)]" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,11,6,0.34)_0%,rgba(2,10,5,0.12)_43%,rgba(2,10,5,0.68)_100%)]" aria-hidden="true" />
       <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center px-5 py-16 text-center sm:px-8 sm:py-20">
-        <p className="text-sm font-semibold tracking-[0.04em] text-[#b4eea8]">ChessOTB Club Spaces</p>
-        <h1 className="mt-5 max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl lg:leading-[0.98]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-          A home for every game.
+        <h1 className="max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl lg:leading-[0.98]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          Chess Clubs
         </h1>
         <p className="mt-5 max-w-xl text-base leading-7 text-white/76 sm:text-lg sm:leading-8">
-          Private spaces for the people who meet, play, and keep their club moving.
+          By ChessOTB.Club
         </p>
         <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={onCreate}
-              className="inline-flex min-h-12 min-w-40 items-center justify-center gap-2 rounded-xl bg-[#5c9a60] px-5 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(0,0,0,0.22)] transition-[background-color,transform] hover:bg-[#6eac70] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
-            >
-              Start a club
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
+          <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
+            Start a club
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </SpinBorderButton>
             <Link
               href="/clubs/demo"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
