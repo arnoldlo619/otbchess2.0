@@ -36,14 +36,16 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain('fetchPriority="high"');
     expect(guestLanding).toContain('aria-hidden="true"');
     expect(guestLanding).toContain("bg-[linear-gradient(90deg");
-    expect(guestLanding).toContain("Chess Clubs");
-    expect(guestLanding).toContain("By ChessOTB.Club");
     expect(guestLanding).toContain("Start a club");
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
     expect(myClubsSource).toContain('import { ClubPlayerIdBadge } from "@/components/ui/club-player-id-badge"');
     expect(guestLanding).toContain('<ClubPlayerIdBadge className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 lg:flex" />');
     expect(guestLanding).toContain("lg:pt-[25rem]");
+    expect(guestLanding).toContain('className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row"');
+    expect(guestLanding).not.toContain("Chess Clubs");
+    expect(guestLanding).not.toContain("By ChessOTB.Club");
+    expect(guestLanding).not.toContain("<h1");
   });
 
   it("uses the shared premium landing CTA and removes the retired dashboard feature rail", () => {

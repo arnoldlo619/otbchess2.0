@@ -123,26 +123,18 @@ function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,11,6,0.34)_0%,rgba(2,10,5,0.12)_43%,rgba(2,10,5,0.68)_100%)]" aria-hidden="true" />
       <ClubPlayerIdBadge className="absolute left-1/2 top-0 z-10 hidden -translate-x-1/2 lg:flex" />
       <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center justify-center px-5 py-16 text-center sm:px-8 sm:py-20 lg:justify-start lg:pb-16 lg:pt-[25rem]">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl lg:leading-[0.98]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Chess Clubs
-          </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-white/76 sm:text-lg sm:leading-8">
-            By ChessOTB.Club
-          </p>
-          <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:items-start">
-            <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
-              Start a club
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </SpinBorderButton>
-            <Link
-              href="/clubs/demo"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
-            >
-              <Eye className="h-4 w-4" aria-hidden="true" />
-              Explore the workspace
-            </Link>
-          </div>
+        <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
+          <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
+            Start a club
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </SpinBorderButton>
+          <Link
+            href="/clubs/demo"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
+          >
+            <Eye className="h-4 w-4" aria-hidden="true" />
+            Explore the workspace
+          </Link>
         </div>
       </div>
     </section>
