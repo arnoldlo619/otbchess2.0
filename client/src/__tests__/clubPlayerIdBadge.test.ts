@@ -6,31 +6,48 @@ const badgeSource = readFileSync(
   resolve(process.cwd(), "client/src/components/ui/club-player-id-badge.tsx"),
   "utf8",
 );
+const lanyardSource = readFileSync(
+  resolve(process.cwd(), "client/src/components/ui/club-player-lanyard-scene.runtime.jsx"),
+  "utf8",
+);
 
-describe("Club Player ID badge", () => {
-  it("renders a ChessOTB-branded Chess Club Player credential", () => {
-    expect(badgeSource).toContain("CHESSOTB.CLUB");
-    expect(badgeSource).toContain("Chess Club Player");
-    expect(badgeSource).toContain("CHESSOTB COMMUNITY MEMBER");
-    expect(badgeSource).toContain("COTB-2026-001");
-    expect(badgeSource).toContain('src="/club-assets/club-space-otb-table.webp"');
+const assetPath = (name: string) => resolve(process.cwd(), "client/public/club-assets", name);
+
+describe("Club Player lanyard", () => {
+  it("uses a code-split ReactBits physics scene only when desktop WebGL and motion preferences allow it", () => {
+    expect(badgeSource).toContain('lazy(() => import("./club-player-lanyard-scene.runtime.jsx"))');
+    expect(badgeSource).toContain('window.matchMedia("(min-width: 1024px)")');
+    expect(badgeSource).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(badgeSource).toContain('canvas.getContext("webgl2") || canvas.getContext("webgl")');
+    expect(badgeSource).toContain("<Suspense fallback={<StaticClubPlayerBadge />}>");
   });
 
-  it("keeps its interaction local, accessible, and respectful of reduced motion", () => {
-    expect(badgeSource).toContain("useReducedMotion");
-    expect(badgeSource).toContain("aria-pressed={flipped}");
-    expect(badgeSource).toContain('type="button"');
-    expect(badgeSource).toContain("onPointerMove={handlePointerMove}");
-    expect(badgeSource).toContain("onPointerLeave={resetTilt}");
-    expect(badgeSource).toContain("focus-visible:ring-2");
-    expect(badgeSource).not.toContain("position:fixed");
-    expect(badgeSource).not.toContain("fonts.googleapis.com");
+  it("keeps a branded static fallback instead of leaving non-WebGL visitors without a credential", () => {
+    expect(badgeSource).toContain('src="/club-assets/chess-club-player-front.svg"');
+    expect(badgeSource).toContain("ChessOTB Club Player credential");
+    expect(badgeSource).toContain("Interactive 3D ChessOTB Club Player lanyard");
   });
 
-  it("is a desktop-only decorative depth layer rather than a mobile obstruction", () => {
-    expect(badgeSource).toContain('h-[22.5rem] w-[14.5rem]');
-    expect(badgeSource).toContain("[perspective:1200px]");
-    expect(badgeSource).toContain("[backface-visibility:hidden]");
-    expect(badgeSource).toContain("[transform:rotateY(180deg)]");
+  it("integrates ReactBits lanyard physics with bespoke ChessOTB card surfaces", () => {
+    expect(lanyardSource).toContain('from "@react-three/fiber"');
+    expect(lanyardSource).toContain('from "@react-three/drei"');
+    expect(lanyardSource).toContain('from "@react-three/rapier"');
+    expect(lanyardSource).toContain('from "meshline"');
+    expect(lanyardSource).toContain('import cardGLB from "./lanyard-assets/card.glb"');
+    expect(lanyardSource).toContain('const FRONT_IMAGE = "/club-assets/chess-club-player-front.svg"');
+    expect(lanyardSource).toContain('const BACK_IMAGE = "/club-assets/chess-club-player-back.svg"');
+    expect(lanyardSource).toContain('const LANYARD_IMAGE = "/club-assets/chessotb-lanyard-band.svg"');
+    expect(lanyardSource).toContain("useRopeJoint");
+    expect(lanyardSource).toContain("useSphericalJoint");
+    expect(lanyardSource).toContain("onPointerDown");
+    expect(lanyardSource).toContain("onPointerUp");
+  });
+
+  it("ships all local ReactBits and ChessOTB lanyard assets", () => {
+    expect(() => readFileSync(resolve(process.cwd(), "client/src/components/ui/lanyard-assets/card.glb"))).not.toThrow();
+    expect(() => readFileSync(resolve(process.cwd(), "client/src/components/ui/lanyard-assets/reactbits-lanyard.png"))).not.toThrow();
+    expect(() => readFileSync(assetPath("chess-club-player-front.svg"), "utf8")).not.toThrow();
+    expect(() => readFileSync(assetPath("chess-club-player-back.svg"), "utf8")).not.toThrow();
+    expect(() => readFileSync(assetPath("chessotb-lanyard-band.svg"), "utf8")).not.toThrow();
   });
 });

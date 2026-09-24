@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1080" viewBox="0 0 720 1080">
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#efffe9"/>
+      <stop offset="0.56" stop-color="#c8edbc"/>
+      <stop offset="1" stop-color="#8dcb85"/>
+    </linearGradient>
+    <linearGradient id="photoShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06240d" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#061b0b" stop-opacity="0.76"/>
+    </linearGradient>
+    <pattern id="board" width="48" height="48" patternUnits="userSpaceOnUse">
+      <rect width="48" height="48" fill="#1b5a25" opacity="0.055"/>
+      <path d="M0 0h24v24H0zM24 24h24v24H24z" fill="#0e3b17" opacity="0.11"/>
+    </pattern>
+  </defs>
+  <rect width="720" height="1080" rx="28" fill="url(#surface)"/>
+  <rect width="720" height="1080" rx="28" fill="url(#board)"/>
+  <rect x="46" y="44" width="628" height="2" fill="#1a4c20" opacity="0.22"/>
+  <text x="52" y="89" fill="#102a15" font-family="Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="1.5">CHESSOTB.CLUB</text>
+  <text x="52" y="124" fill="#3b7042" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3">OFFICIAL PLAYER ID</text>
+  <text x="665" y="84" text-anchor="end" fill="#234c29" font-family="Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="2">OTB</text>
+  <text x="665" y="110" text-anchor="end" fill="#234c29" font-family="Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="2">CLUBS</text>
+  <rect x="52" y="168" width="616" height="360" rx="22" fill="#0d2d13"/>
+  <image href="/club-assets/club-space-otb-table.webp" x="52" y="168" width="616" height="360" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="52" y="168" width="616" height="360" rx="22" fill="url(#photoShade)"/>
+  <rect x="77" y="454" width="112" height="42" rx="12" fill="#0c2911" fill-opacity="0.76" stroke="#dffbd9" stroke-opacity="0.45"/>
+  <text x="133" y="481" text-anchor="middle" fill="#f1ffed" font-family="Arial, sans-serif" font-size="14" font-weight="800" letter-spacing="2">PLAYER</text>
+  <circle cx="638" cy="500" r="31" fill="#2f833b" stroke="#e0fad8" stroke-width="10"/>
+  <path d="M622 501l11 11 22-25" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="52" y="605" fill="#102a15" font-family="Arial, sans-serif" font-size="42" font-weight="800" letter-spacing="-1">Chess Club Player</text>
+  <text x="52" y="641" fill="#3c7142" font-family="Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="2.5">CHESSOTB COMMUNITY MEMBER</text>
+  <rect x="52" y="688" width="616" height="2" fill="#1a4c20" opacity="0.25"/>
+  <text x="52" y="741" fill="#4a764e" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.5">PLAYER ID</text>
+  <text x="668" y="741" text-anchor="end" fill="#173a1c" font-family="Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="1.5">COTB-2026-001</text>
+  <circle cx="63" cy="790" r="10" fill="none" stroke="#3d7043" stroke-width="4"/>
+  <path d="M63 776v16M55 786h16" stroke="#3d7043" stroke-width="4" stroke-linecap="round"/>
+  <text x="86" y="796" fill="#4a764e" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.5">OTB COMMUNITY</text>
+  <rect x="52" y="870" width="616" height="2" fill="#1a4c20" opacity="0.25"/>
+  <text x="52" y="925" fill="#476f4a" font-family="Arial, sans-serif" font-size="14" font-weight="800" letter-spacing="2">PLAY · CONNECT · IMPROVE</text>
+  <rect x="656" y="838" width="6" height="145" rx="3" fill="#e6ffe0" opacity="0.82"/>
+</svg>
