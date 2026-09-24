@@ -170,19 +170,40 @@ export function ClubDashboardSidebar({
       }}
     >
       <div className="border-b border-white/[0.065] px-1 py-3">
-        <div className="flex h-16 items-center justify-center">
+        <div className="flex h-16 items-center justify-center overflow-hidden">
           <button
             type="button"
             onClick={onBackToClubs}
             aria-label="Back to all clubs"
-            className="group/brand flex h-16 w-16 shrink-0 items-center justify-center bg-transparent outline-none transition-[opacity,transform] duration-200 ease-out hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
-            style={{ color: accent, "--tw-ring-color": accent } as React.CSSProperties}
+            className="group/brand relative flex h-16 shrink-0 items-center justify-center overflow-hidden bg-transparent outline-none transition-[width,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:opacity-100 active:scale-[0.96] focus-visible:ring-2 motion-reduce:transition-none"
+            style={{
+              width: expanded ? "152px" : "64px",
+              color: accent,
+              // @ts-expect-error CSS custom property is supported by React at runtime.
+              "--tw-ring-color": accent,
+            }}
           >
             <img
               src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
-              alt="OTB!!"
-              className="h-16 w-16 origin-center object-contain transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
-              style={{ transform: expanded ? "scale(1.08)" : "scale(1)" }}
+              alt=""
+              aria-hidden="true"
+              className="absolute h-16 w-16 origin-center object-contain transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+              style={{
+                opacity: expanded ? 0 : 1,
+                transform: expanded ? "scale(0.9)" : "scale(1)",
+              }}
+              draggable={false}
+            />
+            <img
+              src="/club-assets/otb-wordmark-brilliant.webp"
+              alt=""
+              aria-hidden="true"
+              className="absolute h-16 w-[152px] object-contain mix-blend-screen transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+              style={{
+                opacity: expanded ? 1 : 0,
+                transform: expanded ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.96)",
+                transitionDelay: expanded ? "75ms" : "0ms",
+              }}
               draggable={false}
             />
           </button>

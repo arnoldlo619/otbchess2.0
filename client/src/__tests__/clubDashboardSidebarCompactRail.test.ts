@@ -41,9 +41,16 @@ describe("Club Dashboard compact sidebar rail", () => {
     expect(sidebarSource).toContain("motion-reduce:transition-none");
   });
 
-  it("uses a larger centered brand trigger without changing its accessible back-to-clubs action", () => {
-    expect(sidebarSource).toContain('className="group/brand flex h-16 w-16 shrink-0 items-center justify-center');
-    expect(sidebarSource).toContain('className="h-16 w-16 origin-center object-contain');
+  it("crossfades the fixed-height compact mark into the supplied wordmark without changing its accessible back-to-clubs action", () => {
+    expect(sidebarSource).toContain('className="group/brand relative flex h-16 shrink-0 items-center justify-center');
+    expect(sidebarSource).toContain('width: expanded ? "152px" : "64px"');
+    expect(sidebarSource).toContain('src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"');
+    expect(sidebarSource).toContain('src="/club-assets/otb-wordmark-brilliant.webp"');
+    expect(sidebarSource).toContain('className="absolute h-16 w-[152px] object-contain mix-blend-screen');
+    expect(sidebarSource).toContain('opacity: expanded ? 1 : 0');
+    expect(sidebarSource).toContain('opacity: expanded ? 0 : 1');
+    expect(sidebarSource).toContain('transitionDelay: expanded ? "75ms" : "0ms"');
+    expect(sidebarSource).toContain("motion-reduce:transition-none");
     expect(sidebarSource).toContain('aria-label="Back to all clubs"');
   });
 
