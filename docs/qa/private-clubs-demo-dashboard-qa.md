@@ -37,7 +37,7 @@ The `/clubs` index was reviewed at **1440 × 960** and **375 × 812**. The signe
 
 ## Subsequent visual refinement
 
-The experimental **Chess Club Player** lanyard has been removed at the request of the product owner. The public `/clubs` gateway now restores a single centered **Chess Clubs** heading over the photographic hero while retaining the footer action group and its mobile install-banner clearance. The unused ReactBits scene, Three.js/Rapier dependencies, card textures, asset handling, and focused badge test were removed with it, eliminating the optional multi-megabyte desktop physics bundle rather than merely hiding it.
+The experimental **Chess Club Player** lanyard has been removed at the request of the product owner. The public `/clubs` gateway now restores a single centered **Chess Clubs** heading over the photographic hero. The two actions are stacked directly beneath that heading, staying horizontal on larger screens and vertical on mobile, so the title and its actions read as one centered conversion group. The unused ReactBits scene, Three.js/Rapier dependencies, card textures, asset handling, and focused badge test were removed with it, eliminating the optional multi-megabyte desktop physics bundle rather than merely hiding it.
 
 ## Remaining scope boundary
 

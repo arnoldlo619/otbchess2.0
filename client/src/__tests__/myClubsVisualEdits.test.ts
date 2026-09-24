@@ -43,10 +43,9 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain("<h1");
     expect(guestLanding).toContain("Chess Clubs");
     expect(guestLanding).toContain("top-[26%]");
-    expect(guestLanding).toContain('flex-1 flex-col items-center justify-end');
-    expect(guestLanding).toContain('pb-36 pt-44');
-    expect(guestLanding).not.toContain("lg:pt-[25rem]");
-    expect(guestLanding).toContain('className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row"');
+    expect(guestLanding).toContain('flex w-full -translate-x-1/2 flex-col items-center');
+    expect(guestLanding).toContain('Chess Clubs\n        </h1>\n        <div className="mt-6 flex w-full flex-col items-center justify-center gap-3 sm:mt-7 sm:flex-row">');
+    expect(guestLanding).not.toContain('justify-end px-5 pb-36');
     expect(guestLanding).not.toContain("By ChessOTB.Club");
   });
 
