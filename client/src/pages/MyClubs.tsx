@@ -122,18 +122,23 @@ function GuestClubLanding({ onCreate }: { onCreate: () => void }) {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(3,13,7,0.86)_0%,rgba(4,16,9,0.71)_48%,rgba(3,12,6,0.82)_100%)]" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,11,6,0.34)_0%,rgba(2,10,5,0.12)_43%,rgba(2,10,5,0.68)_100%)]" aria-hidden="true" />
       <div className="absolute inset-0 z-20 flex w-full items-center justify-center px-5 pt-8 text-center sm:px-8">
-        <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
-          <SpinBorderButton variant="solid" type="button" onClick={onCreate}>
+        <div className="flex w-full max-w-[28rem] flex-col items-center justify-center gap-6">
+          <h1 className="text-4xl font-bold tracking-[-0.05em] text-white sm:text-5xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            Chess Clubs
+          </h1>
+          <div className="flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row">
+            <SpinBorderButton variant="solid" type="button" onClick={onCreate} className="w-full sm:w-[216px] [&>span.relative]:min-h-11 [&>span.relative]:px-4 [&>span.relative]:py-2.5 sm:[&>span.relative]:py-2.5">
             Start a club
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </SpinBorderButton>
           <Link
             href="/clubs/demo"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309]"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/28 bg-black/10 px-4 text-sm font-semibold text-white/92 transition-[background-color,border-color,transform] hover:border-white/48 hover:bg-white/10 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c4f3b7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071309] sm:w-[216px]"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
             Explore the workspace
           </Link>
+          </div>
         </div>
       </div>
     </section>

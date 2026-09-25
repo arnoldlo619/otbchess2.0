@@ -40,17 +40,21 @@ describe("My Clubs visual system", () => {
     expect(guestLanding).toContain("Explore the workspace");
     expect(guestLanding).toContain('href="/clubs/demo"');
     expect(myClubsSource).not.toContain("ClubPlayerIdBadge");
-    expect(guestLanding).not.toContain("<h1");
-    expect(guestLanding).not.toContain("Chess Clubs");
+    expect(guestLanding).toContain("<h1");
+    expect(guestLanding).toContain("Chess Clubs");
     expect(guestLanding).toContain('absolute inset-0 z-20 flex w-full items-center justify-center');
-    expect(guestLanding).toContain('className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row"');
+    expect(guestLanding).toContain('className="flex w-full max-w-[28rem] flex-col items-center justify-center gap-6"');
+    expect(guestLanding).toContain('className="flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row"');
+    expect(guestLanding).toContain('className="w-full sm:w-[216px] [&>span.relative]:min-h-11 [&>span.relative]:px-4 [&>span.relative]:py-2.5 sm:[&>span.relative]:py-2.5"');
+    expect(guestLanding).toContain('min-h-12 w-full items-center justify-center');
+    expect(guestLanding).toContain('sm:w-[216px]');
     expect(guestLanding).not.toContain("top-[26%]");
     expect(guestLanding).not.toContain("By ChessOTB.Club");
   });
 
   it("uses the shared premium landing CTA and removes the retired dashboard feature rail", () => {
     expect(myClubsSource).toContain('import { SpinBorderButton } from "@/components/ui/spin-border-button"');
-    expect(guestLanding).toContain('<SpinBorderButton variant="solid" type="button" onClick={onCreate}>');
+    expect(guestLanding).toContain('<SpinBorderButton variant="solid" type="button" onClick={onCreate} className="w-full sm:w-[216px]');
     expect(guestLanding).not.toContain("ChessOTB Club Spaces");
     expect(guestLanding).not.toContain("A home for every game.");
     expect(guestLanding).not.toContain("previewRows");

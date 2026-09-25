@@ -51,6 +51,10 @@ The fixture is consistently branded **The OTB Chess Club** across its desktop ba
 
 The generic event glyphs in the read-only Club Feed were replaced with locally cached public Chess.com profile thumbnails for **Hikaru Nakamura**, **Anna Cramling**, and **Erik**. Each image includes a descriptive alt label, lazy decoding, circular crop, and an initial-based fallback if an image fails. Caching the fixed demo fixtures under `/club-assets` avoids a runtime dependency on Chess.com while making the fixture visibly resemble a real member-driven Club Feed.
 
+## Subsequent Club gateway CTA refinement
+
+The public `/clubs` gateway restores a centered **Chess Clubs** H1 above the two primary actions. Both CTAs now use the same desktop width and a slimmer visual height: the shared landing-style **Start a club** button keeps the premium animated border treatment while matching the outline **Explore the workspace** control's footprint. On mobile, both controls remain full-width, stacked, touch-safe, and clear of the install banner.
+
 ## Remaining scope boundary
 
 The existing `/clubs/leaderboard` page remains registered but the public Club index now has no records because all real Clubs are private. A future dedicated privacy decision can either retire that surface or redefine it as an opt-in, anonymized product metric; it is not used by the new `/clubs` experience.
