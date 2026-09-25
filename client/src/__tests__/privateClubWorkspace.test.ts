@@ -12,6 +12,7 @@ const wizard = readFileSync(resolve(root, "client/src/components/CreateClubWizar
 const registry = readFileSync(resolve(root, "client/src/lib/clubRegistry.ts"), "utf8");
 const server = readFileSync(resolve(root, "server/clubs.ts"), "utf8");
 const schema = readFileSync(resolve(root, "shared/schema.ts"), "utf8");
+const demoFeed = demo.slice(demo.indexOf("function DemoFeed"), demo.indexOf("function DemoEvents"));
 
 function routeBlock(path: string): string {
   const start = server.indexOf(`clubsRouter.get("${path}"`);
@@ -42,6 +43,16 @@ describe("private Club workspace model", () => {
     expect(demo).toContain("<ShaderBackground");
     expect(demo).toContain("<DemoMobileDrawer");
     expect(demo).not.toMatch(/[🏆🌍🥇🥈🥉🔥]/u);
+  });
+
+  it("uses cached Chess.com profile photos instead of generic activity glyphs in the demo feed", () => {
+    expect(demo).toContain('avatarSrc: "/club-assets/chesscom-hikaru-avatar.png"');
+    expect(demo).toContain('avatarSrc: "/club-assets/chesscom-anna-avatar.jpg"');
+    expect(demo).toContain('avatarSrc: "/club-assets/chesscom-erik-avatar.jpeg"');
+    expect(demoFeed).toContain("<DemoChessComAvatar src={avatarSrc} label={avatarLabel} />");
+    expect(demoFeed).not.toContain("icon: Icon");
+    expect(demo).toContain('alt={`${label} Chess.com profile avatar`}');
+    expect(demo).toContain("onError={() => setFailed(true)}");
   });
 
   it("renders only personal memberships in the Club index", () => {

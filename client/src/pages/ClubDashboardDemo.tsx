@@ -70,26 +70,32 @@ const DEMO_ACTIVITY = [
   {
     type: "Tournament results",
     title: "OTB Fall Blitz finished",
-    byline: "By Maya Chen",
+    byline: "By Hikaru Nakamura",
     date: "Today",
     accent: "#d99a28",
     icon: Trophy,
+    avatarSrc: "/club-assets/chesscom-hikaru-avatar.png",
+    avatarLabel: "Hikaru Nakamura",
   },
   {
     type: "Club update",
     title: "New boards are ready for Thursday",
-    byline: "By Maya Chen",
+    byline: "By Anna Cramling",
     date: "Yesterday",
     accent: DEMO_ACCENT,
     icon: MessageSquare,
+    avatarSrc: "/club-assets/chesscom-anna-avatar.jpg",
+    avatarLabel: "Anna Cramling",
   },
   {
     type: "Member update",
     title: "Welcome four new club members",
-    byline: `By ${DEMO_CLUB_NAME}`,
+    byline: "By Erik",
     date: "Sep 28",
     accent: "#78a6e5",
     icon: Users,
+    avatarSrc: "/club-assets/chesscom-erik-avatar.jpeg",
+    avatarLabel: "Erik",
   },
 ];
 
@@ -131,6 +137,28 @@ function DemoAvatar({ initials, tone, size = "md" }: { initials: string; tone: s
       style={{ background: `linear-gradient(135deg, ${tone}, ${tone}a8)` }}
     >
       {initials}
+    </span>
+  );
+}
+
+function DemoChessComAvatar({ src, label }: { src: string; label: string }) {
+  const [failed, setFailed] = useState(false);
+  const fallback = label.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+
+  return (
+    <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/15 bg-[oklch(0.20_0.04_145)] shadow-sm" title={`${label} on Chess.com`}>
+      {failed ? (
+        <span className="flex h-full w-full items-center justify-center bg-[#315f3c] text-[11px] font-bold text-white">{fallback}</span>
+      ) : (
+        <img
+          src={src}
+          alt={`${label} Chess.com profile avatar`}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+        />
+      )}
     </span>
   );
 }
@@ -347,9 +375,9 @@ function DemoFeed() {
       <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
         <header className="border-b px-4 py-3.5 sm:px-5" style={{ borderColor: "rgba(255,255,255,0.065)" }}><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club timeline</p><h2 className="mt-0.5 text-sm font-bold text-white/92">Club Feed</h2></header>
         <div className="divide-y divide-white/[0.065]">
-          {DEMO_ACTIVITY.map(({ title, byline, date, accent, icon: Icon }) => (
+          {DEMO_ACTIVITY.map(({ title, byline, date, avatarSrc, avatarLabel }) => (
             <article key={title} className="flex gap-3 px-4 py-4 sm:gap-4 sm:px-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `${accent}18`, color: accent }}><Icon className="h-[18px] w-[18px]" aria-hidden="true" /></div>
+              <DemoChessComAvatar src={avatarSrc} label={avatarLabel} />
               <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="text-sm font-bold text-white/92">{byline.replace("By ", "")}</span><span className="text-xs text-white/38">{date}</span></div><h3 className="mt-1.5 text-base font-bold text-white/92">{title}</h3><p className="mt-1.5 text-sm leading-6 text-white/50">This sample post demonstrates the same card hierarchy and member-only context as a live Club Feed.</p><div className="mt-3 flex items-center gap-2 text-xs font-semibold" style={{ color: DEMO_ACCENT }}><FolderLock className="h-3.5 w-3.5" aria-hidden="true" />Visible to club members</div></div>
               <MoreHorizontal className="h-5 w-5 shrink-0 text-white/35" aria-hidden="true" />
             </article>

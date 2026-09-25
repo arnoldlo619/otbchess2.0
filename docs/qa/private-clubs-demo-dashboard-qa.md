@@ -47,6 +47,10 @@ The public **Start a club** action no longer opens an intermediate Club-specific
 
 The fixture is consistently branded **The OTB Chess Club** across its desktop banner, mobile header, mobile navigation drawer, activity byline, event naming, and venue. The supplied monochrome chess illustration is served locally as `/club-assets/the-otb-chess-club-demo-banner.jpg` and framed at the board area (`object-position: center 30%`) so the wide banner remains intentional at both viewport sizes. Directional black overlays at 90%/72%/56% opacity plus a vertical finishing overlay preserve readable white text over the high-contrast artwork without disguising the illustration. Live desktop and mobile reviews confirmed the name, board-focused crop, banner contrast, touch layout, and install-banner clearance.
 
+## Subsequent demo Feed refinement
+
+The generic event glyphs in the read-only Club Feed were replaced with locally cached public Chess.com profile thumbnails for **Hikaru Nakamura**, **Anna Cramling**, and **Erik**. Each image includes a descriptive alt label, lazy decoding, circular crop, and an initial-based fallback if an image fails. Caching the fixed demo fixtures under `/club-assets` avoids a runtime dependency on Chess.com while making the fixture visibly resemble a real member-driven Club Feed.
+
 ## Remaining scope boundary
 
 The existing `/clubs/leaderboard` page remains registered but the public Club index now has no records because all real Clubs are private. A future dedicated privacy decision can either retire that surface or redefine it as an opt-in, anonymized product metric; it is not used by the new `/clubs` experience.
