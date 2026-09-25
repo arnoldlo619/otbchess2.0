@@ -62,4 +62,19 @@ describe("Home page visual edits", () => {
     expect(integration).toContain("maxresdefault.jpg");
     expect(integration).toContain("videoLoaded ? (isDark ? 0.62 : 0.55) : 0");
   });
+
+  it("keeps the HOW IT WORKS badge icon-free with a restrained motion-safe glow hover", () => {
+    const howItWorks = homeSource.slice(
+      homeSource.indexOf('id="how-it-works"'),
+      homeSource.indexOf("{/* Parallax step blocks */", homeSource.indexOf('id="how-it-works"')),
+    );
+
+    expect(howItWorks).toContain("How It Works");
+    expect(howItWorks).not.toContain("<Zap");
+    expect(howItWorks).toContain("transition-[background-color,color,box-shadow,transform] duration-300 ease-out");
+    expect(howItWorks).toContain("hover:-translate-y-px");
+    expect(howItWorks).toContain("hover:shadow-[0_0_0_1px_");
+    expect(howItWorks).toContain("motion-reduce:transform-none motion-reduce:transition-none");
+    expect(homeSource).not.toMatch(/\bZap,?\n/);
+  });
 });

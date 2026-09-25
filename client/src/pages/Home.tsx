@@ -36,7 +36,6 @@ import { useAuthContext } from "../context/AuthContext";
 import {
   Trophy,
   Users,
-  Zap,
   Menu,
   X,
   Crown,
@@ -1119,10 +1118,11 @@ function HowItWorks() {
     }`}>
       {/* Section header */}
       <div className="container pt-20 pb-4 text-center">
-        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5 ${
-          isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#436850]/10 text-[#436850]"
+        <div className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-widest mb-5 transition-[background-color,color,box-shadow,transform] duration-300 ease-out will-change-transform hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
+          isDark
+            ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)] hover:bg-[oklch(0.65_0.14_145)]/20 hover:shadow-[0_0_0_1px_oklch(0.65_0.14_145/0.20),0_0_18px_oklch(0.65_0.14_145/0.16)]"
+            : "bg-[#436850]/10 text-[#436850] hover:bg-[#436850]/14 hover:shadow-[0_0_0_1px_rgba(67,104,80,0.16),0_0_18px_rgba(67,104,80,0.14)]"
         }`}>
-          <Zap className="w-3 h-3" />
           How It Works
         </div>
         <h2
