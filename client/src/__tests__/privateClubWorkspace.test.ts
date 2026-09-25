@@ -25,7 +25,11 @@ describe("private Club workspace model", () => {
     expect(app.indexOf('<Route path={"/clubs/demo"} component={ClubDashboardDemo} />'))
       .toBeLessThan(app.indexOf('<Route path={"/clubs/:id"} component={ClubProfile} />'));
     expect(demo).toContain("Read-only demo");
-    expect(demo).toContain("Harbor Chess Club");
+    expect(demo).toContain('const DEMO_CLUB_NAME = "The OTB Chess Club"');
+    expect(demo).toContain('const DEMO_BANNER_IMAGE = "/club-assets/the-otb-chess-club-demo-banner.jpg"');
+    expect(demo).toContain('className="absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-80"');
+    expect(demo).toContain('rgba(2,12,6,0.90)');
+    expect(demo).not.toContain("Harbor");
     expect(demo).not.toContain("/api/clubs");
   });
 

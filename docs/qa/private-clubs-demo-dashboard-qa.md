@@ -43,6 +43,10 @@ The experimental **Chess Club Player** lanyard has been removed at the request o
 
 The public **Start a club** action no longer opens an intermediate Club-specific modal. It now sends visitors directly to the dedicated authentication page with the **Create account** tab selected and a preserved `/clubs?create=1` return path. After a successful full-account sign-in or registration, the existing Club-index URL handler clears the parameter and opens the real Club creation wizard. Browser QA confirmed that the visitor action arrives at `/auth?tab=signup&redirect=%2Fclubs%3Fcreate%3D1`, with no preview or modal step. The retired `CreateClubAuthGate` component and its overlay inventory coverage were removed.
 
+## Subsequent demo identity refinement
+
+The fixture is consistently branded **The OTB Chess Club** across its desktop banner, mobile header, mobile navigation drawer, activity byline, event naming, and venue. The supplied monochrome chess illustration is served locally as `/club-assets/the-otb-chess-club-demo-banner.jpg` and framed at the board area (`object-position: center 30%`) so the wide banner remains intentional at both viewport sizes. Directional black overlays at 90%/72%/56% opacity plus a vertical finishing overlay preserve readable white text over the high-contrast artwork without disguising the illustration. Live desktop and mobile reviews confirmed the name, board-focused crop, banner contrast, touch layout, and install-banner clearance.
+
 ## Remaining scope boundary
 
 The existing `/clubs/leaderboard` page remains registered but the public Club index now has no records because all real Clubs are private. A future dedicated privacy decision can either retire that surface or redefine it as an opt-in, anonymized product metric; it is not used by the new `/clubs` experience.

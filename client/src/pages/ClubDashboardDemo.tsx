@@ -54,6 +54,8 @@ const NAV_BG = "oklch(0.15 0.04 145 / 0.78)";
 const NAV_BORDER = "oklch(0.22 0.06 145)";
 const SURFACE = "oklch(0.155 0.045 145)";
 const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+const DEMO_CLUB_NAME = "The OTB Chess Club";
+const DEMO_BANNER_IMAGE = "/club-assets/the-otb-chess-club-demo-banner.jpg";
 
 const DEMO_NAV: DemoNavItem[] = [
   { id: "overview", label: "Overview", icon: DashboardIcon, group: "workspace" },
@@ -67,7 +69,7 @@ const DEMO_NAV: DemoNavItem[] = [
 const DEMO_ACTIVITY = [
   {
     type: "Tournament results",
-    title: "Harbor Fall Blitz finished",
+    title: "OTB Fall Blitz finished",
     byline: "By Maya Chen",
     date: "Today",
     accent: "#d99a28",
@@ -84,7 +86,7 @@ const DEMO_ACTIVITY = [
   {
     type: "Member update",
     title: "Welcome four new club members",
-    byline: "By Harbor Chess Club",
+    byline: `By ${DEMO_CLUB_NAME}`,
     date: "Sep 28",
     accent: "#78a6e5",
     icon: Users,
@@ -103,7 +105,7 @@ const DEMO_EVENTS = [
     title: "Thursday Night Rapid",
     detail: "Three relaxed rapid games with an optional analysis table after the final round.",
     date: "Thu, Oct 8",
-    venue: "Harbor Room · Boardwalk",
+    venue: "OTB Chess Club Hall · Boardwalk",
     kind: "Meetup",
     attendees: "26 going",
     day: "08",
@@ -166,7 +168,7 @@ function DemoMobileDrawer({
         <header className="flex items-start justify-between gap-4 border-b px-5 py-4" style={{ borderColor: SURFACE_BORDER }}>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: "oklch(0.64 0.12 145)" }}>Club workspace</p>
-            <h2 id="demo-club-mobile-nav-title" className="mt-1 truncate text-lg font-bold leading-tight text-white">Harbor Chess Club</h2>
+            <h2 id="demo-club-mobile-nav-title" className="mt-1 truncate text-lg font-bold leading-tight text-white">{DEMO_CLUB_NAME}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Close club navigation" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/8 text-white/80 transition-transform active:scale-95">
             <X size={20} strokeWidth={2.25} />
@@ -236,15 +238,23 @@ function DemoMobileDrawer({
 function DemoBanner({ activeTab }: { activeTab: DemoTab }) {
   if (activeTab === "album") return null;
   return (
-    <div className="relative mb-5 min-h-[160px] overflow-hidden rounded-3xl chess-board-bg sm:min-h-[220px]">
-      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${DEMO_ACCENT}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)` }} />
+    <div className="relative mb-5 min-h-[160px] overflow-hidden rounded-3xl bg-[#071008] sm:min-h-[220px]">
+      <img
+        src={DEMO_BANNER_IMAGE}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-80"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,6,0.90)_0%,rgba(2,12,6,0.72)_54%,rgba(2,12,6,0.56)_100%)]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,10,5,0.18)_0%,rgba(2,10,5,0.78)_100%)]" aria-hidden="true" />
       <div className="relative z-10 flex min-h-[160px] items-end gap-4 p-4 pt-10 sm:min-h-[220px] sm:p-6 sm:pt-12">
         <div className="min-w-0 flex-1 pb-0.5">
           <div className="mb-0.5 flex flex-wrap items-center gap-2">
-            <h1 className="text-[18px] font-black leading-tight tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>Harbor Chess Club</h1>
+            <h1 className="text-[18px] font-black leading-tight tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1>
             <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)", borderColor: "oklch(0.30 0.05 145)" }}>Private</span>
           </div>
-          <p className="mb-1.5 max-w-2xl text-[12px] leading-relaxed text-white/82">A fixture-only preview of the Harbor Chess Club workspace.</p>
+          <p className="mb-1.5 max-w-2xl text-[12px] leading-relaxed text-white/82">A fixture-only preview of The OTB Chess Club workspace.</p>
           <div className="flex flex-wrap items-center gap-3 text-[11px] text-white/62">
             <span className="flex items-center gap-1"><Users className="h-3 w-3" style={{ color: DEMO_ACCENT }} /><span className="font-bold text-white">84</span><span>members</span></span>
             <span className="h-3 w-px bg-white/20" />
@@ -432,7 +442,7 @@ export default function ClubDashboardDemo() {
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <header className="otb-header-safe relative flex min-h-[52px] flex-shrink-0 items-center gap-2 px-2 py-1 lg:px-5 lg:py-2.5" style={{ background: topBarBackground, backdropFilter: "blur(16px)", borderBottom: `1px solid ${NAV_BORDER}` }}>
             <Link href="/clubs" aria-label="Back to clubs" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[oklch(0.65_0.12_145)] transition-transform active:scale-95 lg:hidden"><ChevronLeft size={20} strokeWidth={2.5} /></Link>
-            <div className="min-w-0 flex-1 lg:hidden"><p className="truncate text-[15px] font-bold leading-tight text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Harbor Chess Club</p><p className="text-[10px] font-medium text-[oklch(0.55_0.08_145)]">84 members</p></div>
+            <div className="min-w-0 flex-1 lg:hidden"><p className="truncate text-[15px] font-bold leading-tight text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</p><p className="text-[10px] font-medium text-[oklch(0.55_0.08_145)]">84 members</p></div>
             <div className="ml-auto flex items-center gap-2"><span className="hidden items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold sm:inline-flex" style={{ background: `${DEMO_ACCENT}14`, borderColor: `${DEMO_ACCENT}38`, color: "#a8ee9d" }}><Eye className="h-3.5 w-3.5" aria-hidden="true" />Read-only demo</span><button type="button" onClick={() => setMobileNavOpen((open) => !open)} aria-label={mobileNavOpen ? "Close club navigation" : "Open club navigation"} aria-expanded={mobileNavOpen} aria-haspopup="dialog" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform active:scale-95 lg:hidden" style={{ color: "rgba(255,255,255,0.88)", background: `${DEMO_ACCENT}22`, border: `1px solid ${DEMO_ACCENT}55`, boxShadow: mobileNavOpen ? `0 0 0 3px ${DEMO_ACCENT}20` : "none" }}>{mobileNavOpen ? <X size={20} strokeWidth={2.25} /> : <Menu size={21} strokeWidth={2.25} />}</button></div>
           </header>
 
