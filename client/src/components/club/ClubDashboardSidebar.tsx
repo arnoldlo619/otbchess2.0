@@ -201,7 +201,7 @@ export function ClubDashboardSidebar({
               src="/club-assets/otb-wordmark-brilliant.webp"
               alt=""
               aria-hidden="true"
-              className="absolute h-14 w-[136px] object-contain mix-blend-screen transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
+              className="absolute h-12 w-[112px] object-contain mix-blend-screen transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
               style={{
                 opacity: expanded ? 1 : 0,
                 transform: expanded ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.96)",
