@@ -76,6 +76,9 @@ describe("My Clubs visual system", () => {
   it("retains the functional membership index and minimal no-clubs state for signed-in users", () => {
     expect(myClubsSource).toContain("{user && (");
     expect(memberIndex).toContain("Welcome back");
+    expect(memberIndex).toContain('<span className="block">Welcome back,</span>');
+    expect(memberIndex).toContain('<span className="mt-1 block italic">{user.displayName?.split(" ")[0] || "Player"}</span>');
+    expect(memberIndex).toContain("leading-[1.05]");
     expect(memberIndex).toContain("Your chess clubs hub.");
     expect(memberIndex).toContain("<PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />");
     expect(memberIndex).not.toContain('href="/clubs/demo"');

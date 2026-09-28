@@ -246,8 +246,9 @@ export default function MyClubs() {
       <main className={!user ? "" : "mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-6 sm:pt-12"}>
         {!user ? <GuestClubLanding onCreate={openCreateClub} /> : <>
           <section className="max-w-2xl">
-            <h1 className={`text-3xl font-bold tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              {`Welcome back, ${user.displayName?.split(" ")[0] || "Player"}`}
+            <h1 className={`text-3xl font-bold leading-[1.05] tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              <span className="block">Welcome back,</span>
+              <span className="mt-1 block italic">{user.displayName?.split(" ")[0] || "Player"}</span>
             </h1>
             <p className={`mt-3 text-base leading-7 ${textMuted}`}>Your chess clubs hub.</p>
           </section>
