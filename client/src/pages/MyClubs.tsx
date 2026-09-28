@@ -248,7 +248,7 @@ export default function MyClubs() {
           <section className="max-w-2xl">
             <h1 className={`text-3xl font-bold leading-[1.05] tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
               <span className="block">Welcome back,</span>
-              <span className="mt-1 block italic">{user.displayName?.split(" ")[0] || "Player"}</span>
+              <span className="mt-2 block text-5xl leading-[1.08] italic sm:text-6xl">{user.displayName?.split(" ")[0] || "Player"}</span>
             </h1>
             <p className={`mt-3 text-base leading-7 ${textMuted}`}>Your chess clubs hub.</p>
           </section>

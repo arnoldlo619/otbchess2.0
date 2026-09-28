@@ -77,7 +77,7 @@ describe("My Clubs visual system", () => {
     expect(myClubsSource).toContain("{user && (");
     expect(memberIndex).toContain("Welcome back");
     expect(memberIndex).toContain('<span className="block">Welcome back,</span>');
-    expect(memberIndex).toContain('<span className="mt-1 block italic">{user.displayName?.split(" ")[0] || "Player"}</span>');
+    expect(memberIndex).toContain('<span className="mt-2 block text-5xl leading-[1.08] italic sm:text-6xl">{user.displayName?.split(" ")[0] || "Player"}</span>');
     expect(memberIndex).toContain("leading-[1.05]");
     expect(memberIndex).toContain("Your chess clubs hub.");
     expect(memberIndex).toContain("<PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />");
