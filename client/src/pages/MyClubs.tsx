@@ -249,7 +249,7 @@ export default function MyClubs() {
           <section className="max-w-2xl">
             <h1 className={`font-bold tracking-tight ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
               <span className="block text-5xl leading-[1.03] sm:text-6xl">Welcome back,</span>
-              <span className={`club-welcome-name mt-2 block text-3xl leading-[1.15] italic sm:text-4xl ${welcomeNameTone}`}>{user.displayName?.split(" ")[0] || "Player"}</span>
+              <span className={`club-welcome-name mt-2 block text-3xl leading-[1.15] italic sm:text-4xl ${welcomeNameTone}`} style={{fontSize: '56px'}}>{user.displayName?.split(" ")[0] || "Player"}</span>
             </h1>
             <p className={`mt-3 text-base leading-7 ${textMuted}`}>Your chess clubs hub.</p>
           </section>

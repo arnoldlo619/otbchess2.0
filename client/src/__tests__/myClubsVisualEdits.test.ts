@@ -82,6 +82,7 @@ describe("My Clubs visual system", () => {
     expect(memberIndex).toContain("Welcome back");
     expect(memberIndex).toContain('<span className="block text-5xl leading-[1.03] sm:text-6xl">Welcome back,</span>');
     expect(memberIndex).toContain('club-welcome-name mt-2 block text-3xl leading-[1.15] italic sm:text-4xl');
+    expect(memberIndex).toContain("fontSize: '56px'");
     expect(myClubsSource).toContain('const welcomeNameTone = isDark ? "text-[#b9f5ad]" : "text-[#28703a]"');
     expect(globalStylesSource).toContain("@keyframes club-welcome-name-in");
     expect(globalStylesSource).toContain("animation: club-welcome-name-in 480ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both");
