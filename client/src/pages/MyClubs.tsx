@@ -219,6 +219,7 @@ export default function MyClubs() {
   const shell = !user ? "bg-[#061008]" : isDark ? "bg-[#0d1a0f]" : "bg-[#f5f7f2]";
   const textMain = isDark ? "text-white" : "text-[#15291c]";
   const textMuted = isDark ? "text-white/60" : "text-[#516555]";
+  const welcomeNameTone = isDark ? "text-[#b9f5ad]" : "text-[#28703a]";
 
   return (
     <div className={`min-h-[100dvh] ${shell}`}>
@@ -246,9 +247,9 @@ export default function MyClubs() {
       <main className={!user ? "" : "mx-auto max-w-6xl px-4 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] pt-8 sm:px-6 sm:pt-12"}>
         {!user ? <GuestClubLanding onCreate={openCreateClub} /> : <>
           <section className="max-w-2xl">
-            <h1 className={`text-3xl font-bold leading-[1.05] tracking-tight sm:text-4xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              <span className="block">Welcome back,</span>
-              <span className="mt-2 block text-5xl leading-[1.08] italic sm:text-6xl">{user.displayName?.split(" ")[0] || "Player"}</span>
+            <h1 className={`font-bold tracking-tight ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              <span className="block text-5xl leading-[1.03] sm:text-6xl">Welcome back,</span>
+              <span className={`club-welcome-name mt-2 block text-3xl leading-[1.15] italic sm:text-4xl ${welcomeNameTone}`}>{user.displayName?.split(" ")[0] || "Player"}</span>
             </h1>
             <p className={`mt-3 text-base leading-7 ${textMuted}`}>Your chess clubs hub.</p>
           </section>

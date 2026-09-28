@@ -6,6 +6,10 @@ const myClubsSource = readFileSync(
   resolve(process.cwd(), "client/src/pages/MyClubs.tsx"),
   "utf8",
 );
+const globalStylesSource = readFileSync(
+  resolve(process.cwd(), "client/src/index.css"),
+  "utf8",
+);
 
 const clubCard = myClubsSource.slice(
   myClubsSource.indexOf("function ClubCard"),
@@ -76,9 +80,12 @@ describe("My Clubs visual system", () => {
   it("retains the functional membership index and minimal no-clubs state for signed-in users", () => {
     expect(myClubsSource).toContain("{user && (");
     expect(memberIndex).toContain("Welcome back");
-    expect(memberIndex).toContain('<span className="block">Welcome back,</span>');
-    expect(memberIndex).toContain('<span className="mt-2 block text-5xl leading-[1.08] italic sm:text-6xl">{user.displayName?.split(" ")[0] || "Player"}</span>');
-    expect(memberIndex).toContain("leading-[1.05]");
+    expect(memberIndex).toContain('<span className="block text-5xl leading-[1.03] sm:text-6xl">Welcome back,</span>');
+    expect(memberIndex).toContain('club-welcome-name mt-2 block text-3xl leading-[1.15] italic sm:text-4xl');
+    expect(myClubsSource).toContain('const welcomeNameTone = isDark ? "text-[#b9f5ad]" : "text-[#28703a]"');
+    expect(globalStylesSource).toContain("@keyframes club-welcome-name-in");
+    expect(globalStylesSource).toContain("animation: club-welcome-name-in 480ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both");
+    expect(globalStylesSource).toContain(".club-welcome-name { animation: none; }");
     expect(memberIndex).toContain("Your chess clubs hub.");
     expect(memberIndex).toContain("<PrivateClubEmptyState isDark={isDark} onCreate={openCreateClub} />");
     expect(memberIndex).not.toContain('href="/clubs/demo"');
