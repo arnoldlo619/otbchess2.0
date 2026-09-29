@@ -341,7 +341,7 @@ export default function AuthPage() {
               <img
                 src="/auth-assets/auth-brand-artwork.png"
                 alt="1904 Chess Club brand mark"
-                className="mb-5 h-24 w-24 rounded-2xl object-cover shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+                className="mb-5 h-48 w-48 rounded-[28px] object-cover shadow-[0_18px_36px_rgba(0,0,0,0.24)]"
               />
               <h1 className="text-[28px] leading-[1.08] font-extrabold tracking-tight text-white">
                 <span className="block">Play more chess.</span>
