@@ -232,7 +232,6 @@ import { applyClubFeedTextFormat, ClubFeedRichText, sanitizeClubFeedUrl, type Cl
 const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
 const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
 const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
-const RsvpFormAnalytics = lazy(() => import("@/components/club/RsvpFormAnalytics"));
 
 function ClubFeatureFallback({ overlay = false }: { overlay?: boolean }) {
   return (
@@ -417,6 +416,103 @@ function AttendeeAvatars({ rsvps, max = 7 }: { rsvps: ClubEventRSVP[]; max?: num
       </div>
       <span className="text-white/50 text-xs font-medium">{going.length} going</span>
     </div>
+  );
+}
+
+/** Scheduled event card — visual language aligned with the /clubs gallery. */
+function ScheduledEventGalleryCard({
+  event,
+  isDark,
+  isOwner,
+  onOpenRsvps,
+  onEdit,
+  onDelete,
+}: {
+  event: ClubEvent;
+  isDark: boolean;
+  isOwner: boolean;
+  onOpenRsvps: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const accent = event.accentColor ?? "#4CAF50";
+  const isTournament = Boolean(event.tournamentId);
+  const detailsHref = isTournament
+    ? `/tournament/${event.tournamentId}/play`
+    : `/clubs/${event.clubId}/meetup/${event.id}`;
+  const eventType = isTournament ? "Tournament" : event.eventType === "meetup" ? "Meetup" : "Club event";
+  const formattedDate = new Date(event.startAt).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const coverFallback = `linear-gradient(145deg, ${accent} 0%, ${accent}99 44%, ${isDark ? "#102518" : "#1a3521"} 100%)`;
+  const textMain = isDark ? "text-white" : "text-[#15291c]";
+  const textMuted = isDark ? "text-white/58" : "text-[#496052]";
+
+  return (
+    <article
+      className={`group overflow-hidden rounded-2xl border transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl ${
+        isDark ? "border-white/10 bg-white/[0.055] hover:border-[#78c86c]/40" : "border-[#dbe6d9] bg-white hover:border-[#78a873]/65"
+      }`}
+    >
+      <a href={detailsHref} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-inset" aria-label={`Open ${event.title}`}>
+        <div className="relative aspect-[16/9] overflow-hidden" style={{ background: event.coverImageUrl ? undefined : coverFallback }}>
+          {event.coverImageUrl ? (
+            <img src={event.coverImageUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" loading="lazy" decoding="async" />
+          ) : (
+            <>
+              <div className="absolute inset-0 chess-board-bg opacity-[0.15]" aria-hidden="true" />
+              {isTournament ? <Trophy className="absolute bottom-4 right-4 h-12 w-12 text-white/25" strokeWidth={1.5} aria-hidden="true" /> : <Calendar className="absolute bottom-4 right-4 h-12 w-12 text-white/25" strokeWidth={1.5} aria-hidden="true" />}
+            </>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" aria-hidden="true" />
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-[#17321d] shadow-sm">{formattedDate}</span>
+          <span className="absolute bottom-3 left-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white/78">{eventType}</span>
+        </div>
+      </a>
+
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <a href={detailsHref} className={`block truncate text-base font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#4CAF50] ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {event.title}
+            </a>
+            <p className={`mt-1 text-sm ${textMuted}`}>{formatEventTime(event.startAt, event.endAt)}</p>
+          </div>
+          <ArrowRight className={`mt-0.5 h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 ${isDark ? "text-white/45" : "text-[#5d7560]"}`} aria-hidden="true" />
+        </div>
+
+        {event.venue && (
+          <p className={`mt-2 flex min-w-0 items-center gap-1.5 truncate text-sm ${textMuted}`}>
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">{event.venue}</span>
+          </p>
+        )}
+        {event.description && <p className={`mt-2 line-clamp-2 text-sm leading-5 ${textMuted}`}>{event.description}</p>}
+
+        <div className={`mt-4 flex min-h-10 items-center justify-between gap-2 border-t pt-3 ${isDark ? "border-white/8" : "border-[#e1eadf]"}`}>
+          <a href={detailsHref} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: isDark ? "#9ce891" : "#28703a" }}>
+            View event <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </a>
+          {isOwner && (
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={onOpenRsvps} className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5 ${textMuted}`}>
+                <Users className="h-3.5 w-3.5" aria-hidden="true" /> RSVPs
+              </button>
+              {isTournament ? (
+                <a href={`/tournament/${event.tournamentId}/manage`} className={`inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5 ${textMuted}`}>Manage</a>
+              ) : (
+                <>
+                  <button type="button" onClick={onEdit} aria-label={`Edit ${event.title}`} className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5 ${textMuted}`}><Pencil className="h-3.5 w-3.5" aria-hidden="true" /></button>
+                  <button type="button" onClick={onDelete} aria-label={`Delete ${event.title}`} className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -2646,14 +2742,12 @@ export default function ClubDashboard() {
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showTournamentWizard, setShowTournamentWizard] = useState(false);
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
-  const [showPastMeetups, setShowPastMeetups] = useState(false);
-  const [showAllUpcomingMeetups, setShowAllUpcomingMeetups] = useState(false);
   const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
   const [editMeetupId, setEditMeetupId] = useState<string | null>(null);
-  const [eventsFilter, setEventsFilter] = useState<"all" | "meetups" | "tournaments" | "leagues">("all");
-  const [showPastTournaments, setShowPastTournaments] = useState(false);
-  const [showAllUpcomingTmts, setShowAllUpcomingTmts] = useState(false);
-  const [showPastEvents, setShowPastEvents] = useState(false);
+  // This mode is intentionally not exposed as an Events filter. It is only the
+  // direct handoff from the owner-only Leagues quick action into its existing
+  // management workspace.
+  const [eventsFilter, setEventsFilter] = useState<"all" | "leagues">("all");
   const [announcementText, setAnnouncementText] = useState("");
   const [announcementComposerFocused, setAnnouncementComposerFocused] = useState(false);
   const [announcementComposerExpanded, setAnnouncementComposerExpanded] = useState(false);
@@ -3354,15 +3448,6 @@ export default function ClubDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isOwnerOrDirector]);
 
-  // Redirect old leagues tab deep-links to Events tab with leagues filter
-  useEffect(() => {
-    if (tab === "leagues" && club) {
-      setEventsFilter("leagues");
-      setTab("events");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, club]);
-
   // ── Member management handlers ───────────────────────────────────────────────
   async function handleRemoveMember(memberId: string) {
     if (!club) return;
@@ -3485,19 +3570,11 @@ export default function ClubDashboard() {
       setAddingWalkIn(false);
     }
   }
-  const upcomingEvents = events.filter(isUpcoming);
-  const pastEvents = events.filter((e) => !isUpcoming(e));
-  // Tournament events: club events that are linked to a real tournament
+  // The Events tab is deliberately an upcoming-only gallery. Historical data
+  // stays in reporting and attendance surfaces, not alongside scheduled dates.
+  const upcomingEvents = events.filter(isUpcoming).sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  // Tournament events remain separately available for the navigation badge.
   const tournamentEvents = events.filter((e) => !!e.tournamentId);
-  // Meetup events: club events created via the Club Meetup wizard
-  const meetupEvents = events.filter((e) => e.eventType === "meetup");
-  const otherEvents = events.filter((e) => !e.tournamentId && e.eventType !== "meetup");
-  const eventFilterCounts = {
-    all: events.length,
-    meetups: meetupEvents.length,
-    tournaments: tournamentEvents.length,
-    leagues: clubLeagues.length,
-  } as const;
 
   const filteredMembers = members.filter(
     (m) =>
@@ -3797,7 +3874,7 @@ export default function ClubDashboard() {
           temporarilyExpanded={sidebarTemporarilyExpanded}
           onPointerExpandedChange={setSidebarHovered}
           onFocusExpandedChange={setSidebarKeyboardExpanded}
-          onSelect={(nextTab) => setTab(nextTab as Tab)}
+          onSelect={(nextTab) => { if (nextTab === "events") setEventsFilter("all"); setTab(nextTab as Tab); }}
           onBackToClubs={() => navigate("/clubs")}
         />
 
@@ -4220,7 +4297,7 @@ export default function ClubDashboard() {
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
-                  { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
+                  { icon: LeaguesIcon, label: "Leagues", action: () => { setEventsFilter("leagues"); setTab("events"); } },
                   { icon: Megaphone, label: "Post", action: () => setTab("feed") },
                 ].map(({ icon: Icon, label, action }) => (
                   <button
@@ -4307,605 +4384,82 @@ export default function ClubDashboard() {
           </div>
         )}
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
-        {tab === "events" && (
-          <div className="space-y-6">
-            <section
-              className="overflow-hidden rounded-2xl border p-4 sm:p-5"
-              style={{
-                background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.78)",
-                borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
-                boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)",
-              }}
-              aria-labelledby="club-events-heading"
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" style={{ color: accent }} aria-hidden="true" />
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "rgba(21,41,28,0.52)" }}>Club schedule</p>
-                  </div>
-                  <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h2 id="club-events-heading" className="text-2xl font-bold tracking-tight sm:text-[28px]" style={{ color: isDark ? "rgba(255,255,255,0.94)" : "#15291c" }}>Events</h2>
-                    <span className="text-sm" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
-                      {upcomingEvents.length === 1 ? "1 upcoming date" : `${upcomingEvents.length} upcoming dates`}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 max-w-2xl text-sm leading-6" style={{ color: isDark ? "rgba(255,255,255,0.54)" : "rgba(21,41,28,0.60)" }}>
-                    Find the next club session, tournament, or league season in one schedule.
-                  </p>
-                </div>
-
-                {isOwnerOrDirector && (
-                  eventsFilter === "leagues" ? (
-                    <button
-                      onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); setLeagueName(""); setLeagueDesc(""); setLeagueMaxPlayers(6); setLeaguePickedIds(new Set()); }}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2 sm:w-auto"
-                      style={{ background: accent, color: "#0a1a0f", "--tw-ring-offset-color": isDark ? "oklch(0.155 0.045 145)" : "#f4f7f3" } as React.CSSProperties}
-                    >
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                      New league
-                    </button>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                      <SpinBorderButton
-                        variant="solid"
-                        onClick={() => setShowTournamentWizard(true)}
-                        className="min-h-11 whitespace-nowrap px-4"
-                      >
-                        <GanttChart className="h-4 w-4" />
-                        New tournament
-                      </SpinBorderButton>
-                      <button
-                        onClick={() => setShowMeetupWizard(true)}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2"
-                        style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(21,41,28,0.035)", borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(21,41,28,0.16)", color: isDark ? "rgba(255,255,255,0.82)" : "#15291c", "--tw-ring-offset-color": isDark ? "oklch(0.155 0.045 145)" : "#f4f7f3" } as React.CSSProperties}
-                      >
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                        Create meetup
-                      </button>
-                    </div>
-                  )
-                )}
+        {tab === "events" && eventsFilter !== "leagues" && (
+          <div className="space-y-7">
+            <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: isDark ? "#ffffff" : "#15291c", fontFamily: "'Clash Display', sans-serif" }}>Events</h2>
+                <p className="mt-1 text-sm" style={{ color: isDark ? "rgba(255,255,255,0.60)" : "#516555" }}>
+                  {upcomingEvents.length === 1 ? "1 scheduled event" : `${upcomingEvents.length} scheduled events`}
+                </p>
               </div>
-
-              <div className="mt-5 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)" }}>
-                <div role="tablist" aria-label="Event type" className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                  {([
-                    { key: "all", label: "All events" },
-                    { key: "meetups", label: "Meetups" },
-                    { key: "tournaments", label: "Tournaments" },
-                    { key: "leagues", label: "Leagues" },
-                  ] as const).map((filter) => {
-                    const selected = eventsFilter === filter.key;
-                    return (
-                      <button
-                        key={filter.key}
-                        role="tab"
-                        aria-selected={selected}
-                        onClick={() => setEventsFilter(filter.key)}
-                        className="inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition-[background-color,border-color,color,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2 sm:min-w-[116px] sm:justify-center"
-                        style={{
-                          background: selected ? (isDark ? `${accent}22` : `${accent}16`) : (isDark ? "rgba(255,255,255,0.025)" : "rgba(21,41,28,0.025)"),
-                          borderColor: selected ? `${accent}88` : (isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.11)"),
-                          color: selected ? (isDark ? "#b5f4a9" : "#1f6933") : (isDark ? "rgba(255,255,255,0.64)" : "rgba(21,41,28,0.70)"),
-                          "--tw-ring-offset-color": isDark ? "oklch(0.155 0.045 145)" : "#f4f7f3",
-                        } as React.CSSProperties}
-                      >
-                        <span>{filter.label}</span>
-                        <span className="rounded-md px-1.5 py-0.5 text-[11px] tabular-nums" style={{ background: selected ? `${accent}26` : (isDark ? "rgba(255,255,255,0.07)" : "rgba(21,41,28,0.07)"), color: "inherit" }}>{eventFilterCounts[filter.key]}</span>
-                      </button>
-                    );
-                  })}
+              {isOwnerOrDirector && (
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
+                  <SpinBorderButton variant="solid" onClick={() => setShowTournamentWizard(true)} className="min-h-11 whitespace-nowrap px-4">
+                    <GanttChart className="h-4 w-4" />
+                    New tournament
+                  </SpinBorderButton>
+                  <button
+                    type="button"
+                    onClick={() => setShowMeetupWizard(true)}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
+                    style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.72)", borderColor: isDark ? "rgba(255,255,255,0.13)" : "#dbe6d9", color: isDark ? "rgba(255,255,255,0.86)" : "#15291c", "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3" } as React.CSSProperties}
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    Create meetup
+                  </button>
                 </div>
-              </div>
+              )}
             </section>
 
-            {eventsFilter === "all" && events.length === 0 && (
-              <section className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center" style={{ borderColor: isDark ? "rgba(255,255,255,0.16)" : "rgba(21,41,28,0.18)", background: isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.52)" }}>
-                <CalendarClock className="h-8 w-8" style={{ color: accent }} aria-hidden="true" />
-                <h2 className="mt-3 text-base font-bold" style={{ color: isDark ? "rgba(255,255,255,0.88)" : "#15291c" }}>Nothing scheduled yet</h2>
-                <p className="mt-1 max-w-sm text-sm leading-6" style={{ color: isDark ? "rgba(255,255,255,0.52)" : "rgba(21,41,28,0.60)" }}>
-                  {isOwnerOrDirector ? "Start with a tournament or a meetup to give your members a date to rally around." : "Your club has not scheduled an event yet. Check back soon for the next date."}
+            {upcomingEvents.length > 0 ? (
+              <section aria-label="Scheduled club events" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {upcomingEvents.map((event) => (
+                  <ScheduledEventGalleryCard
+                    key={event.id}
+                    event={event}
+                    isDark={isDark}
+                    isOwner={Boolean(isOwnerOrDirector)}
+                    onOpenRsvps={() => openRsvpPanel(event.id)}
+                    onEdit={() => setEditMeetupId(event.id)}
+                    onDelete={() => setDeleteMeetupId(event.id)}
+                  />
+                ))}
+              </section>
+            ) : (
+              <section className={`flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center ${isDark ? "border-white/14 bg-white/[0.035]" : "border-[#cfdccc] bg-white/60"}`}>
+                <Calendar className="h-9 w-9" style={{ color: accent }} aria-hidden="true" />
+                <h3 className="mt-3 text-lg font-bold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#15291c" }}>No scheduled events</h3>
+                <p className="mt-1 max-w-sm text-sm leading-6" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "#516555" }}>
+                  {isOwnerOrDirector ? "Create a tournament or meetup to give members their next date over the board." : "Your club has not scheduled an event yet. Check back soon."}
                 </p>
               </section>
             )}
 
-            {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
-            {(eventsFilter === "all" || eventsFilter === "meetups") && (eventsFilter === "meetups" || meetupEvents.length > 0) && (() => {
-              // ── Recurring series consolidation ──────────────────────────────
-              // For recurring meetups (weekly/biweekly/monthly), show ONE card per
-              // series. If the latest instance is past, compute the next occurrence
-              // date and display it as upcoming so the card stays on the board.
-              function getNextOccurrence(baseDate: Date, recurrence: string): Date {
-                const next = new Date(baseDate);
-                const now = new Date();
-                const msDay = 86400000;
-                const step = recurrence === "weekly" ? 7 * msDay
-                  : recurrence === "biweekly" ? 14 * msDay
-                  : recurrence === "monthly" ? 30 * msDay
-                  : 0;
-                if (step === 0) return next;
-                while (next <= now) next.setTime(next.getTime() + step);
-                return next;
-              }
-
-              // Group by recurrenceSeriesId (or id for one-offs)
-              const seriesMap = new Map<string, ClubEvent[]>();
-              for (const ev of meetupEvents) {
-                const key = ev.recurrenceSeriesId ?? ev.id;
-                if (!seriesMap.has(key)) seriesMap.set(key, []);
-                seriesMap.get(key)!.push(ev);
-              }
-
-              // Build display cards: one per series
-              interface MeetupCard {
-                representative: ClubEvent; // the event to link to
-                displayDate: Date;         // the date shown on the card
-                isVirtual: boolean;        // true = next occurrence is computed, no real event yet
-                seriesId: string;
-                pastInstances: ClubEvent[];
-              }
-              const cards: MeetupCard[] = [];
-              for (const [seriesId, instances] of Array.from(seriesMap)) {
-                const sorted = [...instances].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-                const latest = sorted[sorted.length - 1];
-                const recurrence = latest.recurrence ?? "none";
-                const latestDate = new Date(latest.startAt);
-                const now = new Date();
-
-                if (latestDate > now) {
-                  // Latest instance is still upcoming — show it directly
-                  cards.push({ representative: latest, displayDate: latestDate, isVirtual: false, seriesId, pastInstances: sorted.slice(0, -1) });
-                } else if (recurrence !== "none") {
-                  // All instances are past but series recurs — compute next occurrence
-                  const nextDate = getNextOccurrence(latestDate, recurrence);
-                  cards.push({ representative: latest, displayDate: nextDate, isVirtual: true, seriesId, pastInstances: sorted });
-                } else {
-                  // One-off past event — goes to past section only
-                  cards.push({ representative: latest, displayDate: latestDate, isVirtual: false, seriesId, pastInstances: sorted.slice(0, -1) });
-                }
-              }
-
-              const upcomingCards = cards.filter(c => c.displayDate > new Date());
-              const pastOnlyCards = cards.filter(c => c.displayDate <= new Date());
-              // All past instances across all series for the collapsed section
-              const allPastInstances = meetupEvents.filter(e => !isUpcoming(e));
-
-              const recurrenceLabel = (rec?: string) =>
-                rec === "weekly" ? "Weekly" : rec === "biweekly" ? "Bi-weekly" : rec === "monthly" ? "Monthly" : "One-time";
-
-              return (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-4 h-4" style={{ color: accent }} />
-                <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
-                  Club Meetups · {upcomingCards.length}{allPastInstances.length > 0 ? ` (${allPastInstances.length} past)` : ""}
-                </h2>
-              </div>
-              {upcomingCards.length > 0 ? (
-                <div className="space-y-4">
-                  {(showAllUpcomingMeetups ? upcomingCards : upcomingCards.slice(0, 4)).map((card) => {
-                    const ev = card.representative;
-                    const rec = ev.recurrence;
-                    const rLabel = recurrenceLabel(rec);
-                    const isRecurring = rec && rec !== "none";
-                    // For virtual cards, link to the most recent real instance
-                    const href = `/clubs/${club.id}/meetup/${ev.id}`;
-                    const displayDateStr = card.displayDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-                    return (
-                      <article
-                        key={card.seriesId}
-                        className="group relative overflow-hidden rounded-2xl border transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px"
-                        style={{
-                          background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.80)",
-                          borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
-                          boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 8px 24px rgba(31,57,39,0.045)",
-                        }}
-                      >
-                        <a href={href} aria-label={`Open ${ev.title}`} className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-inset" style={{ "--tw-ring-color": accent } as React.CSSProperties} />
-                        <div className="relative z-10 flex gap-3 p-4 sm:gap-4 sm:p-5 pointer-events-none">
-                          <div className="flex h-[70px] w-[58px] shrink-0 flex-col items-center justify-center rounded-xl border text-center" style={{ background: isDark ? `${accent}14` : `${accent}10`, borderColor: `${accent}35`, color: isDark ? "#b5f4a9" : "#1f6933" }}>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.12em]">{card.displayDate.toLocaleDateString("en-US", { month: "short" })}</span>
-                            <span className="mt-0.5 text-2xl font-bold leading-none tabular-nums">{card.displayDate.getDate()}</span>
-                            <span className="mt-1 text-[10px] font-medium">{card.displayDate.toLocaleDateString("en-US", { weekday: "short" })}</span>
-                          </div>
-                          <div className="min-w-0 flex-1 pt-0.5">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: isDark ? "rgba(255,255,255,0.50)" : "rgba(21,41,28,0.54)" }}>Meetup</span>
-                              {isRecurring && <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.64)" : "rgba(21,41,28,0.64)" }}><Repeat className="h-3 w-3" aria-hidden="true" /> {rLabel}</span>}
-                              {card.isVirtual && <span className="text-[11px]" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "rgba(21,41,28,0.50)" }}>Next occurrence</span>}
-                            </div>
-                            <h2 className="mt-1 truncate text-base font-bold leading-6 sm:text-lg" style={{ color: isDark ? "rgba(255,255,255,0.94)" : "#15291c" }}>{ev.title}</h2>
-                            {ev.description && <p className="mt-1 line-clamp-2 text-sm leading-5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "rgba(21,41,28,0.62)" }}>{ev.description}</p>}
-                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
-                              {ev.venue && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />{ev.venue}</span>}
-                              <span>{displayDateStr}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 pointer-events-none sm:px-5" style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(21,41,28,0.09)" }}>
-                          <span className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold" style={{ color: accent }}>Open meetup <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
-                          {isOwnerOrDirector && !card.isVirtual && (
-                            <div className="flex items-center gap-1.5 pointer-events-auto">
-                              <button onClick={(event) => { event.preventDefault(); event.stopPropagation(); openRsvpPanel(ev.id); }} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Users className="h-3.5 w-3.5" aria-hidden="true" /> RSVPs</button>
-                              <button onClick={(event) => { event.preventDefault(); event.stopPropagation(); setEditMeetupId(ev.id); }} aria-label={`Edit ${ev.title}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Pencil className="h-3.5 w-3.5" aria-hidden="true" /></button>
-                              <button onClick={(event) => { event.preventDefault(); event.stopPropagation(); setDeleteMeetupId(ev.id); }} aria-label={`Delete ${ev.title}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border transition-colors hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#7f1d1d" }}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
-                            </div>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
-                  {upcomingCards.length > 4 && (
-                    <button
-                      onClick={() => setShowAllUpcomingMeetups(v => !v)}
-                      className="w-full py-3 text-xs font-semibold text-white/30 hover:text-white/60 transition-colors"
-                    >
-                      {showAllUpcomingMeetups ? "Show Less" : `View All ${upcomingCards.length} Upcoming Meetups`}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
-                  <Users className="w-8 h-8 opacity-20 text-white" />
-                  <p className="text-white/30 text-sm">
-                    {isOwnerOrDirector
-                      ? "No upcoming meetups — use Create meetup above to schedule one."
-                      : "No upcoming meetups scheduled by this club yet."}
-                  </p>
-                </div>
-              )}
-              {/* Past meetups — collapsed by default */}
-              {allPastInstances.length > 0 && (
-                <div className="mt-4">
-                  <button
-                    onClick={() => setShowPastMeetups(v => !v)}
-                    className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
-                  >
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastMeetups ? "rotate-180" : ""}`} />
-                    {showPastMeetups ? "Hide" : "Show"} {allPastInstances.length} Past Meetup{allPastInstances.length !== 1 ? "s" : ""}
-                  </button>
-                  {showPastMeetups && (
-                    <div className="space-y-4 opacity-60">
-                      {allPastInstances.map((ev) => {
-                        const rLabel2 = recurrenceLabel(ev.recurrence);
-                        return (
-                          <div
-                            key={ev.id}
-                            className="rounded-2xl border border-white/10 overflow-hidden"
-                            style={{ background: "oklch(0.16 0.05 145)" }}
-                          >
-                            <div className="h-1" style={{ background: "rgba(255,255,255,0.1)" }} />
-                            <div className="p-5">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>Past</span>
-                                    {ev.recurrence && ev.recurrence !== "none" && (
-                                      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.40)" }}>
-                                        <Repeat className="w-2.5 h-2.5" />
-                                        {rLabel2}
-                                      </span>
-                                    )}
-                                    <span className="text-white/30 text-xs">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                                  </div>
-                                  <h3 className="text-white/60 font-bold text-base truncate">{ev.title}</h3>
-                                  {ev.venue && (
-                                    <div className="flex items-center gap-1.5 mt-1 text-white/25 text-xs">
-                                      <MapPin className="w-3 h-3" />
-                                      <span>{ev.venue}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2 mt-3">
-                                <a href={`/clubs/${club.id}/meetup/${ev.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/40 border border-white/10 hover:text-white/60 transition">
-                                  <Calendar className="w-3 h-3" />
-                                  View
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-              );
-            })()}
-            {/* u2500u2500 RSVP FORM RESPONSES (owner analytics) u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500 */}
-            {(eventsFilter === "all" || eventsFilter === "meetups") && isOwnerOrDirector && (() => {
-              const meetupEventsWithForms = events.filter(e => e.eventType === "meetup");
-              if (meetupEventsWithForms.length === 0) return null;
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pt-2">
-                    <ClipboardList className="w-4 h-4 text-white/40" />
-                    <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest">RSVP Form Responses</h3>
-                  </div>
-                  <Suspense fallback={<ClubFeatureFallback />}>
-                    {meetupEventsWithForms.map((ev) => (
-                      <RsvpFormAnalytics
-                        key={ev.id}
-                        clubId={club.id}
-                        eventId={ev.id}
-                        accentColor={accent}
-                      />
-                    ))}
-                  </Suspense>
-                </div>
-              );
-            })()}
-
-            {/* ── DELETE MEETUP CONFIRMATION DIALOG ──────────────────────── */}
             {deleteMeetupId && (() => {
-              const meetupToDelete = events.find(e => e.id === deleteMeetupId);
+              const eventToDelete = events.find((event) => event.id === deleteMeetupId);
               return (
                 <div className="modal-overlay z-[200]">
                   <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeDeleteMeetup} />
-                  <div
-                    ref={deleteMeetupDialogRef}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="delete-meetup-title"
-                    tabIndex={-1}
-                    className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4"
-                    style={{ background: "oklch(0.16 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
-                  >
+                  <div ref={deleteMeetupDialogRef} role="dialog" aria-modal="true" aria-labelledby="delete-event-title" tabIndex={-1} className="relative w-full max-w-sm space-y-4 overflow-hidden rounded-3xl p-6 shadow-2xl" style={{ background: "oklch(0.16 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-red-500/15">
-                        <AlertTriangle className="w-5 h-5 text-red-400" />
-                      </div>
-                      <div>
-                        <h3 id="delete-meetup-title" className="text-white font-bold text-base">Delete Meetup</h3>
-                        <p className="text-white/40 text-xs mt-0.5">This cannot be undone</p>
-                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-500/15"><AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" /></div>
+                      <div><h3 id="delete-event-title" className="text-base font-bold text-white">Delete event</h3><p className="mt-0.5 text-xs text-white/40">This cannot be undone</p></div>
                     </div>
-                    <p className="text-white/60 text-sm">
-                      Are you sure you want to delete{" "}
-                      <span className="text-white font-semibold">"{meetupToDelete?.title ?? "this meetup"}"</span>?{" "}
-                      All RSVPs and check-ins will be permanently removed.
-                    </p>
+                    <p className="text-sm text-white/60">Are you sure you want to delete <span className="font-semibold text-white">“{eventToDelete?.title ?? "this event"}”</span>? All RSVPs and check-ins will be permanently removed.</p>
                     <div className="flex gap-3 pt-1">
-                      <button
-                        onClick={closeDeleteMeetup}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white transition-colors"
-                        style={{ background: "rgba(255,255,255,0.07)" }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={async () => {
-                          const id = deleteMeetupId;
-                          setDeleteMeetupId(null);
-                          try {
-                            await authFetch(`/api/clubs/${club.id}/events/${id}`, { method: "DELETE" });
-                          } catch { /* ignore — also delete locally */ }
-                          deleteClubEvent(id);
-                          setEvents(listClubEvents(club.id));
-                          toast.success("Meetup deleted");
-                        }}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors active:scale-95"
-                      >
-                        Delete Meetup
-                      </button>
+                      <button type="button" onClick={closeDeleteMeetup} className="flex-1 rounded-xl bg-white/7 py-2.5 text-sm font-semibold text-white/60 transition-colors hover:text-white">Cancel</button>
+                      <button type="button" onClick={async () => { const eventId = deleteMeetupId; setDeleteMeetupId(null); try { await authFetch(`/api/clubs/${club.id}/events/${eventId}`, { method: "DELETE" }); } catch { /* local delete remains available offline */ } deleteClubEvent(eventId); setEvents(listClubEvents(club.id)); toast.success("Event deleted"); }} className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-600">Delete</button>
                     </div>
                   </div>
                 </div>
               );
             })()}
 
-            {/* ── EDIT MEETUP MODAL ──────────────────────────────────────── */}
             {editMeetupId && (() => {
-              const meetupToEdit = events.find(e => e.id === editMeetupId);
-              if (!meetupToEdit) return null;
-              return (
-                <EditEventModal
-                  event={meetupToEdit}
-                  clubAccent={accent}
-                  onSaved={(updated) => {
-                    setEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
-                    setEditMeetupId(null);
-                    toast.success("Meetup updated");
-                  }}
-                  onClose={() => setEditMeetupId(null)}
-                />
-              );
-            })()}
-
-            {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
-            {(eventsFilter === "all" || eventsFilter === "tournaments") && (eventsFilter === "tournaments" || tournamentEvents.length > 0) && (() => {
-              const upcomingTmts = tournamentEvents.filter(isUpcoming);
-              const pastTmts = tournamentEvents.filter(e => !isUpcoming(e));
-              return (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <GanttChart className="w-4 h-4" style={{ color: accent }} />
-                <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
-                  Tournaments · {upcomingTmts.length}{pastTmts.length > 0 ? ` (${pastTmts.length} past)` : ""}
-                </h2>
-              </div>
-              {upcomingTmts.length > 0 ? (
-                <div className="space-y-4">
-                  {(showAllUpcomingTmts ? upcomingTmts : upcomingTmts.slice(0, 4)).map((event) => {
-                    return (
-                      <article
-                        key={event.id}
-                        className="overflow-hidden rounded-2xl border"
-                        style={{
-                          background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.80)",
-                          borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
-                          boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 8px 24px rgba(31,57,39,0.045)",
-                        }}
-                      >
-                        <div className="flex gap-3 p-4 sm:gap-4 sm:p-5">
-                          <div className="flex h-[70px] w-[58px] shrink-0 flex-col items-center justify-center rounded-xl border text-center" style={{ background: isDark ? `${accent}14` : `${accent}10`, borderColor: `${accent}35`, color: isDark ? "#b5f4a9" : "#1f6933" }}>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.12em]">{new Date(event.startAt).toLocaleDateString("en-US", { month: "short" })}</span>
-                            <span className="mt-0.5 text-2xl font-bold leading-none tabular-nums">{new Date(event.startAt).getDate()}</span>
-                            <span className="mt-1 text-[10px] font-medium">{new Date(event.startAt).toLocaleDateString("en-US", { weekday: "short" })}</span>
-                          </div>
-                          <div className="min-w-0 flex-1 pt-0.5">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                              <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: isDark ? "rgba(255,255,255,0.50)" : "rgba(21,41,28,0.54)" }}>Tournament</span>
-                              <span className="text-[11px] font-semibold" style={{ color: isDark ? "#b5f4a9" : "#1f6933" }}>Upcoming</span>
-                            </div>
-                            <h2 className="mt-1 truncate text-base font-bold leading-6 sm:text-lg" style={{ color: isDark ? "rgba(255,255,255,0.94)" : "#15291c" }}>{event.title}</h2>
-                            {event.description && <p className="mt-1 line-clamp-2 text-sm leading-5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "rgba(21,41,28,0.62)" }}>{event.description}</p>}
-                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
-                              {event.venue && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />{event.venue}</span>}
-                              <span>{new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 sm:px-5" style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(21,41,28,0.09)" }}>
-                          <a href={`/tournament/${event.tournamentId}/play`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-[background-color,transform] hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" style={{ background: accent, color: "#0a1a0f" }}><Trophy className="h-3.5 w-3.5" aria-hidden="true" />Open tournament</a>
-                          {isOwnerOrDirector && (
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <button onClick={() => openRsvpPanel(event.id)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Users className="h-3.5 w-3.5" aria-hidden="true" /> RSVPs</button>
-                              <a href={`/tournament/${event.tournamentId}/manage`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Settings2 className="h-3.5 w-3.5" aria-hidden="true" /> Manage</a>
-                              <a href={`/clubs/${club.id}/meetup/${event.id}/rsvp-form/builder`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><ClipboardList className="h-3.5 w-3.5" aria-hidden="true" /> Registration</a>
-                            </div>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
-                  {upcomingTmts.length > 4 && (
-                    <button
-                      onClick={() => setShowAllUpcomingTmts(v => !v)}
-                      className="w-full py-3 text-xs font-semibold text-white/30 hover:text-white/60 transition-colors"
-                    >
-                      {showAllUpcomingTmts ? "Show Less" : `View All ${upcomingTmts.length} Upcoming Tournaments`}
-                    </button>
-                  )}
-                </div>
-                            ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
-                  <GanttChart className="w-8 h-8 opacity-20 text-white" />
-                  <p className="text-white/30 text-sm">
-                    {isOwnerOrDirector
-                      ? "No upcoming tournaments — use New tournament above to host one."
-                      : "No upcoming tournaments hosted by this club yet."}
-                  </p>
-                </div>
-              )}
-              {/* Past tournaments — collapsed by default */}
-              {pastTmts.length > 0 && (
-                <div className="mt-4">
-                  <button
-                    onClick={() => setShowPastTournaments(v => !v)}
-                    className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
-                  >
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastTournaments ? "rotate-180" : ""}`} />
-                    {showPastTournaments ? "Hide" : "Show"} {pastTmts.length} Past Tournament{pastTmts.length !== 1 ? "s" : ""}
-                  </button>
-                  {showPastTournaments && (
-                    <div className="space-y-4 opacity-60">
-                      {pastTmts.map((event) => (
-                        <div key={event.id} className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: "oklch(0.16 0.05 145)" }}>
-                          <div className="h-1" style={{ background: "rgba(255,255,255,0.1)" }} />
-                          <div className="p-5">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>Past</span>
-                                  <span className="text-white/30 text-xs">{new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                                </div>
-                                <h3 className="text-white/60 font-bold text-base truncate">{event.title}</h3>
-                                {event.venue && (
-                                  <div className="flex items-center gap-1.5 mt-1 text-white/25 text-xs">
-                                    <MapPin className="w-3 h-3" />
-                                    <span>{event.venue}</span>
-                                  </div>
-                                )}
-                              </div>
-                              <GanttChart className="w-6 h-6 flex-shrink-0 opacity-15" />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 mt-3">
-                              <a href={`/tournament/${event.tournamentId}/play`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/40 border border-white/10 hover:text-white/60 transition">
-                                <Trophy className="w-3 h-3" />
-                                View Results
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-              );
-            })()}
-            {/* ── OTHER EVENTS SECTION ─────────────────────────────────────── */}
-            {eventsFilter === "all" && otherEvents.length > 0 && (() => {
-              const nonTmtUpcoming = upcomingEvents.filter(e => !e.tournamentId && e.eventType !== "meetup");
-              const nonTmtPast = pastEvents.filter(e => !e.tournamentId && e.eventType !== "meetup");
-              return (
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-4 h-4" style={{ color: accent }} />
-                    <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
-                      Other Events · {nonTmtUpcoming.length}{nonTmtPast.length > 0 ? ` (${nonTmtPast.length} past)` : ""}
-                    </h2>
-                  </div>
-                  {nonTmtUpcoming.length > 0 ? (
-                    <div className="space-y-4 mb-4">
-                      {nonTmtUpcoming.map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          userId={user?.id ?? "guest"}
-                          displayName={user?.displayName ?? "Guest"}
-                          avatarUrl={user?.avatarUrl}
-                          isOwner={!!isOwnerOrDirector}
-                          onDeleted={refreshEvents}
-                          onEdited={refreshEvents}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6 mb-4">
-                      <Calendar className="w-8 h-8 opacity-20 text-white" />
-                      <p className="text-white/30 text-sm">
-                        {isOwnerOrDirector
-                          ? "No upcoming events — click \"Club Meetup\" or \"New Tournament\" above to add one."
-                          : "No upcoming events scheduled by this club yet."}
-                      </p>
-                    </div>
-                  )}
-                  {/* Past events — collapsed by default */}
-                  {nonTmtPast.length > 0 && (
-                    <div>
-                      <button
-                        onClick={() => setShowPastEvents(v => !v)}
-                        className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
-                      >
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastEvents ? "rotate-180" : ""}`} />
-                        {showPastEvents ? "Hide" : "Show"} {nonTmtPast.length} Past Event{nonTmtPast.length !== 1 ? "s" : ""}
-                      </button>
-                      {showPastEvents && (
-                        <div className="space-y-4 opacity-60">
-                          {nonTmtPast.map((event) => (
-                            <EventCard
-                              key={event.id}
-                              event={event}
-                              userId={user?.id ?? "guest"}
-                              displayName={user?.displayName ?? "Guest"}
-                              avatarUrl={user?.avatarUrl}
-                              isOwner={!!isOwnerOrDirector}
-                              onDeleted={refreshEvents}
-                              onEdited={refreshEvents}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
+              const eventToEdit = events.find((event) => event.id === editMeetupId);
+              if (!eventToEdit) return null;
+              return <EditEventModal event={eventToEdit} clubAccent={accent} onSaved={(updated) => { setEvents((current) => current.map((event) => event.id === updated.id ? updated : event)); setEditMeetupId(null); toast.success("Event updated"); }} onClose={() => setEditMeetupId(null)} />;
             })()}
           </div>
         )}
@@ -8151,7 +7705,7 @@ export default function ClubDashboard() {
                     <button
                       type="button"
                       key={clubTab.id}
-                      onClick={() => { setTab(clubTab.id); closeMobileNavDrawer(); }}
+                      onClick={() => { if (clubTab.id === "events") setEventsFilter("all"); setTab(clubTab.id); closeMobileNavDrawer(); }}
                       aria-current={isActive ? "page" : undefined}
                       className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-transform active:scale-[0.985]"
                       style={{
@@ -8186,7 +7740,7 @@ export default function ClubDashboard() {
                         <button
                           type="button"
                           key={clubTab.id}
-                          onClick={() => { setTab(clubTab.id); closeMobileNavDrawer(); }}
+                          onClick={() => { if (clubTab.id === "events") setEventsFilter("all"); setTab(clubTab.id); closeMobileNavDrawer(); }}
                           aria-current={isActive ? "page" : undefined}
                           className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-transform active:scale-[0.985]"
                           style={{

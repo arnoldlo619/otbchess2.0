@@ -7,37 +7,36 @@ const dashboardSource = readFileSync(
   "utf8",
 );
 
-describe("Club Events workspace", () => {
-  it("uses a schedule-first header with explicit event-type tabs", () => {
-    expect(dashboardSource).toContain('aria-labelledby="club-events-heading"');
-    expect(dashboardSource).toContain('Club schedule');
-    expect(dashboardSource).toContain('role="tablist" aria-label="Event type"');
-    expect(dashboardSource).toContain('{ key: "all", label: "All events" }');
-    expect(dashboardSource).toContain('{ key: "meetups", label: "Meetups" }');
-    expect(dashboardSource).toContain('{ key: "tournaments", label: "Tournaments" }');
-    expect(dashboardSource).toContain('{ key: "leagues", label: "Leagues" }');
-    expect(dashboardSource).toContain('eventFilterCounts[filter.key]');
+describe("Club Events gallery", () => {
+  it("uses a single upcoming-only event projection", () => {
+    expect(dashboardSource).toContain('const upcomingEvents = events.filter(isUpcoming).sort');
+    expect(dashboardSource).toContain('tab === "events" && eventsFilter !== "leagues"');
+    expect(dashboardSource).toContain('aria-label="Scheduled club events"');
+    expect(dashboardSource).not.toContain('showPastMeetups');
+    expect(dashboardSource).not.toContain('showPastTournaments');
+    expect(dashboardSource).not.toContain('showPastEvents');
+    expect(dashboardSource).not.toContain('role="tablist" aria-label="Event type"');
   });
 
-  it("keeps creation paths clear for organizers", () => {
-    expect(dashboardSource).toContain('New tournament');
-    expect(dashboardSource).toContain('Create meetup');
-    expect(dashboardSource).toContain('New league');
+  it("renders a content-first card for every scheduled event", () => {
+    expect(dashboardSource).toContain("function ScheduledEventGalleryCard");
+    expect(dashboardSource).toContain("upcomingEvents.map((event) => (");
+    expect(dashboardSource).toContain("aspect-[16/9]");
+    expect(dashboardSource).toContain("event.coverImageUrl");
+    expect(dashboardSource).toContain("View event");
+    expect(dashboardSource).toContain("No scheduled events");
   });
 
-  it("renders only the category selected by the Events filter", () => {
-    expect(dashboardSource).toContain('(eventsFilter === "all" || eventsFilter === "meetups")');
-    expect(dashboardSource).toContain('(eventsFilter === "all" || eventsFilter === "tournaments")');
-    expect(dashboardSource).toContain('eventsFilter === "all" && otherEvents.length > 0');
+  it("keeps organizer creation and management paths without reintroducing filters", () => {
+    expect(dashboardSource).toContain("New tournament");
+    expect(dashboardSource).toContain("Create meetup");
+    expect(dashboardSource).toContain("onOpenRsvps={() => openRsvpPanel(event.id)}");
+    expect(dashboardSource).toContain("setEventsFilter(\"leagues\"); setTab(\"events\")");
     expect(dashboardSource).toContain('tab === "events" && eventsFilter === "leagues"');
   });
 
-  it("uses readable, date-led cards and persistent owner actions", () => {
-    expect(dashboardSource).toContain('Open meetup');
-    expect(dashboardSource).toContain('Open tournament');
-    expect(dashboardSource).toContain('aria-label={`Edit ${ev.title}`}');
-    expect(dashboardSource).toContain('aria-label={`Delete ${ev.title}`}');
-    expect(dashboardSource).toContain('Registration');
-    expect(dashboardSource).not.toContain('const isUpcomingTmt = true;');
+  it("clears the private League handoff when Events is opened from navigation", () => {
+    expect(dashboardSource).toContain('if (nextTab === "events") setEventsFilter("all")');
+    expect(dashboardSource).toContain('if (clubTab.id === "events") setEventsFilter("all")');
   });
 });
