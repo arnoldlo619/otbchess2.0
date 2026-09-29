@@ -4209,10 +4209,11 @@ export default function ClubDashboard() {
             {/* ── Quick Actions — centered owner controls ── */}
             <section aria-labelledby="overview-quick-actions">
               <h3 id="overview-quick-actions" className="mb-3 text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
-              <div className="mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3">
+              <div className="mx-auto grid max-w-[680px] grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
+                  { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
                   { icon: Megaphone, label: "Post", action: () => setTab("feed") },
                 ].map(({ icon: Icon, label, action }) => (
                   <button

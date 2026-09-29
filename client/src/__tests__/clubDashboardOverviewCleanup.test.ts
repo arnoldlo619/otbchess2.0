@@ -22,9 +22,19 @@ describe("Club Dashboard overview cleanup", () => {
     expect(dashboardSource).not.toContain('background: isDark ? "rgba(255,255,255,0.07)" : `${accent}13`');
   });
 
-  it("preserves the three operational Quick Action intents", () => {
+  it("preserves the four operational Quick Action intents", () => {
     expect(dashboardSource).toContain('{ icon: Plus, label: "New Meetup"');
     expect(dashboardSource).toContain('{ icon: GanttChart, label: "Tournament"');
+    expect(dashboardSource).toContain('{ icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") }');
     expect(dashboardSource).toContain('{ icon: Megaphone, label: "Post"');
+    expect(dashboardSource).toContain('max-w-[680px] grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3');
+  });
+
+  it("routes the Leagues action into the current club's create-and-manage workspace", () => {
+    expect(dashboardSource).toContain('if (tab === "leagues" && club) {');
+    expect(dashboardSource).toContain('setEventsFilter("leagues");');
+    expect(dashboardSource).toContain('setTab("events");');
+    expect(dashboardSource).toContain('body: JSON.stringify({ clubId: club.id');
+    expect(dashboardSource).toContain('href={`/leagues/${league.id}`}');
   });
 });
