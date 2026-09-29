@@ -28,8 +28,10 @@ describe("private Club workspace model", () => {
     expect(demo).toContain("Read-only demo");
     expect(demo).toContain('const DEMO_CLUB_NAME = "The OTB Chess Club"');
     expect(demo).toContain('const DEMO_BANNER_IMAGE = "/club-assets/the-otb-chess-club-demo-banner.jpg"');
-    expect(demo).toContain('className="absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-80"');
-    expect(demo).toContain('rgba(2,12,6,0.90)');
+    expect(demo).toContain('data-testid="club-demo-social-header"');
+    expect(demo).toContain('className="relative h-[108px] overflow-hidden sm:h-[144px]"');
+    expect(demo).toContain('className="absolute inset-0 h-full w-full object-cover object-[center_30%]"');
+    expect(demo).toContain("Private club");
     expect(demo).not.toContain("Harbor");
     expect(demo).not.toContain("/api/clubs");
   });

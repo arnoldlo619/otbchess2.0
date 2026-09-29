@@ -910,11 +910,6 @@ function EventCard({
 }
 
 /** Create Event modal */
-const COUNTRY_FLAGS: Record<string, string> = {
-  GB: "🇬🇧", US: "🇺🇸", DE: "🇩🇪", JP: "🇯🇵", IN: "🇮🇳", FR: "🇫🇷",
-  ES: "🇪🇸", IT: "🇮🇹", CA: "🇨🇦", AU: "🇦🇺", BR: "🇧🇷", RU: "🇷🇺",
-};
-
 const ACCENT_PRESETS = [
   // Greens
   "#4CAF50", "#22c55e", "#16a34a", "#86efac", "#a3e635", "#14b8a6",
@@ -4108,15 +4103,22 @@ export default function ClubDashboard() {
           <div ref={scrollContainerRef} className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
-                {/* ── CLUB BANNER ─────────────────────────────────────────── */}
-                {tab !== "album" && (() => {
-                  const flag = COUNTRY_FLAGS[club.country ?? ""] ?? "🌍";
-                  return (
+                {/* ── CLUB SOCIAL HEADER ─────────────────────────────────── */}
+                {tab !== "album" && (
+                  <section
+                    ref={bannerRef}
+                    aria-label={`${club.name} club header`}
+                    data-testid="club-dashboard-social-header"
+                    className={`relative mb-5 overflow-hidden rounded-[28px] border shadow-[0_18px_48px_rgba(4,20,10,0.18)]${!club.bannerUrl ? " chess-board-bg" : ""}`}
+                    style={{
+                      borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(19,55,34,0.14)",
+                      background: isDark ? "rgba(5,19,10,0.94)" : "rgba(255,255,255,0.96)",
+                    }}
+                  >
+                    {/* Retained club banner image: a compact social-profile cover. */}
                     <div
-                      ref={bannerRef}
-                      className={`relative rounded-3xl overflow-hidden mb-5${!club.bannerUrl ? " chess-board-bg" : ""}`}
+                      className="relative h-[108px] overflow-hidden sm:h-[144px]"
                       style={{
-                        minHeight: "clamp(160px, 22vw, 220px)",
                         ...(club.bannerUrl ? {
                           backgroundImage: `url(${club.bannerUrl})`,
                           backgroundSize: "cover",
@@ -4125,133 +4127,120 @@ export default function ClubDashboard() {
                         } : {}),
                       }}
                     >
-                      {/* Dark gradient overlay */}
                       <div
                         className="absolute inset-0"
                         style={{
                           background: club.bannerUrl
-                            ? `linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.18) 100%)`
-                            : `linear-gradient(135deg, ${accent}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)`,
+                            ? "linear-gradient(180deg, rgba(2,12,6,0.18) 0%, rgba(2,12,6,0.46) 100%)"
+                            : `linear-gradient(135deg, ${accent}3b 0%, oklch(0.13 0.06 145 / 0.86) 64%, oklch(0.09 0.035 145 / 0.96) 100%)`,
                         }}
                       />
-                      {/* Content */}
-                      <div className="relative z-10 flex items-end gap-4 p-4 sm:p-6 pt-10 sm:pt-12">
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-[linear-gradient(180deg,transparent,rgba(3,14,7,0.42))]" />
+                    </div>
 
-                        {/* Club identity */}
-                        <div className="flex-1 min-w-0 pb-0.5">
-                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                            <h1 className="text-[18px] sm:text-2xl font-black tracking-tight text-white leading-tight" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {/* Album-style identity rail: avatar, metadata, and one readable content surface. */}
+                    <div
+                      className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-5"
+                      style={{
+                        background: isDark
+                          ? "linear-gradient(180deg, rgba(6,22,12,0.98), rgba(6,22,12,0.92))"
+                          : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,252,248,0.94))",
+                      }}
+                    >
+                      <div className="-mt-9 flex items-start gap-4 sm:-mt-11 sm:gap-5">
+                        <div className="relative shrink-0 rounded-full p-[2px] shadow-[0_8px_24px_rgba(1,12,5,0.32)]" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}70, ${accent})` }}>
+                          <div className={`rounded-full p-1 ${isDark ? "bg-[#06130d]" : "bg-white"}`}>
+                            <PlayerAvatar
+                              username={club.ownerName ?? club.name}
+                              name={club.name}
+                              avatarUrl={club.avatarUrl ?? undefined}
+                              size={72}
+                              showBadge={false}
+                            />
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1 pt-10 sm:pt-12">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <h1 className="min-w-0 text-xl font-bold tracking-tight sm:text-2xl" style={{ color: isDark ? "rgba(255,255,255,0.96)" : "#12372A", fontFamily: "'Clash Display', sans-serif" }}>
                               {club.name}
                             </h1>
-                            {club.isPublic ? (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${accent}33`, color: accent, border: `1px solid ${accent}44` }}>Public</span>
-                            ) : (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)", border: "1px solid oklch(0.30 0.05 145)" }}>Private</span>
-                            )}
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: isDark ? "rgba(255,255,255,0.52)" : "rgba(18,55,42,0.58)" }}>
+                              {club.isPublic ? <Globe className="h-3 w-3" aria-hidden="true" /> : <Lock className="h-3 w-3" aria-hidden="true" />}
+                              {club.isPublic ? "Public club" : "Private club"}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" style={{ color: isDark ? "rgba(255,255,255,0.62)" : "rgba(18,55,42,0.70)" }}>
+                            <span><strong className="font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#12372A" }}>{club.memberCount}</strong> members</span>
+                            <span><strong className="font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#12372A" }}>{club.tournamentCount}</strong> events</span>
+                            {club.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden="true" />{club.location}</span>}
                           </div>
                           {club.description && (
-                            <p className="text-[12px] leading-relaxed line-clamp-2 mb-1.5" style={{ color: "rgba(255,255,255,0.82)", textShadow: "0 1px 4px rgba(0,0,0,0.55)" }}>
+                            <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.56)" : "rgba(18,55,42,0.68)" }}>
                               {club.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-3 text-[11px]" style={{ color: "rgba(255,255,255,0.62)", textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" style={{ color: accent }} />
-                              <span className="font-bold text-white">{club.memberCount}</span>
-                              <span>members</span>
-                            </span>
-                            <span className="w-px h-3" style={{ background: "oklch(0.35 0.05 145)" }} />
-                            <span className="flex items-center gap-1">
-                              <Trophy className="w-3 h-3" style={{ color: accent }} />
-                              <span className="font-bold text-white">{club.tournamentCount}</span>
-                              <span>events</span>
-                            </span>
-                            {club.location && (
-                              <>
-                                <span className="w-px h-3 hidden sm:block" style={{ background: "oklch(0.35 0.05 145)" }} />
-                                <span className="hidden sm:flex items-center gap-1" style={{ color: "rgba(255,255,255,0.62)" }}>
-                                  <MapPin className="w-3 h-3" style={{ color: "rgba(255,255,255,0.55)" }} />
-                                  {flag} {club.location}
-                                </span>
-                              </>
-                            )}
-                          </div>
                         </div>
-
-                      {/* Banner upload overlay (owners/directors) */}
-                      {isOwnerOrDirector && (
-                        <>
-                          {/* Drag-and-drop overlay */}
-                          <div
-                            className="absolute inset-0 z-30 pointer-events-none transition-all duration-200"
-                            style={{
-                              background: bannerDragOver ? "rgba(0,0,0,0.55)" : "transparent",
-                              border: bannerDragOver ? `2px dashed ${accent}` : "2px dashed transparent",
-                              borderRadius: "1.5rem",
-                            }}
-                          >
-                            {bannerDragOver && (
-                              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                                <Camera className="w-8 h-8" style={{ color: accent }} />
-                                <span className="text-sm font-bold text-white">Drop to upload banner</span>
-                              </div>
-                            )}
-                          </div>
-                          {/* Invisible drag target covering the whole banner */}
-                          <div
-                            className="absolute inset-0 z-20"
-                            onDragOver={(e) => { e.preventDefault(); setBannerDragOver(true); }}
-                            onDragLeave={() => setBannerDragOver(false)}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              setBannerDragOver(false);
-                              const file = e.dataTransfer.files?.[0];
-                              if (file) handleBannerFile(file);
-                            }}
-                          />
-                          {/* Action buttons top-right */}
-                          <div className="absolute top-3 right-3 z-40 flex items-center gap-2">
-                            {bannerUploading ? (
-                              <div
-                                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
-                                style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                              >
-                                <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                                </svg>
-                                Uploading…
-                              </div>
-                            ) : (
-                              <label
-                                  htmlFor="banner-upload-dash"
-                                  className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
-                                  style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                                  title={club.bannerUrl ? "Change banner image" : "Add banner image"}
-                                >
-                                  <Camera className="w-3.5 h-3.5" />
-                                  {club.bannerUrl ? "Change Banner" : "Add Banner"}
-                                </label>
-                            )}
-                          </div>
-                          <input
-                            aria-label="Name"
-                            id="banner-upload-dash"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleBannerFile(file);
-                              e.target.value = "";
-                            }}
-                          />
-                        </>
-                      )}
                       </div>
                     </div>
-                  );
-                })()}
+
+                    {/* Banner upload remains a direct, owner-only action without competing with the identity rail. */}
+                    {isOwnerOrDirector && (
+                      <>
+                        <div
+                          className="pointer-events-none absolute inset-0 z-30 transition-all duration-200"
+                          style={{
+                            background: bannerDragOver ? "rgba(0,0,0,0.55)" : "transparent",
+                            border: bannerDragOver ? `2px dashed ${accent}` : "2px dashed transparent",
+                            borderRadius: "28px",
+                          }}
+                        >
+                          {bannerDragOver && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                              <Camera className="h-8 w-8" style={{ color: accent }} aria-hidden="true" />
+                              <span className="text-sm font-bold text-white">Drop to upload banner</span>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="absolute inset-0 z-20"
+                          onDragOver={(event) => { event.preventDefault(); setBannerDragOver(true); }}
+                          onDragLeave={() => setBannerDragOver(false)}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            setBannerDragOver(false);
+                            const file = event.dataTransfer.files?.[0];
+                            if (file) handleBannerFile(file);
+                          }}
+                        />
+                        <div className="absolute right-3 top-3 z-40 flex items-center gap-2 sm:right-4 sm:top-4">
+                          {bannerUploading ? (
+                            <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md" style={{ background: "rgba(0,0,0,0.50)" }}>
+                              <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                              Uploading…
+                            </div>
+                          ) : (
+                            <label htmlFor="banner-upload-dash" className="flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur-md transition-all hover:bg-black/70 focus-within:ring-2 focus-within:ring-white/80" style={{ background: "rgba(0,0,0,0.50)" }} title={club.bannerUrl ? "Change banner image" : "Add banner image"}>
+                              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                              {club.bannerUrl ? "Change Banner" : "Add Banner"}
+                            </label>
+                          )}
+                        </div>
+                        <input
+                          aria-label="Upload club banner image"
+                          id="banner-upload-dash"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) handleBannerFile(file);
+                            event.target.value = "";
+                          }}
+                        />
+                      </>
+                    )}
+                  </section>
+                )}
         <TabTransition tabKey={tab}>
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (

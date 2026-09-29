@@ -28,6 +28,7 @@ import {
   Eye,
   FolderLock,
   Image as ImageIcon,
+  Lock as LockIcon,
   MapPin,
   Menu,
   MessageSquare,
@@ -129,8 +130,8 @@ const DEMO_EVENTS = [
   },
 ];
 
-function DemoAvatar({ initials, tone, size = "md" }: { initials: string; tone: string; size?: "sm" | "md" }) {
-  const dimensions = size === "sm" ? "h-9 w-9 text-[11px]" : "h-11 w-11 text-xs";
+function DemoAvatar({ initials, tone, size = "md" }: { initials: string; tone: string; size?: "sm" | "md" | "lg" }) {
+  const dimensions = size === "sm" ? "h-9 w-9 text-[11px]" : size === "lg" ? "h-[72px] w-[72px] rounded-full text-lg" : "h-11 w-11 text-xs";
   return (
     <span
       className={`${dimensions} inline-flex shrink-0 items-center justify-center rounded-xl border border-white/10 font-bold text-white`}
@@ -266,33 +267,23 @@ function DemoMobileDrawer({
 function DemoBanner({ activeTab }: { activeTab: DemoTab }) {
   if (activeTab === "album") return null;
   return (
-    <div className="relative mb-5 min-h-[160px] overflow-hidden rounded-3xl bg-[#071008] sm:min-h-[220px]">
-      <img
-        src={DEMO_BANNER_IMAGE}
-        alt=""
-        aria-hidden="true"
-        decoding="async"
-        className="absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-80"
-      />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,6,0.90)_0%,rgba(2,12,6,0.72)_54%,rgba(2,12,6,0.56)_100%)]" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,10,5,0.18)_0%,rgba(2,10,5,0.78)_100%)]" aria-hidden="true" />
-      <div className="relative z-10 flex min-h-[160px] items-end gap-4 p-4 pt-10 sm:min-h-[220px] sm:p-6 sm:pt-12">
-        <div className="min-w-0 flex-1 pb-0.5">
-          <div className="mb-0.5 flex flex-wrap items-center gap-2">
-            <h1 className="text-[18px] font-black leading-tight tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1>
-            <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)", borderColor: "oklch(0.30 0.05 145)" }}>Private</span>
-          </div>
-          <p className="mb-1.5 max-w-2xl text-[12px] leading-relaxed text-white/82">A fixture-only preview of The OTB Chess Club workspace.</p>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] text-white/62">
-            <span className="flex items-center gap-1"><Users className="h-3 w-3" style={{ color: DEMO_ACCENT }} /><span className="font-bold text-white">84</span><span>members</span></span>
-            <span className="h-3 w-px bg-white/20" />
-            <span className="flex items-center gap-1"><Trophy className="h-3 w-3" style={{ color: DEMO_ACCENT }} /><span className="font-bold text-white">12</span><span>events</span></span>
-            <span className="hidden h-3 w-px bg-white/20 sm:block" />
-            <span className="hidden items-center gap-1 sm:flex"><MapPin className="h-3 w-3" />Portland, Maine</span>
+    <section aria-label={`${DEMO_CLUB_NAME} club header`} data-testid="club-demo-social-header" className="relative mb-5 overflow-hidden rounded-[28px] border border-white/10 bg-[#06130d] shadow-[0_18px_48px_rgba(4,20,10,0.18)]">
+      <div className="relative h-[108px] overflow-hidden sm:h-[144px]">
+        <img src={DEMO_BANNER_IMAGE} alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_30%]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,12,6,0.18)_0%,rgba(2,12,6,0.52)_100%)]" aria-hidden="true" />
+        <div className="absolute inset-x-0 bottom-0 h-14 bg-[linear-gradient(180deg,transparent,rgba(3,14,7,0.44))]" aria-hidden="true" />
+      </div>
+      <div className="relative z-10 bg-[linear-gradient(180deg,rgba(6,22,12,0.98),rgba(6,22,12,0.92))] px-4 pb-4 sm:px-6 sm:pb-5">
+        <div className="-mt-9 flex items-start gap-4 sm:-mt-11 sm:gap-5">
+          <div className="shrink-0 rounded-full bg-[linear-gradient(135deg,#4CAF50,#4CAF5070,#4CAF50)] p-[2px] shadow-[0_8px_24px_rgba(1,12,5,0.32)]"><div className="rounded-full bg-[#06130d] p-1"><DemoAvatar initials="OC" tone="#426f45" size="lg" /></div></div>
+          <div className="min-w-0 flex-1 pt-10 sm:pt-12">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1><span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/52"><LockIcon className="h-3 w-3" aria-hidden="true" />Private club</span></div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/62"><span><strong className="font-semibold text-white/92">84</strong> members</span><span><strong className="font-semibold text-white/92">12</strong> events</span><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#4CAF50]" aria-hidden="true" />Portland, Maine</span></div>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/56">A fixture-only preview of The OTB Chess Club workspace.</p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -314,7 +305,7 @@ function DemoQuickActions({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
             className="group flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-white/9 bg-[oklch(0.14_0.04_145)] px-2 py-2 text-center text-white/92 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px hover:border-white/15 hover:bg-[oklch(0.17_0.05_145)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.98] sm:min-h-16 sm:flex-row sm:gap-2 sm:px-3 sm:py-3"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.075] sm:h-10 sm:w-10"><Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /></span>
-            <span className="whitespace-nowrap text-xs font-semibold sm:text-[15px]">{label}</span>
+            <span className="text-xs font-semibold sm:text-sm">{label}</span>
           </button>
         ))}
       </div>
