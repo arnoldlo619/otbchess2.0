@@ -218,7 +218,6 @@ import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 import { apiCreateClubFeedPost, apiDeleteClubFeedPost, canCurrentUserDeleteClubFeedPost, type ClubFeedAttachmentInput } from "@/lib/clubFeedApi";
-import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { ShaderBackground } from "@/components/ui/shader-r";
 import Silk from "@/components/Silk";
 import { GreenWaves } from "@/components/GreenWaves";
@@ -4394,16 +4393,21 @@ export default function ClubDashboard() {
                 </p>
               </div>
               {isOwnerOrDirector && (
-                <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                  <SpinBorderButton variant="solid" onClick={() => setShowTournamentWizard(true)} className="min-h-11 whitespace-nowrap px-4">
-                    <GanttChart className="h-4 w-4" />
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowTournamentWizard(true)}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 sm:w-auto"
+                    style={{ background: accent, borderColor: accent, color: "#0a1a0f", boxShadow: `0 7px 18px ${accent}24`, "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3" } as React.CSSProperties}
+                  >
+                    <GanttChart className="h-4 w-4" aria-hidden="true" />
                     New tournament
-                  </SpinBorderButton>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setShowMeetupWizard(true)}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2"
-                    style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.72)", borderColor: isDark ? "rgba(255,255,255,0.13)" : "#dbe6d9", color: isDark ? "rgba(255,255,255,0.86)" : "#15291c", "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3" } as React.CSSProperties}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 sm:w-auto"
+                    style={{ background: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.72)", borderColor: isDark ? "rgba(255,255,255,0.15)" : "#dbe6d9", color: isDark ? "rgba(255,255,255,0.90)" : "#15291c", "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3" } as React.CSSProperties}
                   >
                     <Plus className="h-4 w-4" aria-hidden="true" />
                     Create meetup
