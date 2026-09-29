@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 import { Eye, EyeOff, Loader2, ChevronRight, CheckCircle2, Ghost, ArrowLeft } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { ApiErrorNotice } from "@/components/ApiErrorNotice";
+import { GreenWaves } from "@/components/GreenWaves";
 import {
   validateEmail,
   validatePassword,
@@ -279,16 +280,16 @@ export default function AuthPage() {
 
   return (
     <div
-      className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 relative"
-      style={{
-        backgroundImage: "url('/manus-storage/auth-bg_d6364218.jpeg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
+      className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[oklch(0.10_0.035_145)] p-4 sm:p-6"
     >
-      {/* Dark semi-transparent overlay for minimalist smoothness */}
-      <div className="pointer-events-none absolute inset-0 bg-black/40" />
+      {/* Brand-native club-template motion with a solid fallback and readable scrim. */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <GreenWaves className="h-full w-full opacity-90" />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(118deg, rgba(1, 12, 5, 0.78) 0%, rgba(2, 18, 8, 0.62) 52%, rgba(1, 10, 4, 0.80) 100%)" }}
+        />
+      </div>
       {/* Back to home link */}
       <a
         href="/"
@@ -306,7 +307,7 @@ export default function AuthPage() {
 
           {/* ── Left panel (desktop only) ── */}
           <div
-            className="relative hidden flex-col justify-between overflow-hidden p-10 md:flex"
+            className="relative hidden flex-col justify-between overflow-hidden p-8 md:flex"
             style={{
               background: "linear-gradient(160deg, oklch(0.24 0.08 148) 0%, oklch(0.17 0.06 145) 100%)",
             }}
@@ -337,12 +338,12 @@ export default function AuthPage() {
 
             {/* Tagline */}
             <div className="relative mt-auto">
-              <h1 className="max-w-[16ch] text-[42px] leading-[1.1] font-extrabold tracking-tight text-white text-balance">
-                Where chess happens.{" "}
-                <span className="text-[oklch(0.75_0.14_145)]">Over the board.</span>
+              <h1 className="text-[28px] leading-[1.08] font-extrabold tracking-tight text-white">
+                <span className="block">Play more chess.</span>
+                <span className="block text-[oklch(0.75_0.14_145)]">Over the board.</span>
               </h1>
               <p className="mt-3 text-base text-white/60 max-w-[22ch] leading-relaxed">
-                Host tournaments, track ratings, and connect with your chess community.
+                chessotb.club
               </p>
             </div>
 
