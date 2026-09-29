@@ -12,7 +12,7 @@ import {
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
   Share2, Copy, Check, QrCode, X, History, Settings, Pencil,
-  ExternalLink, TrendingUp, Star
+  ExternalLink, Star, AlertTriangle
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon, MembersIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
@@ -709,6 +709,7 @@ export default function LeagueDashboard() {
   const [settingsDescription, setSettingsDescription] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
+  const [expandedHistoryWeek, setExpandedHistoryWeek] = useState<number | null>(null);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [isCommissionerReport, setIsCommissionerReport] = useState(false);
   const [editingMatch, setEditingMatch] = useState<LeagueMatch | null>(null);
@@ -740,8 +741,6 @@ export default function LeagueDashboard() {
   // Join-request state (for non-member visitors)
   const [joinRequestStatus, setJoinRequestStatus] = useState<"idle" | "pending" | "already" | "loading" | "error">("idle");
   const [joinRequestMsg, setJoinRequestMsg] = useState("");
-  // Detect if the user arrived via an invite link (?join=1)
-  const isInviteLink = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("join") === "1";
   // ── Unified color system (matches ClubProfile) ─────────────────────────────
   // Dark:  deep forest-green base, low-chroma surface steps
   // Light: near-white with subtle sage tint — no yellow-cream
@@ -1108,7 +1107,7 @@ export default function LeagueDashboard() {
       if (res.ok) {
         const d = await res.json();
         if (d.completed) {
-          showToast(d.champion ? `🏆 Season complete! ${d.champion.displayName} is the champion!` : "Season complete!");
+          showToast(d.champion ? `Season complete! ${d.champion.displayName} is the champion.` : "Season complete!");
         } else {
           showToast(`Advanced to Week ${d.newWeek}!`);
         }
@@ -1258,6 +1257,15 @@ export default function LeagueDashboard() {
     ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: TournamentsIcon }] : []),
     ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: MembersIcon, badge: joinRequests.length }] : []),
     ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon }] : []),
+  ];
+
+  const configurationItems = [
+    { label: "League Name", value: league.name },
+    { label: "Club", value: league.clubName ?? "—" },
+    { label: "Format", value: league.formatType.replace(/_/g, " ").replace(/\b\w/g, (character) => character.toUpperCase()) },
+    { label: "Max Players", value: `${league.maxPlayers} spots` },
+    { label: "Status", value: league.status.charAt(0).toUpperCase() + league.status.slice(1) },
+    { label: "Commissioner", value: league.commissionerName },
   ];
 
   return (
@@ -1471,7 +1479,7 @@ export default function LeagueDashboard() {
                 </button>
               )}
               {/* Share — shown for non-active leagues or non-commissioners */}
-              {(!isCommissioner || league.status !== "active") && (
+              {(!isCommissioner || league.status !== "active") && !(isCommissioner && activeTab === "requests") && (
                 <button
                   onClick={() => setShowShare(true)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
@@ -1487,8 +1495,8 @@ export default function LeagueDashboard() {
           {/* ── LEAGUE HERO BANNER: the single identity surface ───────────── */}
           <div
             data-testid="league-dashboard-hero"
-            className="flex-shrink-0 relative overflow-hidden"
-            style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
+            className="flex-shrink-0 relative overflow-hidden h-[132px] sm:h-[144px] lg:h-[156px]"
+            style={{ borderBottom: `1px solid ${cardBorder}` }}
           >
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
             <div
@@ -1497,10 +1505,10 @@ export default function LeagueDashboard() {
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-            <div className="relative z-10 h-full flex items-center gap-6 px-6">
+            <div className="relative z-10 h-full flex items-center gap-5 px-4 sm:px-6">
               <div className="flex-1 min-w-0">
                 <h1
-                  className="whitespace-nowrap text-[clamp(1.55rem,7vw,2.25rem)] font-black leading-tight"
+                  className="truncate text-[clamp(1.65rem,7vw,2.5rem)] font-black leading-tight"
                   style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                 >
                   {league.name}
@@ -1508,7 +1516,7 @@ export default function LeagueDashboard() {
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.55)" }}>{league.clubName}</span>
                   <span
-                    className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider"
+                    className="text-[11px] px-2 py-0.5 rounded font-bold uppercase tracking-wider"
                     style={{ background: `${accent}30`, color: accent, border: `1px solid ${accent}50` }}
                   >
                     {league.formatType.replace(/_/g, " ")}
@@ -1523,41 +1531,13 @@ export default function LeagueDashboard() {
                   { label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
-                    <div className="text-xl font-black" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</div>
+                    <div className="text-2xl font-black tabular-nums" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.58)" }}>{label}</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Guest CTA banner */}
-          {(!user || user.isGuest) && (isInviteLink || league.status === "draft") && (
-            <div
-              className="mx-4 lg:mx-6 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
-              style={{
-                background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
-                border: `1px solid ${accent}44`,
-              }}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm" style={{ color: textMain }}>
-                  {isInviteLink ? "You've been invited to join this league!" : "Interested in joining this league?"}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: textMuted }}>
-                  Sign in with your chess.com account to request a spot from the commissioner.
-                </p>
-              </div>
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-                style={{ background: accent, color: "#fff" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                Sign In to Request a Spot
-              </button>
-            </div>
-          )}
 
           {/* Player invite banner */}
           {user && !isCommissioner && myInvite && (
@@ -2169,14 +2149,24 @@ export default function LeagueDashboard() {
               </div>
             )}
 
-            {/* My standing + next opponent */}
+            {/* Competition snapshot */}
             {(myStanding || nextWeekMatch) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <section className="space-y-3">
+                <div className="flex items-end justify-between gap-3 px-1">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: textMuted }}>Your league</p>
+                    <h2 className="mt-1 text-lg font-bold tracking-tight" style={{ color: textMain }}>Competition snapshot</h2>
+                  </div>
+                  <button onClick={() => setActiveTab("standings")} className="flex items-center gap-1 text-xs font-semibold" style={{ color: accent }}>
+                    Full standings <ChevronRight size={13} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {myStanding && (
                   <div className="rounded-2xl p-4" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-2">
                       <Target size={13} style={{ color: accent }} />
-                      <span className="text-xs font-semibold" style={{ color: textMuted }}>My Standing</span>
+                      <span className="text-sm font-semibold" style={{ color: textMuted }}>My Standing</span>
                     </div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-black" style={{ color: accent }}>#{myStanding.rank}</span>
@@ -2196,7 +2186,7 @@ export default function LeagueDashboard() {
                   <div className="rounded-2xl p-4" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-2">
                       <Shield size={13} style={{ color: accent }} />
-                      <span className="text-xs font-semibold" style={{ color: textMuted }}>Next Opponent</span>
+                      <span className="text-sm font-semibold" style={{ color: textMuted }}>Next Opponent</span>
                     </div>
                     {(() => {
                       const oppId = nextWeekMatch.playerWhiteId === user?.id
@@ -2236,7 +2226,8 @@ export default function LeagueDashboard() {
                     })()}
                   </div>
                 )}
-              </div>
+                </div>
+              </section>
             )}
 
 
@@ -2246,7 +2237,7 @@ export default function LeagueDashboard() {
               <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                 <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                   <Clock size={14} style={{ color: accent }} />
-                  <span className="font-semibold text-sm" style={{ color: textMain }}>Recent Results</span>
+                  <span className="font-semibold text-base" style={{ color: textMain }}>Recent Results</span>
                 </div>
                 <div className="divide-y" style={{ borderColor: cardBorder }}>
                   {recentResults.map((m) => (
@@ -2292,7 +2283,7 @@ export default function LeagueDashboard() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Crown size={15} style={{ color: accent }} />
-                    <span className="font-semibold text-sm" style={{ color: textMain }}>Standings</span>
+                    <span className="font-semibold text-base" style={{ color: textMain }}>Standings</span>
                   </div>
                   <button
                     onClick={() => setActiveTab("standings")}
@@ -2361,7 +2352,7 @@ export default function LeagueDashboard() {
             <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
               <div className="flex items-center gap-2 mb-4">
                 <Users size={16} style={{ color: accent }} />
-                <span className="font-semibold text-sm" style={{ color: textMain }}>
+                <span className="font-semibold text-base" style={{ color: textMain }}>
                   Players ({league.players.length})
                 </span>
               </div>
@@ -3001,7 +2992,7 @@ export default function LeagueDashboard() {
             <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
               {/* Table header */}
               <div
-                className="hidden sm:grid items-center px-4 py-3 text-xs font-bold uppercase tracking-widest"
+                className="hidden lg:grid items-center px-4 py-3 text-xs font-bold uppercase tracking-widest"
                 style={{
                   borderBottom: `1px solid ${cardBorder}`,
                   color: textMuted,
@@ -3040,7 +3031,7 @@ export default function LeagueDashboard() {
                     <div key={s.playerId}>
                       {/* Desktop row */}
                       <div
-                        className="hidden sm:grid items-center px-4 py-3 transition-colors duration-200 hover:bg-white/5"
+                        className="hidden lg:grid items-center px-4 py-3.5 transition-colors duration-200 hover:bg-white/5"
                         style={{
                           gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 4.5rem",
                           gap: "0.5rem",
@@ -3155,7 +3146,7 @@ export default function LeagueDashboard() {
 
                       {/* Mobile card */}
                       <div
-                        className="sm:hidden px-4 py-3.5"
+                        className="lg:hidden px-4 py-4"
                         style={{
                           borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
                           background: isMe
@@ -3284,13 +3275,44 @@ export default function LeagueDashboard() {
         {/* ── SCHEDULE ──────────────────────────────────────────────────────── */}
         {activeTab === "schedule" && (
           <div className="space-y-4">
-            {weeks.map((week) => (
-              <div
+            <div
+              className="rounded-2xl px-4 py-3 flex items-center gap-3"
+              style={{ background: isDark ? "oklch(0.18 0.05 145 / 0.72)" : "oklch(0.97 0.02 145)", border: `1px solid ${cardBorder}` }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}14`, color: accent }}>
+                <Calendar size={16} aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold" style={{ color: textMain }}>Season progress</p>
+                <p className="mt-0.5 text-xs leading-5" style={{ color: textMuted }}>
+                  {weeks.filter((week) => week.isComplete).length} of {league.totalWeeks} weeks complete
+                </p>
+              </div>
+              <span className="text-sm font-bold tabular-nums" style={{ color: accent }}>
+                {Math.round((weeks.filter((week) => week.isComplete).length / Math.max(league.totalWeeks, 1)) * 100)}%
+              </span>
+            </div>
+            {weeks.map((week, index) => {
+              const isCompletedWeek = league.status === "completed" || week.isComplete || week.weekNumber < league.currentWeek;
+              const isCurrentWeek = league.status !== "completed" && week.weekNumber === league.currentWeek;
+              const previousWeek = weeks[index - 1];
+              const showSectionLabel = index === 0 || isCompletedWeek !== (league.status === "completed" || previousWeek?.isComplete || previousWeek?.weekNumber < league.currentWeek);
+              const sectionLabel = isCurrentWeek ? "Current week" : isCompletedWeek ? "Completed weeks" : "Upcoming weeks";
+              return (
+                <div key={week.weekNumber} className="space-y-2">
+                  {showSectionLabel && (
+                    <div className="flex items-center gap-2 px-1 pt-2">
+                      <span className="h-px flex-1" style={{ background: cardBorder }} />
+                      <h2 className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: isCurrentWeek ? accent : textMuted }}>{sectionLabel}</h2>
+                      <span className="h-px flex-1" style={{ background: cardBorder }} />
+                    </div>
+                  )}
+                  <div
                 key={week.weekNumber}
                 className="rounded-2xl overflow-hidden"
                 style={{
                   background: cardBg,
-                  border: `1.5px solid ${week.weekNumber === league.currentWeek ? accent + "55" : cardBorder}`,
+                  border: `1.5px solid ${isCurrentWeek ? accent + "55" : cardBorder}`,
                 }}
               >
                 {/* Week header */}
@@ -3298,15 +3320,15 @@ export default function LeagueDashboard() {
                   className="flex items-center justify-between px-4 py-3"
                   style={{
                     borderBottom: `1px solid ${cardBorder}`,
-                    background: week.weekNumber === league.currentWeek
+                    background: isCurrentWeek
                       ? `${accent}10`
                       : isDark ? "oklch(0.23 0.06 145)" : "#f9fafb",
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <Calendar size={14} style={{ color: week.weekNumber === league.currentWeek ? accent : textMuted }} />
+                    <Calendar size={14} style={{ color: isCurrentWeek ? accent : textMuted }} />
                     <span className="font-semibold text-sm" style={{ color: textMain }}>Week {week.weekNumber}</span>
-                    {week.weekNumber === league.currentWeek && (
+                    {isCurrentWeek && (
                       <span
                         className="text-xs px-2 py-0.5 rounded-full font-medium"
                         style={{ background: `${accent}22`, color: accent }}
@@ -3321,7 +3343,7 @@ export default function LeagueDashboard() {
                     </span>
                   ) : week.weekNumber < league.currentWeek ? (
                     <span className="text-xs" style={{ color: "#f87171" }}>Incomplete</span>
-                  ) : week.weekNumber === league.currentWeek ? (
+                  ) : isCurrentWeek ? (
                     <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#facc15" }}>
                       <Circle size={10} className="fill-current" /> Active
                     </span>
@@ -3347,7 +3369,7 @@ export default function LeagueDashboard() {
                           }}
                         >
                           {mine && match.playerWhiteId === user?.id && (
-                            <span style={{ color: accent }}>★ </span>
+                            <Star className="inline-block mr-1 -mt-0.5" size={12} fill="currentColor" style={{ color: accent }} aria-label="Your match" />
                           )}
                           {match.playerWhiteName}
                         </div>
@@ -3368,7 +3390,7 @@ export default function LeagueDashboard() {
                         >
                           {match.playerBlackName}
                           {mine && match.playerBlackId === user?.id && (
-                            <span style={{ color: accent }}> ★</span>
+                            <Star className="inline-block ml-1 -mt-0.5" size={12} fill="currentColor" style={{ color: accent }} aria-label="Your match" />
                           )}
                         </div>
                         <div className="flex-shrink-0 ml-1">
@@ -3394,8 +3416,10 @@ export default function LeagueDashboard() {
                     );
                   })}
                 </div>
-              </div>
-            ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -3419,10 +3443,11 @@ export default function LeagueDashboard() {
                   <div className="relative flex-shrink-0">
                     <Avatar url={standings[0].avatarUrl} name={standings[0].displayName} size={14} ring />
                     <span
-                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-lg"
+                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg"
                       style={{ background: "oklch(0.82 0.18 85)", color: "oklch(0.18 0.06 85)" }}
+                      aria-label="Season champion"
                     >
-                      🏆
+                      <Trophy size={13} aria-hidden="true" />
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -3502,48 +3527,59 @@ export default function LeagueDashboard() {
                 <Calendar size={14} style={{ color: accent }} />
                 <span className="font-semibold text-sm" style={{ color: textMain }}>All Results by Week</span>
               </div>
-              {weeks.map((week) => (
-                <div key={week.weekNumber} className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                  <div
-                    className="px-4 py-2.5 flex items-center justify-between"
-                    style={{ borderBottom: `1px solid ${cardBorder}`, background: isDark ? "oklch(0.23 0.06 145)" : "#f9fafb" }}
-                  >
-                    <span className="text-xs font-semibold" style={{ color: textMain }}>Week {week.weekNumber}</span>
-                    <span className="text-xs" style={{ color: week.isComplete ? accent : textMuted }}>
-                      {week.isComplete ? "Complete" : "Incomplete"}
-                    </span>
-                  </div>
-                  <div className="divide-y" style={{ borderColor: cardBorder }}>
-                    {week.matches.map((match) => (
-                      <div key={match.id} className="flex items-center gap-3 px-4 py-3">
-                        <span
-                          className="flex-1 text-sm truncate"
-                          style={{ color: textMain, fontWeight: match.result === "white_win" ? 600 : 400 }}
-                        >
-                          {match.playerWhiteName}
+              {weeks.map((week) => {
+                const isExpanded = expandedHistoryWeek === week.weekNumber;
+                return (
+                  <div key={week.weekNumber} className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedHistoryWeek(isExpanded ? null : week.weekNumber)}
+                      aria-expanded={isExpanded}
+                      className="w-full min-h-11 px-4 py-3 flex items-center justify-between text-left transition-colors hover:opacity-85"
+                      style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f9fafb" }}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm font-semibold" style={{ color: textMain }}>Week {week.weekNumber}</span>
+                        <span className="text-xs" style={{ color: week.isComplete ? accent : textMuted }}>
+                          {week.isComplete ? "Complete" : "Incomplete"}
                         </span>
-                        <span
-                          className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
-                          style={{
-                            background: match.resultStatus === "completed" ? `${accent}22` : "transparent",
-                            color: match.resultStatus === "completed" ? accent : textMuted,
-                          }}
-                        >
-                          {match.resultStatus === "completed"
-                            ? (match.result === "white_win" ? "1–0" : match.result === "black_win" ? "0–1" : "½–½")
-                            : "vs"}
-                        </span>
-                        <span
-                          className="flex-1 text-sm truncate text-right"
-                          style={{ color: textMain, fontWeight: match.result === "black_win" ? 600 : 400 }}
-                        >
-                          {match.playerBlackName}
-                        </span>
+                      </span>
+                      <ChevronDown className={isExpanded ? "rotate-180 transition-transform" : "transition-transform"} size={16} style={{ color: textMuted }} aria-hidden="true" />
+                    </button>
+                    {isExpanded && (
+                      <div className="divide-y" style={{ borderColor: cardBorder }}>
+                        {week.matches.map((match) => (
+                          <div key={match.id} className="flex items-center gap-3 px-4 py-3">
+                            <span
+                              className="flex-1 text-sm truncate"
+                              style={{ color: textMain, fontWeight: match.result === "white_win" ? 600 : 400 }}
+                            >
+                              {match.playerWhiteName}
+                            </span>
+                            <span
+                              className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                              style={{
+                                background: match.resultStatus === "completed" ? `${accent}22` : "transparent",
+                                color: match.resultStatus === "completed" ? accent : textMuted,
+                              }}
+                            >
+                              {match.resultStatus === "completed"
+                                ? (match.result === "white_win" ? "1–0" : match.result === "black_win" ? "0–1" : "½–½")
+                                : "vs"}
+                            </span>
+                            <span
+                              className="flex-1 text-sm truncate text-right"
+                              style={{ color: textMain, fontWeight: match.result === "black_win" ? 600 : 400 }}
+                            >
+                              {match.playerBlackName}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           )}
@@ -3557,12 +3593,12 @@ export default function LeagueDashboard() {
             >
               <div className="px-4 pt-4 pb-3 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: textMain }}>Invite Club Members</p>
+                  <p className="text-base font-semibold" style={{ color: textMain }}>Invite Club Members</p>
                   <p className="text-xs mt-0.5" style={{ color: textMuted }}>Proactively invite specific members to join this league</p>
                 </div>
                 <button
                   onClick={() => setShowInvitePicker((v) => !v)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                  className="min-h-11 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{ background: showInvitePicker ? `${accent}22` : accent, color: showInvitePicker ? accent : "#fff" }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -3662,7 +3698,7 @@ export default function LeagueDashboard() {
               style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
             >
             <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold" style={{ color: textMain }}>Join Requests</p>
+              <p className="text-base font-semibold" style={{ color: textMain }}>Join Requests</p>
               <span className="text-xs" style={{ color: textMuted }}>{joinRequests.length} pending</span>
             </div>
             {/* Push notification prompt for commissioners who haven't subscribed */}
@@ -3676,13 +3712,13 @@ export default function LeagueDashboard() {
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold" style={{ color: textMain }}>Get notified instantly</p>
-                  <p className="text-xs" style={{ color: textMuted }}>Enable push notifications to be alerted when a player requests to join.</p>
+                  <p className="text-sm font-semibold" style={{ color: textMain }}>Get notified instantly</p>
+                  <p className="text-xs leading-5" style={{ color: textMuted }}>Enable push notifications to be alerted when a player requests to join.</p>
                 </div>
                 <button
                   onClick={handleSubscribePush}
                   disabled={pushLoading}
-                  className="text-xs font-semibold flex-shrink-0 px-3 py-1.5 rounded-xl"
+                  className="min-h-11 text-xs font-semibold flex-shrink-0 px-3 py-1.5 rounded-xl"
                   style={{ background: accent, color: "#fff" }}
                 >
                   {pushLoading ? "..." : "Enable"}
@@ -3713,14 +3749,7 @@ export default function LeagueDashboard() {
               >
                 <Users size={32} className="mx-auto mb-3" style={{ color: textMuted }} />
                 <p className="text-sm font-semibold" style={{ color: textMain }}>No pending requests</p>
-                <p className="text-xs mt-1" style={{ color: textMuted }}>Share the league invite link to attract players.</p>
-                <button
-                  onClick={() => setShowShare(true)}
-                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                  style={{ background: `${accent}22`, color: accent }}
-                >
-                  <Share2 size={12} /> Share Invite Link
-                </button>
+                <p className="text-xs mt-1 leading-5" style={{ color: textMuted }}>Share the invite link from the roster growth helper below to attract players.</p>
               </div>
             ) : (
               <div
@@ -3765,23 +3794,26 @@ export default function LeagueDashboard() {
               </div>
             )}
             </div>
-            {/* Quick share reminder */}
-            <div
-              className="rounded-2xl px-4 py-3 flex items-center gap-3"
-              style={{ background: `${accent}0d`, border: `1px solid ${accent}22` }}
+            {/* Quiet roster-growth helper */}
+            <aside
+              className="rounded-2xl px-4 py-3.5 flex items-center gap-3"
+              style={{ background: isDark ? "oklch(0.18 0.05 145 / 0.72)" : "oklch(0.97 0.02 145)", border: `1px solid ${cardBorder}` }}
             >
-              <Share2 size={14} style={{ color: accent }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}14`, color: accent }}>
+                <Share2 size={15} />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs" style={{ color: textMain }}>Share the invite link so more players can request to join.</p>
+                <p className="text-sm font-semibold" style={{ color: textMain }}>Grow the roster</p>
+                <p className="mt-0.5 text-xs leading-5" style={{ color: textMuted }}>Share the invite link when you are ready for more player requests.</p>
               </div>
               <button
                 onClick={() => setShowShare(true)}
-                className="text-xs font-semibold flex-shrink-0"
-                style={{ color: accent }}
+                className="min-h-11 px-3 rounded-lg text-xs font-semibold flex-shrink-0 transition-colors hover:opacity-80"
+                style={{ color: accent, background: `${accent}12`, border: `1px solid ${accent}28` }}
               >
                 Share
               </button>
-            </div>
+            </aside>
           </div>
         )}
         </TabTransition>
@@ -3799,8 +3831,9 @@ export default function LeagueDashboard() {
                 </div>
               </div>
 
-              {/* Form card */}
-              <div className="rounded-2xl p-5 space-y-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
+                {/* Form card */}
+                <div className="rounded-2xl p-5 space-y-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
 
                 {/* League Name */}
                 <div className="space-y-1.5">
@@ -3812,7 +3845,7 @@ export default function LeagueDashboard() {
                     onChange={e => setSettingsName(e.target.value)}
                     placeholder={league.name}
                     maxLength={100}
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
+                    className="min-h-11 w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
                     style={{
                       background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
                       border: `1.5px solid ${cardBorder}`,
@@ -3835,7 +3868,7 @@ export default function LeagueDashboard() {
                     placeholder={String(league.maxPlayers)}
                     min={league.players.length}
                     max={64}
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
+                    className="min-h-11 w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
                     style={{
                       background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
                       border: `1.5px solid ${cardBorder}`,
@@ -3854,7 +3887,7 @@ export default function LeagueDashboard() {
                     aria-label="Format"
                     value={settingsFormat || league.formatType}
                     onChange={e => setSettingsFormat(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all appearance-none"
+                    className="min-h-11 w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all appearance-none"
                     style={{
                       background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
                       border: `1.5px solid ${cardBorder}`,
@@ -3866,7 +3899,10 @@ export default function LeagueDashboard() {
                     <option value="swiss">Swiss</option>
                   </select>
                   {league.status !== "draft" && (
-                    <p className="text-[11px]" style={{ color: "#f59e0b" }}>⚠ Changing format after the season has started will not regenerate the schedule.</p>
+                    <p className="flex items-start gap-1.5 text-xs leading-5" style={{ color: isDark ? "#fbbf24" : "#92400e" }}>
+                      <AlertTriangle className="mt-0.5 flex-shrink-0" size={14} aria-hidden="true" />
+                      Changing format after the season has started will not regenerate the schedule.
+                    </p>
                   )}
                 </div>
 
@@ -3930,7 +3966,7 @@ export default function LeagueDashboard() {
                       }
                     }}
                     disabled={savingSettings}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                    className="min-h-11 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
                     style={{ background: accent, color: isDark ? "oklch(0.12 0.04 145)" : "#fff", opacity: savingSettings ? 0.7 : 1 }}
                   >
                     {savingSettings ? (
@@ -3946,7 +3982,7 @@ export default function LeagueDashboard() {
                       setSettingsFormat("");
                       setSettingsDescription("");
                     }}
-                    className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    className="min-h-11 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
                     style={{ background: isDark ? "oklch(0.22 0.05 145)" : "#e8ede8", color: textMain }}
                   >
                     Reset
@@ -3954,24 +3990,33 @@ export default function LeagueDashboard() {
                 </div>
               </div>
 
-              {/* Current values card */}
-              <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: textMuted }}>Current Configuration</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: "League Name", value: league.name },
-                    { label: "Club", value: league.clubName ?? "—" },
-                    { label: "Format", value: league.formatType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) },
-                    { label: "Max Players", value: `${league.maxPlayers} spots` },
-                    { label: "Status", value: league.status.charAt(0).toUpperCase() + league.status.slice(1) },
-                    { label: "Commissioner", value: league.commissionerName },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="flex items-center justify-between">
-                      <span className="text-xs" style={{ color: textMuted }}>{label}</span>
-                      <span className="text-xs font-semibold" style={{ color: textMain }}>{value}</span>
-                    </div>
-                  ))}
-                </div>
+                <aside className="hidden lg:block rounded-2xl p-5 lg:sticky lg:top-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <h3 className="text-sm font-semibold" style={{ color: textMain }}>Current settings</h3>
+                  <p className="mt-1 text-xs leading-5" style={{ color: textMuted }}>A quick reference while you update the season.</p>
+                  <dl className="mt-5 space-y-3">
+                    {configurationItems.map(({ label, value }) => (
+                      <div key={label} className="border-b pb-3 last:border-0 last:pb-0" style={{ borderColor: cardBorder }}>
+                        <dt className="text-xs" style={{ color: textMuted }}>{label}</dt>
+                        <dd className="mt-1 text-sm font-semibold break-words" style={{ color: textMain }}>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </aside>
+
+                <details className="lg:hidden rounded-2xl" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <summary className="min-h-11 cursor-pointer list-none px-4 py-3 text-sm font-semibold flex items-center justify-between" style={{ color: textMain }}>
+                    Current settings
+                    <ChevronDown size={16} style={{ color: textMuted }} aria-hidden="true" />
+                  </summary>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-4 pb-4">
+                    {configurationItems.map(({ label, value }) => (
+                      <div key={label}>
+                        <dt className="text-xs" style={{ color: textMuted }}>{label}</dt>
+                        <dd className="mt-1 text-sm font-semibold break-words" style={{ color: textMain }}>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </details>
               </div>
             </div>
           )}
@@ -3979,7 +4024,10 @@ export default function LeagueDashboard() {
           </div>{/* end main content column */}
 
           {/* ── RIGHT PANEL: Upcoming Matchups (desktop only) ─────────────── */}
-          <div className="hidden lg:flex flex-col gap-3 w-80 flex-shrink-0">
+          <aside
+            aria-label="Upcoming league matchups"
+            className={`${activeTab === "overview" || activeTab === "matchups" ? "hidden lg:flex" : "hidden"} flex-col gap-3 w-80 flex-shrink-0`}
+          >
 
             {/* Header row */}
             <div className="flex items-center justify-between">
@@ -4081,7 +4129,7 @@ export default function LeagueDashboard() {
             })()}
 
 
-          </div>{/* end right panel */}
+          </aside>{/* end right panel */}
               </div>{/* end flex row */}
             </div>{/* end px wrapper */}
           </div>{/* end scrollable content */}
@@ -4250,11 +4298,11 @@ export default function LeagueDashboard() {
             {/* Warning if not all matches reported */}
             {!weeks.find(w => w.weekNumber === league.currentWeek)?.matches.every(m => m.resultStatus === "completed") && (
               <div
-                className="mx-5 mb-3 px-4 py-3 rounded-2xl text-xs"
+                className="mx-5 mb-3 px-4 py-3 rounded-2xl flex items-start gap-2 text-xs leading-5"
                 style={{ background: "oklch(0.32 0.10 80 / 0.20)", border: "1px solid oklch(0.65 0.14 80 / 0.35)", color: "oklch(0.80 0.12 80)" }}
               >
-                <strong>⚠ Not all Week {league.currentWeek} matches have been reported.</strong>
-                <br />Unreported matches will remain as pending.
+                <AlertTriangle className="mt-0.5 flex-shrink-0" size={15} aria-hidden="true" />
+                <p><strong>Not all Week {league.currentWeek} matches have been reported.</strong><br />Unreported matches will remain as pending.</p>
               </div>
             )}
 

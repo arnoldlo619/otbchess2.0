@@ -44,12 +44,41 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain('w-[60px] flex-shrink-0 py-4');
     expect(dashboard).toContain('justify-center gap-1 flex-1');
     expect(dashboard).toContain('data-testid="league-dashboard-hero"');
-    expect(dashboard).toContain('height: "120px"');
+    expect(dashboard).toContain('h-[132px] sm:h-[144px] lg:h-[156px]');
     expect(dashboard).toContain('Desktop spacer: the league identity lives exclusively in the hero.');
     expect(dashboard).toContain('data-testid="league-dashboard-header-actions"');
     expect(dashboard.match(/title="Share League"/g) ?? []).toHaveLength(1);
     expect(dashboard.match(/title=\{pushStatus === "subscribed" \? "Notifications On"/g) ?? []).toHaveLength(1);
     expect(dashboard).not.toContain("const progressPct");
+  });
+
+  it("keeps League content readable, contextual, and free of emoji warning glyphs", () => {
+    expect(dashboard).toContain("Competition snapshot");
+    expect(dashboard).toContain("Grow the roster");
+    expect(dashboard).toContain('aria-label="Upcoming league matchups"');
+    expect(dashboard).toContain('activeTab === "overview" || activeTab === "matchups"');
+    expect(dashboard).toContain('hidden lg:grid items-center px-4 py-3 text-xs');
+    expect(dashboard).toContain('className="lg:hidden px-4 py-4"');
+    expect(dashboard).toContain("<AlertTriangle");
+    expect(dashboard).not.toContain("⚠ Changing format");
+  });
+
+  it("uses one guest join conversion surface and organized season detail", () => {
+    expect(dashboard).not.toContain("Sign In to Request a Spot");
+    expect(dashboard).toContain("Join this League");
+    expect(dashboard).toContain("Season progress");
+    expect(dashboard).toContain("Completed weeks");
+    expect(dashboard).toContain("Upcoming weeks");
+    expect(dashboard).toContain("expandedHistoryWeek");
+    expect(dashboard).toContain('aria-expanded={isExpanded}');
+  });
+
+  it("keeps settings editing focused with a responsive reference summary", () => {
+    expect(dashboard).toContain("const configurationItems");
+    expect(dashboard).toContain("Current settings");
+    expect(dashboard).toContain("lg:grid-cols-[minmax(0,1fr)_17rem]");
+    expect(dashboard).toContain('className="lg:hidden rounded-2xl"');
+    expect(dashboard).toContain("min-h-11 flex-1 py-2.5");
   });
 });
 
