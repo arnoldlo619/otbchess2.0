@@ -38,6 +38,19 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain("Settings saved");
     expect(dashboard).toContain("Save Changes");
   });
+
+  it("uses the demo's centered rail and a single production league identity/action cluster", () => {
+    expect(dashboard).toContain('data-testid="league-desktop-sidebar"');
+    expect(dashboard).toContain('w-[60px] flex-shrink-0 py-4');
+    expect(dashboard).toContain('justify-center gap-1 flex-1');
+    expect(dashboard).toContain('data-testid="league-dashboard-hero"');
+    expect(dashboard).toContain('height: "120px"');
+    expect(dashboard).toContain('Desktop spacer: the league identity lives exclusively in the hero.');
+    expect(dashboard).toContain('data-testid="league-dashboard-header-actions"');
+    expect(dashboard.match(/title="Share League"/g) ?? []).toHaveLength(1);
+    expect(dashboard.match(/title=\{pushStatus === "subscribed" \? "Notifications On"/g) ?? []).toHaveLength(1);
+    expect(dashboard).not.toContain("const progressPct");
+  });
 });
 
 describe("League Demo implementation", () => {

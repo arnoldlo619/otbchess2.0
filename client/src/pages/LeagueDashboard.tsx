@@ -1260,8 +1260,6 @@ export default function LeagueDashboard() {
     ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: OtbSettingsIcon }] : []),
   ];
 
-  const progressPct = totalMatches > 0 ? Math.round((completedMatchCount / totalMatches) * 100) : 0;
-
   return (
     <div className="min-h-screen" style={{ background: pageBg }}>
       {/* Toast */}
@@ -1282,108 +1280,79 @@ export default function LeagueDashboard() {
 
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[72px] flex-shrink-0 h-full py-5 gap-1.5 relative"
+          data-testid="league-desktop-sidebar"
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 py-4 gap-1 relative chess-board-bg sticky top-0 self-start h-screen"
           style={{
-            background: isDark
-              ? "linear-gradient(180deg, oklch(0.16 0.05 145), oklch(0.13 0.04 145))"
-              : "linear-gradient(180deg, oklch(0.14 0.06 145), oklch(0.11 0.05 145))",
-            borderRight: `1px solid ${isDark ? "oklch(0.24 0.06 145)" : "oklch(0.22 0.06 145)"}`,
+            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
           }}
         >
-          {/* Club logo / back button */}
-          <button
-            onClick={() => navigate(`/clubs/${league.clubId}`)}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 transition-all hover:scale-105 active:scale-95 flex-shrink-0 overflow-hidden shadow-lg"
-            style={{ background: accent, boxShadow: `0 4px 12px ${accent}44` }}
-            title={league.clubName ?? "Back to Club"}
-          >
-            <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
-              alt="OTB!!"
-              className="w-7 h-7 object-contain"
-            />
-          </button>
-
-          {/* Divider */}
-          <div className="w-9 h-px mb-1" style={{ background: isDark ? "oklch(0.28 0.05 145)" : "oklch(0.25 0.06 145)" }} />
-
-          {/* Nav icons */}
-          <nav aria-label="League dashboard navigation" className="flex flex-col items-center gap-0.5 flex-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="relative w-12 h-11 rounded-xl flex items-center justify-center transition-all group"
-                  style={{
-                    background: isActive ? `${accent}22` : "transparent",
-                    color: isActive ? accent : isDark ? "oklch(0.62 0.06 145)" : "oklch(0.42 0.06 145)",
-                  }}
-                  title={tab.label}
-                >
-                  {/* Active indicator bar */}
-                  {isActive && (
-                    <span
-                      className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
-                      style={{ background: accent }}
-                    />
-                  )}
-                  <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
-                    <Icon size={18} />
-                  </span>
-                  {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
-                      style={{ background: "#ef4444", color: "#fff" }}
-                    >
-                      {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
-                    </span>
-                  )}
-                  {/* Tooltip */}
-                  <span
-                    className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg"
-                    style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#1a2e1f", color: "#fff", border: `1px solid ${isDark ? "oklch(0.30 0.06 145)" : "oklch(0.25 0.06 145)"}` }}
-                  >
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Divider */}
-          <div className="w-9 h-px mt-1 mb-1" style={{ background: isDark ? "oklch(0.28 0.05 145)" : "oklch(0.25 0.06 145)" }} />
-
-          {/* Bottom actions */}
-          <div className="flex flex-col items-center gap-0.5">
-            {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
-              <button
-                onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
-                disabled={pushLoading || pushStatus === "denied"}
-                className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: pushStatus === "subscribed" ? `${accent}22` : "transparent", color: pushStatus === "subscribed" ? accent : isDark ? "oklch(0.62 0.06 145)" : "oklch(0.42 0.06 145)" }}
-                title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
-              >
-                {pushLoading ? (
-                  <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                  </svg>
-                )}
-              </button>
-            )}
+          <div
+            className="absolute inset-0 pointer-events-none z-0"
+            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
+          />
+          <div className="relative z-10 flex flex-col items-center w-full h-full">
             <button
-              onClick={() => setShowShare(true)}
-              className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-              style={{ color: isDark ? "oklch(0.62 0.06 145)" : "oklch(0.42 0.06 145)" }}
-              title="Share League"
+              onClick={() => navigate(`/clubs/${league.clubId}`)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden transition-opacity hover:opacity-80"
+              title={league.clubName ?? "Back to Club"}
             >
-              <Share2 size={16} />
+              <img
+                src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                alt="OTB!!"
+                className="w-8 h-8 object-contain"
+              />
             </button>
+
+            <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+
+            <nav aria-label="League dashboard navigation" className="flex flex-col items-center justify-center gap-1 flex-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                    style={{
+                      background: isActive ? accent : "transparent",
+                      color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)",
+                    }}
+                    title={tab.label}
+                  >
+                    <span className={`otb-icon${isActive ? " otb-icon--active" : ""}`}>
+                      <Icon size={17} />
+                    </span>
+                    {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                        style={{ background: "#ef4444", color: "#fff" }}
+                      >
+                        {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
+                      </span>
+                    )}
+                    <span
+                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                      style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
+                    >
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+            <div className="flex flex-col items-center gap-1">
+              <button
+                onClick={() => navigate(`/clubs/${league.clubId}`)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                style={{ color: isDark ? "oklch(0.68 0.08 145)" : "oklch(0.40 0.08 145)" }}
+                title="Back to Club"
+              >
+                <ArrowLeft size={16} />
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -1392,7 +1361,7 @@ export default function LeagueDashboard() {
 
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
-            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
+            className="relative flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
             style={{
               background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
               backdropFilter: "blur(12px)",
@@ -1407,34 +1376,16 @@ export default function LeagueDashboard() {
             >
               <ArrowLeft size={18} />
             </button>
-
-
-
             {/* Mobile title */}
-            <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate block" style={{ color: "oklch(0.95 0.02 145)" }}>
-                {league.name}
-              </span>
-              <span className="text-xs font-medium truncate block" style={{ color: "oklch(0.72 0.06 145)" }}>
-                {league.clubName}
-              </span>
+            <div className="pointer-events-none absolute inset-x-16 text-center lg:hidden">
+              <span className="block whitespace-nowrap text-base font-bold" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
             </div>
 
-            {/* Desktop league name + format */}
-            <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0">
-              <div className="min-w-0">
-                <h1 className="text-sm font-bold truncate" style={{ color: textMain }}>{league.name}</h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs font-medium" style={{ color: textMuted }}>{league.clubName}</span>
-                  <span className="text-xs px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide" style={{ background: `${accent}18`, color: accent }}>
-                    {league.formatType.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Desktop spacer: the league identity lives exclusively in the hero. */}
+            <div className="hidden lg:block flex-1" />
 
-            {/* Centered Live / status pill */}
-            <div className="flex items-center justify-center">
+            {/* One desktop status anchor: visually centered without duplicating the hero identity. */}
+            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center justify-center">
               <div
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                 style={{
@@ -1464,8 +1415,8 @@ export default function LeagueDashboard() {
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-1.5">
-              {/* Commissioner quick-action buttons — replace Share+Avatar when active */}
+            <div data-testid="league-dashboard-header-actions" className="ml-auto flex items-center gap-1.5">
+              {/* Commissioner quick-action buttons — one authoritative action cluster */}
               {isCommissioner && league.status === "active" && (
                 <>
                   {/* Crown + role label — desktop only */}
@@ -1533,40 +1484,29 @@ export default function LeagueDashboard() {
             </div>
           </div>
 
-          {/* ── LEAGUE HERO BANNER (animated ASCII art backdrop + stats overlay) ── */}
+          {/* ── LEAGUE HERO BANNER: the single identity surface ───────────── */}
           <div
+            data-testid="league-dashboard-hero"
             className="flex-shrink-0 relative overflow-hidden"
-            style={{ height: "140px", borderBottom: `1px solid ${cardBorder}` }}
+            style={{ height: "120px", borderBottom: `1px solid ${cardBorder}` }}
           >
-            {/* Animated ASCII art — contain so the full trophy is visible, anchored right */}
             <AsciiArt className="absolute inset-0 w-full h-full" style={{ objectPosition: "right center" }} />
-
-            {/* Dark gradient overlay so text stays legible */}
             <div
               className="absolute inset-0"
               style={{
                 background: "linear-gradient(90deg, oklch(0.10 0.05 145 / 0.88) 0%, oklch(0.10 0.05 145 / 0.55) 60%, oklch(0.10 0.05 145 / 0.30) 100%)",
               }}
             />
-
-            {/* Green accent glow from left edge */}
-            <div
-              className="absolute inset-y-0 left-0 w-1"
-              style={{ background: accent, boxShadow: `0 0 24px 4px ${accent}88` }}
-            />
-
-            {/* Stats content — overlaid on the video */}
             <div className="relative z-10 h-full flex items-center gap-6 px-6">
-              {/* League name + format */}
               <div className="flex-1 min-w-0">
-                <h2
-                  className="text-xl font-black truncate leading-tight"
-                  style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+                <h1
+                  className="whitespace-nowrap text-[clamp(1.55rem,7vw,2.25rem)] font-black leading-tight"
+                  style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
                 >
                   {league.name}
-                </h2>
+                </h1>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.55)" }}>{league.clubName}</span>
+                  <span className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.55)" }}>{league.clubName}</span>
                   <span
                     className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider"
                     style={{ background: `${accent}30`, color: accent, border: `1px solid ${accent}50` }}
@@ -1575,43 +1515,16 @@ export default function LeagueDashboard() {
                   </span>
                 </div>
               </div>
-
-              {/* Divider */}
               <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
-
-              {/* Season progress ring */}
-              <div className="hidden sm:flex flex-col items-center gap-1 flex-shrink-0">
-                <div className="relative w-11 h-11">
-                  <svg className="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
-                    <circle
-                      cx="18" cy="18" r="15" fill="none"
-                      stroke={accent}
-                      strokeWidth="3"
-                      strokeDasharray={`${progressPct * 0.942} 100`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black" style={{ color: accent }}>
-                    {progressPct}%
-                  </span>
-                </div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>Progress</span>
-              </div>
-
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
-
-              {/* Stats pills */}
-              <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
                 {[
                   { label: "Players", value: `${league.players.length}/${league.maxPlayers}` },
                   { label: "Matches", value: `${completedMatchCount}/${totalMatches}` },
                   { label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="text-center">
-                    <div className="text-sm font-black" style={{ color: "#fff", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{value}</div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.40)" }}>{label}</div>
+                    <div className="text-xl font-black" style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{value}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</div>
                   </div>
                 ))}
               </div>
