@@ -336,13 +336,17 @@ export default function AuthPage() {
               <span className="text-base font-semibold tracking-tight text-white">OTB Chess</span>
             </div>
 
-            {/* Tagline */}
-            <div className="relative mt-auto">
+            {/* Primary brand artwork — uses the open panel space without crowding the statement. */}
+            <div className="relative flex flex-1 items-center justify-center py-3">
               <img
                 src="/auth-assets/auth-brand-artwork.png"
                 alt="1904 Chess Club brand mark"
-                className="mb-5 h-48 w-48 rounded-[28px] object-cover shadow-[0_18px_36px_rgba(0,0,0,0.24)]"
+                className="h-[19rem] w-[19rem] shrink-0 rounded-[36px] object-cover shadow-[0_22px_44px_rgba(0,0,0,0.26)]"
               />
+            </div>
+
+            {/* Tagline */}
+            <div className="relative">
               <h1 className="text-[28px] leading-[1.08] font-extrabold tracking-tight text-white">
                 <span className="block">Play more chess.</span>
                 <span className="block text-[oklch(0.75_0.14_145)]">Over the board.</span>

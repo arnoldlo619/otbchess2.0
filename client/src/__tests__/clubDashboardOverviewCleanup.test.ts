@@ -14,8 +14,8 @@ describe("Club Dashboard overview cleanup", () => {
   });
 
   it("uses larger monochrome Quick Action labels and icon surfaces", () => {
-    expect(dashboardSource).toContain("min-h-14 items-center justify-center gap-2");
-    expect(dashboardSource).toContain("sm:min-h-16");
+    expect(dashboardSource).toContain("min-h-[72px] items-center justify-center gap-2.5");
+    expect(dashboardSource).toContain("h-10 w-10 shrink-0 items-center justify-center rounded-xl");
     expect(dashboardSource).toContain("text-sm font-semibold sm:text-[15px]");
     expect(dashboardSource).toContain('background: isDark ? "rgba(255,255,255,0.075)" : "rgba(21,41,28,0.055)"');
     expect(dashboardSource).toContain('color: isDark ? "rgba(255,255,255,0.88)" : "#15291c"');
@@ -27,7 +27,14 @@ describe("Club Dashboard overview cleanup", () => {
     expect(dashboardSource).toContain('{ icon: GanttChart, label: "Tournament"');
     expect(dashboardSource).toContain('{ icon: LeaguesIcon, label: "Leagues", action: () => { setEventsFilter("leagues"); setTab("events"); } }');
     expect(dashboardSource).toContain('{ icon: Megaphone, label: "Post"');
-    expect(dashboardSource).toContain('max-w-[680px] grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3');
+    expect(dashboardSource).toContain('max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4');
+  });
+
+  it("adds restrained, accessible hover depth without changing action behavior", () => {
+    expect(dashboardSource).toContain("hover:-translate-y-0.5 hover:border-[var(--quick-action-hover-border)] hover:shadow-[var(--quick-action-hover-shadow)]");
+    expect(dashboardSource).toContain('"--quick-action-hover-border": isDark ? `${accent}82` : `${accent}58`');
+    expect(dashboardSource).toContain("group-hover:opacity-100 motion-reduce:transition-none");
+    expect(dashboardSource).toContain("group-hover:scale-[1.045]");
   });
 
   it("routes the Leagues action into the current club's create-and-manage workspace", () => {

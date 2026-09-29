@@ -4292,7 +4292,7 @@ export default function ClubDashboard() {
             {/* ── Quick Actions — centered owner controls ── */}
             <section aria-labelledby="overview-quick-actions">
               <h3 id="overview-quick-actions" className="mb-3 text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
-              <div className="mx-auto grid max-w-[680px] grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+              <div className="mx-auto grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
@@ -4302,20 +4302,29 @@ export default function ClubDashboard() {
                   <button
                     key={label}
                     onClick={action}
-                    className="group flex min-h-14 items-center justify-center gap-2 rounded-xl border px-3 py-3 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0 active:scale-[0.98] sm:min-h-16"
+                    className="group relative isolate flex min-h-[72px] items-center justify-center gap-2.5 overflow-hidden rounded-2xl border px-3 py-3 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--quick-action-hover-border)] hover:shadow-[var(--quick-action-hover-shadow)] focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
                     style={{
                       background: isDark ? "oklch(0.14 0.04 145)" : "rgba(255,255,255,0.72)",
                       borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
                       color: isDark ? "rgba(255,255,255,0.92)" : "#15291c",
                       boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 1px 2px rgba(21,41,28,0.04)",
+                      "--quick-action-hover-border": isDark ? `${accent}82` : `${accent}58`,
+                      "--quick-action-hover-shadow": isDark ? "0 14px 30px rgba(0,0,0,0.28)" : "0 14px 30px rgba(20,55,31,0.12)",
                       // The visible green focus outline stays consistent in both appearances.
                       "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3",
                     } as React.CSSProperties}
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 sm:h-10 sm:w-10" style={{ background: isDark ? "rgba(255,255,255,0.075)" : "rgba(21,41,28,0.055)" }}>
-                      <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" style={{ color: isDark ? "rgba(255,255,255,0.88)" : "#15291c" }} aria-hidden="true" />
-                    </div>
-                    <span className="whitespace-nowrap text-sm font-semibold sm:text-[15px]">{label}</span>
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 motion-reduce:transition-none"
+                      style={{ background: isDark ? `radial-gradient(circle at 15% 0%, ${accent}2b 0%, transparent 59%)` : `radial-gradient(circle at 15% 0%, ${accent}1c 0%, transparent 59%)` }}
+                    />
+                    <span className="relative z-10 flex items-center gap-2.5">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-[background-color,box-shadow,transform] duration-200 ease-out group-hover:scale-[1.045] group-hover:shadow-sm motion-reduce:transition-none sm:h-11 sm:w-11" style={{ background: isDark ? "rgba(255,255,255,0.075)" : "rgba(21,41,28,0.055)" }}>
+                        <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" style={{ color: isDark ? "rgba(255,255,255,0.88)" : "#15291c" }} aria-hidden="true" />
+                      </span>
+                      <span className="whitespace-nowrap text-sm font-semibold sm:text-[15px]">{label}</span>
+                    </span>
                   </button>
                 ))}
               </div>

@@ -26,7 +26,9 @@ describe("Auth page visual refinement", () => {
   it("places the supplied 1904 brand artwork above the desktop statement", () => {
     expect(authSource).toContain('src="/auth-assets/auth-brand-artwork.png"');
     expect(authSource).toContain('alt="1904 Chess Club brand mark"');
-    expect(authSource).toContain('h-48 w-48 rounded-[28px]');
+    expect(authSource).toContain('flex flex-1 items-center justify-center py-3');
+    expect(authSource).toContain('h-[19rem] w-[19rem] shrink-0 rounded-[36px]');
+    expect(authSource).not.toContain('h-48 w-48 rounded-[28px]');
     expect(authSource.indexOf('src="/auth-assets/auth-brand-artwork.png"')).toBeLessThan(authSource.indexOf("Play more chess."));
     expect(existsSync(resolve(process.cwd(), "client/public/auth-assets/auth-brand-artwork.png"))).toBe(true);
   });
