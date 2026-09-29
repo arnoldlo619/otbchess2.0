@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -21,5 +21,12 @@ describe("Auth page visual refinement", () => {
     expect(authSource).toContain("Over the board.");
     expect(authSource).toContain("chessotb.club");
     expect(authSource).not.toContain("Where chess happens.");
+  });
+
+  it("places the supplied 1904 brand artwork above the desktop statement", () => {
+    expect(authSource).toContain('src="/auth-assets/auth-brand-artwork.png"');
+    expect(authSource).toContain('alt="1904 Chess Club brand mark"');
+    expect(authSource.indexOf('src="/auth-assets/auth-brand-artwork.png"')).toBeLessThan(authSource.indexOf("Play more chess."));
+    expect(existsSync(resolve(process.cwd(), "client/public/auth-assets/auth-brand-artwork.png"))).toBe(true);
   });
 });

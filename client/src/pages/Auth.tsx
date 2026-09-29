@@ -338,6 +338,11 @@ export default function AuthPage() {
 
             {/* Tagline */}
             <div className="relative mt-auto">
+              <img
+                src="/auth-assets/auth-brand-artwork.png"
+                alt="1904 Chess Club brand mark"
+                className="mb-5 h-24 w-24 rounded-2xl object-cover shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+              />
               <h1 className="text-[28px] leading-[1.08] font-extrabold tracking-tight text-white">
                 <span className="block">Play more chess.</span>
                 <span className="block text-[oklch(0.75_0.14_145)]">Over the board.</span>
