@@ -3491,6 +3491,13 @@ export default function ClubDashboard() {
   const tournamentEvents = events.filter((e) => !!e.tournamentId);
   // Meetup events: club events created via the Club Meetup wizard
   const meetupEvents = events.filter((e) => e.eventType === "meetup");
+  const otherEvents = events.filter((e) => !e.tournamentId && e.eventType !== "meetup");
+  const eventFilterCounts = {
+    all: events.length,
+    meetups: meetupEvents.length,
+    tournaments: tournamentEvents.length,
+    leagues: clubLeagues.length,
+  } as const;
 
   const filteredMembers = members.filter(
     (m) =>
@@ -4301,62 +4308,110 @@ export default function ClubDashboard() {
         )}
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && (
-          <div className="space-y-8">
-            {/* ── Owner action bar ─────────────────────────────────────────── */}
-            {isOwnerOrDirector && (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <SpinBorderButton
-                  variant="solid"
-                  onClick={() => setShowTournamentWizard(true)}
-                  className="flex-1 w-full"
-                >
-                  <GanttChart className="w-4 h-4" />
-                  New Tournament
-                  <ArrowRight className="w-4 h-4" />
-                </SpinBorderButton>
-                <button
-                  onClick={() => setShowMeetupWizard(true)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white/60 border border-dashed border-white/15 hover:border-white/30 hover:text-white/80 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  Club Meetup
-                </button>
+          <div className="space-y-6">
+            <section
+              className="overflow-hidden rounded-2xl border p-4 sm:p-5"
+              style={{
+                background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.78)",
+                borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
+                boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)",
+              }}
+              aria-labelledby="club-events-heading"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" style={{ color: accent }} aria-hidden="true" />
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "rgba(21,41,28,0.52)" }}>Club schedule</p>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h2 id="club-events-heading" className="text-2xl font-bold tracking-tight sm:text-[28px]" style={{ color: isDark ? "rgba(255,255,255,0.94)" : "#15291c" }}>Events</h2>
+                    <span className="text-sm" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
+                      {upcomingEvents.length === 1 ? "1 upcoming date" : `${upcomingEvents.length} upcoming dates`}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 max-w-2xl text-sm leading-6" style={{ color: isDark ? "rgba(255,255,255,0.54)" : "rgba(21,41,28,0.60)" }}>
+                    Find the next club session, tournament, or league season in one schedule.
+                  </p>
+                </div>
+
+                {isOwnerOrDirector && (
+                  eventsFilter === "leagues" ? (
+                    <button
+                      onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); setLeagueName(""); setLeagueDesc(""); setLeagueMaxPlayers(6); setLeaguePickedIds(new Set()); }}
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2 sm:w-auto"
+                      style={{ background: accent, color: "#0a1a0f", "--tw-ring-offset-color": isDark ? "oklch(0.155 0.045 145)" : "#f4f7f3" } as React.CSSProperties}
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      New league
+                    </button>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
+                      <SpinBorderButton
+                        variant="solid"
+                        onClick={() => setShowTournamentWizard(true)}
+                        className="min-h-11 whitespace-nowrap px-4"
+                      >
+                        <GanttChart className="h-4 w-4" />
+                        New tournament
+                      </SpinBorderButton>
+                      <button
+                        onClick={() => setShowMeetupWizard(true)}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2"
+                        style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(21,41,28,0.035)", borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(21,41,28,0.16)", color: isDark ? "rgba(255,255,255,0.82)" : "#15291c", "--tw-ring-offset-color": isDark ? "oklch(0.155 0.045 145)" : "#f4f7f3" } as React.CSSProperties}
+                      >
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        Create meetup
+                      </button>
+                    </div>
+                  )
+                )}
               </div>
+
+              <div className="mt-5 border-t pt-4" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)" }}>
+                <div role="tablist" aria-label="Event type" className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                  {([
+                    { key: "all", label: "All events" },
+                    { key: "meetups", label: "Meetups" },
+                    { key: "tournaments", label: "Tournaments" },
+                    { key: "leagues", label: "Leagues" },
+                  ] as const).map((filter) => {
+                    const selected = eventsFilter === filter.key;
+                    return (
+                      <button
+                        key={filter.key}
+                        role="tab"
+                        aria-selected={selected}
+                        onClick={() => setEventsFilter(filter.key)}
+                        className="inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition-[background-color,border-color,color,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2 sm:min-w-[116px] sm:justify-center"
+                        style={{
+                          background: selected ? (isDark ? `${accent}22` : `${accent}16`) : (isDark ? "rgba(255,255,255,0.025)" : "rgba(21,41,28,0.025)"),
+                          borderColor: selected ? `${accent}88` : (isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.11)"),
+                          color: selected ? (isDark ? "#b5f4a9" : "#1f6933") : (isDark ? "rgba(255,255,255,0.64)" : "rgba(21,41,28,0.70)"),
+                          "--tw-ring-offset-color": isDark ? "oklch(0.155 0.045 145)" : "#f4f7f3",
+                        } as React.CSSProperties}
+                      >
+                        <span>{filter.label}</span>
+                        <span className="rounded-md px-1.5 py-0.5 text-[11px] tabular-nums" style={{ background: selected ? `${accent}26` : (isDark ? "rgba(255,255,255,0.07)" : "rgba(21,41,28,0.07)"), color: "inherit" }}>{eventFilterCounts[filter.key]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {eventsFilter === "all" && events.length === 0 && (
+              <section className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center" style={{ borderColor: isDark ? "rgba(255,255,255,0.16)" : "rgba(21,41,28,0.18)", background: isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.52)" }}>
+                <CalendarClock className="h-8 w-8" style={{ color: accent }} aria-hidden="true" />
+                <h2 className="mt-3 text-base font-bold" style={{ color: isDark ? "rgba(255,255,255,0.88)" : "#15291c" }}>Nothing scheduled yet</h2>
+                <p className="mt-1 max-w-sm text-sm leading-6" style={{ color: isDark ? "rgba(255,255,255,0.52)" : "rgba(21,41,28,0.60)" }}>
+                  {isOwnerOrDirector ? "Start with a tournament or a meetup to give your members a date to rally around." : "Your club has not scheduled an event yet. Check back soon for the next date."}
+                </p>
+              </section>
             )}
 
-            {/* ── Events filter tabs ────────────────────────────────────── */}
-            {(() => {
-              // eventsFilter is declared in component scope below; rendered here
-              const filters: { key: typeof eventsFilter; label: string }[] = [
-                { key: "all", label: "All" },
-                { key: "meetups", label: "Meetups" },
-                { key: "tournaments", label: "Tournaments" },
-                { key: "leagues", label: "Leagues" },
-              ];
-              return (
-                <div className="flex items-center gap-2">
-                  {filters.map(f => (
-                    <button
-                      key={f.key}
-                      onClick={() => setEventsFilter(f.key)}
-                      className="px-4 rounded-full text-xs font-bold transition-all active:scale-95"
-                      style={{
-                        height: "36px",
-                        touchAction: "manipulation",
-                        ...(eventsFilter === f.key
-                          ? { background: accent, color: "#0a1a0f" }
-                          : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" })
-                      }}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
-              );
-            })()}
-
             {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
-            {eventsFilter !== "tournaments" && (() => {
+            {(eventsFilter === "all" || eventsFilter === "meetups") && (eventsFilter === "meetups" || meetupEvents.length > 0) && (() => {
               // ── Recurring series consolidation ──────────────────────────────
               // For recurring meetups (weekly/biweekly/monthly), show ONE card per
               // series. If the latest instance is past, compute the next occurrence
@@ -4423,7 +4478,7 @@ export default function ClubDashboard() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-4 h-4" style={{ color: accent }} />
-                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
+                <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
                   Club Meetups · {upcomingCards.length}{allPastInstances.length > 0 ? ` (${allPastInstances.length} past)` : ""}
                 </h2>
               </div>
@@ -4438,113 +4493,47 @@ export default function ClubDashboard() {
                     const href = `/clubs/${club.id}/meetup/${ev.id}`;
                     const displayDateStr = card.displayDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                     return (
-                      <div
+                      <article
                         key={card.seriesId}
-                        className="relative block rounded-2xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/25 hover:scale-[1.01] hover:shadow-xl active:scale-[0.99] group"
-                        style={{ background: "oklch(0.16 0.05 145)", textDecoration: "none" }}
+                        className="group relative overflow-hidden rounded-2xl border transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px"
+                        style={{
+                          background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.80)",
+                          borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
+                          boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 8px 24px rgba(31,57,39,0.045)",
+                        }}
                       >
-                        <a
-                          href={href}
-                          aria-label={`View ${ev.title}`}
-                          className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                          style={{ color: accent }}
-                        />
-                        <div className="relative z-10 h-1 pointer-events-none transition-all group-hover:h-[3px]" style={{ background: accent }} />
-                        <div className="relative z-10 p-5 pointer-events-none">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                {/* Upcoming badge */}
-                                <span
-                                  className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                  style={{ background: "rgba(134,239,172,0.15)", color: "#86efac" }}
-                                >
-                                  Upcoming
-                                </span>
-                                {/* Recurrence badge — prominent for recurring series */}
-                                {isRecurring && (
-                                  <span
-                                    className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
-                                    style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)" }}
-                                  >
-                                    <Repeat className="w-2.5 h-2.5" />
-                                    {rLabel}
-                                  </span>
-                                )}
-                                <span className="text-white/30 text-xs">{displayDateStr}</span>
-                                {card.isVirtual && (
-                                  <span className="text-white/20 text-xs italic">Next occurrence</span>
-                                )}
-                              </div>
-                              <h3 className="text-white font-bold text-base truncate group-hover:text-white transition-colors">{ev.title}</h3>
-                              {ev.description && (
-                                <p className="text-white/40 text-sm mt-1 line-clamp-2">{ev.description}</p>
-                              )}
-                              {ev.venue && (
-                                <div className="flex items-center gap-1.5 mt-2 text-white/30 text-xs">
-                                  <MapPin className="w-3 h-3" />
-                                  <span>{ev.venue}</span>
-                                </div>
-                              )}
-                            </div>
-                            {/* Right actions: arrow + trash (owner) */}
-                            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                              <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0"
-                                style={{ background: accent + "22", color: accent }}
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </div>
-                              {isOwnerOrDirector && !card.isVirtual && (<>
-                                <button
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditMeetupId(ev.id); }}
-                                  className="pointer-events-auto w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/15 active:scale-90"
-                                  style={{ color: "rgba(255,255,255,0.55)" }}
-                                  title="Edit meetup"
-                                >
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteMeetupId(ev.id); }}
-                                  className="pointer-events-auto w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 active:scale-90"
-                                  style={{ color: "rgba(255,100,100,0.7)" }}
-                                  title="Delete meetup"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </>)}
-                            </div>
+                        <a href={href} aria-label={`Open ${ev.title}`} className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-inset" style={{ "--tw-ring-color": accent } as React.CSSProperties} />
+                        <div className="relative z-10 flex gap-3 p-4 sm:gap-4 sm:p-5 pointer-events-none">
+                          <div className="flex h-[70px] w-[58px] shrink-0 flex-col items-center justify-center rounded-xl border text-center" style={{ background: isDark ? `${accent}14` : `${accent}10`, borderColor: `${accent}35`, color: isDark ? "#b5f4a9" : "#1f6933" }}>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.12em]">{card.displayDate.toLocaleDateString("en-US", { month: "short" })}</span>
+                            <span className="mt-0.5 text-2xl font-bold leading-none tabular-nums">{card.displayDate.getDate()}</span>
+                            <span className="mt-1 text-[10px] font-medium">{card.displayDate.toLocaleDateString("en-US", { weekday: "short" })}</span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2 mt-4">
-                            <span
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all group-hover:shadow-md group-hover:brightness-110"
-                              style={{ background: accent + "33", color: accent, border: `1px solid ${accent}66` }}
-                            >
-                              <Calendar className="w-3.5 h-3.5" />
-                              View Meetup
-                            </span>
-                            {!card.isVirtual && (
-                              <span
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition"
-                                style={{ borderColor: accent + "66", color: accent, background: accent + "18" }}
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                RSVP
-                              </span>
-                            )}
-                            {isOwnerOrDirector && !card.isVirtual && (
-                              <button
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRsvpPanel(ev.id); }}
-                                className="pointer-events-auto flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition hover:scale-105 active:scale-95"
-                                style={{ borderColor: "rgba(96,165,250,0.4)", color: "#60a5fa", background: "rgba(96,165,250,0.1)" }}
-                              >
-                                <Users className="w-3.5 h-3.5" />
-                                Manage RSVPs
-                              </button>
-                            )}
+                          <div className="min-w-0 flex-1 pt-0.5">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: isDark ? "rgba(255,255,255,0.50)" : "rgba(21,41,28,0.54)" }}>Meetup</span>
+                              {isRecurring && <span className="inline-flex items-center gap-1 text-[11px] font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.64)" : "rgba(21,41,28,0.64)" }}><Repeat className="h-3 w-3" aria-hidden="true" /> {rLabel}</span>}
+                              {card.isVirtual && <span className="text-[11px]" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "rgba(21,41,28,0.50)" }}>Next occurrence</span>}
+                            </div>
+                            <h2 className="mt-1 truncate text-base font-bold leading-6 sm:text-lg" style={{ color: isDark ? "rgba(255,255,255,0.94)" : "#15291c" }}>{ev.title}</h2>
+                            {ev.description && <p className="mt-1 line-clamp-2 text-sm leading-5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "rgba(21,41,28,0.62)" }}>{ev.description}</p>}
+                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
+                              {ev.venue && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />{ev.venue}</span>}
+                              <span>{displayDateStr}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 pointer-events-none sm:px-5" style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(21,41,28,0.09)" }}>
+                          <span className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold" style={{ color: accent }}>Open meetup <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
+                          {isOwnerOrDirector && !card.isVirtual && (
+                            <div className="flex items-center gap-1.5 pointer-events-auto">
+                              <button onClick={(event) => { event.preventDefault(); event.stopPropagation(); openRsvpPanel(ev.id); }} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Users className="h-3.5 w-3.5" aria-hidden="true" /> RSVPs</button>
+                              <button onClick={(event) => { event.preventDefault(); event.stopPropagation(); setEditMeetupId(ev.id); }} aria-label={`Edit ${ev.title}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Pencil className="h-3.5 w-3.5" aria-hidden="true" /></button>
+                              <button onClick={(event) => { event.preventDefault(); event.stopPropagation(); setDeleteMeetupId(ev.id); }} aria-label={`Delete ${ev.title}`} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border transition-colors hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#7f1d1d" }}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
+                            </div>
+                          )}
+                        </div>
+                      </article>
                     );
                   })}
                   {upcomingCards.length > 4 && (
@@ -4561,7 +4550,7 @@ export default function ClubDashboard() {
                   <Users className="w-8 h-8 opacity-20 text-white" />
                   <p className="text-white/30 text-sm">
                     {isOwnerOrDirector
-                      ? "No upcoming meetups — click \"Club Meetup\" above to schedule one."
+                      ? "No upcoming meetups — use Create meetup above to schedule one."
                       : "No upcoming meetups scheduled by this club yet."}
                   </p>
                 </div>
@@ -4627,7 +4616,7 @@ export default function ClubDashboard() {
               );
             })()}
             {/* u2500u2500 RSVP FORM RESPONSES (owner analytics) u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500u2500 */}
-            {isOwnerOrDirector && (() => {
+            {(eventsFilter === "all" || eventsFilter === "meetups") && isOwnerOrDirector && (() => {
               const meetupEventsWithForms = events.filter(e => e.eventType === "meetup");
               if (meetupEventsWithForms.length === 0) return null;
               return (
@@ -4727,115 +4716,60 @@ export default function ClubDashboard() {
             })()}
 
             {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
-            {eventsFilter !== "meetups" && (() => {
+            {(eventsFilter === "all" || eventsFilter === "tournaments") && (eventsFilter === "tournaments" || tournamentEvents.length > 0) && (() => {
               const upcomingTmts = tournamentEvents.filter(isUpcoming);
               const pastTmts = tournamentEvents.filter(e => !isUpcoming(e));
               return (
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <GanttChart className="w-4 h-4" style={{ color: accent }} />
-                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
+                <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
                   Tournaments · {upcomingTmts.length}{pastTmts.length > 0 ? ` (${pastTmts.length} past)` : ""}
                 </h2>
               </div>
               {upcomingTmts.length > 0 ? (
                 <div className="space-y-4">
                   {(showAllUpcomingTmts ? upcomingTmts : upcomingTmts.slice(0, 4)).map((event) => {
-                    const isUpcomingTmt = true;
                     return (
-                      <div
+                      <article
                         key={event.id}
-                        className="rounded-2xl border border-white/10 overflow-hidden"
-                        style={{ background: "oklch(0.16 0.05 145)" }}
+                        className="overflow-hidden rounded-2xl border"
+                        style={{
+                          background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.80)",
+                          borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
+                          boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 8px 24px rgba(31,57,39,0.045)",
+                        }}
                       >
-                        {/* Accent top bar */}
-                        <div className="h-1" style={{ background: accent }} />
-                        <div className="p-5">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span
-                                  className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                  style={isUpcomingTmt
-                                    ? { background: "rgba(134,239,172,0.15)", color: "#86efac" }
-                                    : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
-                                  }
-                                >
-                                  {isUpcomingTmt ? "Upcoming" : "Past"}
-                                </span>
-                                <span className="text-white/30 text-xs">
-                                  {new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                </span>
-                              </div>
-                              <h3 className="text-white font-bold text-base truncate">{event.title}</h3>
-                              {event.description && (
-                                <p className="text-white/40 text-sm mt-1 line-clamp-2">{event.description}</p>
-                              )}
-                              {event.venue && (
-                                <div className="flex items-center gap-1.5 mt-2 text-white/30 text-xs">
-                                  <MapPin className="w-3 h-3" />
-                                  <span>{event.venue}</span>
-                                </div>
-                              )}
-                            </div>
-                            <GanttChart className="w-8 h-8 flex-shrink-0 opacity-20" />
+                        <div className="flex gap-3 p-4 sm:gap-4 sm:p-5">
+                          <div className="flex h-[70px] w-[58px] shrink-0 flex-col items-center justify-center rounded-xl border text-center" style={{ background: isDark ? `${accent}14` : `${accent}10`, borderColor: `${accent}35`, color: isDark ? "#b5f4a9" : "#1f6933" }}>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.12em]">{new Date(event.startAt).toLocaleDateString("en-US", { month: "short" })}</span>
+                            <span className="mt-0.5 text-2xl font-bold leading-none tabular-nums">{new Date(event.startAt).getDate()}</span>
+                            <span className="mt-1 text-[10px] font-medium">{new Date(event.startAt).toLocaleDateString("en-US", { weekday: "short" })}</span>
                           </div>
-                          {/* Action buttons */}
-                          <div className="flex flex-wrap items-center gap-2 mt-4">
-                            <a
-                              href={`/clubs/${club.id}/meetup/${event.id}`}
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:opacity-90 active:scale-95"
-                              style={{ borderColor: accent + "66", color: accent, background: accent + "18" }}
-                            >
-                              <Calendar className="w-3.5 h-3.5" />
-                              Event page
-                            </a>
-                            <a
-                              href={`/tournament/${event.tournamentId}/play`}
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition hover:opacity-90 active:scale-95"
-                              style={{ background: accent, color: "#0a1a0f" }}
-                            >
-                              <Trophy className="w-3.5 h-3.5" />
-                              View Tournament
-                            </a>
-                            {isUpcomingTmt && !isOwnerOrDirector && (
-                              <a
-                                href={`/tournament/${event.tournamentId}/play`}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:opacity-90 active:scale-95"
-                                style={{ borderColor: accent + "44", color: accent, background: accent + "11" }}
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                                Join Tournament
-                              </a>
-                            )}
-                            {isOwnerOrDirector && (
-                              <>
-                                <a
-                                  href={`/clubs/${club.id}/meetup/${event.id}/rsvp-form/builder`}
-                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white/50 border border-white/10 hover:text-white/80 hover:border-white/20 transition"
-                                >
-                                  <Calendar className="w-3.5 h-3.5" />
-                                  RSVP form
-                                </a>
-                                <button
-                                  onClick={() => openRsvpPanel(event.id)}
-                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white/50 border border-white/10 hover:text-white/80 hover:border-white/20 transition"
-                                >
-                                  <Users className="w-3.5 h-3.5" />
-                                  Manage RSVPs
-                                </button>
-                                <a
-                                  href={`/tournament/${event.tournamentId}/manage`}
-                                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white/50 border border-white/10 hover:text-white/80 hover:border-white/20 transition"
-                                >
-                                  <Settings2 className="w-3.5 h-3.5" />
-                                  Manage tournament
-                                </a>
-                              </>
-                            )}
+                          <div className="min-w-0 flex-1 pt-0.5">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: isDark ? "rgba(255,255,255,0.50)" : "rgba(21,41,28,0.54)" }}>Tournament</span>
+                              <span className="text-[11px] font-semibold" style={{ color: isDark ? "#b5f4a9" : "#1f6933" }}>Upcoming</span>
+                            </div>
+                            <h2 className="mt-1 truncate text-base font-bold leading-6 sm:text-lg" style={{ color: isDark ? "rgba(255,255,255,0.94)" : "#15291c" }}>{event.title}</h2>
+                            {event.description && <p className="mt-1 line-clamp-2 text-sm leading-5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "rgba(21,41,28,0.62)" }}>{event.description}</p>}
+                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>
+                              {event.venue && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />{event.venue}</span>}
+                              <span>{new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-3 sm:px-5" style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "rgba(21,41,28,0.09)" }}>
+                          <a href={`/tournament/${event.tournamentId}/play`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-[background-color,transform] hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" style={{ background: accent, color: "#0a1a0f" }}><Trophy className="h-3.5 w-3.5" aria-hidden="true" />Open tournament</a>
+                          {isOwnerOrDirector && (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button onClick={() => openRsvpPanel(event.id)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Users className="h-3.5 w-3.5" aria-hidden="true" /> RSVPs</button>
+                              <a href={`/tournament/${event.tournamentId}/manage`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><Settings2 className="h-3.5 w-3.5" aria-hidden="true" /> Manage</a>
+                              <a href={`/clubs/${club.id}/meetup/${event.id}/rsvp-form/builder`} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ borderColor: isDark ? "rgba(255,255,255,0.13)" : "rgba(21,41,28,0.14)", color: isDark ? "rgba(255,255,255,0.72)" : "#15291c" }}><ClipboardList className="h-3.5 w-3.5" aria-hidden="true" /> Registration</a>
+                            </div>
+                          )}
+                        </div>
+                      </article>
                     );
                   })}
                   {upcomingTmts.length > 4 && (
@@ -4852,7 +4786,7 @@ export default function ClubDashboard() {
                   <GanttChart className="w-8 h-8 opacity-20 text-white" />
                   <p className="text-white/30 text-sm">
                     {isOwnerOrDirector
-                      ? "No upcoming tournaments — click \"New Tournament\" above to host one."
+                      ? "No upcoming tournaments — use New tournament above to host one."
                       : "No upcoming tournaments hosted by this club yet."}
                   </p>
                 </div>
@@ -4906,7 +4840,7 @@ export default function ClubDashboard() {
               );
             })()}
             {/* ── OTHER EVENTS SECTION ─────────────────────────────────────── */}
-            {(() => {
+            {eventsFilter === "all" && otherEvents.length > 0 && (() => {
               const nonTmtUpcoming = upcomingEvents.filter(e => !e.tournamentId && e.eventType !== "meetup");
               const nonTmtPast = pastEvents.filter(e => !e.tournamentId && e.eventType !== "meetup");
               return (
