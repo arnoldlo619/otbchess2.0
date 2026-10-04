@@ -1289,7 +1289,7 @@ export default function LeagueDashboard() {
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
           data-testid="league-desktop-sidebar"
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 py-4 gap-1 relative chess-board-bg sticky top-0 self-start h-screen"
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 py-4 gap-1 relative z-50 overflow-visible chess-board-bg sticky top-0 self-start h-screen"
           style={{
             borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
           }}
@@ -1340,7 +1340,8 @@ export default function LeagueDashboard() {
                       </span>
                     )}
                     <span
-                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                      data-testid="league-sidebar-tooltip"
+                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-[60]"
                       style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
                     >
                       {tab.label}

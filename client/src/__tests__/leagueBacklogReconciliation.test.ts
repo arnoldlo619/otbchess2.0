@@ -20,6 +20,12 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain('label: "Schedule"');
   });
 
+  it("keeps desktop sidebar tooltips above the League content layer", () => {
+    expect(dashboard).toContain('data-testid="league-sidebar-tooltip"');
+    expect(dashboard).toContain("relative z-50 overflow-visible chess-board-bg");
+    expect(dashboard).toContain("transition-opacity z-[60]");
+  });
+
   it("renders the overview, roster, progress, standings, and upcoming matchup surfaces", () => {
     expect(dashboard).toContain("Upcoming Matchups");
     expect(dashboard).toContain("League Form");
