@@ -417,7 +417,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
       <div className="container relative z-10 h-full">
         {/* Mobile-first hero content */}
-        <div className="hero-mobile-content max-w-3xl mx-auto text-center flex flex-col justify-center gap-8 sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0">
+        <div className="hero-mobile-content max-w-4xl mx-auto text-center flex flex-col justify-center gap-8 sm:block pt-4 sm:pt-16 lg:pt-24 pb-4 sm:pb-0">
           {/* ── Top group: announcement + heading + subtitle ── */}
           <div className="flex flex-col items-center">
             <div className="opacity-0-init animate-fade-in-up flex justify-center mb-4 sm:mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
@@ -430,15 +430,13 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </div>
 
             <h1
-              className="opacity-0-init animate-fade-in-up text-[2.15rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.06] tracking-tight mb-3 sm:mb-6 text-foreground"
+              className="opacity-0-init animate-fade-in-up text-[2.2rem] sm:text-5xl lg:text-6xl xl:text-[4.5rem] font-bold leading-[1.03] tracking-tight mb-3 sm:mb-6 text-foreground"
               style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
             >
-              Chess Clubs,
-              <br />
               Chess Tournaments,
               <br />
               <PatternText
-                text="Over The Board."
+                text="Over the Board."
                 className={isDark ? "otb-pattern-text--dark" : "otb-pattern-text--light"}
               />
             </h1>
@@ -448,7 +446,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               className="opacity-0-init animate-fade-in-up text-sm sm:text-lg leading-relaxed mb-0 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-4 sm:px-0"
               style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
             >
-              Host tournaments with automatic pairings.
+              For the Chess Clubs playing more Chess OTB.
             </h2>
           </div>
 

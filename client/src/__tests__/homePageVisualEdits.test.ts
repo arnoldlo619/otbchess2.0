@@ -8,6 +8,19 @@ const homeSource = readFileSync(
 );
 
 describe("Home page visual edits", () => {
+  it("uses the refined two-line tournament hero while retaining the animated board phrase", () => {
+    const hero = homeSource.slice(
+      homeSource.indexOf("function Hero"),
+      homeSource.indexOf("/// ─── Stats Bar"),
+    );
+
+    expect(hero).toContain("Chess Tournaments,");
+    expect(hero).toContain('text="Over the Board."');
+    expect(hero).toContain("For the Chess Clubs playing more Chess OTB.");
+    expect(hero).not.toContain("Chess Clubs,");
+    expect(hero).not.toContain("Host tournaments with automatic pairings.");
+  });
+
   it("keeps the requested Chess Club starter headings", () => {
     expect(homeSource).toContain("The Chess Club Starter Pack");
     expect(homeSource).toContain("Your Chess Club Website");
