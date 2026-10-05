@@ -309,6 +309,77 @@ describe("Club Album API behavior", () => {
     expect(memberDelete.status).toBe(403);
   });
 
+  it("moves Club Event cover data into managed storage before inserting the event", async () => {
+    const createdEvent = {
+      id: "meetup-1", clubId: "club-1", title: "Sunday Chess", description: null,
+      startAt: new Date("2026-10-11T20:00:00.000Z"), endAt: null, venue: null, address: null,
+      admissionNote: null, coverImageUrl: "/manus-storage/club-events/club-1/meetup-1/cover.webp",
+      accentColor: "#4CAF50", creatorId: "owner-1", creatorName: "Owner", isPublished: 1,
+      eventType: "meetup", tournamentId: null, recurrence: "none", recurrenceSeriesId: null,
+      recurrenceEndDate: null, createdAt: new Date("2026-10-05T00:00:00.000Z"), updatedAt: new Date("2026-10-05T00:00:00.000Z"),
+    };
+    mocks.storagePut.mockResolvedValue({ key: "club-events/club-1/meetup-1/cover.webp", url: createdEvent.coverImageUrl });
+    const { insertValues } = fakeDb([[publicClub], [], [], [createdEvent]]);
+    const response = await fetch(`${baseUrl}/api/clubs/club-1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({
+        id: "meetup-1",
+        title: "Sunday Chess",
+        startAt: "2026-10-11T20:00:00.000Z",
+        creatorName: "Owner",
+        eventType: "meetup",
+        coverImageUrl: `data:image/webp;base64,${Buffer.from("event-cover").toString("base64")}`,
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(mocks.storagePut).toHaveBeenCalledWith(
+      "club-events/club-1/meetup-1/cover.webp",
+      expect.any(Buffer),
+      "image/webp",
+    );
+    expect(insertValues).toHaveBeenCalledWith(expect.objectContaining({
+      id: "meetup-1",
+      clubId: "club-1",
+      coverImageUrl: createdEvent.coverImageUrl,
+    }));
+    await expect(response.json()).resolves.toEqual(expect.objectContaining({
+      id: "meetup-1",
+      coverImageUrl: createdEvent.coverImageUrl,
+    }));
+  });
+
+  it("rejects unsupported Club Event covers and returns an existing event for an idempotent retry", async () => {
+    fakeDb([[publicClub], [], []]);
+    const rejected = await fetch(`${baseUrl}/api/clubs/club-1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({
+        id: "meetup-rejected",
+        title: "Sunday Chess",
+        startAt: "2026-10-11T20:00:00.000Z",
+        coverImageUrl: "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBA==",
+      }),
+    });
+    expect(rejected.status).toBe(400);
+    expect(mocks.storagePut).not.toHaveBeenCalled();
+
+    const existingEvent = {
+      id: "meetup-retry", clubId: "club-1", title: "Sunday Chess", startAt: new Date("2026-10-11T20:00:00.000Z"),
+      endAt: null, createdAt: new Date("2026-10-05T00:00:00.000Z"), updatedAt: new Date("2026-10-05T00:00:00.000Z"),
+    };
+    const retryDb = fakeDb([[publicClub], [], [existingEvent]]);
+    const retried = await fetch(`${baseUrl}/api/clubs/club-1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({ id: "meetup-retry", title: "Sunday Chess", startAt: "2026-10-11T20:00:00.000Z" }),
+    });
+    expect(retried.status).toBe(200);
+    expect(retryDb.insertValues).not.toHaveBeenCalled();
+    await expect(retried.json()).resolves.toEqual(expect.objectContaining({ id: "meetup-retry" }));
+  });
+
   it("returns 404 after a photo row is removed and redirects only while the row exists", async () => {
     fakeDb([[publicClub], []]);
     const removed = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/file`, {

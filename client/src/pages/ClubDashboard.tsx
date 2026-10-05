@@ -37,7 +37,8 @@ import {
   getEventComments,
   postComment,
   deleteComment,
-  createClubEvent,
+  createPersistedClubEvent,
+  getClubEventCreationErrorMessage,
   updateClubEvent,
   deleteClubEvent,
   type ClubEvent,
@@ -974,31 +975,37 @@ function CreateEventModal({
   }, [step]);
   const previewValid = coverImageUrl.startsWith("http");
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !date) return;
     setSubmitting(true);
-    const startAt = new Date(`${date}T${startTime}`).toISOString();
-    const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
-    createClubEvent({
-      clubId,
-      title: title.trim(),
-      description: description.trim() || undefined,
-      startAt,
-      endAt,
-      venue: venue.trim() || undefined,
-      address: address.trim() || undefined,
-      admissionNote: admissionNote.trim() || undefined,
-      coverImageUrl: previewValid ? coverImageUrl.trim() : undefined,
-      accentColor,
-      creatorId: userId,
-      creatorName: displayName,
-      isPublished: true,
-    });
-    setSubmitting(false);
-    toast.success("Event created!");
-    onCreated();
-    onClose();
+    try {
+      const startAt = new Date(`${date}T${startTime}`).toISOString();
+      const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
+      await createPersistedClubEvent({
+        clubId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        startAt,
+        endAt,
+        venue: venue.trim() || undefined,
+        address: address.trim() || undefined,
+        admissionNote: admissionNote.trim() || undefined,
+        coverImageUrl: previewValid ? coverImageUrl.trim() : undefined,
+        accentColor,
+        creatorId: userId,
+        creatorName: displayName,
+        isPublished: true,
+      });
+      toast.success("Event created!");
+      onCreated();
+      onClose();
+    } catch (error) {
+      const message = getClubEventCreationErrorMessage(error);
+      if (message) toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const inputCls = "w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors";

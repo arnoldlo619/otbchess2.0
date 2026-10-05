@@ -391,6 +391,7 @@ export function createApp() {
     limit: "512kb",
     type: (req) => !(req.method === "POST" && (
       /^\/api\/clubs\/[^/]+\/feed\/?$/.test(req.url?.split("?")[0] ?? "")
+      || /^\/api\/clubs\/[^/]+\/events\/?$/.test(req.url?.split("?")[0] ?? "")
       || /^\/api\/clubs\/[^/]+\/albums\/[^/]+\/photos\/?$/.test(req.url?.split("?")[0] ?? "")
     )),
   }));
@@ -589,6 +590,9 @@ export function createApp() {
   app.use("/uploads", express.static(uploadsDir, { maxAge: "7d" }));
   // ── Clubs API (Discover, Create, Join, Members) ───────────────────────────
   app.use("/api/clubs/:clubId/feed", express.json({ limit: "22mb" }));
+  // Event covers are uploaded as validated data URLs, then moved into managed
+  // storage by the event route. Keep this narrow instead of raising the global cap.
+  app.use("/api/clubs/:clubId/events", express.json({ limit: "7mb" }));
   app.use("/api/clubs/:clubId/albums/:albumId/photos", express.json({ limit: "10mb" }));
   app.use("/api/clubs", clubsRouter);
   app.use("/api/leagues", leaguesRouter);

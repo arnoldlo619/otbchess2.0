@@ -9,7 +9,7 @@
  *   otb-club-rsvps-v1           — array of ClubEventRSVP objects
  *   otb-club-event-comments-v1  — array of ClubEventComment objects
  */
-import { authFetch } from "@/lib/apiFetch";
+import { ApiError, authFetch } from "@/lib/apiFetch";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -211,6 +211,24 @@ function genId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+class ClubEventPersistenceError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "ClubEventPersistenceError";
+  }
+}
+
+/**
+ * `authFetch` already displays connection and 5xx errors through the global
+ * notifier. Return a local message only for validation/access failures so the
+ * creation flow never stacks duplicate error toasts.
+ */
+export function getClubEventCreationErrorMessage(error: unknown): string | null {
+  if (error instanceof ApiError) return null;
+  if (error instanceof ClubEventPersistenceError && error.status >= 500) return null;
+  return error instanceof Error ? error.message : "Unable to create this Club Event";
+}
+
 // ── Events API ────────────────────────────────────────────────────────────────
 
 /** List all published events for a club, sorted by startAt ascending. */
@@ -225,7 +243,55 @@ export function getClubEvent(eventId: string): ClubEvent | null {
   return loadEvents().find((e) => e.id === eventId) ?? null;
 }
 
-/** Create a new club event. Returns the created event. Also persists to server API (fire-and-forget). */
+/**
+ * Create a Club Event on the authoritative server, then cache the canonical row.
+ *
+ * Event creation must never present a local-only record as a completed meetup:
+ * members need the same event, RSVP and attendance record across devices.
+ */
+export async function createPersistedClubEvent(
+  data: Omit<ClubEvent, "id" | "createdAt" | "updatedAt">
+): Promise<ClubEvent> {
+  const now = new Date().toISOString();
+  const event: ClubEvent = { ...data, id: genId(), createdAt: now, updatedAt: now };
+  const response = await authFetch(`/api/clubs/${encodeURIComponent(event.clubId)}/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: event.id,
+      title: event.title,
+      description: event.description ?? null,
+      startAt: event.startAt,
+      endAt: event.endAt ?? null,
+      venue: event.venue ?? null,
+      address: event.address ?? null,
+      admissionNote: event.admissionNote ?? null,
+      coverImageUrl: event.coverImageUrl ?? null,
+      accentColor: event.accentColor ?? "#4CAF50",
+      creatorName: event.creatorName,
+      eventType: event.eventType ?? "standard",
+      tournamentId: event.tournamentId ?? null,
+      recurrence: event.recurrence ?? "none",
+      recurrenceSeriesId: event.recurrenceSeriesId ?? null,
+      recurrenceEndDate: event.recurrenceEndDate ?? null,
+    }),
+  });
+  if (!response.ok) {
+    const payload = await response.clone().json().catch(() => ({})) as { error?: string };
+    throw new ClubEventPersistenceError(payload.error ?? "Unable to create this Club Event", response.status);
+  }
+
+  const canonicalEvent = toClubEvent(await response.json() as Record<string, unknown>);
+  const events = loadEvents().filter((item) => item.id !== canonicalEvent.id);
+  events.push(canonicalEvent);
+  saveEvents(events);
+  return canonicalEvent;
+}
+
+/**
+ * Legacy local factory retained for historical fixtures and offline draft data.
+ * All live Club UI creation paths must call `createPersistedClubEvent` instead.
+ */
 export function createClubEvent(
   data: Omit<ClubEvent, "id" | "createdAt" | "updatedAt">
 ): ClubEvent {
@@ -234,45 +300,7 @@ export function createClubEvent(
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
-  // Persist to server (fire-and-forget)
-  _persistEventToServer(event);
   return event;
-}
-
-/** Fire-and-forget: POST a club event to the server API. */
-function _persistEventToServer(event: ClubEvent): void {
-  try {
-    const token = localStorage.getItem("otb-auth-token");
-    if (!token) return;
-    authFetch(`/api/clubs/${event.clubId}/events`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        id: event.id,
-        title: event.title,
-        description: event.description ?? null,
-        startAt: event.startAt,
-        endAt: event.endAt ?? null,
-        venue: event.venue ?? null,
-        address: event.address ?? null,
-        admissionNote: event.admissionNote ?? null,
-        coverImageUrl: event.coverImageUrl ?? null,
-        accentColor: event.accentColor ?? "#4CAF50",
-        creatorName: event.creatorName,
-        eventType: event.eventType ?? "standard",
-        tournamentId: event.tournamentId ?? null,
-        recurrence: event.recurrence ?? "none",
-        recurrenceSeriesId: event.recurrenceSeriesId ?? null,
-        recurrenceEndDate: event.recurrenceEndDate ?? null,
-      }),
-    }).then((res) => {
-      if (!res.ok) {
-        window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "event" } }));
-      }
-    }).catch(() => {
-      window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "event" } }));
-    });
-  } catch { /* ignore */ }
 }
 
 /**
@@ -366,6 +394,49 @@ export function deleteRecurringSeries(seriesId: string, fromDate?: string): void
  * Generate recurring instances of a seed event and persist them.
  * weekly: up to 12 occurrences | biweekly: up to 12 | monthly: up to 6
  */
+export async function createPersistedRecurringEvents(
+  seed: ClubEvent,
+  recurrence: "weekly" | "biweekly" | "monthly",
+  endDate?: string
+): Promise<ClubEvent[]> {
+  const seriesId = seed.recurrenceSeriesId ?? seed.id;
+  const maxInstances = recurrence === "monthly" ? 6 : 12;
+  const cutoff = endDate ? new Date(endDate).getTime() : Infinity;
+  const created: ClubEvent[] = [];
+  let cursor = new Date(seed.startAt);
+  const seedDuration = seed.endAt ? new Date(seed.endAt).getTime() - new Date(seed.startAt).getTime() : 0;
+  for (let i = 0; i < maxInstances; i++) {
+    if (recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
+    else if (recurrence === "biweekly") cursor = new Date(cursor.getTime() + 14 * 86400000);
+    else { const n = new Date(cursor); n.setMonth(n.getMonth() + 1); cursor = n; }
+    if (cursor.getTime() > cutoff) break;
+    const instance = await createPersistedClubEvent({
+      clubId: seed.clubId,
+      title: seed.title,
+      description: seed.description,
+      startAt: cursor.toISOString(),
+      endAt: seedDuration > 0 ? new Date(cursor.getTime() + seedDuration).toISOString() : undefined,
+      venue: seed.venue,
+      address: seed.address,
+      coverImageUrl: seed.coverImageUrl,
+      accentColor: seed.accentColor,
+      creatorId: seed.creatorId,
+      creatorName: seed.creatorName,
+      tournamentId: seed.tournamentId,
+      parkingNote: seed.parkingNote,
+      admissionNote: seed.admissionNote,
+      isPublished: seed.isPublished,
+      eventType: seed.eventType,
+      recurrence,
+      recurrenceSeriesId: seriesId,
+      recurrenceEndDate: endDate,
+    });
+    created.push(instance);
+  }
+  return created;
+}
+
+/** Local recurrence factory for legacy/offline event data. */
 export function createRecurringEvents(
   seed: ClubEvent,
   recurrence: "weekly" | "biweekly" | "monthly",
@@ -380,12 +451,25 @@ export function createRecurringEvents(
   for (let i = 0; i < maxInstances; i++) {
     if (recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
     else if (recurrence === "biweekly") cursor = new Date(cursor.getTime() + 14 * 86400000);
-    else { const n = new Date(cursor); n.setMonth(n.getMonth() + 1); cursor = n; }
+    else { const next = new Date(cursor); next.setMonth(next.getMonth() + 1); cursor = next; }
     if (cursor.getTime() > cutoff) break;
     const instance = createClubEvent({
-      ...seed,
+      clubId: seed.clubId,
+      title: seed.title,
+      description: seed.description,
       startAt: cursor.toISOString(),
       endAt: seedDuration > 0 ? new Date(cursor.getTime() + seedDuration).toISOString() : undefined,
+      venue: seed.venue,
+      address: seed.address,
+      coverImageUrl: seed.coverImageUrl,
+      accentColor: seed.accentColor,
+      creatorId: seed.creatorId,
+      creatorName: seed.creatorName,
+      tournamentId: seed.tournamentId,
+      parkingNote: seed.parkingNote,
+      admissionNote: seed.admissionNote,
+      isPublished: seed.isPublished,
+      eventType: seed.eventType,
       recurrence,
       recurrenceSeriesId: seriesId,
       recurrenceEndDate: endDate,

@@ -1222,6 +1222,19 @@ clubsRouter.get("/:id/events", authMiddleware, async (req: Request, res: Respons
   }
 });
 
+const CLUB_EVENT_COVER_MAX_BYTES = 5 * 1024 * 1024;
+const CLUB_EVENT_COVER_DATA_URL = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/;
+
+function serializeClubEvent(row: typeof clubEvents.$inferSelect) {
+  return {
+    ...row,
+    startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
+    endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
+    createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+    updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+  };
+}
+
 /** POST /api/clubs/:id/events — create a club event */
 clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -1237,6 +1250,28 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
     const isDirector = membership?.role === "director" || membership?.role === "owner";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can create events" }); return; }
     const body = req.body as typeof clubEvents.$inferInsert;
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    const startAt = typeof body.startAt === "string" ? new Date(body.startAt) : new Date(NaN);
+    if (!title || title.length > 200 || Number.isNaN(startAt.getTime())) {
+      res.status(400).json({ error: "An event title and valid start time are required" });
+      return;
+    }
+    if (typeof body.description === "string" && body.description.length > 10_000) {
+      res.status(400).json({ error: "Event description must be 10,000 characters or fewer" });
+      return;
+    }
+    if (typeof body.venue === "string" && body.venue.length > 200) {
+      res.status(400).json({ error: "Venue must be 200 characters or fewer" });
+      return;
+    }
+    if (typeof body.address === "string" && body.address.length > 300) {
+      res.status(400).json({ error: "Address must be 300 characters or fewer" });
+      return;
+    }
+    if (typeof body.admissionNote === "string" && body.admissionNote.length > 200) {
+      res.status(400).json({ error: "Admission note must be 200 characters or fewer" });
+      return;
+    }
     if (body.tournamentId) {
       const [linkedEvent] = await db.select().from(clubEvents)
         .where(eq(clubEvents.tournamentId, body.tournamentId)).limit(1);
@@ -1245,25 +1280,50 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
           res.status(409).json({ error: "Tournament is already linked to another club event" });
           return;
         }
-        res.json({
-          ...linkedEvent,
-          startAt: linkedEvent.startAt instanceof Date ? linkedEvent.startAt.toISOString() : String(linkedEvent.startAt),
-          endAt: linkedEvent.endAt instanceof Date ? linkedEvent.endAt.toISOString() : linkedEvent.endAt ? String(linkedEvent.endAt) : null,
-          createdAt: linkedEvent.createdAt instanceof Date ? linkedEvent.createdAt.toISOString() : String(linkedEvent.createdAt),
-          updatedAt: linkedEvent.updatedAt instanceof Date ? linkedEvent.updatedAt.toISOString() : String(linkedEvent.updatedAt),
-        });
+        res.json(serializeClubEvent(linkedEvent));
         return;
       }
     }
     const eventId = body.id ?? nanoid(16);
+    const [existingEvent] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId)).limit(1);
+    if (existingEvent) {
+      if (existingEvent.clubId !== id) {
+        res.status(409).json({ error: "Event ID is already in use" });
+        return;
+      }
+      res.json(serializeClubEvent(existingEvent));
+      return;
+    }
+
+    let coverImageUrl: string | null = body.coverImageUrl ?? null;
+    if (typeof coverImageUrl === "string" && coverImageUrl.startsWith("data:")) {
+      const coverMatch = coverImageUrl.match(CLUB_EVENT_COVER_DATA_URL);
+      if (!coverMatch) {
+        res.status(400).json({ error: "Event cover must be a JPEG, PNG, or WebP image" });
+        return;
+      }
+      const coverBytes = Buffer.from(coverMatch[2], "base64");
+      if (coverBytes.length === 0 || coverBytes.length > CLUB_EVENT_COVER_MAX_BYTES) {
+        res.status(413).json({ error: "Event cover must be 5 MB or smaller" });
+        return;
+      }
+      const mimeType = coverMatch[1];
+      const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1];
+      const storedCover = await storagePut(`club-events/${id}/${eventId}/cover.${extension}`, coverBytes, mimeType);
+      coverImageUrl = storedCover.url;
+    }
+    if (coverImageUrl && !/^(https?:\/\/|\/manus-storage\/)/.test(coverImageUrl)) {
+      res.status(400).json({ error: "Event cover must be an uploaded image or a secure URL" });
+      return;
+    }
     await db.insert(clubEvents).values({
-      id: eventId, clubId: id, title: body.title,
+      id: eventId, clubId: id, title,
       description: body.description ?? null,
-      startAt: new Date(body.startAt),
+      startAt,
       endAt: body.endAt ? new Date(body.endAt) : null,
       venue: body.venue ?? null, address: body.address ?? null,
       admissionNote: body.admissionNote ?? null,
-      coverImageUrl: body.coverImageUrl ?? null,
+      coverImageUrl,
       accentColor: body.accentColor ?? "#4CAF50",
       creatorId: userId, creatorName: body.creatorName ?? "",
       isPublished: 1, eventType: body.eventType ?? "standard",
@@ -1274,13 +1334,7 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
     });
     const [created] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
     broadcastClubEvent(id, "event_created", { eventId, tournamentId: body.tournamentId ?? null });
-    res.status(201).json({
-      ...created,
-      startAt: created.startAt instanceof Date ? created.startAt.toISOString() : String(created.startAt),
-      endAt: created.endAt instanceof Date ? created.endAt.toISOString() : created.endAt ? String(created.endAt) : null,
-      createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt),
-      updatedAt: created.updatedAt instanceof Date ? created.updatedAt.toISOString() : String(created.updatedAt),
-    });
+    res.status(201).json(serializeClubEvent(created));
   } catch (err) {
     logger.error("[clubs] POST /:id/events error:", err);
     res.status(500).json({ error: "Failed to create club event" });

@@ -7,11 +7,13 @@
 import { useState, useRef, useCallback } from "react";
 import { X, Users, MapPin, Clock, Calendar, Repeat, ImagePlus, Trash2 } from "lucide-react";
 import {
-  createClubEvent,
-  createRecurringEvents,
+  createPersistedClubEvent,
+  createPersistedRecurringEvents,
+  getClubEventCreationErrorMessage,
   type ClubEvent,
 } from "../lib/clubEventRegistry";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { toast } from "sonner";
 
 interface Props {
   clubId: string;
@@ -112,39 +114,43 @@ export default function ClubMeetupWizard({
     if (file) handleImageFile(file);
   }, [handleImageFile]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !date) return;
     setSubmitting(true);
+    try {
+      const startAt = new Date(`${date}T${startTime}`).toISOString();
+      const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
+      const seed = await createPersistedClubEvent({
+        clubId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        startAt,
+        endAt,
+        venue: location.trim() || undefined,
+        address: address.trim() || undefined,
+        creatorId: userId,
+        creatorName: displayName,
+        accentColor: clubAccent,
+        isPublished: true,
+        eventType: "meetup",
+        recurrence: frequency === "popup" ? "none" : frequency,
+        coverImageUrl: coverImageUrl || undefined,
+      });
 
-    const startAt = new Date(`${date}T${startTime}`).toISOString();
-    const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
+      // Generate recurring instances only after the canonical seed is saved.
+      if (frequency !== "popup") {
+        await createPersistedRecurringEvents(seed, frequency);
+      }
 
-    const seed = createClubEvent({
-      clubId,
-      title: title.trim(),
-      description: description.trim() || undefined,
-      startAt,
-      endAt,
-      venue: location.trim() || undefined,
-      address: address.trim() || undefined,
-      creatorId: userId,
-      creatorName: displayName,
-      accentColor: clubAccent,
-      isPublished: true,
-      eventType: "meetup",
-      recurrence: frequency === "popup" ? "none" : frequency,
-      coverImageUrl: coverImageUrl,
-    });
-
-    // Generate recurring instances (up to 12 weeks / 6 months ahead)
-    if (frequency !== "popup") {
-      createRecurringEvents(seed, frequency);
+      // Feed post will be created by ClubDashboard's onCreated callback via recordMeetupCreated().
+      onCreated(seed);
+    } catch (error) {
+      const message = getClubEventCreationErrorMessage(error);
+      if (message) toast.error(message);
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
-    // Feed post will be created by ClubDashboard's onCreated callback via recordMeetupCreated()
-    onCreated(seed);
   }
 
   return (

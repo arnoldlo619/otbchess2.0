@@ -70,10 +70,11 @@ import {
   upsertRSVP,
   syncRSVPsFromServer,
   syncEventsFromServer,
-  createClubEvent,
+  createPersistedClubEvent,
+  getClubEventCreationErrorMessage,
   updateClubEvent,
   deleteClubEvent,
-  createRecurringEvents,
+  createPersistedRecurringEvents,
   deleteRecurringSeries,
   type ClubEvent,
   type ClubEventRSVP,
@@ -2991,7 +2992,7 @@ export default function ClubProfile() {
                       if (!club || !user || !eventForm.title.trim() || !eventForm.startAt) return;
                       setCreatingEvent(true);
                       try {
-                        const newEvent = createClubEvent({
+                        const newEvent = await createPersistedClubEvent({
                           clubId: club.id,
                           title: eventForm.title.trim(),
                           description: eventForm.description.trim() || undefined,
@@ -3009,7 +3010,7 @@ export default function ClubProfile() {
                         // Generate recurring instances and tag series
                         if (eventForm.recurrence !== "none") {
                           updateClubEvent(newEvent.id, { recurrenceSeriesId: newEvent.id });
-                          createRecurringEvents(
+                          await createPersistedRecurringEvents(
                             { ...newEvent, recurrenceSeriesId: newEvent.id },
                             eventForm.recurrence,
                             eventForm.recurrenceEndDate || undefined
@@ -3020,8 +3021,9 @@ export default function ClubProfile() {
                         setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none", recurrenceEndDate: "", coverImageUrl: "" });
                         const seriesNote = eventForm.recurrence !== "none" ? " (series created)" : "";
                         toast.success(`"${newEvent.title}" created${seriesNote}`);
-                      } catch {
-                        toast.error("Failed to create event");
+                      } catch (error) {
+                        const message = getClubEventCreationErrorMessage(error);
+                        if (message) toast.error(message);
                       } finally {
                         setCreatingEvent(false);
                       }
