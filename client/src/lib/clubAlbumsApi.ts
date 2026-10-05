@@ -2,6 +2,16 @@ import { authFetch } from "./apiFetch";
 
 const BASE = "/api/clubs";
 
+export interface ClubAlbumPhotoComment {
+  id: string;
+  photoId: string;
+  authorUserId: string;
+  authorDisplayName: string;
+  authorAvatarUrl: string | null;
+  body: string;
+  createdAt: string;
+}
+
 export interface ClubAlbumPhoto {
   id: string;
   albumId: string;
@@ -12,6 +22,9 @@ export interface ClubAlbumPhoto {
   height: number | null;
   sortOrder: number;
   createdAt?: string;
+  likeCount: number;
+  likedByViewer: boolean;
+  comments: ClubAlbumPhotoComment[];
 }
 
 export interface ClubAlbum {
@@ -85,6 +98,28 @@ export async function apiUploadClubAlbumPhoto(clubId: string, albumId: string, i
 export async function apiDeleteClubAlbumPhoto(clubId: string, albumId: string, photoId: string): Promise<void> {
   const response = await authFetch(`${BASE}/${clubId}/albums/${albumId}/photos/${photoId}`, { method: "DELETE" });
   if (!response.ok) throw await responseError(response, "Failed to remove photo");
+}
+
+export async function apiToggleClubAlbumPhotoLike(clubId: string, albumId: string, photoId: string): Promise<{ liked: boolean; likeCount: number }> {
+  const response = await authFetch(`${BASE}/${clubId}/albums/${albumId}/photos/${photoId}/like`, { method: "POST" });
+  if (!response.ok) throw await responseError(response, "Failed to update photo reaction");
+  return response.json() as Promise<{ liked: boolean; likeCount: number }>;
+}
+
+export async function apiCreateClubAlbumPhotoComment(clubId: string, albumId: string, photoId: string, body: string): Promise<ClubAlbumPhotoComment> {
+  const response = await authFetch(`${BASE}/${clubId}/albums/${albumId}/photos/${photoId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body }),
+  });
+  if (!response.ok) throw await responseError(response, "Failed to add comment");
+  const payload = await response.json() as { comment: ClubAlbumPhotoComment };
+  return payload.comment;
+}
+
+export async function apiDeleteClubAlbumPhotoComment(clubId: string, albumId: string, photoId: string, commentId: string): Promise<void> {
+  const response = await authFetch(`${BASE}/${clubId}/albums/${albumId}/photos/${photoId}/comments/${commentId}`, { method: "DELETE" });
+  if (!response.ok) throw await responseError(response, "Failed to remove comment");
 }
 
 export async function apiDeleteClubAlbum(clubId: string, albumId: string): Promise<void> {

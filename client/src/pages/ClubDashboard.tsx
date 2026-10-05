@@ -5275,6 +5275,8 @@ export default function ClubDashboard() {
             clubAvatarUrl={club.avatarUrl}
             canManage={Boolean(isOwnerOrDirector)}
             canUpload={isActiveClubMember}
+            canInteract={Boolean(isActiveClubMember && user && !user.isGuest)}
+            viewerUser={user ? { id: user.id, isGuest: user.isGuest } : null}
             currentUserName={user?.displayName ?? club.ownerName}
             accent={accent}
             isDark={isDark}

@@ -11,6 +11,9 @@ const api = vi.hoisted(() => ({
   upload: vi.fn(),
   deletePhoto: vi.fn(),
   deleteAlbum: vi.fn(),
+  toggleLike: vi.fn(),
+  createComment: vi.fn(),
+  deleteComment: vi.fn(),
 }));
 
 vi.mock("../client/src/lib/clubAlbumsApi", () => ({
@@ -20,6 +23,9 @@ vi.mock("../client/src/lib/clubAlbumsApi", () => ({
   apiUploadClubAlbumPhoto: api.upload,
   apiDeleteClubAlbumPhoto: api.deletePhoto,
   apiDeleteClubAlbum: api.deleteAlbum,
+  apiToggleClubAlbumPhotoLike: api.toggleLike,
+  apiCreateClubAlbumPhotoComment: api.createComment,
+  apiDeleteClubAlbumPhotoComment: api.deleteComment,
 }));
 
 vi.mock("../client/src/components/PlayerAvatar", () => ({
@@ -60,6 +66,9 @@ function albumWithPhotos(photoCount = 6): ClubAlbum {
       height: 1000,
       sortOrder: index,
       createdAt: "2026-08-24T19:00:00.000Z",
+      likeCount: 0,
+      likedByViewer: false,
+      comments: [],
     })),
   };
 }
@@ -236,6 +245,45 @@ describe("ClubAlbumTab rendered behavior", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Close photo viewer" }));
     await waitFor(() => expect(screen.queryByText("2 of 6")).toBeNull());
+  });
+
+  it("persists photo-specific likes and comments through the social viewer rail", async () => {
+    const album = albumWithPhotos(2);
+    api.list.mockResolvedValue([album]);
+    api.toggleLike.mockResolvedValue({ liked: true, likeCount: 1 });
+    api.createComment.mockResolvedValue({
+      id: "comment-1",
+      photoId: "photo-1",
+      authorUserId: "viewer-1",
+      authorDisplayName: "Member",
+      authorAvatarUrl: null,
+      body: "Great final round.",
+      createdAt: "2026-08-24T20:00:00.000Z",
+    });
+    api.deleteComment.mockResolvedValue(undefined);
+
+    render(<ClubAlbumTab {...baseProps} canManage canInteract viewerUser={{ id: "viewer-1", isGuest: false }} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Open Championship Night album" }));
+
+    const viewer = await screen.findByRole("dialog");
+    expect(within(viewer).getByLabelText("Photo interactions")).toBeTruthy();
+    fireEvent.click(within(viewer).getByRole("button", { name: "Like this photo" }));
+    await waitFor(() => expect(api.toggleLike).toHaveBeenCalledWith("club-1", "album-1", "photo-1"));
+    expect(within(viewer).getByRole("button", { name: "Unlike this photo" })).toBeTruthy();
+
+    fireEvent.change(within(viewer).getByLabelText("Add a comment"), { target: { value: "Great final round." } });
+    fireEvent.click(within(viewer).getByRole("button", { name: "Post comment" }));
+    await waitFor(() => expect(api.createComment).toHaveBeenCalledWith("club-1", "album-1", "photo-1", "Great final round."));
+    expect(await within(viewer).findByText("Great final round.")).toBeTruthy();
+
+    fireEvent.click(within(viewer).getByRole("button", { name: "Next photo" }));
+    expect(await within(viewer).findByText("0 comments")).toBeTruthy();
+    fireEvent.click(within(viewer).getByRole("button", { name: "Previous photo" }));
+    expect(await within(viewer).findByText("1 comment")).toBeTruthy();
+
+    fireEvent.click(within(viewer).getByRole("button", { name: "Remove" }));
+    await waitFor(() => expect(api.deleteComment).toHaveBeenCalledWith("club-1", "album-1", "photo-1", "comment-1"));
+    expect(await within(viewer).findByText("No comments yet. Start a conversation about this moment.")).toBeTruthy();
   });
 
   it("shows owner creation controls and an accessible album editor", async () => {

@@ -50,6 +50,25 @@ describe("Club Album persistence and API contracts", () => {
     expect(server).toContain('res.set("Cache-Control", "no-store")');
     expect(storage).toContain('new URL("v1/storage/presign/get"');
   });
+
+  it("persists member-authorized photo reactions and comments with scoped cleanup", () => {
+    const schema = read("shared/schema.ts");
+    const migration = read("drizzle/0020_club_album_photo_social.sql");
+    const server = read("server/clubs.ts");
+
+    expect(schema).toContain('"club_album_photo_likes"');
+    expect(schema).toContain('"club_album_photo_comments"');
+    expect(schema).toContain('uniqueIndex("capl_photo_user_idx")');
+    expect(migration).toContain("CREATE TABLE `club_album_photo_likes`");
+    expect(migration).toContain("CREATE TABLE `club_album_photo_comments`");
+    expect(server).toContain('clubsRouter.post("/:id/albums/:albumId/photos/:photoId/like", requireFullAuth');
+    expect(server).toContain('clubsRouter.post("/:id/albums/:albumId/photos/:photoId/comments", requireFullAuth');
+    expect(server).toContain('clubsRouter.delete("/:id/albums/:albumId/photos/:photoId/comments/:commentId", requireFullAuth');
+    expect(server).toContain('await isActiveClubMember(club.id, club.ownerId, userId)');
+    expect(server).toContain('Comments must be between 1 and 500 characters');
+    expect(server).toContain('await db.delete(clubAlbumPhotoLikes)');
+    expect(server).toContain('await db.delete(clubAlbumPhotoComments)');
+  });
 });
 
 describe("Club Album product experience contracts", () => {
@@ -79,14 +98,35 @@ describe("Club Album product experience contracts", () => {
     expect(component).toContain('decoding="async"');
   });
 
+  it("uses a responsive, non-emoji social rail while preserving carousel controls", () => {
+    const component = read("client/src/components/club/ClubAlbumTab.tsx");
+    const api = read("client/src/lib/clubAlbumsApi.ts");
+    const dashboard = read("client/src/pages/ClubDashboard.tsx");
+    const profile = read("client/src/pages/ClubProfile.tsx");
+
+    expect(component).toContain('aria-label="Photo interactions"');
+    expect(component).toContain('lg:grid-cols-[minmax(0,1fr)_25rem]');
+    expect(component).toContain('safe-area-inset-bottom');
+    expect(component).toContain('No comments yet. Start a conversation about this moment.');
+    expect(component).toContain('event.key === "ArrowLeft"');
+    expect(component).toContain('event.key === "ArrowRight"');
+    expect(component).not.toMatch(/[\u{1F300}-\u{1FAFF}]/u);
+    expect(api).toContain('apiToggleClubAlbumPhotoLike');
+    expect(api).toContain('apiCreateClubAlbumPhotoComment');
+    expect(api).toContain('apiDeleteClubAlbumPhotoComment');
+    expect(dashboard).toContain('canInteract={Boolean(isActiveClubMember && user && !user.isGuest)}');
+    expect(profile).toContain('canInteract={Boolean(user && !user.isGuest && (joined || isOwner || isDirector))}');
+  });
+
   it("exposes Album on both public-profile and club-dashboard desktop and mobile navigation", () => {
     const profile = read("client/src/pages/ClubProfile.tsx");
     const dashboard = read("client/src/pages/ClubDashboard.tsx");
     const tabs = read("client/src/components/club/ClubTabs.tsx");
+    const profileNavigation = read("client/src/lib/clubProfileNavigation.ts");
 
-    expect(profile).toContain('"members" | "album" | "leagues"');
+    expect(profileNavigation).toContain('MEMBER_CLUB_PROFILE_TABS = ["home", "feed", "events", "members", "album", "leagues"]');
     expect(profile).toContain('activeTab === "album"');
-    expect(profile.match(/"home", "feed", "events", "members", "album", "leagues"/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(profile).toContain('const valid: ClubTabId[] = ["home", "events", "members", "feed", "album", "leagues"]');
     expect(dashboard).toContain('| "album" |');
     expect(dashboard).toContain('{ id: "album", label: "Album", icon: AlbumIcon, group: "workspace" }');
     expect(dashboard).toContain('tab === "album"');

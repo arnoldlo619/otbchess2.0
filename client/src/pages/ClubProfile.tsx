@@ -3229,6 +3229,8 @@ export default function ClubProfile() {
             clubAvatarUrl={club.avatarUrl}
             canManage={isOwner || isDirector}
             canUpload={joined}
+            canInteract={Boolean(user && !user.isGuest && (joined || isOwner || isDirector))}
+            viewerUser={user ? { id: user.id, isGuest: user.isGuest } : null}
             currentUserName={user?.displayName ?? club.ownerName}
             accent={accent}
             isDark={isDark}

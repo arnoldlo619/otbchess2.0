@@ -857,6 +857,51 @@ export const clubAlbumPhotos = mysqlTable(
 export type ClubAlbumPhotoRow = typeof clubAlbumPhotos.$inferSelect;
 export type NewClubAlbumPhotoRow = typeof clubAlbumPhotos.$inferInsert;
 
+// ── Club Album Photo Social ───────────────────────────────────────────────────
+// Photo interactions are scoped redundantly to a club and album as well as the
+// photo. That makes every authorization query explicit, efficient, and resilient
+// when photos are moved or removed from an album.
+export const clubAlbumPhotoLikes = mysqlTable(
+  "club_album_photo_likes",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    photoId: varchar("photo_id", { length: 64 }).notNull(),
+    albumId: varchar("album_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    userId: varchar("user_id", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    photoIdx: index("capl_photo_idx").on(table.photoId, table.createdAt),
+    clubIdx: index("capl_club_idx").on(table.clubId),
+    uniqueLike: uniqueIndex("capl_photo_user_idx").on(table.photoId, table.userId),
+  })
+);
+export type ClubAlbumPhotoLikeRow = typeof clubAlbumPhotoLikes.$inferSelect;
+export type NewClubAlbumPhotoLikeRow = typeof clubAlbumPhotoLikes.$inferInsert;
+
+export const clubAlbumPhotoComments = mysqlTable(
+  "club_album_photo_comments",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    photoId: varchar("photo_id", { length: 64 }).notNull(),
+    albumId: varchar("album_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    authorUserId: varchar("author_user_id", { length: 64 }).notNull(),
+    authorDisplayName: varchar("author_display_name", { length: 100 }).notNull(),
+    authorAvatarUrl: text("author_avatar_url"),
+    body: varchar("body", { length: 500 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    photoCreatedIdx: index("capc_photo_created_idx").on(table.photoId, table.createdAt),
+    clubIdx: index("capc_club_idx").on(table.clubId),
+    authorIdx: index("capc_author_idx").on(table.authorUserId),
+  })
+);
+export type ClubAlbumPhotoCommentRow = typeof clubAlbumPhotoComments.$inferSelect;
+export type NewClubAlbumPhotoCommentRow = typeof clubAlbumPhotoComments.$inferInsert;
+
 // Fantasy Chess League Tables
 export const leagues = mysqlTable('leagues', {
   id: varchar('id', { length: 64 }).primaryKey(),

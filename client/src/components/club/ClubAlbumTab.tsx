@@ -1,13 +1,16 @@
-import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type DragEvent, type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  Heart,
   ImagePlus,
   Images,
   Loader2,
+  MessageCircle,
   Pencil,
   Plus,
   RefreshCw,
+  Send,
   Trash2,
   X,
 } from "lucide-react";
@@ -26,12 +29,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   apiCreateClubAlbum,
+  apiCreateClubAlbumPhotoComment,
   apiDeleteClubAlbum,
+  apiDeleteClubAlbumPhotoComment,
   apiDeleteClubAlbumPhoto,
   apiListClubAlbums,
+  apiToggleClubAlbumPhotoLike,
   apiUpdateClubAlbum,
   apiUploadClubAlbumPhoto,
   type ClubAlbum,
+  type ClubAlbumPhoto,
+  type ClubAlbumPhotoComment,
 } from "@/lib/clubAlbumsApi";
 
 const MAX_FILES_PER_BATCH = 12;
@@ -68,6 +76,11 @@ interface ClubAlbumTabProps {
   clubAvatarUrl?: string | null;
   canManage: boolean;
   canUpload: boolean;
+  canInteract?: boolean;
+  viewerUser?: {
+    id: string;
+    isGuest: boolean;
+  } | null;
   currentUserName?: string;
   accent: string;
   isDark: boolean;
@@ -226,6 +239,8 @@ export function ClubAlbumTab({
   clubAvatarUrl,
   canManage,
   canUpload,
+  canInteract = false,
+  viewerUser,
   currentUserName = "Club director",
   accent,
   isDark,
@@ -248,6 +263,9 @@ export function ClubAlbumTab({
   const [uploadAlbum, setUploadAlbum] = useState<ClubAlbum | null>(null);
   const [deleteAlbumTarget, setDeleteAlbumTarget] = useState<ClubAlbum | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [interactionPending, setInteractionPending] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadAlbums = useCallback(async () => {
@@ -268,10 +286,14 @@ export function ClubAlbumTab({
 
   const currentPhoto = viewer?.album.photos[viewer.index] ?? null;
   const viewerCount = viewer?.album.photos.length ?? 0;
+  const currentPhotoComments = currentPhoto?.comments ?? [];
+  const currentPhotoLikeCount = currentPhoto?.likeCount ?? 0;
 
   useEffect(() => {
     if (!viewer || viewer.album.photos.length === 0) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("input, textarea, [contenteditable='true']")) return;
       if (event.key === "ArrowLeft") {
         setViewer((current) => current ? { ...current, index: (current.index - 1 + current.album.photos.length) % current.album.photos.length } : null);
       }
@@ -474,6 +496,70 @@ export function ClubAlbumTab({
     }
   };
 
+  const updateViewerPhoto = (photoId: string, update: (photo: ClubAlbumPhoto) => ClubAlbumPhoto) => {
+    const updateAlbum = (album: ClubAlbum) => ({
+      ...album,
+      photos: album.photos.map((photo) => photo.id === photoId ? update(photo) : photo),
+    });
+    setAlbums((current) => current.map((album) => viewer && album.id === viewer.album.id ? updateAlbum(album) : album));
+    setViewer((current) => current ? { ...current, album: updateAlbum(current.album) } : null);
+  };
+
+  const toggleCurrentPhotoLike = async () => {
+    if (!viewer || !currentPhoto || !canInteract) return;
+    const actionId = `like:${currentPhoto.id}`;
+    setInteractionPending(actionId);
+    try {
+      const result = await apiToggleClubAlbumPhotoLike(clubId, viewer.album.id, currentPhoto.id);
+      updateViewerPhoto(currentPhoto.id, (photo) => ({ ...photo, likedByViewer: result.liked, likeCount: result.likeCount }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to update photo reaction");
+    } finally {
+      setInteractionPending(null);
+    }
+  };
+
+  const submitCurrentPhotoComment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!viewer || !currentPhoto || !canInteract) return;
+    const body = commentDraft.trim();
+    if (!body) {
+      setCommentError("Write a comment before posting.");
+      return;
+    }
+    const actionId = `comment:${currentPhoto.id}`;
+    setInteractionPending(actionId);
+    setCommentError(null);
+    try {
+      const comment = await apiCreateClubAlbumPhotoComment(clubId, viewer.album.id, currentPhoto.id, body);
+      updateViewerPhoto(currentPhoto.id, (photo) => ({ ...photo, comments: [...(photo.comments ?? []), comment] }));
+      setCommentDraft("");
+    } catch (error) {
+      setCommentError(error instanceof Error ? error.message : "Unable to add comment");
+    } finally {
+      setInteractionPending(null);
+    }
+  };
+
+  const deleteCurrentPhotoComment = async (comment: ClubAlbumPhotoComment) => {
+    if (!viewer || !currentPhoto) return;
+    const actionId = `delete-comment:${comment.id}`;
+    setInteractionPending(actionId);
+    try {
+      await apiDeleteClubAlbumPhotoComment(clubId, viewer.album.id, currentPhoto.id, comment.id);
+      updateViewerPhoto(currentPhoto.id, (photo) => ({ ...photo, comments: (photo.comments ?? []).filter((item) => item.id !== comment.id) }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to remove comment");
+    } finally {
+      setInteractionPending(null);
+    }
+  };
+
+  useEffect(() => {
+    setCommentDraft("");
+    setCommentError(null);
+  }, [currentPhoto?.id]);
+
   const totalPhotos = useMemo(() => albums.reduce((sum, album) => sum + album.photos.length, 0), [albums]);
   const surface = isDark ? "border-white/8 bg-[#071309]/92 text-white" : "border-[#436850]/15 bg-white/92 text-[#12372A]";
   const muted = isDark ? "text-white/55" : "text-[#436850]/75";
@@ -657,44 +743,129 @@ export function ClubAlbumTab({
           <DialogTitle className="sr-only">{viewer?.album.title ?? "Album photo"}</DialogTitle>
           <DialogDescription className="sr-only">Full-screen club album photo viewer. Use the left and right arrow keys to navigate.</DialogDescription>
           {viewer && (currentPhoto || getCuratedClubAlbumCover(viewer.album.title) || viewer.album.coverImageUrl) && (
-            <div className="relative flex h-full min-h-0 flex-col">
-              <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:px-6">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">{viewer.album.title}</p>
-                  <p className="mt-0.5 text-xs tabular-nums text-white/60">{viewerCount ? `${viewer.index + 1} of ${viewerCount}` : "Album cover"}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {canUpload && isSharedCategoryAlbum(viewer.album.title) && (
-                    <button type="button" onClick={() => { setViewer(null); openUpload(viewer.album); }} className="inline-flex h-11 items-center gap-2 rounded-full bg-[#4CAF50] px-4 text-xs font-semibold text-white shadow-lg transition hover:bg-[#57bf59] focus:outline-none focus:ring-2 focus:ring-white" aria-label={`Upload photos to ${viewer.album.title}`}>
-                      <ImagePlus className="h-4 w-4" aria-hidden="true" /> Upload photos
+            <div className="flex h-full min-h-0 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_25rem]">
+              <section className="relative flex min-h-[50dvh] min-w-0 flex-1 items-center justify-center bg-black lg:min-h-0" aria-label="Album photo carousel">
+                <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-4 pb-12 pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:px-6">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold">{viewer.album.title}</p>
+                    <p className="mt-0.5 text-xs tabular-nums text-white/60">{viewerCount ? `${viewer.index + 1} of ${viewerCount}` : "Album cover"}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {canUpload && isSharedCategoryAlbum(viewer.album.title) && (
+                      <button type="button" onClick={() => { setViewer(null); openUpload(viewer.album); }} className="inline-flex h-11 items-center gap-2 rounded-full bg-[#4CAF50] px-3.5 text-xs font-semibold text-white shadow-lg transition-colors hover:bg-[#57bf59] focus:outline-none focus:ring-2 focus:ring-white" aria-label={`Upload photos to ${viewer.album.title}`}>
+                        <ImagePlus className="h-4 w-4" aria-hidden="true" /><span className="hidden sm:inline">Upload photos</span>
+                      </button>
+                    )}
+                    {canManage && currentPhoto && (
+                      <button type="button" onClick={() => void deleteCurrentPhoto()} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-md transition-colors hover:bg-red-500/25 hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Remove this photo">
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setViewer(null)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Close photo viewer">
+                      <X className="h-5 w-5" aria-hidden="true" />
                     </button>
-                  )}
-                  {canManage && currentPhoto && (
-                    <button type="button" onClick={() => void deleteCurrentPhoto()} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white/70 backdrop-blur-md transition-colors hover:bg-red-500/25 hover:text-red-300" aria-label="Remove this photo">
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                  )}
-                  <button type="button" onClick={() => setViewer(null)} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20" aria-label="Close photo viewer">
-                    <X className="h-5 w-5" aria-hidden="true" />
-                  </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex min-h-0 flex-1 items-center justify-center px-2 py-20 sm:px-16">
+
                 <img src={currentPhoto?.url ?? getCuratedClubAlbumCover(viewer.album.title) ?? viewer.album.coverImageUrl ?? ""} alt={currentPhoto?.altText || currentPhoto?.caption || `${viewer.album.title} album cover`} className="max-h-full max-w-full object-contain" />
-              </div>
-              {viewerCount > 1 && (
-                <>
-                  <button type="button" onClick={() => setViewer((current) => current ? { ...current, index: (current.index - 1 + current.album.photos.length) % current.album.photos.length } : null)} className="absolute left-2 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-md transition-colors hover:bg-black/70 sm:left-5" aria-label="Previous photo">
-                    <ChevronLeft className="h-6 w-6" aria-hidden="true" />
-                  </button>
-                  <button type="button" onClick={() => setViewer((current) => current ? { ...current, index: (current.index + 1) % current.album.photos.length } : null)} className="absolute right-2 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-md transition-colors hover:bg-black/70 sm:right-5" aria-label="Next photo">
-                    <ChevronRight className="h-6 w-6" aria-hidden="true" />
-                  </button>
-                </>
-              )}
-              <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/85 to-transparent px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] pt-12 text-center">
-                {currentPhoto?.caption && <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/85">{currentPhoto.caption}</p>}
-              </div>
+
+                {viewerCount > 1 && (
+                  <>
+                    <button type="button" onClick={() => setViewer((current) => current ? { ...current, index: (current.index - 1 + current.album.photos.length) % current.album.photos.length } : null)} className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-white sm:left-5" aria-label="Previous photo">
+                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <button type="button" onClick={() => setViewer((current) => current ? { ...current, index: (current.index + 1) % current.album.photos.length } : null)} className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-white sm:right-5" aria-label="Next photo">
+                      <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </>
+                )}
+
+                {currentPhoto?.caption && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 to-transparent px-16 pb-5 pt-12 text-center lg:hidden">
+                    <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/85">{currentPhoto.caption}</p>
+                  </div>
+                )}
+              </section>
+
+              <aside aria-label="Photo interactions" className="flex min-h-0 max-h-[50dvh] flex-col border-t border-white/10 bg-[#0a120c] lg:max-h-none lg:border-l lg:border-t-0">
+                <div className="border-b border-white/10 px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <PlayerAvatar username={clubName} name={clubName} avatarUrl={clubAvatarUrl ?? undefined} size={36} showBadge={false} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-white">{clubName}</p>
+                      <p className="mt-0.5 text-xs text-white/50">{formatClubAlbumDate(viewer.album.eventDate, viewer.album.createdAt)}</p>
+                    </div>
+                  </div>
+                  {currentPhoto?.caption && <p className="mt-3 text-sm leading-relaxed text-white/78">{currentPhoto.caption}</p>}
+                </div>
+
+                {currentPhoto ? <>
+                  <div className="flex items-center gap-3 border-b border-white/10 px-5 py-3.5">
+                    <button
+                      type="button"
+                      onClick={() => void toggleCurrentPhotoLike()}
+                      disabled={!canInteract || interactionPending === `like:${currentPhoto.id}`}
+                      aria-pressed={currentPhoto.likedByViewer}
+                      aria-label={currentPhoto.likedByViewer ? "Unlike this photo" : "Like this photo"}
+                      className={`inline-flex h-11 min-w-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#74d477] disabled:cursor-not-allowed disabled:opacity-55 ${currentPhoto.likedByViewer ? "bg-[#4CAF50]/18 text-[#86df8a]" : "bg-white/[0.055] text-white/75 hover:bg-white/10 hover:text-white"}`}
+                    >
+                      <Heart className={`h-4 w-4 ${currentPhoto.likedByViewer ? "fill-current" : ""}`} aria-hidden="true" />
+                      <span>{currentPhotoLikeCount || "Like"}</span>
+                    </button>
+                    <span className="inline-flex items-center gap-2 text-sm text-white/55"><MessageCircle className="h-4 w-4" aria-hidden="true" />{currentPhotoComments.length} comment{currentPhotoComments.length === 1 ? "" : "s"}</span>
+                  </div>
+
+                  <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                    {currentPhotoComments.length > 0 ? (
+                      <ul className="space-y-4" aria-label="Photo comments">
+                        {currentPhotoComments.map((comment) => {
+                          const canDeleteComment = Boolean(canManage || viewerUser?.id === comment.authorUserId);
+                          return (
+                            <li key={comment.id} className="group flex gap-2.5">
+                              <PlayerAvatar username={comment.authorDisplayName} name={comment.authorDisplayName} avatarUrl={comment.authorAvatarUrl ?? undefined} size={32} showBadge={false} />
+                              <div className="min-w-0 flex-1">
+                                <div className="rounded-2xl rounded-tl-sm bg-white/[0.055] px-3 py-2.5">
+                                  <p className="text-xs font-bold text-white/90">{comment.authorDisplayName}</p>
+                                  <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-white/75">{comment.body}</p>
+                                </div>
+                                <div className="mt-1 flex items-center gap-2 px-1">
+                                  <time className="text-[11px] text-white/40" dateTime={comment.createdAt}>{new Date(comment.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time>
+                                  {canDeleteComment && (
+                                    <button type="button" onClick={() => void deleteCurrentPhotoComment(comment)} disabled={interactionPending === `delete-comment:${comment.id}`} className="text-[11px] font-semibold text-white/45 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-[#74d477] disabled:opacity-50">Remove</button>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="flex min-h-24 items-center justify-center rounded-2xl border border-dashed border-white/10 px-5 text-center">
+                        <p className="text-sm leading-relaxed text-white/48">No comments yet. Start a conversation about this moment.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t border-white/10 px-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-3">
+                    {canInteract ? (
+                      <form onSubmit={(event) => void submitCurrentPhotoComment(event)}>
+                        <label htmlFor="club-album-comment" className="sr-only">Add a comment</label>
+                        <div className="flex items-end gap-2">
+                          <Textarea id="club-album-comment" value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} maxLength={500} rows={1} placeholder="Add a comment" className="min-h-11 flex-1 resize-none border-white/10 bg-white/[0.045] px-3 py-2.5 text-sm text-white placeholder:text-white/35 focus-visible:ring-[#74d477]" />
+                          <button type="submit" disabled={!commentDraft.trim() || interactionPending === `comment:${currentPhoto.id}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#4CAF50] text-white transition-colors hover:bg-[#57bf59] focus:outline-none focus:ring-2 focus:ring-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Post comment">
+                            {interactionPending === `comment:${currentPhoto.id}` ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
+                          </button>
+                        </div>
+                        {commentError ? <p className="mt-2 text-xs text-red-300" role="alert">{commentError}</p> : <p className="mt-2 text-right text-[11px] text-white/35">{commentDraft.length}/500</p>}
+                      </form>
+                    ) : (
+                      <p className="rounded-xl bg-white/[0.045] px-3 py-3 text-center text-xs leading-relaxed text-white/52">{viewerUser?.isGuest ? "Create a free account to like photos and join the conversation." : "Only signed-in club members can like photos and comment."}</p>
+                    )}
+                  </div>
+                </> : (
+                  <div className="flex flex-1 items-center justify-center px-6 text-center"><p className="text-sm leading-relaxed text-white/50">Upload the first event photo to begin this album’s conversation.</p></div>
+                )}
+              </aside>
             </div>
           )}
         </DialogContent>

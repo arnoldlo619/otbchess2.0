@@ -42,7 +42,10 @@ import {
   rsvpFormResponses,
   clubAlbums,
   clubAlbumPhotos,
+  clubAlbumPhotoLikes,
+  clubAlbumPhotoComments,
   clubFeedAttachments,
+  users,
 } from "../shared/schema";
 import { eq, and, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -2555,6 +2558,7 @@ clubsRouter.get("/:id/albums", authMiddleware, async (req: Request, res: Respons
     const access = await getAuthorizedClub(req, res, req.params.id);
     if (!access) return;
     const { db, club } = access;
+    const viewerId = (req as Request & { userId?: string }).userId ?? null;
 
     const albums = await db
       .select()
@@ -2566,11 +2570,48 @@ clubsRouter.get("/:id/albums", authMiddleware, async (req: Request, res: Respons
       .from(clubAlbumPhotos)
       .where(eq(clubAlbumPhotos.clubId, club.id))
       .orderBy(clubAlbumPhotos.sortOrder, clubAlbumPhotos.createdAt);
+    const likes = await db
+      .select({ photoId: clubAlbumPhotoLikes.photoId, userId: clubAlbumPhotoLikes.userId })
+      .from(clubAlbumPhotoLikes)
+      .where(eq(clubAlbumPhotoLikes.clubId, club.id));
+    const comments = await db
+      .select()
+      .from(clubAlbumPhotoComments)
+      .where(eq(clubAlbumPhotoComments.clubId, club.id))
+      .orderBy(clubAlbumPhotoComments.createdAt);
     const photosByAlbum = new Map<string, typeof photos>();
     for (const photo of photos) {
       const current = photosByAlbum.get(photo.albumId) ?? [];
       current.push(photo);
       photosByAlbum.set(photo.albumId, current);
+    }
+    const likesByPhoto = new Map<string, Set<string>>();
+    for (const like of likes) {
+      const current = likesByPhoto.get(like.photoId) ?? new Set<string>();
+      current.add(like.userId);
+      likesByPhoto.set(like.photoId, current);
+    }
+    const commentsByPhoto = new Map<string, Array<{
+      id: string;
+      photoId: string;
+      authorUserId: string;
+      authorDisplayName: string;
+      authorAvatarUrl: string | null;
+      body: string;
+      createdAt: string;
+    }>>();
+    for (const comment of comments) {
+      const current = commentsByPhoto.get(comment.photoId) ?? [];
+      current.push({
+        id: comment.id,
+        photoId: comment.photoId,
+        authorUserId: comment.authorUserId,
+        authorDisplayName: comment.authorDisplayName,
+        authorAvatarUrl: comment.authorAvatarUrl ?? null,
+        body: comment.body,
+        createdAt: albumDate(comment.createdAt),
+      });
+      commentsByPhoto.set(comment.photoId, current);
     }
 
     res.json({
@@ -2594,12 +2635,176 @@ clubsRouter.get("/:id/albums", authMiddleware, async (req: Request, res: Respons
           height: photo.height ?? null,
           sortOrder: photo.sortOrder,
           createdAt: albumDate(photo.createdAt),
+          likeCount: likesByPhoto.get(photo.id)?.size ?? 0,
+          likedByViewer: viewerId ? likesByPhoto.get(photo.id)?.has(viewerId) ?? false : false,
+          comments: commentsByPhoto.get(photo.id) ?? [],
         })),
       })),
     });
   } catch (error) {
     logger.error("club_albums_list_failed", { clubId: req.params.id, error });
     res.status(500).json({ error: "Failed to load club albums" });
+  }
+});
+
+async function getAlbumSocialAccess(req: Request, res: Response) {
+  const userId = getUserId(req, res);
+  if (!userId) return null;
+  const { db, club } = await resolveClubForAlbums(req.params.id);
+  if (!club || !(await isActiveClubMember(club.id, club.ownerId, userId))) {
+    res.status(404).json({ error: "Album photo not found" });
+    return null;
+  }
+  const [photo] = await db
+    .select({ id: clubAlbumPhotos.id, albumId: clubAlbumPhotos.albumId, clubId: clubAlbumPhotos.clubId })
+    .from(clubAlbumPhotos)
+    .where(and(
+      eq(clubAlbumPhotos.id, req.params.photoId),
+      eq(clubAlbumPhotos.albumId, req.params.albumId),
+      eq(clubAlbumPhotos.clubId, club.id)
+    ))
+    .limit(1);
+  if (!photo) {
+    res.status(404).json({ error: "Album photo not found" });
+    return null;
+  }
+  return { db, club, photo, userId };
+}
+
+/** POST /api/clubs/:id/albums/:albumId/photos/:photoId/like — toggle a member's photo reaction */
+clubsRouter.post("/:id/albums/:albumId/photos/:photoId/like", requireFullAuth, async (req: Request, res: Response) => {
+  try {
+    const access = await getAlbumSocialAccess(req, res);
+    if (!access) return;
+    const { db, club, photo, userId } = access;
+    const [existingLike] = await db
+      .select({ id: clubAlbumPhotoLikes.id })
+      .from(clubAlbumPhotoLikes)
+      .where(and(
+        eq(clubAlbumPhotoLikes.photoId, photo.id),
+        eq(clubAlbumPhotoLikes.albumId, photo.albumId),
+        eq(clubAlbumPhotoLikes.clubId, club.id),
+        eq(clubAlbumPhotoLikes.userId, userId)
+      ))
+      .limit(1);
+
+    let liked: boolean;
+    if (existingLike) {
+      await db.delete(clubAlbumPhotoLikes).where(eq(clubAlbumPhotoLikes.id, existingLike.id));
+      liked = false;
+    } else {
+      await db.insert(clubAlbumPhotoLikes).values({
+        id: nanoid(24),
+        photoId: photo.id,
+        albumId: photo.albumId,
+        clubId: club.id,
+        userId,
+      });
+      liked = true;
+    }
+    const [total] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(clubAlbumPhotoLikes)
+      .where(and(
+        eq(clubAlbumPhotoLikes.photoId, photo.id),
+        eq(clubAlbumPhotoLikes.albumId, photo.albumId),
+        eq(clubAlbumPhotoLikes.clubId, club.id)
+      ));
+    res.json({ liked, likeCount: Number(total?.count ?? 0) });
+  } catch (error) {
+    logger.error("club_album_photo_like_failed", { clubId: req.params.id, albumId: req.params.albumId, photoId: req.params.photoId, error });
+    res.status(500).json({ error: "Unable to update photo reaction" });
+  }
+});
+
+/** POST /api/clubs/:id/albums/:albumId/photos/:photoId/comments — add a member comment */
+clubsRouter.post("/:id/albums/:albumId/photos/:photoId/comments", requireFullAuth, async (req: Request, res: Response) => {
+  try {
+    const access = await getAlbumSocialAccess(req, res);
+    if (!access) return;
+    const { db, club, photo, userId } = access;
+    const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
+    if (!body || body.length > 500) {
+      res.status(400).json({ error: "Comments must be between 1 and 500 characters" });
+      return;
+    }
+    const [author] = await db
+      .select({ displayName: users.displayName, avatarUrl: users.avatarUrl })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!author) {
+      res.status(403).json({ error: "Account profile unavailable" });
+      return;
+    }
+    const id = nanoid(24);
+    const createdAt = new Date();
+    await db.insert(clubAlbumPhotoComments).values({
+      id,
+      photoId: photo.id,
+      albumId: photo.albumId,
+      clubId: club.id,
+      authorUserId: userId,
+      authorDisplayName: author.displayName,
+      authorAvatarUrl: author.avatarUrl,
+      body,
+      createdAt,
+    });
+    res.status(201).json({
+      comment: {
+        id,
+        photoId: photo.id,
+        authorUserId: userId,
+        authorDisplayName: author.displayName,
+        authorAvatarUrl: author.avatarUrl ?? null,
+        body,
+        createdAt: createdAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    logger.error("club_album_photo_comment_create_failed", { clubId: req.params.id, albumId: req.params.albumId, photoId: req.params.photoId, error });
+    res.status(500).json({ error: "Unable to add comment" });
+  }
+});
+
+/** DELETE /api/clubs/:id/albums/:albumId/photos/:photoId/comments/:commentId — remove an author's or moderator's comment */
+clubsRouter.delete("/:id/albums/:albumId/photos/:photoId/comments/:commentId", requireFullAuth, async (req: Request, res: Response) => {
+  try {
+    const access = await getAlbumSocialAccess(req, res);
+    if (!access) return;
+    const { db, club, photo, userId } = access;
+    const [comment] = await db
+      .select({ id: clubAlbumPhotoComments.id, authorUserId: clubAlbumPhotoComments.authorUserId })
+      .from(clubAlbumPhotoComments)
+      .where(and(
+        eq(clubAlbumPhotoComments.id, req.params.commentId),
+        eq(clubAlbumPhotoComments.photoId, photo.id),
+        eq(clubAlbumPhotoComments.albumId, photo.albumId),
+        eq(clubAlbumPhotoComments.clubId, club.id)
+      ))
+      .limit(1);
+    if (!comment) {
+      res.status(404).json({ error: "Comment not found" });
+      return;
+    }
+    let canModerate = club.ownerId === userId;
+    if (!canModerate && comment.authorUserId !== userId) {
+      const [membership] = await db
+        .select({ role: dbClubMembers.role })
+        .from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, club.id), eq(dbClubMembers.userId, userId)))
+        .limit(1);
+      canModerate = membership?.role === "director";
+    }
+    if (comment.authorUserId !== userId && !canModerate) {
+      res.status(403).json({ error: "Only the comment author or club moderators can remove this comment" });
+      return;
+    }
+    await db.delete(clubAlbumPhotoComments).where(eq(clubAlbumPhotoComments.id, comment.id));
+    res.json({ success: true });
+  } catch (error) {
+    logger.error("club_album_photo_comment_delete_failed", { clubId: req.params.id, albumId: req.params.albumId, photoId: req.params.photoId, commentId: req.params.commentId, error });
+    res.status(500).json({ error: "Unable to remove comment" });
   }
 });
 
@@ -2812,6 +3017,9 @@ clubsRouter.post("/:id/albums/:albumId/photos", requireFullAuth, albumPhotoJsonP
         width: Number.isInteger(width) && width! > 0 ? width : null,
         height: Number.isInteger(height) && height! > 0 ? height : null,
         sortOrder: Number(total ?? 0),
+        likeCount: 0,
+        likedByViewer: false,
+        comments: [],
       },
     });
   } catch (error) {
@@ -2833,6 +3041,16 @@ clubsRouter.delete("/:id/albums/:albumId/photos/:photoId", requireFullAuth, asyn
       res.status(403).json({ error: "Only club owners and directors can remove album photos" });
       return;
     }
+    await db.delete(clubAlbumPhotoLikes).where(and(
+      eq(clubAlbumPhotoLikes.photoId, req.params.photoId),
+      eq(clubAlbumPhotoLikes.albumId, req.params.albumId),
+      eq(clubAlbumPhotoLikes.clubId, club.id)
+    ));
+    await db.delete(clubAlbumPhotoComments).where(and(
+      eq(clubAlbumPhotoComments.photoId, req.params.photoId),
+      eq(clubAlbumPhotoComments.albumId, req.params.albumId),
+      eq(clubAlbumPhotoComments.clubId, club.id)
+    ));
     await db.delete(clubAlbumPhotos).where(and(
       eq(clubAlbumPhotos.id, req.params.photoId),
       eq(clubAlbumPhotos.albumId, req.params.albumId),
@@ -2863,6 +3081,14 @@ clubsRouter.delete("/:id/albums/:albumId", requireFullAuth, async (req: Request,
       res.status(404).json({ error: "Album not found" });
       return;
     }
+    await db.delete(clubAlbumPhotoLikes).where(and(
+      eq(clubAlbumPhotoLikes.albumId, album.id),
+      eq(clubAlbumPhotoLikes.clubId, club.id)
+    ));
+    await db.delete(clubAlbumPhotoComments).where(and(
+      eq(clubAlbumPhotoComments.albumId, album.id),
+      eq(clubAlbumPhotoComments.clubId, club.id)
+    ));
     await db.delete(clubAlbumPhotos).where(eq(clubAlbumPhotos.albumId, album.id));
     await db.delete(clubAlbums).where(eq(clubAlbums.id, album.id));
     res.json({ success: true });

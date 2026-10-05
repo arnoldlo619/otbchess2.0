@@ -141,6 +141,13 @@
       "when": 1790065908138,
       "tag": "0019_light_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1791195407877,
+      "tag": "0020_club_album_photo_social",
+      "breakpoints": true
     }
   ]
 }

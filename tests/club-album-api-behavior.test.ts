@@ -85,14 +85,16 @@ describe("Club Album API behavior", () => {
     mocks.storagePut.mockResolvedValue({ key: "club-albums/key.webp", url: "/manus-storage/club-albums/key.webp" });
   });
 
-  it("lists published albums publicly and returns database-checked photo URLs", async () => {
+  it("lists published albums for authorized members and returns database-checked photo URLs", async () => {
     fakeDb([
       [publicClub],
       [{ id: "album-1", clubId: "club-1", title: "Club Photos", description: null, eventDate: "2026-08-20", coverImageUrl: "/manus-storage/club-photos-default-cover_8e826089.jpg", createdByName: "Owner", createdAt: new Date("2026-08-20"), updatedAt: new Date("2026-08-20") }],
       [{ id: "photo-1", albumId: "album-1", url: "/manus-storage/secret.webp", caption: "Final round", altText: "Two players at board one", width: 1200, height: 800, sortOrder: 0, createdAt: new Date("2026-08-20") }],
     ]);
 
-    const response = await fetch(`${baseUrl}/api/clubs/test-club/albums`);
+    const response = await fetch(`${baseUrl}/api/clubs/test-club/albums`, {
+      headers: { "x-test-user-id": "owner-1" },
+    });
     const body = await response.json() as { albums: Array<{ coverImageUrl: string | null; photos: Array<{ url: string }> }> };
 
     expect(response.status).toBe(200);
@@ -233,6 +235,44 @@ describe("Club Album API behavior", () => {
     expect(blocked.status).toBe(403);
   });
 
+  it("persists photo likes and author-attributed comments for active members", async () => {
+    const photo = { id: "photo-1", albumId: "album-1", clubId: "club-1" };
+    const likeDb = fakeDb([[publicClub], [photo], [], [{ count: 1 }]]);
+    const liked = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/like`, {
+      method: "POST",
+      headers: { "x-test-user-id": "owner-1" },
+    });
+    expect(liked.status).toBe(200);
+    await expect(liked.json()).resolves.toEqual({ liked: true, likeCount: 1 });
+    expect(likeDb.insertValues).toHaveBeenCalledWith(expect.objectContaining({
+      photoId: "photo-1", albumId: "album-1", clubId: "club-1", userId: "owner-1",
+    }));
+
+    const commentDb = fakeDb([[publicClub], [photo], [{ displayName: "Owner", avatarUrl: "https://avatar.example.test/owner" }]]);
+    const commented = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({ body: "Great final round." }),
+    });
+    const commentBody = await commented.json() as { comment: { authorDisplayName: string; body: string } };
+    expect(commented.status).toBe(201);
+    expect(commentBody.comment).toMatchObject({ authorDisplayName: "Owner", body: "Great final round." });
+    expect(commentDb.insertValues).toHaveBeenCalledWith(expect.objectContaining({
+      authorUserId: "owner-1", authorDisplayName: "Owner", body: "Great final round.",
+    }));
+  });
+
+  it("allows the comment author or club moderator to remove a scoped photo comment", async () => {
+    const photo = { id: "photo-1", albumId: "album-1", clubId: "club-1" };
+    const commentDb = fakeDb([[publicClub], [photo], [{ id: "comment-1", authorUserId: "owner-1" }]]);
+    const removed = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/comments/comment-1`, {
+      method: "DELETE",
+      headers: { "x-test-user-id": "owner-1" },
+    });
+    expect(removed.status).toBe(200);
+    expect(commentDb.deleteWhere).toHaveBeenCalledTimes(1);
+  });
+
   it("allows owners to remove one photo and delete an entire album", async () => {
     const photoDb = fakeDb([[publicClub]]);
     const photoDelete = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1`, {
@@ -240,7 +280,7 @@ describe("Club Album API behavior", () => {
       headers: { "x-test-user-id": "owner-1" },
     });
     expect(photoDelete.status).toBe(200);
-    expect(photoDb.deleteWhere).toHaveBeenCalledTimes(1);
+    expect(photoDb.deleteWhere).toHaveBeenCalledTimes(3);
 
     const albumDb = fakeDb([[publicClub], [{ id: "album-1" }]]);
     const albumDelete = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1`, {
@@ -248,7 +288,7 @@ describe("Club Album API behavior", () => {
       headers: { "x-test-user-id": "owner-1" },
     });
     expect(albumDelete.status).toBe(200);
-    expect(albumDb.deleteWhere).toHaveBeenCalledTimes(2);
+    expect(albumDb.deleteWhere).toHaveBeenCalledTimes(4);
   });
 
   it("allows directors to create albums but blocks ordinary members from destructive actions", async () => {
@@ -271,12 +311,18 @@ describe("Club Album API behavior", () => {
 
   it("returns 404 after a photo row is removed and redirects only while the row exists", async () => {
     fakeDb([[publicClub], []]);
-    const removed = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/file`, { redirect: "manual" });
+    const removed = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/file`, {
+      redirect: "manual",
+      headers: { "x-test-user-id": "owner-1" },
+    });
     expect(removed.status).toBe(404);
     expect(mocks.storageGetSignedUrl).not.toHaveBeenCalled();
 
     fakeDb([[publicClub], [{ storageKey: "club-albums/private-key.webp" }]]);
-    const existing = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/file`, { redirect: "manual" });
+    const existing = await fetch(`${baseUrl}/api/clubs/test-club/albums/album-1/photos/photo-1/file`, {
+      redirect: "manual",
+      headers: { "x-test-user-id": "owner-1" },
+    });
     expect(existing.status).toBe(307);
     expect(existing.headers.get("location")).toBe("https://signed.example.test/photo");
     expect(existing.headers.get("cache-control")).toBe("no-store");
