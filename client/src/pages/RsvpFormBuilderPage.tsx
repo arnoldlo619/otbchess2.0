@@ -49,6 +49,8 @@ import {
   Save,
   Loader2,
   AlertCircle,
+  SlidersHorizontal,
+  Palette,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
@@ -120,6 +122,13 @@ const QUESTION_TYPE_META: Record<QuestionType, { label: string; icon: React.Reac
 };
 
 const ACCENT = "#4CAF50";
+
+const FORM_BUILDER_TABS = [
+  { id: "questions" as const, label: "Questions", icon: ClipboardList },
+  { id: "responses" as const, label: "Responses", icon: BarChart2 },
+  { id: "settings" as const, label: "Settings", icon: SlidersHorizontal },
+  { id: "theme" as const, label: "Theme", icon: Palette },
+];
 
 function nanoid(len = 10): string {
   return Math.random().toString(36).slice(2, 2 + len);
@@ -439,128 +448,118 @@ export default function RsvpFormBuilderPage() {
     );
   }
 
+  const saveState = saveStatus === "saving"
+    ? { label: "Saving", Icon: Loader2, tone: "text-white/60", iconClass: "animate-spin" }
+    : saveStatus === "saved"
+      ? { label: "Saved", Icon: Save, tone: "text-white/50", iconClass: "" }
+      : saveStatus === "unsaved"
+        ? { label: "Unsaved changes", Icon: Save, tone: "text-amber-200", iconClass: "" }
+        : saveStatus === "recovered"
+          ? { label: "Recovered locally", Icon: AlertCircle, tone: "text-amber-200", iconClass: "" }
+          : { label: "Saved locally · sync failed", Icon: AlertCircle, tone: "text-amber-200", iconClass: "" };
+  const SaveStateIcon = saveState.Icon;
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.13 0.04 145)" }}>
       {/* ── TOP HEADER ─────────────────────────────────────────────────────── */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 flex items-center gap-4 px-5 h-14 border-b"
-        style={{ background: "oklch(0.15 0.05 145)", borderColor: "rgba(255,255,255,0.08)" }}
+        className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-3 sm:px-5"
+        style={{ background: "oklch(0.14 0.045 145 / 0.96)", borderColor: "rgba(255,255,255,0.08)", backdropFilter: "blur(18px)" }}
       >
-        {/* Back button */}
-        <button
-          onClick={() => navigate(`/clubs/${clubId}/meetup/${eventId}`)}
-          className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-sm font-medium flex-shrink-0"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back</span>
-        </button>
-
-        {/* Form title (editable) */}
-        <div className="flex-1 min-w-0 flex items-center gap-3">
-          <ClipboardList className="w-5 h-5 flex-shrink-0" style={{ color: ACCENT }} />
-          <input
-            aria-label="Form title"
-            value={form.title}
-            onChange={(e) => updateForm({ title: e.target.value })}
-            className="bg-transparent text-white font-semibold text-base outline-none border-b border-transparent hover:border-white/20 focus:border-white/50 transition-colors truncate max-w-xs"
-            placeholder="Form title"
-          />
-          {/* Auto-save indicator */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {saveStatus === "saving" && (
-              <span className="flex items-center gap-1 text-white/30 text-xs">
-                <Loader2 className="w-3 h-3 animate-spin" /> Saving…
-              </span>
-            )}
-            {saveStatus === "saved" && (
-              <span className="flex items-center gap-1 text-white/30 text-xs">
-                <Save className="w-3 h-3" /> Saved
-              </span>
-            )}
-            {saveStatus === "unsaved" && (
-              <span className="text-amber-400/60 text-xs">Unsaved changes</span>
-            )}
-            {saveStatus === "recovered" && (
-              <span className="text-amber-300/70 text-xs">Recovered locally</span>
-            )}
-            {saveStatus === "error" && (
-              <span className="flex items-center gap-1 text-amber-300/70 text-xs">
-                <AlertCircle className="w-3 h-3" /> Saved locally · sync failed
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Tab nav */}
-        <nav aria-label="Form builder sections" className="hidden md:flex items-center gap-1">
-          {(["questions", "responses", "settings", "theme"] as const).map((t) => (
+        <div className="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="px-4 py-1.5 rounded-full text-sm font-semibold capitalize transition-all"
-              style={tab === t
-                ? { background: `${ACCENT}22`, color: ACCENT }
-                : { color: "rgba(255,255,255,0.45)", background: "transparent" }
+              onClick={() => navigate(`/clubs/${clubId}/meetup/${eventId}`)}
+              aria-label="Back to event"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-white/55 transition-colors hover:bg-white/8 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <div className="h-8 w-px bg-white/10" aria-hidden="true" />
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl sm:flex" style={{ background: `${ACCENT}1c`, border: `1px solid ${ACCENT}30` }}>
+                <ClipboardList className="h-4 w-4" style={{ color: ACCENT }} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/38">RSVP form</p>
+                <p className="max-w-[13rem] truncate text-sm font-semibold text-white sm:max-w-[19rem]">{form.title.trim() || "Untitled RSVP form"}</p>
+              </div>
+              <div role="status" aria-live="polite" className={`hidden items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold lg:flex ${saveState.tone}`} style={{ background: "rgba(255,255,255,0.035)", borderColor: "rgba(255,255,255,0.08)" }}>
+                <SaveStateIcon className={`h-3 w-3 ${saveState.iconClass}`} />
+                <span>{saveState.label}</span>
+              </div>
+            </div>
+          </div>
+
+          <nav aria-label="Form builder sections" className="hidden items-center gap-1 rounded-xl border p-1 lg:flex" style={{ background: "rgba(0,0,0,0.16)", borderColor: "rgba(255,255,255,0.08)" }}>
+            {FORM_BUILDER_TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                aria-current={tab === id ? "page" : undefined}
+                className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
+                style={tab === id
+                  ? { background: `${ACCENT}20`, color: "#dcfce7", boxShadow: `inset 0 0 0 1px ${ACCENT}2b` }
+                  : { color: "rgba(255,255,255,0.48)" }}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center justify-end gap-2">
+            {form.isPublished && (
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold text-white/70 transition-colors hover:bg-white/8 hover:text-white sm:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
+                style={{ borderColor: "rgba(255,255,255,0.12)" }}
+              >
+                <Eye className="h-3.5 w-3.5" />
+                Preview
+              </a>
+            )}
+            <button
+              onClick={togglePublish}
+              disabled={saving}
+              className="flex h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 sm:px-4 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#102d1d]"
+              style={form.isPublished
+                ? { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.76)", border: "1px solid rgba(255,255,255,0.14)" }
+                : { background: ACCENT, color: "#0a1a0f", boxShadow: `0 6px 18px ${ACCENT}22` }
               }
             >
-              {t}
+              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : form.isPublished ? <EyeOff className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+              {form.isPublished ? "Unpublish" : "Publish"}
             </button>
-          ))}
-        </nav>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Preview link */}
-          {form.isPublished ? (
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white transition border border-white/10 hover:border-white/20"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Preview
-            </a>
-          ) : null}
-
-          {/* Publish / Unpublish */}
-          <button
-            onClick={togglePublish}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:opacity-50"
-            style={form.isPublished
-              ? { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.12)" }
-              : { background: ACCENT, color: "#0a1a0f" }
-            }
-          >
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : form.isPublished ? <EyeOff className="w-3.5 h-3.5" /> : null}
-            {form.isPublished ? "Unpublish" : "Publish"}
-          </button>
+          </div>
         </div>
       </header>
 
       {/* ── MOBILE TAB NAV ─────────────────────────────────────────────────── */}
       <div
-        className="md:hidden fixed top-14 left-0 right-0 z-40 flex border-b"
-        style={{ background: "oklch(0.15 0.05 145)", borderColor: "rgba(255,255,255,0.08)" }}
+        className="fixed top-16 left-0 right-0 z-40 grid grid-cols-4 border-b lg:hidden"
+        style={{ background: "oklch(0.14 0.045 145 / 0.98)", borderColor: "rgba(255,255,255,0.08)", backdropFilter: "blur(14px)" }}
       >
-        {(["questions", "responses", "settings"] as const).map((t) => (
+        {FORM_BUILDER_TABS.map(({ id, label }) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className="flex-1 py-2.5 text-xs font-semibold capitalize transition-all border-b-2"
-            style={tab === t
+            key={id}
+            onClick={() => setTab(id)}
+            aria-current={tab === id ? "page" : undefined}
+            className="min-h-11 border-b-2 px-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-400/70"
+            style={tab === id
               ? { color: ACCENT, borderColor: ACCENT }
               : { color: "rgba(255,255,255,0.40)", borderColor: "transparent" }
             }
           >
-            {t}
+            {label}
           </button>
         ))}
       </div>
 
       {/* ── MAIN CONTENT ───────────────────────────────────────────────────── */}
-      <div className="flex-1 pt-14 md:pt-14 pb-16 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16 pt-28 lg:pt-16">
 
         {/* ── QUESTIONS TAB ──────────────────────────────────────────────── */}
         {tab === "questions" && (
