@@ -53,18 +53,15 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
 import { toast } from "sonner";
+import {
+  createClubMeetupRsvpQuestions,
+  type RsvpFormQuestion,
+  type RsvpQuestionType,
+} from "@shared/rsvpMeetupTemplate";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-export type QuestionType = "text" | "textarea" | "radio" | "checkbox" | "select" | "number";
-
-export interface FormQuestion {
-  id: string;
-  type: QuestionType;
-  label: string;
-  required: boolean;
-  options?: string[];
-  placeholder?: string;
-}
+export type QuestionType = RsvpQuestionType;
+export type FormQuestion = RsvpFormQuestion;
 
 interface RsvpFormData {
   id: string;
@@ -192,7 +189,7 @@ export default function RsvpFormBuilderPage() {
           toast.info("Recovered unsaved changes");
         }
       } else if (res.status === 404) {
-        // Create a blank form
+        // Every new Club Event form starts with the concise Meetup RSVP template.
         const createRes = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvp-form`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -200,7 +197,7 @@ export default function RsvpFormBuilderPage() {
           body: JSON.stringify({
             title: "RSVP Form",
             description: "",
-            questions: [makeQuestion("radio")],
+            questions: createClubMeetupRsvpQuestions(() => nanoid()),
           }),
         });
         if (createRes.ok) {
@@ -343,7 +340,8 @@ export default function RsvpFormBuilderPage() {
     if (!form) return;
     const q = form.questions.find((q) => q.id === id);
     if (!q) return;
-    const copy = { ...q, id: nanoid() };
+    // A duplicate is a normal question, not a second response identity field.
+    const copy = { ...q, id: nanoid(), fieldKey: undefined };
     const idx = form.questions.findIndex((q) => q.id === id);
     const qs = [...form.questions];
     qs.splice(idx + 1, 0, copy);
@@ -1219,7 +1217,7 @@ function QuestionCard({
                 <select
                   aria-label="Question type"
                   value={question.type}
-                  onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined }); }}
+                  onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined, fieldKey: undefined }); }}
                   onClick={(e) => e.stopPropagation()}
                   className="appearance-none pl-3 pr-8 py-1.5 rounded-xl text-sm font-semibold text-white/70 outline-none cursor-pointer"
                   style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}

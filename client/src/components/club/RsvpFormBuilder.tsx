@@ -20,17 +20,14 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
+import {
+  createClubMeetupRsvpQuestions,
+  type RsvpFormQuestion,
+  type RsvpQuestionType,
+} from "@shared/rsvpMeetupTemplate";
 
-export type QuestionType = "text" | "textarea" | "radio" | "checkbox" | "select" | "number";
-
-export interface FormQuestion {
-  id: string;
-  type: QuestionType;
-  label: string;
-  required: boolean;
-  options?: string[]; // for radio / checkbox / select
-  placeholder?: string;
-}
+export type QuestionType = RsvpQuestionType;
+export type FormQuestion = RsvpFormQuestion;
 
 export interface RsvpFormData {
   id: string;
@@ -42,6 +39,7 @@ export interface RsvpFormData {
   slug: string;
   isPublished: number; // 0 | 1
   closesAt?: string | null;
+  collectEmail?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,6 +101,8 @@ export default function RsvpFormBuilder({ clubId, eventId }: Props) {
           setDescription(data.form.description ?? "");
           setQuestions((data.form.questions as FormQuestion[]) ?? []);
           setIsPublished(data.form.isPublished === 1);
+        } else if (res.status === 404) {
+          setQuestions(createClubMeetupRsvpQuestions(nanoid8));
         }
       } catch { /* no form yet */ }
       setLoading(false);
@@ -360,7 +360,7 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
             <select
               aria-label="Question type"
               value={question.type}
-              onChange={(e) => onUpdate({ type: e.target.value as QuestionType, options: [] })}
+              onChange={(e) => onUpdate({ type: e.target.value as QuestionType, options: [], fieldKey: undefined })}
               className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white/70 outline-none cursor-pointer"
               style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
             >

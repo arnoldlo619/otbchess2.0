@@ -107,11 +107,16 @@ export default function RsvpFormPage() {
     e.preventDefault();
     if (!form) return;
 
-    // Validate required questions
-    const questions = form.questions as FormQuestion[];
-    for (const q of questions) {
+    // Validate template identity fields and owner-authored questions together.
+    const allQuestions = form.questions as FormQuestion[];
+    const answerForQuestion = (question: FormQuestion): AnswerValue => {
+      if (question.fieldKey === "respondentName") return name;
+      if (question.fieldKey === "respondentEmail") return email;
+      return answers[question.id] ?? (question.type === "checkbox" ? [] : "");
+    };
+    for (const q of allQuestions) {
       if (!q.required) continue;
-      const ans = answers[q.id];
+      const ans = answerForQuestion(q);
       if (!ans || (Array.isArray(ans) && ans.length === 0) || ans === "") {
         setSubmitError(`"${q.label || "A required question"}" must be answered.`);
         return;
@@ -124,10 +129,10 @@ export default function RsvpFormPage() {
       const payload = {
         respondentName: name || "Anonymous",
         respondentEmail: email || null,
-        answers: questions.map((q) => ({
+        answers: allQuestions.map((q) => ({
           questionId: q.id,
           questionLabel: q.label,
-          answer: answers[q.id] ?? "",
+          answer: answerForQuestion(q),
         })),
       };
       const res = await fetch(`/api/clubs/rsvp-public/${slug}/submit`, {
@@ -199,7 +204,13 @@ export default function RsvpFormPage() {
     );
   }
 
-  const questions = form.questions as FormQuestion[];
+  const allQuestions = form.questions as FormQuestion[];
+  const nameQuestion = allQuestions.find((question) => question.fieldKey === "respondentName");
+  const emailQuestion = allQuestions.find((question) => question.fieldKey === "respondentEmail");
+  // Legacy forms retain their email field; new Meetup forms map their identity
+  // cards directly to these inputs so attendees never see duplicates.
+  const showEmail = Boolean(emailQuestion || form.collectEmail || !nameQuestion);
+  const questions = allQuestions.filter((question) => !question.fieldKey);
 
   // ── Form ─────────────────────────────────────────────────────────────────
   return (
@@ -274,40 +285,46 @@ export default function RsvpFormPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
-            {/* Name + email */}
+            {/* Identity fields are editable template cards, persisted alongside answers. */}
             <div className="space-y-3">
               <div>
                 <label className="block text-white/70 text-xs font-semibold mb-1.5 uppercase tracking-wider">
-                  Your Name <span className="text-red-400">*</span>
+                  {nameQuestion?.label ?? "Name"} <span className="text-red-400">*</span>
                 </label>
                 <input
                   aria-label="Name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Magnus Carlsen"
+                  placeholder={nameQuestion?.placeholder ?? "Your full name"}
                   className="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-all duration-200"
                   style={{ background: "oklch(0.18 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = accent; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
                 />
               </div>
-              <div>
-                <label className="block text-white/70 text-xs font-semibold mb-1.5 uppercase tracking-wider">
-                  Email <span className="text-white/30 font-normal normal-case">(optional)</span>
-                </label>
-                <input
-                  aria-label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-all duration-200"
-                  style={{ background: "oklch(0.18 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = accent; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
-                />
-              </div>
+              {showEmail && (
+                <div>
+                  <label className="block text-white/70 text-xs font-semibold mb-1.5 uppercase tracking-wider">
+                    {emailQuestion?.label ?? "Email"}
+                    {emailQuestion?.required
+                      ? <span className="text-red-400"> *</span>
+                      : <span className="text-white/30 font-normal normal-case"> (optional)</span>}
+                  </label>
+                  <input
+                    aria-label="Email"
+                    type="email"
+                    required={Boolean(emailQuestion?.required)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={emailQuestion?.placeholder ?? "you@example.com"}
+                    className="w-full px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-all duration-200"
+                    style={{ background: "oklch(0.18 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = accent; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Divider */}

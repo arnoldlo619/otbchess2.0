@@ -51,6 +51,7 @@ import { eq, and, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
+import { createClubMeetupRsvpQuestions } from "../shared/rsvpMeetupTemplate";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -2441,7 +2442,9 @@ clubsRouter.post("/:id/events/:eventId/rsvp-form", authMiddleware, async (req: R
         createdByUserId: userId,
         title: title ?? "RSVP Form",
         description: description ?? null,
-        questions: (questions ?? []) as unknown[],
+        // Keep an explicitly empty array editable, but direct API creation
+        // without a question payload receives the Club Meetup essentials.
+        questions: (questions ?? createClubMeetupRsvpQuestions(() => nanoid(12))) as unknown[],
         slug,
         isPublished: isPublished ? 1 : 0,
         closesAt: closesAt ? new Date(closesAt) : null,

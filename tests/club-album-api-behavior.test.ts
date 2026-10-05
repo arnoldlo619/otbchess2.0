@@ -125,6 +125,30 @@ describe("Club Album API behavior", () => {
     expect(response.status).toBe(403);
   });
 
+  it("creates direct Club Event RSVP forms with the concise Meetup template", async () => {
+    const createdForm = {
+      id: "form-1", eventId: "event-1", clubId: "club-1", createdByUserId: "owner-1",
+      title: "RSVP Form", description: null, questions: [], slug: "club-1-event-1-form-1",
+      isPublished: 0, createdAt: new Date(), updatedAt: new Date(),
+    };
+    const { insertValues } = fakeDb([[publicClub], [], [], [createdForm]]);
+    const response = await fetch(`${baseUrl}/api/clubs/club-1/events/event-1/rsvp-form`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({}),
+    });
+
+    expect(response.status).toBe(201);
+    expect(insertValues).toHaveBeenCalledWith(expect.objectContaining({
+      questions: expect.arrayContaining([
+        expect.objectContaining({ label: "Name", fieldKey: "respondentName", required: true }),
+        expect.objectContaining({ label: "Chess.com username", required: false }),
+        expect.objectContaining({ label: "What would you like to join?", options: ["Casual open play", "Casual tournament"] }),
+        expect.objectContaining({ label: "Email address", fieldKey: "respondentEmail", required: true }),
+      ]),
+    }));
+  });
+
   it("validates required album metadata and creates a valid owner album", async () => {
     fakeDb([[publicClub]]);
     const invalid = await fetch(`${baseUrl}/api/clubs/test-club/albums`, {
