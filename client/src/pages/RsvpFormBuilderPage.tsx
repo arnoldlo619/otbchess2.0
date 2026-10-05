@@ -55,6 +55,7 @@ import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draft
 import { toast } from "sonner";
 import {
   createClubMeetupRsvpQuestions,
+  getSmartRsvpQuestionConfig,
   type RsvpFormQuestion,
   type RsvpQuestionType,
 } from "@shared/rsvpMeetupTemplate";
@@ -124,10 +125,11 @@ function nanoid(len = 10): string {
   return Math.random().toString(36).slice(2, 2 + len);
 }
 
-function makeQuestion(type: QuestionType = "radio"): FormQuestion {
+function makeQuestion(type: QuestionType = "text", typeSource: "smart" | "manual" = "smart"): FormQuestion {
   return {
     id: nanoid(),
     type,
+    typeSource,
     label: "",
     required: false,
     options: ["radio", "checkbox", "select"].includes(type) ? ["Option 1"] : undefined,
@@ -308,9 +310,9 @@ export default function RsvpFormBuilderPage() {
     scheduleSave(updated);
   }
 
-  function addQuestion(type: QuestionType = "radio") {
+  function addQuestion(type?: QuestionType) {
     if (!form) return;
-    const q = makeQuestion(type);
+    const q = makeQuestion(type ?? "text", type ? "manual" : "smart");
     const updated = { ...form, questions: [...form.questions, q] };
     setForm(updated);
     setActiveQuestionId(q.id);
@@ -641,7 +643,7 @@ export default function RsvpFormBuilderPage() {
 
             {/* Add question button (bottom) */}
             <button
-              onClick={() => addQuestion("radio")}
+              onClick={() => addQuestion()}
               className="mt-4 w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold border border-dashed transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{ borderColor: `${ACCENT}55`, color: ACCENT, background: `${ACCENT}08` }}
             >
@@ -1207,7 +1209,12 @@ function QuestionCard({
                 aria-label="Question label"
                 ref={labelRef}
                 value={question.label}
-                onChange={(e) => onUpdate({ label: e.target.value })}
+                onChange={(e) => {
+                  const label = e.target.value;
+                  onUpdate(question.typeSource === "manual"
+                    ? { label }
+                    : { label, ...getSmartRsvpQuestionConfig(label, question) });
+                }}
                 onClick={(e) => e.stopPropagation()}
                 placeholder={`Question ${index + 1}`}
                 className="flex-1 bg-transparent text-white text-base font-medium outline-none border-b border-transparent hover:border-white/20 focus:border-white/50 transition-colors pb-1 placeholder-white/25"
@@ -1217,7 +1224,7 @@ function QuestionCard({
                 <select
                   aria-label="Question type"
                   value={question.type}
-                  onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined, fieldKey: undefined }); }}
+                  onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, typeSource: "manual", options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined, fieldKey: undefined }); }}
                   onClick={(e) => e.stopPropagation()}
                   className="appearance-none pl-3 pr-8 py-1.5 rounded-xl text-sm font-semibold text-white/70 outline-none cursor-pointer"
                   style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
@@ -1228,6 +1235,17 @@ function QuestionCard({
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
               </div>
+              {question.typeSource !== "manual" ? (
+                <span className="text-xs font-semibold text-green-300/80 whitespace-nowrap">Smart type</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onUpdate(getSmartRsvpQuestionConfig(question.label, question)); }}
+                  className="text-xs font-semibold text-white/45 hover:text-green-300 transition-colors whitespace-nowrap"
+                >
+                  Use smart type
+                </button>
+              )}
             </div>
 
             {/* Answer preview */}

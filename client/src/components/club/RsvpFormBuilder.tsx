@@ -22,6 +22,7 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 import {
   createClubMeetupRsvpQuestions,
+  getSmartRsvpQuestionConfig,
   type RsvpFormQuestion,
   type RsvpQuestionType,
 } from "@shared/rsvpMeetupTemplate";
@@ -66,6 +67,7 @@ function defaultQuestion(): FormQuestion {
   return {
     id: nanoid8(),
     type: "text",
+    typeSource: "smart",
     label: "",
     required: false,
     options: [],
@@ -348,7 +350,12 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
           <input
             aria-label="Question"
             value={question.label}
-            onChange={(e) => onUpdate({ label: e.target.value })}
+            onChange={(e) => {
+              const label = e.target.value;
+              onUpdate(question.typeSource === "manual"
+                ? { label }
+                : { label, ...getSmartRsvpQuestionConfig(label, question) });
+            }}
             placeholder={`Question ${index + 1}`}
             className="w-full px-3 py-2 rounded-lg text-sm font-medium text-white placeholder-white/30 outline-none transition-all duration-200"
             style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
@@ -360,7 +367,7 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
             <select
               aria-label="Question type"
               value={question.type}
-              onChange={(e) => onUpdate({ type: e.target.value as QuestionType, options: [], fieldKey: undefined })}
+              onChange={(e) => onUpdate({ type: e.target.value as QuestionType, typeSource: "manual", options: [], fieldKey: undefined })}
               className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white/70 outline-none cursor-pointer"
               style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
             >
@@ -368,6 +375,17 @@ function QuestionCard({ question, index, onUpdate, onRemove, onAddOption, onUpda
                 <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
               ))}
             </select>
+            {question.typeSource !== "manual" ? (
+              <span className="text-[11px] font-semibold text-green-300/80 whitespace-nowrap">Smart</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onUpdate(getSmartRsvpQuestionConfig(question.label, question))}
+                className="text-[11px] font-semibold text-white/45 hover:text-green-300 transition-colors whitespace-nowrap"
+              >
+                Use smart type
+              </button>
+            )}
             <label className="flex items-center gap-1.5 cursor-pointer select-none">
               <input
                 type="checkbox"
