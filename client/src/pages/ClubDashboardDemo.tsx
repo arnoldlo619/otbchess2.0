@@ -28,7 +28,6 @@ import {
   Eye,
   FolderLock,
   Image as ImageIcon,
-  Lock as LockIcon,
   MapPin,
   Menu,
   MessageSquare,
@@ -274,13 +273,13 @@ function DemoBanner({ activeTab }: { activeTab: DemoTab }) {
         aria-hidden="true"
         style={{ backgroundImage: `url(${DEMO_BANNER_IMAGE})` }}
       />
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(122deg,rgba(2,12,6,0.86)_0%,rgba(2,12,6,0.74)_46%,rgba(2,12,6,0.60)_100%)]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[rgba(2,12,6,0.68)]" aria-hidden="true" />
       <div className="relative z-10 h-[108px] sm:h-[144px]" aria-hidden="true" />
-      <div className="relative z-10 bg-[linear-gradient(180deg,rgba(2,12,6,0.18)_0%,rgba(2,12,6,0.64)_34%,rgba(2,12,6,0.88)_100%)] px-4 pb-4 sm:px-6 sm:pb-5">
+      <div className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-5">
         <div className="-mt-9 flex items-start gap-4 sm:-mt-11 sm:gap-5">
           <div className="shrink-0 rounded-full bg-[linear-gradient(135deg,#4CAF50,#4CAF5070,#4CAF50)] p-[2px] shadow-[0_8px_24px_rgba(1,12,5,0.32)]"><div className="rounded-full bg-[#06130d] p-1"><DemoAvatar initials="OC" tone="#426f45" size="lg" /></div></div>
           <div className="min-w-0 flex-1 pt-10 sm:pt-12">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1><span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/52"><LockIcon className="h-3 w-3" aria-hidden="true" />Private club</span></div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1></div>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/62"><span><strong className="font-semibold text-white/92">84</strong> members</span><span><strong className="font-semibold text-white/92">12</strong> events</span><span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#4CAF50]" aria-hidden="true" />Portland, Maine</span></div>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/56">A fixture-only preview of The OTB Chess Club workspace.</p>
           </div>

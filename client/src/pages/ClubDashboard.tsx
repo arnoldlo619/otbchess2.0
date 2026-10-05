@@ -139,7 +139,6 @@ import {
   Share2 as _Share2,
   ChevronDown,
   ChevronUp,
-  Globe,
   X,
   Megaphone,
   PartyPopper,
@@ -4122,7 +4121,7 @@ export default function ClubDashboard() {
                       background: "#06130d",
                     }}
                   >
-                    {/* The supplied cover fills the entire social header; layered scrims protect all metadata. */}
+                    {/* The supplied cover fills the entire social header; one even scrim avoids a visible transition seam. */}
                     {club.bannerUrl && (
                       <div
                         data-testid="club-dashboard-full-bleed-banner"
@@ -4141,7 +4140,7 @@ export default function ClubDashboard() {
                       aria-hidden="true"
                       style={{
                         background: club.bannerUrl
-                          ? "linear-gradient(122deg, rgba(2,12,6,0.86) 0%, rgba(2,12,6,0.74) 46%, rgba(2,12,6,0.60) 100%)"
+                          ? "rgba(2,12,6,0.68)"
                           : `linear-gradient(135deg, ${accent}3b 0%, oklch(0.13 0.06 145 / 0.86) 64%, oklch(0.09 0.035 145 / 0.96) 100%)`,
                       }}
                     />
@@ -4151,12 +4150,9 @@ export default function ClubDashboard() {
                       aria-hidden="true"
                     />
 
-                    {/* Album-style identity rail: readable over the full-bleed club cover. */}
+                    {/* Album-style identity rail inherits the full-cover readability overlay. */}
                     <div
                       className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-5"
-                      style={{
-                        background: "linear-gradient(180deg, rgba(2,12,6,0.18) 0%, rgba(2,12,6,0.64) 34%, rgba(2,12,6,0.88) 100%)",
-                      }}
                     >
                       <div className="-mt-9 flex items-start gap-4 sm:-mt-11 sm:gap-5">
                         <div className="relative shrink-0 rounded-full p-[2px] shadow-[0_8px_24px_rgba(1,12,5,0.32)]" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}70, ${accent})` }}>
@@ -4175,10 +4171,6 @@ export default function ClubDashboard() {
                             <h1 className="min-w-0 text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>
                               {club.name}
                             </h1>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/62">
-                              {club.isPublic ? <Globe className="h-3 w-3" aria-hidden="true" /> : <Lock className="h-3 w-3" aria-hidden="true" />}
-                              {club.isPublic ? "Public club" : "Private club"}
-                            </span>
                           </div>
                           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/76">
                             <span><strong className="font-semibold text-white">{club.memberCount}</strong> members</span>
