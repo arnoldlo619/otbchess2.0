@@ -268,12 +268,15 @@ function DemoBanner({ activeTab }: { activeTab: DemoTab }) {
   if (activeTab === "album") return null;
   return (
     <section aria-label={`${DEMO_CLUB_NAME} club header`} data-testid="club-demo-social-header" className="relative mb-5 overflow-hidden rounded-[28px] border border-white/10 bg-[#06130d] shadow-[0_18px_48px_rgba(4,20,10,0.18)]">
-      <div className="relative h-[108px] overflow-hidden sm:h-[144px]">
-        <img src={DEMO_BANNER_IMAGE} alt="" aria-hidden="true" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_30%]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,12,6,0.18)_0%,rgba(2,12,6,0.52)_100%)]" aria-hidden="true" />
-        <div className="absolute inset-x-0 bottom-0 h-14 bg-[linear-gradient(180deg,transparent,rgba(3,14,7,0.44))]" aria-hidden="true" />
-      </div>
-      <div className="relative z-10 bg-[linear-gradient(180deg,rgba(6,22,12,0.98),rgba(6,22,12,0.92))] px-4 pb-4 sm:px-6 sm:pb-5">
+      <div
+        data-testid="club-demo-full-bleed-banner"
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-[center_30%]"
+        aria-hidden="true"
+        style={{ backgroundImage: `url(${DEMO_BANNER_IMAGE})` }}
+      />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(122deg,rgba(2,12,6,0.86)_0%,rgba(2,12,6,0.74)_46%,rgba(2,12,6,0.60)_100%)]" aria-hidden="true" />
+      <div className="relative z-10 h-[108px] sm:h-[144px]" aria-hidden="true" />
+      <div className="relative z-10 bg-[linear-gradient(180deg,rgba(2,12,6,0.18)_0%,rgba(2,12,6,0.64)_34%,rgba(2,12,6,0.88)_100%)] px-4 pb-4 sm:px-6 sm:pb-5">
         <div className="-mt-9 flex items-start gap-4 sm:-mt-11 sm:gap-5">
           <div className="shrink-0 rounded-full bg-[linear-gradient(135deg,#4CAF50,#4CAF5070,#4CAF50)] p-[2px] shadow-[0_8px_24px_rgba(1,12,5,0.32)]"><div className="rounded-full bg-[#06130d] p-1"><DemoAvatar initials="OC" tone="#426f45" size="lg" /></div></div>
           <div className="min-w-0 flex-1 pt-10 sm:pt-12">

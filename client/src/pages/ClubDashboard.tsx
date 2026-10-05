@@ -4109,47 +4109,51 @@ export default function ClubDashboard() {
                     ref={bannerRef}
                     aria-label={`${club.name} club header`}
                     data-testid="club-dashboard-social-header"
-                    className={`relative mb-5 overflow-hidden rounded-[28px] border shadow-[0_18px_48px_rgba(4,20,10,0.18)]${!club.bannerUrl ? " chess-board-bg" : ""}`}
+                    className={`relative mb-5 overflow-hidden rounded-[28px] border shadow-[0_18px_48px_rgba(4,20,10,0.24)]${!club.bannerUrl ? " chess-board-bg" : ""}`}
                     style={{
                       borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(19,55,34,0.14)",
-                      background: isDark ? "rgba(5,19,10,0.94)" : "rgba(255,255,255,0.96)",
+                      background: "#06130d",
                     }}
                   >
-                    {/* Retained club banner image: a compact social-profile cover. */}
-                    <div
-                      className="relative h-[108px] overflow-hidden sm:h-[144px]"
-                      style={{
-                        ...(club.bannerUrl ? {
+                    {/* The supplied cover fills the entire social header; layered scrims protect all metadata. */}
+                    {club.bannerUrl && (
+                      <div
+                        data-testid="club-dashboard-full-bleed-banner"
+                        className="pointer-events-none absolute inset-0 z-0 bg-cover"
+                        aria-hidden="true"
+                        style={{
                           backgroundImage: `url(${club.bannerUrl})`,
                           backgroundSize: "cover",
                           backgroundPosition: `center ${bannerBgY}%`,
                           transition: "background-position 0.05s linear",
-                        } : {}),
-                      }}
-                    >
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          background: club.bannerUrl
-                            ? "linear-gradient(180deg, rgba(2,12,6,0.18) 0%, rgba(2,12,6,0.46) 100%)"
-                            : `linear-gradient(135deg, ${accent}3b 0%, oklch(0.13 0.06 145 / 0.86) 64%, oklch(0.09 0.035 145 / 0.96) 100%)`,
                         }}
                       />
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-[linear-gradient(180deg,transparent,rgba(3,14,7,0.42))]" />
-                    </div>
+                    )}
+                    <div
+                      className="pointer-events-none absolute inset-0 z-[1]"
+                      aria-hidden="true"
+                      style={{
+                        background: club.bannerUrl
+                          ? "linear-gradient(122deg, rgba(2,12,6,0.86) 0%, rgba(2,12,6,0.74) 46%, rgba(2,12,6,0.60) 100%)"
+                          : `linear-gradient(135deg, ${accent}3b 0%, oklch(0.13 0.06 145 / 0.86) 64%, oklch(0.09 0.035 145 / 0.96) 100%)`,
+                      }}
+                    />
+                    {/* Reserved image space keeps the avatar’s social-profile overlap. */}
+                    <div
+                      className="relative z-10 h-[108px] sm:h-[144px]"
+                      aria-hidden="true"
+                    />
 
-                    {/* Album-style identity rail: avatar, metadata, and one readable content surface. */}
+                    {/* Album-style identity rail: readable over the full-bleed club cover. */}
                     <div
                       className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-5"
                       style={{
-                        background: isDark
-                          ? "linear-gradient(180deg, rgba(6,22,12,0.98), rgba(6,22,12,0.92))"
-                          : "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,252,248,0.94))",
+                        background: "linear-gradient(180deg, rgba(2,12,6,0.18) 0%, rgba(2,12,6,0.64) 34%, rgba(2,12,6,0.88) 100%)",
                       }}
                     >
                       <div className="-mt-9 flex items-start gap-4 sm:-mt-11 sm:gap-5">
                         <div className="relative shrink-0 rounded-full p-[2px] shadow-[0_8px_24px_rgba(1,12,5,0.32)]" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}70, ${accent})` }}>
-                          <div className={`rounded-full p-1 ${isDark ? "bg-[#06130d]" : "bg-white"}`}>
+                          <div className="rounded-full bg-[#06130d] p-1">
                             <PlayerAvatar
                               username={club.ownerName ?? club.name}
                               name={club.name}
@@ -4161,21 +4165,21 @@ export default function ClubDashboard() {
                         </div>
                         <div className="min-w-0 flex-1 pt-10 sm:pt-12">
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <h1 className="min-w-0 text-xl font-bold tracking-tight sm:text-2xl" style={{ color: isDark ? "rgba(255,255,255,0.96)" : "#12372A", fontFamily: "'Clash Display', sans-serif" }}>
+                            <h1 className="min-w-0 text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>
                               {club.name}
                             </h1>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: isDark ? "rgba(255,255,255,0.52)" : "rgba(18,55,42,0.58)" }}>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/62">
                               {club.isPublic ? <Globe className="h-3 w-3" aria-hidden="true" /> : <Lock className="h-3 w-3" aria-hidden="true" />}
                               {club.isPublic ? "Public club" : "Private club"}
                             </span>
                           </div>
-                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm" style={{ color: isDark ? "rgba(255,255,255,0.62)" : "rgba(18,55,42,0.70)" }}>
-                            <span><strong className="font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#12372A" }}>{club.memberCount}</strong> members</span>
-                            <span><strong className="font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#12372A" }}>{club.tournamentCount}</strong> events</span>
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/76">
+                            <span><strong className="font-semibold text-white">{club.memberCount}</strong> members</span>
+                            <span><strong className="font-semibold text-white">{club.tournamentCount}</strong> events</span>
                             {club.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" style={{ color: accent }} aria-hidden="true" />{club.location}</span>}
                           </div>
                           {club.description && (
-                            <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.56)" : "rgba(18,55,42,0.68)" }}>
+                            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/68">
                               {club.description}
                             </p>
                           )}
