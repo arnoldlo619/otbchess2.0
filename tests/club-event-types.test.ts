@@ -17,8 +17,6 @@ describe("Club Event type taxonomy", () => {
   it("exposes the requested canonical event types", () => {
     expect(CLUB_EVENT_TYPES).toEqual([
       "tournament",
-      "speed_dating",
-      "trivia",
       "puzzle_relay",
       "casual",
       "lecture",
@@ -28,7 +26,8 @@ describe("Club Event type taxonomy", () => {
   it("maps legacy labels safely while rejecting unknown values", () => {
     expect(parseClubEventType("meetup")).toBe("casual");
     expect(parseClubEventType("standard")).toBe("casual");
-    expect(parseClubEventType("trivia_night")).toBe("trivia");
+    expect(parseClubEventType("speed_dating")).toBeNull();
+    expect(parseClubEventType("trivia_night")).toBeNull();
     expect(parseClubEventType("lecture")).toBe("lecture");
     expect(parseClubEventType("unsupported")).toBeNull();
   });

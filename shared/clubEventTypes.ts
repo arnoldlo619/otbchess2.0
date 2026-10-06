@@ -1,7 +1,5 @@
 export const CLUB_EVENT_TYPES = [
   "tournament",
-  "speed_dating",
-  "trivia",
   "puzzle_relay",
   "casual",
   "lecture",
@@ -19,7 +17,6 @@ const CLUB_EVENT_TYPE_SET = new Set<string>(CLUB_EVENT_TYPES);
 const LEGACY_EVENT_TYPE_ALIASES: Readonly<Record<string, ClubEventType>> = {
   standard: "casual",
   meetup: "casual",
-  trivia_night: "trivia",
 };
 
 export function parseClubEventType(value: unknown): ClubEventType | null {

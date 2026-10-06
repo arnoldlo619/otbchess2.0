@@ -1283,10 +1283,6 @@ export const clubEvents = mysqlTable(
     creatorName: varchar("creator_name", { length: 100 }).notNull().default(""),
     isPublished: tinyint("is_published").notNull().default(1),
     eventType: varchar("event_type", { length: 30 }).notNull().default("casual"),
-    // Speed Dating configuration. Session state and pairings live in dedicated
-    // tables below so the schedule remains durable across devices and reloads.
-    speedDatingRounds: int("speed_dating_rounds"),
-    speedDatingMinutes: int("speed_dating_minutes"),
     tournamentId: varchar("tournament_id", { length: 100 }),
     // Extended event management fields
     capacity: int("capacity"),
@@ -1390,79 +1386,6 @@ export const clubEventRsvps = mysqlTable(
 );
 export type ClubEventRsvpRow = typeof clubEventRsvps.$inferSelect;
 export type NewClubEventRsvpRow = typeof clubEventRsvps.$inferInsert;
-
-// ─── club_speed_dating_sessions ───────────────────────────────────────────────
-// One durable, organizer-controlled live session per Speed Dating event. The
-// stored round deadline lets every member recover the same visible timer after a
-// refresh without relying on browser-local state.
-export const clubSpeedDatingSessions = mysqlTable(
-  "club_speed_dating_sessions",
-  {
-    id: varchar("id", { length: 64 }).primaryKey(),
-    clubId: varchar("club_id", { length: 64 }).notNull(),
-    eventId: varchar("event_id", { length: 64 }).notNull(),
-    status: varchar("status", { length: 20 }).notNull().default("active"),
-    currentRound: int("current_round").notNull().default(1),
-    totalRounds: int("total_rounds").notNull(),
-    minutesPerRound: int("minutes_per_round").notNull().default(5),
-    currentRoundEndsAt: timestamp("current_round_ends_at"),
-    startedBy: varchar("started_by", { length: 64 }).notNull(),
-    startedAt: timestamp("started_at").defaultNow().notNull(),
-    completedAt: timestamp("completed_at"),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-  },
-  (table) => ({
-    csdsEventUnique: uniqueIndex("csds_event_unique").on(table.eventId),
-    csdsClubIdx: index("csds_club_idx").on(table.clubId),
-    csdsStatusIdx: index("csds_status_idx").on(table.status),
-  })
-);
-export type ClubSpeedDatingSessionRow = typeof clubSpeedDatingSessions.$inferSelect;
-
-// ─── club_speed_dating_participants ───────────────────────────────────────────
-// Participant identity is snapshotted at session start from an active RSVP so an
-// in-progress roster cannot drift when somebody updates their profile.
-export const clubSpeedDatingParticipants = mysqlTable(
-  "club_speed_dating_participants",
-  {
-    id: varchar("id", { length: 64 }).primaryKey(),
-    sessionId: varchar("session_id", { length: 64 }).notNull(),
-    clubId: varchar("club_id", { length: 64 }).notNull(),
-    eventId: varchar("event_id", { length: 64 }).notNull(),
-    userId: varchar("user_id", { length: 64 }).notNull(),
-    displayName: varchar("display_name", { length: 100 }).notNull().default(""),
-    avatarUrl: text("avatar_url"),
-    joinedAt: timestamp("joined_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    csdpSessionUserUnique: uniqueIndex("csdp_session_user_unique").on(table.sessionId, table.userId),
-    csdpEventIdx: index("csdp_event_idx").on(table.eventId),
-  })
-);
-export type ClubSpeedDatingParticipantRow = typeof clubSpeedDatingParticipants.$inferSelect;
-
-// ─── club_speed_dating_pairings ───────────────────────────────────────────────
-// Pairings are written once per round and never computed only in the client,
-// preserving the same matchups for every participant and the organizer.
-export const clubSpeedDatingPairings = mysqlTable(
-  "club_speed_dating_pairings",
-  {
-    id: varchar("id", { length: 64 }).primaryKey(),
-    sessionId: varchar("session_id", { length: 64 }).notNull(),
-    clubId: varchar("club_id", { length: 64 }).notNull(),
-    eventId: varchar("event_id", { length: 64 }).notNull(),
-    roundNumber: int("round_number").notNull(),
-    boardNumber: int("board_number").notNull(),
-    whiteUserId: varchar("white_user_id", { length: 64 }).notNull(),
-    blackUserId: varchar("black_user_id", { length: 64 }).notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    csdprSessionRoundBoardUnique: uniqueIndex("csdpr_session_round_board_unique").on(table.sessionId, table.roundNumber, table.boardNumber),
-    csdprSessionRoundIdx: index("csdpr_session_round_idx").on(table.sessionId, table.roundNumber),
-  })
-);
-export type ClubSpeedDatingPairingRow = typeof clubSpeedDatingPairings.$inferSelect;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPENINGS DATABASE SYSTEM

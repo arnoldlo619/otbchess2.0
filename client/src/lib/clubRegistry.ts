@@ -554,7 +554,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     name: "Pawn Chess Club",
     tagline: "NYC's most vibrant chess nightlife — all levels welcome.",
     description:
-      "Born in New York City with a simple goal: create a space where strangers and friends could play chess without intimidation. Pawn Chess Club hosts weekly evening events across Manhattan and Brooklyn with live DJ sets, speed-dating chess rounds, and casual open play. With 7,800+ Instagram followers and sold-out events every week, Pawn is redefining what a chess club looks and feels like. Founded by @ismuisamu and @simone_nr.",
+      "Born in New York City with a simple goal: create a space where strangers and friends could play chess without intimidation. Pawn Chess Club hosts weekly evening events across Manhattan and Brooklyn with live DJ sets, open boards, and casual play. With 7,800+ Instagram followers and sold-out events every week, Pawn is redefining what a chess club looks and feels like. Founded by @ismuisamu and @simone_nr.",
     location: "New York, NY",
     country: "US",
     category: "community",
@@ -565,7 +565,7 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     ownerName: "Ismu Isamu",
     isPublic: false,
     website: "https://www.instagram.com/pawnchessclub/",
-    announcement: "🎉 Speed Dating Chess Night — every Friday 7–9pm. All levels welcome. Limited tickets.",
+    announcement: "Friday Chess Night — every Friday 7–9pm. All levels welcome. Limited tickets.",
   },
   {
     name: "Club Chess NYC",
@@ -755,8 +755,8 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
   ],
   // Pawn Chess Club
   [
-    { tournamentId: "pawn-speed-dating-apr-2026", name: "Speed Dating Chess Night April", date: "2026-04-04", format: "Swiss", playerCount: 0, rounds: 8, status: "upcoming" },
-    { tournamentId: "pawn-speed-dating-mar-2026", name: "Speed Dating Chess Night March", date: "2026-03-07", format: "Swiss", playerCount: 42, rounds: 8, status: "completed", winnerName: "Ismu Isamu" },
+    { tournamentId: "pawn-chess-night-apr-2026", name: "Friday Chess Night April", date: "2026-04-04", format: "Swiss", playerCount: 0, rounds: 8, status: "upcoming" },
+    { tournamentId: "pawn-chess-night-mar-2026", name: "Friday Chess Night March", date: "2026-03-07", format: "Swiss", playerCount: 42, rounds: 8, status: "completed", winnerName: "Ismu Isamu" },
     { tournamentId: "pawn-blitz-feb-2026", name: "Pawn Blitz February", date: "2026-02-14", format: "Swiss", playerCount: 38, rounds: 5, status: "completed", winnerName: "Simone N." },
   ],
   // Club Chess NYC

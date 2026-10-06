@@ -42,7 +42,6 @@ import {
 } from "@/lib/clubEventRegistry";
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
-import { ClubSpeedDatingSession } from "@/components/club/ClubSpeedDatingSession";
 import { authFetch } from "@/lib/apiFetch";
 import { ClipboardList } from "lucide-react";
 
@@ -460,7 +459,7 @@ export default function MeetupEventPage() {
                         className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase transition-all duration-200 hover:scale-105"
                         style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.50)" }}
                       >
-                        {event.eventType === "speed_dating" ? "Speed Dating" : "Club Meetup"}
+                        Club Meetup
                       </span>
                     </div>
                     <h1
@@ -589,14 +588,6 @@ export default function MeetupEventPage() {
                           </Link>
                         </div>
                       </div>
-                    )}
-                    {event.eventType === "speed_dating" && (
-                      <ClubSpeedDatingSession
-                        event={event}
-                        viewerId={user?.id}
-                        canManage={Boolean(isOwnerOrDirector)}
-                        accentColor={accentColor}
-                      />
                     )}
                     {/* Check-in action */}
                     {!isOwnerOrDirector && (

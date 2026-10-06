@@ -162,6 +162,20 @@
       "when": 1791271430256,
       "tag": "0022_club_speed_dating_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1791272379488,
+      "tag": "0023_club_trivia_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1791273422027,
+      "tag": "0024_retire_unused_event_modes",
+      "breakpoints": true
     }
   ]
 }
