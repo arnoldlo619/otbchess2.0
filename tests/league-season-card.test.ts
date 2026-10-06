@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderLeagueSeasonCard } from "../server/leagueSeasonCard";
+import { renderLeaguePlayerCard, renderLeagueSeasonCard } from "../server/leagueSeasonCard";
 
 const season = {
   leagueName: "Downtown Autumn League",
@@ -37,6 +37,25 @@ describe("League season card renderer", () => {
     const first = renderLeagueSeasonCard(season);
     const second = renderLeagueSeasonCard(season);
 
+    expect(second.equals(first)).toBe(true);
+  });
+
+  it("renders a deterministic 1200×630 player card with first-party final standing data", () => {
+    const playerCard = {
+      leagueName: season.leagueName,
+      clubName: season.clubName,
+      formatType: season.formatType,
+      totalWeeks: season.totalWeeks,
+      player: season.standings[1],
+      bestResult: "Finished #2 overall",
+    };
+    const first = renderLeaguePlayerCard(playerCard);
+    const second = renderLeaguePlayerCard(playerCard);
+
+    expect(first.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    expect(first.readUInt32BE(16)).toBe(1200);
+    expect(first.readUInt32BE(20)).toBe(630);
+    expect(first.length).toBeGreaterThan(10_000);
     expect(second.equals(first)).toBe(true);
   });
 });

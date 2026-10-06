@@ -19,6 +19,15 @@ export interface LeagueSeasonCardData {
   standings: LeagueSeasonCardStanding[];
 }
 
+export interface LeaguePlayerCardData {
+  leagueName: string;
+  clubName?: string | null;
+  formatType: string;
+  totalWeeks: number;
+  player: LeagueSeasonCardStanding;
+  bestResult: string;
+}
+
 const WIDTH = 1200;
 const HEIGHT = 630;
 
@@ -182,6 +191,109 @@ export function renderLeagueSeasonCard(data: LeagueSeasonCardData): Buffer {
     ctx.fillText(`${standing.points} pts`, 1071, rowY + 30);
     ctx.textAlign = "left";
   }
+
+  ctx.fillStyle = "rgba(231, 255, 226, 0.46)";
+  ctx.font = "500 14px sans-serif";
+  ctx.fillText("chessotb.club", 94, 550);
+  ctx.textAlign = "right";
+  ctx.fillText("Over the board. Together.", 1106, 550);
+  ctx.textAlign = "left";
+
+  return canvas.toBuffer("image/png");
+}
+
+/** Renders a 1200×630 final-season player card without remote asset fetching. */
+export function renderLeaguePlayerCard(data: LeaguePlayerCardData): Buffer {
+  const canvas = createCanvas(WIDTH, HEIGHT);
+  const ctx = canvas.getContext("2d");
+  const initials = data.player.displayName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "P";
+
+  const background = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+  background.addColorStop(0, "#0a2515");
+  background.addColorStop(0.56, "#144e2d");
+  background.addColorStop(1, "#07140c");
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  ctx.fillStyle = "rgba(158, 241, 146, 0.075)";
+  for (let x = 0; x < WIDTH; x += 74) {
+    for (let y = 0; y < HEIGHT; y += 74) {
+      ctx.fillRect(x, y, 36, 36);
+    }
+  }
+
+  roundedRect(ctx, 54, 46, 1092, 538, 30);
+  ctx.fillStyle = "rgba(4, 15, 8, 0.72)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(174, 246, 168, 0.17)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#a8f39e";
+  ctx.font = "700 22px sans-serif";
+  ctx.fillText("OTB!!", 94, 98);
+  ctx.fillStyle = "rgba(240, 255, 239, 0.64)";
+  ctx.font = "600 15px sans-serif";
+  ctx.fillText((data.clubName || "ChessOTB Club").toUpperCase(), 94, 126);
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(240, 255, 239, 0.58)";
+  ctx.font = "600 14px sans-serif";
+  ctx.fillText("SEASON PLAYER CARD", 1106, 98);
+  ctx.textAlign = "left";
+
+  ctx.fillStyle = "rgba(231, 255, 226, 0.62)";
+  ctx.font = "600 16px sans-serif";
+  ctx.fillText(`${data.leagueName} · ${formatTypeLabel(data.formatType)} · ${data.totalWeeks} weeks`, 94, 177);
+
+  ctx.beginPath();
+  ctx.arc(210, 332, 94, 0, Math.PI * 2);
+  ctx.fillStyle = "#2d8050";
+  ctx.fill();
+  ctx.strokeStyle = "#a8f39e";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  ctx.fillStyle = "#edffea";
+  ctx.font = "800 66px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(initials, 210, 355);
+  ctx.textAlign = "left";
+
+  ctx.beginPath();
+  ctx.arc(278, 405, 33, 0, Math.PI * 2);
+  ctx.fillStyle = data.player.rank === 1 ? "#f6ca6b" : "#d8f1d3";
+  ctx.fill();
+  ctx.fillStyle = "#173420";
+  ctx.font = "800 21px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`#${data.player.rank}`, 278, 413);
+  ctx.textAlign = "left";
+
+  ctx.fillStyle = "#f4fff0";
+  ctx.font = "700 45px sans-serif";
+  drawText(ctx, data.player.displayName, 354, 293, 650);
+  ctx.fillStyle = "#b8f6a9";
+  ctx.font = "700 28px sans-serif";
+  ctx.fillText(`${data.player.points} pts`, 354, 338);
+  ctx.fillStyle = "rgba(231, 255, 226, 0.64)";
+  ctx.font = "600 18px sans-serif";
+  ctx.fillText(`${data.player.wins} wins · ${data.player.draws} draws · ${data.player.losses} losses`, 354, 374);
+
+  roundedRect(ctx, 354, 416, 656, 74, 16);
+  ctx.fillStyle = "rgba(168, 243, 158, 0.10)";
+  ctx.fill();
+  ctx.fillStyle = "rgba(231, 255, 226, 0.52)";
+  ctx.font = "600 13px sans-serif";
+  ctx.fillText("BEST RESULT", 382, 446);
+  ctx.fillStyle = "#e6ffe0";
+  ctx.font = "700 19px sans-serif";
+  drawText(ctx, data.bestResult, 382, 474, 590);
 
   ctx.fillStyle = "rgba(231, 255, 226, 0.46)";
   ctx.font = "500 14px sans-serif";

@@ -4089,11 +4089,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Season Summary: server-rendered 1200×630 social card and compact Share Season Card action with native image sharing and copy-link fallback
 
 ## FCL Phase 5: Season Stats Player Cards
-- [ ] Server: install canvas npm package for server-side PNG generation
-- [ ] Server: add GET /api/leagues/:leagueId/player-card/:playerId endpoint that renders a PNG card
-- [ ] Card design: dark green gradient background with OTB branding, player avatar, rank badge, W/D/L, points, best result, league name + season label
-- [ ] Season Summary tab: add "Download Card" button per player row and a "Share Your Card" CTA for the current user
-- [ ] Season Summary tab: show card preview modal before download
+- [x] Server: install canvas npm package for server-side PNG generation
+- [x] Server: add GET /api/leagues/:leagueId/player-card/:playerId endpoint that renders a PNG card
+- [x] Card design: dark green gradient background with OTB branding, player avatar, rank badge, W/D/L, points, best result, league name + season label
+- [x] Season Summary tab: add "Download Card" button per player row and a "Share Your Card" CTA for the current user
+- [x] Season Summary tab: show card preview modal before download
 
 ## Mobile Nav: Hamburger Menu for Unauthenticated Users
 - [x] Add hamburger icon button to navbar (mobile only, hidden when signed in or on desktop)

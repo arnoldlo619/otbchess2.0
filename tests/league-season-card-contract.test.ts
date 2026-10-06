@@ -15,6 +15,13 @@ describe("League season card delivery", () => {
     expect(serverSource).toContain("orderBy(asc(leagueStandings.rank))");
   });
 
+  it("exposes an immutable completed-season player card endpoint", () => {
+    expect(serverSource).toContain('leaguesRouter.get("/:leagueId/player-card/:playerId"');
+    expect(serverSource).toContain("Player cards are available after the season is complete");
+    expect(serverSource).toContain("renderLeaguePlayerCard({");
+    expect(serverSource).toContain("Player standing not found");
+  });
+
   it("keeps the share action compact and available only for completed seasons", () => {
     expect(dashboardSource).toContain("Season Summary");
     expect(dashboardSource).toContain("Share Season Card");
@@ -25,5 +32,14 @@ describe("League season card delivery", () => {
     expect(dashboardSource).toContain("navigator.canShare({ files: [imageFile] })");
     expect(dashboardSource).toContain("navigator.clipboard.writeText(seasonCardUrl)");
     expect(dashboardSource).toContain("/season-card.png");
+  });
+
+  it("keeps per-player cards preview-first with download, native sharing, and accessible dismissal", () => {
+    expect(dashboardSource).toContain("PlayerSeasonCardPreview");
+    expect(dashboardSource).toContain("Preview your season card");
+    expect(dashboardSource).toContain("Download Card");
+    expect(dashboardSource).toContain("Share Card");
+    expect(dashboardSource).toContain("useAccessibleOverlay({");
+    expect(dashboardSource).toContain("/player-card/${encodeURIComponent(player.playerId)}");
   });
 });

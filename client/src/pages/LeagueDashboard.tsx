@@ -3,7 +3,7 @@
  * Phase 2: Your Match This Week · Next Opponent · Recent Results ·
  *          Streak/Movement Standings · Schedule Highlights
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -12,7 +12,7 @@ import {
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
   Share2, Copy, Check, QrCode, X, History, Settings, Pencil,
-  ExternalLink, Star, AlertTriangle
+  ExternalLink, Star, AlertTriangle, Download
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon, MembersIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
@@ -20,6 +20,7 @@ import { TabTransition } from "@/components/TabTransition";
 import AuthModal from "@/components/AuthModal";
 import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
+import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
 import { OTBLoader } from "@/components/OTBLoader";
@@ -295,6 +296,136 @@ function ShareModal({
             </button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function PlayerSeasonCardPreview({
+  league,
+  player,
+  isDark,
+  onClose,
+  onToast,
+}: {
+  league: League;
+  player: LeagueStanding;
+  isDark: boolean;
+  onClose: () => void;
+  onToast: (message: string, type?: "success" | "error") => void;
+}) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [sharing, setSharing] = useState(false);
+  const safeName = player.displayName.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "player";
+  const cardUrl = `${window.location.origin}/api/leagues/${encodeURIComponent(league.id)}/player-card/${encodeURIComponent(player.playerId)}`;
+  const filename = `${safeName}-${league.name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "league"}-season-card.png`;
+  const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
+  const border = isDark ? "oklch(0.29 0.07 145)" : "oklch(0.88 0.03 145)";
+  const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
+  const textMuted = isDark ? "oklch(0.74 0.04 145)" : "oklch(0.38 0.05 145)";
+  const accent = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
+
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: closeButtonRef,
+  });
+
+  async function sharePlayerCard() {
+    setSharing(true);
+    try {
+      if (typeof navigator.share === "function") {
+        const response = await fetch(cardUrl);
+        if (!response.ok) throw new Error("Player card could not be generated");
+        const imageFile = new File([await response.blob()], filename, { type: "image/png" });
+        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            title: `${player.displayName} · ${league.name}`,
+            text: `${player.displayName}'s ${league.name} season results on ChessOTB.`,
+            files: [imageFile],
+          });
+        } else {
+          await navigator.share({
+            title: `${player.displayName} · ${league.name}`,
+            text: `${player.displayName}'s ${league.name} season results on ChessOTB.`,
+            url: cardUrl,
+          });
+        }
+        onToast("Player card shared.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(cardUrl);
+      onToast("Player card link copied.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      window.open(cardUrl, "_blank", "noopener,noreferrer");
+      onToast("Opened the player card in a new tab.");
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay z-50 px-4 py-6" style={{ background: "rgba(0,0,0,0.68)" }}>
+      <div
+        ref={overlayRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="player-season-card-title"
+        tabIndex={-1}
+        className="w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: bg, border: `1px solid ${border}` }}
+      >
+        <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5" style={{ borderBottom: `1px solid ${border}` }}>
+          <div className="min-w-0">
+            <p id="player-season-card-title" className="truncate text-sm font-bold" style={{ color: textMain }}>{player.displayName}'s season card</p>
+            <p className="mt-0.5 text-xs" style={{ color: textMuted }}>A completed-season snapshot from {league.name}.</p>
+          </div>
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close player season card preview"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl transition-opacity hover:opacity-80"
+            style={{ background: isDark ? "oklch(0.24 0.06 145)" : "#f3f4f6", color: textMuted }}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="p-3 sm:p-5">
+          <img
+            src={cardUrl}
+            alt={`${player.displayName}'s ${league.name} season card`}
+            width={1200}
+            height={630}
+            className="w-full rounded-2xl"
+            style={{ border: `1px solid ${border}` }}
+          />
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <a
+              href={cardUrl}
+              download={filename}
+              className="min-h-11 inline-flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-opacity hover:opacity-85"
+              style={{ background: isDark ? "oklch(0.24 0.06 145)" : "#f3f4f6", color: textMain }}
+            >
+              <Download size={16} aria-hidden="true" />
+              Download Card
+            </a>
+            <button
+              type="button"
+              onClick={() => void sharePlayerCard()}
+              disabled={sharing}
+              className="min-h-11 inline-flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-opacity hover:opacity-85 disabled:cursor-wait disabled:opacity-65"
+              style={{ background: accent, color: "#fff" }}
+            >
+              {sharing ? <Clock size={16} className="animate-spin" aria-hidden="true" /> : <Share2 size={16} aria-hidden="true" />}
+              {sharing ? "Preparing card" : "Share Card"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -720,6 +851,7 @@ export default function LeagueDashboard() {
   const [showShare, setShowShare] = useState(false);
   const [sharingSeasonCard, setSharingSeasonCard] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<LeaguePlayer | null>(null);
+  const [selectedPlayerCard, setSelectedPlayerCard] = useState<LeagueStanding | null>(null);
   // Join requests (commissioner-only, for Draft leagues)
   const [joinRequests, setJoinRequests] = useState<Array<{ id: number; playerId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null; createdAt: string }>>([]);
   const [reviewingId, setReviewingId] = useState<number | null>(null);
@@ -3572,6 +3704,18 @@ export default function LeagueDashboard() {
                       <div className="text-xs" style={{ color: textMuted }}>{s.wins}W {s.draws}D {s.losses}L</div>
                     </div>
                     <span className="font-bold text-base flex-shrink-0" style={{ color: accent }}>{s.points} pts</span>
+                    {league.status === "completed" && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlayerCard(s)}
+                        aria-label={isMe ? "Preview your season card" : `Preview ${s.displayName}'s season card`}
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-semibold transition-opacity hover:opacity-80"
+                        style={{ background: `${accent}14`, color: accent, border: `1px solid ${accent}2f` }}
+                      >
+                        <Share2 size={14} aria-hidden="true" />
+                        <span className="hidden sm:inline">{isMe ? "Your Card" : "Card"}</span>
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -4311,6 +4455,16 @@ export default function LeagueDashboard() {
           league={league}
           isDark={isDark}
           onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {selectedPlayerCard && (
+        <PlayerSeasonCardPreview
+          league={league}
+          player={selectedPlayerCard}
+          isDark={isDark}
+          onClose={() => setSelectedPlayerCard(null)}
+          onToast={showToast}
         />
       )}
 
