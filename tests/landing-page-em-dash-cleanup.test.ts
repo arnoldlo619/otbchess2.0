@@ -10,6 +10,6 @@ describe("landing page editorial punctuation", () => {
 
   it("keeps the current tournament sign-up message concise without em-dash construction", () => {
     const home = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
-    expect(home).toContain("Players Sign Up with Chess.com Username");
+    expect(home).toContain("Players sign up with their Chess.com username");
   });
 });

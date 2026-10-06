@@ -1067,7 +1067,7 @@ function HowItWorks() {
     {
       number: "01",
       icon: <Trophy className="w-3 h-3" />,
-      title: "Create Your Tournament, Share QR Code",
+      title: "Share your QR Code",
       description: "Players scan once arriving for seamless check-in process for everyone.",
       cta: "Host a Tournament",
       ctaHref: NAV_CTA_PRIMARY.path,
@@ -1079,7 +1079,7 @@ function HowItWorks() {
     {
       number: "02",
       icon: <Users className="w-3 h-3" />,
-      title: "Players Sign Up with Chess.com Username",
+      title: "Players sign up with their Chess.com username",
       description: "Round pairings optimally generated on ELO rating",
       cta: "Try our Chess.com User Lookup",
       ctaHref: "#chesscom-integration",

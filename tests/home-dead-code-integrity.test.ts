@@ -16,13 +16,13 @@ describe("Home dead-code integrity", () => {
   it("removes the redundant How It Works Step pill badge while retaining the step content", () => {
     expect(homeSource).not.toContain("function StepBadge");
     expect(homeSource).not.toContain("otb-step-badge");
-    expect(homeSource).toContain("Create Your Tournament, Share QR Code");
+    expect(homeSource).toContain("Share your QR Code");
     expect(homeSource).toContain("Seamless Tournament Flow for All");
   });
 
   it("keeps the revised tournament flow copy and Chess.com lookup destination", () => {
-    expect(homeSource).toContain("Input the Date, Location, Time, and Time Format to instantly get a shareable QR code.");
-    expect(homeSource).toContain("Players Sign Up with Chess.com Username");
+    expect(homeSource).toContain("Players scan once arriving for seamless check-in process for everyone.");
+    expect(homeSource).toContain("Players sign up with their Chess.com username");
     expect(homeSource).toContain("Try our Chess.com User Lookup");
     expect(homeSource).toContain('ctaHref: "#chesscom-integration"');
     expect(homeSource).toContain('id="chesscom-integration"');
