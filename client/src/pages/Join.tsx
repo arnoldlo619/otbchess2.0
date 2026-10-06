@@ -34,17 +34,17 @@ import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
 import {resolveTournament, registerTournament, type TournamentConfig} from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
+import { resolveChessComRating } from "@/lib/chessComPlayerPayload";
 
 /**
  * Pick the correct rating from a profile based on the tournament's ratingType.
- * Falls back: preferred → other → bullet → 1200.
+ * Falls back: preferred → other → bullet → daily → 1200.
  */
 function pickRating(
-  prof: { rapid: number; blitz: number; bullet: number; elo?: number },
+  prof: { rapid: number; blitz: number; bullet: number; daily?: number; elo?: number },
   ratingType: "rapid" | "blitz" = "rapid",
 ): number {
-  if (ratingType === "blitz") return prof.blitz || prof.rapid || prof.bullet || 1200;
-  return prof.rapid || prof.blitz || prof.bullet || 1200;
+  return resolveChessComRating(prof, ratingType);
 }
 import { addPlayerToTournament, removeJoinedPlayerFromTournament } from "@/lib/directorState";
 import {
@@ -387,7 +387,7 @@ function ShareSheet({
     initialFocusRef: cancelButtonRef,
   });
   const rType = ratingType ?? "rapid";
-  const displayRating = rType === "blitz" ? profile.blitz : profile.rapid;
+  const displayRating = pickRating(profile, rType);
   const ratingLabel = rType === "blitz" ? "Blitz" : "Rapid";
   const shareText = `Just registered for ${tournament.name} on OTB Chess! 🏆 Playing as @${profile.username} (${displayRating} ${ratingLabel} ELO). See you at the board!`;
   const shareUrl = window.location.href;
@@ -2070,9 +2070,9 @@ export default function JoinPage() {
                   {/* ELO count-up */}
                   <div>
                     <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {manualRatingUsed ? (
-                        <div className="col-span-3">
+                        <div className="col-span-full">
                           <EloStatBox label="Manual rating" target={profile.elo} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                         </div>
                       ) : profile.platform === "lichess" ? (
@@ -2086,6 +2086,7 @@ export default function JoinPage() {
                           <EloStatBox label="Rapid" target={profile.rapid} isPrimary={resolvedConfig?.ratingType !== "blitz"} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                           <EloStatBox label="Blitz" target={profile.blitz} isPrimary={resolvedConfig?.ratingType === "blitz"} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                           <EloStatBox label="Bullet" target={profile.bullet} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Daily" target={(profile as ChessComProfile).daily} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                         </>
                       )}
                     </div>
@@ -2097,7 +2098,7 @@ export default function JoinPage() {
 
                   {/* Tier badge */}
                   {(() => {
-                    const heroRating = resolvedConfig?.ratingType === "blitz" ? profile.blitz : profile.rapid;
+                    const heroRating = pickRating(profile, resolvedConfig?.ratingType);
                     const tier = isDark ? eloTierDark(heroRating) : eloTier(heroRating);
                     return (
                       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${tier.bg} ${tier.color}`}>
@@ -2243,7 +2244,7 @@ export default function JoinPage() {
                     <div className="text-right">
                       <p className={`text-xl font-bold tabular-nums ${isDark ? "text-[#4CAF50]" : "text-[#436850]"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                        {resolvedConfig?.ratingType === "blitz" ? profile.blitz : profile.rapid}
+                        {pickRating(profile, resolvedConfig?.ratingType)}
                       </p>
                       <p className={`text-xs ${textMuted}`}>{resolvedConfig?.ratingType === "blitz" ? "Blitz" : "Rapid"} ELO</p>
                     </div>

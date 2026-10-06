@@ -42,7 +42,12 @@ import type { Player } from "@/lib/tournamentData";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
 import { authFetch } from "@/lib/apiFetch";
-import { chessComPlayerEndpoint, normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
+import {
+  chessComPlayerEndpoint,
+  extractChessComRatings,
+  normalizeChessComPlayerPayload,
+  resolveChessComRating,
+} from "@/lib/chessComPlayerPayload";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Platform = "chess.com" | "lichess" | "manual" | "csv";
@@ -54,6 +59,7 @@ interface LookupResult {
   rapid?: number;
   blitz?: number;
   bullet?: number;
+  daily?: number;
   rapidElo?: number;
   blitzElo?: number;
   avatar?: string;
@@ -115,14 +121,12 @@ export async function lookupChessCom(username: string): Promise<LookupResult> {
   if (res.status === 429) throw new Error("Rate limited — try again in a moment");
   if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`);
   const { profile, stats } = normalizeChessComPlayerPayload(await res.json(), username);
-  const rapid = (stats?.chess_rapid as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
-  const blitz = (stats?.chess_blitz as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
-  const bullet = (stats?.chess_bullet as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
+  const ratings = extractChessComRatings(stats);
   return {
     name: (profile.name as string) || (profile.username as string),
     username: profile.username as string,
-    rapid, blitz, bullet,
-    elo: rapid || blitz || bullet || 1200,
+    ...ratings,
+    elo: resolveChessComRating(ratings),
     avatar: profile.avatar as string | undefined,
     country: (profile.country as string | undefined)?.split("/").pop()?.toUpperCase(),
     title: profile.title as string | undefined,
@@ -822,9 +826,7 @@ export function AddPlayerModal({
       if (lookupState !== "found" || !lookupResult) return;
       const isChessCom = platform === "chess.com";
       const activeElo = isChessCom
-        ? (ratingType === "blitz"
-          ? (lookupResult.blitz || lookupResult.rapid || lookupResult.bullet || lookupResult.elo)
-          : (lookupResult.rapid || lookupResult.blitz || lookupResult.bullet || lookupResult.elo))
+        ? resolveChessComRating(lookupResult, ratingType)
         : lookupResult.elo;
       player = {
         id: nanoid(),
@@ -1083,7 +1085,7 @@ export function AddPlayerModal({
                                   border: ratingType === "rapid" ? `1px solid ${isDark ? "rgba(77,105,64,0.40)" : "rgba(77,105,64,0.25)"}` : "1px solid transparent",
                                 }}
                               >
-                                ⚡ Rapid {lookupResult.rapid}
+                                Rapid {lookupResult.rapid}
                               </span>
                             ) : null}
                             {lookupResult.blitz ? (
@@ -1097,7 +1099,7 @@ export function AddPlayerModal({
                                   border: ratingType === "blitz" ? `1px solid ${isDark ? "rgba(77,105,64,0.40)" : "rgba(77,105,64,0.25)"}` : "1px solid transparent",
                                 }}
                               >
-                                🔥 Blitz {lookupResult.blitz}
+                                Blitz {lookupResult.blitz}
                               </span>
                             ) : null}
                             <span className="text-[10px]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>

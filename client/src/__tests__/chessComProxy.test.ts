@@ -10,10 +10,11 @@
  *  2. Rating extraction logic handles all chess.com stat shapes
  *  3. 404 handling for unknown usernames
  *  4. Country code → flag emoji conversion
- *  5. Best-available rating fallback (rapid → blitz → bullet)
+ *  5. Best-available rating fallback (rapid → blitz → bullet → daily → 1200)
  */
 
 import { describe, it, expect } from "vitest";
+import { extractChessComRatings, resolveChessComRating } from "../lib/chessComPlayerPayload.js";
 
 // ─── Helpers extracted from useChessComProfile.ts ────────────────────────────
 
@@ -30,17 +31,8 @@ function countryCodeToFlag(code: string): string {
 }
 
 function extractRatings(statsData: Record<string, unknown>) {
-  const rapid =
-    (statsData?.chess_rapid as Record<string, Record<string, number>> | undefined)
-      ?.last?.rating ?? 0;
-  const blitz =
-    (statsData?.chess_blitz as Record<string, Record<string, number>> | undefined)
-      ?.last?.rating ?? 0;
-  const bullet =
-    (statsData?.chess_bullet as Record<string, Record<string, number>> | undefined)
-      ?.last?.rating ?? 0;
-  const elo = rapid || blitz || bullet || 0;
-  return { rapid, blitz, bullet, elo };
+  const ratings = extractChessComRatings(statsData);
+  return { ...ratings, elo: resolveChessComRating(ratings) };
 }
 
 // ─── Country flag tests ───────────────────────────────────────────────────────
@@ -87,11 +79,13 @@ describe("extractRatings", () => {
       chess_rapid: { last: { rating: 1800, date: 123456, rd: 50 } },
       chess_blitz: { last: { rating: 1700, date: 123456, rd: 50 } },
       chess_bullet: { last: { rating: 1600, date: 123456, rd: 50 } },
+      chess_daily: { last: { rating: 1500, date: 123456, rd: 50 } },
     };
     const result = extractRatings(stats);
     expect(result.rapid).toBe(1800);
     expect(result.blitz).toBe(1700);
     expect(result.bullet).toBe(1600);
+    expect(result.daily).toBe(1500);
     expect(result.elo).toBe(1800); // rapid preferred
   });
 
@@ -115,13 +109,16 @@ describe("extractRatings", () => {
     expect(result.elo).toBe(1600); // bullet fallback
   });
 
-  it("returns 0 elo when no ratings available", () => {
+  it("falls back to daily, then 1200 when no usable live rating exists", () => {
+    expect(extractRatings({ chess_daily: { last: { rating: 1450 } } }).elo).toBe(1450);
+
     const stats = {};
     const result = extractRatings(stats);
     expect(result.rapid).toBe(0);
     expect(result.blitz).toBe(0);
     expect(result.bullet).toBe(0);
-    expect(result.elo).toBe(0);
+    expect(result.daily).toBe(0);
+    expect(result.elo).toBe(1200);
   });
 
   it("handles missing last object gracefully", () => {
@@ -134,7 +131,7 @@ describe("extractRatings", () => {
 
   it("handles null stats gracefully", () => {
     const result = extractRatings({});
-    expect(result.elo).toBe(0);
+    expect(result.elo).toBe(1200);
   });
 
   it("handles very high GM ratings", () => {

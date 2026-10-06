@@ -33,7 +33,12 @@ import {
   RefreshCw,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
-import { chessComPlayerEndpoint, normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
+import {
+  chessComPlayerEndpoint,
+  extractChessComRatings,
+  normalizeChessComPlayerPayload,
+  resolveChessComRating,
+} from "@/lib/chessComPlayerPayload";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type RowStatus = "pending" | "loading" | "ready" | "duplicate" | "error";
@@ -84,31 +89,13 @@ export async function lookupChessComRsvp(username: string): Promise<Partial<Play
   if (res.status === 429) throw new Error("Rate limited — try again in a moment");
   if (!res.ok) throw new Error(`chess.com error (${res.status})`);
   const { profile, stats } = normalizeChessComPlayerPayload(await res.json(), username);
-  // Parse all rating categories with safe optional chaining
-  const rapidElo: number | undefined =
-    (stats.chess_rapid as Record<string, unknown> | undefined)?.last
-      ? ((stats.chess_rapid as Record<string, unknown>).last as Record<string, unknown>).rating as number
-      : undefined;
-  const blitzElo: number | undefined =
-    (stats.chess_blitz as Record<string, unknown> | undefined)?.last
-      ? ((stats.chess_blitz as Record<string, unknown>).last as Record<string, unknown>).rating as number
-      : undefined;
-  const bulletElo: number | undefined =
-    (stats.chess_bullet as Record<string, unknown> | undefined)?.last
-      ? ((stats.chess_bullet as Record<string, unknown>).last as Record<string, unknown>).rating as number
-      : undefined;
-  const dailyElo: number | undefined =
-    (stats.chess_daily as Record<string, unknown> | undefined)?.last
-      ? ((stats.chess_daily as Record<string, unknown>).last as Record<string, unknown>).rating as number
-      : undefined;
-  // Active ELO: prefer rapid → blitz → bullet → daily → 1200
-  const elo = rapidElo ?? blitzElo ?? bulletElo ?? dailyElo ?? 1200;
+  const ratings = extractChessComRatings(stats);
   return {
     name: (profile.name as string | undefined) || (profile.username as string | undefined),
     username: profile.username as string | undefined,
-    elo,
-    rapidElo,
-    blitzElo,
+    elo: resolveChessComRating(ratings),
+    ...(ratings.rapid ? { rapidElo: ratings.rapid } : {}),
+    ...(ratings.blitz ? { blitzElo: ratings.blitz } : {}),
     avatarUrl: profile.avatar as string | undefined,
     country: typeof profile.country === "string"
       ? profile.country.split("/").pop()?.toUpperCase() ?? "US"

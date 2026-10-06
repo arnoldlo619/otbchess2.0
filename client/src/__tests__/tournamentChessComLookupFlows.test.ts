@@ -19,6 +19,16 @@ const flatChessComPayload = {
   stats: {
     chess_rapid: { last: { rating: 2811 } },
     chess_blitz: { last: { rating: 3168 } },
+    chess_bullet: { last: { rating: 3095 } },
+    chess_daily: { last: { rating: 2239 } },
+  },
+};
+
+const dailyOnlyChessComPayload = {
+  username: "daily-only",
+  name: "Daily Only",
+  stats: {
+    chess_daily: { last: { rating: 1530 } },
   },
 };
 
@@ -49,6 +59,8 @@ describe("Tournament Chess.com lookup flows", () => {
       username: "hikaru",
       rapid: 2811,
       blitz: 3168,
+      bullet: 3095,
+      daily: 2239,
       elo: 2811,
       country: "US",
       title: "GM",
@@ -81,6 +93,24 @@ describe("Tournament Chess.com lookup flows", () => {
       name: "Hikaru Nakamura",
       rapid: 2811,
       blitz: 3168,
+      daily: 2239,
+    });
+  });
+
+  it("keeps RSVP upload, Add Player, and QR Join aligned for daily-only accounts", async () => {
+    authFetchMock.mockImplementation(() => Promise.resolve(response(dailyOnlyChessComPayload)));
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(response(dailyOnlyChessComPayload))));
+
+    await expect(lookupChessCom("daily-director")).resolves.toMatchObject({
+      daily: 1530,
+      elo: 1530,
+    });
+    await expect(lookupChessComRsvp("daily-rsvp")).resolves.toMatchObject({
+      elo: 1530,
+    });
+    await expect(fetchFromChessCom("daily-qr")).resolves.toMatchObject({
+      daily: 1530,
+      elo: 1530,
     });
   });
 });

@@ -11,7 +11,12 @@
 import { useState, useCallback } from "react";
 
 import { authFetch } from "@/lib/apiFetch";
-import { chessComPlayerEndpoint, normalizeChessComPlayerPayload } from "@/lib/chessComPlayerPayload";
+import {
+  chessComPlayerEndpoint,
+  extractChessComRatings,
+  normalizeChessComPlayerPayload,
+  resolveChessComRating,
+} from "@/lib/chessComPlayerPayload";
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface OpeningEntry {
   name: string;
@@ -40,7 +45,8 @@ export interface ChessComProfile {
   rapid: number;
   blitz: number;
   bullet: number;
-  /** Best available rating (rapid → blitz → bullet) */
+  daily: number;
+  /** Best available rating (rapid → blitz → bullet → daily → 1200) */
   elo: number;
   status: "online" | "offline";
   joined?: number;
@@ -86,11 +92,7 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
   if (!res.ok) throw new Error(`chess.com proxy error: ${res.status}`);
 
   const { profile: profileData, stats: statsData } = normalizeChessComPlayerPayload(await res.json(), username);
-
-  const rapid = (statsData?.chess_rapid as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
-  const blitz = (statsData?.chess_blitz as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
-  const bullet = (statsData?.chess_bullet as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
-  const elo = rapid || blitz || bullet || 0;
+  const ratings = extractChessComRatings(statsData);
 
   const countryCode = profileData.country
     ? (profileData.country as string).split("/").pop() ?? ""
@@ -104,10 +106,8 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
     title: profileData.title as string | undefined,
     country: countryCode,
     countryFlag,
-    rapid,
-    blitz,
-    bullet,
-    elo,
+    ...ratings,
+    elo: resolveChessComRating(ratings),
     status: profileData.status === "online" ? "online" : "offline",
     joined: profileData.joined as number | undefined,
     platform: "chesscom",
