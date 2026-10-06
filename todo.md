@@ -4401,7 +4401,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove WhatsApp tab, keep only Email and QR Code tabs
 - [x] Email tab: per-player send button + bulk "Email All" with player card download link
 - [x] Server-side email endpoint: personalized results email with report URL + player card link
-- [ ] QR Code tab: QR linking to tournament results/report page
+- [x] QR Code tab: QR linking to canonical tournament results/report page, with PNG download, link copy, and fullscreen projection
 
 ## SMTP Server-Side Email
 - [x] Add SMTP config storage in user settings (host, port, user, pass, from name) — encrypted server-side
