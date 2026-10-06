@@ -23,17 +23,19 @@ describe("Club Events gallery", () => {
     expect(dashboardSource).toContain("upcomingEvents.map((event) => (");
     expect(dashboardSource).toContain("aspect-[16/9]");
     expect(dashboardSource).toContain("event.coverImageUrl");
-    expect(dashboardSource).toContain("View event");
+    expect(dashboardSource).toContain('className="absolute inset-0 z-10 cursor-pointer touch-manipulation rounded-2xl');
+    expect(dashboardSource).toContain('aria-label={`Open ${event.title} details`}');
+    expect(dashboardSource).toContain("Open {event.title} details");
+    expect(dashboardSource).not.toContain("View event");
     expect(dashboardSource).toContain("No scheduled events");
   });
 
   it("keeps organizer creation and management paths without reintroducing filters", () => {
-    expect(dashboardSource).toContain("New tournament");
-    expect(dashboardSource).toContain("Create meetup");
-    expect(dashboardSource).toContain('flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center');
-    expect(dashboardSource).toContain('min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold whitespace-nowrap');
-    expect(dashboardSource).not.toContain('SpinBorderButton variant="solid" onClick={() => setShowTournamentWizard(true)}');
+    expect(dashboardSource).toContain('label: "Create event"');
+    expect(dashboardSource).toContain("setShowCreateEvent(true)");
     expect(dashboardSource).toContain("onOpenRsvps={() => openRsvpPanel(event.id)}");
+    expect(dashboardSource).toContain("Manage RSVPs");
+    expect(dashboardSource).toContain('aria-label={`Options for ${event.title}`}');
     expect(dashboardSource).toContain("setEventsFilter(\"leagues\"); setTab(\"events\")");
     expect(dashboardSource).toContain('tab === "events" && eventsFilter === "leagues"');
   });

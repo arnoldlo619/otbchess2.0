@@ -532,14 +532,44 @@ function ScheduledEventGalleryCard({
   const coverFallback = `linear-gradient(145deg, ${accent} 0%, ${accent}99 44%, ${isDark ? "#102518" : "#1a3521"} 100%)`;
   const textMain = isDark ? "text-white" : "text-[#15291c]";
   const textMuted = isDark ? "text-white/58" : "text-[#496052]";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuItemClass = isDark
+    ? "text-white/75 hover:bg-white/8 hover:text-white"
+    : "text-[#27402d]/80 hover:bg-[#eff7ed] hover:text-[#15291c]";
+  const destructiveMenuItemClass = isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-600 hover:bg-red-50";
+
+  useEffect(() => {
+    function closeMenu(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        window.requestAnimationFrame(() => menuTriggerRef.current?.focus({ preventScroll: true }));
+      }
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen]);
 
   return (
     <article
-      className={`group overflow-hidden rounded-2xl border transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl ${
+      className={`group relative overflow-hidden rounded-2xl border transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none ${
         isDark ? "border-white/10 bg-white/[0.055] hover:border-[#78c86c]/40" : "border-[#dbe6d9] bg-white hover:border-[#78a873]/65"
       }`}
     >
-      <a href={detailsHref} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-inset" aria-label={`Open ${event.title}`}>
+      <a href={detailsHref} className="absolute inset-0 z-10 cursor-pointer touch-manipulation rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`Open ${event.title} details`}>
+        <span className="sr-only">Open {event.title} details</span>
+      </a>
+      <div className="relative z-0 pointer-events-none">
         <div className="relative aspect-[16/9] overflow-hidden" style={{ background: event.coverImageUrl ? undefined : coverFallback }}>
           {event.coverImageUrl ? (
             <img src={event.coverImageUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" loading="lazy" decoding="async" />
@@ -553,14 +583,13 @@ function ScheduledEventGalleryCard({
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-[#17321d] shadow-sm">{formattedDate}</span>
           <span className="absolute bottom-3 left-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white/78">{eventType}</span>
         </div>
-      </a>
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <a href={detailsHref} className={`block truncate text-base font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#4CAF50] ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <h3 className={`truncate text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {event.title}
-            </a>
+            </h3>
             <p className={`mt-1 text-sm ${textMuted}`}>{formatEventTime(event.startAt, event.endAt)}</p>
           </div>
           <ArrowRight className={`mt-0.5 h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 ${isDark ? "text-white/45" : "text-[#5d7560]"}`} aria-hidden="true" />
@@ -573,28 +602,45 @@ function ScheduledEventGalleryCard({
           </p>
         )}
         {event.description && <p className={`mt-2 line-clamp-2 text-sm leading-5 ${textMuted}`}>{event.description}</p>}
+        </div>
+      </div>
 
-        <div className={`mt-4 flex min-h-10 items-center justify-between gap-2 border-t pt-3 ${isDark ? "border-white/8" : "border-[#e1eadf]"}`}>
-          <a href={detailsHref} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: isDark ? "#9ce891" : "#28703a" }}>
-            View event <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </a>
-          {isOwner && (
-            <div className="flex items-center gap-1">
-              <button type="button" onClick={onOpenRsvps} className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5 ${textMuted}`}>
-                <Users className="h-3.5 w-3.5" aria-hidden="true" /> RSVPs
+      {isOwner && (
+        <div ref={menuRef} className="absolute right-3 top-3 z-20 pointer-events-auto">
+          <button
+            type="button"
+            ref={menuTriggerRef}
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={`Options for ${event.title}`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 text-white/85 shadow-sm backdrop-blur-sm transition-colors hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
+          >
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
+          </button>
+          {menuOpen && (
+            <div role="menu" aria-label={`Options for ${event.title}`} className={`absolute right-0 top-full z-30 mt-2 min-w-44 overflow-hidden rounded-2xl border py-1 shadow-2xl ${isDark ? "border-white/10 bg-[#0a1a0f]" : "border-[#dbe6d9] bg-white"}`}>
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onOpenRsvps(); }} className={`flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-semibold transition-colors ${menuItemClass}`}>
+                <Users className="h-4 w-4" style={{ color: accent }} aria-hidden="true" /> Manage RSVPs
               </button>
               {isTournament ? (
-                <a href={`/tournament/${event.tournamentId}/manage`} className={`inline-flex min-h-9 items-center rounded-lg px-2.5 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5 ${textMuted}`}>Manage</a>
+                <a href={`/tournament/${event.tournamentId}/manage`} role="menuitem" onClick={() => setMenuOpen(false)} className={`flex items-center gap-2.5 px-4 py-3 text-sm font-semibold transition-colors ${menuItemClass}`}>
+                  <Trophy className="h-4 w-4" style={{ color: accent }} aria-hidden="true" /> Manage tournament
+                </a>
               ) : (
                 <>
-                  <button type="button" onClick={onEdit} aria-label={`Edit ${event.title}`} className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] dark:hover:bg-white/5 ${textMuted}`}><Pencil className="h-3.5 w-3.5" aria-hidden="true" /></button>
-                  <button type="button" onClick={onDelete} aria-label={`Delete ${event.title}`} className={`inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500`}><Trash2 className="h-3.5 w-3.5" aria-hidden="true" /></button>
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onEdit(); }} className={`flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-semibold transition-colors ${menuItemClass}`}>
+                    <Pencil className="h-4 w-4" style={{ color: accent }} aria-hidden="true" /> Edit event
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onDelete(); }} className={`flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-semibold transition-colors ${destructiveMenuItemClass}`}>
+                    <Trash2 className="h-4 w-4" aria-hidden="true" /> Delete event
+                  </button>
                 </>
               )}
             </div>
           )}
         </div>
-      </div>
+      )}
     </article>
   );
 }
