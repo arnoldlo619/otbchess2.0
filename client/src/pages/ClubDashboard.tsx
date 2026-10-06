@@ -173,14 +173,6 @@ import {
   GitBranch as _GitBranch,
   Bell as _Bell,
   Camera,
-  Paperclip,
-  Bold,
-  Italic,
-  Underline,
-  List as ListIcon,
-  Quote,
-  Code2,
-  Eraser,
   Settings2,
   Minus,
   GanttChart,
@@ -217,7 +209,7 @@ import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
-import { apiCreateClubFeedPost, apiDeleteClubFeedPost, canCurrentUserDeleteClubFeedPost, type ClubFeedAttachmentInput } from "@/lib/clubFeedApi";
+import { apiDeleteClubFeedPost, canCurrentUserDeleteClubFeedPost } from "@/lib/clubFeedApi";
 import { ShaderBackground } from "@/components/ui/shader-r";
 import Silk from "@/components/Silk";
 import { GreenWaves } from "@/components/GreenWaves";
@@ -227,7 +219,8 @@ import { FeedIcon as OtbFeedIcon, EventsIcon, MembersIcon, AlbumIcon, LeaguesIco
 import { TabTransition } from "@/components/TabTransition";
 import { ClubAlbumTab } from "@/components/club/ClubAlbumTab";
 import { ClubDashboardSidebar } from "@/components/club/ClubDashboardSidebar";
-import { applyClubFeedTextFormat, ClubFeedRichText, sanitizeClubFeedUrl, type ClubFeedTextFormat } from "@/components/club/ClubFeedRichText";
+import { ClubFeedRichText } from "@/components/club/ClubFeedRichText";
+import { ClubFeedComposer } from "@/components/club/ClubFeedComposer";
 const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
 const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
 const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
@@ -2878,13 +2871,7 @@ export default function ClubDashboard() {
   // direct handoff from the owner-only Leagues quick action into its existing
   // management workspace.
   const [eventsFilter, setEventsFilter] = useState<"all" | "leagues">("all");
-  const [announcementText, setAnnouncementText] = useState("");
-  const [announcementComposerFocused, setAnnouncementComposerFocused] = useState(false);
-  const [announcementComposerExpanded, setAnnouncementComposerExpanded] = useState(false);
-  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
-  const [announcementAttachments, setAnnouncementAttachments] = useState<Array<ClubFeedAttachmentInput & { previewUrl?: string; byteSize: number }>>([]);
-  const [announcementAttachmentError, setAnnouncementAttachmentError] = useState<string | null>(null);
-  const announcementComposerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [feedComposerOpenRequest, setFeedComposerOpenRequest] = useState(0);
   const [memberSearch, setMemberSearch] = useState("");
   // Post-type composer
   const [composerMode, setComposerMode] = useState<"announcement" | "poll" | "rsvp">("announcement");
@@ -2957,7 +2944,6 @@ export default function ClubDashboard() {
   const joinQRDialogRef = useRef<HTMLDivElement>(null);
   const inviteDialogRef = useRef<HTMLDivElement>(null);
   const inviteEmailInputRef = useRef<HTMLInputElement>(null);
-  const announcementAttachmentInputRef = useRef<HTMLInputElement>(null);
   const deleteMeetupDialogRef = useRef<HTMLDivElement>(null);
   const transferDialogRef = useRef<HTMLDivElement>(null);
   const recordBattleDialogRef = useRef<HTMLDivElement>(null);
@@ -3337,123 +3323,6 @@ export default function ClubDashboard() {
       toast.success("Invite revoked");
     } catch {
       toast.error("Could not revoke invite");
-    }
-  }
-
-  function resetAnnouncementComposer() {
-    announcementAttachments.forEach((attachment) => attachment.previewUrl && URL.revokeObjectURL(attachment.previewUrl));
-    setAnnouncementText("");
-    setAnnouncementAttachments([]);
-    setAnnouncementAttachmentError(null);
-    setAnnouncementComposerExpanded(false);
-    setAnnouncementComposerFocused(false);
-    if (announcementAttachmentInputRef.current) announcementAttachmentInputRef.current.value = "";
-  }
-
-  function applyAnnouncementTextFormat(format: ClubFeedTextFormat) {
-    const textarea = announcementComposerTextareaRef.current;
-    if (!textarea) return;
-
-    let linkUrl: string | null | undefined;
-    if (format === "link") {
-      const requestedUrl = window.prompt("Paste the link destination", "https://");
-      if (requestedUrl === null) return;
-      linkUrl = sanitizeClubFeedUrl(requestedUrl);
-      if (!linkUrl) {
-        setAnnouncementAttachmentError("Add a valid http or https link.");
-        return;
-      }
-    }
-
-    const formatted = applyClubFeedTextFormat(
-      announcementText,
-      textarea.selectionStart,
-      textarea.selectionEnd,
-      format,
-      linkUrl,
-    );
-    if (formatted.value.length > 500) {
-      setAnnouncementAttachmentError("Formatting would exceed the 500-character post limit.");
-      return;
-    }
-    setAnnouncementText(formatted.value);
-    setAnnouncementAttachmentError(null);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(formatted.selectionStart, formatted.selectionEnd);
-    });
-  }
-
-  async function handleAnnouncementAttachmentSelection(files: FileList | null) {
-    if (!files) return;
-    const selected = Array.from(files);
-    const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf", "text/plain"]);
-    if (selected.length + announcementAttachments.length > 4) {
-      setAnnouncementAttachmentError("Add up to 4 attachments per post.");
-      return;
-    }
-    if (selected.some((file) => !allowed.has(file.type))) {
-      setAnnouncementAttachmentError("Choose a JPEG, PNG, WebP, GIF, PDF, or text file.");
-      return;
-    }
-    if (selected.some((file) => file.size === 0 || file.size > 6 * 1024 * 1024)) {
-      setAnnouncementAttachmentError("Each attachment must be 6 MB or smaller.");
-      return;
-    }
-    if (announcementAttachments.reduce((total, attachment) => total + attachment.byteSize, 0) + selected.reduce((total, file) => total + file.size, 0) > 16 * 1024 * 1024) {
-      setAnnouncementAttachmentError("Attachments must total 16 MB or less.");
-      return;
-    }
-    try {
-      const prepared = await Promise.all(selected.map(async (file) => ({
-        dataUrl: await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Unable to read attachment"));
-          reader.onerror = () => reject(new Error("Unable to read attachment"));
-          reader.readAsDataURL(file);
-        }),
-        fileName: file.name,
-        mimeType: file.type,
-        byteSize: file.size,
-        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
-      })));
-      setAnnouncementAttachments((current) => [...current, ...prepared]);
-      setAnnouncementAttachmentError(null);
-    } catch {
-      setAnnouncementAttachmentError("Unable to prepare that attachment. Please try again.");
-    } finally {
-      if (announcementAttachmentInputRef.current) announcementAttachmentInputRef.current.value = "";
-    }
-  }
-
-  function removeAnnouncementAttachment(index: number) {
-    setAnnouncementAttachments((current) => {
-      const removed = current[index];
-      if (removed?.previewUrl) URL.revokeObjectURL(removed.previewUrl);
-      return current.filter((_, currentIndex) => currentIndex !== index);
-    });
-  }
-
-  async function submitAnnouncement(e: React.FormEvent) {
-    e.preventDefault();
-    if (!announcementText.trim() || !club || !user) return;
-    setPostingAnnouncement(true);
-    try {
-      await apiCreateClubFeedPost(club.id, {
-        type: "announcement",
-        actorName: user.displayName,
-        actorAvatarUrl: user.avatarUrl ?? null,
-        detail: announcementText.trim(),
-        attachments: announcementAttachments.map(({ dataUrl, fileName, mimeType }) => ({ dataUrl, fileName, mimeType })),
-      });
-      resetAnnouncementComposer();
-      const merged = await syncFeedFromServer(club.id);
-      setFeedEvents(merged.slice(0, 50));
-      toast.success("Post published to the club feed.");
-    } catch (error) {
-      setAnnouncementAttachmentError(error instanceof Error ? error.message : "Unable to publish your post.");
-    } finally {
-      setPostingAnnouncement(false);
     }
   }
 
@@ -4437,10 +4306,7 @@ export default function ClubDashboard() {
                             ? {
                                 label: "Post update",
                                 icon: MessageSquare,
-                                onClick: () => {
-                                  setAnnouncementComposerExpanded(true);
-                                  window.requestAnimationFrame(() => announcementComposerTextareaRef.current?.focus({ preventScroll: true }));
-                                },
+                                onClick: () => setFeedComposerOpenRequest((current) => current + 1),
                               }
                             : undefined
                     }
@@ -5337,176 +5203,18 @@ export default function ClubDashboard() {
             <>
             {/* ── Composer (active members) ───────────────────────────────────── */}
             {isActiveClubMember && (
-              <div
-                className="overflow-hidden rounded-2xl border transition-[border-color,box-shadow,background] duration-200"
-                style={{
-                  background: composerTokens.surface,
-                  borderColor: announcementComposerFocused ? `${accent}66` : composerTokens.border,
-                  boxShadow: announcementComposerFocused ? composerTokens.shadow : "none",
+              <ClubFeedComposer
+                clubId={club.id}
+                actorName={user?.displayName ?? "Club member"}
+                actorAvatarUrl={user?.avatarUrl}
+                accent={accent}
+                isDark={isDark}
+                openRequest={feedComposerOpenRequest}
+                onPublished={async () => {
+                  const merged = await syncFeedFromServer(club.id);
+                  setFeedEvents(merged.slice(0, 50));
                 }}
-              >
-                <form onSubmit={submitAnnouncement} className="p-3.5 sm:p-4">
-                  <label className="sr-only" htmlFor="club-announcement-composer">Post an announcement</label>
-                  {announcementComposerExpanded ? (
-                    <div className="flex flex-col gap-3.5">
-                      <div className="flex min-w-0 items-center justify-between gap-3 px-0.5">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-black/5 dark:ring-white/10">
-                            <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={40} className="h-full w-full object-cover" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold" style={{ color: composerTokens.primaryText }}>Share with your club</p>
-                            <p className="mt-0.5 truncate text-xs" style={{ color: composerTokens.mutedText }}>Your update will appear in the Club Feed.</p>
-                          </div>
-                        </div>
-                        <span
-                          className="hidden shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:inline-flex"
-                          style={{ borderColor: `${accent}40`, background: `${accent}12`, color: accent }}
-                        >
-                          Members
-                        </span>
-                      </div>
-
-                      <div
-                        className="overflow-hidden rounded-2xl border transition-[border-color,box-shadow] duration-200 ease-out"
-                        style={{
-                          background: composerTokens.panel,
-                          borderColor: announcementComposerFocused ? `${accent}88` : composerTokens.innerBorder,
-                          boxShadow: announcementComposerFocused
-                            ? `0 0 0 3px ${accent}1c, inset 0 1px 0 ${isDark ? "rgba(255,255,255,0.055)" : "rgba(255,255,255,0.9)"}`
-                            : `inset 0 1px 0 ${isDark ? "rgba(255,255,255,0.035)" : "rgba(255,255,255,0.88)"}`,
-                        }}
-                      >
-                        <div
-                          role="toolbar"
-                          aria-label="Club post formatting"
-                          className="flex items-center gap-1 overflow-x-auto border-b px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                          style={{ borderColor: composerTokens.innerBorder }}
-                        >
-                          {([
-                            { format: "bold", label: "Bold", icon: Bold },
-                            { format: "italic", label: "Italicize", icon: Italic },
-                            { format: "underline", label: "Underline", icon: Underline },
-                            { format: "bulletList", label: "Bullet list", icon: ListIcon },
-                            { format: "numberList", label: "Numbered list", icon: ListOrdered },
-                            { format: "quote", label: "Quote", icon: Quote },
-                            { format: "code", label: "Inline code", icon: Code2 },
-                            { format: "link", label: "Add link", icon: Link2 },
-                          ] as const).map(({ format, label, icon: Icon }) => (
-                            <button
-                              key={format}
-                              type="button"
-                              onMouseDown={(event) => event.preventDefault()}
-                              onClick={() => applyAnnouncementTextFormat(format)}
-                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.97]"
-                              style={{ color: composerTokens.secondaryText, background: "transparent", "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}
-                              aria-label={label}
-                              title={label}
-                            >
-                              <Icon className="h-4 w-4" aria-hidden="true" />
-                            </button>
-                          ))}
-                          <span className="mx-0.5 h-5 w-px shrink-0" style={{ background: composerTokens.innerBorder }} aria-hidden="true" />
-                          <button
-                            type="button"
-                            onMouseDown={(event) => event.preventDefault()}
-                            onClick={() => applyAnnouncementTextFormat("clear")}
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-red-500/10 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.97]"
-                            style={{ color: composerTokens.mutedText, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}
-                            aria-label="Clear formatting"
-                            title="Clear formatting"
-                          >
-                            <Eraser className="h-4 w-4" aria-hidden="true" />
-                          </button>
-                        </div>
-                        <textarea
-                          ref={announcementComposerTextareaRef}
-                          id="club-announcement-composer"
-                          aria-describedby="club-announcement-count"
-                          value={announcementText}
-                          onChange={(e) => setAnnouncementText(e.target.value)}
-                          onFocus={() => setAnnouncementComposerFocused(true)}
-                          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); resetAnnouncementComposer(); } }}
-                          placeholder="What would you like to share with your club?"
-                          maxLength={500}
-                          autoFocus
-                          className="min-h-40 w-full resize-none border-0 bg-transparent px-4 py-3.5 text-base leading-relaxed outline-none placeholder:text-[color:var(--composer-placeholder)] sm:min-h-44"
-                          style={{ color: composerTokens.primaryText, caretColor: accent, "--composer-placeholder": composerTokens.mutedText } as React.CSSProperties}
-                        />
-                      </div>
-
-                      <input
-                        ref={announcementAttachmentInputRef}
-                        id="club-feed-attachments"
-                        className="sr-only"
-                        type="file"
-                        multiple
-                        accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain"
-                        aria-describedby="club-feed-attachment-help"
-                        onChange={(event) => void handleAnnouncementAttachmentSelection(event.currentTarget.files)}
-                      />
-                      <p id="club-feed-attachment-help" className="px-0.5 text-xs leading-5" style={{ color: composerTokens.mutedText }}>Up to four JPEG, PNG, WebP, GIF, PDF, or text files. Each file can be up to 6 MB.</p>
-                      {announcementAttachmentError && <p role="alert" className="px-0.5 text-xs font-medium text-red-600 dark:text-red-300">{announcementAttachmentError}</p>}
-                      {announcementAttachments.length > 0 && (
-                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                          {announcementAttachments.map((attachment, index) => (
-                            <div key={`${attachment.fileName}-${index}`} className="group relative overflow-hidden rounded-xl border" style={{ borderColor: composerTokens.innerBorder, background: composerTokens.attachmentSurface }}>
-                              {attachment.previewUrl ? <img src={attachment.previewUrl} alt={`Selected ${attachment.fileName}`} className="aspect-square w-full object-cover" /> : <div className="flex aspect-square flex-col items-center justify-center gap-1.5 px-2 text-center"><FileText className="h-5 w-5" style={{ color: composerTokens.secondaryText }} /><span className="line-clamp-2 text-[11px] font-semibold" style={{ color: composerTokens.secondaryText }}>{attachment.fileName}</span></div>}
-                              <button type="button" onClick={() => removeAnnouncementAttachment(index)} className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-full border bg-black/75 text-white shadow-sm transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ borderColor: "rgba(255,255,255,0.18)", "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#0b180d" : "#ffffff" } as React.CSSProperties} aria-label={`Remove ${attachment.fileName}`}><X className="h-4 w-4" /></button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3" style={{ borderColor: composerTokens.innerBorder }}>
-                        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-                          <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-10 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ color: composerTokens.secondaryText, background: composerTokens.attachmentSurface, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}><Camera className="h-4 w-4" aria-hidden="true" />Photo / GIF</button>
-                          <button type="button" onClick={() => announcementAttachmentInputRef.current?.click()} className="inline-flex h-10 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ color: composerTokens.secondaryText, background: composerTokens.attachmentSurface, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}><Paperclip className="h-4 w-4" aria-hidden="true" />Attach</button>
-                          <span id="club-announcement-count" className="whitespace-nowrap text-xs tabular-nums" style={{ color: composerTokens.mutedText }} aria-live="polite">{announcementText.length}/500</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button type="button" onClick={resetAnnouncementComposer} className="h-10 rounded-xl px-3 text-xs font-semibold transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2" style={{ color: composerTokens.secondaryText, background: composerTokens.controlHover, "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}>Discard</button>
-                          <button
-                            type="submit"
-                            disabled={!announcementText.trim() || postingAnnouncement}
-                            className="flex h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                            style={{ background: accent, touchAction: "manipulation", "--tw-ring-color": accent, "--tw-ring-offset-color": isDark ? "#102214" : "#f7fbf7" } as React.CSSProperties}
-                          >
-                            <Megaphone className="h-4 w-4" />
-                            {postingAnnouncement ? "Posting…" : "Post"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-black/5 dark:ring-white/10">
-                        <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={40} className="h-full w-full object-cover" />
-                      </div>
-                      <div
-                        className="min-w-0 flex-1 overflow-hidden rounded-2xl border transition-[border-color,box-shadow] duration-200 ease-out"
-                        style={{
-                          background: composerTokens.panel,
-                          borderColor: composerTokens.innerBorder,
-                          boxShadow: `inset 0 1px 0 ${isDark ? "rgba(255,255,255,0.035)" : "rgba(255,255,255,0.88)"}`,
-                        }}
-                      >
-                        <input
-                          id="club-announcement-composer"
-                          aria-describedby="club-announcement-count"
-                          value={announcementText}
-                          onChange={(e) => setAnnouncementText(e.target.value)}
-                          onFocus={() => { setAnnouncementComposerFocused(true); setAnnouncementComposerExpanded(true); }}
-                          placeholder="Share an update with your club…"
-                          maxLength={500}
-                          className="h-12 w-full border-0 bg-transparent px-4 text-base leading-relaxed outline-none placeholder:text-[color:var(--composer-placeholder)]"
-                          style={{ color: composerTokens.primaryText, caretColor: accent, "--composer-placeholder": composerTokens.mutedText } as React.CSSProperties}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </form>
-              </div>
+              />
             )}
 
             {/* Scheduled polls queue (director-only) */}

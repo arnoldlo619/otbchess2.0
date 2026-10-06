@@ -60,14 +60,14 @@
 - [x] Club Feed: Confirm and implement the intended member posting permission scope without weakening club moderation
 - [x] Club Feed: Allow active club members to post directly to the Feed
 - [x] Club Feed: Restrict Feed deletion to the original poster or club owner
-- [ ] Club Feed: Add server and client regression coverage for member posts and deletion authorization
-- [ ] Club Feed: Add committed interaction coverage for expanded composer open, discard, submit, and keyboard behavior
+- [x] Club Feed: Add server and client regression coverage for member posts and deletion authorization
+- [x] Club Feed: Add committed interaction coverage for expanded composer open, discard, submit, and keyboard behavior
 - [x] Club Feed: Add secure photo, GIF, and file attachments to member Feed posts
 - [x] Club Feed: Persist and render attached media with upload previews and author-or-owner deletion integrity
 - [x] Club Feed: Validate attachment types, permissions, accessibility, and responsive Feed rendering
-- [ ] Club Feed: Add committed UI coverage for composer expansion, Escape/discard, attachment add/remove, failed upload, and submit behavior
-- [ ] Club Feed: Capture expanded-composer and attachment-rendering states at desktop and mobile widths
-- [ ] Club Feed: Add explicit keyboard and accessible-label coverage for the attachment input trigger
+- [x] Club Feed: Add committed UI coverage for composer expansion, Escape/discard, attachment add/remove, failed upload, and submit behavior
+- [x] Club Feed: Capture expanded-composer and attachment-rendering states at desktop and mobile widths
+- [x] Club Feed: Add explicit keyboard and accessible-label coverage for the attachment input trigger
 - [x] Club Feed: Intentionally replace legacy local-only announcement persistence with the server-backed Feed contract required for secure attachment authorization
 - [x] Club Feed: Add an accessible image gallery preview modal for photo and GIF attachments with keyboard, touch, and responsive controls
 - [x] Club Feed: Validate gallery open, close, previous/next navigation, focus handling, and mobile presentation
