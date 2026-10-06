@@ -37,6 +37,7 @@ import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { getTournamentFormatLabel } from "@/lib/formatRegistry";
 import { getTournamentStatusDisplay } from "@/lib/tournamentUtils";
+import { shouldAutoSwitchToSwissEliminationBracket } from "@/lib/swissEliminationNavigation";
 import { useAuthContext } from "@/context/AuthContext";
 import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
@@ -433,9 +434,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
     return "text-[#436850]";
   };
 
-  const medals = ["🥇", "🥈", "🥉"];
-
-  const rankLabel = (rank: number) => (rank <= 3 ? medals[rank - 1] : `#${rank}`);
+  const rankLabel = (rank: number) => `#${rank}`;
 
   return (
     <div className={`rounded-xl border transition-colors duration-300 ${
@@ -468,7 +467,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
             <div className="flex items-center gap-1.5">
               {standingRows.slice(0, 3).map((row, i) => (
                 <span key={row.player.id} className="flex items-center gap-1">
-                  <span className="text-sm">{medals[i]}</span>
+                  <span className={`text-xs font-bold tabular-nums ${medalColor(i + 1)}`}>#{i + 1}</span>
                   <span className={`text-xs font-medium ${
                     isDark ? "text-white/70" : "text-[#374151]"
                   }`}>{row.player.name.split(" ")[0]}</span>
@@ -516,8 +515,8 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
                 {isMe && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-[#436850]" />
                 )}
-                <span className={`text-base font-bold w-7 text-center flex-shrink-0 ${medalColor(rank)}`}>
-                  {rank <= 3 ? medals[rank - 1] : rank}
+                <span className={`text-base font-bold tabular-nums w-7 text-center flex-shrink-0 ${medalColor(rank)}`}>
+                  #{rank}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -881,8 +880,8 @@ function StandingsPanel({ players, rounds, myPlayerId, format, quadSections }: {
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#436850] rounded-r-sm" />
             )}
             {/* Rank */}
-            <span className={`text-base font-bold ${medalColor(rank)}`}>
-              {rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : rank}
+            <span className={`text-base font-bold tabular-nums ${medalColor(rank)}`}>
+              #{rank}
             </span>
 
             {/* Player info */}
@@ -1532,11 +1531,7 @@ export default function TournamentPage() {
   // For swiss_elim: determine where the elimination rounds start
   const swissRounds = (config as { swissRounds?: number } | undefined)?.swissRounds ?? 0;
   const elimStartRound = isElimFormat && config?.format === "swiss_elim" ? swissRounds + 1 : 1;
-  // Awaiting cutoff: swiss_elim format, swiss rounds done, no elim rounds generated yet
-  // isAwaitingCutoff: Swiss phase is complete but bracket hasn't been generated yet.
-  // We check elimPhase from the state (set by the director) rather than round numbers,
-  // because currentRound never exceeds swissRounds until the bracket is generated.
-  const stateElimPhase = (displayState as DirectorState & { elimPhase?: string }).elimPhase;
+  // Awaiting cutoff: Swiss phase is complete but the bracket has not been generated yet.
   const stateElimPlayers = (displayState as DirectorState & { elimPlayers?: Player[] }).elimPlayers ?? [];
   const isAwaitingCutoff = config?.format === "swiss_elim" &&
     // Swiss phase complete: all swiss rounds done and no elim bracket yet
@@ -1591,15 +1586,18 @@ export default function TournamentPage() {
 
   // ── Auto-switch to bracket tab when swiss_elim transitions to elimination ──
   useEffect(() => {
-    if (hasAutoSwitchedToBracketRef.current) return;
-    if (config?.format !== "swiss_elim") return;
     const elimPhase = (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase;
     const elimPlayers = (tournamentState as DirectorState & { elimPlayers?: Player[] } | null)?.elimPlayers ?? [];
-    const wasSwiss = prevElimPhaseRef.current === undefined || prevElimPhaseRef.current === "swiss" || prevElimPhaseRef.current === "cutoff";
+    const shouldAutoSwitch = shouldAutoSwitchToSwissEliminationBracket({
+      format: config?.format,
+      previousPhase: prevElimPhaseRef.current,
+      currentPhase: elimPhase,
+      advancingPlayerCount: elimPlayers.length,
+      hasAutoSwitched: hasAutoSwitchedToBracketRef.current,
+    });
     prevElimPhaseRef.current = elimPhase;
 
-    // Trigger when elimPhase transitions to "elimination" and bracket players exist
-    if (elimPhase === "elimination" && elimPlayers.length > 0 && wasSwiss) {
+    if (shouldAutoSwitch) {
       hasAutoSwitchedToBracketRef.current = true;
 
       // Switch mobile tab to bracket
@@ -1615,7 +1613,6 @@ export default function TournamentPage() {
       toast.success("Elimination bracket is live!", {
         description: "Swiss rounds are complete. The bracket stage has begun.",
         duration: 6000,
-        icon: "⚔️",
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
