@@ -149,6 +149,58 @@ describe("Club Album API behavior", () => {
     }));
   });
 
+  it("creates Puzzle Relay events with validated teams and difficulty", async () => {
+    const createdEvent = {
+      id: "relay-event-1", clubId: "club-1", title: "Friday Puzzle Relay", description: null,
+      startAt: new Date("2026-10-10T19:00:00.000Z"), endAt: null, venue: null, address: null,
+      admissionNote: null, coverImageUrl: null, accentColor: "#4CAF50", creatorId: "owner-1",
+      creatorName: "Owner", isPublished: 1, eventType: "puzzle_relay", tournamentId: null,
+      puzzleRelayTeams: 4, puzzleRelayDifficulty: "advanced", recurrence: "none", recurrenceSeriesId: null,
+      recurrenceEndDate: null, createdAt: new Date(), updatedAt: new Date(),
+    };
+    const { insertValues } = fakeDb([[publicClub], [], [], [createdEvent]]);
+
+    const response = await fetch(`${baseUrl}/api/clubs/club-1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({
+        id: "relay-event-1",
+        title: "Friday Puzzle Relay",
+        startAt: "2026-10-10T19:00:00.000Z",
+        eventType: "puzzle_relay",
+        puzzleRelayTeams: 4,
+        puzzleRelayDifficulty: "advanced",
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(insertValues).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: "puzzle_relay",
+      puzzleRelayTeams: 4,
+      puzzleRelayDifficulty: "advanced",
+    }));
+  });
+
+  it("rejects invalid Puzzle Relay team settings before an event is inserted", async () => {
+    const { insertValues } = fakeDb([[publicClub], []]);
+
+    const response = await fetch(`${baseUrl}/api/clubs/club-1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({
+        title: "Broken Relay",
+        startAt: "2026-10-10T19:00:00.000Z",
+        eventType: "puzzle_relay",
+        puzzleRelayTeams: 9,
+        puzzleRelayDifficulty: "advanced",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: expect.stringContaining("Puzzle Relay requires") });
+    expect(insertValues).not.toHaveBeenCalled();
+  });
+
   it("validates required album metadata and creates a valid owner album", async () => {
     fakeDb([[publicClub]]);
     const invalid = await fetch(`${baseUrl}/api/clubs/test-club/albums`, {

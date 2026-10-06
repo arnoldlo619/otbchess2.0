@@ -110,6 +110,7 @@ import {
   Check,
   Download,
   Clock,
+  Puzzle,
   UserCheck,
   Zap,
   Star,
@@ -1079,6 +1080,9 @@ function CreateEventModal({
   const [admissionNote, setAdmissionNote] = useState("Free for members");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [accentColor, setAccentColor] = useState(clubAccent ?? "#4CAF50");
+  const [selectedEventType, setSelectedEventType] = useState<"casual" | "puzzle_relay">("casual");
+  const [puzzleRelayTeams, setPuzzleRelayTeams] = useState(2);
+  const [puzzleRelayDifficulty, setPuzzleRelayDifficulty] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -1116,7 +1120,9 @@ function CreateEventModal({
         creatorId: userId,
         creatorName: displayName,
         isPublished: true,
-        eventType: "casual",
+        eventType: selectedEventType,
+        puzzleRelayTeams: selectedEventType === "puzzle_relay" ? puzzleRelayTeams : undefined,
+        puzzleRelayDifficulty: selectedEventType === "puzzle_relay" ? puzzleRelayDifficulty : undefined,
       });
       toast.success("Event created!");
       onCreated();
@@ -1297,6 +1303,56 @@ function CreateEventModal({
                     <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.25)" }} />
                   </div>
                 </button>
+
+                {/* Puzzle Relay */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedEventType("puzzle_relay");
+                    setTitle((currentTitle) => currentTitle || "Puzzle Relay");
+                    setDescription((currentDescription) => currentDescription || "A team relay of chess puzzles. Solve your position, then hand the board to your next teammate.");
+                    setStep("details");
+                  }}
+                  className="group relative flex flex-col items-start gap-3 rounded-3xl text-left transition-all duration-200 overflow-hidden flex-shrink-0 sm:flex-shrink sm:w-auto"
+                  style={{
+                    padding: "22px 22px 20px",
+                    width: "min(80vw, 100%)",
+                    minWidth: "260px",
+                    background: "rgba(124,245,98,0.10)",
+                    border: "2px solid rgba(124,245,98,0.30)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(124,245,98,0.17)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(124,245,98,0.55)";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(64,180,78,0.22)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(124,245,98,0.10)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(124,245,98,0.30)";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                  }}
+                >
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase" style={{ background: "rgba(124,245,98,0.16)", color: "#a5fb85" }}>
+                    Team format
+                  </span>
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(124,245,98,0.13)" }}>
+                    <Puzzle className="w-5 h-5 text-[#a5fb85]" strokeWidth={1.8} />
+                  </div>
+                  <div className="pr-6">
+                    <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Puzzle Relay</h3>
+                    <p className="text-white/55 text-sm leading-relaxed">Teams race through puzzle positions, handing the board to the next player after every solve.</p>
+                  </div>
+                  <div className="flex items-center justify-between w-full mt-auto pt-1">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      <Users className="w-3.5 h-3.5" />
+                      Roster-based teams
+                    </div>
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.35)" }} />
+                  </div>
+                </button>
               </div>
 
             </div>
@@ -1348,10 +1404,10 @@ function CreateEventModal({
             <Calendar className="w-5 h-5 text-white" />
           </div>
           <h2 id="create-club-event-details-title" className="text-2xl font-black text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Club Event
+            {selectedEventType === "puzzle_relay" ? "Puzzle Relay" : "Club Event"}
           </h2>
           <p className="text-white/50 text-sm">
-            Fill in the details for your club event
+            {selectedEventType === "puzzle_relay" ? "Set the event, then teams are built from the attendee roster." : "Fill in the details for your club event"}
           </p>
         </div>
 
@@ -1386,6 +1442,42 @@ function CreateEventModal({
               <input type="time" aria-label="End time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
+
+          {selectedEventType === "puzzle_relay" && (
+            <fieldset className="rounded-2xl border border-[#7cf562]/20 bg-[#7cf562]/[0.045] p-4">
+              <legend className="px-1 text-xs font-semibold uppercase tracking-wider text-[#a5fb85]">Relay setup</legend>
+              <p className="mb-4 text-xs leading-5 text-white/52">Players marked Going or checked in will be distributed across teams when the director starts the relay.</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={labelCls} htmlFor="puzzle-relay-teams">Teams</label>
+                  <select
+                    id="puzzle-relay-teams"
+                    value={puzzleRelayTeams}
+                    onChange={(event) => setPuzzleRelayTeams(Number(event.target.value))}
+                    className={inputCls}
+                  >
+                    {[2, 3, 4, 5, 6, 8].map((teamCount) => <option key={teamCount} value={teamCount} className="bg-[#0b180d]">{teamCount} teams</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span className={labelCls}>Difficulty</span>
+                  <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Puzzle Relay difficulty">
+                    {(["beginner", "intermediate", "advanced"] as const).map((difficulty) => (
+                      <button
+                        key={difficulty}
+                        type="button"
+                        onClick={() => setPuzzleRelayDifficulty(difficulty)}
+                        aria-pressed={puzzleRelayDifficulty === difficulty}
+                        className={`min-h-10 rounded-lg px-2 text-[11px] font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7cf562] ${puzzleRelayDifficulty === difficulty ? "bg-[#7cf562] text-[#0b180d]" : "border border-white/12 bg-black/15 text-white/64 hover:bg-white/8"}`}
+                      >
+                        {difficulty}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          )}
 
           {/* Venue + Admission */}
           <div className="grid grid-cols-2 gap-3">

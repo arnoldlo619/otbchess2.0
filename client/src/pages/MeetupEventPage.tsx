@@ -44,6 +44,7 @@ import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
 import { authFetch } from "@/lib/apiFetch";
 import { ClipboardList } from "lucide-react";
+import { ClubPuzzleRelaySession } from "@/components/club/ClubPuzzleRelaySession";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   none: "One-time",
@@ -522,6 +523,15 @@ export default function MeetupEventPage() {
                         </div>
                       )}
                     </div>
+
+                    {event.eventType === "puzzle_relay" && clubId && eventId && (
+                      <ClubPuzzleRelaySession
+                        clubId={clubId}
+                        eventId={eventId}
+                        currentUserId={user?.id}
+                        canManage={Boolean(isOwnerOrDirector)}
+                      />
+                    )}
 
                     {/* Checked-in attendees (event day only) */}
                     {onEventDay && checkedInMembers.length > 0 && (

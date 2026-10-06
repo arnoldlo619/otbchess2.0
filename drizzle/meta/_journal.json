@@ -183,6 +183,13 @@
       "when": 1791274286352,
       "tag": "0025_club_tournament_score_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1791275540065,
+      "tag": "0026_club_puzzle_relay_sessions",
+      "breakpoints": true
     }
   ]
 }

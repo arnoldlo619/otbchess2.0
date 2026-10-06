@@ -3312,7 +3312,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add `eventType` taxonomy for tournament, puzzle relay, casual, and lecture; retire unused Speed Dating and Trivia values
 - [x] Removed unused Chess Speed Dating event mode, session storage, APIs, and UI
 - [x] Removed unused Trivia Night event mode, session storage, APIs, and UI
-- [ ] Puzzle Relay Race event: team-based puzzle solving, relay handoff, timer
+- [x] Puzzle Relay Race event: team-based puzzle solving, relay handoff, timer
 - [x] Event type picker in CreateEventModal with icons and descriptions
 - [x] Event type badge on event cards
 

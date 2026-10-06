@@ -1323,6 +1323,10 @@ export const clubEvents = mysqlTable(
     isPublished: tinyint("is_published").notNull().default(1),
     eventType: varchar("event_type", { length: 30 }).notNull().default("casual"),
     tournamentId: varchar("tournament_id", { length: 100 }),
+    // Puzzle Relay configuration is intentionally stored on the event so a
+    // session can be started later from the approved RSVP/check-in roster.
+    puzzleRelayTeams: int("puzzle_relay_teams"),
+    puzzleRelayDifficulty: varchar("puzzle_relay_difficulty", { length: 20 }),
     // Extended event management fields
     capacity: int("capacity"),
     rsvpRequired: tinyint("rsvp_required").notNull().default(0),
@@ -1345,6 +1349,76 @@ export const clubEvents = mysqlTable(
 );
 export type ClubEventRow = typeof clubEvents.$inferSelect;
 export type NewClubEventRow = typeof clubEvents.$inferInsert;
+
+// ─── club_puzzle_relay_sessions ──────────────────────────────────────────────
+// One live session per Puzzle Relay event. Teams own independent puzzle queues;
+// the active team member hands the board to the next teammate after a solve.
+export const clubPuzzleRelaySessions = mysqlTable(
+  "club_puzzle_relay_sessions",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    eventId: varchar("event_id", { length: 64 }).notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    difficulty: varchar("difficulty", { length: 20 }).notNull(),
+    puzzlesPerTeam: int("puzzles_per_team").notNull().default(3),
+    startedBy: varchar("started_by", { length: 64 }).notNull(),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    completedAt: timestamp("completed_at"),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    cprsEventUnique: uniqueIndex("cprs_event_unique").on(table.eventId),
+    cprsClubIdx: index("cprs_club_idx").on(table.clubId),
+    cprsStatusIdx: index("cprs_status_idx").on(table.status),
+  }),
+);
+export type ClubPuzzleRelaySessionRow = typeof clubPuzzleRelaySessions.$inferSelect;
+export type NewClubPuzzleRelaySessionRow = typeof clubPuzzleRelaySessions.$inferInsert;
+
+export const clubPuzzleRelayTeams = mysqlTable(
+  "club_puzzle_relay_teams",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    sessionId: varchar("session_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    eventId: varchar("event_id", { length: 64 }).notNull(),
+    teamNumber: int("team_number").notNull(),
+    name: varchar("name", { length: 100 }).notNull(),
+    score: int("score").notNull().default(0),
+    currentPuzzleIndex: int("current_puzzle_index").notNull().default(0),
+    currentMemberIndex: int("current_member_index").notNull().default(0),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    cprtSessionTeamUnique: uniqueIndex("cprt_session_team_unique").on(table.sessionId, table.teamNumber),
+    cprtSessionIdx: index("cprt_session_idx").on(table.sessionId),
+  }),
+);
+export type ClubPuzzleRelayTeamRow = typeof clubPuzzleRelayTeams.$inferSelect;
+export type NewClubPuzzleRelayTeamRow = typeof clubPuzzleRelayTeams.$inferInsert;
+
+export const clubPuzzleRelayTeamMembers = mysqlTable(
+  "club_puzzle_relay_team_members",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    teamId: varchar("team_id", { length: 64 }).notNull(),
+    sessionId: varchar("session_id", { length: 64 }).notNull(),
+    userId: varchar("user_id", { length: 64 }).notNull(),
+    displayName: varchar("display_name", { length: 120 }).notNull(),
+    avatarUrl: varchar("avatar_url", { length: 500 }),
+    orderIndex: int("order_index").notNull(),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    cprtmSessionUserUnique: uniqueIndex("cprtm_session_user_unique").on(table.sessionId, table.userId),
+    cprtmTeamIdx: index("cprtm_team_idx").on(table.teamId, table.orderIndex),
+  }),
+);
+export type ClubPuzzleRelayTeamMemberRow = typeof clubPuzzleRelayTeamMembers.$inferSelect;
+export type NewClubPuzzleRelayTeamMemberRow = typeof clubPuzzleRelayTeamMembers.$inferInsert;
 
 // ─── club_feed ────────────────────────────────────────────────────────────────
 // Server-side store for club feed posts (announcements, polls, tournament cards).

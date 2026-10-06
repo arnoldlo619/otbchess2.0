@@ -156,6 +156,10 @@ function toClubEvent(row: Record<string, unknown>): ClubEvent {
     isPublished: row.isPublished === 1 || row.isPublished === true,
     tournamentId: typeof row.tournamentId === "string" ? row.tournamentId : undefined,
     eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
+    puzzleRelayTeams: typeof row.puzzleRelayTeams === "number" ? row.puzzleRelayTeams : undefined,
+    puzzleRelayDifficulty: row.puzzleRelayDifficulty === "beginner" || row.puzzleRelayDifficulty === "intermediate" || row.puzzleRelayDifficulty === "advanced"
+      ? row.puzzleRelayDifficulty
+      : undefined,
     recurrence: row.recurrence === "weekly" || row.recurrence === "biweekly" || row.recurrence === "monthly" ? row.recurrence : undefined,
     recurrenceSeriesId: typeof row.recurrenceSeriesId === "string" ? row.recurrenceSeriesId : undefined,
     recurrenceEndDate: typeof row.recurrenceEndDate === "string" ? row.recurrenceEndDate : undefined,

@@ -31,6 +31,10 @@ import {
   clubFeed,
   clubFeed as dbClubFeed,
   clubEventRsvps,
+  meetupCheckins,
+  clubPuzzleRelaySessions,
+  clubPuzzleRelayTeams,
+  clubPuzzleRelayTeamMembers,
   leagues,
   leaguePlayers,
   leagueWeeks,
@@ -54,6 +58,15 @@ import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 import { createClubMeetupRsvpQuestions } from "../shared/rsvpMeetupTemplate";
 import { canonicalizeClubEventType, parseClubEventType } from "../shared/clubEventTypes";
 import { getClubTournamentLeaderboard, reconcileClubTournamentScores } from "./clubTournamentLeaderboard.js";
+import {
+  assignPuzzleRelayTeams,
+  getPuzzleRelayPuzzleSequence,
+  isPuzzleRelaySolution,
+  parsePuzzleRelayDifficulty,
+  parsePuzzleRelayTeamCount,
+  PUZZLE_RELAY_PUZZLES_PER_TEAM,
+  type PuzzleRelayDifficulty,
+} from "../shared/puzzleRelay";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -1220,11 +1233,86 @@ function serializeClubEvent(row: typeof clubEvents.$inferSelect) {
   return {
     ...row,
     eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
+    puzzleRelayTeams: row.puzzleRelayTeams ?? null,
+    puzzleRelayDifficulty: row.puzzleRelayDifficulty ?? null,
     startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
     endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
     createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
     updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
   };
+}
+
+async function getPuzzleRelaySessionPayload(
+  db: Awaited<ReturnType<typeof getDb>>,
+  session: typeof clubPuzzleRelaySessions.$inferSelect,
+) {
+  const [teams, members] = await Promise.all([
+    db.select().from(clubPuzzleRelayTeams)
+      .where(eq(clubPuzzleRelayTeams.sessionId, session.id))
+      .orderBy(clubPuzzleRelayTeams.teamNumber),
+    db.select().from(clubPuzzleRelayTeamMembers)
+      .where(eq(clubPuzzleRelayTeamMembers.sessionId, session.id))
+      .orderBy(clubPuzzleRelayTeamMembers.orderIndex),
+  ]);
+
+  const puzzles = getPuzzleRelayPuzzleSequence(
+    session.difficulty as PuzzleRelayDifficulty,
+    session.puzzlesPerTeam,
+  );
+
+  return {
+    id: session.id,
+    clubId: session.clubId,
+    eventId: session.eventId,
+    status: session.status as "active" | "completed",
+    difficulty: session.difficulty as PuzzleRelayDifficulty,
+    puzzlesPerTeam: session.puzzlesPerTeam,
+    startedBy: session.startedBy,
+    startedAt: session.startedAt instanceof Date ? session.startedAt.toISOString() : String(session.startedAt),
+    completedAt: session.completedAt instanceof Date ? session.completedAt.toISOString() : session.completedAt ? String(session.completedAt) : null,
+    teams: teams.map((team) => {
+      const teamMembers = members
+        .filter((member) => member.teamId === team.id)
+        .map((member) => ({
+          userId: member.userId,
+          displayName: member.displayName,
+          avatarUrl: member.avatarUrl ?? null,
+          orderIndex: member.orderIndex,
+        }));
+      const completed = team.completedAt !== null || team.currentPuzzleIndex >= session.puzzlesPerTeam;
+      return {
+        id: team.id,
+        teamNumber: team.teamNumber,
+        name: team.name,
+        score: team.score,
+        currentPuzzleIndex: team.currentPuzzleIndex,
+        currentMemberIndex: team.currentMemberIndex,
+        completed,
+        currentPuzzle: completed ? null : puzzles[team.currentPuzzleIndex] ?? null,
+        members: teamMembers,
+      };
+    }),
+  };
+}
+
+async function getClubEventForPuzzleRelay(
+  db: Awaited<ReturnType<typeof getDb>>,
+  clubId: string,
+  eventId: string,
+) {
+  const [event] = await db.select().from(clubEvents).where(and(
+    eq(clubEvents.id, eventId),
+    eq(clubEvents.clubId, clubId),
+  )).limit(1);
+  return event ?? null;
+}
+
+function isClubManager(
+  club: typeof dbClubs.$inferSelect,
+  membership: typeof dbClubMembers.$inferSelect | undefined,
+  userId: string,
+) {
+  return club.ownerId === userId || membership?.role === "owner" || membership?.role === "director";
 }
 
 /** POST /api/clubs/:id/events — create a club event */
@@ -1269,6 +1357,18 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       return;
     }
     const eventType = canonicalizeClubEventType(body.eventType, body.tournamentId);
+    const requestedRelayTeams = body.puzzleRelayTeams ?? 2;
+    const requestedRelayDifficulty = body.puzzleRelayDifficulty ?? "intermediate";
+    const puzzleRelayTeams = eventType === "puzzle_relay"
+      ? parsePuzzleRelayTeamCount(requestedRelayTeams)
+      : null;
+    const puzzleRelayDifficulty = eventType === "puzzle_relay"
+      ? parsePuzzleRelayDifficulty(requestedRelayDifficulty)
+      : null;
+    if (eventType === "puzzle_relay" && (!puzzleRelayTeams || !puzzleRelayDifficulty)) {
+      res.status(400).json({ error: "Puzzle Relay requires 2–8 teams and a valid difficulty" });
+      return;
+    }
     if (body.tournamentId) {
       const [linkedEvent] = await db.select().from(clubEvents)
         .where(eq(clubEvents.tournamentId, body.tournamentId)).limit(1);
@@ -1325,6 +1425,8 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       creatorId: userId, creatorName: body.creatorName ?? "",
       isPublished: 1, eventType,
       tournamentId: body.tournamentId ?? null,
+      puzzleRelayTeams,
+      puzzleRelayDifficulty,
       recurrence: body.recurrence ?? "none",
       recurrenceSeriesId: body.recurrenceSeriesId ?? null,
       recurrenceEndDate: body.recurrenceEndDate ?? null,
@@ -1352,11 +1454,249 @@ clubsRouter.delete("/:id/events/:eventId", authMiddleware, async (req: Request, 
     const isOwner = club.ownerId === userId;
     const isDirector = membership?.role === "director" || membership?.role === "owner";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Not authorised" }); return; }
+    const [relaySession] = await db.select({ id: clubPuzzleRelaySessions.id })
+      .from(clubPuzzleRelaySessions)
+      .where(and(
+        eq(clubPuzzleRelaySessions.clubId, id),
+        eq(clubPuzzleRelaySessions.eventId, eventId),
+      ))
+      .limit(1);
+    if (relaySession) {
+      const relayTeams = await db.select({ id: clubPuzzleRelayTeams.id })
+        .from(clubPuzzleRelayTeams)
+        .where(eq(clubPuzzleRelayTeams.sessionId, relaySession.id));
+      if (relayTeams.length > 0) {
+        await db.delete(clubPuzzleRelayTeamMembers)
+          .where(eq(clubPuzzleRelayTeamMembers.sessionId, relaySession.id));
+        await db.delete(clubPuzzleRelayTeams)
+          .where(eq(clubPuzzleRelayTeams.sessionId, relaySession.id));
+      }
+      await db.delete(clubPuzzleRelaySessions).where(eq(clubPuzzleRelaySessions.id, relaySession.id));
+    }
     await db.delete(clubEvents).where(eq(clubEvents.id, eventId));
     res.json({ success: true });
   } catch (err) {
     logger.error("[clubs] DELETE /:id/events/:eventId error:", err);
     res.status(500).json({ error: "Failed to delete event" });
+  }
+});
+
+/** GET /api/clubs/:id/events/:eventId/puzzle-relay — active member session view. */
+clubsRouter.get("/:id/events/:eventId/puzzle-relay", requireFullAuth, async (req: Request, res: Response) => {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return;
+  try {
+    const event = await getClubEventForPuzzleRelay(access.db, access.club.id, req.params.eventId);
+    if (!event || canonicalizeClubEventType(event.eventType, event.tournamentId) !== "puzzle_relay") {
+      res.status(404).json({ error: "Puzzle Relay event not found" });
+      return;
+    }
+    const [session] = await access.db.select().from(clubPuzzleRelaySessions).where(and(
+      eq(clubPuzzleRelaySessions.clubId, access.club.id),
+      eq(clubPuzzleRelaySessions.eventId, event.id),
+    )).limit(1);
+    res.json({ session: session ? await getPuzzleRelaySessionPayload(access.db, session) : null });
+  } catch (error) {
+    logger.error("club_puzzle_relay_read_failed", { clubId: access.club.id, eventId: req.params.eventId, error });
+    res.status(500).json({ error: "Unable to load Puzzle Relay" });
+  }
+});
+
+/** POST /api/clubs/:id/events/:eventId/puzzle-relay/start — owner/director starts the relay from RSVP/check-in roster. */
+clubsRouter.post("/:id/events/:eventId/puzzle-relay/start", requireFullAuth, async (req: Request, res: Response) => {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return;
+  try {
+    const [membership] = await access.db.select().from(dbClubMembers).where(and(
+      eq(dbClubMembers.clubId, access.club.id),
+      eq(dbClubMembers.userId, access.userId),
+    )).limit(1);
+    if (!isClubManager(access.club, membership, access.userId)) {
+      res.status(403).json({ error: "Only club owners and directors can start Puzzle Relay" });
+      return;
+    }
+
+    const event = await getClubEventForPuzzleRelay(access.db, access.club.id, req.params.eventId);
+    if (!event || canonicalizeClubEventType(event.eventType, event.tournamentId) !== "puzzle_relay") {
+      res.status(404).json({ error: "Puzzle Relay event not found" });
+      return;
+    }
+
+    const [existing] = await access.db.select().from(clubPuzzleRelaySessions).where(and(
+      eq(clubPuzzleRelaySessions.clubId, access.club.id),
+      eq(clubPuzzleRelaySessions.eventId, event.id),
+    )).limit(1);
+    if (existing) {
+      res.json({ session: await getPuzzleRelaySessionPayload(access.db, existing) });
+      return;
+    }
+
+    const [checkins, goingRsvps] = await Promise.all([
+      access.db.select().from(meetupCheckins).where(and(
+        eq(meetupCheckins.clubId, access.club.id),
+        eq(meetupCheckins.eventId, event.id),
+      )),
+      access.db.select().from(clubEventRsvps).where(and(
+        eq(clubEventRsvps.clubId, access.club.id),
+        eq(clubEventRsvps.eventId, event.id),
+        eq(clubEventRsvps.status, "going"),
+      )),
+    ]);
+    const rosterByUserId = new Map<string, {
+      userId: string;
+      displayName: string;
+      avatarUrl: string | null;
+    }>();
+    checkins.forEach((member) => {
+      rosterByUserId.set(member.userId, {
+        userId: member.userId,
+        displayName: member.displayName,
+        avatarUrl: member.avatarUrl ?? null,
+      });
+    });
+    goingRsvps.forEach((member) => {
+      if (rosterByUserId.has(member.userId)) return;
+      rosterByUserId.set(member.userId, {
+        userId: member.userId,
+        displayName: member.displayName,
+        avatarUrl: member.avatarUrl ?? null,
+      });
+    });
+    const roster = Array.from(rosterByUserId.values());
+    if (roster.length < 2) {
+      res.status(400).json({ error: "At least two checked-in or going members are needed to start Puzzle Relay" });
+      return;
+    }
+
+    const difficulty = parsePuzzleRelayDifficulty(event.puzzleRelayDifficulty) ?? "intermediate";
+    const teamCount = parsePuzzleRelayTeamCount(event.puzzleRelayTeams) ?? 2;
+    const assignments = assignPuzzleRelayTeams(roster, teamCount);
+    const sessionId = nanoid(16);
+    await access.db.insert(clubPuzzleRelaySessions).values({
+      id: sessionId,
+      clubId: access.club.id,
+      eventId: event.id,
+      status: "active",
+      difficulty,
+      puzzlesPerTeam: PUZZLE_RELAY_PUZZLES_PER_TEAM,
+      startedBy: access.userId,
+    });
+
+    for (const assignment of assignments) {
+      const teamId = nanoid(16);
+      await access.db.insert(clubPuzzleRelayTeams).values({
+        id: teamId,
+        sessionId,
+        clubId: access.club.id,
+        eventId: event.id,
+        teamNumber: assignment.teamNumber,
+        name: `Team ${assignment.teamNumber}`,
+      });
+      await access.db.insert(clubPuzzleRelayTeamMembers).values(assignment.members.map((member, orderIndex) => ({
+        id: nanoid(16),
+        teamId,
+        sessionId,
+        userId: member.userId,
+        displayName: member.displayName,
+        avatarUrl: member.avatarUrl ?? null,
+        orderIndex,
+      })));
+    }
+
+    const [created] = await access.db.select().from(clubPuzzleRelaySessions)
+      .where(eq(clubPuzzleRelaySessions.id, sessionId));
+    const payload = await getPuzzleRelaySessionPayload(access.db, created);
+    broadcastClubEvent(access.club.id, "puzzle_relay_started", { eventId: event.id, sessionId });
+    res.status(201).json({ session: payload });
+  } catch (error) {
+    logger.error("club_puzzle_relay_start_failed", { clubId: access.club.id, eventId: req.params.eventId, error });
+    res.status(500).json({ error: "Unable to start Puzzle Relay" });
+  }
+});
+
+/** POST /api/clubs/:id/events/:eventId/puzzle-relay/attempt — submit the active teammate's move. */
+clubsRouter.post("/:id/events/:eventId/puzzle-relay/attempt", requireFullAuth, async (req: Request, res: Response) => {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return;
+  const { teamId, from, to, promotion } = req.body as {
+    teamId?: string;
+    from?: string;
+    to?: string;
+    promotion?: string;
+  };
+  if (!teamId || !from || !to || !/^[a-h][1-8]$/.test(from) || !/^[a-h][1-8]$/.test(to)) {
+    res.status(400).json({ error: "A valid Puzzle Relay move is required" });
+    return;
+  }
+
+  try {
+    const [session] = await access.db.select().from(clubPuzzleRelaySessions).where(and(
+      eq(clubPuzzleRelaySessions.clubId, access.club.id),
+      eq(clubPuzzleRelaySessions.eventId, req.params.eventId),
+    )).limit(1);
+    if (!session) { res.status(404).json({ error: "Puzzle Relay has not started" }); return; }
+    if (session.status !== "active") {
+      res.status(409).json({ error: "Puzzle Relay is complete" });
+      return;
+    }
+    const [team] = await access.db.select().from(clubPuzzleRelayTeams).where(and(
+      eq(clubPuzzleRelayTeams.id, teamId),
+      eq(clubPuzzleRelayTeams.sessionId, session.id),
+      eq(clubPuzzleRelayTeams.clubId, access.club.id),
+    )).limit(1);
+    if (!team || team.completedAt || team.currentPuzzleIndex >= session.puzzlesPerTeam) {
+      res.status(409).json({ error: "This team has finished its relay" });
+      return;
+    }
+    const teamMembers = await access.db.select().from(clubPuzzleRelayTeamMembers)
+      .where(eq(clubPuzzleRelayTeamMembers.teamId, team.id))
+      .orderBy(clubPuzzleRelayTeamMembers.orderIndex);
+    const activeMember = teamMembers[team.currentMemberIndex];
+    if (!activeMember || activeMember.userId !== access.userId) {
+      res.status(403).json({ error: "Wait for your teammate to hand off the board" });
+      return;
+    }
+
+    const puzzles = getPuzzleRelayPuzzleSequence(session.difficulty as PuzzleRelayDifficulty, session.puzzlesPerTeam);
+    const puzzle = puzzles[team.currentPuzzleIndex];
+    if (!puzzle) { res.status(409).json({ error: "No active puzzle for this team" }); return; }
+    const correct = isPuzzleRelaySolution(puzzle.id, from, to, promotion);
+    if (!correct) {
+      res.json({ correct: false, session: await getPuzzleRelaySessionPayload(access.db, session) });
+      return;
+    }
+
+    const nextPuzzleIndex = team.currentPuzzleIndex + 1;
+    const completed = nextPuzzleIndex >= session.puzzlesPerTeam;
+    await access.db.update(clubPuzzleRelayTeams).set({
+      score: team.score + 1,
+      currentPuzzleIndex: nextPuzzleIndex,
+      currentMemberIndex: (team.currentMemberIndex + 1) % teamMembers.length,
+      completedAt: completed ? new Date() : null,
+    }).where(eq(clubPuzzleRelayTeams.id, team.id));
+
+    const updatedTeams = await access.db.select().from(clubPuzzleRelayTeams)
+      .where(eq(clubPuzzleRelayTeams.sessionId, session.id));
+    const allTeamsCompleted = updatedTeams.every((item) =>
+      item.completedAt !== null || item.currentPuzzleIndex >= session.puzzlesPerTeam,
+    );
+    if (allTeamsCompleted) {
+      await access.db.update(clubPuzzleRelaySessions).set({ status: "completed", completedAt: new Date() })
+        .where(eq(clubPuzzleRelaySessions.id, session.id));
+    }
+    const [updatedSession] = await access.db.select().from(clubPuzzleRelaySessions)
+      .where(eq(clubPuzzleRelaySessions.id, session.id));
+    const payload = await getPuzzleRelaySessionPayload(access.db, updatedSession);
+    broadcastClubEvent(access.club.id, "puzzle_relay_progress", {
+      eventId: session.eventId,
+      sessionId: session.id,
+      teamId: team.id,
+      completed: allTeamsCompleted,
+    });
+    res.json({ correct: true, completed, session: payload });
+  } catch (error) {
+    logger.error("club_puzzle_relay_attempt_failed", { clubId: access.club.id, eventId: req.params.eventId, error });
+    res.status(500).json({ error: "Unable to score Puzzle Relay move" });
   }
 });
 
