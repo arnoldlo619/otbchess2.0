@@ -807,6 +807,45 @@ export const dbClubMembers = mysqlTable(
 export type DbClubMemberRow = typeof dbClubMembers.$inferSelect;
 export type NewDbClubMemberRow = typeof dbClubMembers.$inferInsert;
 
+// ─── Club Tournament Score Entries ────────────────────────────────────────────
+// Immutable per-tournament scoring snapshots for the Club Members leaderboard.
+// Totals are always derived from this ledger so finalization retries and later
+// score corrections never double-count a player's Club Ranking points.
+export const clubTournamentScoreEntries = mysqlTable(
+  "club_tournament_score_entries",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    memberUserId: varchar("member_user_id", { length: 64 }).notNull(),
+    chesscomUsername: varchar("chesscom_username", { length: 100 }).notNull(),
+    playerName: varchar("player_name", { length: 100 }).notNull().default(""),
+    avatarUrl: varchar("avatar_url", { length: 500 }),
+    // Kept as a decimal-safe string so half-points and future scoring formats
+    // retain their exact total without relying on binary floating-point storage.
+    points: varchar("points", { length: 24 }).notNull().default("0"),
+    wins: int("wins").notNull().default(0),
+    draws: int("draws").notNull().default(0),
+    losses: int("losses").notNull().default(0),
+    finalRank: int("final_rank"),
+    finalizedAt: timestamp("finalized_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    uniqueTournamentMember: uniqueIndex("ctse_club_tournament_member_uniq").on(
+      table.clubId,
+      table.tournamentId,
+      table.memberUserId
+    ),
+    clubPointsIdx: index("ctse_club_points_idx").on(table.clubId, table.points),
+    tournamentIdx: index("ctse_tournament_idx").on(table.tournamentId),
+    memberIdx: index("ctse_member_idx").on(table.memberUserId),
+  })
+);
+export type ClubTournamentScoreEntry = typeof clubTournamentScoreEntries.$inferSelect;
+export type NewClubTournamentScoreEntry = typeof clubTournamentScoreEntries.$inferInsert;
+
 // ── Club Albums ───────────────────────────────────────────────────────────────
 // Public event-photo collections owned by a club. Image bytes live in managed
 // object storage; the database keeps only album metadata and storage references.

@@ -11,6 +11,32 @@ import { authFetch } from "./apiFetch";
 
 const BASE = "/api/clubs";
 
+export interface ClubTournamentLeaderboardEntry {
+  rank: number;
+  memberUserId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  totalPoints: number;
+  totalWins: number;
+  tournamentsPlayed: number;
+  latestEarnedAt: string;
+  isViewer: boolean;
+}
+
+export interface ClubTournamentLeaderboard {
+  entries: ClubTournamentLeaderboardEntry[];
+  completedTournamentsCount: number;
+  playersRankedCount: number;
+}
+
+export interface ClubTournamentLeaderboardReconciliation {
+  clubId: string;
+  scannedTournaments: number;
+  materializedTournaments: number;
+  entriesWritten: number;
+  unmatchedUsernames: string[];
+}
+
 // ── List all public clubs (Discover page) ─────────────────────────────────────
 export async function apiListPublicClubs(opts?: {
   search?: string;
@@ -136,6 +162,34 @@ export async function apiListClubMembers(clubId: string): Promise<ClubMember[]> 
     return (await res.json()) as ClubMember[];
   } catch {
     return [];
+  }
+}
+
+// ── Club tournament leaderboard ──────────────────────────────────────────────
+export async function apiGetClubTournamentLeaderboard(clubId: string): Promise<ClubTournamentLeaderboard | null> {
+  try {
+    const res = await authFetch(`${BASE}/${clubId}/leaderboard`);
+    if (!res.ok) return null;
+    return await res.json() as ClubTournamentLeaderboard;
+  } catch {
+    return null;
+  }
+}
+
+export async function apiReconcileClubTournamentLeaderboard(
+  clubId: string,
+  tournamentId?: string,
+): Promise<ClubTournamentLeaderboardReconciliation | null> {
+  try {
+    const res = await authFetch(`${BASE}/${clubId}/leaderboard/reconcile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tournamentId ? { tournamentId } : {}),
+    });
+    if (!res.ok) return null;
+    return await res.json() as ClubTournamentLeaderboardReconciliation;
+  } catch {
+    return null;
   }
 }
 

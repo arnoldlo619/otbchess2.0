@@ -50,29 +50,13 @@ import {
 } from "@/lib/clubEventRegistry";
 import {
   listBattles,
-  createBattle,
-  startBattle,
-  recordBattleResult,
-  deleteBattle,
-  getBattleLeaderboard,
-  getHeadToHeadRecords,
   loadPotmArchive,
   snapshotPotmWinner,
-  seedDemoBattlesToClub,
   type ClubBattle,
-  type BattleResult as _BattleResult,
-  type BattleLeaderboardEntry,
-  type HeadToHeadRecord,
   type PotmArchiveEntry,
 } from "@/lib/clubBattleRegistry";
 import {
   apiBattleList,
-  apiBattleCreate,
-  apiBattleStart,
-  apiBattleRecordResult,
-  apiBattleDelete,
-  apiBattleLeaderboard,
-  apiBattleBulkImport,
   migrateLocalBattlesToServer,
 } from "@/lib/clubBattleApi";
 import {
@@ -90,8 +74,6 @@ import {
   publishScheduledPolls,
   listScheduledPolls,
   cancelScheduledPoll,
-  postBattleResult,
-  postLeaderboardSnapshot,
   postPlayerOfMonth,
   shouldPostPotmThisMonth,
   getPreviousMonthKey,
@@ -204,7 +186,15 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { ClubFeedMediaGallery } from "@/components/club/ClubFeedMediaGallery";
-import { apiGetClub, apiListClubMembers, apiListMyClubs, apiTransferOwnership } from "@/lib/clubsApi";
+import {
+  apiGetClub,
+  apiGetClubTournamentLeaderboard,
+  apiListClubMembers,
+  apiListMyClubs,
+  apiReconcileClubTournamentLeaderboard,
+  apiTransferOwnership,
+  type ClubTournamentLeaderboard as ClubTournamentLeaderboardData,
+} from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
@@ -221,6 +211,7 @@ import { ClubAlbumTab } from "@/components/club/ClubAlbumTab";
 import { ClubDashboardSidebar } from "@/components/club/ClubDashboardSidebar";
 import { ClubFeedRichText } from "@/components/club/ClubFeedRichText";
 import { ClubFeedComposer } from "@/components/club/ClubFeedComposer";
+import { ClubTournamentLeaderboard } from "@/components/club/ClubTournamentLeaderboard";
 const TournamentWizard = lazy(() => import("@/components/TournamentWizard").then((module) => ({ default: module.TournamentWizard })));
 const ClubMeetupWizard = lazy(() => import("@/components/ClubMeetupWizard"));
 const ClubSettingsPanel = lazy(() => import("@/components/ClubSettingsPanel").then((module) => ({ default: module.ClubSettingsPanel })));
@@ -2741,7 +2732,10 @@ export default function ClubDashboard() {
   const sidebarTemporarilyExpanded = sidebarHovered || sidebarKeyboardExpanded;
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("profile");
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
-  const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
+  const [membersSubTab, setMembersSubTab] = useState<"members" | "leaderboard" | "attendance">("members");
+  const [tournamentLeaderboard, setTournamentLeaderboard] = useState<ClubTournamentLeaderboardData | null>(null);
+  const [tournamentLeaderboardLoading, setTournamentLeaderboardLoading] = useState(false);
+  const [tournamentLeaderboardReconciling, setTournamentLeaderboardReconciling] = useState(false);
   const [attendanceView, setAttendanceView] = useState<"by-meetup" | "by-member">("by-meetup");
   // ── Member management state ───────────────────────────────────────────────
   const [memberMenuOpenId, setMemberMenuOpenId] = useState<string | null>(null);
@@ -2825,23 +2819,9 @@ export default function ClubDashboard() {
   const [rsvpCreateTournament, setRsvpCreateTournament] = useState(true);
   const [rsvpFormat, setRsvpFormat] = useState<"swiss" | "roundrobin">("swiss");
   const [rsvpTimePreset, setRsvpTimePreset] = useState<"5+0" | "10+0" | "10+5" | "15+10">("10+5");
-  // Battle state
-  const [battleView, setBattleView] = useState<"leaderboard" | "battles">("leaderboard");
+  // Retained for existing Club analytics and Player of the Month data. Manual
+  // Battle entry and Battle rankings are intentionally retired from Members.
   const [battles, setBattles] = useState<ClubBattle[]>([]);
-  const [battleLeaderboard, setBattleLeaderboard] = useState<BattleLeaderboardEntry[]>([]);
-  const [battlePlayerA, setBattlePlayerA] = useState("");
-  const [battlePlayerB, setBattlePlayerB] = useState("");
-  const [battleNotes, setBattleNotes] = useState("");
-  const [_battleResultId, _setBattleResultId] = useState<string | null>(null);
-  const [expandedLeaderboardId, setExpandedLeaderboardId] = useState<string | null>(null);
-  // Record Battle modal state
-  const [showRecordBattle, setShowRecordBattle] = useState(false);
-  const [rbWhite, setRbWhite] = useState("");
-  const [rbBlack, setRbBlack] = useState("");
-  const [rbResult, setRbResult] = useState<"white" | "black" | "draw">("white");
-  const [rbDate, setRbDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [rbNotes, setRbNotes] = useState("");
-  const [rbSaving, setRbSaving] = useState(false);
 
   // Mobile club navigation drawer state. The drawer replaces the dense bottom
   // navigation while retaining every existing destination and permission boundary.
@@ -2879,7 +2859,6 @@ export default function ClubDashboard() {
   const inviteEmailInputRef = useRef<HTMLInputElement>(null);
   const deleteMeetupDialogRef = useRef<HTMLDivElement>(null);
   const transferDialogRef = useRef<HTMLDivElement>(null);
-  const recordBattleDialogRef = useRef<HTMLDivElement>(null);
   const removeMemberDialogRef = useRef<HTMLDivElement>(null);
   const rsvpDialogRef = useRef<HTMLDivElement>(null);
   const mobileNavDialogRef = useRef<HTMLElement>(null);
@@ -2891,7 +2870,6 @@ export default function ClubDashboard() {
     setTransferConfirm(false);
     setTransferTargetId(null);
   }, []);
-  const closeRecordBattle = useCallback(() => setShowRecordBattle(false), []);
   const closeRemoveMember = useCallback(() => {
     setRemoveMemberId(null);
     setRemoveMemberName("");
@@ -2906,7 +2884,6 @@ export default function ClubDashboard() {
   useAccessibleOverlay({ open: showInviteDialog, onClose: closeInviteDialog, containerRef: inviteDialogRef, initialFocusRef: inviteEmailInputRef });
   useAccessibleOverlay({ open: Boolean(deleteMeetupId), onClose: closeDeleteMeetup, containerRef: deleteMeetupDialogRef });
   useAccessibleOverlay({ open: showTransferModal, onClose: closeTransfer, containerRef: transferDialogRef });
-  useAccessibleOverlay({ open: showRecordBattle, onClose: closeRecordBattle, containerRef: recordBattleDialogRef });
   useAccessibleOverlay({ open: Boolean(removeMemberId), onClose: closeRemoveMember, containerRef: removeMemberDialogRef });
   useAccessibleOverlay({ open: Boolean(rsvpPanelEventId), onClose: closeRsvpPanel, containerRef: rsvpDialogRef });
   useAccessibleOverlay({ open: mobileNavOpen, onClose: closeMobileNavDrawer, containerRef: mobileNavDialogRef });
@@ -3043,7 +3020,6 @@ export default function ClubDashboard() {
       const cid = found.id;
       migrateLocalBattlesToServer(cid).catch(() => {});
       apiBattleList(cid).then(setBattles).catch(() => setBattles(listBattles(cid)));
-      apiBattleLeaderboard(cid).then(setBattleLeaderboard).catch(() => setBattleLeaderboard(getBattleLeaderboard(cid)));
       // Sync events and feed from server (merges server records into localStorage)
       syncEventsFromServer(cid).then((merged) => setEvents(merged)).catch(() => {});
       syncFeedFromServer(cid).then((merged) => setFeedEvents(merged.slice(0, 50))).catch(() => {});
@@ -3172,21 +3148,53 @@ export default function ClubDashboard() {
     void fetchClubLeagues();
   }, [tab, eventsFilter, club?.id, fetchClubLeagues]);
 
-  async function refreshBattles() {
-    if (!club) return;
+  const refreshTournamentLeaderboard = useCallback(async () => {
+    if (!club?.id) return;
+    setTournamentLeaderboardLoading(true);
     try {
-      const [battles, leaderboard] = await Promise.all([
-        apiBattleList(club.id),
-        apiBattleLeaderboard(club.id),
-      ]);
-      setBattles(battles);
-      setBattleLeaderboard(leaderboard);
+      const data = await apiGetClubTournamentLeaderboard(club.id);
+      if (!data) throw new Error("leaderboard_unavailable");
+      setTournamentLeaderboard(data);
     } catch {
-      // Fallback to localStorage if server is unreachable
-      setBattles(listBattles(club.id));
-      setBattleLeaderboard(getBattleLeaderboard(club.id));
+      setTournamentLeaderboard(null);
+      toast.error("Unable to load tournament standings. Try again shortly.");
+    } finally {
+      setTournamentLeaderboardLoading(false);
+    }
+  }, [club?.id]);
+
+  async function handleTournamentLeaderboardReconcile() {
+    if (!club || !isOwnerOrDirector) return;
+    setTournamentLeaderboardReconciling(true);
+    try {
+      const result = await apiReconcileClubTournamentLeaderboard(club.id);
+      if (!result) throw new Error("leaderboard_reconcile_unavailable");
+      await refreshTournamentLeaderboard();
+      if (result.unmatchedUsernames.length > 0) {
+        toast.info(`Results refreshed. ${result.unmatchedUsernames.length} player${result.unmatchedUsernames.length === 1 ? "" : "s"} could not be matched to a Club member.`);
+      } else {
+        toast.success("Tournament results refreshed");
+      }
+    } catch {
+      toast.error("Unable to refresh tournament results. Try again shortly.");
+    } finally {
+      setTournamentLeaderboardReconciling(false);
     }
   }
+
+  async function refreshBattleAnalytics() {
+    if (!club) return;
+    try {
+      setBattles(await apiBattleList(club.id));
+    } catch {
+      setBattles(listBattles(club.id));
+    }
+  }
+
+  useEffect(() => {
+    if (tab !== "members" || membersSubTab !== "leaderboard" || !club?.id) return;
+    void refreshTournamentLeaderboard();
+  }, [tab, membersSubTab, club?.id, refreshTournamentLeaderboard]);
 
   function refreshFeed() {
     if (!club) return;
@@ -4455,9 +4463,9 @@ export default function ClubDashboard() {
         {/* ── MEMBERS TAB ───────────────────────────────────────────────────── */}
         {tab === "members" && (
           <div className="space-y-5">
-            {/* Members sub-tab toggle: Members | Battles | Attendance (owner only) */}
+            {/* Members sub-tab toggle: Members | Leaderboard | Attendance */}
             <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "oklch(0.16 0.05 145)" }}>
-              {(["members", "battles", ...(isOwnerOrDirector ? ["attendance"] : [])] as ("members" | "battles" | "attendance")[]).map((st) => (
+              {(["members", "leaderboard", ...(isOwnerOrDirector ? ["attendance"] : [])] as ("members" | "leaderboard" | "attendance")[]).map((st) => (
                 <button
                   key={st}
                   onClick={() => setMembersSubTab(st)}
@@ -4470,107 +4478,23 @@ export default function ClubDashboard() {
                       : { color: "oklch(0.55 0.08 145)" })
                   }}
                 >
-                  {st === "members" ? <Users className="w-3.5 h-3.5" /> : st === "battles" ? <Swords className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
-                  {st === "members" ? "Members" : st === "battles" ? "Battles" : "Attendance"}
+                  {st === "members" ? <Users className="w-3.5 h-3.5" /> : st === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
+                  {st === "members" ? "Members" : st === "leaderboard" ? "Leaderboard" : "Attendance"}
                 </button>
               ))}
             </div>
 
-            {/* Members sub-tab content */}
-            {membersSubTab === "battles" && (
-              <div className="space-y-6">
-                {/* Header row: sub-nav + Record Battle button */}
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-1 items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
-                    {(["leaderboard", "battles"] as const).map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setBattleView(v)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                          battleView === v ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-                        }`}
-                      >
-                        {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
-                        {v === "leaderboard" ? "Leaderboard" : "Battles"}
-                      </button>
-                    ))}
-                  </div>
-                  {isOwnerOrDirector && (
-                    <button
-                      onClick={() => {
-                        setRbWhite(""); setRbBlack(""); setRbResult("white");
-                        setRbDate(new Date().toISOString().slice(0, 10)); setRbNotes("");
-                        setShowRecordBattle(true);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition active:scale-95 flex-shrink-0"
-                      style={{ background: accent, color: "#0a1a0f" }}
-                    >
-                      <Plus className="w-4 h-4" />
-                      Record
-                    </button>
-                  )}
-                </div>
-                {/* Leaderboard view */}
-                {battleView === "leaderboard" && (() => {
-                  const sorted = [...members].sort((a, b) => {
-                    const winsA = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === a.userId) || (bt.result === "player_b" && bt.playerBId === a.userId))).length;
-                    const winsB = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === b.userId) || (bt.result === "player_b" && bt.playerBId === b.userId))).length;
-                    return winsB - winsA;
-                  });
-                  return (
-                    <div className="space-y-2">
-                      {sorted.slice(0, 10).map((m, idx) => {
-                        const wins = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === m.userId) || (bt.result === "player_b" && bt.playerBId === m.userId))).length;
-                        const losses = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_b" && bt.playerAId === m.userId) || (bt.result === "player_a" && bt.playerBId === m.userId))).length;
-                        const draws = battles.filter(bt => bt.status === "completed" && bt.result === "draw" && (bt.playerAId === m.userId || bt.playerBId === m.userId)).length;
-                        return (
-                          <div key={m.userId} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.16 0.05 145)" }}>
-                            <span className="text-white/30 text-xs font-bold w-5 text-center">{idx + 1}</span>
-                            <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={32} className="rounded-full" />
-                            <span className="flex-1 text-white text-sm font-semibold truncate">{m.displayName}</span>
-                            <div className="flex items-center gap-3 text-xs">
-                              <span className="text-green-400 font-bold">{wins}W</span>
-                              <span className="text-red-400">{losses}L</span>
-                              <span className="text-white/40">{draws}D</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {members.length === 0 && (
-                        <div className="text-center py-12 text-white/30">
-                          <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                          <p className="text-sm">No battle results yet</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-                {/* Recent battles view */}
-                {battleView === "battles" && (
-                  <div className="space-y-3">
-                    {[...battles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 20).map((bt) => (
-                      <div key={bt.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.16 0.05 145)" }}>
-                        <Swords className="w-4 h-4 text-white/30 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold truncate">{bt.playerAName} vs {bt.playerBName}</p>
-                          <p className="text-white/30 text-xs">{new Date(bt.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                        </div>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          bt.status === "completed" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-                        }`}>
-                          {bt.status === "completed" ? (bt.result === "draw" ? "Draw" : bt.result === "player_a" ? `${bt.playerAName} won` : `${bt.playerBName} won`) : "In Progress"}
-                        </span>
-                      </div>
-                    ))}
-                    {battles.length === 0 && (
-                      <div className="text-center py-12 text-white/30">
-                        <Swords className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm">No battles yet</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+            {membersSubTab === "leaderboard" && (
+              <ClubTournamentLeaderboard
+                leaderboard={tournamentLeaderboard}
+                loading={tournamentLeaderboardLoading}
+                isDark={isDark}
+                accent={accent}
+                viewerHasChesscomUsername={Boolean(members.find((member) => member.userId === user?.id)?.chesscomUsername)}
+                canReconcile={Boolean(isOwnerOrDirector)}
+                reconciling={tournamentLeaderboardReconciling}
+                onReconcile={handleTournamentLeaderboardReconcile}
+              />
             )}
 
             {membersSubTab === "members" && <>
@@ -4644,25 +4568,6 @@ export default function ClubDashboard() {
                           <span className="hidden sm:inline text-white/20 text-xs">
                             {new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                           </span>
-                          {isOwnerOrDirector && m.userId !== user?.id && (
-                            <button
-                              title={`Challenge ${m.displayName}`}
-                              onClick={() => {
-                                setBattlePlayerA(user?.id ?? "");
-                                setBattlePlayerB(m.userId);
-                                setMembersSubTab("battles");
-                                setBattleView("battles");
-                                setTimeout(() => {
-                                  document.getElementById("create-battle-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                                }, 80);
-                              }}
-                              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105 active:scale-95"
-                              style={{ background: "oklch(0.35 0.12 145 / 0.25)", color: "oklch(0.75 0.18 145)", border: "1px solid oklch(0.55 0.15 145 / 0.3)" }}
-                            >
-                              <Swords className="w-3 h-3" />
-                              <span className="hidden sm:inline">Challenge</span>
-                            </button>
-                          )}
                           {/* ── Owner/Director member management menu ── */}
                           {isClubOwner && m.userId !== user?.id && m.role !== "owner" && (
                             <div className="relative" data-member-menu-root={m.userId}>
@@ -5320,7 +5225,7 @@ export default function ClubDashboard() {
                     const freshMembers = await apiListClubMembers(club.id);
                     setMembers(freshMembers);
                     setFeedEvents(listFeedEvents(club.id, 50));
-                    await refreshBattles();
+                    await refreshBattleAnalytics();
                     toast.success("Analytics refreshed");
                   }}
                   className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
@@ -6070,541 +5975,6 @@ export default function ClubDashboard() {
           );
         })()}
 
-        {/* ── BATTLES TAB ─────────────────────────────────────────────────── */}
-        {tab === "battles" && (
-          <div className="space-y-6">
-            {/* ── Sub-nav: Leaderboard | Battles ─────────────────────────────── */}
-            <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
-              {(["leaderboard", "battles"] as const).map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setBattleView(v)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    battleView === v
-                      ? "bg-white/10 text-white"
-                      : "text-white/40 hover:text-white/70"
-                  }`}
-                >
-                  {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
-                  {v === "leaderboard" ? "Leaderboard" : "Battles"}
-                </button>
-              ))}
-            </div>
-
-            {/* ── Seed demo battles (owner only) ──────────────────────────── */}
-            {isOwnerOrDirector && (
-              <button
-                onClick={async () => {
-                  if (!club) return;
-                  // Generate demo battles into localStorage first (deterministic)
-                  const added = seedDemoBattlesToClub(club.id);
-                  if (added > 0) {
-                    // Push them to the server via bulk import
-                    try {
-                      const localBattles = listBattles(club.id);
-                      const { inserted } = await apiBattleBulkImport(club.id, localBattles);
-                      await refreshBattles();
-                      toast.success(`Seeded ${inserted} demo battle results!`);
-                    } catch {
-                      setBattles(listBattles(club.id));
-                      toast.success(`Seeded ${added} demo battle results (local only)!`);
-                    }
-                  } else {
-                    toast.info("Demo battles already seeded");
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-dashed border-[#4CAF50]/40 text-[#4CAF50]/70 hover:text-[#4CAF50] hover:border-[#4CAF50]/70 hover:bg-[#4CAF50]/05 transition-all"
-              >
-                <Swords className="w-4 h-4" />
-                Seed Demo Battles (Magnus vs Hikaru, Firouzja vs Caruana + 150 more)
-              </button>
-            )}
-
-            {/* ── LEADERBOARD VIEW ────────────────────────────────────────────── */}
-            {battleView === "leaderboard" && (
-              <div className="space-y-4">
-                {battleLeaderboard.length === 0 ? (
-                  <div className="flex flex-col items-center gap-3 py-16 text-white/30">
-                    <Trophy className="w-12 h-12 opacity-20" />
-                    <p className="text-sm text-center">No battles recorded yet.<br />Complete some battles to see the leaderboard.</p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Podium — top 3 */}
-                    {battleLeaderboard.length >= 1 && (
-                      <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                        <div className="flex items-end justify-center gap-3 mb-4">
-                          {/* 2nd place */}
-                          {battleLeaderboard[1] && (
-                            <div className="flex flex-col items-center gap-2 flex-1">
-                              <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-black text-white/70 border-2 border-white/20"
-                                style={{ background: "oklch(0.22 0.05 240)" }}>
-                                {battleLeaderboard[1].playerName.charAt(0).toUpperCase()}
-                              </div>
-                              <p className="text-white/70 text-xs font-semibold text-center truncate w-full">{battleLeaderboard[1].playerName}</p>
-                              <div className="w-full rounded-t-xl flex flex-col items-center py-3" style={{ background: "oklch(0.28 0.06 240)", minHeight: 56 }}>
-                                <span className="text-white/40 text-[10px] font-bold">2nd</span>
-                                <span className="text-white font-black text-sm">{battleLeaderboard[1].wins}W</span>
-                                <span className="text-white/40 text-[10px]">{battleLeaderboard[1].winRate}%</span>
-                              </div>
-                            </div>
-                          )}
-                          {/* 1st place */}
-                          <div className="flex flex-col items-center gap-2 flex-1">
-                            <Crown className="w-5 h-5 text-amber-400" />
-                            <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-black text-white border-2 border-amber-400/60"
-                              style={{ background: "oklch(0.26 0.08 80)" }}>
-                              {battleLeaderboard[0].playerName.charAt(0).toUpperCase()}
-                            </div>
-                            <p className="text-white text-xs font-bold text-center truncate w-full">{battleLeaderboard[0].playerName}</p>
-                            <div className="w-full rounded-t-xl flex flex-col items-center py-4" style={{ background: "oklch(0.32 0.1 80)", minHeight: 72 }}>
-                              <span className="text-amber-400 text-[10px] font-bold">1st</span>
-                              <span className="text-white font-black text-base">{battleLeaderboard[0].wins}W</span>
-                              <span className="text-amber-400/70 text-[10px]">{battleLeaderboard[0].winRate}%</span>
-                            </div>
-                          </div>
-                          {/* 3rd place */}
-                          {battleLeaderboard[2] && (
-                            <div className="flex flex-col items-center gap-2 flex-1">
-                              <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black text-white/60 border-2 border-white/10"
-                                style={{ background: "oklch(0.2 0.04 240)" }}>
-                                {battleLeaderboard[2].playerName.charAt(0).toUpperCase()}
-                              </div>
-                              <p className="text-white/60 text-xs font-semibold text-center truncate w-full">{battleLeaderboard[2].playerName}</p>
-                              <div className="w-full rounded-t-xl flex flex-col items-center py-2.5" style={{ background: "oklch(0.24 0.05 240)", minHeight: 48 }}>
-                                <span className="text-white/30 text-[10px] font-bold">3rd</span>
-                                <span className="text-white/70 font-black text-sm">{battleLeaderboard[2].wins}W</span>
-                                <span className="text-white/30 text-[10px]">{battleLeaderboard[2].winRate}%</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Full ranked list */}
-                    <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-                      {battleLeaderboard.map((entry, idx) => {
-                        const isExpanded = expandedLeaderboardId === entry.playerId;
-                        const h2h = getHeadToHeadRecords(club!.id, entry.playerId);
-                        const medalColor = idx === 0 ? "text-amber-400" : idx === 1 ? "text-white/60" : idx === 2 ? "text-orange-400" : "text-white/20";
-                        return (
-                          <div key={entry.playerId} className={`border-b border-white/5 last:border-0 ${
-                            idx < 3 ? "bg-white/[0.02]" : ""
-                          }`}>
-                            <button
-                              onClick={() => setExpandedLeaderboardId(isExpanded ? null : entry.playerId)}
-                              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 transition text-left"
-                            >
-                              {/* Rank */}
-                              <span className={`w-5 text-center text-xs font-black flex-shrink-0 ${medalColor}`}>
-                                {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`}
-                              </span>
-                              {/* Avatar */}
-                              <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white/60"
-                                style={{ background: "oklch(0.25 0.07 145)" }}>
-                                {entry.playerName.charAt(0).toUpperCase()}
-                              </div>
-                              {/* Name + stats */}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm font-semibold truncate">{entry.playerName}</p>
-                                <div className="mt-1 h-1 rounded-full bg-white/10 overflow-hidden w-full">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-700"
-                                    style={{
-                                      width: `${entry.winRate}%`,
-                                      background: entry.winRate >= 60
-                                        ? "oklch(0.65 0.2 145)"
-                                        : entry.winRate >= 40
-                                        ? "oklch(0.7 0.15 80)"
-                                        : "oklch(0.55 0.18 25)"
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                              {/* W/D/L */}
-                              <div className="flex items-center gap-1.5 text-xs font-bold flex-shrink-0">
-                                <span className="text-emerald-400">{entry.wins}W</span>
-                                <span className="text-white/20">·</span>
-                                <span className="text-white/40">{entry.draws}D</span>
-                                <span className="text-white/20">·</span>
-                                <span className="text-red-400">{entry.losses}L</span>
-                              </div>
-                              {/* Streak */}
-                              {entry.streak !== 0 && (
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                                  entry.streak > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
-                                }`}>
-                                  {entry.streak > 0 ? `🔥${entry.streak}W` : `${Math.abs(entry.streak)}L`}
-                                </span>
-                              )}
-                              <ChevronDown className={`w-3.5 h-3.5 text-white/30 flex-shrink-0 transition-transform ${
-                                isExpanded ? "rotate-180" : ""
-                              }`} />
-                            </button>
-                            {/* H2H drill-down */}
-                            {isExpanded && (
-                              <div className="bg-white/[0.02] border-t border-white/5 px-4 py-3 space-y-2">
-                                <p className="text-white/40 text-[11px] uppercase tracking-wider font-semibold mb-2">Head-to-Head</p>
-                                {h2h.length === 0 ? (
-                                  <p className="text-white/20 text-xs">No completed battles yet.</p>
-                                ) : (
-                                  h2h.map((rec) => {
-                                    const total = rec.wins + rec.draws + rec.losses;
-                                    const winPct = total > 0 ? Math.round((rec.wins / total) * 100) : 0;
-                                    return (
-                                      <div key={rec.opponentId} className="flex items-center gap-3">
-                                        <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white/60"
-                                          style={{ background: "oklch(0.3 0.08 145)" }}>
-                                          {rec.opponentAvatarUrl ? (
-                                            <img src={rec.opponentAvatarUrl} alt={rec.opponentName} className="w-full h-full object-cover rounded-full"
-                                              loading="lazy"
-                                              decoding="async"
-                                              aria-hidden="true"
-                                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                                          ) : rec.opponentName.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-white/80 text-xs font-semibold truncate">{rec.opponentName}</p>
-                                          <div className="mt-0.5 h-1 rounded-full bg-white/10 overflow-hidden w-full">
-                                            <div className="h-full rounded-full transition-all duration-500"
-                                              style={{ width: `${winPct}%`, background: winPct >= 60 ? "oklch(0.65 0.2 145)" : winPct >= 40 ? "oklch(0.7 0.15 80)" : "oklch(0.55 0.18 25)" }} />
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-1 text-[11px] font-bold flex-shrink-0">
-                                          <span className="text-emerald-400">{rec.wins}W</span>
-                                          <span className="text-white/20">/</span>
-                                          <span className="text-white/40">{rec.draws}D</span>
-                                          <span className="text-white/20">/</span>
-                                          <span className="text-red-400">{rec.losses}L</span>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* ── BATTLES VIEW ────────────────────────────────────────────────── */}
-            {battleView === "battles" && (
-              <div className="space-y-6">
-            {/* Challenge creator (director only) */}
-            {isOwnerOrDirector && (
-              <div id="create-battle-form" className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Swords className="w-4 h-4" style={{ color: accent }} />
-                  <h3 className="text-white font-semibold text-sm">Create Battle</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="text-white/40 text-xs mb-1 block">Player A</label>
-                    <select
-                      aria-label="BattlePlayerA"
-                      value={battlePlayerA}
-                      onChange={(e) => setBattlePlayerA(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
-                    >
-                      <option value="">Select member…</option>
-                      {members.map((m) => (
-                        <option key={m.userId} value={m.userId}>{m.displayName}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-white/40 text-xs mb-1 block">Player B</label>
-                    <select
-                      aria-label="BattlePlayerB"
-                      value={battlePlayerB}
-                      onChange={(e) => setBattlePlayerB(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
-                    >
-                      <option value="">Select member…</option>
-                      {members.filter((m) => m.userId !== battlePlayerA).map((m) => (
-                        <option key={m.userId} value={m.userId}>{m.displayName}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <input
-                  aria-label="Battle notes"
-                  type="text"
-                  placeholder="Notes (optional)"
-                  value={battleNotes}
-                  onChange={(e) => setBattleNotes(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 mb-3"
-                />
-                <button
-                  disabled={!battlePlayerA || !battlePlayerB}
-                  onClick={async () => {
-                    if (!club || !battlePlayerA || !battlePlayerB) return;
-                    const nameA = members.find((m) => m.userId === battlePlayerA)?.displayName ?? battlePlayerA;
-                    const nameB = members.find((m) => m.userId === battlePlayerB)?.displayName ?? battlePlayerB;
-                    try {
-                      await apiBattleCreate(club.id, { playerAId: battlePlayerA, playerAName: nameA, playerBId: battlePlayerB, playerBName: nameB, notes: battleNotes || undefined });
-                    } catch {
-                      createBattle(club.id, { playerAId: battlePlayerA, playerAName: nameA, playerBId: battlePlayerB, playerBName: nameB, notes: battleNotes || undefined });
-                    }
-                    setBattlePlayerA(""); setBattlePlayerB(""); setBattleNotes("");
-                    await refreshBattles();
-                    toast.success("Battle created!");
-                  }}
-                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
-                  style={{ background: accent, color: "#0a1a0f" }}
-                >
-                  Create Battle
-                </button>
-              </div>
-            )}
-
-            {/* Active & pending battles */}
-            {battles.filter((b) => b.status !== "completed").length > 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Flame className="w-4 h-4 text-orange-400" />
-                  <h3 className="text-white font-semibold text-sm">Active Battles</h3>
-                </div>
-                <div className="space-y-3">
-                  {battles.filter((b) => b.status !== "completed").map((battle) => (
-                    <div key={battle.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-white font-semibold text-sm">{battle.playerAName}</span>
-                          <span className="text-white/30 text-xs font-bold">VS</span>
-                          <span className="text-white font-semibold text-sm">{battle.playerBName}</span>
-                        </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          battle.status === "active" ? "bg-orange-500/20 text-orange-400" : "bg-white/10 text-white/40"
-                        }`}>
-                          {battle.status.toUpperCase()}
-                        </span>
-                      </div>
-                      {battle.notes && <p className="text-white/30 text-xs mb-3">{battle.notes}</p>}
-                      {isOwnerOrDirector && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {battle.status === "pending" && (
-                            <button
-                              onClick={async () => {
-                                try { await apiBattleStart(club.id, battle.id); } catch { startBattle(club.id, battle.id); }
-                                await refreshBattles();
-                              }}
-                              className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition"
-                            >
-                              Start
-                            </button>
-                          )}
-                          {battle.status === "active" && (
-                            <>
-                              <button
-                                onClick={async () => {
-                                  try { await apiBattleRecordResult(club.id, battle.id, "player_a"); } catch { recordBattleResult(club.id, battle.id, "player_a"); }
-                                  postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_a", directorName: user?.displayName });
-                                  await refreshBattles();
-                                  postLeaderboardSnapshot(club.id, battles.filter(b => b.status === "completed").length + 1);
-                                  toast.success(`${battle.playerAName} wins!`);
-                                }}
-                                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
-                                style={{ background: accent + "33", color: accent }}
-                              >
-                                {battle.playerAName} Wins
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  try { await apiBattleRecordResult(club.id, battle.id, "draw"); } catch { recordBattleResult(club.id, battle.id, "draw"); }
-                                  postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "draw", directorName: user?.displayName });
-                                  await refreshBattles();
-                                  toast.success("Draw recorded!");
-                                }}
-                                className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition"
-                              >
-                                Draw
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  try { await apiBattleRecordResult(club.id, battle.id, "player_b"); } catch { recordBattleResult(club.id, battle.id, "player_b"); }
-                                  postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_b", directorName: user?.displayName });
-                                  await refreshBattles();
-                                  postLeaderboardSnapshot(club.id, battles.filter(b => b.status === "completed").length + 1);
-                                  toast.success(`${battle.playerBName} wins!`);
-                                }}
-                                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
-                                style={{ background: accent + "33", color: accent }}
-                              >
-                                {battle.playerBName} Wins
-                              </button>
-                            </>
-                          )}
-                          <button
-                            onClick={async () => {
-                              try { await apiBattleDelete(club.id, battle.id); } catch { deleteBattle(club.id, battle.id); }
-                              await refreshBattles();
-                            }}
-                            className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition ml-auto"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Leaderboard */}
-            {battleLeaderboard.length > 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Medal className="w-4 h-4" style={{ color: accent }} />
-                  <h3 className="text-white font-semibold text-sm">Battle Leaderboard</h3>
-                </div>
-                <div className="space-y-1.5">
-                  {battleLeaderboard.map((entry, idx) => {
-                    const isExpanded = expandedLeaderboardId === entry.playerId;
-                    const h2h: HeadToHeadRecord[] = club ? getHeadToHeadRecords(club.id, entry.playerId, members) : [];
-                    return (
-                      <div key={entry.playerId} className="rounded-xl overflow-hidden">
-                        {/* Leaderboard row — clickable */}
-                        <button
-                          onClick={() => setExpandedLeaderboardId(isExpanded ? null : entry.playerId)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 bg-white/5 hover:bg-white/10 transition-colors text-left"
-                        >
-                          <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${
-                            idx === 0 ? "text-yellow-400" : idx === 1 ? "text-slate-300" : idx === 2 ? "text-amber-600" : "text-white/30"
-                          }`}>{idx + 1}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-semibold truncate">{entry.playerName}</p>
-                            <p className="text-white/30 text-xs">{entry.total} battles · {entry.winRate}% win rate</p>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs font-bold flex-shrink-0">
-                            <span className="text-emerald-400">{entry.wins}W</span>
-                            <span className="text-white/30">{entry.draws}D</span>
-                            <span className="text-red-400">{entry.losses}L</span>
-                          </div>
-                          {entry.streak !== 0 && (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                              entry.streak > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
-                            }`}>
-                              {entry.streak > 0 ? `🔥 ${entry.streak}W` : `${Math.abs(entry.streak)}L`}
-                            </span>
-                          )}
-                          <ChevronDown className={`w-3.5 h-3.5 text-white/30 flex-shrink-0 transition-transform duration-200 ${
-                            isExpanded ? "rotate-180" : ""
-                          }`} />
-                        </button>
-
-                        {/* Head-to-head detail panel */}
-                        {isExpanded && (
-                          <div className="bg-white/[0.03] border-t border-white/5 px-4 py-3 space-y-2">
-                            <p className="text-white/40 text-[11px] uppercase tracking-wider font-semibold mb-2">Head-to-Head Breakdown</p>
-                            {h2h.length === 0 ? (
-                              <p className="text-white/20 text-xs">No completed battles yet.</p>
-                            ) : (
-                              h2h.map((rec) => {
-                                const total = rec.wins + rec.draws + rec.losses;
-                                const winPct = total > 0 ? Math.round((rec.wins / total) * 100) : 0;
-                                return (
-                                  <div key={rec.opponentId} className="flex items-center gap-3">
-                                    {/* Avatar — real image or initials fallback */}
-                                    <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center text-[10px] font-bold text-white/60"
-                                      style={{ background: "oklch(0.3 0.08 145)" }}>
-                                      {rec.opponentAvatarUrl ? (
-                                        <img
-                                          loading="lazy"
-                                          decoding="async"
-                                          src={rec.opponentAvatarUrl}
-                                          alt={rec.opponentName}
-                                          className="w-full h-full object-cover"
-                                          aria-hidden="true"
-                                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                                        />
-                                      ) : (
-                                        rec.opponentName.charAt(0).toUpperCase()
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-white/80 text-xs font-semibold truncate">{rec.opponentName}</p>
-                                      {/* Win-rate bar */}
-                                      <div className="mt-0.5 h-1 rounded-full bg-white/10 overflow-hidden w-full">
-                                        <div
-                                          className="h-full rounded-full transition-all duration-500"
-                                          style={{
-                                            width: `${winPct}%`,
-                                            background: winPct >= 60 ? "oklch(0.65 0.2 145)" : winPct >= 40 ? "oklch(0.7 0.15 80)" : "oklch(0.55 0.18 25)"
-                                          }}
-                                        />
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold flex-shrink-0">
-                                      <span className="text-emerald-400">{rec.wins}W</span>
-                                      <span className="text-white/20">/</span>
-                                      <span className="text-white/40">{rec.draws}D</span>
-                                      <span className="text-white/20">/</span>
-                                      <span className="text-red-400">{rec.losses}L</span>
-                                    </div>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Completed battle history */}
-            {battles.filter((b) => b.status === "completed").length > 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Trophy className="w-4 h-4" style={{ color: accent }} />
-                  <h3 className="text-white font-semibold text-sm">Battle History</h3>
-                </div>
-                <div className="space-y-2">
-                  {battles.filter((b) => b.status === "completed").slice(0, 20).map((battle) => {
-                    const winnerName = battle.result === "player_a" ? battle.playerAName : battle.result === "player_b" ? battle.playerBName : null;
-                    return (
-                      <div key={battle.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm">
-                            <span className={battle.result === "player_a" ? "font-bold" : "text-white/60"}>{battle.playerAName}</span>
-                            <span className="text-white/30 mx-2">vs</span>
-                            <span className={battle.result === "player_b" ? "font-bold" : "text-white/60"}>{battle.playerBName}</span>
-                          </p>
-                          {battle.notes && <p className="text-white/30 text-xs truncate">{battle.notes}</p>}
-                        </div>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                          battle.result === "draw" ? "bg-white/10 text-white/40" : "bg-emerald-500/20 text-emerald-400"
-                        }`}>
-                          {battle.result === "draw" ? "DRAW" : `${winnerName} wins`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Empty state */}
-            {battles.length === 0 && (
-              <div className="flex flex-col items-center gap-3 py-16 text-white/30">
-                <Swords className="w-12 h-12 opacity-20" />
-                <p className="text-sm text-center">No battles yet.<br />Create a battle between two members to start tracking records.</p>
-              </div>
-            )}
-              </div>
-            )}
-          </div>
-        )}
          {/* ── LEAGUES TAB ─────────────────────────────────────────────────── */}
         {tab === "events" && eventsFilter === "leagues" && (
           <div className="space-y-6">
@@ -6993,186 +6363,6 @@ export default function ClubDashboard() {
         />
         </Suspense>
       )}
-      {/* ── Record Battle Modal ─────────────────────────────────────────── */}
-      {showRecordBattle && club && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
-          <div
-            ref={recordBattleDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="record-club-battle-title"
-            tabIndex={-1}
-            className="w-full max-w-md rounded-2xl border border-white/10 p-6 space-y-5"
-            style={{ background: "oklch(0.14 0.05 145)" }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Swords className="w-5 h-5" style={{ color: accent }} />
-                <h2 id="record-club-battle-title" className="text-white font-bold text-base">Record Battle</h2>
-              </div>
-              <button onClick={closeRecordBattle} aria-label="Close record battle" className="text-white/30 hover:text-white/70 transition">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* White player */}
-            <div>
-              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">White</label>
-              <select
-                aria-label="White player"
-                value={rbWhite}
-                onChange={(e) => { setRbWhite(e.target.value); if (e.target.value === rbBlack) setRbBlack(""); }}
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
-                style={{ background: "oklch(0.18 0.05 145)" }}
-              >
-                <option value="">Select player…</option>
-                {members.map((m) => (
-                  <option key={m.userId} value={m.userId}>{m.displayName}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Black player */}
-            <div>
-              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Black</label>
-              <select
-                aria-label="Black player"
-                value={rbBlack}
-                onChange={(e) => setRbBlack(e.target.value)}
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
-                style={{ background: "oklch(0.18 0.05 145)" }}
-              >
-                <option value="">Select player…</option>
-                {members.filter((m) => m.userId !== rbWhite).map((m) => (
-                  <option key={m.userId} value={m.userId}>{m.displayName}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Result */}
-            <div>
-              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Result</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(["white", "draw", "black"] as const).map((r) => {
-                  const label = r === "white"
-                    ? (rbWhite ? (members.find(m => m.userId === rbWhite)?.displayName ?? "White") + " wins" : "White wins")
-                    : r === "black"
-                    ? (rbBlack ? (members.find(m => m.userId === rbBlack)?.displayName ?? "Black") + " wins" : "Black wins")
-                    : "Draw";
-                  return (
-                    <button
-                      key={r}
-                      onClick={() => setRbResult(r)}
-                      className="py-2 rounded-xl text-xs font-semibold transition border"
-                      style={rbResult === r
-                        ? { background: accent, color: "#0a1a0f", borderColor: accent }
-                        : { background: "oklch(0.18 0.05 145)", color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.1)" }
-                      }
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Date */}
-            <div>
-              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Date</label>
-              <input
-                aria-label="Battle date"
-                type="date"
-                value={rbDate}
-                onChange={(e) => setRbDate(e.target.value)}
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
-                style={{ background: "oklch(0.18 0.05 145)", colorScheme: "dark" }}
-              />
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Notes <span className="normal-case font-normal">(optional)</span></label>
-              <input
-                aria-label="RbNotes"
-                type="text"
-                value={rbNotes}
-                onChange={(e) => setRbNotes(e.target.value)}
-                placeholder="e.g. Sicilian Defense, 32 moves"
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 border border-white/10"
-                style={{ background: "oklch(0.18 0.05 145)" }}
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-1">
-              <button
-                onClick={() => setShowRecordBattle(false)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/50 border border-white/10 hover:bg-white/5 transition"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={!rbWhite || !rbBlack || rbSaving}
-                onClick={async () => {
-                  if (!club || !rbWhite || !rbBlack) return;
-                  setRbSaving(true);
-                  const whiteName = members.find((m) => m.userId === rbWhite)?.displayName ?? rbWhite;
-                  const blackName = members.find((m) => m.userId === rbBlack)?.displayName ?? rbBlack;
-                  // Map white/black/draw → player_a/player_b/draw
-                  const apiResult: "player_a" | "player_b" | "draw" =
-                    rbResult === "white" ? "player_a" : rbResult === "black" ? "player_b" : "draw";
-                  // Use the selected date as the timestamp
-                  const dateIso = rbDate ? new Date(rbDate + "T12:00:00").toISOString() : new Date().toISOString();
-                  try {
-                    // Create battle and immediately record result in one flow
-                    let battle;
-                    try {
-                      battle = await apiBattleCreate(club.id, {
-                        playerAId: rbWhite, playerAName: whiteName,
-                        playerBId: rbBlack, playerBName: blackName,
-                        notes: rbNotes || undefined,
-                        createdAt: dateIso,
-                      });
-                      await apiBattleRecordResult(club.id, battle.id, apiResult);
-                    } catch {
-                      // Fallback to localStorage
-                      const local = createBattle(club.id, {
-                        playerAId: rbWhite, playerAName: whiteName,
-                        playerBId: rbBlack, playerBName: blackName,
-                        notes: rbNotes || undefined,
-                      });
-                      recordBattleResult(club.id, local.id, apiResult);
-                    }
-                    // Post to feed
-                    postBattleResult({
-                      clubId: club.id,
-                      battleId: "recorded",
-                      playerAName: whiteName,
-                      playerBName: blackName,
-                      outcome: apiResult,
-                      directorName: user?.displayName,
-                    });
-                    await refreshBattles();
-                    setShowRecordBattle(false);
-                    const resultLabel = rbResult === "white" ? `${whiteName} wins` : rbResult === "black" ? `${blackName} wins` : "Draw recorded";
-                    toast.success(`Battle recorded — ${resultLabel}!`);
-                  } catch (err) {
-                    toast.error("Failed to record battle. Please try again.");
-                  } finally {
-                    setRbSaving(false);
-                  }
-                }}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30 active:scale-95"
-                style={{ background: accent, color: "#0a1a0f" }}
-              >
-                {rbSaving ? "Saving…" : "Save Battle"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Invite Members Dialog ─────────────────────────────────────────── */}
       {showInviteDialog && isOwnerOrDirector && club && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">

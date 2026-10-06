@@ -39,6 +39,7 @@ import { createChessProxyRouter } from "./chessProxy.js";
 import { createPrepRouter } from "./prepRoutes.js";
 import { createClientErrorRouter } from "./clientErrorRoutes.js";
 import { createOperationalMetricsRouter } from "./operationalMetricsRoutes.js";
+import { materializeClubTournamentScores } from "./clubTournamentLeaderboard.js";
 import { validate, addPlayerSchema, saveStateSchema, analyticsEventSchema, broadcastSchema, timerUpdateSchema } from "./validation.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -1922,6 +1923,16 @@ export function createApp() {
         await db.insert(tournamentState).values({ tournamentId: id, stateJson: JSON.stringify(finalState), revision: nextRevision });
       }
       await db.update(userTournaments).set({ status: "completed" }).where(eq(userTournaments.tournamentId, id));
+      try {
+        // Only tournament-linked Club events are materialized; unrelated tournaments
+        // remain untouched. The service replaces this tournament's ledger slice,
+        // keeping retries and final-score corrections idempotent.
+        await materializeClubTournamentScores(id, finalState);
+      } catch (leaderboardError) {
+        // Tournament completion is authoritative and must not fail because a Club
+        // ranking projection needs a later reconciliation.
+        logger.error("club_tournament_leaderboard_materialization_failed", { tournamentId: id, error: leaderboardError });
+      }
       invalidateSnapshotCache(id);
       const subs = sseSubscribers.get(id);
       if (subs && subs.size > 0) {

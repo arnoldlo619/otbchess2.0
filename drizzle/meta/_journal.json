@@ -176,6 +176,13 @@
       "when": 1791273422027,
       "tag": "0024_retire_unused_event_modes",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1791274286352,
+      "tag": "0025_club_tournament_score_ledger",
+      "breakpoints": true
     }
   ]
 }

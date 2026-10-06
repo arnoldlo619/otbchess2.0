@@ -33,7 +33,9 @@ describe("Club Dashboard workspace headers", () => {
     expect(dashboard).toContain("setShowCreateEvent(true)");
     expect(dashboard).toContain("function openInviteDialog()");
     expect(dashboard).toContain("onClick: openInviteDialog");
-    expect(dashboard).toContain("announcementComposerTextareaRef.current?.focus");
+    expect(dashboard).toContain("setFeedComposerOpenRequest((current) => current + 1)");
+    expect(dashboard).toContain("<ClubFeedComposer");
+    expect(dashboard).toContain("openRequest={feedComposerOpenRequest}");
     expect(dashboard).toContain('data-testid="club-members-invite-dialog"');
     expect(dashboard).not.toContain('>New tournament<');
     expect(dashboard).not.toContain('>Create meetup<');

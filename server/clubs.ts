@@ -53,6 +53,7 @@ import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 import { createClubMeetupRsvpQuestions } from "../shared/rsvpMeetupTemplate";
 import { canonicalizeClubEventType, parseClubEventType } from "../shared/clubEventTypes";
+import { getClubTournamentLeaderboard, reconcileClubTournamentScores } from "./clubTournamentLeaderboard.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -1863,6 +1864,46 @@ clubsRouter.patch(
     }
   }
 );
+
+/** GET /api/clubs/:id/leaderboard — current Club member standings from completed tournaments. */
+clubsRouter.get("/:id/leaderboard", requireFullAuth, async (req: Request, res: Response) => {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return;
+  try {
+    res.json(await getClubTournamentLeaderboard(access.club.id, access.userId));
+  } catch (error) {
+    logger.error("club_tournament_leaderboard_read_failed", { clubId: access.club.id, error });
+    res.status(500).json({ error: "Unable to load club leaderboard" });
+  }
+});
+
+/** POST /api/clubs/:id/leaderboard/reconcile — owner/director recovery for completed Club tournaments. */
+clubsRouter.post("/:id/leaderboard/reconcile", requireFullAuth, async (req: Request, res: Response) => {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return;
+  try {
+    const [membership] = await access.db
+      .select({ role: dbClubMembers.role })
+      .from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, access.club.id), eq(dbClubMembers.userId, access.userId)))
+      .limit(1);
+    const canManage = access.club.ownerId === access.userId || membership?.role === "owner" || membership?.role === "director";
+    if (!canManage) {
+      res.status(403).json({ error: "Only club owners and directors can reconcile tournament standings" });
+      return;
+    }
+
+    const requestedTournamentId = typeof req.body?.tournamentId === "string" ? req.body.tournamentId.trim() : undefined;
+    if (requestedTournamentId !== undefined && requestedTournamentId.length === 0) {
+      res.status(400).json({ error: "tournamentId must be a non-empty string when supplied" });
+      return;
+    }
+    res.json(await reconcileClubTournamentScores(access.club.id, requestedTournamentId));
+  } catch (error) {
+    logger.error("club_tournament_leaderboard_reconcile_failed", { clubId: access.club.id, error });
+    res.status(500).json({ error: "Unable to reconcile club tournament standings" });
+  }
+});
 
 // ── POST /api/clubs/:id/events/:eventId/checkin-admin — owner checks in a user ─
 clubsRouter.post(

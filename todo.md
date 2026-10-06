@@ -9,6 +9,10 @@
 - [x] Club Albums: Remove the requested empty-state camera icon from the public Album panel
 - [x] Club Albums: Center the public Album tab header to match the other club tab pages
 - [x] Club Albums: Verify centered Album header alignment at desktop and mobile widths
+- [x] Club Members: Replace the Battles subtab and manual battle-recording flow with a tournament-results Leaderboard
+- [x] Club Members: Persist a Club/tournament/member score ledger and materialize completed Club tournament points idempotently
+- [x] Club Members: Aggregate active member Club rankings by tournament points and wins with private member access and owner/director reconciliation
+- [x] Club Members: Add responsive leaderboard UI, lifecycle/API tests, desktop/mobile light/dark QA, and migration verification
 - [x] Club Dashboard: Remove the redundant compact footer icon below Settings
 - [x] Club Dashboard: Remove the expanded sidebar club-name title and header collapse/expand control
 - [x] Club Dashboard: Verify minimalist compact and expanded sidebar layouts plus preserved navigation behavior
