@@ -739,12 +739,16 @@ export function ClubAlbumTab({
       </Dialog>
 
       <Dialog open={viewer !== null} onOpenChange={(open) => { if (!open) setViewer(null); }}>
-        <DialogContent showCloseButton={false} className="h-[100dvh] w-screen max-w-none gap-0 overflow-hidden rounded-none border-0 bg-black p-0 text-white">
+        <DialogContent
+          showCloseButton={false}
+          data-testid="club-album-fullscreen-viewer"
+          className="!fixed !inset-0 !z-[100] !grid !h-[100dvh] !w-[100dvw] !max-w-none !translate-x-0 !translate-y-0 !gap-0 !overflow-hidden !rounded-none !border-0 !bg-black !p-0 !shadow-none sm:!max-w-none"
+        >
           <DialogTitle className="sr-only">{viewer?.album.title ?? "Album photo"}</DialogTitle>
           <DialogDescription className="sr-only">Full-screen club album photo viewer. Use the left and right arrow keys to navigate.</DialogDescription>
           {viewer && (currentPhoto || getCuratedClubAlbumCover(viewer.album.title) || viewer.album.coverImageUrl) && (
-            <div className="flex h-full min-h-0 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_25rem]">
-              <section className="relative flex min-h-[50dvh] min-w-0 flex-1 items-center justify-center bg-black lg:min-h-0" aria-label="Album photo carousel">
+            <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_minmax(18rem,42dvh)] lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-1 xl:grid-cols-[minmax(0,1fr)_26rem]">
+              <section className="relative flex min-h-0 min-w-0 items-center justify-center bg-black" aria-label="Album photo carousel">
                 <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-4 pb-12 pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:px-6">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold">{viewer.album.title}</p>
@@ -767,7 +771,7 @@ export function ClubAlbumTab({
                   </div>
                 </div>
 
-                <img src={currentPhoto?.url ?? getCuratedClubAlbumCover(viewer.album.title) ?? viewer.album.coverImageUrl ?? ""} alt={currentPhoto?.altText || currentPhoto?.caption || `${viewer.album.title} album cover`} className="max-h-full max-w-full object-contain" />
+                <img src={currentPhoto?.url ?? getCuratedClubAlbumCover(viewer.album.title) ?? viewer.album.coverImageUrl ?? ""} alt={currentPhoto?.altText || currentPhoto?.caption || `${viewer.album.title} album cover`} className="h-full w-full object-contain" />
 
                 {viewerCount > 1 && (
                   <>
@@ -780,14 +784,9 @@ export function ClubAlbumTab({
                   </>
                 )}
 
-                {currentPhoto?.caption && (
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 to-transparent px-16 pb-5 pt-12 text-center lg:hidden">
-                    <p className="mx-auto max-w-2xl text-sm leading-relaxed text-white/85">{currentPhoto.caption}</p>
-                  </div>
-                )}
               </section>
 
-              <aside aria-label="Photo interactions" className="flex min-h-0 max-h-[50dvh] flex-col border-t border-white/10 bg-[#0a120c] lg:max-h-none lg:border-l lg:border-t-0">
+              <aside aria-label="Photo interactions" className="flex min-h-0 flex-col border-t border-white/10 bg-[#08100a] lg:border-l lg:border-t-0">
                 <div className="border-b border-white/10 px-5 py-4">
                   <div className="flex items-start gap-3">
                     <PlayerAvatar username={clubName} name={clubName} avatarUrl={clubAvatarUrl ?? undefined} size={36} showBadge={false} />

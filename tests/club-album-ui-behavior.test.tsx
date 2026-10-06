@@ -238,6 +238,10 @@ describe("ClubAlbumTab rendered behavior", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open Championship Night album" }));
     expect(await screen.findByText("1 of 6")).toBeTruthy();
+    const fullscreenViewer = screen.getByTestId("club-album-fullscreen-viewer");
+    expect(fullscreenViewer.className).toContain("!inset-0");
+    expect(fullscreenViewer.className).toContain("!w-[100dvw]");
+    expect(fullscreenViewer.className).toContain("sm:!max-w-none");
 
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(await screen.findByText("2 of 6")).toBeTruthy();

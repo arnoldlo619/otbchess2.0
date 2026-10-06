@@ -81,6 +81,10 @@ describe("Club Album product experience contracts", () => {
     expect(component).toContain("Create album");
     expect(component).toContain("Uploading photos");
     expect(component).toContain("Full-screen club album photo viewer");
+    expect(component).toContain('data-testid="club-album-fullscreen-viewer"');
+    expect(component).toContain("!inset-0");
+    expect(component).toContain("!w-[100dvw]");
+    expect(component).toContain("sm:!max-w-none");
     expect(component).toContain('event.key === "ArrowLeft"');
     expect(component).toContain('event.key === "ArrowRight"');
     expect(component).toContain('aria-label="Previous photo"');
@@ -105,7 +109,8 @@ describe("Club Album product experience contracts", () => {
     const profile = read("client/src/pages/ClubProfile.tsx");
 
     expect(component).toContain('aria-label="Photo interactions"');
-    expect(component).toContain('lg:grid-cols-[minmax(0,1fr)_25rem]');
+    expect(component).toContain('lg:grid-cols-[minmax(0,1fr)_24rem]');
+    expect(component).toContain('grid-rows-[minmax(0,1fr)_minmax(18rem,42dvh)]');
     expect(component).toContain('safe-area-inset-bottom');
     expect(component).toContain('No comments yet. Start a conversation about this moment.');
     expect(component).toContain('event.key === "ArrowLeft"');
