@@ -263,8 +263,30 @@ function DemoMobileDrawer({
   );
 }
 
+function DemoWorkspaceHeader({ activeTab }: { activeTab: Extract<DemoTab, "feed" | "events" | "members"> }) {
+  const content = {
+    feed: { label: "Feed", primary: "5 updates", secondary: "84 members", description: "Updates, results, and conversations from The OTB Chess Club." },
+    events: { label: "Events", primary: "2 scheduled", secondary: "84 members", description: "Your club’s upcoming tournament nights, meetups, and over-the-board plans." },
+    members: { label: "Members", primary: "84 members", secondary: "2 events", description: "The players, regulars, and organizers who make The OTB Chess Club a club." },
+  }[activeTab];
+
+  return (
+    <header data-testid="club-demo-workspace-header" className="mb-5 border-b border-white/10 px-1 pb-5 text-white sm:px-2 sm:pb-6">
+      <div className="flex items-center gap-4 sm:gap-5">
+        <div className="shrink-0 rounded-full bg-[linear-gradient(135deg,#4CAF50,#4CAF5066,#4CAF50)] p-[2px]"><div className="rounded-full bg-[#06130d] p-1"><DemoAvatar initials="OC" tone="#426f45" size="lg" /></div></div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 className="truncate text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1><span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">{content.label}</span></div>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85"><span><strong className="font-semibold text-white">{content.primary}</strong></span><span><strong className="font-semibold text-white">{content.secondary}</strong></span></div>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">{content.description}</p>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function DemoBanner({ activeTab }: { activeTab: DemoTab }) {
-  if (activeTab === "album") return null;
+  if (activeTab === "feed" || activeTab === "events" || activeTab === "members") return <DemoWorkspaceHeader activeTab={activeTab} />;
+  if (activeTab !== "overview") return null;
   return (
     <section aria-label={`${DEMO_CLUB_NAME} club header`} data-testid="club-demo-social-header" className="relative mb-5 overflow-hidden rounded-[28px] border border-white/10 bg-[#06130d] shadow-[0_18px_48px_rgba(4,20,10,0.18)]">
       <div

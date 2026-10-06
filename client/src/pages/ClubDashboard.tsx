@@ -273,6 +273,90 @@ function isUpcoming(event: ClubEvent): boolean {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+type ClubWorkspaceHeaderTab = "feed" | "events" | "members";
+
+function ClubWorkspaceSocialHeader({
+  club,
+  tab,
+  memberCount,
+  eventCount,
+  updateCount,
+  accent,
+  isDark,
+  action,
+}: {
+  club: Club;
+  tab: ClubWorkspaceHeaderTab;
+  memberCount: number;
+  eventCount: number;
+  updateCount: number;
+  accent: string;
+  isDark: boolean;
+  action?: { label: string; icon: React.ElementType; onClick: () => void };
+}) {
+  const content = {
+    feed: {
+      label: "Feed",
+      primary: `${updateCount} update${updateCount === 1 ? "" : "s"}`,
+      secondary: `${memberCount} member${memberCount === 1 ? "" : "s"}`,
+      description: `Updates, results, and conversations from ${club.name}.`,
+    },
+    events: {
+      label: "Events",
+      primary: `${eventCount} scheduled`,
+      secondary: `${memberCount} member${memberCount === 1 ? "" : "s"}`,
+      description: "Your club’s upcoming tournament nights, meetups, and over-the-board plans.",
+    },
+    members: {
+      label: "Members",
+      primary: `${memberCount} member${memberCount === 1 ? "" : "s"}`,
+      secondary: `${eventCount} event${eventCount === 1 ? "" : "s"}`,
+      description: `The players, regulars, and organizers who make ${club.name} a club.`,
+    },
+  }[tab];
+  const ActionIcon = action?.icon;
+  const muted = isDark ? "text-white/55" : "text-[#436850]/75";
+
+  return (
+    <header
+      aria-label={`${club.name} ${content.label.toLowerCase()} header`}
+      data-testid="club-dashboard-workspace-header"
+      className={`mb-5 border-b px-1 pb-5 sm:px-2 sm:pb-6 ${isDark ? "border-white/10 text-white" : "border-[#436850]/15 text-[#12372A]"}`}
+    >
+      <div className="flex items-center gap-4 sm:gap-5">
+        <div className="relative shrink-0 rounded-full p-[2px]" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}66, ${accent})` }}>
+          <div className={`rounded-full p-1 ${isDark ? "bg-[#06130d]" : "bg-white"}`}>
+            <PlayerAvatar username={club.ownerName ?? club.name} name={club.name} avatarUrl={club.avatarUrl ?? undefined} size={72} showBadge={false} />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{club.name}</h1>
+            <span className={`text-xs font-semibold uppercase tracking-[0.12em] ${muted}`}>{content.label}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <span><strong className="font-semibold">{content.primary}</strong></span>
+            <span><strong className="font-semibold">{content.secondary}</strong></span>
+          </div>
+          <p className={`mt-2 max-w-2xl text-sm leading-relaxed ${muted}`}>{content.description}</p>
+        </div>
+        {action && ActionIcon && (
+          <button type="button" onClick={action.onClick} className="hidden h-11 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] sm:inline-flex" style={{ background: accent }}>
+            <ActionIcon className="h-4 w-4" aria-hidden="true" />
+            {action.label}
+          </button>
+        )}
+      </div>
+      {action && ActionIcon && (
+        <button type="button" onClick={action.onClick} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] sm:hidden" style={{ background: accent }}>
+          <ActionIcon className="h-4 w-4" aria-hidden="true" />
+          {action.label}
+        </button>
+      )}
+    </header>
+  );
+}
+
 /** Pill RSVP button with animated state */
 function RSVPButton({
   eventId,
@@ -4109,8 +4193,8 @@ export default function ClubDashboard() {
           <div ref={scrollContainerRef} className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
-                {/* ── CLUB SOCIAL HEADER ─────────────────────────────────── */}
-                {tab !== "album" && (
+                {/* ── OWNER OVERVIEW COVER HEADER ─────────────────────────── */}
+                {tab === "overview" && isOwnerOrDirector && (
                   <section
                     ref={bannerRef}
                     aria-label={`${club.name} club header`}
@@ -4243,6 +4327,41 @@ export default function ClubDashboard() {
                       </>
                     )}
                   </section>
+                )}
+                {(tab === "feed" || tab === "events" || tab === "members") && (
+                  <ClubWorkspaceSocialHeader
+                    club={club}
+                    tab={tab}
+                    memberCount={club.memberCount}
+                    eventCount={upcomingEvents.length}
+                    updateCount={feedEvents.length}
+                    accent={accent}
+                    isDark={isDark}
+                    action={
+                      tab === "events" && isOwnerOrDirector
+                        ? { label: "Create event", icon: Plus, onClick: () => setShowCreateEvent(true) }
+                        : tab === "members" && isOwnerOrDirector
+                          ? {
+                              label: "Invite members",
+                              icon: UserPlus,
+                              onClick: () => {
+                                setShowInvitePanel(true);
+                                void fetchPendingInvites();
+                                window.requestAnimationFrame(() => document.getElementById("club-members-invites")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+                              },
+                            }
+                          : tab === "feed" && isActiveClubMember
+                            ? {
+                                label: "Post update",
+                                icon: MessageSquare,
+                                onClick: () => {
+                                  setAnnouncementComposerExpanded(true);
+                                  window.requestAnimationFrame(() => announcementComposerTextareaRef.current?.focus({ preventScroll: true }));
+                                },
+                              }
+                            : undefined
+                    }
+                  />
                 )}
         <TabTransition tabKey={tab}>
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
@@ -4386,37 +4505,6 @@ export default function ClubDashboard() {
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && eventsFilter !== "leagues" && (
           <div className="space-y-7">
-            <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: isDark ? "#ffffff" : "#15291c", fontFamily: "'Clash Display', sans-serif" }}>Events</h2>
-                <p className="mt-1 text-sm" style={{ color: isDark ? "rgba(255,255,255,0.60)" : "#516555" }}>
-                  {upcomingEvents.length === 1 ? "1 scheduled event" : `${upcomingEvents.length} scheduled events`}
-                </p>
-              </div>
-              {isOwnerOrDirector && (
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowTournamentWizard(true)}
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 sm:w-auto"
-                    style={{ background: accent, borderColor: accent, color: "#0a1a0f", boxShadow: `0 7px 18px ${accent}24`, "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3" } as React.CSSProperties}
-                  >
-                    <GanttChart className="h-4 w-4" aria-hidden="true" />
-                    New tournament
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowMeetupWizard(true)}
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 sm:w-auto"
-                    style={{ background: isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.72)", borderColor: isDark ? "rgba(255,255,255,0.15)" : "#dbe6d9", color: isDark ? "rgba(255,255,255,0.90)" : "#15291c", "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3" } as React.CSSProperties}
-                  >
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Create meetup
-                  </button>
-                </div>
-              )}
-            </section>
-
             {upcomingEvents.length > 0 ? (
               <section aria-label="Scheduled club events" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {upcomingEvents.map((event) => (
@@ -4604,6 +4692,7 @@ export default function ClubDashboard() {
             {/* ── Invite Members panel (owner/director only) ─────────────────── */}
             {isOwnerOrDirector && (
               <div
+                id="club-members-invites"
                 className="rounded-2xl border border-white/08 overflow-hidden"
                 style={{ background: "oklch(0.16 0.05 145)" }}
               >
