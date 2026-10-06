@@ -437,7 +437,8 @@ function QRCodePanel({
         <button
           onClick={() => setProjecting(true)}
           title="Project fullscreen"
-          className={`p-2 rounded-xl transition-colors ${
+          aria-label="Project results QR code fullscreen"
+          className={`min-h-11 min-w-11 p-2 rounded-xl transition-colors ${
             isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-[#ADBC9F]/40 text-[#436850] hover:bg-[#ADBC9F]"
           }`}
         >

@@ -964,7 +964,7 @@ export default function ReportPage() {
   const shareModal = useShareModal();
   const reportUrl =
     typeof window !== "undefined"
-      ? window.location.href
+      ? new URL(`/tournament/${encodeURIComponent(tournamentId)}/report`, window.location.origin).toString()
       : "";
 
   // Loading state — show spinner while fetching full roster from server
