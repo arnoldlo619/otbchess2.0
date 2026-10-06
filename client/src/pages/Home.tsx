@@ -24,10 +24,11 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { TOURNAMENT_WIZARD_ACTIVE_KEY, TournamentWizard } from "@/components/TournamentWizard";
+import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { stripCreateAction } from "@/lib/routeRedirects";
+import { isTournamentWizardActive, setTournamentWizardActive } from "@/lib/tournamentWizardActivity";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 
 import AuthModal from "../components/AuthModal";
@@ -2094,9 +2095,7 @@ function Footer() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
-  const [wizardOpen, setWizardOpen] = useState(() =>
-    typeof window !== "undefined" && window.sessionStorage.getItem(TOURNAMENT_WIZARD_ACTIVE_KEY) === "1"
-  );
+  const [wizardOpen, setWizardOpen] = useState(isTournamentWizardActive);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { theme } = useTheme();
@@ -2107,11 +2106,11 @@ export default function Home() {
   // Active tab state synced with AnimeNavBar via IntersectionObserver.
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
   const openTournamentWizard = useCallback(() => {
-    try { window.sessionStorage.setItem(TOURNAMENT_WIZARD_ACTIVE_KEY, "1"); } catch { /* storage may be unavailable */ }
+    setTournamentWizardActive(true);
     setWizardOpen(true);
   }, []);
   const closeTournamentWizard = useCallback(() => {
-    try { window.sessionStorage.removeItem(TOURNAMENT_WIZARD_ACTIVE_KEY); } catch { /* storage may be unavailable */ }
+    setTournamentWizardActive(false);
     setWizardOpen(false);
   }, []);
 

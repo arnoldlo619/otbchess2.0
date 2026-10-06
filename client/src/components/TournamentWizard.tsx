@@ -73,11 +73,10 @@ import type { Club } from "@/lib/clubRegistry";
 import { ensureTournamentClubEvent } from "@/lib/clubEventRegistry";
 import { DEFAULT_PAYMENT_METHOD_ORDER, type PaymentMethod } from "@/lib/paymentLinks";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
+import { setTournamentWizardActive } from "@/lib/tournamentWizardActivity";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event" | "brackets" | "quads";
-
-export const TOURNAMENT_WIZARD_ACTIVE_KEY = "otb-tournament-wizard-active-v1";
 export function tournamentWizardDraftKey(initialClubId?: string | null): string {
   return `otb-tournament-wizard-draft-v1:${initialClubId ?? "standalone"}`;
 }
@@ -4519,6 +4518,13 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     containerRef: wizardDialogRef,
   });
   useKeyboardScroll(scrollContainerRef, 24);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setTournamentWizardActive(true);
+    return () => setTournamentWizardActive(false);
+  }, [open]);
 
   // Owned clubs for the "Link to Club" dropdown
   const [ownedClubs, setOwnedClubs] = useState<Club[]>([]);

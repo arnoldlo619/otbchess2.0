@@ -4360,7 +4360,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] TypeScript 0 errors
 
 ## ActiveTournamentBanner — Hide on Creation Flow Pages
-- [ ] Suppress ActiveTournamentBanner on tournament creation flow pages (Setup, Bracket, Director setup steps)
+- [x] Suppress ActiveTournamentBanner on tournament creation flow pages (Setup, Bracket, Director setup steps)
 
 ## Rapid + Blitz ELO Ratings
 - [x] Update chess.com ELO fetch to return both rapidElo and blitzElo

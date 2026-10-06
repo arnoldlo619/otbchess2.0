@@ -11,17 +11,28 @@
  * - Shows a live status badge (LIVE / PAUSED / LOBBY) for at-a-glance context.
  * - Re-checks on window focus so returning from another app shows fresh state.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Trophy, ChevronRight, X, Shield, Pause, Clock } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
+import {
+  isTournamentWizardActive,
+  TOURNAMENT_WIZARD_ACTIVITY_EVENT,
+} from "@/lib/tournamentWizardActivity";
 
 export function ActiveTournamentBanner() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [location] = useLocation();
   const activeTournament = useActiveTournament();
+  const [tournamentWizardActive, setTournamentWizardActive] = useState(isTournamentWizardActive);
+
+  useEffect(() => {
+    const syncTournamentWizardActivity = () => setTournamentWizardActive(isTournamentWizardActive());
+    window.addEventListener(TOURNAMENT_WIZARD_ACTIVITY_EVENT, syncTournamentWizardActivity);
+    return () => window.removeEventListener(TOURNAMENT_WIZARD_ACTIVITY_EVENT, syncTournamentWizardActivity);
+  }, []);
 
   const [dismissed, setDismissed] = useState<Set<string>>(() => {
     try {
@@ -36,7 +47,7 @@ export function ActiveTournamentBanner() {
   const isOnTournamentPage =
     location.startsWith("/tournament/") || location.startsWith("/join");
 
-  if (isOnTournamentPage || !activeTournament) return null;
+  if (isOnTournamentPage || tournamentWizardActive || !activeTournament) return null;
 
   // On the landing page, never dismiss — it's the primary navigation aid
   const isLandingPage = location === "/" || location === "";
