@@ -22,6 +22,8 @@ describe("Club Dashboard workspace headers", () => {
     expect(dashboard).toContain('label: "Members"');
     expect(dashboard).toContain('size={72}');
     expect(dashboard).toContain('tracking-[0.12em]');
+    expect(dashboard).toContain("relative mb-6 pb-6 after:absolute after:inset-x-0 after:bottom-0 after:h-px");
+    expect(dashboard).not.toContain("mb-5 border-b px-1 pb-5");
   });
 
   it("keeps one relevant owner or member action in the compact header", () => {
@@ -41,5 +43,6 @@ describe("Club Dashboard workspace headers", () => {
     expect(demo).toContain('data-testid="club-demo-workspace-header"');
     expect(demo).toContain('if (activeTab === "feed" || activeTab === "events" || activeTab === "members")');
     expect(demo).toContain('if (activeTab !== "overview") return null;');
+    expect(demo).toContain("relative mb-6 pb-6 text-white after:absolute after:inset-x-0");
   });
 });

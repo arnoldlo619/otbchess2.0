@@ -271,7 +271,7 @@ function DemoWorkspaceHeader({ activeTab }: { activeTab: Extract<DemoTab, "feed"
   }[activeTab];
 
   return (
-    <header data-testid="club-demo-workspace-header" className="mb-5 border-b border-white/10 px-1 pb-5 text-white sm:px-2 sm:pb-6">
+    <header data-testid="club-demo-workspace-header" className="relative mb-6 pb-6 text-white after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10 after:content-['']">
       <div className="flex items-center gap-4 sm:gap-5">
         <div className="shrink-0 rounded-full bg-[linear-gradient(135deg,#4CAF50,#4CAF5066,#4CAF50)] p-[2px]"><div className="rounded-full bg-[#06130d] p-1"><DemoAvatar initials="OC" tone="#426f45" size="lg" /></div></div>
         <div className="min-w-0 flex-1">

@@ -321,7 +321,7 @@ function ClubWorkspaceSocialHeader({
     <header
       aria-label={`${club.name} ${content.label.toLowerCase()} header`}
       data-testid="club-dashboard-workspace-header"
-      className={`mb-5 border-b px-1 pb-5 sm:px-2 sm:pb-6 ${isDark ? "border-white/10 text-white" : "border-[#436850]/15 text-[#12372A]"}`}
+      className={`relative mb-6 pb-6 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:content-[''] ${isDark ? "text-white after:bg-white/10" : "text-[#12372A] after:bg-[#436850]/15"}`}
     >
       <div className="flex items-center gap-4 sm:gap-5">
         <div className="relative shrink-0 rounded-full p-[2px]" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}66, ${accent})` }}>
