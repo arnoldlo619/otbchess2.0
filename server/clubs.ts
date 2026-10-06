@@ -45,14 +45,18 @@ import {
   clubAlbumPhotoLikes,
   clubAlbumPhotoComments,
   clubFeedAttachments,
+  clubSpeedDatingSessions,
+  clubSpeedDatingParticipants,
+  clubSpeedDatingPairings,
   users,
 } from "../shared/schema";
-import { eq, and, desc, or, sql } from "drizzle-orm";
+import { eq, and, asc, desc, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 import { createClubMeetupRsvpQuestions } from "../shared/rsvpMeetupTemplate";
 import { canonicalizeClubEventType, parseClubEventType } from "../shared/clubEventTypes";
+import { createSpeedDatingRound, getSpeedDatingRoundCapacity } from "../shared/speedDatingPairings";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -1219,10 +1223,87 @@ function serializeClubEvent(row: typeof clubEvents.$inferSelect) {
   return {
     ...row,
     eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
+    speedDatingRounds: row.speedDatingRounds ?? null,
+    speedDatingMinutes: row.speedDatingMinutes ?? null,
     startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
     endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
     createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
     updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+  };
+}
+
+function getSpeedDatingConfig(event: typeof clubEvents.$inferSelect) {
+  const totalRounds = event.speedDatingRounds ?? 4;
+  const minutesPerRound = event.speedDatingMinutes ?? 5;
+  return {
+    totalRounds: Math.max(1, Math.min(12, totalRounds)),
+    minutesPerRound: Math.max(1, Math.min(30, minutesPerRound)),
+  };
+}
+
+function parseSpeedDatingNumber(value: unknown, fallback: number, min: number, max: number): number | null {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) return null;
+  return value;
+}
+
+async function getSpeedDatingAccess(req: Request, res: Response) {
+  const access = await getAuthorizedClub(req, res, req.params.id);
+  if (!access) return null;
+  const [event] = await access.db
+    .select()
+    .from(clubEvents)
+    .where(and(eq(clubEvents.id, req.params.eventId), eq(clubEvents.clubId, access.club.id)))
+    .limit(1);
+
+  if (!event || canonicalizeClubEventType(event.eventType, event.tournamentId) !== "speed_dating") {
+    res.status(404).json({ error: "Speed Dating event not found" });
+    return null;
+  }
+
+  const [membership] = await access.db
+    .select({ role: dbClubMembers.role })
+    .from(dbClubMembers)
+    .where(and(eq(dbClubMembers.clubId, access.club.id), eq(dbClubMembers.userId, access.userId)))
+    .limit(1);
+  const canManage = access.club.ownerId === access.userId || membership?.role === "owner" || membership?.role === "director";
+  return { ...access, event, canManage };
+}
+
+async function serializeSpeedDatingSession(
+  db: Awaited<ReturnType<typeof getDb>>,
+  session: typeof clubSpeedDatingSessions.$inferSelect
+) {
+  const [participants, pairings] = await Promise.all([
+    db.select().from(clubSpeedDatingParticipants)
+      .where(eq(clubSpeedDatingParticipants.sessionId, session.id))
+      .orderBy(asc(clubSpeedDatingParticipants.joinedAt)),
+    db.select().from(clubSpeedDatingPairings)
+      .where(and(eq(clubSpeedDatingPairings.sessionId, session.id), eq(clubSpeedDatingPairings.roundNumber, session.currentRound)))
+      .orderBy(asc(clubSpeedDatingPairings.boardNumber)),
+  ]);
+  const participantById = new Map(participants.map((participant) => [participant.userId, participant]));
+
+  return {
+    id: session.id,
+    clubId: session.clubId,
+    eventId: session.eventId,
+    status: session.status as "active" | "completed",
+    currentRound: session.currentRound,
+    totalRounds: session.totalRounds,
+    minutesPerRound: session.minutesPerRound,
+    currentRoundEndsAt: session.currentRoundEndsAt instanceof Date ? session.currentRoundEndsAt.toISOString() : session.currentRoundEndsAt ? String(session.currentRoundEndsAt) : null,
+    participants: participants.map((participant) => ({
+      userId: participant.userId,
+      displayName: participant.displayName,
+      avatarUrl: participant.avatarUrl ?? null,
+    })),
+    pairings: pairings.map((pairing) => ({
+      id: pairing.id,
+      boardNumber: pairing.boardNumber,
+      white: participantById.get(pairing.whiteUserId) ?? { userId: pairing.whiteUserId, displayName: "Player", avatarUrl: null },
+      black: participantById.get(pairing.blackUserId) ?? { userId: pairing.blackUserId, displayName: "Player", avatarUrl: null },
+    })),
   };
 }
 
@@ -1268,6 +1349,16 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       return;
     }
     const eventType = canonicalizeClubEventType(body.eventType, body.tournamentId);
+    const speedDatingRounds = eventType === "speed_dating"
+      ? parseSpeedDatingNumber(body.speedDatingRounds, 4, 1, 12)
+      : null;
+    const speedDatingMinutes = eventType === "speed_dating"
+      ? parseSpeedDatingNumber(body.speedDatingMinutes, 5, 1, 30)
+      : null;
+    if (eventType === "speed_dating" && (speedDatingRounds === null || speedDatingMinutes === null)) {
+      res.status(400).json({ error: "Speed Dating rounds must be 1–12 and minutes per round must be 1–30" });
+      return;
+    }
     if (body.tournamentId) {
       const [linkedEvent] = await db.select().from(clubEvents)
         .where(eq(clubEvents.tournamentId, body.tournamentId)).limit(1);
@@ -1323,6 +1414,8 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       accentColor: body.accentColor ?? "#4CAF50",
       creatorId: userId, creatorName: body.creatorName ?? "",
       isPublished: 1, eventType,
+      speedDatingRounds,
+      speedDatingMinutes,
       tournamentId: body.tournamentId ?? null,
       recurrence: body.recurrence ?? "none",
       recurrenceSeriesId: body.recurrenceSeriesId ?? null,
@@ -1334,6 +1427,171 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
   } catch (err) {
     logger.error("[clubs] POST /:id/events error:", err);
     res.status(500).json({ error: "Failed to create club event" });
+  }
+});
+
+/** GET /api/clubs/:id/events/:eventId/speed-dating — current shared social round for members. */
+clubsRouter.get("/:id/events/:eventId/speed-dating", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const access = await getSpeedDatingAccess(req, res);
+    if (!access) return;
+    const [session] = await access.db
+      .select()
+      .from(clubSpeedDatingSessions)
+      .where(eq(clubSpeedDatingSessions.eventId, access.event.id))
+      .limit(1);
+
+    res.json({
+      canManage: access.canManage,
+      session: session ? await serializeSpeedDatingSession(access.db, session) : null,
+    });
+  } catch (err) {
+    logger.error("[clubs] GET Speed Dating session error:", err);
+    res.status(500).json({ error: "Failed to fetch Speed Dating session" });
+  }
+});
+
+/** POST /api/clubs/:id/events/:eventId/speed-dating/start — freeze a Going RSVP roster and start round one. */
+clubsRouter.post("/:id/events/:eventId/speed-dating/start", requireFullAuth, async (req: Request, res: Response) => {
+  try {
+    const access = await getSpeedDatingAccess(req, res);
+    if (!access) return;
+    if (!access.canManage) {
+      res.status(403).json({ error: "Only club owners and directors can start Speed Dating" });
+      return;
+    }
+
+    const [existing] = await access.db
+      .select()
+      .from(clubSpeedDatingSessions)
+      .where(eq(clubSpeedDatingSessions.eventId, access.event.id))
+      .limit(1);
+    if (existing) {
+      res.json({ session: await serializeSpeedDatingSession(access.db, existing) });
+      return;
+    }
+
+    const rsvps = await access.db
+      .select()
+      .from(clubEventRsvps)
+      .where(and(
+        eq(clubEventRsvps.clubId, access.club.id),
+        eq(clubEventRsvps.eventId, access.event.id),
+        eq(clubEventRsvps.status, "going")
+      ));
+    const roster = Array.from(new Map(rsvps.map((rsvp) => [rsvp.userId, rsvp])).values());
+    if (roster.length < 2) {
+      res.status(400).json({ error: "At least two members marked Going are needed to start Speed Dating" });
+      return;
+    }
+
+    const sessionId = nanoid(16);
+    const config = getSpeedDatingConfig(access.event);
+    const totalRounds = Math.min(config.totalRounds, getSpeedDatingRoundCapacity(roster.length));
+    const roundEndsAt = new Date(Date.now() + config.minutesPerRound * 60_000);
+    await access.db.insert(clubSpeedDatingSessions).values({
+      id: sessionId,
+      clubId: access.club.id,
+      eventId: access.event.id,
+      status: "active",
+      currentRound: 1,
+      totalRounds,
+      minutesPerRound: config.minutesPerRound,
+      currentRoundEndsAt: roundEndsAt,
+      startedBy: access.userId,
+    });
+    await access.db.insert(clubSpeedDatingParticipants).values(roster.map((rsvp) => ({
+      id: nanoid(16),
+      sessionId,
+      clubId: access.club.id,
+      eventId: access.event.id,
+      userId: rsvp.userId,
+      displayName: rsvp.displayName,
+      avatarUrl: rsvp.avatarUrl ?? null,
+    })));
+    const firstRound = createSpeedDatingRound(roster.map((rsvp) => rsvp.userId), 1);
+    await access.db.insert(clubSpeedDatingPairings).values(firstRound.map((pairing) => ({
+      id: nanoid(16),
+      sessionId,
+      clubId: access.club.id,
+      eventId: access.event.id,
+      roundNumber: 1,
+      boardNumber: pairing.boardNumber,
+      whiteUserId: pairing.whiteUserId,
+      blackUserId: pairing.blackUserId,
+    })));
+    const [created] = await access.db.select().from(clubSpeedDatingSessions)
+      .where(eq(clubSpeedDatingSessions.id, sessionId));
+    broadcastClubEvent(access.club.id, "speed_dating_started", { eventId: access.event.id, sessionId });
+    res.status(201).json({ session: await serializeSpeedDatingSession(access.db, created) });
+  } catch (err) {
+    logger.error("[clubs] POST Speed Dating start error:", err);
+    res.status(500).json({ error: "Failed to start Speed Dating" });
+  }
+});
+
+/** POST /api/clubs/:id/events/:eventId/speed-dating/advance — publish the next persisted pairing round. */
+clubsRouter.post("/:id/events/:eventId/speed-dating/advance", requireFullAuth, async (req: Request, res: Response) => {
+  try {
+    const access = await getSpeedDatingAccess(req, res);
+    if (!access) return;
+    if (!access.canManage) {
+      res.status(403).json({ error: "Only club owners and directors can advance Speed Dating" });
+      return;
+    }
+
+    const [session] = await access.db
+      .select()
+      .from(clubSpeedDatingSessions)
+      .where(eq(clubSpeedDatingSessions.eventId, access.event.id))
+      .limit(1);
+    if (!session) {
+      res.status(404).json({ error: "Start Speed Dating before advancing rounds" });
+      return;
+    }
+    if (session.status === "completed") {
+      res.json({ session: await serializeSpeedDatingSession(access.db, session) });
+      return;
+    }
+
+    const nextRound = session.currentRound + 1;
+    if (nextRound > session.totalRounds) {
+      await access.db.update(clubSpeedDatingSessions)
+        .set({ status: "completed", completedAt: new Date(), currentRoundEndsAt: null })
+        .where(eq(clubSpeedDatingSessions.id, session.id));
+      const [completed] = await access.db.select().from(clubSpeedDatingSessions)
+        .where(eq(clubSpeedDatingSessions.id, session.id));
+      broadcastClubEvent(access.club.id, "speed_dating_completed", { eventId: access.event.id, sessionId: session.id });
+      res.json({ session: await serializeSpeedDatingSession(access.db, completed) });
+      return;
+    }
+
+    const participants = await access.db
+      .select()
+      .from(clubSpeedDatingParticipants)
+      .where(eq(clubSpeedDatingParticipants.sessionId, session.id));
+    const nextPairings = createSpeedDatingRound(participants.map((participant) => participant.userId), nextRound);
+    const roundEndsAt = new Date(Date.now() + session.minutesPerRound * 60_000);
+    await access.db.insert(clubSpeedDatingPairings).values(nextPairings.map((pairing) => ({
+      id: nanoid(16),
+      sessionId: session.id,
+      clubId: access.club.id,
+      eventId: access.event.id,
+      roundNumber: nextRound,
+      boardNumber: pairing.boardNumber,
+      whiteUserId: pairing.whiteUserId,
+      blackUserId: pairing.blackUserId,
+    })));
+    await access.db.update(clubSpeedDatingSessions)
+      .set({ currentRound: nextRound, currentRoundEndsAt: roundEndsAt })
+      .where(eq(clubSpeedDatingSessions.id, session.id));
+    const [advanced] = await access.db.select().from(clubSpeedDatingSessions)
+      .where(eq(clubSpeedDatingSessions.id, session.id));
+    broadcastClubEvent(access.club.id, "speed_dating_round_advanced", { eventId: access.event.id, sessionId: session.id, round: nextRound });
+    res.json({ session: await serializeSpeedDatingSession(access.db, advanced) });
+  } catch (err) {
+    logger.error("[clubs] POST Speed Dating advance error:", err);
+    res.status(500).json({ error: "Failed to advance Speed Dating" });
   }
 });
 
@@ -1351,6 +1609,17 @@ clubsRouter.delete("/:id/events/:eventId", authMiddleware, async (req: Request, 
     const isOwner = club.ownerId === userId;
     const isDirector = membership?.role === "director" || membership?.role === "owner";
     if (!isOwner && !isDirector) { res.status(403).json({ error: "Not authorised" }); return; }
+    const sessions = await db.select({ id: clubSpeedDatingSessions.id })
+      .from(clubSpeedDatingSessions)
+      .where(and(eq(clubSpeedDatingSessions.clubId, id), eq(clubSpeedDatingSessions.eventId, eventId)));
+    if (sessions.length > 0) {
+      const sessionIds = sessions.map((session) => session.id);
+      for (const sessionId of sessionIds) {
+        await db.delete(clubSpeedDatingPairings).where(eq(clubSpeedDatingPairings.sessionId, sessionId));
+        await db.delete(clubSpeedDatingParticipants).where(eq(clubSpeedDatingParticipants.sessionId, sessionId));
+      }
+      await db.delete(clubSpeedDatingSessions).where(eq(clubSpeedDatingSessions.eventId, eventId));
+    }
     await db.delete(clubEvents).where(eq(clubEvents.id, eventId));
     res.json({ success: true });
   } catch (err) {

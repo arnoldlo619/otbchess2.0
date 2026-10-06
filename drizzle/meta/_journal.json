@@ -155,6 +155,13 @@
       "when": 1791270796002,
       "tag": "0021_normalize_club_event_types",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1791271430256,
+      "tag": "0022_club_speed_dating_sessions",
+      "breakpoints": true
     }
   ]
 }

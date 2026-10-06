@@ -3306,11 +3306,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Goal 4b — New Casual Event Types
 
 - [x] Add `eventType` field to ClubEvent: "tournament" | "speed_dating" | "trivia" | "puzzle_relay" | "casual" | "lecture"
-- [ ] Chess Speed Dating event: timed 5-min mini-games, rotating partners, social matching UI
+- [x] Chess Speed Dating event: timed 5-min mini-games, rotating partners, social matching UI
 - [ ] Trivia Night event: question rounds, team scoring, live leaderboard
 - [ ] Puzzle Relay Race event: team-based puzzle solving, relay handoff, timer
 - [x] Event type picker in CreateEventModal with icons and descriptions
-- [ ] Event type badge on event cards
+- [x] Event type badge on event cards
 
 ## Goal 5 — Discover Clubs Page with Trending Showcase Clubs
 

@@ -42,6 +42,7 @@ import {
 } from "@/lib/clubEventRegistry";
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
+import { ClubSpeedDatingSession } from "@/components/club/ClubSpeedDatingSession";
 import { authFetch } from "@/lib/apiFetch";
 import { ClipboardList } from "lucide-react";
 
@@ -88,9 +89,9 @@ export default function MeetupEventPage() {
 
   const isOwnerOrDirector =
     user &&
-    members.some(
+    (club?.ownerId === user.id || members.some(
       (m) => m.userId === user.id && (m.role === "owner" || m.role === "director")
-    );
+    ));
 
   const myRsvp = user && event ? getUserRSVP(event.id, user.id) : null;
   const counts = event ? countRSVPs(event.id) : { going: 0, maybe: 0, not_going: 0 };
@@ -459,7 +460,7 @@ export default function MeetupEventPage() {
                         className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase transition-all duration-200 hover:scale-105"
                         style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.50)" }}
                       >
-                        Club Meetup
+                        {event.eventType === "speed_dating" ? "Speed Dating" : "Club Meetup"}
                       </span>
                     </div>
                     <h1
@@ -588,6 +589,14 @@ export default function MeetupEventPage() {
                           </Link>
                         </div>
                       </div>
+                    )}
+                    {event.eventType === "speed_dating" && (
+                      <ClubSpeedDatingSession
+                        event={event}
+                        viewerId={user?.id}
+                        canManage={Boolean(isOwnerOrDirector)}
+                        accentColor={accentColor}
+                      />
                     )}
                     {/* Check-in action */}
                     {!isOwnerOrDirector && (

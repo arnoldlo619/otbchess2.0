@@ -120,6 +120,37 @@ export interface ClubEventComment {
   createdAt: string;
 }
 
+export interface ClubSpeedDatingParticipant {
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+}
+
+export interface ClubSpeedDatingPairing {
+  id: string;
+  boardNumber: number;
+  white: ClubSpeedDatingParticipant;
+  black: ClubSpeedDatingParticipant;
+}
+
+export interface ClubSpeedDatingSession {
+  id: string;
+  clubId: string;
+  eventId: string;
+  status: "active" | "completed";
+  currentRound: number;
+  totalRounds: number;
+  minutesPerRound: number;
+  currentRoundEndsAt: string | null;
+  participants: ClubSpeedDatingParticipant[];
+  pairings: ClubSpeedDatingPairing[];
+}
+
+export interface ClubSpeedDatingSessionResponse {
+  canManage: boolean;
+  session: ClubSpeedDatingSession | null;
+}
+
 // ── Storage keys ──────────────────────────────────────────────────────────────
 
 const EVENTS_KEY = "otb-club-events-v1";
@@ -164,6 +195,8 @@ function toClubEvent(row: Record<string, unknown>): ClubEvent {
     isPublished: row.isPublished === 1 || row.isPublished === true,
     tournamentId: typeof row.tournamentId === "string" ? row.tournamentId : undefined,
     eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
+    speedDatingRounds: typeof row.speedDatingRounds === "number" ? row.speedDatingRounds : undefined,
+    speedDatingMinutes: typeof row.speedDatingMinutes === "number" ? row.speedDatingMinutes : undefined,
     recurrence: row.recurrence === "weekly" || row.recurrence === "biweekly" || row.recurrence === "monthly" ? row.recurrence : undefined,
     recurrenceSeriesId: typeof row.recurrenceSeriesId === "string" ? row.recurrenceSeriesId : undefined,
     recurrenceEndDate: typeof row.recurrenceEndDate === "string" ? row.recurrenceEndDate : undefined,
@@ -282,6 +315,8 @@ export async function createPersistedClubEvent(
       accentColor: event.accentColor ?? "#4CAF50",
       creatorName: event.creatorName,
       eventType: canonicalizeClubEventType(event.eventType, event.tournamentId),
+      speedDatingRounds: event.speedDatingRounds ?? null,
+      speedDatingMinutes: event.speedDatingMinutes ?? null,
       tournamentId: event.tournamentId ?? null,
       recurrence: event.recurrence ?? "none",
       recurrenceSeriesId: event.recurrenceSeriesId ?? null,
@@ -298,6 +333,35 @@ export async function createPersistedClubEvent(
   events.push(canonicalEvent);
   saveEvents(events);
   return canonicalEvent;
+}
+
+async function readSpeedDatingSessionResponse(response: Response): Promise<ClubSpeedDatingSessionResponse> {
+  if (!response.ok) {
+    const payload = await response.clone().json().catch(() => ({})) as { error?: string };
+    throw new ClubEventPersistenceError(payload.error ?? "Unable to load Speed Dating", response.status);
+  }
+  return response.json() as Promise<ClubSpeedDatingSessionResponse>;
+}
+
+export async function getSpeedDatingSession(clubId: string, eventId: string): Promise<ClubSpeedDatingSessionResponse> {
+  const response = await authFetch(`/api/clubs/${encodeURIComponent(clubId)}/events/${encodeURIComponent(eventId)}/speed-dating`);
+  return readSpeedDatingSessionResponse(response);
+}
+
+export async function startSpeedDatingSession(clubId: string, eventId: string): Promise<ClubSpeedDatingSession> {
+  const response = await authFetch(`/api/clubs/${encodeURIComponent(clubId)}/events/${encodeURIComponent(eventId)}/speed-dating/start`, {
+    method: "POST",
+  });
+  const payload = await readSpeedDatingSessionResponse(response) as ClubSpeedDatingSessionResponse & { session: ClubSpeedDatingSession };
+  return payload.session;
+}
+
+export async function advanceSpeedDatingSession(clubId: string, eventId: string): Promise<ClubSpeedDatingSession> {
+  const response = await authFetch(`/api/clubs/${encodeURIComponent(clubId)}/events/${encodeURIComponent(eventId)}/speed-dating/advance`, {
+    method: "POST",
+  });
+  const payload = await readSpeedDatingSessionResponse(response) as ClubSpeedDatingSessionResponse & { session: ClubSpeedDatingSession };
+  return payload.session;
 }
 
 /**
@@ -330,6 +394,7 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
       coverImageUrl?: string | null; accentColor: string;
       creatorId: string; creatorName: string; isPublished: number;
       eventType: string; tournamentId?: string | null;
+      speedDatingRounds?: number | null; speedDatingMinutes?: number | null;
       recurrence?: string | null; recurrenceSeriesId?: string | null;
       recurrenceEndDate?: string | null;
       createdAt: string; updatedAt: string;
@@ -350,6 +415,8 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
         isPublished: row.isPublished === 1,
         tournamentId: row.tournamentId ?? undefined,
         eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
+        speedDatingRounds: typeof row.speedDatingRounds === "number" ? row.speedDatingRounds : undefined,
+        speedDatingMinutes: typeof row.speedDatingMinutes === "number" ? row.speedDatingMinutes : undefined,
         recurrence: (row.recurrence as ClubEvent["recurrence"]) ?? "none",
         recurrenceSeriesId: row.recurrenceSeriesId ?? undefined,
         recurrenceEndDate: row.recurrenceEndDate ?? undefined,
@@ -439,6 +506,8 @@ export async function createPersistedRecurringEvents(
       admissionNote: seed.admissionNote,
       isPublished: seed.isPublished,
       eventType: seed.eventType,
+      speedDatingRounds: seed.speedDatingRounds,
+      speedDatingMinutes: seed.speedDatingMinutes,
       recurrence,
       recurrenceSeriesId: seriesId,
       recurrenceEndDate: endDate,
@@ -482,6 +551,8 @@ export function createRecurringEvents(
       admissionNote: seed.admissionNote,
       isPublished: seed.isPublished,
       eventType: seed.eventType,
+      speedDatingRounds: seed.speedDatingRounds,
+      speedDatingMinutes: seed.speedDatingMinutes,
       recurrence,
       recurrenceSeriesId: seriesId,
       recurrenceEndDate: endDate,

@@ -1091,6 +1091,9 @@ function CreateEventModal({
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [accentColor, setAccentColor] = useState(clubAccent ?? "#4CAF50");
   const [submitting, setSubmitting] = useState(false);
+  const [selectedEventType, setSelectedEventType] = useState<"casual" | "speed_dating">("casual");
+  const [speedDatingRounds, setSpeedDatingRounds] = useState(4);
+  const [speedDatingMinutes, setSpeedDatingMinutes] = useState(5);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -1127,7 +1130,9 @@ function CreateEventModal({
         creatorId: userId,
         creatorName: displayName,
         isPublished: true,
-        eventType: "casual",
+        eventType: selectedEventType,
+        speedDatingRounds: selectedEventType === "speed_dating" ? speedDatingRounds : undefined,
+        speedDatingMinutes: selectedEventType === "speed_dating" ? speedDatingMinutes : undefined,
       });
       toast.success("Event created!");
       onCreated();
@@ -1310,33 +1315,39 @@ function CreateEventModal({
                 </button>
               </div>
 
-              {/* ── Coming Soon cards: 2-col grid always ── */}
+              {/* ── Social event modes ── */}
               <div className="grid grid-cols-2 gap-3">
 
-                {/* Speed Dating — Coming Soon */}
-                <div
-                  className="relative flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedEventType("speed_dating");
+                    setTitle("Speed Dating Chess Night");
+                    setDescription("Five-minute social chess rounds with a new opponent each time.");
+                    setStep("details");
+                  }}
+                  className="group relative flex flex-col items-start gap-3 overflow-hidden rounded-3xl text-left transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7cf562]"
                   style={{
                     padding: "20px 18px 18px",
-                    background: "rgba(255,255,255,0.04)",
-                    border: "2px solid rgba(255,255,255,0.08)",
+                    background: "rgba(124,245,98,0.08)",
+                    border: "2px solid rgba(124,245,98,0.26)",
                   }}
                 >
                   <span
                     className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-                    style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+                    style={{ background: "rgba(124,245,98,0.18)", color: "#b7ff9e" }}
                   >
-                    Coming Soon
+                    Live rounds
                   </span>
-                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
-                    <Zap className="w-4.5 h-4.5 text-white/40" strokeWidth={1.8} />
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(124,245,98,0.14)" }}>
+                    <Zap className="w-4.5 h-4.5 text-[#b7ff9e]" strokeWidth={1.8} />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-white/50 mb-0.5" style={{ fontFamily: "'Clash Display', sans-serif" }}>Speed Dating</h3>
-                    <p className="text-white/30 text-xs leading-relaxed">Timed round-robin social meetups for your club members.</p>
+                    <h3 className="text-base font-bold text-white mb-0.5" style={{ fontFamily: "'Clash Display', sans-serif" }}>Speed Dating</h3>
+                    <p className="text-white/55 text-xs leading-relaxed">Timed social rounds with shared pairings for everyone.</p>
                   </div>
-                  <Lock className="absolute bottom-4 right-4 w-3.5 h-3.5 text-white/20" />
-                </div>
+                  <ArrowRight className="absolute bottom-4 right-4 h-4 w-4 text-[#b7ff9e] transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </button>
 
                 {/* Trivia Night — Coming Soon */}
                 <div
@@ -1396,7 +1407,7 @@ function CreateEventModal({
     );
   }
 
-  // ── Step 2: Standard Night details form ───────────────────────────────────
+  // ── Step 2: event details form ─────────────────────────────────────────────
   return (
     <div
       ref={dialogRef}
@@ -1435,10 +1446,14 @@ function CreateEventModal({
         {/* Header */}
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: accentColor }}>
-            <Calendar className="w-5 h-5 text-white" />
+            {selectedEventType === "speed_dating" ? <Zap className="w-5 h-5 text-white" /> : <Calendar className="w-5 h-5 text-white" />}
           </div>
-          <h2 id="create-club-event-details-title" className="text-2xl font-black text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h2>
-          <p className="text-white/50 text-sm">Fill in the details for your club event</p>
+          <h2 id="create-club-event-details-title" className="text-2xl font-black text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            {selectedEventType === "speed_dating" ? "Speed Dating" : "Club Event"}
+          </h2>
+          <p className="text-white/50 text-sm">
+            {selectedEventType === "speed_dating" ? "Set the social round format, then publish your event." : "Fill in the details for your club event"}
+          </p>
         </div>
 
         <form onSubmit={submit} className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
@@ -1472,6 +1487,20 @@ function CreateEventModal({
               <input type="time" aria-label="End time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
+
+          {selectedEventType === "speed_dating" && (
+            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-[#7cf562]/20 bg-[#7cf562]/[0.06] p-3">
+              <div>
+                <label className={labelCls}>Rounds</label>
+                <input type="number" min={1} max={12} inputMode="numeric" value={speedDatingRounds} onChange={e => setSpeedDatingRounds(Math.max(1, Math.min(12, Number(e.target.value) || 1)))} className={inputCls} aria-label="Speed Dating rounds" />
+              </div>
+              <div>
+                <label className={labelCls}>Minutes per round</label>
+                <input type="number" min={1} max={30} inputMode="numeric" value={speedDatingMinutes} onChange={e => setSpeedDatingMinutes(Math.max(1, Math.min(30, Number(e.target.value) || 1)))} className={inputCls} aria-label="Minutes per Speed Dating round" />
+              </div>
+              <p className="col-span-2 text-xs leading-relaxed text-white/50">The organizer starts the round from members marked Going. Every round gets a fresh, shared pairing schedule.</p>
+            </div>
+          )}
 
           {/* Venue + Admission */}
           <div className="grid grid-cols-2 gap-3">
