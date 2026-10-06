@@ -5,11 +5,12 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync(resolve(import.meta.dirname, "../client/src/pages/ClubDashboard.tsx"), "utf8");
 
 describe("Club Owner Overview UI contract", () => {
-  it("keeps the three owner quick actions centered in a responsive, touch-safe grid", () => {
+  it("keeps the owner quick actions centered in a responsive, touch-safe grid", () => {
     expect(source).toContain('id="overview-quick-actions"');
-    expect(source).toContain('mx-auto grid max-w-[560px] grid-cols-3');
+    expect(source).toContain('mx-auto grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4');
     expect(source).toContain('label: "New Meetup"');
     expect(source).toContain('label: "Tournament"');
+    expect(source).toContain('label: "Leagues"');
     expect(source).toContain('label: "Post"');
     expect(source).toContain('min-h-12');
   });
@@ -23,11 +24,22 @@ describe("Club Owner Overview UI contract", () => {
     expect(source).toContain('background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)"');
   });
 
+  it("keeps Recent Activity available with a readable empty state for new clubs", () => {
+    expect(source).not.toContain('{feedEvents.length > 0 && (\n              <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity"');
+    expect(source).toContain('{feedEvents.length === 0 ? (');
+    expect(source).toContain('No activity yet');
+    expect(source).toContain('Posts, event updates, and club conversations will appear here.');
+    expect(source).toContain('aria-label="Open the club feed"');
+    expect(source).toContain('min-h-[132px]');
+    expect(source).toContain('sm:min-h-[148px]');
+  });
+
   it("keeps tournament category labels visible and renders a single trophy treatment", () => {
     expect(source).toContain('const activityKind = ev.type === "rsvp_form" ? "Event" : isTournamentActivity ? "Tournaments"');
-    expect(source).toContain('h-[76px] w-[108px]');
-    expect(source).toContain('sm:h-[84px] sm:w-[116px]');
+    expect(source).toContain('h-[96px] w-[116px]');
+    expect(source).toContain('sm:h-[112px] sm:w-[136px]');
     expect(source).toContain('activityTitle?.replace(/^(?:🏆\\s*)+/, "").trim()');
-    expect(source).toContain('<ActivityIcon className="mt-0.5 h-3.5 w-3.5 shrink-0"');
+    expect(source).toContain('>{activityKind}</span>');
+    expect(source).not.toContain('<ActivityIcon className=');
   });
 });

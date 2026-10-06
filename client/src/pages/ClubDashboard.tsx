@@ -4391,15 +4391,28 @@ export default function ClubDashboard() {
             </section>
 
             {/* ── 5. Recent Activity ── */}
-            {feedEvents.length > 0 && (
-              <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
-                <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.46)" }}>Club timeline</p>
-                    <h3 id="recent-club-activity" className="mt-0.5 text-sm font-bold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>Recent Activity</h3>
-                  </div>
-                  <button onClick={() => setTab("feed")} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: accent }}>View all</button>
+            <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
+              <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.46)" }}>Club timeline</p>
+                  <h3 id="recent-club-activity" className="mt-0.5 text-sm font-bold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>Recent Activity</h3>
                 </div>
+                <button onClick={() => setTab("feed")} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: accent }}>View all</button>
+              </div>
+              {feedEvents.length === 0 ? (
+                <div className="flex min-h-[132px] items-center gap-4 px-4 py-5 sm:min-h-[148px] sm:px-5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: `${accent}14`, color: accent }}>
+                    <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold sm:text-base" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#15291c" }}>No activity yet</p>
+                    <p className="mt-1 max-w-md text-sm leading-6" style={{ color: isDark ? "rgba(255,255,255,0.48)" : "rgba(21,41,28,0.56)" }}>Posts, event updates, and club conversations will appear here.</p>
+                  </div>
+                  <button onClick={() => setTab("feed")} className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: accent }} aria-label="Open the club feed">
+                    Open <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
                 <div className="divide-y" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.075)" }}>
                   {feedEvents.slice(0, 4).map(ev => {
                     const imageAttachment = ev.attachments?.find((attachment) => attachment.mimeType.startsWith("image/"));
@@ -4426,8 +4439,8 @@ export default function ClubDashboard() {
                     );
                   })}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
 
 
 

@@ -82,7 +82,7 @@
 - [x] Club Feed: Validate the composer focus treatment and save a checkpoint
 - [x] Club Overview: Center the New Meetup, Tournament, and Post quick actions with touch-safe responsive spacing
 - [x] Club Overview: Redesign Recent Activity as a compact event-led management list with clear event actions
-- [ ] Club Overview: Validate activity-list hierarchy, light/dark appearance, empty states, and mobile layout
+- [x] Club Overview: Validate activity-list hierarchy, light/dark appearance, empty states, and mobile layout
 - [x] Club Home: Redesign the Home tab as a responsive profile-first club destination inspired by the supplied reference
 - [x] Club Home: Add a compact club highlight row and a content-led grid while preserving real club actions and links
 - [x] Club Home: Validate owner and visitor presentation, light/dark appearance, keyboard controls, and mobile layout
