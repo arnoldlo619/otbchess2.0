@@ -133,7 +133,7 @@ export default function ClubMeetupWizard({
         creatorName: displayName,
         accentColor: clubAccent,
         isPublished: true,
-        eventType: "meetup",
+        eventType: "casual",
         recurrence: frequency === "popup" ? "none" : frequency,
         coverImageUrl: coverImageUrl || undefined,
       });

@@ -3305,7 +3305,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Goal 4b — New Casual Event Types
 
-- [ ] Add `eventType` field to ClubEvent: "tournament" | "speed_dating" | "trivia" | "puzzle_relay" | "casual" | "lecture"
+- [x] Add `eventType` field to ClubEvent: "tournament" | "speed_dating" | "trivia" | "puzzle_relay" | "casual" | "lecture"
 - [ ] Chess Speed Dating event: timed 5-min mini-games, rotating partners, social matching UI
 - [ ] Trivia Night event: question rounds, team scoring, live leaderboard
 - [ ] Puzzle Relay Race event: team-based puzzle solving, relay handoff, timer

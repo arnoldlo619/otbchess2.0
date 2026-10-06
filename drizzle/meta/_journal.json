@@ -148,6 +148,13 @@
       "when": 1791195407877,
       "tag": "0020_club_album_photo_social",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1791270796002,
+      "tag": "0021_normalize_club_event_types",
+      "breakpoints": true
     }
   ]
 }

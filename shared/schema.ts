@@ -1282,7 +1282,7 @@ export const clubEvents = mysqlTable(
     creatorId: varchar("creator_id", { length: 64 }).notNull(),
     creatorName: varchar("creator_name", { length: 100 }).notNull().default(""),
     isPublished: tinyint("is_published").notNull().default(1),
-    eventType: varchar("event_type", { length: 30 }).notNull().default("standard"),
+    eventType: varchar("event_type", { length: 30 }).notNull().default("casual"),
     tournamentId: varchar("tournament_id", { length: 100 }),
     // Extended event management fields
     capacity: int("capacity"),

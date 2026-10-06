@@ -516,7 +516,16 @@ function ScheduledEventGalleryCard({
   const detailsHref = isTournament
     ? `/tournament/${event.tournamentId}/play`
     : `/clubs/${event.clubId}/meetup/${event.id}`;
-  const eventType = isTournament ? "Tournament" : event.eventType === "meetup" ? "Meetup" : "Club event";
+  const eventType = isTournament
+    ? "Tournament"
+    : ({
+        casual: "Meetup",
+        speed_dating: "Speed dating",
+        trivia: "Trivia night",
+        puzzle_relay: "Puzzle relay",
+        lecture: "Lecture",
+        tournament: "Tournament",
+      } as const)[event.eventType ?? "casual"];
   const formattedDate = new Date(event.startAt).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
@@ -1118,6 +1127,7 @@ function CreateEventModal({
         creatorId: userId,
         creatorName: displayName,
         isPublished: true,
+        eventType: "casual",
       });
       toast.success("Event created!");
       onCreated();
@@ -5001,7 +5011,7 @@ export default function ClubDashboard() {
             {/* ── ATTENDANCE SUB-TAB ──────────────────────────────────────── */}
             {membersSubTab === "attendance" && isOwnerOrDirector && (() => {
               // Compute attendance data from all meetup events
-              const allMeetups = events.filter(e => e.eventType === "meetup");
+              const allMeetups = events.filter(e => e.eventType === "casual");
               const pastMeetups = allMeetups.filter(e => !isUpcoming(e)).sort(
                 (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
               );

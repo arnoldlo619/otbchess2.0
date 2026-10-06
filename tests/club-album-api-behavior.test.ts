@@ -339,7 +339,7 @@ describe("Club Album API behavior", () => {
       startAt: new Date("2026-10-11T20:00:00.000Z"), endAt: null, venue: null, address: null,
       admissionNote: null, coverImageUrl: "/manus-storage/club-events/club-1/meetup-1/cover.webp",
       accentColor: "#4CAF50", creatorId: "owner-1", creatorName: "Owner", isPublished: 1,
-      eventType: "meetup", tournamentId: null, recurrence: "none", recurrenceSeriesId: null,
+      eventType: "casual", tournamentId: null, recurrence: "none", recurrenceSeriesId: null,
       recurrenceEndDate: null, createdAt: new Date("2026-10-05T00:00:00.000Z"), updatedAt: new Date("2026-10-05T00:00:00.000Z"),
     };
     mocks.storagePut.mockResolvedValue({ key: "club-events/club-1/meetup-1/cover.webp", url: createdEvent.coverImageUrl });
@@ -366,10 +366,12 @@ describe("Club Album API behavior", () => {
     expect(insertValues).toHaveBeenCalledWith(expect.objectContaining({
       id: "meetup-1",
       clubId: "club-1",
+      eventType: "casual",
       coverImageUrl: createdEvent.coverImageUrl,
     }));
     await expect(response.json()).resolves.toEqual(expect.objectContaining({
       id: "meetup-1",
+      eventType: "casual",
       coverImageUrl: createdEvent.coverImageUrl,
     }));
   });
@@ -402,6 +404,24 @@ describe("Club Album API behavior", () => {
     expect(retried.status).toBe(200);
     expect(retryDb.insertValues).not.toHaveBeenCalled();
     await expect(retried.json()).resolves.toEqual(expect.objectContaining({ id: "meetup-retry" }));
+  });
+
+  it("normalizes legacy Club Event types and rejects unsupported values", async () => {
+    const { insertValues } = fakeDb([[publicClub], []]);
+    const rejected = await fetch(`${baseUrl}/api/clubs/club-1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-test-user-id": "owner-1" },
+      body: JSON.stringify({
+        id: "unsupported-event-type",
+        title: "Unsupported event",
+        startAt: "2026-10-11T20:00:00.000Z",
+        eventType: "not-a-club-event",
+      }),
+    });
+
+    expect(rejected.status).toBe(400);
+    await expect(rejected.json()).resolves.toEqual({ error: "Event type is not supported" });
+    expect(insertValues).not.toHaveBeenCalled();
   });
 
   it("returns 404 after a photo row is removed and redirects only while the row exists", async () => {

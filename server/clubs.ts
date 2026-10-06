@@ -52,6 +52,7 @@ import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 import { createClubMeetupRsvpQuestions } from "../shared/rsvpMeetupTemplate";
+import { canonicalizeClubEventType, parseClubEventType } from "../shared/clubEventTypes";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -1187,13 +1188,7 @@ clubsRouter.get("/event/:eventId", async (req: Request, res: Response) => {
     const db = await getDb();
     const [row] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
     if (!row) { res.status(404).json({ error: "Event not found" }); return; }
-    res.json({
-      ...row,
-      startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
-      endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
-      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
-      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
-    });
+    res.json(serializeClubEvent(row));
   } catch (err) {
     logger.error("[clubs] GET /event/:eventId error:", err);
     res.status(500).json({ error: "Failed to fetch event" });
@@ -1210,13 +1205,7 @@ clubsRouter.get("/:id/events", authMiddleware, async (req: Request, res: Respons
       .from(clubEvents)
       .where(eq(clubEvents.clubId, access.club.id))
       .orderBy(desc(clubEvents.startAt));
-    res.json(rows.map((r: typeof clubEvents.$inferSelect) => ({
-      ...r,
-      startAt: r.startAt instanceof Date ? r.startAt.toISOString() : String(r.startAt),
-      endAt: r.endAt instanceof Date ? r.endAt.toISOString() : r.endAt ? String(r.endAt) : null,
-      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
-      updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
-    })));
+    res.json(rows.map(serializeClubEvent));
   } catch (err) {
     logger.error("[clubs] GET /:id/events error:", err);
     res.status(500).json({ error: "Failed to fetch club events" });
@@ -1229,6 +1218,7 @@ const CLUB_EVENT_COVER_DATA_URL = /^data:(image\/(?:jpeg|png|webp));base64,([A-Z
 function serializeClubEvent(row: typeof clubEvents.$inferSelect) {
   return {
     ...row,
+    eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
     startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
     endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
     createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
@@ -1273,6 +1263,11 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       res.status(400).json({ error: "Admission note must be 200 characters or fewer" });
       return;
     }
+    if (body.eventType !== undefined && parseClubEventType(body.eventType) === null) {
+      res.status(400).json({ error: "Event type is not supported" });
+      return;
+    }
+    const eventType = canonicalizeClubEventType(body.eventType, body.tournamentId);
     if (body.tournamentId) {
       const [linkedEvent] = await db.select().from(clubEvents)
         .where(eq(clubEvents.tournamentId, body.tournamentId)).limit(1);
@@ -1327,7 +1322,7 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       coverImageUrl,
       accentColor: body.accentColor ?? "#4CAF50",
       creatorId: userId, creatorName: body.creatorName ?? "",
-      isPublished: 1, eventType: body.eventType ?? "standard",
+      isPublished: 1, eventType,
       tournamentId: body.tournamentId ?? null,
       recurrence: body.recurrence ?? "none",
       recurrenceSeriesId: body.recurrenceSeriesId ?? null,

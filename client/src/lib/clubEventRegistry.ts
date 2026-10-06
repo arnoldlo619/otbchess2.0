@@ -10,6 +10,10 @@
  *   otb-club-event-comments-v1  — array of ClubEventComment objects
  */
 import { ApiError, authFetch } from "@/lib/apiFetch";
+import {
+  canonicalizeClubEventType,
+  type ClubEventType,
+} from "@shared/clubEventTypes";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -54,11 +58,8 @@ export interface ClubEvent {
   admissionNote?: string;
   /** Whether the event is published (visible to members) */
   isPublished: boolean;
-  /**
-   * Optional event type for special formats.
-   * Omit for standard chess night / tournament.
-   */
-  eventType?: "standard" | "speed_dating" | "trivia_night" | "puzzle_relay" | "meetup";
+  /** Canonical activity type; omitted draft payloads default to casual. */
+  eventType?: ClubEventType;
   /** Speed Dating: number of rounds */
   speedDatingRounds?: number;
   /** Speed Dating: minutes per round */
@@ -127,8 +128,19 @@ const COMMENTS_KEY = "otb-club-event-comments-v1";
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
+function withCanonicalEventType(event: ClubEvent): ClubEvent {
+  return {
+    ...event,
+    eventType: canonicalizeClubEventType(event.eventType, event.tournamentId),
+  };
+}
+
 function loadEvents(): ClubEvent[] {
-  try { return JSON.parse(localStorage.getItem(EVENTS_KEY) || "[]"); } catch { return []; }
+  try {
+    const parsed = JSON.parse(localStorage.getItem(EVENTS_KEY) || "[]") as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((event) => withCanonicalEventType(event as ClubEvent));
+  } catch { return []; }
 }
 function saveEvents(events: ClubEvent[]): void {
   try { localStorage.setItem(EVENTS_KEY, JSON.stringify(events)); } catch { /* full */ }
@@ -150,8 +162,8 @@ function toClubEvent(row: Record<string, unknown>): ClubEvent {
     creatorId: String(row.creatorId),
     creatorName: String(row.creatorName ?? ""),
     isPublished: row.isPublished === 1 || row.isPublished === true,
-    eventType: row.eventType === "meetup" ? "meetup" : "standard",
     tournamentId: typeof row.tournamentId === "string" ? row.tournamentId : undefined,
+    eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
     recurrence: row.recurrence === "weekly" || row.recurrence === "biweekly" || row.recurrence === "monthly" ? row.recurrence : undefined,
     recurrenceSeriesId: typeof row.recurrenceSeriesId === "string" ? row.recurrenceSeriesId : undefined,
     recurrenceEndDate: typeof row.recurrenceEndDate === "string" ? row.recurrenceEndDate : undefined,
@@ -178,7 +190,7 @@ export async function ensureTournamentClubEvent(input: TournamentClubEventInput)
         venue: input.venue ?? null,
         accentColor: input.accentColor ?? "#4CAF50",
         creatorName: input.creatorName,
-        eventType: "standard",
+        eventType: "tournament",
         tournamentId: input.tournamentId,
       }),
     });
@@ -269,7 +281,7 @@ export async function createPersistedClubEvent(
       coverImageUrl: event.coverImageUrl ?? null,
       accentColor: event.accentColor ?? "#4CAF50",
       creatorName: event.creatorName,
-      eventType: event.eventType ?? "standard",
+      eventType: canonicalizeClubEventType(event.eventType, event.tournamentId),
       tournamentId: event.tournamentId ?? null,
       recurrence: event.recurrence ?? "none",
       recurrenceSeriesId: event.recurrenceSeriesId ?? null,
@@ -296,7 +308,7 @@ export function createClubEvent(
   data: Omit<ClubEvent, "id" | "createdAt" | "updatedAt">
 ): ClubEvent {
   const now = new Date().toISOString();
-  const event: ClubEvent = { ...data, id: genId(), createdAt: now, updatedAt: now };
+  const event = withCanonicalEventType({ ...data, id: genId(), createdAt: now, updatedAt: now });
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
@@ -336,8 +348,8 @@ export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]>
         accentColor: row.accentColor,
         creatorId: row.creatorId, creatorName: row.creatorName,
         isPublished: row.isPublished === 1,
-        eventType: (row.eventType as ClubEvent["eventType"]) ?? "standard",
         tournamentId: row.tournamentId ?? undefined,
+        eventType: canonicalizeClubEventType(row.eventType, row.tournamentId),
         recurrence: (row.recurrence as ClubEvent["recurrence"]) ?? "none",
         recurrenceSeriesId: row.recurrenceSeriesId ?? undefined,
         recurrenceEndDate: row.recurrenceEndDate ?? undefined,
@@ -362,7 +374,7 @@ export function updateClubEvent(
   const events = loadEvents();
   const idx = events.findIndex((e) => e.id === eventId);
   if (idx === -1) return null;
-  events[idx] = { ...events[idx], ...patch, updatedAt: new Date().toISOString() };
+  events[idx] = withCanonicalEventType({ ...events[idx], ...patch, updatedAt: new Date().toISOString() });
   saveEvents(events);
   return events[idx];
 }

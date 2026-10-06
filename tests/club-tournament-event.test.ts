@@ -37,7 +37,7 @@ describe("Tournament-as-Club-Event integration", () => {
       creatorName: "Test User",
       accentColor: "#4CAF50",
       isPublished: true,
-      eventType: "standard",
+      eventType: "tournament",
       tournamentId: TEST_TOURNAMENT_ID,
     });
     expect(ev.tournamentId).toBe(TEST_TOURNAMENT_ID);
@@ -57,7 +57,7 @@ describe("Tournament-as-Club-Event integration", () => {
       creatorName: "Test User",
       accentColor: "#4CAF50",
       isPublished: true,
-      eventType: "standard",
+      eventType: "tournament",
       tournamentId: TEST_TOURNAMENT_ID,
     });
 
@@ -80,7 +80,7 @@ describe("Tournament-as-Club-Event integration", () => {
       creatorName: "Test User",
       accentColor: "#4CAF50",
       isPublished: true,
-      eventType: "standard",
+      eventType: "tournament",
       tournamentId: TEST_TOURNAMENT_ID,
     });
     const ev2 = createClubEvent({
@@ -92,7 +92,7 @@ describe("Tournament-as-Club-Event integration", () => {
       creatorName: "Test User",
       accentColor: "#4CAF50",
       isPublished: true,
-      eventType: "meetup",
+      eventType: "casual",
     });
 
     // ev1 has tournamentId, ev2 does not
@@ -113,7 +113,7 @@ describe("Tournament-as-Club-Event integration", () => {
       creatorName: "Test User",
       accentColor: "#4CAF50",
       isPublished: true,
-      eventType: "meetup",
+      eventType: "casual",
     });
 
     expect(ev.tournamentId).toBeUndefined();
@@ -130,7 +130,7 @@ describe("Tournament-as-Club-Event integration", () => {
       creatorName: "Test User",
       accentColor: "#4CAF50",
       isPublished: true,
-      eventType: "standard",
+      eventType: "tournament",
       tournamentId: TEST_TOURNAMENT_ID,
     });
     expect(ev.startAt).toBe(futureDate);

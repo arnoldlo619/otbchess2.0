@@ -102,6 +102,25 @@ describe("clubEventRegistry — Events", () => {
     expect(listClubEvents("club-2").length).toBe(1);
   });
 
+  it("normalizes legacy cached event types before returning them to the dashboard", () => {
+    localStorageMock.setItem("otb-club-events-v1", JSON.stringify([{
+      id: "legacy-meetup",
+      clubId: "club-1",
+      title: "Legacy meetup",
+      startAt: "2026-10-12T20:00:00.000Z",
+      creatorId: "user-1",
+      creatorName: "Alice",
+      isPublished: true,
+      eventType: "meetup",
+      createdAt: "2026-10-01T00:00:00.000Z",
+      updatedAt: "2026-10-01T00:00:00.000Z",
+    }]));
+
+    expect(listClubEvents("club-1", true)).toEqual([
+      expect.objectContaining({ id: "legacy-meetup", eventType: "casual" }),
+    ]);
+  });
+
   it("persists a linked tournament event server-side and replaces stale local copies", async () => {
     makeEvent({ id: "stale-event", tournamentId: "spring-open-2026", title: "Stale tournament" });
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
@@ -119,7 +138,7 @@ describe("clubEventRegistry — Events", () => {
       creatorId: "user-1",
       creatorName: "Alice",
       isPublished: 1,
-      eventType: "standard",
+      eventType: "tournament",
       tournamentId: "spring-open-2026",
       recurrence: "none",
       recurrenceSeriesId: null,
