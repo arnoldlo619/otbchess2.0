@@ -2347,7 +2347,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write 41 vitest tests for square_map and FEN generation (squareMapFen.test.ts)
 - [x] All 1,957 tests pass
 - [x] Save checkpoint
-- [ ] Improve corner detection for highly rotated boards (>30°)
+- [x] Improve corner detection for highly rotated boards (>30°)
 
 ## YOLO Model Rotation Augmentation Training
 

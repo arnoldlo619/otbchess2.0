@@ -285,16 +285,27 @@ def extract_corners(mask, orig_w, orig_h):
 
 
 def sort_corners(pts):
-    """Sort 4 corner points into [tl, tr, br, bl] order."""
-    cx = sum(p[0] for p in pts) / 4
-    cy = sum(p[1] for p in pts) / 4
+    """Sort a quadrilateral clockwise, beginning with its visually top-most point.
 
-    tl = min([p for p in pts if p[0] < cx and p[1] < cy], key=lambda p: p[0] + p[1], default=pts[0])
-    tr = min([p for p in pts if p[0] >= cx and p[1] < cy], key=lambda p: -p[0] + p[1], default=pts[1])
-    br = max([p for p in pts if p[0] >= cx and p[1] >= cy], key=lambda p: p[0] + p[1], default=pts[2])
-    bl = min([p for p in pts if p[0] < cx and p[1] >= cy], key=lambda p: p[0] - p[1], default=pts[3])
+    The previous quadrant-based implementation assumed every board corner had a
+    unique relationship to the centroid. At rotations near 45°, the top and
+    bottom vertices sit directly above/below the centroid, which made the
+    fallback branches duplicate a corner and produced a degenerate warp.
 
-    return [tl, tr, br, bl]
+    Image coordinates increase downward, so ordering ``atan2(y - cy, x - cx)``
+    ascending produces a clockwise polygon. Rotating that polygon to its
+    top-most (then left-most) point yields the stable source order expected by
+    ``warp_board``: [top/left, top/right, bottom/right, bottom/left].
+    """
+    if len(pts) != 4:
+        raise ValueError(f"Expected exactly 4 board corners, got {len(pts)}")
+
+    cx = sum(p[0] for p in pts) / len(pts)
+    cy = sum(p[1] for p in pts) / len(pts)
+    clockwise = sorted(pts, key=lambda p: math.atan2(p[1] - cy, p[0] - cx))
+
+    start = min(range(len(clockwise)), key=lambda index: (clockwise[index][1], clockwise[index][0]))
+    return clockwise[start:] + clockwise[:start]
 
 
 # ─── Board Warp ───────────────────────────────────────────────────────────────
