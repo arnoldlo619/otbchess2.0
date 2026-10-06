@@ -40,6 +40,11 @@ describe("Club Feed client contract", () => {
 
   it("uses the Overview-aligned card hierarchy while retaining Feed media and event interactions", () => {
     expect(dashboardSource).toContain("const cardSurface = isDark ? \"oklch(0.155 0.045 145)\" : \"rgba(255,255,255,0.76)\"");
+    expect(dashboardSource).toContain('data-club-feed-post-card={isAnnouncement ? "social" : "event"}');
+    expect(dashboardSource).toContain('const heartReaction = "❤️"');
+    expect(dashboardSource).toContain('toggleReaction(clubId, event.id, heartReaction, userId);');
+    expect(dashboardSource).toContain('await navigator.share({ title: event.actorName || "Club post", text, url });');
+    expect(dashboardSource).toContain('onReactionChanged={refreshFeed}');
     expect(dashboardSource).toContain("const eventKind = event.type === \"tournament_completed\"");
     expect(dashboardSource).toContain("<ClubFeedMediaGallery images={imageAttachments}");
     expect(dashboardSource).toContain("onClick={() => handleRsvp(s)}");

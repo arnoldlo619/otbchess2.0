@@ -69,6 +69,7 @@ import {
   upsertFeedRSVP,
   pinFeedEvent,
   unpinFeedEvent,
+  toggleReaction,
   checkAndCloseExpiredPolls,
   schedulePoll,
   publishScheduledPolls,
@@ -110,6 +111,7 @@ import {
   Check,
   Download,
   Clock,
+  Heart,
   Puzzle,
   UserCheck,
   Zap,
@@ -119,12 +121,11 @@ import {
   Plus,
   Trash2,
   ExternalLink,
-  Share2 as _Share2,
+  Share2,
   ChevronDown,
   ChevronUp,
   X,
   Megaphone,
-  PartyPopper,
   ArrowRight,
   Lock,
   MoreVertical,
@@ -487,7 +488,7 @@ function AttendeeAvatars({ rsvps, max = 7 }: { rsvps: ClubEventRSVP[]; max?: num
   );
 }
 
-/** Scheduled event card — visual language aligned with the /clubs gallery. */
+/** Scheduled event card — cover-led, editorial, and fully clickable. */
 function ScheduledEventGalleryCard({
   event,
   isDark,
@@ -519,6 +520,11 @@ function ScheduledEventGalleryCard({
   const formattedDate = new Date(event.startAt).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
+    day: "numeric",
+  });
+  const dateTimeLabel = new Date(event.startAt).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
     day: "numeric",
   });
   const coverFallback = `linear-gradient(145deg, ${accent} 0%, ${accent}99 44%, ${isDark ? "#102518" : "#1a3521"} 100%)`;
@@ -554,46 +560,54 @@ function ScheduledEventGalleryCard({
 
   return (
     <article
-      className={`group relative overflow-hidden rounded-2xl border transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none ${
+      data-club-event-card="large"
+      className={`group relative overflow-hidden rounded-3xl border transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl motion-reduce:transform-none motion-reduce:transition-none ${
         isDark ? "border-white/10 bg-white/[0.055] hover:border-[#78c86c]/40" : "border-[#dbe6d9] bg-white hover:border-[#78a873]/65"
       }`}
     >
-      <a href={detailsHref} className="absolute inset-0 z-10 cursor-pointer touch-manipulation rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`Open ${event.title} details`}>
+      <a href={detailsHref} className="absolute inset-0 z-10 cursor-pointer touch-manipulation rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`Open ${event.title} details`}>
         <span className="sr-only">Open {event.title} details</span>
       </a>
       <div className="relative z-0 pointer-events-none">
-        <div className="relative aspect-[16/9] overflow-hidden" style={{ background: event.coverImageUrl ? undefined : coverFallback }}>
+        <div className="relative aspect-[16/10] overflow-hidden" style={{ background: event.coverImageUrl ? undefined : coverFallback }}>
           {event.coverImageUrl ? (
-            <img src={event.coverImageUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025]" loading="lazy" decoding="async" />
+            <img src={event.coverImageUrl} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transition-none" loading="lazy" decoding="async" />
           ) : (
             <>
               <div className="absolute inset-0 chess-board-bg opacity-[0.15]" aria-hidden="true" />
-              {isTournament ? <Trophy className="absolute bottom-4 right-4 h-12 w-12 text-white/25" strokeWidth={1.5} aria-hidden="true" /> : <Calendar className="absolute bottom-4 right-4 h-12 w-12 text-white/25" strokeWidth={1.5} aria-hidden="true" />}
+              {isTournament ? <Trophy className="absolute bottom-5 right-5 h-14 w-14 text-white/25" strokeWidth={1.5} aria-hidden="true" /> : <Calendar className="absolute bottom-5 right-5 h-14 w-14 text-white/25" strokeWidth={1.5} aria-hidden="true" />}
             </>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" aria-hidden="true" />
-          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-[#17321d] shadow-sm">{formattedDate}</span>
-          <span className="absolute bottom-3 left-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white/78">{eventType}</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/16 to-black/5" aria-hidden="true" />
+          <time dateTime={event.startAt} aria-label={dateTimeLabel} className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#17321d] shadow-sm sm:left-5 sm:top-5">
+            {formattedDate}
+          </time>
+          <span className="absolute bottom-4 left-4 rounded-full border border-white/20 bg-black/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm sm:bottom-5 sm:left-5">{eventType}</span>
         </div>
 
-      <div className="p-4">
+      <div className="flex min-h-[184px] flex-col p-5 sm:min-h-[198px] sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className={`truncate text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <h3 className={`line-clamp-2 text-xl font-bold leading-[1.12] tracking-tight sm:text-2xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
               {event.title}
             </h3>
-            <p className={`mt-1 text-sm ${textMuted}`}>{formatEventTime(event.startAt, event.endAt)}</p>
+            <p className={`mt-2 flex items-center gap-1.5 text-sm font-medium ${textMuted}`}>
+              <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {formatEventTime(event.startAt, event.endAt)}
+            </p>
           </div>
-          <ArrowRight className={`mt-0.5 h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 ${isDark ? "text-white/45" : "text-[#5d7560]"}`} aria-hidden="true" />
+          <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-transform duration-200 group-hover:translate-x-1 ${isDark ? "border-white/10 bg-white/[0.06] text-white/72" : "border-[#d9e5d7] bg-[#f7fbf6] text-[#31533a]"}`} aria-hidden="true">
+            <ArrowRight className="h-4 w-4" />
+          </span>
         </div>
 
         {event.venue && (
-          <p className={`mt-2 flex min-w-0 items-center gap-1.5 truncate text-sm ${textMuted}`}>
+          <p className={`mt-3 flex min-w-0 items-center gap-1.5 truncate text-sm ${textMuted}`}>
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="truncate">{event.venue}</span>
           </p>
         )}
-        {event.description && <p className={`mt-2 line-clamp-2 text-sm leading-5 ${textMuted}`}>{event.description}</p>}
+        {event.description && <p className={`mt-3 line-clamp-2 text-sm leading-5 ${textMuted}`}>{event.description}</p>}
         </div>
       </div>
 
@@ -1725,8 +1739,6 @@ function EditEventModal({
   );
 }
 
-// ── Feed event icon ───────────────────────────────────────────────────────────
-
 // ── FeedCard (rich interactive card for poll / rsvp_form / announcement) ──────
 
 export function FeedCard({
@@ -1745,6 +1757,7 @@ export function FeedCard({
   onUnpin,
   onVoted,
   onRsvped,
+  onReactionChanged,
 }: {
   event: FeedEvent;
   accent: string;
@@ -1761,6 +1774,7 @@ export function FeedCard({
   onUnpin: (id: string) => void;
   onVoted: () => void;
   onRsvped: () => void;
+  onReactionChanged?: () => void;
 }) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryStartIndex, setGalleryStartIndex] = useState(0);
@@ -1791,6 +1805,10 @@ export function FeedCard({
   const completedResultAccent = isDark ? "oklch(0.84 0.15 80)" : "oklch(0.45 0.13 80)";
   const completedResultDateSurface = isDark ? "oklch(0.25 0.08 80 / 0.46)" : "oklch(0.90 0.08 80 / 0.58)";
   const completedResultBorder = isDark ? "oklch(0.62 0.12 80 / 0.42)" : "oklch(0.55 0.12 80 / 0.44)";
+  const isAnnouncement = event.type === "announcement";
+  const heartReaction = "❤️";
+  const likeCount = Object.keys(event.reactions?.[heartReaction] ?? {}).length;
+  const likedByCurrentUser = Boolean(userId && event.reactions?.[heartReaction]?.[userId]);
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId) return;
@@ -1804,9 +1822,36 @@ export function FeedCard({
     onRsvped();
   }
 
+  function handleLike() {
+    if (!userId) return;
+    toggleReaction(clubId, event.id, heartReaction, userId);
+    onReactionChanged?.();
+  }
+
+  async function handleShare() {
+    const url = event.linkHref ? new URL(event.linkHref, window.location.origin).toString() : window.location.href;
+    const text = event.detail ?? event.description;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: event.actorName || "Club post", text, url });
+        return;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
+    }
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(`${text}\n${url}`.trim());
+      toast.success("Post link copied");
+    } catch {
+      toast.error("Unable to share this post");
+    }
+  }
+
   return (
     <article
-      className={`group overflow-hidden rounded-2xl border transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px ${
+      data-club-feed-post-card={isAnnouncement ? "social" : "event"}
+      className={`group overflow-hidden rounded-3xl border transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px motion-reduce:transform-none motion-reduce:transition-none ${
         event.isPinned
           ? "border-amber-500/30 shadow-[0_0_0_1px_oklch(0.78_0.15_80_/_0.15)]"
           : "hover:border-white/[0.13] dark:hover:border-white/[0.13]"
@@ -1824,7 +1869,7 @@ export function FeedCard({
           <span className="text-amber-400 text-[10px] font-bold uppercase tracking-widest">Pinned Post</span>
         </div>
       )}
-      <div className="flex items-start gap-3 border-b px-4 py-3.5" style={{ borderColor: dividerBorder }}>
+      <div className="flex items-start gap-3 px-5 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
         {event.type === "tournament_completed" ? (
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border px-1.5 text-center text-[11px] font-black leading-tight"
@@ -1833,22 +1878,25 @@ export function FeedCard({
             {formatTournamentResultDate(event.createdAt)}
           </div>
         ) : (
-          <FeedIcon type={event.type} />
+          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full ring-1 ring-black/5 dark:ring-white/10">
+            <PlayerAvatar username={event.actorChesscomUsername ?? event.actorName} name={event.actorName} avatarUrl={event.actorAvatarUrl ?? undefined} size={44} className="h-full w-full object-cover" />
+          </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-2 flex-wrap">
             {event.type === "tournament_completed" ? (
               <h2 className="text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: completedResultAccent }}>{formatTournamentResultFeedTitle(event.tournamentName)}</h2>
             ) : (
-              <h2 className="text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: primaryText }}>{event.actorName}</h2>
+              <h2 className="text-[15px] font-bold leading-5 sm:text-base" style={{ color: primaryText }}>{event.actorName}</h2>
             )}
-            {event.type !== "tournament_completed" && <span className="pt-0.5 text-xs sm:pt-1" style={{ color: mutedText }}>{timeAgo(event.createdAt)}</span>}
           </div>
           {event.type !== "tournament_completed" && (
-            <div className="mt-1 flex items-center gap-1.5 text-xs sm:text-sm" style={{ color: secondaryText }}>
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs" style={{ color: secondaryText }}>
               <span className="font-medium">{eventKind}</span>
-              {event.description && (
-              <><span aria-hidden="true" style={{ color: mutedText }}>·</span><span className="truncate">{event.description}</span></>
+              <span aria-hidden="true" style={{ color: mutedText }}>·</span>
+              <time dateTime={event.createdAt} className="shrink-0">{timeAgo(event.createdAt)}</time>
+              {!isAnnouncement && event.description && (
+                <><span aria-hidden="true" style={{ color: mutedText }}>·</span><span className="truncate">{event.description}</span></>
               )}
             </div>
           )}
@@ -1856,12 +1904,13 @@ export function FeedCard({
             <p className="mt-1 text-xs sm:text-sm" style={{ color: secondaryText }}>{event.tournamentFormat}{event.tournamentPlayerCount ? ` · ${event.tournamentPlayerCount} players` : ""}</p>
           )}
         </div>
-        <div className="flex items-center gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+        <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
           {canPin && (
             <button
               onClick={() => event.isPinned ? onUnpin(event.id) : onPin(event.id)}
               title={event.isPinned ? "Unpin post" : "Pin to top"}
-              className={`p-1.5 rounded-lg transition-colors ${
+              aria-label={event.isPinned ? "Unpin post" : "Pin to top"}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                 event.isPinned
                   ? "text-amber-400 hover:bg-amber-500/10"
                   : "text-white/20 hover:text-amber-400 hover:bg-amber-500/10"
@@ -1873,7 +1922,7 @@ export function FeedCard({
           {canDelete && (
             <button
               onClick={() => onDelete(event.id)}
-              className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/20 hover:text-red-400 transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-red-500/10 text-white/20 hover:text-red-400 transition-colors"
               title="Delete post"
               aria-label="Delete post"
             >
@@ -1883,7 +1932,7 @@ export function FeedCard({
         </div>
       </div>
       {!isPoll && !isRsvp && event.type === "tournament_completed" && (
-        <div className="px-4 pb-4 pt-3.5">
+        <div className="px-5 pb-5 pt-2 sm:px-6 sm:pb-6">
           {/* Visual podium card — mirrors the Instagram carousel slide aesthetic */}
           <div
             className="rounded-2xl overflow-hidden relative"
@@ -1965,16 +2014,16 @@ export function FeedCard({
         </div>
       )}
       {!isPoll && !isRsvp && event.type !== "tournament_completed" && (event.detail || imageAttachments.length > 0 || documentAttachments.length > 0) && (
-        <div className="px-4 pb-4 pt-3.5">
+        <div className="px-5 pb-4 pt-1 sm:px-6 sm:pb-5">
           {event.detail && (event.type === "announcement"
-            ? <div style={{ color: secondaryText }}><ClubFeedRichText value={event.detail} accent={accent} className="text-sm" /></div>
+            ? <div style={{ color: primaryText }}><ClubFeedRichText value={event.detail} accent={accent} className="text-[15px] leading-7 sm:text-base" /></div>
             : <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: secondaryText }}>{event.detail}</p>
           )}
           {imageAttachments.length > 0 && (
-            <div className={`mt-3 grid gap-2 ${imageAttachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+            <div className={`mt-4 grid gap-2 ${imageAttachments.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
               {imageAttachments.map((attachment, index) => (
-                <button key={attachment.id} type="button" onClick={() => { setGalleryStartIndex(index); setGalleryOpen(true); }} className="group/image relative overflow-hidden rounded-xl border border-white/10 bg-black/20 text-left focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
-                  <img loading="lazy" decoding="async" src={attachment.url} alt={attachment.fileName || "Club Feed image attachment"} className="aspect-[4/3] w-full object-cover transition duration-200 group-hover/image:scale-[1.02]" />
+                <button key={attachment.id} type="button" onClick={() => { setGalleryStartIndex(index); setGalleryOpen(true); }} className="group/image relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 text-left focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+                  <img loading="lazy" decoding="async" src={attachment.url} alt={attachment.fileName || "Club Feed image attachment"} className={`${imageAttachments.length === 1 ? "aspect-[16/10]" : "aspect-[4/3]"} w-full object-cover transition duration-200 group-hover/image:scale-[1.02] motion-reduce:transition-none`} />
                   <span className="sr-only">Open {attachment.fileName} in gallery</span>
                 </button>
               ))}
@@ -1996,6 +2045,32 @@ export function FeedCard({
               {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
             </a>
           )}
+        </div>
+      )}
+      {isAnnouncement && (
+        <div className="flex items-center gap-1 border-t px-3 py-2.5 sm:px-4" style={{ borderColor: dividerBorder }}>
+          <button
+            type="button"
+            onClick={handleLike}
+            disabled={!userId}
+            aria-label={likedByCurrentUser ? "Unlike post" : "Like post"}
+            aria-pressed={likedByCurrentUser}
+            className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-45 ${likedByCurrentUser ? "text-rose-500" : "hover:bg-black/[0.045] dark:hover:bg-white/[0.07]"}`}
+            style={{ color: likedByCurrentUser ? undefined : secondaryText, outlineColor: accent }}
+          >
+            <Heart className={`h-[18px] w-[18px] ${likedByCurrentUser ? "fill-current" : ""}`} aria-hidden="true" />
+            <span>{likedByCurrentUser ? "Liked" : "Like"}{likeCount > 0 ? ` ${likeCount}` : ""}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label="Share post"
+            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors hover:bg-black/[0.045] focus-visible:outline-none focus-visible:ring-2 dark:hover:bg-white/[0.07]"
+            style={{ color: secondaryText, outlineColor: accent }}
+          >
+            <Share2 className="h-[18px] w-[18px]" aria-hidden="true" />
+            <span>Share</span>
+          </button>
         </div>
       )}
       {isPoll && event.pollOptions && (
@@ -2384,33 +2459,6 @@ export function FeedCard({
     </article>
   );
 }
-
-function FeedIcon({ type }: { type: FeedEvent["type"] }) {
-  const map: Record<FeedEvent["type"], React.ReactNode> = {
-    member_join:           <UserCheck className="w-4 h-4 text-[#4CAF50]" />,
-    member_leave:          <X className="w-4 h-4 text-red-400" />,
-    tournament_created:    <Trophy className="w-4 h-4 text-amber-400" />,
-    tournament_completed:  <Star className="w-4 h-4 text-amber-400" />,
-    announcement:          <Megaphone className="w-4 h-4 text-blue-400" />,
-    club_founded:          <PartyPopper className="w-4 h-4 text-purple-400" />,
-    poll:                  <BarChart2 className="w-4 h-4 text-[#4CAF50]" />,
-    rsvp_form:             <ClipboardList className="w-4 h-4 text-blue-400" />,
-    poll_result:           <Award className="w-4 h-4 text-amber-400" />,
-    battle_result:         <Swords className="w-4 h-4 text-orange-400" />,
-    leaderboard_snapshot:  <Trophy className="w-4 h-4 text-amber-400" />,
-    potm_announcement:      <Crown className="w-4 h-4 text-amber-400" />,
-    event_created:           <Calendar className="w-4 h-4 text-green-400" />,
-  };
-  return (
-    <div
-      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-      style={{ background: "rgba(255,255,255,0.07)" }}
-    >
-      {map[type]}
-    </div>
-  );
-}
-
 // ── Role badge ────────────────────────────────────────────────────────────────
 
 function RoleBadge({ role }: { role: ClubMember["role"] }) {
@@ -4501,7 +4549,7 @@ export default function ClubDashboard() {
         {tab === "events" && eventsFilter !== "leagues" && (
           <div className="space-y-7">
             {upcomingEvents.length > 0 ? (
-              <section aria-label="Scheduled club events" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <section aria-label="Scheduled club events" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-2 xl:gap-6">
                 {upcomingEvents.map((event) => (
                   <ScheduledEventGalleryCard
                     key={event.id}
@@ -5226,6 +5274,7 @@ export default function ClubDashboard() {
                       onUnpin={handleUnpinFeedEvent}
                       onVoted={refreshFeed}
                       onRsvped={refreshFeed}
+                      onReactionChanged={refreshFeed}
                     />
                   ))}
               </div>

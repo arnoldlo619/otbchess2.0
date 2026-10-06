@@ -27,12 +27,14 @@ import {
   ChevronRight,
   Eye,
   FolderLock,
+  Heart,
   Image as ImageIcon,
   MapPin,
   Menu,
   MessageSquare,
   MoreHorizontal,
   Plus,
+  Share2,
   Settings2,
   Trophy,
   Users,
@@ -380,25 +382,36 @@ function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
 function DemoFeed() {
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border p-4" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
+      <section className="rounded-3xl border p-4 sm:p-5" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
         <div className="flex items-center gap-3">
           <DemoAvatar initials="MC" tone="#a77925" size="sm" />
-          <button type="button" className="min-h-11 flex-1 rounded-xl border border-white/9 bg-white/[0.035] px-3 text-left text-sm text-white/38 transition-colors hover:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">Share with your club</button>
+          <button type="button" className="min-h-11 flex-1 rounded-2xl border border-white/9 bg-white/[0.035] px-4 text-left text-sm text-white/38 transition-colors hover:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">Share with your club</button>
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-white/[0.065] pt-3"><span className="text-xs text-white/34">Read-only example composer</span><FolderLock className="h-4 w-4" style={{ color: DEMO_ACCENT }} aria-hidden="true" /></div>
       </section>
-      <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
-        <header className="border-b px-4 py-3.5 sm:px-5" style={{ borderColor: "rgba(255,255,255,0.065)" }}><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club timeline</p><h2 className="mt-0.5 text-sm font-bold text-white/92">Club Feed</h2></header>
-        <div className="divide-y divide-white/[0.065]">
-          {DEMO_ACTIVITY.map(({ title, byline, date, avatarSrc, avatarLabel }) => (
-            <article key={title} className="flex gap-3 px-4 py-4 sm:gap-4 sm:px-5">
+      <div aria-label="Club Feed" className="space-y-4">
+        {DEMO_ACTIVITY.map(({ type, title, byline, date, avatarSrc, avatarLabel }) => (
+          <article key={title} data-demo-feed-card="social" className="overflow-hidden rounded-3xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
+            <div className="flex items-start gap-3 px-5 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
               <DemoChessComAvatar src={avatarSrc} label={avatarLabel} />
-              <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="text-sm font-bold text-white/92">{byline.replace("By ", "")}</span><span className="text-xs text-white/38">{date}</span></div><h3 className="mt-1.5 text-base font-bold text-white/92">{title}</h3><p className="mt-1.5 text-sm leading-6 text-white/50">This sample post demonstrates the same card hierarchy and member-only context as a live Club Feed.</p><div className="mt-3 flex items-center gap-2 text-xs font-semibold" style={{ color: DEMO_ACCENT }}><FolderLock className="h-3.5 w-3.5" aria-hidden="true" />Visible to club members</div></div>
-              <MoreHorizontal className="h-5 w-5 shrink-0 text-white/35" aria-hidden="true" />
-            </article>
-          ))}
-        </div>
-      </section>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="text-[15px] font-bold text-white/92 sm:text-base">{byline.replace("By ", "")}</span></div>
+                <p className="mt-0.5 text-xs text-white/46">{type} <span aria-hidden="true">·</span> {date}</p>
+              </div>
+              <button type="button" aria-label={`Post options for ${title}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/38 transition-colors hover:bg-white/[0.07] hover:text-white/75 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"><MoreHorizontal className="h-5 w-5" aria-hidden="true" /></button>
+            </div>
+            <div className="px-5 pb-4 pt-1 sm:px-6 sm:pb-5">
+              <h2 className="text-[15px] font-bold leading-7 text-white sm:text-base">{title}</h2>
+              <p className="mt-2 text-[15px] leading-7 text-white/62 sm:text-base">This sample post demonstrates the same member-first card hierarchy, media rhythm, and secure club context as a live Club Feed.</p>
+              <div className="mt-3 flex items-center gap-2 text-xs font-semibold" style={{ color: DEMO_ACCENT }}><FolderLock className="h-3.5 w-3.5" aria-hidden="true" />Visible to club members</div>
+            </div>
+            <div className="flex items-center gap-1 border-t px-3 py-2.5 sm:px-4" style={{ borderColor: "rgba(255,255,255,0.065)" }}>
+              <button type="button" disabled aria-label="Like post in read-only demo" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-white/46"><Heart className="h-[18px] w-[18px]" aria-hidden="true" />Like</button>
+              <button type="button" disabled aria-label="Share post in read-only demo" className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-white/46"><Share2 className="h-[18px] w-[18px]" aria-hidden="true" />Share</button>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

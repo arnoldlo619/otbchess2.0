@@ -32,7 +32,7 @@ describe("private Club workspace model", () => {
     expect(demo).toContain('data-testid="club-demo-full-bleed-banner"');
     expect(demo).toContain('className="pointer-events-none absolute inset-0 z-0 bg-cover bg-[center_30%]"');
     expect(demo).toContain('className="relative z-10 h-[108px] sm:h-[144px]"');
-    expect(demo).toContain("Private club");
+    expect(demo).not.toContain("Private club");
     expect(demo).not.toContain("Harbor");
     expect(demo).not.toContain("/api/clubs");
   });
@@ -56,6 +56,10 @@ describe("private Club workspace model", () => {
     expect(demoFeed).not.toContain("icon: Icon");
     expect(demo).toContain('alt={`${label} Chess.com profile avatar`}');
     expect(demo).toContain("onError={() => setFailed(true)}");
+    expect(demoFeed).toContain('data-demo-feed-card="social"');
+    expect(demoFeed).toContain('aria-label="Club Feed"');
+    expect(demoFeed).toContain("Like post in read-only demo");
+    expect(demoFeed).toContain("Share post in read-only demo");
   });
 
   it("renders only personal memberships in the Club index", () => {

@@ -40,16 +40,27 @@ function renderCard(event: Partial<FeedEvent>) {
 afterEach(cleanup);
 
 describe("Club Feed Overview-aligned card variants", () => {
-  it("renders the structured metadata hierarchy for announcements and secure image attachments", () => {
+  it("renders the social post hierarchy, real action rail, and secure image attachments", () => {
     renderCard({
       detail: "Friday night blitz is open.",
       attachments: [{ id: "attachment-1", mimeType: "image/webp", fileName: "blitz.webp", url: "/secure/blitz.webp" }],
     });
 
     expect(screen.getByText("Arnold")).toBeTruthy();
-    expect(screen.getAllByText("Club update")).toHaveLength(2);
+    expect(screen.getByText("Club update")).toBeTruthy();
     expect(screen.getByText("Friday night blitz is open.")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Open blitz\.webp in gallery/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Like post" }).getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByRole("button", { name: "Share post" })).toBeTruthy();
+  });
+
+  it("reflects a persisted current-user like without introducing an unbacked save action", () => {
+    renderCard({
+      reactions: { "❤️": { "member-1": true, "member-2": true } },
+    });
+
+    expect(screen.getByRole("button", { name: "Unlike post" }).textContent).toContain("Liked 2");
+    expect(screen.queryByRole("button", { name: /Save post/i })).toBeNull();
   });
 
   it("retains poll and RSVP card controls through the visual-system update", () => {
