@@ -74,6 +74,7 @@ import { HeroDashboardMockup } from "@/components/ui/HeroDashboardMockup";
 import { AsciiArt } from "@/components/ui/d60-hero";
 import { PatternText } from "@/components/ui/pattern-text";
 import { normalizePlatformStats } from "@/lib/platformStats";
+import { useLeagueWorkspaceNavigation } from "@/lib/leagueWorkspaceNavigation";
 
 const LIVE_TOURNAMENT_DEMO_PATH = "/tournament/otb-demo-2026/manage";
 
@@ -2101,23 +2102,8 @@ export default function Home() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
-  // League smart routing: fetch user's leagues to pick the best destination
-  interface MyLeague { id: string; name: string; status: string; }
-  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
   const isGuest = !user || user.isGuest;
-  useEffect(() => {
-    if (isGuest) { setMyLeagues([]); return; }
-    fetch("/api/leagues/mine", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: MyLeague[]) => setMyLeagues(Array.isArray(data) ? data : []))
-      .catch(() => setMyLeagues([]));
-  }, [isGuest]);
-  const leagueNavUrl = (() => {
-    if (!myLeagues.length) return "/league-demo";
-    const active = myLeagues.find((l) => l.status === "active");
-    const target = active ?? myLeagues[0];
-    return `/league/${target.id}`;
-  })();
+  const { leagueWorkspaceUrl: leagueNavUrl, refreshLeagueWorkspaceUrl } = useLeagueWorkspaceNavigation(user);
   // Active tab state synced with AnimeNavBar via IntersectionObserver.
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
   const openTournamentWizard = useCallback(() => {
@@ -2195,7 +2181,7 @@ export default function Home() {
   const navItems = [
     { name: "Clubs",       url: "/clubs",         icon: Building2,      sectionId: "for-clubs" },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
-    { name: "League",      url: leagueNavUrl,    icon: Trophy,         tooltip: myLeagues.length ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name) : "View League Demo", onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
+    { name: "League",      url: leagueNavUrl,    icon: Trophy,         tooltip: isGuest ? "View League Demo" : "Open your Club Leagues", onClick: async (e: React.MouseEvent) => { e.preventDefault(); window.location.href = await refreshLeagueWorkspaceUrl(); } },
     { name: "Tools",    url: "/training",     icon: GraduationCap },
   ];
 
@@ -2222,6 +2208,7 @@ export default function Home() {
           onSignOutClick={!isGuestUser ? logout : undefined}
           isGuest={isGuestUser}
           user={user}
+          leagueUrl={leagueNavUrl}
         />
       </div>
       {/* Desktop: full avatar dropdown (hidden on mobile to avoid overflow) */}

@@ -99,11 +99,9 @@ describe("Leagues server auth middleware", () => {
     expect(leaguesServerCode).toMatch(/leaguesRouter\.get\("\/:leagueId\/invites",\s*requireAuth/);
   });
 
-  // Public GET endpoints should NOT have requireAuth
-  it("keeps GET /club/:clubId public (no requireAuth)", () => {
-    const match = leaguesServerCode.match(/leaguesRouter\.get\("\/club\/:clubId"(.*?)\)/s);
-    expect(match).toBeTruthy();
-    expect(match![1]).not.toContain("requireAuth");
+  // Public GET endpoints should NOT have requireAuth, except Club workspaces.
+  it("requires membership for GET /club/:clubId", () => {
+    expect(leaguesServerCode).toMatch(/leaguesRouter\.get\("\/club\/:clubId",\s*requireAuth/);
   });
 
   it("keeps GET /:leagueId public (no requireAuth)", () => {

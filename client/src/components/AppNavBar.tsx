@@ -29,6 +29,7 @@ import { DashboardDropdown } from "@/components/DashboardDropdown";
 import { LeagueDropdown } from "@/components/LeagueDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { MobileNavDrawer } from "@/components/MobileNavDrawer";
+import { useLeagueWorkspaceNavigation } from "@/lib/leagueWorkspaceNavigation";
 
 const LOGO_URL =
   "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
@@ -83,10 +84,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   const { user, logout } = useAuthContext();
   const [activeTab, setActiveTab] = useState(defaultActive);
   const activeTournament = useActiveTournament();
-
-  // League header button always goes to the feature overview page (/league).
-  // The dropdown lets users jump directly to their personal league dashboards.
-  const leagueNavUrl = "/league";
+  const { leagueWorkspaceUrl: leagueNavUrl, refreshLeagueWorkspaceUrl } = useLeagueWorkspaceNavigation(user);
 
   const dashboardUrl     = getDashboardUrl();
   const dashboardTooltip = getDashboardTooltip();
@@ -118,11 +116,11 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     { name: "League",
       url: leagueNavUrl,
       icon: LeaguesIcon,
-      tooltip: "OTB Leagues — how it works",
+      tooltip: "Open your Club Leagues",
       dropdown: <LeagueDropdown />,
-      onClick: (e: React.MouseEvent) => {
+      onClick: async (e: React.MouseEvent) => {
         e.preventDefault();
-        window.location.href = leagueNavUrl;
+        window.location.href = await refreshLeagueWorkspaceUrl();
       },
     },
     { name: "Tools", url: "/training", icon: AcademyIcon },
@@ -158,6 +156,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
           onSignOutClick={!isGuest ? logout : undefined}
           isGuest={isGuest}
           user={user}
+          leagueUrl={leagueNavUrl}
         />
       </div>
       {/* Avatar dropdown — desktop only for guests; always shown for signed-in */}

@@ -10,6 +10,7 @@
 import { useState, useEffect } from "react";
 import { Swords, Plus, ChevronRight, Trophy, Sparkles, LayoutGrid, PlayCircle } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+import { getClubLeagueWorkspacePath } from "@/lib/leagueWorkspaceNavigation";
 
 interface MyLeague {
   id: string;
@@ -19,6 +20,7 @@ interface MyLeague {
   totalWeeks: number;
   maxPlayers: number;
   playerCount: number;
+  clubId: string;
   myStanding: { rank: number; points: number; wins: number; draws: number; losses: number } | null;
 }
 
@@ -59,7 +61,7 @@ export function LeagueDropdown() {
       <div className="flex border-b border-white/[0.07]">
         <a
           href="/league"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/league"; }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = "/league"; }}
           className="group flex-1 flex items-center justify-center gap-2 px-3 py-3 text-xs font-semibold text-white/50 hover:text-white/90 hover:bg-white/[0.05] transition-colors border-r border-white/[0.07]"
         >
           <LayoutGrid className="w-3.5 h-3.5 flex-shrink-0 group-hover:text-[oklch(0.75_0.18_145)] transition-colors" />
@@ -67,7 +69,7 @@ export function LeagueDropdown() {
         </a>
         <a
           href="/league-demo"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/league-demo"; }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = "/league-demo"; }}
           className="group flex-1 flex items-center justify-center gap-2 px-3 py-3 text-xs font-semibold text-white/50 hover:text-white/90 hover:bg-white/[0.05] transition-colors"
         >
           <PlayCircle className="w-3.5 h-3.5 flex-shrink-0 group-hover:text-[oklch(0.75_0.18_145)] transition-colors" />
@@ -79,7 +81,7 @@ export function LeagueDropdown() {
       <div className="p-3">
         <a
           href="/league/new"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/league/new"; }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = "/league/new"; }}
           className="group flex items-center gap-3 w-full rounded-xl px-4 py-3 transition-all duration-200"
           style={{
             background: "linear-gradient(135deg, oklch(0.28 0.10 145 / 0.9) 0%, oklch(0.22 0.08 145 / 0.9) 100%)",
@@ -126,8 +128,8 @@ export function LeagueDropdown() {
               return (
                 <li key={lg.id}>
                   <a
-                    href={`/league/${lg.id}`}
-                    onClick={(e) => { e.preventDefault(); window.location.href = `/league/${lg.id}`; }}
+                    href={getClubLeagueWorkspacePath(lg.clubId)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = getClubLeagueWorkspacePath(lg.clubId); }}
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors group"
                   >
                     <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-[#436850]/30 text-[#4CAF50]">
@@ -169,7 +171,7 @@ export function LeagueDropdown() {
       <div className="border-t border-white/[0.08]">
         <a
           href="/league"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/league"; }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = "/league"; }}
           className="flex items-center justify-between px-4 py-2.5 text-xs font-medium text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-colors"
         >
           <span>Explore Leagues</span>

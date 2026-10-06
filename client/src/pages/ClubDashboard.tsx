@@ -2795,7 +2795,7 @@ type SettingsSubTab = "analytics" | "payments" | "profile" | "join" | "danger";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { user } = useAuthContext();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -3010,7 +3010,7 @@ export default function ClubDashboard() {
 
   // League state
   const [clubLeagues, setClubLeagues] = useState<Array<{
-    id: number;
+    id: string;
     name: string;
     description: string | null;
     status: string;
@@ -3027,16 +3027,35 @@ export default function ClubDashboard() {
   const [leagueDesc, setLeagueDesc] = useState("");
   const [leagueMaxPlayers, setLeagueMaxPlayers] = useState(6);
   const [leagueCreating, setLeagueCreating] = useState(false);
+  const [clubLeaguesLoading, setClubLeaguesLoading] = useState(false);
   const [leaguePickedIds, setLeaguePickedIds] = useState<Set<string>>(new Set());
   const [leaguePickSearch, setLeaguePickSearch] = useState("");
 
-  async function fetchClubLeagues() {
-    if (!club) return;
+  // The global League navigation deep-links to the current Club's Events
+  // workspace, while regular Events navigation continues to open the gallery.
+  useEffect(() => {
+    const query = location.includes("?") ? location.slice(location.indexOf("?") + 1) : "";
+    const params = new URLSearchParams(query);
+    if (params.get("tab") === "events" && params.get("view") === "leagues") {
+      setTab("events");
+      setEventsFilter("leagues");
+    }
+  }, [location]);
+
+  const fetchClubLeagues = useCallback(async () => {
+    if (!club?.id) return;
+    setClubLeaguesLoading(true);
     try {
       const res = await authFetch(`/api/leagues/club/${club.id}`, { credentials: "include" });
-      if (res.ok) setClubLeagues(await res.json());
-    } catch { /* ignore */ }
-  }
+      if (!res.ok) throw new Error("Failed to fetch Club Leagues");
+      setClubLeagues(await res.json());
+    } catch {
+      setClubLeagues([]);
+      toast.error("Unable to load Club Leagues. Please try again.");
+    } finally {
+      setClubLeaguesLoading(false);
+    }
+  }, [club?.id]);
 
   // ── Parallax banner refs (must be before any early returns) ───────────────────────
   const bannerRef = useRef<HTMLDivElement>(null);
@@ -3218,6 +3237,13 @@ export default function ClubDashboard() {
     if (tab !== "events" || !clubId) return;
     syncEventsFromServer(clubId).then(setEvents).catch(() => {});
   }, [tab, clubId]);
+
+  // The League workspace is an Events subview. Fetch its canonical server list
+  // whenever the user opens it rather than only after creating a new League.
+  useEffect(() => {
+    if (tab !== "events" || eventsFilter !== "leagues" || !club?.id) return;
+    void fetchClubLeagues();
+  }, [tab, eventsFilter, club?.id, fetchClubLeagues]);
 
   async function refreshBattles() {
     if (!club) return;
@@ -7266,7 +7292,12 @@ export default function ClubDashboard() {
             )}
 
             {/* ── League list ── */}
-            {clubLeagues.length === 0 && !leagueWizardOpen ? (
+            {clubLeaguesLoading && !leagueWizardOpen ? (
+              <div className="flex flex-col items-center gap-3 py-16 text-white/40" role="status" aria-live="polite">
+                <div className="h-8 w-8 rounded-full border-2 border-white/15 border-t-[#4CAF50] animate-spin" aria-hidden="true" />
+                <p className="text-sm">Loading Club Leagues</p>
+              </div>
+            ) : clubLeagues.length === 0 && !leagueWizardOpen ? (
               <div className="flex flex-col items-center gap-4 py-16 text-white/30">
                 <ListOrdered className="w-12 h-12 opacity-20" />
                 <div className="text-center">

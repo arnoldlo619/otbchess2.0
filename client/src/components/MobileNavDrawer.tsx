@@ -95,6 +95,8 @@ interface MobileNavDrawerProps {
   onSignOutClick?: () => void;
   /** Extra class names for the outer wrapper */
   className?: string;
+  /** Preferred Club Events → Leagues workspace for signed-in members. */
+  leagueUrl?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -105,6 +107,7 @@ export function MobileNavDrawer({
   isGuest = true,
   user = null,
   className = "",
+  leagueUrl,
 }: MobileNavDrawerProps) {
   const [open, setOpen]         = useState(false);
   const [location, navigate]    = useLocation();
@@ -151,7 +154,11 @@ export function MobileNavDrawer({
   }, []);
 
   // ── Nav helpers ───────────────────────────────────────────────────────────
-  const isActive = (item: (typeof NAV_ITEMS)[number]) => {
+  const resolvedNavItems = NAV_ITEMS.map((item) => (
+    item.name === "League" && leagueUrl ? { ...item, href: leagueUrl } : item
+  ));
+
+  const isActive = (item: { name: string; href: string }) => {
     if (currentPage) return item.name === currentPage;
     return location.startsWith(item.href);
   };
@@ -320,7 +327,7 @@ export function MobileNavDrawer({
 
             {/* ── Nav items ── */}
             <div className="flex flex-col gap-0.5 px-2 pb-2">
-              {NAV_ITEMS.map((item) => {
+              {resolvedNavItems.map((item) => {
                 const active = isActive(item);
                 return (
                   <button

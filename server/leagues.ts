@@ -26,7 +26,7 @@ import {
   users,
 } from "../shared/schema.js";
 import { buildPrepReport as _buildPrepReport, prewarmPrepCacheForPairings } from "./prepEngine.js";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import webpush from "web-push";
 import type { Request, Response } from "express";
@@ -95,6 +95,41 @@ function getUser(req: Request, res: Response): string | null {
     return null;
   }
   return userId;
+}
+
+const leagueStatusPriority: Record<string, number> = {
+  active: 0,
+  draft: 1,
+  completed: 2,
+};
+
+function sortLeaguesForWorkspace<T extends { status: string; createdAt: Date }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => {
+    const statusDifference = (leagueStatusPriority[a.status] ?? 3) - (leagueStatusPriority[b.status] ?? 3);
+    if (statusDifference !== 0) return statusDifference;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+}
+
+async function serializeLeagueSummary(db: Database, league: typeof leagues.$inferSelect) {
+  const [playerCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(leaguePlayers)
+    .where(eq(leaguePlayers.leagueId, league.id));
+
+  return {
+    id: league.id,
+    clubId: league.clubId,
+    commissionerId: league.commissionerId,
+    name: league.name,
+    description: league.description,
+    status: league.status,
+    currentWeek: league.currentWeek,
+    totalWeeks: Math.max(league.maxPlayers - 1, 0),
+    maxPlayers: league.maxPlayers,
+    createdAt: league.createdAt,
+    playerCount: Number(playerCount?.count ?? 0),
+  };
 }
 
 // ── Round-Robin Scheduler (Circle Method) ────────────────────────────────────
@@ -267,55 +302,91 @@ async function recalculateStandings(leagueId: string): Promise<void> {
   }
 }
 
-// ── GET /mine — list all leagues the current user is a player in ─────────────────
+// ── GET /mine — list all leagues the current user plays in or manages ──────────
 leaguesRouter.get("/mine", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
-    // Find all league_players rows for this user
+    // A commissioner must discover a newly-created League before being added as
+    // a player, so include both roster and commissioner relationships.
     const myPlayers = await db.select().from(leaguePlayers).where(eq(leaguePlayers.playerId, userId));
-    if (!myPlayers.length) return res.json([]);
-    const leagueIds = Array.from(new Set(myPlayers.map(p => p.leagueId)));
-    // Fetch league details for each
+    const managedLeagues = await db.select().from(leagues).where(eq(leagues.commissionerId, userId));
+    const leagueIds = Array.from(new Set([
+      ...myPlayers.map((player) => player.leagueId),
+      ...managedLeagues.map((league) => league.id),
+    ]));
+    if (!leagueIds.length) return res.json([]);
+
     const results = [];
     for (const lid of leagueIds) {
       const [league] = await db.select().from(leagues).where(eq(leagues.id, lid)).limit(1);
       if (!league) continue;
-      const playerCount = await db.select({ count: sql<number>`count(*)` }).from(leaguePlayers).where(eq(leaguePlayers.leagueId, lid));
       const standing = await db.select().from(leagueStandings)
         .where(and(eq(leagueStandings.leagueId, lid), eq(leagueStandings.playerId, userId)))
         .limit(1);
       results.push({
-        id: league.id,
-        name: league.name,
-        description: league.description,
-        status: league.status,
-        currentWeek: league.currentWeek,
-        totalWeeks: league.maxPlayers - 1,
-        maxPlayers: league.maxPlayers,
-        playerCount: Number(playerCount[0]?.count ?? 0),
-        clubId: league.clubId,
+        ...(await serializeLeagueSummary(db, league)),
         myStanding: standing[0] ?? null,
       });
     }
-    res.json(results);
+    res.json(sortLeaguesForWorkspace(results));
   } catch (err) {
     logger.error("[leagues] GET /mine error:", err);
     res.status(500).json({ error: "Failed to fetch your leagues" });
   }
 });
 
-// ── GET /club/:clubId — list leagues for a club ───────────────────────────────────────
-leaguesRouter.get("/club/:clubId", async (req: Request, res: Response) => {
+// ── GET /workspace — preferred Club Events → Leagues destination ─────────────
+leaguesRouter.get("/workspace", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
   try {
     const db = await getDb();
+    const [memberships, ownedClubs] = await Promise.all([
+      db.select({ clubId: dbClubMembers.clubId }).from(dbClubMembers).where(eq(dbClubMembers.userId, userId)),
+      db.select({ id: dbClubs.id }).from(dbClubs).where(eq(dbClubs.ownerId, userId)),
+    ]);
+    const clubIds = Array.from(new Set([
+      ...memberships.map((membership) => membership.clubId),
+      ...ownedClubs.map((club) => club.id),
+    ]));
+    if (!clubIds.length) return res.json({ clubId: null });
+
+    const clubScope = clubIds.length === 1
+      ? eq(leagues.clubId, clubIds[0])
+      : or(...clubIds.map((clubId) => eq(leagues.clubId, clubId)));
+    const scopedLeagues = await db.select().from(leagues).where(clubScope);
+    const preferredLeague = sortLeaguesForWorkspace(scopedLeagues)[0];
+
+    res.json({ clubId: preferredLeague?.clubId ?? clubIds[0] });
+  } catch (err) {
+    logger.error("[leagues] GET /workspace error:", err);
+    res.status(500).json({ error: "Failed to resolve League workspace" });
+  }
+});
+
+// ── GET /club/:clubId — list leagues for an authorized Club member ───────────
+leaguesRouter.get("/club/:clubId", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, req.params.clubId)).limit(1);
+    if (!club) return res.status(404).json({ error: "Club not found" });
+    if (club.ownerId !== userId) {
+      const [membership] = await db.select({ id: dbClubMembers.id })
+        .from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, club.id), eq(dbClubMembers.userId, userId)))
+        .limit(1);
+      if (!membership) return res.status(404).json({ error: "Club not found" });
+    }
     const rows = await db
       .select()
       .from(leagues)
       .where(eq(leagues.clubId, req.params.clubId))
       .orderBy(desc(leagues.createdAt));
-    res.json(rows);
+    res.json(await Promise.all(sortLeaguesForWorkspace(rows).map((league) => serializeLeagueSummary(db, league))));
   } catch (err) {
     logger.error("[leagues] GET /club/:clubId error:", err);
     res.status(500).json({ error: "Failed to fetch leagues" });
