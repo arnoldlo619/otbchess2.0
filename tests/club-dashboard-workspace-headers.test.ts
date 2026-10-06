@@ -31,11 +31,27 @@ describe("Club Dashboard workspace headers", () => {
     expect(dashboard).toContain('label: "Invite members"');
     expect(dashboard).toContain('label: "Post update"');
     expect(dashboard).toContain("setShowCreateEvent(true)");
-    expect(dashboard).toContain("setShowInvitePanel(true)");
+    expect(dashboard).toContain("function openInviteDialog()");
+    expect(dashboard).toContain("onClick: openInviteDialog");
     expect(dashboard).toContain("announcementComposerTextareaRef.current?.focus");
-    expect(dashboard).toContain('id="club-members-invites"');
+    expect(dashboard).toContain('data-testid="club-members-invite-dialog"');
     expect(dashboard).not.toContain('>New tournament<');
     expect(dashboard).not.toContain('>Create meetup<');
+  });
+
+  it("moves member invitations into an accessible dialog rather than an inline drawer", () => {
+    expect(dashboard).toContain('const [showInviteDialog, setShowInviteDialog] = useState(false);');
+    expect(dashboard).toContain('useAccessibleOverlay({ open: showInviteDialog');
+    expect(dashboard).toContain('role="dialog"');
+    expect(dashboard).toContain('aria-labelledby="club-member-invite-title"');
+    expect(dashboard).toContain('htmlFor="club-member-invite-email"');
+    expect(dashboard).toContain('id="club-member-invite-email"');
+    expect(dashboard).toContain('inputMode="email"');
+    expect(dashboard).toContain('onSubmit={sendInvite}');
+    expect(dashboard).toContain('rounded-t-3xl border shadow-2xl sm:max-h');
+    expect(dashboard).toContain('Pending invites');
+    expect(dashboard).not.toContain('showInvitePanel');
+    expect(dashboard).not.toContain('club-members-invites');
   });
 
   it("keeps the demo aligned with live workspace header hierarchy", () => {

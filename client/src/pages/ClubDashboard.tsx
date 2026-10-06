@@ -2953,8 +2953,10 @@ export default function ClubDashboard() {
   const [inviteSending, setInviteSending] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>>([]);
   const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
-  const [showInvitePanel, setShowInvitePanel] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
   const joinQRDialogRef = useRef<HTMLDivElement>(null);
+  const inviteDialogRef = useRef<HTMLDivElement>(null);
+  const inviteEmailInputRef = useRef<HTMLInputElement>(null);
   const announcementAttachmentInputRef = useRef<HTMLInputElement>(null);
   const deleteMeetupDialogRef = useRef<HTMLDivElement>(null);
   const transferDialogRef = useRef<HTMLDivElement>(null);
@@ -2976,7 +2978,13 @@ export default function ClubDashboard() {
     setRemoveMemberName("");
   }, []);
   const closeRsvpPanel = useCallback(() => setRsvpPanelEventId(null), []);
+  const closeInviteDialog = useCallback(() => {
+    setShowInviteDialog(false);
+    setInviteEmail("");
+    setInviteLink(null);
+  }, []);
   useAccessibleOverlay({ open: showJoinQRModal, onClose: closeJoinQR, containerRef: joinQRDialogRef });
+  useAccessibleOverlay({ open: showInviteDialog, onClose: closeInviteDialog, containerRef: inviteDialogRef, initialFocusRef: inviteEmailInputRef });
   useAccessibleOverlay({ open: Boolean(deleteMeetupId), onClose: closeDeleteMeetup, containerRef: deleteMeetupDialogRef });
   useAccessibleOverlay({ open: showTransferModal, onClose: closeTransfer, containerRef: transferDialogRef });
   useAccessibleOverlay({ open: showRecordBattle, onClose: closeRecordBattle, containerRef: recordBattleDialogRef });
@@ -3281,6 +3289,13 @@ export default function ClubDashboard() {
     } catch {
       // ignore
     }
+  }
+
+  function openInviteDialog() {
+    setInviteEmail("");
+    setInviteLink(null);
+    setShowInviteDialog(true);
+    void fetchPendingInvites();
   }
 
   async function sendInvite(e: React.FormEvent) {
@@ -4416,11 +4431,7 @@ export default function ClubDashboard() {
                           ? {
                               label: "Invite members",
                               icon: UserPlus,
-                              onClick: () => {
-                                setShowInvitePanel(true);
-                                void fetchPendingInvites();
-                                window.requestAnimationFrame(() => document.getElementById("club-members-invites")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-                              },
+                              onClick: openInviteDialog,
                             }
                           : tab === "feed" && isActiveClubMember
                             ? {
@@ -4561,7 +4572,7 @@ export default function ClubDashboard() {
                 <p className="text-white/50 font-semibold">Your club is ready to grow</p>
                 <p className="text-white/30 text-sm">Invite members, create an event, and share your QR code to get started.</p>
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => setTab("members")} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
+                  <button onClick={openInviteDialog} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
                     <UserPlus className="w-3.5 h-3.5" />
                     Invite Members
                   </button>
@@ -4760,133 +4771,6 @@ export default function ClubDashboard() {
               isDark={isDark}
             />
 
-
-            {/* ── Invite Members panel (owner/director only) ─────────────────── */}
-            {isOwnerOrDirector && (
-              <div
-                id="club-members-invites"
-                className="rounded-2xl border border-white/08 overflow-hidden"
-                style={{ background: "oklch(0.16 0.05 145)" }}
-              >
-                {/* Panel header */}
-                <button
-                  onClick={() => { setShowInvitePanel((v) => !v); if (!showInvitePanel) fetchPendingInvites(); }}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/04 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <UserPlus className="w-4 h-4" style={{ color: accent }} />
-                    <span className="text-white font-semibold text-sm">Invite Members</span>
-                    {pendingInvites.length > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: `${accent}33`, color: accent }}>
-                        {pendingInvites.length} pending
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${showInvitePanel ? "rotate-180" : ""}`} />
-                </button>
-
-                {showInvitePanel && (
-                  <div className="px-4 pb-4 space-y-4 border-t border-white/08">
-
-                    {/* Email input form */}
-                    <form onSubmit={sendInvite} className="flex gap-2 pt-4">
-                      <div className="flex-1 relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                        <input
-                          aria-label="Invite member email"
-                          type="email"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          placeholder="member@email.com"
-                          required
-                          className="w-full bg-white/07 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/25 transition-colors"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={inviteSending || !inviteEmail.trim()}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ background: accent, color: "white" }}
-                      >
-                        {inviteSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        {inviteSending ? "Sending…" : "Send Invite"}
-                      </button>
-                    </form>
-
-                    {/* Generated invite link */}
-                    {inviteLink && (
-                      <div className="rounded-xl border border-white/10 p-3 space-y-2" style={{ background: "oklch(0.14 0.04 145 / 0.6)" }}>
-                        <p className="text-white/50 text-xs">Invite link for <span className="text-white/80 font-semibold">{inviteLink.email}</span> — share this link:</p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 flex items-center gap-2 bg-white/05 border border-white/10 rounded-lg px-3 py-2 min-w-0">
-                            <Link2 className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
-                            <span className="text-white/60 text-xs truncate font-mono">{inviteLink.url}</span>
-                          </div>
-                          <button
-                            onClick={() => { navigator.clipboard.writeText(inviteLink.url); toast.success("Link copied!"); }}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:scale-105 active:scale-95"
-                            style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                            Copy
-                          </button>
-                        </div>
-                        <p className="text-white/30 text-[10px]">Expires in 7 days. The invitee will be auto-joined to this club when they sign up or log in via this link.</p>
-                      </div>
-                    )}
-
-                    {/* Pending invites list */}
-                    {pendingInvites.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Pending Invites · {pendingInvites.length}</h4>
-                          <button onClick={fetchPendingInvites} className="text-white/30 hover:text-white/60 transition-colors">
-                            <RefreshCw className="w-3 h-3" />
-                          </button>
-                        </div>
-                        {pendingInvites.map((inv) => (
-                          <div
-                            key={inv.id}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/06"
-                            style={{ background: "oklch(0.14 0.04 240)" }}
-                          >
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
-                              <Mail className="w-3.5 h-3.5" style={{ color: accent }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm font-medium truncate">{inv.email}</p>
-                              <p className="text-white/30 text-[10px]">
-                                Expires {new Date(inv.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.token}`); toast.success("Link copied!"); }}
-                                title="Copy invite link"
-                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                              >
-                                <Copy className="w-3.5 h-3.5 text-white/40" />
-                              </button>
-                              <button
-                                onClick={() => revokeInvite(inv.token)}
-                                title="Revoke invite"
-                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-red-500/20"
-                              >
-                                <X className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {pendingInvites.length === 0 && !inviteLink && (
-                      <p className="text-white/25 text-xs text-center py-2">No pending invites. Enter an email above to invite someone.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Search */}
             <div className="relative">
@@ -6004,7 +5888,7 @@ export default function ClubDashboard() {
                   {[
                     { icon: QrCode, label: "Share Join QR", action: () => setSettingsSubTab("join") },
                     { icon: Megaphone, label: "Post Announcement", action: () => setTab("feed") },
-                    { icon: UserPlus, label: "Invite Members", action: () => setTab("members") },
+                    { icon: UserPlus, label: "Invite Members", action: openInviteDialog },
                   ].map(({ icon: Icon, label, action }) => (
                     <button
                       key={label}
@@ -7630,6 +7514,207 @@ export default function ClubDashboard() {
               >
                 {rbSaving ? "Saving…" : "Save Battle"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Invite Members Dialog ─────────────────────────────────────────── */}
+      {showInviteDialog && isOwnerOrDirector && club && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeInviteDialog} aria-hidden="true" />
+          <div
+            ref={inviteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-member-invite-title"
+            aria-describedby="club-member-invite-description"
+            tabIndex={-1}
+            data-testid="club-members-invite-dialog"
+            className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border shadow-2xl sm:max-h-[min(44rem,calc(100dvh-2rem))] sm:rounded-3xl"
+            style={{
+              background: isDark ? "oklch(0.15 0.05 145)" : "oklch(0.98 0.015 145)",
+              borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(22,70,43,0.14)",
+              boxShadow: "0 24px 80px rgba(0, 0, 0, 0.38)",
+            }}
+          >
+            <div
+              className="flex items-start justify-between gap-4 border-b px-5 pb-4 pt-5 sm:px-6"
+              style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(22,70,43,0.10)" }}
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+                  style={{ background: `${accent}1f`, color: accent, border: `1px solid ${accent}38` }}
+                >
+                  <UserPlus className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 pt-0.5">
+                  <h2 id="club-member-invite-title" className="text-base font-bold" style={{ color: isDark ? "white" : "oklch(0.20 0.05 145)" }}>
+                    Invite members
+                  </h2>
+                  <p id="club-member-invite-description" className="mt-1 text-sm leading-5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "oklch(0.42 0.04 145)" }}>
+                    Create a private join link for an email address.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeInviteDialog}
+                aria-label="Close member invitation dialog"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95"
+                style={{
+                  color: isDark ? "rgba(255,255,255,0.62)" : "oklch(0.36 0.04 145)",
+                  background: isDark ? "rgba(255,255,255,0.06)" : "rgba(22,70,43,0.06)",
+                  outlineColor: accent,
+                }}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="min-h-0 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
+              <form onSubmit={sendInvite} className="space-y-3">
+                <div>
+                  <label htmlFor="club-member-invite-email" className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: isDark ? "rgba(255,255,255,0.60)" : "oklch(0.36 0.04 145)" }}>
+                    Email address
+                  </label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "oklch(0.46 0.04 145)" }} aria-hidden="true" />
+                    <input
+                      ref={inviteEmailInputRef}
+                      id="club-member-invite-email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      required
+                      aria-describedby="club-member-invite-help"
+                      className="min-h-11 w-full rounded-xl border py-2.5 pl-10 pr-4 text-base outline-none transition-colors placeholder:text-current/45 focus-visible:ring-2 focus-visible:ring-offset-2 sm:text-sm"
+                      style={{
+                        color: isDark ? "white" : "oklch(0.20 0.05 145)",
+                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.82)",
+                        borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(22,70,43,0.16)",
+                        outlineColor: accent,
+                      }}
+                    />
+                  </div>
+                  <p id="club-member-invite-help" className="mt-2 text-xs leading-5" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "oklch(0.46 0.04 145)" }}>
+                    Copy the private link after creating it, then share it with the recipient. Links expire after seven days.
+                  </p>
+                </div>
+                <button
+                  type="submit"
+                  disabled={inviteSending || !inviteEmail.trim()}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-transform hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                  style={{ background: accent, color: "white", outlineColor: accent }}
+                >
+                  {inviteSending ? <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
+                  {inviteSending ? "Creating invite…" : "Create invite"}
+                </button>
+              </form>
+
+              {inviteLink && (
+                <section aria-labelledby="club-member-invite-link-title" className="rounded-2xl border p-4" style={{ background: isDark ? "rgba(76,175,80,0.08)" : "rgba(76,175,80,0.08)", borderColor: `${accent}40` }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 id="club-member-invite-link-title" className="text-sm font-semibold" style={{ color: isDark ? "white" : "oklch(0.20 0.05 145)" }}>
+                        Invite ready
+                      </h3>
+                      <p className="mt-1 text-xs leading-5" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "oklch(0.42 0.04 145)" }}>
+                        A private link was created for {inviteLink.email}.
+                      </p>
+                    </div>
+                    <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: accent }} aria-hidden="true" />
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border px-3 py-2.5" style={{ background: isDark ? "rgba(0,0,0,0.14)" : "rgba(255,255,255,0.74)", borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(22,70,43,0.12)" }}>
+                    <Link2 className="h-4 w-4 shrink-0" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "oklch(0.42 0.04 145)" }} aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs" style={{ color: isDark ? "rgba(255,255,255,0.68)" : "oklch(0.30 0.04 145)" }}>{inviteLink.url}</span>
+                    <button
+                      type="button"
+                      onClick={() => { navigator.clipboard.writeText(inviteLink.url); toast.success("Invite link copied!"); }}
+                      className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      style={{ background: `${accent}1f`, color: accent, outlineColor: accent }}
+                    >
+                      <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                      Copy
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              <section aria-labelledby="club-member-pending-invites-title">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <h3 id="club-member-pending-invites-title" className="text-sm font-semibold" style={{ color: isDark ? "white" : "oklch(0.20 0.05 145)" }}>
+                      Pending invites
+                    </h3>
+                    {pendingInvites.length > 0 && (
+                      <span className="rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: `${accent}20`, color: accent }}>
+                        {pendingInvites.length}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void fetchPendingInvites()}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    style={{ color: isDark ? "rgba(255,255,255,0.52)" : "oklch(0.40 0.04 145)", outlineColor: accent }}
+                    aria-label="Refresh pending invitations"
+                  >
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+
+                {pendingInvites.length > 0 ? (
+                  <div className="space-y-2">
+                    {pendingInvites.map((inv) => (
+                      <div
+                        key={inv.id}
+                        className="flex items-center gap-3 rounded-xl border px-3 py-3"
+                        style={{ background: isDark ? "rgba(255,255,255,0.035)" : "rgba(22,70,43,0.035)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(22,70,43,0.10)" }}
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${accent}16`, color: accent }}>
+                          <Mail className="h-4 w-4" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium" style={{ color: isDark ? "white" : "oklch(0.20 0.05 145)" }}>{inv.email}</p>
+                          <p className="mt-0.5 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "oklch(0.46 0.04 145)" }}>
+                            Expires {new Date(inv.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.token}`); toast.success("Invite link copied!"); }}
+                            aria-label={`Copy invite link for ${inv.email}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                            style={{ color: isDark ? "rgba(255,255,255,0.60)" : "oklch(0.40 0.04 145)", outlineColor: accent }}
+                          >
+                            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => revokeInvite(inv.token)}
+                            aria-label={`Revoke invite for ${inv.email}`}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                          >
+                            <X className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed px-4 py-6 text-center" style={{ borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(22,70,43,0.16)" }}>
+                    <Mail className="mx-auto h-5 w-5" style={{ color: isDark ? "rgba(255,255,255,0.28)" : "oklch(0.56 0.04 145)" }} aria-hidden="true" />
+                    <p className="mt-2 text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.58)" : "oklch(0.36 0.04 145)" }}>No pending invitations</p>
+                    <p className="mt-1 text-xs leading-5" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "oklch(0.48 0.04 145)" }}>Create an invite above when you are ready to grow the club.</p>
+                  </div>
+                )}
+              </section>
             </div>
           </div>
         </div>
