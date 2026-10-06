@@ -718,6 +718,7 @@ export default function LeagueDashboard() {
   const [advancingWeek, setAdvancingWeek] = useState(false);
   const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [sharingSeasonCard, setSharingSeasonCard] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<LeaguePlayer | null>(null);
   // Join requests (commissioner-only, for Draft leagues)
   const [joinRequests, setJoinRequests] = useState<Array<{ id: number; playerId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null; createdAt: string }>>([]);
@@ -757,6 +758,49 @@ export default function LeagueDashboard() {
   function showToast(msg: string, type: "success" | "error" = "success") {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
+  }
+
+  async function shareSeasonCard() {
+    if (!league || league.status !== "completed") return;
+    const seasonCardUrl = `${window.location.origin}/api/leagues/${encodeURIComponent(league.id)}/season-card.png`;
+    const shareData = {
+      title: `${league.name} season results`,
+      text: `See the final standings from ${league.name} on ChessOTB.`,
+      url: seasonCardUrl,
+    };
+
+    setSharingSeasonCard(true);
+    try {
+      if (typeof navigator.share === "function") {
+        const cardResponse = await fetch(seasonCardUrl);
+        if (!cardResponse.ok) throw new Error("Season card could not be generated");
+        const cardBlob = await cardResponse.blob();
+        const imageFile = new File([cardBlob], `${league.name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "league"}-season-card.png`, {
+          type: cardBlob.type || "image/png",
+        });
+
+        if (typeof navigator.canShare === "function" && navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            title: shareData.title,
+            text: shareData.text,
+            files: [imageFile],
+          });
+        } else {
+          await navigator.share(shareData);
+        }
+        showToast("Season card shared.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(seasonCardUrl);
+      showToast("Season card link copied.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      window.open(seasonCardUrl, "_blank", "noopener,noreferrer");
+      showToast("Opened the season card in a new tab.");
+    } finally {
+      setSharingSeasonCard(false);
+    }
   }
 
   const fetchAll = useCallback(async () => {
@@ -3428,6 +3472,28 @@ export default function LeagueDashboard() {
         {/* ── HISTORY / SEASON SUMMARY ─────────────────────────────────────── */}
         {activeTab === "history" && (
           <div className="space-y-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-base font-bold" style={{ color: textMain }}>Season Summary</p>
+                <p className="mt-0.5 text-xs leading-5" style={{ color: textMuted }}>
+                  {league.status === "completed"
+                    ? "Final standings and results from this completed season."
+                    : "Standings and results will be ready to share after the season is complete."}
+                </p>
+              </div>
+              {league.status === "completed" && standings.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => void shareSeasonCard()}
+                  disabled={sharingSeasonCard}
+                  className="min-h-11 inline-flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-all hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
+                  style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}3d` }}
+                >
+                  {sharingSeasonCard ? <Clock size={15} className="animate-spin" aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
+                  {sharingSeasonCard ? "Preparing card" : "Share Season Card"}
+                </button>
+              )}
+            </div>
             {/* Champion card */}
             {standings[0] && (
               <div

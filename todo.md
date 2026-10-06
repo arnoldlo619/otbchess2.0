@@ -3319,10 +3319,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Goal 5 — Discover Clubs Page with Trending Showcase Clubs
 
 - [x] Research 5 real trending/notable chess clubs worldwide
-- [ ] Build `/clubs/discover` route and `DiscoverClubs` page
-- [ ] Create custom showcase profile pages for each of the 5 clubs
-- [ ] Add "Discover" link to MyClubs page and nav
-- [ ] Each showcase club has: custom hero, description, recent activity feed, CTA to claim/join
+- [x] Superseded: public discovery remains intentionally disabled while Clubs are private workspaces
+- [x] Superseded: showcase profiles are replaced by the isolated public `/clubs/demo` experience
+- [x] Superseded: no Discover navigation is exposed alongside private Club workspaces
+- [x] Superseded: public claim/join CTAs are incompatible with the private-club model
 
 ## Big Goals Sprint — Completed
 
@@ -3631,7 +3631,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] One-tap confirm button calls handleResult with correct winner
 - [x] Dismiss button hides the banner without submitting
 - [x] Banner visible to host only; guest sees a neutral "Time's up" notice
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## Battle Result — Rematch Button
 
@@ -3640,7 +3640,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Rematch button to result screen (host only), between "New Battle" and "Back to Home"
 - [x] Guest sees "Ask host for a rematch" hint text instead of the button
 - [x] Reset confettiFired, clockFlagFallen, flagSuggestionDismissed on rematch
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## Battle Host Waiting — Native Share Button
 
@@ -3648,7 +3648,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Share button below the waiting indicator in host_waiting screen
 - [x] Import Share2 icon from lucide-react
 - [x] Show "Copied link!" toast feedback when clipboard fallback is used
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## Battle History Page
 
@@ -4086,6 +4086,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] League share link: QR code modal for projecting the join link
 - [x] Season history: "Season Summary" tab on completed League Dashboard showing final standings, all match results, and champion
 - [x] Season history: "Past Seasons" section on Club Profile Leagues tab listing completed leagues
+- [x] Season Summary: server-rendered 1200×630 social card and compact Share Season Card action with native image sharing and copy-link fallback
 
 ## FCL Phase 5: Season Stats Player Cards
 - [ ] Server: install canvas npm package for server-side PNG generation

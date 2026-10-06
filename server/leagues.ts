@@ -31,6 +31,7 @@ import { nanoid } from "nanoid";
 import webpush from "web-push";
 import type { Request, Response } from "express";
 import { logger } from "./logger.js";
+import { renderLeagueSeasonCard } from "./leagueSeasonCard.js";
 
 // Initialise VAPID details (same keys as main server)
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY ?? "";
@@ -1480,6 +1481,54 @@ leaguesRouter.patch("/:leagueId/settings", requireAuth, async (req: Request, res
   } catch (err) {
     logger.error("[league-settings] PATCH error:", err);
     res.status(500).json({ error: "Failed to update league settings" });
+  }
+});
+
+// ── GET /:leagueId/season-card.png — server-rendered completed-season share card ──
+leaguesRouter.get("/:leagueId/season-card.png", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const leagueId = req.params.leagueId;
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (league.status !== "completed") {
+      return res.status(409).json({ error: "Season card is available after the season is complete" });
+    }
+
+    const standings = await db.select().from(leagueStandings)
+      .where(eq(leagueStandings.leagueId, leagueId))
+      .orderBy(asc(leagueStandings.rank));
+    if (!standings.length) {
+      return res.status(409).json({ error: "Season card is unavailable until final standings are recorded" });
+    }
+
+    const [club] = await db.select({ name: dbClubs.name })
+      .from(dbClubs)
+      .where(eq(dbClubs.id, league.clubId))
+      .limit(1);
+    const completedMatches = await db.select({ id: leagueMatches.id })
+      .from(leagueMatches)
+      .where(and(eq(leagueMatches.leagueId, leagueId), eq(leagueMatches.resultStatus, "completed")));
+
+    const png = renderLeagueSeasonCard({
+      leagueName: league.name,
+      clubName: club?.name ?? null,
+      formatType: league.formatType,
+      totalWeeks: league.totalWeeks,
+      totalMatches: completedMatches.length,
+      champion: standings[0],
+      standings,
+    });
+
+    res.set({
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      "Content-Length": String(png.length),
+    });
+    return res.send(png);
+  } catch (err) {
+    logger.error("[leagues] GET /:leagueId/season-card.png error:", err);
+    return res.status(500).json({ error: "Failed to generate season card" });
   }
 });
 
