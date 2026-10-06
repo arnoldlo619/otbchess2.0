@@ -348,7 +348,7 @@ export function EditPlayerModal({
             {showAllRatings && (
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
-                  <label className={labelBase}>Rapid ELO ⚡</label>
+                  <label className={labelBase}>Rapid ELO</label>
                   <input
                     aria-label="Rapid ELO"
                     type="number"
@@ -361,7 +361,7 @@ export function EditPlayerModal({
                   />
                 </div>
                 <div>
-                  <label className={labelBase}>Blitz ELO 🔥</label>
+                  <label className={labelBase}>Blitz ELO</label>
                   <input
                     aria-label="Blitz ELO"
                     type="number"

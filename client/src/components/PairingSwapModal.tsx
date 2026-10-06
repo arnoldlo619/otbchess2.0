@@ -137,7 +137,7 @@ function PlayerPill({
           {player.name}
         </p>
         <p className={`text-[10px] ${isDark ? "text-white/35" : "text-[#436850]"}`}>
-          {game.board === 1 && "♛ "}Board {game.board} · {color === "white" ? "White" : "Black"}
+          Board {game.board} · {color === "white" ? "White" : "Black"}
         </p>
       </div>
       {/* ELO */}
@@ -411,8 +411,14 @@ export function PairingSwapModal({
                       {board.board === 1 && <Crown className="w-3 h-3 text-amber-400" />}
                       <span className={`font-bold ${isDark ? "text-white/50" : "text-[#436850]"}`}>Board {board.board}</span>
                     </div>
-                    <p className={`truncate ${isDark ? "text-white/80" : "text-[#12372A]"}`}>⬜ {w?.name ?? "BYE"}</p>
-                    <p className={`truncate ${isDark ? "text-white/80" : "text-[#12372A]"}`}>⬛ {b?.name ?? "BYE"}</p>
+                    <p className={`truncate flex items-center gap-1.5 ${isDark ? "text-white/80" : "text-[#12372A]"}`}>
+                      <span className="w-2 h-2 rounded-full border border-[#ADBC9F] bg-white" aria-hidden="true" />
+                      {w?.name ?? "BYE"}
+                    </p>
+                    <p className={`truncate flex items-center gap-1.5 ${isDark ? "text-white/80" : "text-[#12372A]"}`}>
+                      <span className="w-2 h-2 rounded-full border border-[#436850]/40 bg-[#12372A]/80" aria-hidden="true" />
+                      {b?.name ?? "BYE"}
+                    </p>
                   </div>
                 );
               })}

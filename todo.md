@@ -5188,17 +5188,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix SpectatorQRScreen: bumped z-index to z-[10000] (above MinimalTournamentNav's z-[9999]) so the X close button is never obscured
 - [x] Add board/player search filter to PairingsSection in PublicTournament.tsx — searches by player name, chess.com username, or board number with empty-state handling
 
-## Phase 30: Director Player Editing + Pairing Swap
-
-- [ ] Build EditPlayerModal component: edit player name, manual ELO override, fetch alternate ELO (blitz/rapid) from chess.com API
-- [ ] Wire EditPlayerModal into the player row in Director.tsx registration phase (pencil icon)
-- [ ] Wire EditPlayerModal into in-progress phase player list
-- [ ] Add PATCH /api/tournament/:id/players/:username server endpoint for targeted player field updates
-- [ ] Build PairingSwapModal: select two boards/players to swap, preview result, confirm
-- [ ] Wire PairingSwapModal into the Director.tsx pairings view (swap icon on board cards)
-- [ ] Persist pairing swaps to tournament state via existing state save endpoint
-- [ ] Write unit tests for EditPlayerModal logic and pairing swap helpers
-
 ## Phase 30: Director Player & Pairing Editing (COMPLETED)
 
 - [x] Build EditPlayerModal: edit player name, ELO, rapidElo, blitzElo inline
@@ -5209,7 +5198,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add replaceRoundGames to directorState.ts and expose in useDirectorState hook
 - [x] Add "Swap Pairings" button to Boards tab header (visible during active round)
 - [x] Wire EditPlayerModal and PairingSwapModal into Director.tsx render tree
-- [x] Write 22 unit tests: applyPairingSwap (14 cases) + parseElo validation (8 cases) — all passing
+- [x] Persist player edits and pairing swaps through the optimistic, revision-protected tournament state endpoint
+- [x] Write focused unit and rendered interaction coverage for player edits and pairing swaps
 
 ## Phase 32: Chess Clock Navigation Fixes (COMPLETED)
 
