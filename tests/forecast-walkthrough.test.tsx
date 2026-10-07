@@ -6,8 +6,16 @@ import { ForecastWalkthrough } from "../client/src/components/prep/ForecastWalkt
 import type { ForecastBranch } from "../shared/prepTypes";
 
 vi.mock("react-chessboard", () => ({
-  Chessboard: ({ options }: { options: { position: string; boardOrientation: string; pieces: Record<string, unknown> } }) => (
-    <div data-testid="legal-line-board" data-position={options.position} data-orientation={options.boardOrientation} data-piece-count={Object.keys(options.pieces).length} />
+  Chessboard: ({ options }: { options: { position: string; boardOrientation: string; pieces: Record<string, unknown>; arrows?: Array<{ startSquare: string; endSquare: string; color: string }>; arrowOptions?: { arrowStartOffset: number; arrowWidthDenominator: number } } }) => (
+    <div
+      data-testid="legal-line-board"
+      data-position={options.position}
+      data-orientation={options.boardOrientation}
+      data-piece-count={Object.keys(options.pieces).length}
+      data-arrow={options.arrows?.map(arrow => `${arrow.startSquare}-${arrow.endSquare}-${arrow.color}`).join(",") ?? ""}
+      data-arrow-start-offset={options.arrowOptions?.arrowStartOffset}
+      data-arrow-width-denominator={options.arrowOptions?.arrowWidthDenominator}
+    />
   ),
 }));
 
@@ -67,6 +75,28 @@ describe("Legal Line Explorer", () => {
     fireEvent.click(screen.getByRole("button", { name: /your candidate: c5/i }));
     expect(board.dataset.position).toContain("rnbqkbnr");
     expect(screen.getAllByText(/1\. e4 c5/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("keeps the moving piece at its source while hover-previewing a slim, actor-colored route", () => {
+    render(<ForecastWalkthrough openingForecast={{ white: [], black: [rootBranch] }} myColor="white" isDark t={tokens} opponentUsername="opponent" />);
+    const board = screen.getByTestId("legal-line-board");
+    const startingPosition = board.dataset.position;
+    const branch = screen.getByRole("button", { name: /opponent's tendency: e4/i });
+
+    fireEvent.mouseEnter(branch);
+    expect(board.dataset.position).toBe(startingPosition);
+    expect(board.dataset.arrow).toContain("e2-e4-rgba(126,217,87,0.92)");
+    expect(board.dataset.arrowStartOffset).toBe("0.34");
+    expect(board.dataset.arrowWidthDenominator).toBe("8.5");
+    expect(screen.getByText(/Previewing e4/i, { selector: "span" })).toBeTruthy();
+
+    fireEvent.mouseLeave(branch);
+    expect(board.dataset.arrow).toBe("");
+    expect(screen.getByText("Focus a continuation to preview its route.")).toBeTruthy();
+
+    fireEvent.click(branch);
+    expect(board.dataset.position).not.toBe(startingPosition);
+    expect(board.dataset.arrow).toBe("");
   });
 
   it("provides explicit orientation and FEN-copy controls", async () => {

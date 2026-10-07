@@ -151,7 +151,7 @@ function BranchButton({
           ? "border-white/10 bg-[#0b2a20] hover:border-[#7ED957]/50 hover:bg-[#10382a] focus-visible:ring-offset-[#08241a]"
           : "border-[#bfd2b7] bg-white hover:border-[#436850]/60 hover:bg-[#f7faf5] focus-visible:ring-offset-white"
       }`}
-      aria-label={`${actor}: ${branch.moveSan}. Seen in ${branch.count} of ${parentGames} games reaching this position.`}
+      aria-label={`${actor}: ${branch.moveSan}. Seen in ${branch.count} of ${parentGames} games reaching this position. Focus or hover to preview the move on the board.`}
     >
       <span className={`grid min-h-10 min-w-14 place-items-center rounded-md border px-2 font-mono text-base font-bold ${actorTone(branch)}`}>
         {branch.moveSan}
@@ -228,8 +228,11 @@ export function ForecastWalkthrough({
   );
   const replay = useMemo(() => replayPath(displayedPath), [displayedPath]);
   const committedReplay = useMemo(() => replayPath(selectedPath), [selectedPath]);
-  const lastMove = replay?.moves[replay.moves.length - 1];
-  const sideToMove = replay?.turn ?? "white";
+  // Hover previews deliberately retain the committed position: the moving piece stays
+  // visible at its source square while the arrow explains where the candidate lands.
+  const boardReplay = previewBranch ? committedReplay : replay;
+  const lastMove = boardReplay?.moves[boardReplay.moves.length - 1];
+  const sideToMove = boardReplay?.turn ?? "white";
   const orientation: BoardColor = flipped ? "black" : "white";
   const topColor: BoardColor = orientation === "white" ? "black" : "white";
   const bottomColor: BoardColor = orientation;
@@ -237,21 +240,36 @@ export function ForecastWalkthrough({
     if (!previewBranch) return undefined;
     return replayPath([...selectedPath, previewBranch.moveSan])?.uci.at(-1);
   })();
+  const previewMove = useMemo(() => {
+    if (!previewBranch || !candidateUci || !/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(candidateUci)) return null;
+    return { from: candidateUci.slice(0, 2), to: candidateUci.slice(2, 4) };
+  }, [candidateUci, previewBranch]);
+  const previewColor = previewBranch?.actor === "opponent" ? "rgba(126,217,87,0.92)" : "rgba(255,245,152,0.94)";
+  const previewLabel = previewBranch
+    ? `Previewing ${previewBranch.moveSan} · ${previewBranch.actor === "opponent" ? "opponent tendency" : "your candidate"}`
+    : null;
   const squareStyles = useMemo(() => {
-    if (!lastMove) return {};
-    return {
-      [lastMove.from]: { backgroundColor: "rgba(255, 245, 152, 0.28)" },
-      [lastMove.to]: { backgroundColor: "rgba(255, 245, 152, 0.46)", boxShadow: "inset 0 0 0 2px rgba(255, 245, 152, 0.42)" },
-    };
-  }, [lastMove]);
+    const styles: Record<string, React.CSSProperties> = {};
+    if (lastMove) {
+      styles[lastMove.from] = { backgroundColor: "rgba(255, 245, 152, 0.22)" };
+      styles[lastMove.to] = { backgroundColor: "rgba(255, 245, 152, 0.40)", boxShadow: "inset 0 0 0 2px rgba(255, 245, 152, 0.42)" };
+    }
+    if (previewMove) {
+      const previewSquareColor = previewBranch?.actor === "opponent" ? "rgba(126, 217, 87, 0.28)" : "rgba(255, 245, 152, 0.30)";
+      const previewRingColor = previewBranch?.actor === "opponent" ? "rgba(126, 217, 87, 0.72)" : "rgba(255, 245, 152, 0.76)";
+      styles[previewMove.from] = { backgroundColor: previewSquareColor, boxShadow: `inset 0 0 0 2px ${previewRingColor}` };
+      styles[previewMove.to] = { backgroundColor: previewSquareColor, boxShadow: `inset 0 0 0 3px ${previewRingColor}` };
+    }
+    return styles;
+  }, [lastMove, previewBranch?.actor, previewMove]);
   const positionDescription = useMemo(() => describePosition({
-    fen: replay?.fen ?? new Chess().fen(),
-    path: displayedPath,
+    fen: boardReplay?.fen ?? new Chess().fen(),
+    path: selectedPath,
     orientation,
     sideToMove,
     opponentUsername,
     submittedColor: playerColor,
-  }), [displayedPath, opponentUsername, orientation, playerColor, replay?.fen, sideToMove]);
+  }) + (previewMove && previewBranch ? ` Previewing ${previewBranch.moveSan} from ${previewMove.from} to ${previewMove.to}.` : ""), [boardReplay?.fen, opponentUsername, orientation, playerColor, previewBranch, previewMove, selectedPath, sideToMove]);
   const analysisHref = selectedPath.length > 0 && analysisHrefForUciPath
     ? analysisHrefForUciPath(committedReplay?.uci ?? [])
     : null;
@@ -324,12 +342,15 @@ export function ForecastWalkthrough({
             isDark={isDark}
           />
           <p id="forecast-board-instructions" role="status" aria-live="polite" className="sr-only">{positionDescription} Use the named move buttons to navigate legal continuations.</p>
+          <div className="mt-1 flex min-h-6 items-center px-1.5" aria-live="polite">
+            {previewLabel ? <span className={`text-xs font-semibold ${previewBranch?.actor === "opponent" ? (isDark ? "text-[#aeea91]" : "text-[#315640]") : (isDark ? "text-[#FFF598]" : "text-[#6f6500]")}`}>{previewLabel}</span> : <span className={`text-xs ${t.textTertiary}`}>Focus a continuation to preview its route.</span>}
+          </div>
           <div className={`overflow-hidden rounded-md border shadow-[0_12px_30px_rgba(0,0,0,0.16)] ${isDark ? "border-white/15 bg-[#061F17]" : "border-[#6F9F69]/50 bg-[#F0E6C5]"}`}>
             <div aria-hidden="true" inert>
               <Chessboard
                 options={{
                   pieces: LIVIUS_PIECES,
-                  position: replay?.fen ?? new Chess().fen(),
+                  position: boardReplay?.fen ?? new Chess().fen(),
                   boardOrientation: orientation,
                   allowDragging: false,
                   animationDurationInMs: prefersReducedMotion ? 0 : 180,
@@ -339,7 +360,19 @@ export function ForecastWalkthrough({
                   darkSquareNotationStyle: { color: "#F0E6C5", fontWeight: 700, fontSize: "11px" },
                   lightSquareNotationStyle: { color: "#294330", fontWeight: 700, fontSize: "11px" },
                   squareStyles,
-                  arrows: candidateUci && previewBranch ? [{ startSquare: candidateUci.slice(0, 2), endSquare: candidateUci.slice(2, 4), color: "rgba(255,245,152,0.72)" }] : [],
+                  arrows: previewMove ? [{ startSquare: previewMove.from, endSquare: previewMove.to, color: previewColor }] : [],
+                  arrowOptions: {
+                    color: "#FFF598",
+                    secondaryColor: "#7ED957",
+                    tertiaryColor: "#d15a5a",
+                    arrowStartOffset: 0.34,
+                    arrowLengthReducerDenominator: 5,
+                    sameTargetArrowLengthReducerDenominator: 4,
+                    arrowWidthDenominator: 8.5,
+                    activeArrowWidthMultiplier: 0.9,
+                    opacity: 0.94,
+                    activeOpacity: 0.94,
+                  },
                   boardStyle: { borderRadius: "5px", boxShadow: "none" },
                 }}
               />
@@ -355,7 +388,7 @@ export function ForecastWalkthrough({
 
           <div className={`mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2.5 ${isDark ? "border-white/10 bg-black/15" : "border-[#d8e1d3] bg-[#f7faf5]"}`}>
             <span className={`text-xs font-medium ${t.textSecondary}`}>Position {selectedPath.length + 1} · {sideToMove === "white" ? "White" : "Black"} to move</span>
-            <span className={`max-w-full truncate font-mono text-[11px] ${t.textTertiary}`}>{pathLabel(displayedPath)}</span>
+            <span className={`max-w-full truncate font-mono text-[11px] ${t.textTertiary}`}>{previewBranch ? `Preview: ${previewBranch.moveSan}` : pathLabel(selectedPath)}</span>
           </div>
           <div className="mt-3 grid grid-cols-5 gap-2" aria-label="Replay controls">
             <button type="button" onClick={() => setSelectedPath([])} disabled={selectedPath.length === 0} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-md border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${isDark ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.09]" : "border-[#c8d8c1] bg-white text-[#315640] hover:bg-[#f2f7ef]"}`}><SkipBack aria-hidden="true" className="h-3.5 w-3.5" /><span className="hidden sm:inline">Start</span></button>

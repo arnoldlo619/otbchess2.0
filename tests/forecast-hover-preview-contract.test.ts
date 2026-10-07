@@ -12,7 +12,7 @@ describe("Opening Forecast hover preview", () => {
     expect(source).toContain("onMouseEnter={() => onPreview(branch)}");
     expect(source).toContain("onMouseLeave={() => onPreview(null)}");
     expect(source).toContain("const [previewBranch, setPreviewBranch] = useState<ForecastBranch | null>(null)");
-    expect(source).toContain("const displayedPath = previewBranch?.previewPath ?? selectedPath");
+    expect(source).toContain("previewBranch ? (previewBranch.previewPath ?? [...selectedPath, previewBranch.moveSan]) : selectedPath");
     expect(source).toContain("onPreview={setPreviewBranch}");
   });
 
@@ -22,8 +22,17 @@ describe("Opening Forecast hover preview", () => {
   });
 
   it("uses canonical preview paths so both opponent-color tabs produce legal board positions", () => {
-    expect(source).toContain("previewBranch?.previewPath ?? selectedPath");
+    expect(source).toContain("const replay = useMemo(() => replayPath(displayedPath), [displayedPath])");
     expect(source).toContain("function replayPath(path: string[])");
-    expect(source).toContain("Every branch is replayed from a legal position.");
+    expect(source).toContain("return { fen: chess.fen(), uci, moves");
+  });
+
+  it("keeps a hovered piece at its source and renders one high-contrast, shortened route", () => {
+    expect(source).toContain("const boardReplay = previewBranch ? committedReplay : replay");
+    expect(source).toContain("position: boardReplay?.fen ?? new Chess().fen()");
+    expect(source).toContain("arrows: previewMove ? [{ startSquare: previewMove.from, endSquare: previewMove.to, color: previewColor }] : []");
+    expect(source).toContain("arrowStartOffset: 0.34");
+    expect(source).toContain("arrowWidthDenominator: 8.5");
+    expect(source).toContain("Focus a continuation to preview its route.");
   });
 });
