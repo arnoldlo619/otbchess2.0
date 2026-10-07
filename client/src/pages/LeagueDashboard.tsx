@@ -1190,16 +1190,9 @@ export default function LeagueDashboard() {
   // My standing
   const myStanding = user ? standings.find((s) => s.playerId === user.id) : undefined;
 
-  // chess.com avatars for the current matchup hero card
-  const matchupWhitePlayer = league?.players.find(p => p.playerId === myMatchThisWeek?.playerWhiteId);
-  const matchupBlackPlayer = league?.players.find(p => p.playerId === myMatchThisWeek?.playerBlackId);
-  const matchupChesscomUsernames = [
-    matchupWhitePlayer?.chesscomUsername ?? "",
-    matchupBlackPlayer?.chesscomUsername ?? "",
-  ].filter(Boolean);
-  const { avatars: matchupChesscomAvatars } = useChessAvatars(matchupChesscomUsernames);
-
-  // chess.com avatars for all players (standings, schedule, players grid, etc.)
+  // Chess.com avatars for League players. The current-matchup hero deliberately
+  // shares this cached source with standings and schedule so profile photos do
+  // not flash back to initials as the focused matchup changes.
   const allPlayerChesscomUsernames = (league?.players ?? []).map(p => p.chesscomUsername ?? "").filter(Boolean);
   const { avatars: allPlayerChesscomAvatars, allLoaded: allAvatarsLoaded } = useChessAvatars(allPlayerChesscomUsernames);
 
@@ -2509,10 +2502,6 @@ export default function LeagueDashboard() {
                     const isMe = myMatchThisWeek.playerWhiteId === user?.id;
                     const won = myMatchThisWeek.result === "white_win";
                     const _lost = myMatchThisWeek.result === "black_win";
-                    const whiteChesscomAvatar = whitePlayer?.chesscomUsername
-                      ? (matchupChesscomAvatars.get(whitePlayer.chesscomUsername.toLowerCase()) ?? null)
-                      : null;
-                    const whiteAvatarUrl = whiteChesscomAvatar ?? whitePlayer?.avatarUrl ?? null;
                     return (
                       <div className="flex flex-col items-center gap-3 flex-1">
                         <div className="relative">
@@ -2523,7 +2512,13 @@ export default function LeagueDashboard() {
                               boxShadow: isMe ? `0 0 24px ${accent}44` : "none",
                             }}
                           >
-                            <Avatar url={whiteAvatarUrl} name={myMatchThisWeek.playerWhiteName} size={20} />
+                            <Avatar
+                              url={whitePlayer?.avatarUrl}
+                              chesscomUrl={getChesscomAvatar(whitePlayer?.chesscomUsername)}
+                              name={myMatchThisWeek.playerWhiteName}
+                              size={20}
+                              loading={isChesscomAvatarLoading(whitePlayer?.chesscomUsername)}
+                            />
                           </div>
                           {won && (
                             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
@@ -2587,10 +2582,6 @@ export default function LeagueDashboard() {
                     const blackPlayer = league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId);
                     const isMe = myMatchThisWeek.playerBlackId === user?.id;
                     const won = myMatchThisWeek.result === "black_win";
-                    const blackChesscomAvatar = blackPlayer?.chesscomUsername
-                      ? (matchupChesscomAvatars.get(blackPlayer.chesscomUsername.toLowerCase()) ?? null)
-                      : null;
-                    const blackAvatarUrl = blackChesscomAvatar ?? blackPlayer?.avatarUrl ?? null;
                     return (
                       <div className="flex flex-col items-center gap-3 flex-1">
                         <div className="relative">
@@ -2601,7 +2592,13 @@ export default function LeagueDashboard() {
                               boxShadow: isMe ? `0 0 24px ${accent}44` : "none",
                             }}
                           >
-                            <Avatar url={blackAvatarUrl} name={myMatchThisWeek.playerBlackName} size={20} />
+                            <Avatar
+                              url={blackPlayer?.avatarUrl}
+                              chesscomUrl={getChesscomAvatar(blackPlayer?.chesscomUsername)}
+                              name={myMatchThisWeek.playerBlackName}
+                              size={20}
+                              loading={isChesscomAvatarLoading(blackPlayer?.chesscomUsername)}
+                            />
                           </div>
                           {won && (
                             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
