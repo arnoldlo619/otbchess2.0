@@ -9,7 +9,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
-  Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
+  Crown, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
   Share2, Copy, Check, QrCode, X, Settings, Pencil,
   Star, AlertTriangle, Download
@@ -471,6 +471,8 @@ function ReportResultModal({
 }) {
   const [selected, setSelected] = useState<"white_win" | "black_win" | "draw" | null>(null);
   const [loading, setLoading] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
   const border = isDark ? "oklch(0.27 0.06 145)" : "oklch(0.88 0.03 145)";
   const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
@@ -483,6 +485,14 @@ function ReportResultModal({
   const myPriorReport = isWhite ? match.whiteReport : isBlack ? match.blackReport : null;
   const opponentReport = isWhite ? match.blackReport : isBlack ? match.whiteReport : null;
   const isConfirming = match.resultStatus === "awaiting_confirmation" && opponentReport && !myPriorReport;
+  const title = isConfirming ? "Confirm Result" : "Report Result";
+
+  useAccessibleOverlay({
+    open: true,
+    onClose,
+    containerRef: overlayRef,
+    initialFocusRef: cancelButtonRef,
+  });
 
   const options: { value: "white_win" | "black_win" | "draw"; label: string; sub: string }[] = [
     { value: "white_win", label: `${match.playerWhiteName} wins`, sub: "White wins (+1 pt)" },
@@ -496,44 +506,65 @@ function ReportResultModal({
   }
   return (
     <div
-      className="modal-overlay z-50"
-      style={{ background: "rgba(0,0,0,0.6)" }}
-      onClick={onClose}
+      className="modal-overlay z-[210] px-4 py-5 sm:px-6"
+      style={{ background: "rgba(0,0,0,0.68)", backdropFilter: "blur(8px)" }}
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: bg, border: `1px solid ${border}` }}
-        onClick={(e) => e.stopPropagation()}
+        ref={overlayRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="league-report-result-title"
+        aria-describedby="league-report-result-context"
+        tabIndex={-1}
+        data-testid="league-report-result-modal"
+        className="modal-card w-full max-w-[34rem] rounded-[2rem] overflow-hidden shadow-2xl"
+        style={{
+          background: bg,
+          border: `1px solid ${border}`,
+          boxShadow: isDark ? "0 28px 80px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.025)" : "0 28px 80px rgba(18,55,42,0.18)",
+        }}
       >
-        <div className="px-5 pt-5 pb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Swords size={16} style={{ color: accent }} />
-            <span className="font-bold text-base" style={{ color: textMain }}>
-              {isConfirming ? "Confirm Result" : isCommissionerOverride ? "Submit Official Report" : "Report Result"}
-            </span>
+        <div
+          className="relative overflow-hidden border-b px-6 pb-5 pt-7 text-center sm:px-8 sm:pb-6 sm:pt-8"
+          style={{ borderColor: border, background: isDark ? "linear-gradient(180deg, oklch(0.24 0.08 145 / 0.72), transparent 100%)" : "linear-gradient(180deg, oklch(0.96 0.03 145), transparent 100%)" }}
+        >
+          <div className="pointer-events-none absolute inset-x-12 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+          <div className="relative flex flex-col items-center gap-3">
             {isCommissionerOverride && (
               <span
-                className="ml-auto flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em]"
                 style={{ background: "oklch(0.32 0.10 80)", color: "oklch(0.88 0.15 80)", border: "1px solid oklch(0.65 0.14 80 / 0.4)" }}
               >
                 <Crown size={9} />
                 Commissioner
               </span>
             )}
+            <h1
+              id="league-report-result-title"
+              className="text-3xl font-black tracking-[-0.035em] sm:text-[2.15rem]"
+              style={{ color: textMain, fontFamily: "'Clash Display', sans-serif" }}
+            >
+              {title}
+            </h1>
+            <p id="league-report-result-context" className="text-sm leading-relaxed" style={{ color: textMuted }}>
+              <span className="font-semibold" style={{ color: textMain }}>{match.playerWhiteName}</span>
+              <span className="mx-1.5">vs</span>
+              <span className="font-semibold" style={{ color: textMain }}>{match.playerBlackName}</span>
+              <span className="mx-2 opacity-45">·</span>
+              Week {match.weekNumber}
+            </p>
           </div>
           {isCommissionerOverride && (
-            <p className="text-xs mt-1 mb-1 px-3 py-2 rounded-xl" style={{ background: "oklch(0.32 0.10 80 / 0.25)", color: "oklch(0.80 0.12 80)" }}>
+            <p className="relative mt-4 rounded-2xl px-4 py-2.5 text-xs leading-relaxed" style={{ background: "oklch(0.32 0.10 80 / 0.25)", color: "oklch(0.80 0.12 80)" }}>
               This will immediately lock in the result. No player confirmation required.
             </p>
           )}
-          <p className="text-sm" style={{ color: textMuted }}>
-            {match.playerWhiteName} vs {match.playerBlackName} — Week {match.weekNumber}
-          </p>
         </div>
 
         {/* Show opponent's report if awaiting confirmation */}
         {isConfirming && opponentReport && (
-          <div className="mx-5 mb-3 px-4 py-3 rounded-2xl text-sm" style={{ background: `${warn}18`, border: `1px solid ${warn}44`, color: textMain }}>
+          <div className="mx-6 mt-5 rounded-2xl px-4 py-3 text-sm sm:mx-8" style={{ background: `${warn}18`, border: `1px solid ${warn}44`, color: textMain }}>
             <span style={{ color: warn }}>Your opponent reported:</span>{" "}
             <strong>{resultLabel(opponentReport, match.playerWhiteName, match.playerBlackName)}</strong>
             <p className="text-xs mt-1" style={{ color: textMuted }}>Select the same result to confirm, or a different one to dispute.</p>
@@ -542,7 +573,7 @@ function ReportResultModal({
 
         {/* Already reported — show waiting message */}
         {myPriorReport && match.resultStatus === "awaiting_confirmation" && (
-          <div className="mx-5 mb-3 px-4 py-3 rounded-2xl text-sm" style={{ background: `${accent}18`, border: `1px solid ${accent}44`, color: textMain }}>
+          <div className="mx-6 mt-5 rounded-2xl px-4 py-3 text-sm sm:mx-8" style={{ background: `${accent}18`, border: `1px solid ${accent}44`, color: textMain }}>
             You reported: <strong>{resultLabel(myPriorReport, match.playerWhiteName, match.playerBlackName)}</strong>
             <p className="text-xs mt-1" style={{ color: textMuted }}>Waiting for your opponent to confirm.</p>
           </div>
@@ -550,43 +581,48 @@ function ReportResultModal({
 
         {!myPriorReport && (
           <>
-            <div className="px-5 pb-2 space-y-2">
+            <div className="space-y-2.5 px-6 pb-2 pt-5 sm:px-8">
               {options.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setSelected(opt.value)}
-                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all"
+                  aria-pressed={selected === opt.value}
+                  className="group flex min-h-[84px] w-full items-center gap-4 rounded-2xl px-5 py-3.5 text-left transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0"
                   style={{
                     background: selected === opt.value ? `${accent}22` : isDark ? "oklch(0.22 0.06 145)" : "#f9fafb",
                     border: `1.5px solid ${selected === opt.value ? accent : "transparent"}`,
+                    boxShadow: selected === opt.value ? `0 10px 24px ${accent}18` : "0 1px 0 rgba(255,255,255,0.035)",
+                    outlineColor: accent,
+                    outlineOffset: "3px",
                   }}
                 >
                   <div
-                    className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-transform duration-200 group-hover:scale-110"
                     style={{ borderColor: selected === opt.value ? accent : border }}
                   >
                     {selected === opt.value && <div className="w-2 h-2 rounded-full" style={{ background: accent }} />}
                   </div>
-                  <div>
-                    <div className="font-medium text-sm" style={{ color: textMain }}>{opt.label}</div>
-                    <div className="text-xs" style={{ color: textMuted }}>{opt.sub}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-[15px]" style={{ color: textMain }}>{opt.label}</div>
+                    <div className="mt-0.5 text-xs" style={{ color: textMuted }}>{opt.sub}</div>
                   </div>
                 </button>
               ))}
             </div>
-            <div className="px-5 pb-5 pt-3 flex gap-3">
+            <div className="flex gap-3 px-6 pb-6 pt-4 sm:px-8 sm:pb-8">
               <button
+                ref={cancelButtonRef}
                 onClick={onClose}
-                className="flex-1 py-3 rounded-2xl text-sm font-medium"
-                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted }}
+                className="min-h-12 flex-1 rounded-2xl px-4 py-3 text-sm font-semibold transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted, outlineColor: accent, outlineOffset: "3px" }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!selected || loading}
-                className="flex-1 py-3 rounded-2xl text-sm font-bold transition-opacity disabled:opacity-40"
-                style={{ background: accent, color: "#fff" }}
+                className="min-h-12 flex-1 rounded-2xl px-4 py-3 text-sm font-bold transition-[transform,box-shadow,background-color,opacity] duration-200 ease-out hover:-translate-y-px hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ background: accent, color: "#fff", boxShadow: selected ? `0 10px 22px ${accent}55` : "none", outlineColor: accent, outlineOffset: "3px" }}
               >
                 {loading ? "Saving…" : isConfirming ? "Confirm" : "Submit Report"}
               </button>
@@ -595,11 +631,12 @@ function ReportResultModal({
         )}
 
         {myPriorReport && (
-          <div className="px-5 pb-5 pt-1">
+          <div className="px-6 pb-6 pt-5 sm:px-8 sm:pb-8">
             <button
+              ref={cancelButtonRef}
               onClick={onClose}
-              className="w-full py-3 rounded-2xl text-sm font-medium"
-              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted }}
+              className="min-h-12 w-full rounded-2xl px-4 py-3 text-sm font-semibold transition-[transform,box-shadow,background-color] duration-200 ease-out hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:translate-y-0"
+              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted, outlineColor: accent, outlineOffset: "3px" }}
             >
               Close
             </button>
