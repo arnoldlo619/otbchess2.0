@@ -15,6 +15,7 @@ import { useReducedMotion } from "framer-motion";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { CreateLeagueWizard } from "@/components/CreateLeagueWizard";
 import { useAuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
@@ -3070,14 +3071,7 @@ export default function ClubDashboard() {
     pendingRequests?: number;
   }>>([]);
   const [leagueWizardOpen, setLeagueWizardOpen] = useState(false);
-  const [leagueWizardStep, setLeagueWizardStep] = useState<1 | 2>(1);
-  const [leagueName, setLeagueName] = useState("");
-  const [leagueDesc, setLeagueDesc] = useState("");
-  const [leagueMaxPlayers, setLeagueMaxPlayers] = useState(6);
-  const [leagueCreating, setLeagueCreating] = useState(false);
   const [clubLeaguesLoading, setClubLeaguesLoading] = useState(false);
-  const [leaguePickedIds, setLeaguePickedIds] = useState<Set<string>>(new Set());
-  const [leaguePickSearch, setLeaguePickSearch] = useState("");
 
   // The global League navigation deep-links to the dedicated Club League
   // workspace, while regular Events navigation continues to open the gallery.
@@ -4387,14 +4381,7 @@ export default function ClubDashboard() {
                         ? {
                             label: "New League",
                             icon: Plus,
-                            onClick: () => {
-                              setLeagueWizardOpen(true);
-                              setLeagueWizardStep(1);
-                              setLeagueName("");
-                              setLeagueDesc("");
-                              setLeagueMaxPlayers(6);
-                              setLeaguePickedIds(new Set());
-                            },
+                            onClick: () => setLeagueWizardOpen(true),
                           }
                         : tab === "events" && isOwnerOrDirector
                         ? { label: "Create event", icon: Plus, onClick: () => setShowCreateEvent(true) }
@@ -6150,208 +6137,14 @@ export default function ClubDashboard() {
 
             {/* ── Create League Wizard ── */}
             {leagueWizardOpen && isOwnerOrDirector && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-5">
-                {/* Step indicator */}
-                <div className="flex items-center gap-3 mb-1">
-                  {([1, 2] as const).map((s) => (
-                    <div key={s} className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                        style={leagueWizardStep >= s ? { background: accent, color: "#0a1a0f" } : { background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}
-                      >
-                        {s}
-                      </div>
-                      <span className={`text-xs font-medium ${leagueWizardStep >= s ? "text-white" : "text-white/30"}`}>
-                        {s === 1 ? "Details" : "Add Players"}
-                      </span>
-                      {s < 2 && <div className="w-8 h-px bg-white/10" />}
-                    </div>
-                  ))}
-                  <button onClick={() => setLeagueWizardOpen(false)} className="ml-auto text-white/30 hover:text-white/60 transition">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Step 1 — Details */}
-                {leagueWizardStep === 1 && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5 block">League Name</label>
-                      <input
-                        aria-label="LeagueName"
-                        value={leagueName}
-                        onChange={(e) => setLeagueName(e.target.value)}
-                        placeholder="e.g. Spring 2026 League"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Description <span className="text-white/20 normal-case">(optional)</span></label>
-                      <textarea
-                        aria-label="LeagueDesc"
-                        value={leagueDesc}
-                        onChange={(e) => setLeagueDesc(e.target.value)}
-                        placeholder="What's this league about?"
-                        rows={2}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 resize-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2 block">Max Players</label>
-                      <div className="flex gap-2">
-                        {[4, 6, 8, 10].map((n) => (
-                          <button
-                            key={n}
-                            onClick={() => setLeagueMaxPlayers(n)}
-                            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition border ${
-                              leagueMaxPlayers === n ? "text-[#0a1a0f] border-transparent" : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
-                            }`}
-                            style={leagueMaxPlayers === n ? { background: accent, borderColor: accent } : {}}
-                          >
-                            {n}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-white/30 text-xs mt-2">{leagueMaxPlayers - 1} rounds · {Math.round((leagueMaxPlayers - 1) * 1.5)} weeks estimated</p>
-                    </div>
-                    <div className="flex gap-3 pt-1">
-                      <button
-                        disabled={!leagueName.trim()}
-                        onClick={() => setLeagueWizardStep(2)}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
-                        style={{ background: accent, color: "#0a1a0f" }}
-                      >
-                        Next: Add Players
-                      </button>
-                      <button
-                        disabled={!leagueName.trim() || leagueCreating}
-                        onClick={async () => {
-                          if (!club || !leagueName.trim()) return;
-                          setLeagueCreating(true);
-                          try {
-                            const res = await authFetch("/api/leagues", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              credentials: "include",
-                              body: JSON.stringify({ clubId: club.id, name: leagueName.trim(), description: leagueDesc.trim() || null, maxPlayers: leagueMaxPlayers }),
-                            });
-                            if (!res.ok) throw new Error(await res.text());
-                            toast.success("League created as Draft!");
-                            setLeagueWizardOpen(false);
-                            await fetchClubLeagues();
-                          } catch (err) {
-                            toast.error("Failed to create league");
-                            logger.error(err);
-                          } finally {
-                            setLeagueCreating(false);
-                          }
-                        }}
-                        className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition disabled:opacity-30"
-                      >
-                        {leagueCreating ? "Creating…" : "Create Draft"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2 — Add Players */}
-                {leagueWizardStep === 2 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white font-semibold text-sm">{leagueName}</p>
-                        <p className="text-white/40 text-xs">{leaguePickedIds.size} / {leagueMaxPlayers} players selected</p>
-                      </div>
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: leaguePickedIds.size >= leagueMaxPlayers ? accent : "rgba(255,255,255,0.1)", color: leaguePickedIds.size >= leagueMaxPlayers ? "#0a1a0f" : "rgba(255,255,255,0.4)" }}
-                      >
-                        {leaguePickedIds.size}/{leagueMaxPlayers}
-                      </div>
-                    </div>
-                    <input
-                      aria-label="Search members to add to league"
-                      value={leaguePickSearch}
-                      onChange={(e) => setLeaguePickSearch(e.target.value)}
-                      placeholder="Search members…"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30"
-                    />
-                    <div className="space-y-1.5 max-h-52 overflow-y-auto">
-                      {members
-                        .filter((m) => !leaguePickSearch || m.displayName.toLowerCase().includes(leaguePickSearch.toLowerCase()) || (m.chesscomUsername ?? "").toLowerCase().includes(leaguePickSearch.toLowerCase()))
-                        .map((m) => {
-                          const picked = leaguePickedIds.has(m.userId);
-                          const full = !picked && leaguePickedIds.size >= leagueMaxPlayers;
-                          return (
-                            <button
-                              key={m.userId}
-                              disabled={full}
-                              onClick={() => {
-                                setLeaguePickedIds((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(m.userId)) next.delete(m.userId); else next.add(m.userId);
-                                  return next;
-                                });
-                              }}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left ${
-                                picked ? "bg-white/10 border border-white/20" : full ? "opacity-30 cursor-not-allowed bg-white/3" : "bg-white/5 hover:bg-white/10"
-                              }`}
-                            >
-                              <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={32} className="w-8 h-8 rounded-full flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm font-medium truncate">{m.displayName}</p>
-                                {m.chesscomUsername && <p className="text-white/40 text-xs truncate">{m.chesscomUsername}</p>}
-                              </div>
-                              {picked && <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: accent }} />}
-                            </button>
-                          );
-                        })}
-                    </div>
-                    <div className="flex gap-3 pt-1">
-                      <button onClick={() => setLeagueWizardStep(1)} className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition">
-                        Back
-                      </button>
-                      <button
-                        disabled={!leagueName.trim() || leagueCreating}
-                        onClick={async () => {
-                          if (!club || !leagueName.trim()) return;
-                          setLeagueCreating(true);
-                          try {
-                            const res = await authFetch("/api/leagues", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              credentials: "include",
-                              body: JSON.stringify({
-                                clubId: club.id,
-                                name: leagueName.trim(),
-                                description: leagueDesc.trim() || null,
-                                maxPlayers: leagueMaxPlayers,
-                                playerIds: Array.from(leaguePickedIds),
-                              }),
-                            });
-                            if (!res.ok) throw new Error(await res.text());
-                            toast.success(leaguePickedIds.size > 0 ? `League created with ${leaguePickedIds.size} players!` : "League created as Draft!");
-                            setLeagueWizardOpen(false);
-                            await fetchClubLeagues();
-                          } catch (err) {
-                            toast.error("Failed to create league");
-                            logger.error(err);
-                          } finally {
-                            setLeagueCreating(false);
-                          }
-                        }}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
-                        style={{ background: accent, color: "#0a1a0f" }}
-                      >
-                        {leagueCreating ? "Creating…" : leaguePickedIds.size > 0 ? `Create with ${leaguePickedIds.size} Players` : "Create Draft League"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <CreateLeagueWizard
+                onClose={() => {
+                  setLeagueWizardOpen(false);
+                  void fetchClubLeagues();
+                }}
+              />
             )}
 
-            {/* ── League list ── */}
             {clubLeaguesLoading && !leagueWizardOpen ? (
               <div className="flex flex-col items-center gap-3 py-16 text-white/40" role="status" aria-live="polite">
                 <div className="h-8 w-8 rounded-full border-2 border-white/15 border-t-[#4CAF50] animate-spin" aria-hidden="true" />
@@ -6366,7 +6159,7 @@ export default function ClubDashboard() {
                 </div>
                 {isOwnerOrDirector && (
                   <button
-                    onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); }}
+                    onClick={() => setLeagueWizardOpen(true)}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition"
                     style={{ background: accent, color: "#0a1a0f" }}
                   >

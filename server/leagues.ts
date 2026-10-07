@@ -32,6 +32,15 @@ import webpush from "web-push";
 import type { Request, Response } from "express";
 import { logger } from "./logger.js";
 import { renderLeaguePlayerCard, renderLeagueSeasonCard } from "./leagueSeasonCard.js";
+import {
+  getFullSeasonDetail,
+  initializeFullSeasonLeague,
+  publishFullSeasonWeek,
+  reportFullSeasonGameResult,
+  reportPlayoffGameResult,
+  startFullSeasonWeek,
+} from "./fullSeasonLeague.js";
+import { getFullSeasonStructure, isFullSeasonFormat } from "../shared/fullSeasonLeague.js";
 
 // Initialise VAPID details (same keys as main server)
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY ?? "";
@@ -98,6 +107,15 @@ function getUser(req: Request, res: Response): string | null {
   return userId;
 }
 
+async function canManageLeague(db: Database, league: typeof leagues.$inferSelect, userId: string): Promise<boolean> {
+  if (league.commissionerId === userId) return true;
+  const [membership] = await db.select({ role: dbClubMembers.role })
+    .from(dbClubMembers)
+    .where(and(eq(dbClubMembers.clubId, league.clubId), eq(dbClubMembers.userId, userId)))
+    .limit(1);
+  return Boolean(membership && ["owner", "admin", "director"].includes(membership.role));
+}
+
 const leagueStatusPriority: Record<string, number> = {
   active: 0,
   draft: 1,
@@ -126,7 +144,10 @@ async function serializeLeagueSummary(db: Database, league: typeof leagues.$infe
     description: league.description,
     status: league.status,
     currentWeek: league.currentWeek,
-    totalWeeks: Math.max(league.maxPlayers - 1, 0),
+    totalWeeks: league.totalWeeks,
+    formatType: league.formatType,
+    seasonPhase: league.seasonPhase,
+    playoffQualifierCount: league.playoffQualifierCount,
     maxPlayers: league.maxPlayers,
     createdAt: league.createdAt,
     playerCount: Number(playerCount?.count ?? 0),
@@ -430,24 +451,37 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
 
-  const { clubId, name, description, maxPlayers, playerIds, formatType } = req.body as {
+  const { clubId, name, description, maxPlayers, playerIds, formatType, timeControlBase, timeControlIncrement } = req.body as {
     clubId: string;
     name: string;
     description?: string;
     maxPlayers: number;
     playerIds?: string[]; // optional — commissioner can add players later
     formatType?: string;
+    timeControlBase?: number;
+    timeControlIncrement?: number;
   };
 
   // Validate
   if (!clubId || !name || !maxPlayers) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  if (![4, 6, 8, 10].includes(maxPlayers)) {
-    return res.status(400).json({ error: "League size must be 4, 6, 8, or 10" });
+  const allowedFormats = ["full_season", "round_robin", "swiss", "double_round_robin"];
+  const resolvedFormat = formatType && allowedFormats.includes(formatType) ? formatType : "full_season";
+  const isFullSeason = isFullSeasonFormat(resolvedFormat);
+  if (isFullSeason) {
+    if (!Number.isInteger(maxPlayers) || maxPlayers < 4 || maxPlayers > 28 || maxPlayers % 2 !== 0) {
+      return res.status(400).json({ error: "Full Season League requires an even roster from 4 to 28 players." });
+    }
+  } else if (![4, 6, 8, 10].includes(maxPlayers)) {
+    return res.status(400).json({ error: "Classic League size must be 4, 6, 8, or 10 players." });
   }
-  const allowedFormats = ["round_robin", "swiss", "double_round_robin"];
-  const resolvedFormat = formatType && allowedFormats.includes(formatType) ? formatType : "round_robin";
+  const resolvedTimeControlBase = Number.isInteger(timeControlBase) && Number(timeControlBase) > 0 && Number(timeControlBase) <= 180
+    ? Number(timeControlBase)
+    : 10;
+  const resolvedTimeControlIncrement = Number.isInteger(timeControlIncrement) && Number(timeControlIncrement) >= 0 && Number(timeControlIncrement) <= 60
+    ? Number(timeControlIncrement)
+    : 0;
   const ids = playerIds ?? [];
   if (ids.length > maxPlayers) {
     return res.status(400).json({ error: `Cannot exceed ${maxPlayers} players` });
@@ -475,7 +509,8 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
 
     const memberMap = new Map(memberRows.map((m) => [m.userId, m]));
 
-    const totalWeeks = maxPlayers - 1;
+    const fullSeasonStructure = isFullSeason ? getFullSeasonStructure(maxPlayers) : null;
+    const totalWeeks = fullSeasonStructure?.regularSeasonWeeks ?? maxPlayers - 1;
     const leagueId = nanoid(16);
 
     // Insert league as DRAFT — schedule is generated when commissioner starts the season
@@ -491,6 +526,12 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
       totalWeeks,
       status: "draft",
       currentWeek: 0,
+      seasonPhase: "registration",
+      opponentsPerWeek: fullSeasonStructure?.opponentsPerStandardWeek ?? 1,
+      gamesPerEncounter: fullSeasonStructure?.gamesPerEncounter ?? 1,
+      playoffQualifierCount: fullSeasonStructure?.playoffQualifierCount ?? 0,
+      timeControlBase: resolvedTimeControlBase,
+      timeControlIncrement: resolvedTimeControlIncrement,
     });
 
     // Insert any initial players
@@ -502,6 +543,7 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
         displayName: member?.displayName ?? pid,
         avatarUrl: member?.avatarUrl ?? undefined,
         chesscomUsername: member?.chesscomUsername ?? undefined,
+        originalSeed: ids.indexOf(pid) + 1,
       });
     }
 
@@ -570,6 +612,22 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
 
     // Re-read players after rating update
     const updatedPlayers = await db.select().from(leaguePlayers).where(eq(leaguePlayers.leagueId, league.id));
+
+    // Full Season League preserves a complete circle-factorization but only
+    // materializes its next adaptive weekly Match Set. Classic formats retain
+    // their established all-at-once scheduling below.
+    if (isFullSeasonFormat(league.formatType)) {
+      await initializeFullSeasonLeague(db, league, updatedPlayers);
+      const [startedLeague] = await db.select().from(leagues).where(eq(leagues.id, league.id)).limit(1);
+      const seasonDetail = await getFullSeasonDetail(db, league.id);
+      return res.json({
+        success: true,
+        message: "Full Season League created its first generated Match Set.",
+        status: "active",
+        seasonPhase: startedLeague?.seasonPhase ?? "regular_season",
+        week: seasonDetail?.weeks[0] ?? null,
+      });
+    }
 
     // Generate round-robin schedule
     const schedule = generateRoundRobin(league.maxPlayers);
@@ -670,6 +728,77 @@ leaguesRouter.get("/invites/mine", requireAuth, async (req: Request, res: Respon
   } catch (err) {
     logger.error("[league-invites] GET /mine error:", err);
     res.status(500).json({ error: "Failed to list invites" });
+  }
+});
+
+// ── GET /:leagueId/full-season — grouped Match Sets and Championship Day ─────
+// Defined before /:leagueId so the detail route remains unambiguous.
+leaguesRouter.get("/:leagueId/full-season", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const detail = await getFullSeasonDetail(db, req.params.leagueId);
+    if (!detail) return res.status(404).json({ error: "Full Season League not found" });
+    return res.json(detail);
+  } catch (err) {
+    logger.error("[leagues] GET full season detail error:", err);
+    return res.status(500).json({ error: "Failed to fetch Full Season detail" });
+  }
+});
+
+// ── POST /:leagueId/weeks/:weekNumber/publish — lock the generated Match Set ─
+leaguesRouter.post("/:leagueId/weeks/:weekNumber/publish", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (!isFullSeasonFormat(league.formatType)) return res.status(400).json({ error: "This action is only available for Full Season League." });
+    if (!await canManageLeague(db, league, userId)) return res.status(403).json({ error: "Only a club organizer can publish the Match Set." });
+    await publishFullSeasonWeek(db, league, Number(req.params.weekNumber));
+    return res.json({ success: true, state: "published" });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to publish Match Set";
+    return res.status(400).json({ error: message });
+  }
+});
+
+// ── POST /:leagueId/weeks/:weekNumber/start — move published games in play ────
+leaguesRouter.post("/:leagueId/weeks/:weekNumber/start", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (!isFullSeasonFormat(league.formatType)) return res.status(400).json({ error: "This action is only available for Full Season League." });
+    if (!await canManageLeague(db, league, userId)) return res.status(403).json({ error: "Only a club organizer can start the Match Set." });
+    await startFullSeasonWeek(db, league, Number(req.params.weekNumber));
+    return res.json({ success: true, state: "in_progress" });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to start Match Set";
+    return res.status(400).json({ error: message });
+  }
+});
+
+// ── POST /:leagueId/playoffs/:playoffMatchId/games/:gameId/result ────────────
+leaguesRouter.post("/:leagueId/playoffs/:playoffMatchId/games/:gameId/result", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  const { result } = req.body as { result: "white_win" | "black_win" | "draw" };
+  if (!result || !["white_win", "black_win", "draw"].includes(result)) {
+    return res.status(400).json({ error: "Invalid playoff game result." });
+  }
+  try {
+    const db = await getDb();
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (!await canManageLeague(db, league, userId)) return res.status(403).json({ error: "Only a club organizer can report Championship Day results." });
+    await reportPlayoffGameResult(db, league, req.params.playoffMatchId, req.params.gameId, result, userId);
+    return res.json({ success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to record playoff result";
+    return res.status(400).json({ error: message });
   }
 });
 
@@ -798,16 +927,14 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", requireAuth, async (req
     }
 
     const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
-    const isCommissioner = league[0]?.commissionerId === userId;
-    const membership = await db
-      .select()
-      .from(dbClubMembers)
-      .where(and(eq(dbClubMembers.clubId, league[0]?.clubId ?? ""), eq(dbClubMembers.userId, userId)))
-      .limit(1);
-    const isAdmin = membership.length > 0 && ["owner", "admin", "director"].includes(membership[0].role);
-
-    if (!isCommissioner && !isAdmin) {
+    if (!league[0]) return res.status(404).json({ error: "League not found" });
+    if (!await canManageLeague(db, league[0], userId)) {
       return res.status(403).json({ error: "Only the commissioner can report results" });
+    }
+
+    if (isFullSeasonFormat(league[0].formatType)) {
+      await reportFullSeasonGameResult(db, league[0], matchId, result, userId);
+      return res.json({ success: true, message: "Full Season game finalized", status: "completed" });
     }
 
     const m = match[0];
@@ -922,6 +1049,11 @@ leaguesRouter.post("/:leagueId/advance-week", requireAuth, async (req: Request, 
     }
     if (league[0].status !== "active") {
       return res.status(400).json({ error: "League is not active" });
+    }
+    if (isFullSeasonFormat(league[0].formatType)) {
+      return res.status(400).json({
+        error: "Full Season weeks finalize automatically when all two-game encounters are resolved.",
+      });
     }
 
     const currentWeek = league[0].currentWeek ?? 1;

@@ -25,6 +25,13 @@ import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
 import { OTBLoader } from "@/components/OTBLoader";
 import { AsciiArt } from "@/components/ui/d60-hero";
+import {
+  FullSeasonMatchSet,
+  FullSeasonStandings,
+  type FullSeasonDetail,
+  type FullSeasonGame,
+  type FullSeasonStanding,
+} from "@/components/league/FullSeasonLeaguePanels";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
   id: number;
@@ -34,6 +41,7 @@ interface LeaguePlayer {
   avatarUrl?: string | null;
   chesscomUsername?: string | null;
   rating?: number | null;
+  leagueRating?: number | null;
 }
 interface LeagueMatch {
   id: number;
@@ -60,6 +68,7 @@ interface LeagueWeek {
   publishedAt?: string | null;
   isComplete: number;
   deadline?: string | null;
+  state?: "generated" | "published" | "in_progress" | "finalized";
   matches: LeagueMatch[];
 }
 interface LeagueStanding {
@@ -78,6 +87,16 @@ interface LeagueStanding {
   lastResults?: string;
   chesscomRating?: number | null;
   chesscomUsername?: string | null;
+  seasonPoints?: number;
+  gamePoints?: number;
+  encounterWins?: number;
+  encounterDraws?: number;
+  encounterLosses?: number;
+  gamesPlayed?: number;
+  encountersPlayed?: number;
+  sonnebornBerger?: number;
+  leagueRating?: number;
+  ratingChange?: number;
 }
 interface League {
   id: string;
@@ -92,6 +111,10 @@ interface League {
   currentWeek: number;
   totalWeeks: number;
   status: "draft" | "active" | "completed";
+  seasonPhase?: "registration" | "regular_season" | "playoffs" | "complete";
+  opponentsPerWeek?: number;
+  gamesPerEncounter?: number;
+  playoffQualifierCount?: number;
   createdAt: string;
   players: LeaguePlayer[];
 }
@@ -830,6 +853,7 @@ export default function LeagueDashboard() {
 
   const [league, setLeague] = useState<League | null>(null);
   const [weeks, setWeeks] = useState<LeagueWeek[]>([]);
+  const [fullSeasonDetail, setFullSeasonDetail] = useState<FullSeasonDetail | null>(null);
   const [standings, setStandings] = useState<LeagueStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history" | "requests" | "settings">("overview");
@@ -944,9 +968,15 @@ export default function LeagueDashboard() {
         authFetch(`/api/leagues/${leagueId}/standings`),
       ]);
       if (lRes.ok) {
-        const d = await lRes.json();
+        const d = await lRes.json() as League;
         setLeague(d);
         setSelectedWeek(d.currentWeek ?? 1);
+        if (d.formatType === "full_season") {
+          const fullSeasonResponse = await authFetch(`/api/leagues/${leagueId}/full-season`);
+          setFullSeasonDetail(fullSeasonResponse.ok ? await fullSeasonResponse.json() as FullSeasonDetail : null);
+        } else {
+          setFullSeasonDetail(null);
+        }
       }
       if (wRes.ok) setWeeks(await wRes.json());
       if (sRes.ok) setStandings(await sRes.json());
@@ -1297,7 +1327,30 @@ export default function LeagueDashboard() {
     }
   }
 
+  async function handleFullSeasonWeekAction(action: "publish" | "start", weekNumber: number) {
+    if (!leagueId) return;
+    setAdvancingWeek(true);
+    try {
+      const response = await authFetch(`/api/leagues/${leagueId}/weeks/${weekNumber}/${action}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(data.error ?? `Unable to ${action} this Match Set.`, "error");
+        return;
+      }
+      showToast(action === "publish" ? "Match Set published." : "Match Set is now in progress.");
+      await fetchAll();
+    } catch {
+      showToast(`Unable to ${action} this Match Set.`, "error");
+    } finally {
+      setAdvancingWeek(false);
+    }
+  }
+
   // ── Derived values ─────────────────────────────────────────────────────
+  const isFullSeason = league?.formatType === "full_season";
   const isCommissioner = !!(user && league && league.commissionerId === user.id);
   const isMember = !!(user && league && league.players.some((p: LeaguePlayer) => p.playerId === user.id));
 
@@ -1592,7 +1645,11 @@ export default function LeagueDashboard() {
                   }}
                 />
                 {league.status === "active"
-                  ? `Live · Week ${league.currentWeek}/${league.totalWeeks}`
+                  ? isFullSeason
+                    ? league.seasonPhase === "playoffs"
+                      ? "Championship Day"
+                      : `Full Season · Week ${league.currentWeek}/${league.totalWeeks}`
+                    : `Live · Week ${league.currentWeek}/${league.totalWeeks}`
                   : league.status === "completed"
                   ? "Season Complete"
                   : "Building Roster"}
@@ -1770,6 +1827,22 @@ export default function LeagueDashboard() {
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
+            {isFullSeason && (
+              <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${accent}33` }}>
+                <div className="flex items-center gap-2 px-4 py-2.5" style={{ background: `${accent}12`, borderBottom: `1px solid ${accent}22` }}>
+                  <Trophy size={14} style={{ color: accent }} />
+                  <span className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: accent }}>Full Season League</span>
+                </div>
+                <div className="grid grid-cols-2 divide-x sm:grid-cols-4" style={{ borderColor: cardBorder }}>
+                  {[
+                    ["Phase", league.seasonPhase === "playoffs" ? "Championship Day" : league.seasonPhase === "complete" ? "Complete" : league.status === "draft" ? "Registration" : "Regular Season"],
+                    ["Week", league.status === "draft" ? "Not started" : `${league.currentWeek}/${league.totalWeeks}`],
+                    ["Match set", "3 opponents · 6 games"],
+                    ["Playoffs", `Top ${league.playoffQualifierCount ?? 0}`],
+                  ].map(([label, value]) => <div key={label} className="min-w-0 px-3 py-3"><p className="text-[10px] font-bold uppercase tracking-[.1em]" style={{ color: textMuted }}>{label}</p><p className="mt-1 truncate text-sm font-semibold" style={{ color: textMain }}>{value}</p></div>)}
+                </div>
+              </section>
+            )}
             {/* ── Draft mode: roster progress + Start Season ─────────────── */}
             {league.status === "draft" && isCommissioner && (() => {
               const rosterCount = league.players.length;
@@ -2576,7 +2649,24 @@ export default function LeagueDashboard() {
 
         {/* ── MATCHUPS ──────────────────────────────────────────────────────── */}
         {activeTab === "matchups" && (
-          <>
+          isFullSeason && fullSeasonDetail ? (
+            <FullSeasonMatchSet
+              league={league}
+              detail={fullSeasonDetail}
+              selectedWeek={selectedWeek}
+              onSelectWeek={setSelectedWeek}
+              isCommissioner={isCommissioner}
+              isBusy={advancingWeek}
+              onWeekAction={handleFullSeasonWeekAction}
+              onReport={(game: FullSeasonGame) => { setIsCommissionerReport(true); setReportingMatch(game as unknown as LeagueMatch); }}
+              textMain={textMain}
+              textMuted={textMuted}
+              cardBg={cardBg}
+              cardBorder={cardBorder}
+              accent={accent}
+              isDark={isDark}
+            />
+          ) : <>
             {/* ── Current Matchup Hero (shown when viewing current week + user has a match) ── */}
             {selectedWeek === league.currentWeek && myMatchThisWeek && (
               <div
@@ -3164,7 +3254,18 @@ export default function LeagueDashboard() {
 
         {/* ── STANDINGS ─────────────────────────────────────────────────────── */}
         {activeTab === "standings" && (
-          <div className="space-y-4">
+          isFullSeason ? <FullSeasonStandings
+            standings={standings as FullSeasonStanding[]}
+            qualifierCount={league.playoffQualifierCount ?? 0}
+            seasonPhase={league.seasonPhase}
+            currentUserId={user?.id}
+            textMain={textMain}
+            textMuted={textMuted}
+            cardBg={cardBg}
+            cardBorder={cardBorder}
+            accent={accent}
+            isDark={isDark}
+          /> : <div className="space-y-4">
             {/* Compact standings table */}
             <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
               {/* Table header */}

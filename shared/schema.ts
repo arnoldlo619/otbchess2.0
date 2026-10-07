@@ -949,11 +949,22 @@ export const leagues = mysqlTable('leagues', {
   description: text('description'),
   commissionerId: varchar('commissioner_id', { length: 64 }).notNull(),
   commissionerName: varchar('commissioner_name', { length: 100 }).notNull().default(''),
+  // round_robin is retained for historical leagues; full_season is the flagship format.
   formatType: varchar('format_type', { length: 30 }).notNull().default('round_robin'),
   maxPlayers: int('max_players').notNull(),
   currentWeek: int('current_week').notNull().default(1),
   totalWeeks: int('total_weeks').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('draft'),
+  // registration | regular_season | playoffs | complete
+  seasonPhase: varchar('season_phase', { length: 30 }).notNull().default('registration'),
+  opponentsPerWeek: int('opponents_per_week').notNull().default(1),
+  gamesPerEncounter: int('games_per_encounter').notNull().default(1),
+  playoffQualifierCount: int('playoff_qualifier_count').notNull().default(0),
+  timeControlBase: int('time_control_base').notNull().default(10),
+  timeControlIncrement: int('time_control_increment').notNull().default(0),
+  rosterLockedAt: timestamp('roster_locked_at'),
+  regularSeasonChampionId: varchar('regular_season_champion_id', { length: 64 }),
+  leagueChampionId: varchar('league_champion_id', { length: 64 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 }, (t) => ({ clubIdx: index('lg_club_idx').on(t.clubId), commIdx: index('lg_comm_idx').on(t.commissionerId) }));
@@ -967,7 +978,10 @@ export const leaguePlayers = mysqlTable('league_players', {
   displayName: varchar('display_name', { length: 100 }).notNull().default(''),
   avatarUrl: varchar('avatar_url', { length: 500 }),
   chesscomUsername: varchar('chesscom_username', { length: 50 }),
+  // External chess.com rating is a roster reference; League Rating is separate.
   rating: int('rating'),
+  leagueRating: int('league_rating').notNull().default(1200),
+  originalSeed: int('original_seed').notNull().default(0),
   joinedAt: timestamp('joined_at').defaultNow().notNull(),
 }, (t) => ({ leagueIdx: index('lp_league_idx').on(t.leagueId), uniquePlayer: index('lp_lp_idx').on(t.leagueId, t.playerId) }));
 export type LeaguePlayerRow = typeof leaguePlayers.$inferSelect;
@@ -980,6 +994,8 @@ export const leagueWeeks = mysqlTable('league_weeks', {
   publishedAt: timestamp('published_at'),
   isComplete: tinyint('is_complete').notNull().default(0),
   deadline: timestamp('deadline'),
+  // generated | published | in_progress | finalized
+  state: varchar('state', { length: 20 }).notNull().default('generated'),
 }, (t) => ({ leagueIdx: index('lw_league_idx').on(t.leagueId) }));
 export type LeagueWeekRow = typeof leagueWeeks.$inferSelect;
 export type NewLeagueWeekRow = typeof leagueWeeks.$inferInsert;
@@ -989,6 +1005,10 @@ export const leagueMatches = mysqlTable('league_matches', {
   leagueId: varchar('league_id', { length: 64 }).notNull(),
   weekId: int('week_id').notNull(),
   weekNumber: int('week_number').notNull(),
+  encounterId: varchar('encounter_id', { length: 64 }),
+  gameNumber: int('game_number').notNull().default(1),
+  // regular | playoff_rapid | playoff_blitz | playoff_armageddon
+  gameKind: varchar('game_kind', { length: 30 }).notNull().default('regular'),
   playerWhiteId: varchar('player_white_id', { length: 64 }).notNull(),
   playerWhiteName: varchar('player_white_name', { length: 100 }).notNull().default(''),
   playerBlackId: varchar('player_black_id', { length: 64 }).notNull(),
@@ -1003,9 +1023,87 @@ export const leagueMatches = mysqlTable('league_matches', {
   blackReportedAt: timestamp('black_reported_at'),
   completedAt: timestamp('completed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (t) => ({ leagueIdx: index('lm_league_idx').on(t.leagueId), weekIdx: index('lm_week_idx').on(t.weekId) }));
+}, (t) => ({ leagueIdx: index('lm_league_idx').on(t.leagueId), weekIdx: index('lm_week_idx').on(t.weekId), encounterIdx: index('lm_encounter_idx').on(t.encounterId, t.gameNumber) }));
 export type LeagueMatchRow = typeof leagueMatches.$inferSelect;
 export type NewLeagueMatchRow = typeof leagueMatches.$inferInsert;
+
+/** A two-game, color-reversed Full Season opponent relationship. */
+export const leagueEncounters = mysqlTable('league_encounters', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  weekId: int('week_id').notNull(),
+  weekNumber: int('week_number').notNull(),
+  // Stable alphabetical pair key. Unique per regular season league.
+  pairKey: varchar('pair_key', { length: 150 }).notNull(),
+  playerAId: varchar('player_a_id', { length: 64 }).notNull(),
+  playerBId: varchar('player_b_id', { length: 64 }).notNull(),
+  playerAName: varchar('player_a_name', { length: 100 }).notNull().default(''),
+  playerBName: varchar('player_b_name', { length: 100 }).notNull().default(''),
+  // generated | published | in_progress | complete | postponed | forfeit
+  status: varchar('status', { length: 20 }).notNull().default('generated'),
+  playerAGamePoints: float('player_a_game_points').notNull().default(0),
+  playerBGamePoints: float('player_b_game_points').notNull().default(0),
+  playerASeasonPoints: float('player_a_season_points').notNull().default(0),
+  playerBSeasonPoints: float('player_b_season_points').notNull().default(0),
+  playerARatingDelta: int('player_a_rating_delta').notNull().default(0),
+  playerBRatingDelta: int('player_b_rating_delta').notNull().default(0),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+}, (t) => ({
+  leagueIdx: index('le_league_idx').on(t.leagueId),
+  weekIdx: index('le_week_idx').on(t.weekId),
+  uniquePair: uniqueIndex('le_unique_pair_idx').on(t.leagueId, t.pairKey),
+}));
+export type LeagueEncounterRow = typeof leagueEncounters.$inferSelect;
+export type NewLeagueEncounterRow = typeof leagueEncounters.$inferInsert;
+
+/** Championship Day bracket rows retain regular-season seeding as historical fact. */
+export const leaguePlayoffMatches = mysqlTable('league_playoff_matches', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  bracketKey: varchar('bracket_key', { length: 30 }).notNull(),
+  roundNumber: int('round_number').notNull(),
+  roundLabel: varchar('round_label', { length: 40 }).notNull(),
+  matchNumber: int('match_number').notNull(),
+  playerAId: varchar('player_a_id', { length: 64 }),
+  playerBId: varchar('player_b_id', { length: 64 }),
+  playerASeed: int('player_a_seed'),
+  playerBSeed: int('player_b_seed'),
+  playerASource: varchar('player_a_source', { length: 80 }).notNull(),
+  playerBSource: varchar('player_b_source', { length: 80 }).notNull(),
+  // pending | ready | tiebreak | complete
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  winnerId: varchar('winner_id', { length: 64 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+}, (t) => ({
+  leagueIdx: index('lpm_league_idx').on(t.leagueId),
+  uniqueBracket: uniqueIndex('lpm_bracket_idx').on(t.leagueId, t.bracketKey),
+}));
+export type LeaguePlayoffMatchRow = typeof leaguePlayoffMatches.$inferSelect;
+export type NewLeaguePlayoffMatchRow = typeof leaguePlayoffMatches.$inferInsert;
+
+/** Individual playoff rapid/blitz/Armageddon games belonging to a bracket match. */
+export const leaguePlayoffGames = mysqlTable('league_playoff_games', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  playoffMatchId: varchar('playoff_match_id', { length: 64 }).notNull(),
+  gameNumber: int('game_number').notNull(),
+  // rapid | blitz | armageddon
+  phase: varchar('phase', { length: 20 }).notNull().default('rapid'),
+  playerWhiteId: varchar('player_white_id', { length: 64 }).notNull(),
+  playerBlackId: varchar('player_black_id', { length: 64 }).notNull(),
+  resultStatus: varchar('result_status', { length: 20 }).notNull().default('pending'),
+  result: varchar('result', { length: 20 }),
+  reportedByUserId: varchar('reported_by_user_id', { length: 64 }),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => ({
+  matchIdx: index('lpg_match_idx').on(t.playoffMatchId),
+  uniqueGame: uniqueIndex('lpg_match_game_idx').on(t.playoffMatchId, t.phase, t.gameNumber),
+}));
+export type LeaguePlayoffGameRow = typeof leaguePlayoffGames.$inferSelect;
+export type NewLeaguePlayoffGameRow = typeof leaguePlayoffGames.$inferInsert;
 
 export const leagueStandings = mysqlTable('league_standings', {
   id: int('id').primaryKey().autoincrement(),
@@ -1018,6 +1116,17 @@ export const leagueStandings = mysqlTable('league_standings', {
   draws: int('draws').notNull().default(0),
   points: float('points').notNull().default(0),
   rank: int('rank').notNull().default(0),
+  previousRank: int('previous_rank').notNull().default(0),
+  seasonPoints: float('season_points').notNull().default(0),
+  gamePoints: float('game_points').notNull().default(0),
+  encounterWins: int('encounter_wins').notNull().default(0),
+  encounterDraws: int('encounter_draws').notNull().default(0),
+  encounterLosses: int('encounter_losses').notNull().default(0),
+  gamesPlayed: int('games_played').notNull().default(0),
+  encountersPlayed: int('encounters_played').notNull().default(0),
+  sonnebornBerger: float('sonneborn_berger').notNull().default(0),
+  leagueRating: int('league_rating').notNull().default(1200),
+  ratingChange: int('rating_change').notNull().default(0),
   streak: varchar('streak', { length: 20 }).notNull().default(''),
   movement: varchar('movement', { length: 10 }).notNull().default('same'),
   lastResults: varchar('last_results', { length: 100 }).notNull().default(''),

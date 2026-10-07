@@ -39,6 +39,9 @@ import {
   leaguePlayers,
   leagueWeeks,
   leagueMatches,
+  leagueEncounters,
+  leaguePlayoffMatches,
+  leaguePlayoffGames,
   leagueStandings,
   leagueJoinRequests,
   leagueInvites,
@@ -963,7 +966,13 @@ clubsRouter.delete("/:id", requireFullAuth, async (req: Request, res: Response) 
     // 1. League sub-tables
     const clubLeagueRows = await db.select({ id: leagues.id }).from(leagues).where(eq(leagues.clubId, id));
     for (const lg of clubLeagueRows) {
+      const playoffRows = await db.select({ id: leaguePlayoffMatches.id }).from(leaguePlayoffMatches).where(eq(leaguePlayoffMatches.leagueId, lg.id));
+      for (const playoff of playoffRows) {
+        await db.delete(leaguePlayoffGames).where(eq(leaguePlayoffGames.playoffMatchId, playoff.id));
+      }
+      await db.delete(leaguePlayoffMatches).where(eq(leaguePlayoffMatches.leagueId, lg.id));
       await db.delete(leagueMatches).where(eq(leagueMatches.leagueId, lg.id));
+      await db.delete(leagueEncounters).where(eq(leagueEncounters.leagueId, lg.id));
       await db.delete(leagueStandings).where(eq(leagueStandings.leagueId, lg.id));
       await db.delete(leagueWeeks).where(eq(leagueWeeks.leagueId, lg.id));
       await db.delete(leaguePlayers).where(eq(leaguePlayers.leagueId, lg.id));

@@ -1,37 +1,35 @@
 /**
- * CreateLeagueWizard
- * Full-screen 4-step wizard for creating a Chess Club League.
- *
- * Steps:
- *   1. Select Club — pick which club to create the league under
- *   2. League Details — name + optional description
- *   3. Format & Size — format type + max players (league size)
- *   4. Review & Create — summary before submission
+ * CreateLeagueWizard — Club League creation with Full Season as the flagship
+ * default. Legacy League rows retain their original format and behavior.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
-  X,
-  ChevronRight,
+  ArrowRight,
+  CheckCircle2,
   ChevronLeft,
+  ChevronRight,
+  Crown,
+  Loader2,
+  RotateCcw,
+  ShieldCheck,
+  Sparkles,
   Trophy,
   Users,
-  Swords,
-  RotateCcw,
-  CheckCircle2,
-  Building2,
-  Loader2,
-  Sparkles,
-  ArrowRight,
+  X,
 } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
-import { useAuthContext } from "@/context/AuthContext";
-import { authFetch } from "@/lib/apiFetch";
 import { toast } from "sonner";
+import { useAuthContext } from "@/context/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import { authFetch } from "@/lib/apiFetch";
+import {
+  CLASSIC_ROUND_ROBIN_FORMAT,
+  FULL_SEASON_FORMAT,
+  getFullSeasonStructure,
+  type FullSeasonStructure,
+} from "@shared/fullSeasonLeague";
 
 interface CommissionerClub {
   id: string;
@@ -41,67 +39,90 @@ interface CommissionerClub {
   memberCount?: number;
 }
 
-type FormatType = "round_robin" | "swiss" | "double_round_robin";
+type FormatType = typeof FULL_SEASON_FORMAT | typeof CLASSIC_ROUND_ROBIN_FORMAT;
 
-const FORMAT_OPTIONS: {
-  value: FormatType;
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-  tag: string;
-}[] = [
-  {
-    value: "round_robin",
-    label: "Round Robin",
-    description: "Every player faces every other player once. Classic league format — fair and balanced.",
-    icon: <RotateCcw className="w-5 h-5" />,
-    tag: "Most Popular",
-  },
-  {
-    value: "double_round_robin",
-    label: "Double Round Robin",
-    description: "Each player faces every other player twice — once with White, once with Black.",
-    icon: <Swords className="w-5 h-5" />,
-    tag: "Competitive",
-  },
-  {
-    value: "swiss",
-    label: "Swiss System",
-    description: "Players are paired by score each week. Great for larger groups.",
-    icon: <Trophy className="w-5 h-5" />,
-    tag: "Large Groups",
-  },
-];
+const FULL_SEASON_RECOMMENDATIONS = [
+  { value: 16, label: "16", tag: "Recommended" },
+  { value: 22, label: "22", tag: "Expanded" },
+  { value: 28, label: "28", tag: "Large" },
+] as const;
+const CLASSIC_SIZES = [4, 6, 8, 10] as const;
+const FULL_SEASON_SIZES = Array.from({ length: 13 }, (_, index) => 4 + index * 2);
+const TIME_CONTROLS = [
+  { base: 5, increment: 3, label: "5 + 3", hint: "Fast-paced" },
+  { base: 10, increment: 0, label: "10 + 0", hint: "Recommended" },
+  { base: 10, increment: 5, label: "10 + 5", hint: "Thoughtful" },
+  { base: 15, increment: 10, label: "15 + 10", hint: "Long-form" },
+] as const;
 
-const SIZE_OPTIONS: { value: number; label: string; weeks: number }[] = [
-  { value: 4,  label: "4 Players",  weeks: 3  },
-  { value: 6,  label: "6 Players",  weeks: 5  },
-  { value: 8,  label: "8 Players",  weeks: 7  },
-  { value: 10, label: "10 Players", weeks: 9  },
-];
+function estimateSession(base: number, increment: number, games: number): string {
+  const minutes = Math.max(45, Math.round(games * (base * 2 + increment * 0.8) + 20));
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return hours ? `About ${hours}${remainder ? `h ${remainder}m` : "h"}` : `About ${minutes} min`;
+}
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+function formatLabel(format: FormatType): string {
+  return format === FULL_SEASON_FORMAT ? "Full Season League" : "Classic Round Robin";
+}
 
-function StepIndicator({ current, total }: { current: number; total: number }) {
+function StepIndicator({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-2">
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          className={`h-1 rounded-full transition-all duration-300 ${
-            i < current
-              ? "bg-[oklch(0.65_0.14_145)] w-8"
-              : i === current
-              ? "bg-[oklch(0.65_0.14_145)]/60 w-8"
-              : "bg-white/15 w-4"
+    <ol className="flex items-center gap-1.5" aria-label={`Step ${current + 1} of 4`}>
+      {[0, 1, 2, 3].map((index) => (
+        <li
+          key={index}
+          className={`h-1 rounded-full transition-[width,background-color] duration-200 ${
+            index <= current ? "w-7 bg-[oklch(0.68_0.16_145)]" : "w-3 bg-white/15"
           }`}
         />
       ))}
-    </div>
+    </ol>
   );
 }
 
-// ── Main Wizard ───────────────────────────────────────────────────────────────
+function FullSeasonPreview({ structure, timeControlBase, timeControlIncrement, compact = false }: {
+  structure: FullSeasonStructure;
+  timeControlBase: number;
+  timeControlIncrement: number;
+  compact?: boolean;
+}) {
+  const statistics = compact
+    ? [
+        ["Regular season", `${structure.regularSeasonWeeks} weeks`],
+        ["Per player", `${structure.gamesPerPlayer} games`],
+        ["Playoffs", `Top ${structure.playoffQualifierCount}`],
+      ]
+    : [
+        ["Opponents / player", String(structure.opponentRounds)],
+        ["Games / player", String(structure.gamesPerPlayer)],
+        ["League weeks", String(structure.regularSeasonWeeks)],
+        ["Match set", "3 opponents · 6 games"],
+        ["Championship Day", `Top ${structure.playoffQualifierCount}`],
+        ["Session estimate", estimateSession(timeControlBase, timeControlIncrement, 6)],
+      ];
+  return (
+    <section className="overflow-hidden rounded-2xl border border-[oklch(0.68_0.16_145)]/25 bg-[oklch(0.68_0.16_145)]/[0.07]">
+      <div className="flex items-start gap-3 px-4 py-3.5 border-b border-[oklch(0.68_0.16_145)]/15">
+        <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-[oklch(0.68_0.16_145)]/15 text-[oklch(0.78_0.17_145)]">
+          <Trophy size={16} aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[oklch(0.76_0.16_145)]">Full Season structure</p>
+          <p className="mt-0.5 text-sm text-white/70">Every opponent twice, with colors reversed.</p>
+        </div>
+      </div>
+      <dl className={`grid ${compact ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-3"} divide-x divide-y divide-white/[0.07]`}>
+        {statistics.map(([label, value]) => (
+          <div key={label} className="min-w-0 px-3.5 py-3">
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/40">{label}</dt>
+            <dd className="mt-1 truncate text-sm font-semibold text-white/90">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
 
 interface CreateLeagueWizardProps {
   onClose?: () => void;
@@ -112,84 +133,75 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
   const isDark = theme === "dark";
   const { user } = useAuthContext();
   const [, navigate] = useLocation();
-
-  // Step state
-  const [step, setStep] = useState(0); // 0–3
-  const TOTAL_STEPS = 4;
-
-  // Form state
+  const [step, setStep] = useState(0);
   const [clubs, setClubs] = useState<CommissionerClub[]>([]);
   const [clubsLoading, setClubsLoading] = useState(true);
-  const [selectedClubId, setSelectedClubId] = useState<string>("");
+  const [selectedClubId, setSelectedClubId] = useState("");
   const [leagueName, setLeagueName] = useState("");
   const [description, setDescription] = useState("");
-  const [formatType, setFormatType] = useState<FormatType>("round_robin");
-  const [maxPlayers, setMaxPlayers] = useState<number>(8);
+  const [formatType, setFormatType] = useState<FormatType>(FULL_SEASON_FORMAT);
+  const [maxPlayers, setMaxPlayers] = useState(16);
+  const [timeControlBase, setTimeControlBase] = useState(10);
+  const [timeControlIncrement, setTimeControlIncrement] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [nameError, setNameError] = useState("");
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const closeWizard = useCallback(() => onClose?.(), [onClose]);
-  useAccessibleOverlay({
-    open: true,
-    onClose: closeWizard,
-    containerRef: dialogRef,
-    initialFocusRef: closeButtonRef,
-  });
 
-  // Derived
-  const selectedClub = clubs.find((c) => c.id === selectedClubId);
-  const selectedFormat = FORMAT_OPTIONS.find((f) => f.value === formatType)!;
-  const selectedSize = SIZE_OPTIONS.find((s) => s.value === maxPlayers)!;
+  useAccessibleOverlay({ open: true, onClose: closeWizard, containerRef: dialogRef, initialFocusRef: closeButtonRef });
 
-  // Fetch clubs where user is commissioner-eligible
-  const fetchClubs = useCallback(async () => {
-    setClubsLoading(true);
-    try {
-      const res = await authFetch("/api/leagues/mine-as-commissioner");
-      if (res.ok) {
-        const data: CommissionerClub[] = await res.json();
-        setClubs(data);
-        if (data.length === 1) setSelectedClubId(data[0].id);
-      }
-    } catch {
-      // silent — show empty state
-    } finally {
-      setClubsLoading(false);
-    }
-  }, []);
+  const selectedClub = clubs.find((club) => club.id === selectedClubId);
+  const structure = formatType === FULL_SEASON_FORMAT ? getFullSeasonStructure(maxPlayers) : null;
+  const selectedClassicWeeks = maxPlayers - 1;
 
   useEffect(() => {
-    if (user && !user.isGuest) fetchClubs();
-    else setClubsLoading(false);
-  }, [user, fetchClubs]);
+    if (!user || user.isGuest) {
+      setClubsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    void authFetch("/api/leagues/mine-as-commissioner")
+      .then(async (response) => response.ok ? response.json() as Promise<CommissionerClub[]> : [])
+      .then((data) => {
+        if (cancelled) return;
+        setClubs(data);
+        if (data.length === 1) setSelectedClubId(data[0].id);
+      })
+      .catch(() => {
+        if (!cancelled) setClubs([]);
+      })
+      .finally(() => {
+        if (!cancelled) setClubsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [user]);
 
-  // Navigation helpers
-  const canAdvance = () => {
-    if (step === 0) return !!selectedClubId;
+  function switchFormat(nextFormat: FormatType) {
+    setFormatType(nextFormat);
+    setMaxPlayers(nextFormat === FULL_SEASON_FORMAT ? 16 : 8);
+  }
+
+  function canAdvance(): boolean {
+    if (step === 0) return Boolean(selectedClubId);
     if (step === 1) return leagueName.trim().length >= 2;
     return true;
-  };
+  }
 
-  const advance = () => {
+  function advance() {
     if (step === 1 && leagueName.trim().length < 2) {
       setNameError("League name must be at least 2 characters.");
       return;
     }
     setNameError("");
-    if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
-  };
+    setStep((current) => Math.min(current + 1, 3));
+  }
 
-  const back = () => {
-    if (step > 0) setStep((s) => s - 1);
-  };
-
-  // Submit
-  const handleCreate = async () => {
+  async function handleCreate() {
     if (!selectedClubId || !leagueName.trim()) return;
     setSubmitting(true);
     try {
-      const res = await authFetch("/api/leagues", {
+      const response = await authFetch("/api/leagues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -198,461 +210,110 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
           description: description.trim() || undefined,
           maxPlayers,
           formatType,
+          timeControlBase,
+          timeControlIncrement,
         }),
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        toast.error(body?.error ?? "Failed to create league");
-        return;
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Failed to create league");
       }
-      const data = await res.json();
-      toast.success("League created! You can now invite players.");
+      const data = await response.json() as { leagueId: string };
+      toast.success(formatType === FULL_SEASON_FORMAT ? "Full Season League created. Lock your roster when ready." : "Classic Round Robin created.");
       onClose?.();
       navigate(`/leagues/${data.leagueId}`);
-    } catch {
-      toast.error("Network error — please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Network error — please try again.");
     } finally {
       setSubmitting(false);
     }
-  };
+  }
 
-  // ── Step panels ─────────────────────────────────────────────────────────────
-
-  const renderStep = () => {
-    switch (step) {
-      // ── Step 0: Club Selection ────────────────────────────────────────────
-      case 0:
-        return (
-          <div className="space-y-4">
-            <div>
-              <h2
-                className="text-2xl font-bold text-white mb-1"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Which club is this league for?
-              </h2>
-              <p className="text-white/50 text-sm">
-                You can create a league for any club where you are an owner, admin, or director.
-              </p>
-            </div>
-
-            {clubsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-white/40" />
-              </div>
-            ) : clubs.length === 0 ? (
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-8 text-center">
-                <Building2 className="w-10 h-10 text-white/20 mx-auto mb-3" />
-                <p className="text-white/60 font-medium mb-1">No eligible clubs found</p>
-                <p className="text-white/35 text-sm mb-4">
-                  You need to be an owner, admin, or director of a club to create a league.
-                </p>
-                <a
-                  href="/clubs"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[oklch(0.65_0.14_145)] hover:underline"
-                >
-                  Create or join a club
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {clubs.map((club) => (
-                  <button
-                    key={club.id}
-                    onClick={() => setSelectedClubId(club.id)}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-150 text-left ${
-                      selectedClubId === club.id
-                        ? "border-[oklch(0.65_0.14_145)] bg-[oklch(0.65_0.14_145)]/10"
-                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20"
-                    }`}
-                  >
-                    {/* Club avatar / initial */}
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold text-white"
-                      style={{
-                        background: club.accentColor ?? "oklch(0.35 0.10 145)",
-                      }}
-                    >
-                      {club.avatarUrl ? (
-                        <img
-                          src={club.avatarUrl}
-                          alt={club.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        club.name.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold truncate">{club.name}</p>
-                      {club.memberCount !== undefined && (
-                        <p className="text-white/40 text-xs mt-0.5">
-                          {club.memberCount} member{club.memberCount !== 1 ? "s" : ""}
-                        </p>
-                      )}
-                    </div>
-                    {selectedClubId === club.id && (
-                      <CheckCircle2 className="w-5 h-5 text-[oklch(0.65_0.14_145)] flex-shrink-0" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-
-      // ── Step 1: League Details ────────────────────────────────────────────
-      case 1:
-        return (
-          <div className="space-y-5">
-            <div>
-              <h2
-                className="text-2xl font-bold text-white mb-1"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Name your league
-              </h2>
-              <p className="text-white/50 text-sm">
-                Give your league a memorable name. Players will see this on the standings page.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">
-                League Name *
-              </label>
-              <input
-                aria-label="League Name"
-                autoFocus
-                type="text"
-                value={leagueName}
-                onChange={(e) => {
-                  setLeagueName(e.target.value);
-                  if (e.target.value.trim().length >= 2) setNameError("");
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") advance();
-                }}
-                placeholder="e.g. Spring 2025 Club League"
-                maxLength={100}
-                className={`w-full bg-white/[0.06] border rounded-xl px-4 py-3 text-white placeholder-white/25 text-base focus:outline-none focus:ring-2 transition-all ${
-                  nameError
-                    ? "border-red-500/60 focus:ring-red-500/30"
-                    : "border-white/15 focus:ring-[oklch(0.65_0.14_145)]/40 focus:border-[oklch(0.65_0.14_145)]/50"
-                }`}
-              />
-              {nameError && (
-                <p className="text-red-400 text-xs mt-1.5">{nameError}</p>
-              )}
-              <p className="text-white/25 text-xs mt-1.5 text-right">
-                {leagueName.length}/100
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">
-                Description <span className="normal-case font-normal">(optional)</span>
-              </label>
-              <textarea
-                aria-label="League Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description — rules, schedule, prizes…"
-                maxLength={500}
-                rows={3}
-                className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm focus:outline-none focus:ring-2 focus:ring-[oklch(0.65_0.14_145)]/40 focus:border-[oklch(0.65_0.14_145)]/50 transition-all resize-none"
-              />
-              <p className="text-white/25 text-xs mt-1 text-right">
-                {description.length}/500
-              </p>
-            </div>
-          </div>
-        );
-
-      // ── Step 2: Format & Size ─────────────────────────────────────────────
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2
-                className="text-2xl font-bold text-white mb-1"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Format & size
-              </h2>
-              <p className="text-white/50 text-sm">
-                Choose how matches are scheduled and how many players compete.
-              </p>
-            </div>
-
-            {/* Format */}
-            <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">
-                Format
-              </label>
-              <div className="space-y-2">
-                {FORMAT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setFormatType(opt.value)}
-                    className={`w-full flex items-start gap-4 p-4 rounded-xl border transition-all duration-150 text-left ${
-                      formatType === opt.value
-                        ? "border-[oklch(0.65_0.14_145)] bg-[oklch(0.65_0.14_145)]/10"
-                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20"
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        formatType === opt.value
-                          ? "bg-[oklch(0.65_0.14_145)]/20 text-[oklch(0.75_0.18_145)]"
-                          : "bg-white/[0.06] text-white/40"
-                      }`}
-                    >
-                      {opt.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-white font-semibold text-sm">{opt.label}</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]">
-                          {opt.tag}
-                        </span>
-                      </div>
-                      <p className="text-white/45 text-xs leading-relaxed">{opt.description}</p>
-                    </div>
-                    {formatType === opt.value && (
-                      <CheckCircle2 className="w-4.5 h-4.5 text-[oklch(0.65_0.14_145)] flex-shrink-0 mt-1" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Size */}
-            <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">
-                League Size
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {SIZE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setMaxPlayers(opt.value)}
-                    className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border transition-all duration-150 ${
-                      maxPlayers === opt.value
-                        ? "border-[oklch(0.65_0.14_145)] bg-[oklch(0.65_0.14_145)]/10"
-                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20"
-                    }`}
-                  >
-                    <Users
-                      className={`w-4 h-4 ${
-                        maxPlayers === opt.value ? "text-[oklch(0.65_0.14_145)]" : "text-white/40"
-                      }`}
-                    />
-                    <span
-                      className={`text-sm font-bold ${
-                        maxPlayers === opt.value ? "text-white" : "text-white/60"
-                      }`}
-                    >
-                      {opt.value}
-                    </span>
-                    <span className="text-[10px] text-white/30 leading-tight text-center">
-                      {opt.weeks} weeks
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <p className="text-white/30 text-xs mt-2">
-                Round Robin: {selectedSize.weeks} weeks ({maxPlayers} players × {selectedSize.weeks} rounds)
-              </p>
-            </div>
-          </div>
-        );
-
-      // ── Step 3: Review & Create ───────────────────────────────────────────
-      case 3:
-        return (
-          <div className="space-y-5">
-            <div>
-              <h2
-                className="text-2xl font-bold text-white mb-1"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Review & create
-              </h2>
-              <p className="text-white/50 text-sm">
-                Your league will be created in <strong className="text-white/70">Draft mode</strong> — you can invite players before starting the season.
-              </p>
-            </div>
-
-            {/* Summary card */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] divide-y divide-white/[0.07] overflow-hidden">
-              <ReviewRow label="Club" value={selectedClub?.name ?? "—"} />
-              <ReviewRow label="League Name" value={leagueName} />
-              {description && (
-                <ReviewRow label="Description" value={description} multiline />
-              )}
-              <ReviewRow label="Format" value={selectedFormat.label} />
-              <ReviewRow
-                label="Size"
-                value={`${maxPlayers} players · ${selectedSize.weeks} weeks`}
-              />
-            </div>
-
-            {/* What happens next */}
-            <div className="rounded-xl border border-[oklch(0.65_0.14_145)]/20 bg-[oklch(0.65_0.14_145)]/[0.06] p-4">
-              <p className="text-xs font-semibold text-[oklch(0.65_0.14_145)] uppercase tracking-widest mb-2">
-                What happens next
-              </p>
-              <ul className="space-y-1.5 text-sm text-white/55">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[oklch(0.65_0.14_145)] flex-shrink-0 mt-0.5" />
-                  League is created in Draft mode
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[oklch(0.65_0.14_145)] flex-shrink-0 mt-0.5" />
-                  Invite players from your club roster
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[oklch(0.65_0.14_145)] flex-shrink-0 mt-0.5" />
-                  Start the season when you're ready — schedule generates automatically
-                </li>
-              </ul>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-
-  const stepLabels = ["Select Club", "League Details", "Format & Size", "Review"];
+  const panelTitle = ["Choose a club", "League details", "Format and session", "Review season"][step];
+  const fieldClass = "w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-base text-white placeholder:text-white/30 outline-none transition focus:border-[oklch(0.68_0.16_145)]/70 focus:ring-2 focus:ring-[oklch(0.68_0.16_145)]/20";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Panel */}
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5">
+      <button type="button" tabIndex={-1} aria-label="Close create league wizard" onClick={closeWizard} className="absolute inset-0 cursor-default bg-black/75 backdrop-blur-sm" />
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Create league"
+        aria-labelledby="create-league-title"
         tabIndex={-1}
-        className="relative w-full max-w-lg mx-4 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-        style={{
-          background: isDark
-            ? "oklch(0.14 0.05 145)"
-            : "oklch(0.16 0.05 145)",
-          border: "1px solid oklch(0.65 0.14 145 / 0.18)",
-          maxHeight: "90vh",
-        }}
+        className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl sm:max-h-[90vh]"
+        style={{ background: isDark ? "oklch(0.15 0.05 145)" : "oklch(0.17 0.05 145)", border: "1px solid oklch(0.68 0.16 145 / 0.2)" }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0">
+        <header className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-5 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[oklch(0.68_0.16_145)]/15 text-[oklch(0.76_0.16_145)]"><Sparkles size={17} aria-hidden="true" /></div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[oklch(0.76_0.16_145)]">Create Club League</p>
+              <h1 id="create-league-title" className="truncate text-sm font-semibold text-white">{panelTitle}</h1>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[oklch(0.65_0.14_145)]/20 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-[oklch(0.75_0.18_145)]" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[oklch(0.65_0.14_145)]">
-                {stepLabels[step]}
-              </p>
-              <p className="text-xs text-white/35">Step {step + 1} of {TOTAL_STEPS}</p>
-            </div>
+            <StepIndicator current={step} />
+            <button ref={closeButtonRef} type="button" onClick={closeWizard} aria-label="Close create league wizard" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-white/50 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.68_0.16_145)]"><X size={18} aria-hidden="true" /></button>
           </div>
-          <div className="flex items-center gap-4">
-            <StepIndicator current={step} total={TOTAL_STEPS} />
-            <button
-              ref={closeButtonRef}
-              onClick={onClose}
-              aria-label="Close create league wizard"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        </header>
 
-        {/* Divider */}
-        <div className="h-px bg-white/[0.07] flex-shrink-0" />
-
-        {/* Body — scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          {renderStep()}
-        </div>
-
-        {/* Footer */}
-        <div className="flex-shrink-0 px-6 py-4 border-t border-white/[0.07] flex items-center justify-between gap-3">
-          <button
-            onClick={step === 0 ? onClose : back}
-            className="flex items-center gap-1.5 text-sm font-medium text-white/50 hover:text-white transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            {step === 0 ? "Cancel" : "Back"}
-          </button>
-
-          {step < TOTAL_STEPS - 1 ? (
-            <button
-              onClick={advance}
-              disabled={!canAdvance()}
-              className="flex items-center gap-2 bg-[oklch(0.65_0.14_145)] hover:bg-[oklch(0.70_0.16_145)] disabled:opacity-40 disabled:cursor-not-allowed text-[oklch(0.12_0.04_145)] font-semibold text-sm px-6 py-2.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
-            >
-              Continue
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              onClick={handleCreate}
-              disabled={submitting}
-              className="flex items-center gap-2 bg-[oklch(0.65_0.14_145)] hover:bg-[oklch(0.70_0.16_145)] disabled:opacity-60 disabled:cursor-not-allowed text-[oklch(0.12_0.04_145)] font-semibold text-sm px-6 py-2.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Creating…
-                </>
-              ) : (
-                <>
-                  <Trophy className="w-4 h-4" />
-                  Create League
-                </>
-              )}
-            </button>
+        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+          {step === 0 && (
+            <section className="space-y-4">
+              <div><h2 className="text-2xl font-bold tracking-tight text-white">Which club is this for?</h2><p className="mt-1 text-sm text-white/55">Only club owners, admins, and directors can create a league.</p></div>
+              {clubsLoading ? <div className="flex justify-center py-12"><Loader2 className="animate-spin text-white/40" /></div> : clubs.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center"><Users className="mx-auto mb-3 text-white/25" size={32} /><p className="font-semibold text-white/85">No eligible clubs found</p><a href="/clubs" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[oklch(0.76_0.16_145)] hover:underline">Create or join a club <ArrowRight size={14} /></a></div>
+              ) : <div className="space-y-2">{clubs.map((club) => {
+                const selected = selectedClubId === club.id;
+                return <button key={club.id} type="button" onClick={() => setSelectedClubId(club.id)} className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition ${selected ? "border-[oklch(0.68_0.16_145)]/70 bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"}`}>
+                  <div className="flex h-10 w-10 flex-none items-center justify-center overflow-hidden rounded-lg bg-[oklch(0.28_0.08_145)] font-semibold text-white">{club.avatarUrl ? <img src={club.avatarUrl} alt="" className="h-full w-full object-cover" /> : club.name.charAt(0).toUpperCase()}</div>
+                  <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{club.name}</p><p className="mt-0.5 text-xs text-white/45">{club.memberCount ?? 0} members</p></div>
+                  {selected && <CheckCircle2 className="flex-none text-[oklch(0.76_0.16_145)]" size={19} />}
+                </button>;
+              })}</div>}
+            </section>
           )}
-        </div>
+
+          {step === 1 && (
+            <section className="space-y-5"><div><h2 className="text-2xl font-bold tracking-tight text-white">Name the season</h2><p className="mt-1 text-sm text-white/55">Players will see this name across the season, standings, and Championship Day.</p></div>
+              <div><label htmlFor="league-name" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-white/55">League name</label><input id="league-name" autoFocus value={leagueName} onChange={(event) => { setLeagueName(event.target.value); if (event.target.value.trim().length >= 2) setNameError(""); }} maxLength={100} placeholder="e.g. Spring 2026 Club League" className={`${fieldClass} ${nameError ? "border-red-400/70" : ""}`} />{nameError && <p className="mt-1.5 text-xs text-red-300">{nameError}</p>}</div>
+              <div><label htmlFor="league-description" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-white/55">Season note <span className="font-normal normal-case tracking-normal">(optional)</span></label><textarea id="league-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={4} placeholder="Optional rules, venue notes, or prize details." className={`${fieldClass} resize-none text-sm`} /><p className="mt-1 text-right text-xs text-white/30">{description.length}/500</p></div>
+            </section>
+          )}
+
+          {step === 2 && (
+            <section className="space-y-6"><div><h2 className="text-2xl font-bold tracking-tight text-white">Choose the competition</h2><p className="mt-1 text-sm text-white/55">Full Season is the recommended club experience. Classic stays available for smaller, simpler leagues.</p></div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button type="button" onClick={() => switchFormat(FULL_SEASON_FORMAT)} className={`relative rounded-2xl border p-4 text-left transition ${formatType === FULL_SEASON_FORMAT ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}>
+                  <span className="absolute right-3 top-3 rounded-full bg-[oklch(0.68_0.16_145)]/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[oklch(0.78_0.16_145)]">Recommended</span><Trophy size={20} className="mb-4 text-[oklch(0.76_0.16_145)]" /><p className="font-semibold text-white">Full Season League</p><p className="mt-1.5 text-sm leading-relaxed text-white/55">Three opponents per week, two color-reversed games each, standings, ratings, and Championship Day.</p>
+                </button>
+                <button type="button" onClick={() => switchFormat(CLASSIC_ROUND_ROBIN_FORMAT)} className={`rounded-2xl border p-4 text-left transition ${formatType === CLASSIC_ROUND_ROBIN_FORMAT ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><RotateCcw size={20} className="mb-4 text-white/55" /><p className="font-semibold text-white">Classic Round Robin</p><p className="mt-1.5 text-sm leading-relaxed text-white/55">The established single-game format for compact clubs and shorter league nights.</p></button>
+              </div>
+              {formatType === FULL_SEASON_FORMAT ? <div className="space-y-3"><div className="flex items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-white/55">Roster size</p><p className="mt-1 text-sm text-white/50">Optimized for even rosters of 4–28 players.</p></div></div>
+                <div className="grid grid-cols-3 gap-2">{FULL_SEASON_RECOMMENDATIONS.map((size) => <button key={size.value} type="button" onClick={() => setMaxPlayers(size.value)} className={`rounded-xl border px-3 py-3 text-center transition ${maxPlayers === size.value ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><span className="block text-lg font-bold text-white">{size.label}</span><span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide text-[oklch(0.76_0.16_145)]">{size.tag}</span></button>)}</div>
+                <label className="block text-xs font-semibold text-white/55">All supported sizes<select aria-label="Full Season roster size" value={maxPlayers} onChange={(event) => setMaxPlayers(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[oklch(0.68_0.16_145)]/30">{FULL_SEASON_SIZES.map((size) => <option key={size} value={size} className="bg-[#122016]">{size} players</option>)}</select></label>
+              </div> : <div><p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-white/55">League size</p><div className="grid grid-cols-4 gap-2">{CLASSIC_SIZES.map((size) => <button key={size} type="button" onClick={() => setMaxPlayers(size)} className={`rounded-xl border py-3 text-center text-sm font-semibold transition ${maxPlayers === size ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10 text-white" : "border-white/10 bg-white/[0.03] text-white/60"}`}>{size}</button>)}</div></div>}
+              <div><p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-white/55">Time control</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{TIME_CONTROLS.map((control) => { const selected = timeControlBase === control.base && timeControlIncrement === control.increment; return <button key={control.label} type="button" onClick={() => { setTimeControlBase(control.base); setTimeControlIncrement(control.increment); }} className={`rounded-xl border p-3 text-left transition ${selected ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><span className="block text-sm font-bold text-white">{control.label}</span><span className="mt-0.5 block text-[10px] text-white/45">{control.hint}</span></button>; })}</div></div>
+              {structure ? <FullSeasonPreview structure={structure} timeControlBase={timeControlBase} timeControlIncrement={timeControlIncrement} /> : <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60"><strong className="text-white">Classic structure:</strong> {selectedClassicWeeks} rounds with one game against every player.</div>}
+            </section>
+          )}
+
+          {step === 3 && (
+            <section className="space-y-5"><div><h2 className="text-2xl font-bold tracking-tight text-white">Ready to create?</h2><p className="mt-1 text-sm text-white/55">The league opens in Draft. Invite players, lock the roster, then generate the first Match Set.</p></div>
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] divide-y divide-white/[0.08]"><ReviewRow label="Club" value={selectedClub?.name ?? "—"} /><ReviewRow label="Season" value={leagueName || "—"} /><ReviewRow label="Format" value={formatLabel(formatType)} /><ReviewRow label="Roster" value={`${maxPlayers} players`} /><ReviewRow label="Time control" value={`${timeControlBase} + ${timeControlIncrement}`} />{structure && <ReviewRow label="Season map" value={`${structure.regularSeasonWeeks} weeks · ${structure.gamesPerPlayer} games/player · Top ${structure.playoffQualifierCount}`} />}</div>
+              {structure && <FullSeasonPreview structure={structure} timeControlBase={timeControlBase} timeControlIncrement={timeControlIncrement} compact />}
+              <div className="flex gap-3 rounded-2xl border border-[oklch(0.68_0.16_145)]/20 bg-[oklch(0.68_0.16_145)]/[0.06] p-4"><ShieldCheck className="mt-0.5 flex-none text-[oklch(0.76_0.16_145)]" size={18} /><p className="text-sm leading-relaxed text-white/65">{formatType === FULL_SEASON_FORMAT ? "Every Full Season encounter is a locked two-game, color-reversed set. Pairings never repeat and the regular season remains mathematically complete." : "Classic Round Robin keeps the established single-game club league experience."}</p></div>
+            </section>
+          )}
+        </main>
+
+        <footer className="flex items-center justify-between gap-3 border-t border-white/[0.08] px-5 py-4 sm:px-6"><button type="button" onClick={step === 0 ? closeWizard : () => setStep((current) => current - 1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-white/55 transition hover:text-white"><ChevronLeft size={16} />{step === 0 ? "Cancel" : "Back"}</button>{step < 3 ? <button type="button" disabled={!canAdvance()} onClick={advance} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[oklch(0.68_0.16_145)] px-5 text-sm font-bold text-[oklch(0.12_0.04_145)] transition hover:bg-[oklch(0.75_0.17_145)] disabled:cursor-not-allowed disabled:opacity-40">Continue <ChevronRight size={16} /></button> : <button type="button" disabled={submitting} onClick={() => void handleCreate()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[oklch(0.68_0.16_145)] px-5 text-sm font-bold text-[oklch(0.12_0.04_145)] transition hover:bg-[oklch(0.75_0.17_145)] disabled:cursor-wait disabled:opacity-60">{submitting ? <><Loader2 size={16} className="animate-spin" />Creating</> : <><Crown size={16} />Create league</>}</button>}</footer>
       </div>
     </div>
   );
 }
 
-// ── Review row helper ─────────────────────────────────────────────────────────
-function ReviewRow({
-  label,
-  value,
-  multiline,
-}: {
-  label: string;
-  value: string;
-  multiline?: boolean;
-}) {
-  return (
-    <div className="flex items-start gap-4 px-4 py-3">
-      <span className="text-xs font-semibold text-white/35 uppercase tracking-widest w-28 flex-shrink-0 pt-0.5">
-        {label}
-      </span>
-      <span
-        className={`text-sm text-white/80 flex-1 ${multiline ? "whitespace-pre-wrap" : "truncate"}`}
-      >
-        {value}
-      </span>
-    </div>
-  );
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-start gap-4 px-4 py-3"><dt className="w-28 flex-none pt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/40">{label}</dt><dd className="min-w-0 flex-1 text-sm font-medium text-white/85">{value}</dd></div>;
 }

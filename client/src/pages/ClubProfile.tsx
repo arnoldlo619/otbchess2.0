@@ -3260,7 +3260,7 @@ export default function ClubProfile() {
             {/* Commissioner CTA */}
             {isOwner && (
               <button
-                onClick={() => setShowCreateLeague(true)}
+                onClick={() => navigate("/league/new")}
                 className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#436850]/40 text-sm font-semibold transition-all hover:border-[#436850] hover:bg-[#436850]/8 group"
               >
                 <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#436850] group-hover:text-[#3a5230]"}`} />
@@ -3528,7 +3528,7 @@ export default function ClubProfile() {
                   {isOwner ? (
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                       <button
-                        onClick={() => setShowCreateLeague(true)}
+                        onClick={() => navigate("/league/new")}
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.03] active:scale-[0.98]"
                         style={{ background: "oklch(0.55 0.13 145)", color: "#fff", boxShadow: "0 4px 20px oklch(0.55 0.13 145 / 0.35)" }}
                       >
