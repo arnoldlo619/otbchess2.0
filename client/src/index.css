@@ -1857,6 +1857,80 @@ select {
   scrollbar-gutter: stable;
 }
 
+/* ── Club League commissioner header actions ───────────────────────────────
+ * A single, restrained hover treatment keeps the operational header readable
+ * while making the report/advance path discoverable without a looping effect.
+ */
+.league-header-action {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateZ(0);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease-out, border-color 200ms ease-out;
+}
+
+.league-header-action::before,
+.league-header-action::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.league-header-action::before {
+  inset: 0;
+  background: linear-gradient(112deg, transparent 18%, rgba(228, 255, 221, 0.34) 49%, transparent 78%);
+  opacity: 0;
+  transform: translateX(-118%);
+  transition: opacity 180ms ease-out, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.league-header-action::after {
+  inset: -12px;
+  background: radial-gradient(ellipse at 50% 112%, rgba(124, 245, 98, 0.42), transparent 68%);
+  opacity: 0;
+  filter: blur(9px);
+  transition: opacity 200ms ease-out;
+}
+
+.league-header-action__content {
+  position: relative;
+  z-index: 1;
+}
+
+@media (hover: hover) {
+  .league-header-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(8, 31, 16, 0.34), 0 0 18px rgba(124, 245, 98, 0.22);
+  }
+
+  .league-header-action:hover::before {
+    opacity: 1;
+    transform: translateX(118%);
+  }
+
+  .league-header-action:hover::after {
+    opacity: 1;
+  }
+}
+
+.league-header-action:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.league-header-action:focus-visible {
+  outline: 2px solid oklch(0.78 0.18 145);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .league-header-action,
+  .league-header-action::before,
+  .league-header-action::after {
+    transition-duration: 0.01ms;
+  }
+}
+
 /* On small screens (≤480px) — anchor modal to bottom as a sheet */
 @media (max-width: 480px) {
   .modal-overlay {

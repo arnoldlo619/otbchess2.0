@@ -1446,77 +1446,84 @@ export default function LeagueDashboard() {
             {/* Desktop spacer: the league identity lives exclusively in the hero. */}
             <div className="hidden lg:block flex-1" />
 
-            {/* One desktop status anchor: visually centered without duplicating the hero identity. */}
-            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center justify-center">
-              <div
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-                style={{
-                  background: league.status === "active"
-                    ? "oklch(0.22 0.10 145)"
-                    : league.status === "completed"
-                    ? "oklch(0.22 0.08 85)"
-                    : "oklch(0.20 0.04 145)",
-                  color: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.60 0.08 145)",
-                  border: `1px solid ${
-                    league.status === "active" ? `${accent}44` : league.status === "completed" ? "oklch(0.72 0.18 85 / 0.3)" : "oklch(0.30 0.05 145)"
-                  }`,
-                }}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${league.status === "active" ? "animate-pulse" : ""}`}
-                  style={{
-                    background: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.45 0.05 145)",
-                  }}
-                />
-                {league.status === "active"
-                  ? isFullSeason
-                    ? league.seasonPhase === "playoffs"
-                      ? "Championship Day"
-                      : `Full Season · Week ${league.currentWeek}/${league.totalWeeks}`
-                    : `Live · Week ${league.currentWeek}/${league.totalWeeks}`
-                  : league.status === "completed"
-                  ? "Season Complete"
-                  : "Building Roster"}
-              </div>
-            </div>
-
-            {/* Right actions */}
-            <div data-testid="league-dashboard-header-actions" className="ml-auto flex items-center gap-1.5">
-              {/* Commissioner quick-action buttons — one authoritative action cluster */}
-              {isCommissioner && league.status === "active" && (
-                <>
-                  {/* Crown + role label — desktop only */}
+            {/* Desktop header focal point: commissioner's operational path replaces the redundant live-week badge. */}
+            <div data-testid="league-dashboard-header-actions" className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center justify-center">
+              {isCommissioner && league.status === "active" ? (
+                <div className="flex items-center gap-2 rounded-2xl px-1.5 py-1" style={{ background: "oklch(0.12 0.04 145 / 0.72)", border: "1px solid oklch(0.42 0.10 145 / 0.28)" }}>
                   <span
-                    className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold tracking-wide select-none"
-                    style={{
-                      background: "oklch(0.32 0.10 80 / 0.25)",
-                      color: "oklch(0.88 0.15 80)",
-                      border: "1px solid oklch(0.65 0.14 80 / 0.35)",
-                    }}
+                    className="flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[11px] font-bold uppercase tracking-[0.12em] select-none"
+                    style={{ color: "oklch(0.88 0.15 80)" }}
                   >
-                    <Crown size={10} />
+                    <Crown size={12} aria-hidden="true" />
                     Commissioner
                   </span>
                   <button
                     onClick={() => setActiveTab("matchups")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
-                    style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                    className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-bold"
+                    style={{ background: `linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))`, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
                     title="Report Results"
+                    aria-label="Report League Results"
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    <span className="hidden sm:inline">Report</span>
+                    <span className="league-header-action__content flex items-center gap-2">
+                      <CheckCircle2 size={15} aria-hidden="true" />
+                      Report Results
+                    </span>
                   </button>
                   <button
                     onClick={() => setShowAdvanceConfirm(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
-                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
-                    title="Advance Week"
+                    className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-semibold"
+                    style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
+                    title="Close Week and Advance"
+                    aria-label="Close current week and advance"
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-                    <span className="hidden sm:inline">Advance</span>
+                    <span className="league-header-action__content flex items-center gap-2">
+                      <ChevronRight size={16} aria-hidden="true" />
+                      Advance
+                    </span>
+                  </button>
+                </div>
+              ) : league.status !== "active" ? (
+                <div
+                  data-testid="league-dashboard-status"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{
+                    background: league.status === "completed" ? "oklch(0.22 0.08 85)" : "oklch(0.20 0.04 145)",
+                    color: league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.60 0.08 145)",
+                    border: `1px solid ${league.status === "completed" ? "oklch(0.72 0.18 85 / 0.3)" : "oklch(0.30 0.05 145)"}`,
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.45 0.05 145)" }} />
+                  {league.status === "completed" ? "Season Complete" : "Building Roster"}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Mobile commissioner controls retain direct tap access while the desktop action cluster stays centered. */}
+            <div className="ml-auto flex items-center gap-1.5 lg:hidden">
+              {isCommissioner && league.status === "active" && (
+                <>
+                  <button
+                    onClick={() => setActiveTab("matchups")}
+                    className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
+                    style={{ background: accent, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
+                    aria-label="Report League Results"
+                  >
+                    <span className="league-header-action__content"><CheckCircle2 size={17} aria-hidden="true" /></span>
+                  </button>
+                  <button
+                    onClick={() => setShowAdvanceConfirm(true)}
+                    className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
+                    style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
+                    aria-label="Close current week and advance"
+                  >
+                    <span className="league-header-action__content"><ChevronRight size={18} aria-hidden="true" /></span>
                   </button>
                 </>
               )}
+            </div>
+
+            {/* Supplemental desktop actions stay at the trailing edge. */}
+            <div className="ml-auto hidden items-center gap-1.5 lg:flex">
               {/* Push notifications bell — draft phase only */}
               {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
                 <button
