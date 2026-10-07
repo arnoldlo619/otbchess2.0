@@ -25,7 +25,7 @@ describe("Club Dashboard overview cleanup", () => {
   it("preserves the four operational Quick Action intents", () => {
     expect(dashboardSource).toContain('{ icon: Plus, label: "New Meetup"');
     expect(dashboardSource).toContain('{ icon: GanttChart, label: "Tournament"');
-    expect(dashboardSource).toContain('{ icon: LeaguesIcon, label: "Leagues", action: () => { setEventsFilter("leagues"); setTab("events"); } }');
+    expect(dashboardSource).toContain('{ icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") }');
     expect(dashboardSource).toContain('{ icon: Megaphone, label: "Post"');
     expect(dashboardSource).toContain('max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4');
   });
@@ -38,8 +38,9 @@ describe("Club Dashboard overview cleanup", () => {
   });
 
   it("routes the Leagues action into the current club's create-and-manage workspace", () => {
-    expect(dashboardSource).toContain('action: () => { setEventsFilter("leagues"); setTab("events"); }');
-    expect(dashboardSource).toContain('tab === "events" && eventsFilter === "leagues"');
+    expect(dashboardSource).toContain('action: () => setTab("leagues")');
+    expect(dashboardSource).toContain('tab === "leagues" && (');
+    expect(dashboardSource).toContain('label: "New League"');
     expect(dashboardSource).toContain('body: JSON.stringify({ clubId: club.id');
     expect(dashboardSource).toContain('href={`/leagues/${league.id}`}');
   });

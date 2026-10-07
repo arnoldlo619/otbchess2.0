@@ -10,7 +10,7 @@ const dashboardSource = readFileSync(
 describe("Club Events gallery", () => {
   it("uses a single upcoming-only event projection", () => {
     expect(dashboardSource).toContain('const upcomingEvents = events.filter(isUpcoming).sort');
-    expect(dashboardSource).toContain('tab === "events" && eventsFilter !== "leagues"');
+    expect(dashboardSource).toContain('{tab === "events" && (');
     expect(dashboardSource).toContain('aria-label="Scheduled club events"');
     expect(dashboardSource).not.toContain('showPastMeetups');
     expect(dashboardSource).not.toContain('showPastTournaments');
@@ -34,18 +34,19 @@ describe("Club Events gallery", () => {
     expect(dashboardSource).toContain("No scheduled events");
   });
 
-  it("keeps organizer creation and management paths without reintroducing filters", () => {
+  it("keeps organizer event creation and management paths without reintroducing filters", () => {
     expect(dashboardSource).toContain('label: "Create event"');
     expect(dashboardSource).toContain("setShowCreateEvent(true)");
     expect(dashboardSource).toContain("onOpenRsvps={() => openRsvpPanel(event.id)}");
     expect(dashboardSource).toContain("Manage RSVPs");
     expect(dashboardSource).toContain('aria-label={`Options for ${event.title}`}');
-    expect(dashboardSource).toContain("setEventsFilter(\"leagues\"); setTab(\"events\")");
-    expect(dashboardSource).toContain('tab === "events" && eventsFilter === "leagues"');
+    expect(dashboardSource).not.toContain("eventsFilter");
   });
 
-  it("clears the private League handoff when Events is opened from navigation", () => {
-    expect(dashboardSource).toContain('if (nextTab === "events") setEventsFilter("all")');
-    expect(dashboardSource).toContain('if (clubTab.id === "events") setEventsFilter("all")');
+  it("keeps League out of the Events gallery as a dedicated navigation destination", () => {
+    expect(dashboardSource).toContain('{ id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" }');
+    expect(dashboardSource).toContain('{tab === "leagues" && (');
+    expect(dashboardSource).toContain('action: () => setTab("leagues")');
+    expect(dashboardSource).not.toContain('tab === "events" && eventsFilter === "leagues"');
   });
 });

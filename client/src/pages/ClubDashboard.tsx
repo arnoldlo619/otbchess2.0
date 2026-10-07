@@ -259,7 +259,7 @@ function isUpcoming(event: ClubEvent): boolean {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-type ClubWorkspaceHeaderTab = "feed" | "events" | "members";
+type ClubWorkspaceHeaderTab = "feed" | "events" | "members" | "leagues";
 
 function ClubWorkspaceSocialHeader({
   club,
@@ -267,6 +267,7 @@ function ClubWorkspaceSocialHeader({
   memberCount,
   eventCount,
   updateCount,
+  leagueCount,
   accent,
   isDark,
   action,
@@ -276,6 +277,7 @@ function ClubWorkspaceSocialHeader({
   memberCount: number;
   eventCount: number;
   updateCount: number;
+  leagueCount: number;
   accent: string;
   isDark: boolean;
   action?: { label: string; icon: React.ElementType; onClick: () => void };
@@ -299,13 +301,19 @@ function ClubWorkspaceSocialHeader({
       secondary: `${eventCount} event${eventCount === 1 ? "" : "s"}`,
       description: `The players, regulars, and organizers who make ${club.name} a club.`,
     },
+    leagues: {
+      label: undefined,
+      primary: `${leagueCount} league${leagueCount === 1 ? "" : "s"}`,
+      secondary: `${memberCount} member${memberCount === 1 ? "" : "s"}`,
+      description: "Round-robin seasons and matchups for your club members.",
+    },
   }[tab];
   const ActionIcon = action?.icon;
   const muted = isDark ? "text-white/55" : "text-[#436850]/75";
 
   return (
     <header
-      aria-label={`${club.name} ${content.label.toLowerCase()} header`}
+      aria-label={`${club.name}${content.label ? ` ${content.label.toLowerCase()}` : ""} header`}
       data-testid="club-dashboard-workspace-header"
       className={`relative mb-6 pb-6 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:content-[''] ${isDark ? "text-white after:bg-white/10" : "text-[#12372A] after:bg-[#436850]/15"}`}
     >
@@ -318,7 +326,7 @@ function ClubWorkspaceSocialHeader({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{club.name}</h1>
-            <span className={`text-xs font-semibold uppercase tracking-[0.12em] ${muted}`}>{content.label}</span>
+            {content.label && <span className={`text-xs font-semibold uppercase tracking-[0.12em] ${muted}`}>{content.label}</span>}
           </div>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
             <span><strong className="font-semibold">{content.primary}</strong></span>
@@ -2934,10 +2942,6 @@ export default function ClubDashboard() {
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
   const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
   const [editMeetupId, setEditMeetupId] = useState<string | null>(null);
-  // This mode is intentionally not exposed as an Events filter. It is only the
-  // direct handoff from the owner-only Leagues quick action into its existing
-  // management workspace.
-  const [eventsFilter, setEventsFilter] = useState<"all" | "leagues">("all");
   const [feedComposerOpenRequest, setFeedComposerOpenRequest] = useState(0);
   const [memberSearch, setMemberSearch] = useState("");
   // Post-type composer
@@ -3075,14 +3079,13 @@ export default function ClubDashboard() {
   const [leaguePickedIds, setLeaguePickedIds] = useState<Set<string>>(new Set());
   const [leaguePickSearch, setLeaguePickSearch] = useState("");
 
-  // The global League navigation deep-links to the current Club's Events
+  // The global League navigation deep-links to the dedicated Club League
   // workspace, while regular Events navigation continues to open the gallery.
   useEffect(() => {
     const query = location.includes("?") ? location.slice(location.indexOf("?") + 1) : "";
     const params = new URLSearchParams(query);
-    if (params.get("tab") === "events" && params.get("view") === "leagues") {
-      setTab("events");
-      setEventsFilter("leagues");
+    if (params.get("tab") === "leagues") {
+      setTab("leagues");
     }
   }, [location]);
 
@@ -3281,12 +3284,12 @@ export default function ClubDashboard() {
     syncEventsFromServer(clubId).then(setEvents).catch(() => {});
   }, [tab, clubId]);
 
-  // The League workspace is an Events subview. Fetch its canonical server list
-  // whenever the user opens it rather than only after creating a new League.
+  // Fetch the canonical League list whenever its dedicated workspace opens,
+  // rather than only after creating a new League.
   useEffect(() => {
-    if (tab !== "events" || eventsFilter !== "leagues" || !club?.id) return;
+    if (tab !== "leagues" || !club?.id) return;
     void fetchClubLeagues();
-  }, [tab, eventsFilter, club?.id, fetchClubLeagues]);
+  }, [tab, club?.id, fetchClubLeagues]);
 
   const refreshTournamentLeaderboard = useCallback(async () => {
     if (!club?.id) return;
@@ -3859,10 +3862,10 @@ export default function ClubDashboard() {
     { id: "feed", label: "Feed", icon: OtbFeedIcon, group: "workspace" },
     { id: "album", label: "Album", icon: AlbumIcon, group: "workspace" },
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined, group: "workspace" },
+    { id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" },
     { id: "members", label: "Members", icon: MembersIcon, group: "workspace" },
     { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true, group: "workspace" },
     // battles tab removed - now a sub-tab of Feed
-    // leagues consolidated into Events sub-tab filter
   ];
 
   // Club background image — set via ClubSettingsPanel > ClubBackgroundPicker
@@ -3998,7 +4001,7 @@ export default function ClubDashboard() {
           temporarilyExpanded={sidebarTemporarilyExpanded}
           onPointerExpandedChange={setSidebarHovered}
           onFocusExpandedChange={setSidebarKeyboardExpanded}
-          onSelect={(nextTab) => { if (nextTab === "events") setEventsFilter("all"); setTab(nextTab as Tab); }}
+          onSelect={(nextTab) => setTab(nextTab as Tab)}
           onBackToClubs={() => navigate(`/clubs/${club.id}`)}
           footerAction={{ label: "Back to Club", icon: ChevronLeft, onClick: () => navigate(`/clubs/${club.id}`) }}
         />
@@ -4369,17 +4372,31 @@ export default function ClubDashboard() {
                     )}
                   </section>
                 )}
-                {(tab === "feed" || tab === "events" || tab === "members") && (
+                {(tab === "feed" || tab === "events" || tab === "members" || tab === "leagues") && (
                   <ClubWorkspaceSocialHeader
                     club={club}
                     tab={tab}
                     memberCount={club.memberCount}
                     eventCount={upcomingEvents.length}
                     updateCount={feedEvents.length}
+                    leagueCount={clubLeagues.length}
                     accent={accent}
                     isDark={isDark}
                     action={
-                      tab === "events" && isOwnerOrDirector
+                      tab === "leagues" && isOwnerOrDirector
+                        ? {
+                            label: "New League",
+                            icon: Plus,
+                            onClick: () => {
+                              setLeagueWizardOpen(true);
+                              setLeagueWizardStep(1);
+                              setLeagueName("");
+                              setLeagueDesc("");
+                              setLeagueMaxPlayers(6);
+                              setLeaguePickedIds(new Set());
+                            },
+                          }
+                        : tab === "events" && isOwnerOrDirector
                         ? { label: "Create event", icon: Plus, onClick: () => setShowCreateEvent(true) }
                         : tab === "members" && isOwnerOrDirector
                           ? {
@@ -4441,7 +4458,7 @@ export default function ClubDashboard() {
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
-                  { icon: LeaguesIcon, label: "Leagues", action: () => { setEventsFilter("leagues"); setTab("events"); } },
+                  { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
                   { icon: Megaphone, label: "Post", action: () => setTab("feed") },
                 ].map(({ icon: Icon, label, action }) => (
                   <button
@@ -4550,7 +4567,7 @@ export default function ClubDashboard() {
           </div>
         )}
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
-        {tab === "events" && eventsFilter !== "leagues" && (
+        {tab === "events" && (
           <div className="space-y-7">
             {upcomingEvents.length > 0 ? (
               <section aria-label="Scheduled club events" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-2 xl:gap-6">
@@ -6121,24 +6138,14 @@ export default function ClubDashboard() {
         })()}
 
          {/* ── LEAGUES TAB ─────────────────────────────────────────────────── */}
-        {tab === "events" && eventsFilter === "leagues" && (
+        {tab === "leagues" && (
           <div className="space-y-6">
             {/* Header row */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
               <div>
                 <h2 className="text-white font-bold text-lg">Club Leagues</h2>
                 <p className="text-white/40 text-sm mt-0.5">Round-robin seasons for your club members</p>
               </div>
-              {isOwnerOrDirector && !leagueWizardOpen && (
-                <button
-                  onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); setLeagueName(""); setLeagueDesc(""); setLeagueMaxPlayers(6); setLeaguePickedIds(new Set()); }}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
-                  style={{ background: accent, color: "#0a1a0f" }}
-                >
-                  <Plus className="w-4 h-4" />
-                  New League
-                </button>
-              )}
             </div>
 
             {/* ── Create League Wizard ── */}
@@ -6952,7 +6959,7 @@ export default function ClubDashboard() {
                     <button
                       type="button"
                       key={clubTab.id}
-                      onClick={() => { if (clubTab.id === "events") setEventsFilter("all"); setTab(clubTab.id); closeMobileNavDrawer(); }}
+                      onClick={() => { setTab(clubTab.id); closeMobileNavDrawer(); }}
                       aria-current={isActive ? "page" : undefined}
                       className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-transform active:scale-[0.985]"
                       style={{
@@ -6987,7 +6994,7 @@ export default function ClubDashboard() {
                         <button
                           type="button"
                           key={clubTab.id}
-                          onClick={() => { if (clubTab.id === "events") setEventsFilter("all"); setTab(clubTab.id); closeMobileNavDrawer(); }}
+                          onClick={() => { setTab(clubTab.id); closeMobileNavDrawer(); }}
                           aria-current={isActive ? "page" : undefined}
                           className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold transition-transform active:scale-[0.985]"
                           style={{

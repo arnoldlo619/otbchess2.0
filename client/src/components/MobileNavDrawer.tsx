@@ -95,7 +95,7 @@ interface MobileNavDrawerProps {
   onSignOutClick?: () => void;
   /** Extra class names for the outer wrapper */
   className?: string;
-  /** Preferred Club Events → Leagues workspace for signed-in members. */
+  /** Preferred dedicated Club League workspace for signed-in members. */
   leagueUrl?: string;
 }
 

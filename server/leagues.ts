@@ -338,7 +338,7 @@ leaguesRouter.get("/mine", requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-// ── GET /workspace — preferred Club Events → Leagues destination ─────────────
+// ── GET /workspace — preferred dedicated Club League destination ─────────────
 leaguesRouter.get("/workspace", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;

@@ -12,18 +12,26 @@ const mobileNav = read("client/src/components/MobileNavDrawer.tsx");
 const leagueDropdown = read("client/src/components/LeagueDropdown.tsx");
 
 describe("Club League workspace navigation", () => {
-  it("deep-links into the Club Events League view", () => {
+  it("deep-links into the dedicated Club League view", () => {
     expect(getClubLeagueWorkspacePath("club_123")).toBe(
-      "/clubs/club_123/home?tab=events&view=leagues",
+      "/clubs/club_123/home?tab=leagues",
     );
   });
 
-  it("loads canonical League data whenever the Events League view opens", () => {
+  it("loads canonical League data whenever the dedicated League workspace opens", () => {
     expect(dashboard).toContain('authFetch(`/api/leagues/club/${club.id}`, { credentials: "include" })');
-    expect(dashboard).toContain('tab !== "events" || eventsFilter !== "leagues"');
-    expect(dashboard).toContain('params.get("tab") === "events" && params.get("view") === "leagues"');
-    expect(dashboard).toContain('setEventsFilter("leagues")');
+    expect(dashboard).toContain('if (tab !== "leagues" || !club?.id) return;');
+    expect(dashboard).toContain('if (params.get("tab") === "leagues")');
+    expect(dashboard).toContain('setTab("leagues")');
     expect(dashboard).toContain("Loading Club Leagues");
+    expect(dashboard).not.toContain("eventsFilter");
+  });
+
+  it("presents League as a first-class Club sidebar destination", () => {
+    expect(dashboard).toContain('{ id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" }');
+    expect(dashboard).toContain('{tab === "leagues" && (');
+    expect(dashboard).toContain('label: "New League"');
+    expect(dashboard).not.toContain('tab === "events" && eventsFilter === "leagues"');
   });
 
   it("returns owner-managed Leagues even before the commissioner is on the roster", () => {

@@ -16,6 +16,7 @@ import {
   DashboardIcon,
   EventsIcon,
   FeedIcon,
+  LeaguesIcon,
   MembersIcon,
   SettingsIcon,
 } from "@/components/OtbIcons";
@@ -41,7 +42,7 @@ import {
   X,
 } from "lucide-react";
 
-type DemoTab = "overview" | "feed" | "album" | "events" | "members" | "settings";
+type DemoTab = "overview" | "feed" | "album" | "events" | "leagues" | "members" | "settings";
 
 type DemoNavItem = {
   id: DemoTab;
@@ -64,6 +65,7 @@ const DEMO_NAV: DemoNavItem[] = [
   { id: "feed", label: "Feed", icon: FeedIcon, badge: 2, group: "workspace" },
   { id: "album", label: "Album", icon: AlbumIcon, group: "workspace" },
   { id: "events", label: "Events", icon: EventsIcon, badge: 2, group: "workspace" },
+  { id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" },
   { id: "members", label: "Members", icon: MembersIcon, group: "workspace" },
   { id: "settings", label: "Settings", icon: SettingsIcon, group: "workspace" },
 ];
@@ -265,10 +267,11 @@ function DemoMobileDrawer({
   );
 }
 
-function DemoWorkspaceHeader({ activeTab }: { activeTab: Extract<DemoTab, "feed" | "events" | "members"> }) {
+function DemoWorkspaceHeader({ activeTab }: { activeTab: Extract<DemoTab, "feed" | "events" | "leagues" | "members"> }) {
   const content = {
     feed: { label: "Feed", primary: "5 updates", secondary: "84 members", description: "Updates, results, and conversations from The OTB Chess Club." },
     events: { label: "Events", primary: "2 scheduled", secondary: "84 members", description: "Your club’s upcoming tournament nights, meetups, and over-the-board plans." },
+    leagues: { label: undefined, primary: "1 league", secondary: "84 members", description: "Round-robin seasons and matchups for your club members." },
     members: { label: "Members", primary: "84 members", secondary: "2 events", description: "The players, regulars, and organizers who make The OTB Chess Club a club." },
   }[activeTab];
 
@@ -277,7 +280,7 @@ function DemoWorkspaceHeader({ activeTab }: { activeTab: Extract<DemoTab, "feed"
       <div className="flex items-center gap-4 sm:gap-5">
         <div className="shrink-0 rounded-full bg-[linear-gradient(135deg,#4CAF50,#4CAF5066,#4CAF50)] p-[2px]"><div className="rounded-full bg-[#06130d] p-1"><DemoAvatar initials="OC" tone="#426f45" size="lg" /></div></div>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 className="truncate text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1><span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">{content.label}</span></div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1 className="truncate text-xl font-bold tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{DEMO_CLUB_NAME}</h1>{content.label && <span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">{content.label}</span>}</div>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85"><span><strong className="font-semibold text-white">{content.primary}</strong></span><span><strong className="font-semibold text-white">{content.secondary}</strong></span></div>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">{content.description}</p>
         </div>
@@ -287,7 +290,7 @@ function DemoWorkspaceHeader({ activeTab }: { activeTab: Extract<DemoTab, "feed"
 }
 
 function DemoBanner({ activeTab }: { activeTab: DemoTab }) {
-  if (activeTab === "feed" || activeTab === "events" || activeTab === "members") return <DemoWorkspaceHeader activeTab={activeTab} />;
+  if (activeTab === "feed" || activeTab === "events" || activeTab === "leagues" || activeTab === "members") return <DemoWorkspaceHeader activeTab={activeTab} />;
   if (activeTab !== "overview") return null;
   return (
     <section aria-label={`${DEMO_CLUB_NAME} club header`} data-testid="club-demo-social-header" className="relative mb-5 overflow-hidden rounded-[28px] border border-white/10 bg-[#06130d] shadow-[0_18px_48px_rgba(4,20,10,0.18)]">
@@ -423,11 +426,20 @@ function DemoEvents() {
         <button type="button" className="flex w-full flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold text-[#0a1a0f] transition-transform hover:brightness-110 active:scale-[0.98]" style={{ background: DEMO_ACCENT }}><Trophy className="h-4 w-4" aria-hidden="true" />New Tournament<ArrowRight className="h-4 w-4" aria-hidden="true" /></button>
         <button type="button" className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 px-4 py-3.5 text-sm font-bold text-white/60 transition-colors hover:border-white/30 hover:text-white/80"><Plus className="h-4 w-4" aria-hidden="true" />Club Meetup</button>
       </div>
-      <div className="flex items-center gap-2 overflow-x-auto pb-1" aria-label="Demo event filters">
-        {["All", "Meetups", "Tournaments", "Leagues"].map((filter, index) => <button key={filter} type="button" className="h-9 shrink-0 rounded-full px-4 text-xs font-bold transition-colors" style={{ background: index === 0 ? DEMO_ACCENT : "rgba(255,255,255,0.08)", color: index === 0 ? "#0a1a0f" : "rgba(255,255,255,0.45)" }}>{filter}</button>)}
-      </div>
       <section><div className="mb-4 flex items-center gap-2"><Users className="h-4 w-4" style={{ color: DEMO_ACCENT }} aria-hidden="true" /><h2 className="text-xs font-bold uppercase tracking-widest text-white/40">Club Meetups · 2</h2></div><div className="space-y-4">{DEMO_EVENTS.map((event) => <article key={event.title} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[oklch(0.16_0.05_145)] transition-all hover:scale-[1.005] hover:border-white/25"><div className="h-1 bg-[#4CAF50] transition-all group-hover:h-[3px]" /><div className="p-5"><div className="flex items-start justify-between gap-3"><div className="min-w-0 flex-1"><div className="mb-1 flex flex-wrap items-center gap-2"><span className="rounded-full bg-emerald-300/15 px-2 py-0.5 text-xs font-bold text-emerald-300">Upcoming</span><span className="text-xs text-white/30">{event.date}</span></div><h3 className="truncate text-base font-bold text-white">{event.title}</h3><p className="mt-1 line-clamp-2 text-sm text-white/40">{event.detail}</p><div className="mt-2 flex items-center gap-1.5 text-xs text-white/30"><MapPin className="h-3 w-3" aria-hidden="true" />{event.venue}</div></div><div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]"><span className="text-[10px] font-bold uppercase text-white/40">{event.month}</span><span className="text-sm font-black text-white">{event.day}</span></div></div><div className="mt-4 flex flex-wrap items-center gap-2"><span className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold" style={{ background: `${DEMO_ACCENT}33`, color: DEMO_ACCENT, border: `1px solid ${DEMO_ACCENT}66` }}><Calendar className="h-3.5 w-3.5" aria-hidden="true" />View {event.kind}</span><span className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold text-white/56" style={{ borderColor: `${DEMO_ACCENT}66`, background: `${DEMO_ACCENT}18` }}><CheckCircle2 className="h-3.5 w-3.5" style={{ color: DEMO_ACCENT }} aria-hidden="true" />{event.attendees}</span></div></div></article>)}</div></section>
     </div>
+  );
+}
+
+function DemoLeagues() {
+  return (
+    <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
+      <header className="flex items-center justify-between border-b px-4 py-3.5 sm:px-5" style={{ borderColor: "rgba(255,255,255,0.065)" }}>
+        <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club season</p><h2 className="mt-0.5 text-sm font-bold text-white/92">Club Leagues</h2></div>
+        <span className="rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: `${DEMO_ACCENT}18`, color: DEMO_ACCENT }}>1 active</span>
+      </header>
+      <article className="p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-base font-bold text-white">Autumn Club League</p><p className="mt-1 text-sm leading-6 text-white/50">Weekly round-robin matchups for club members.</p></div><Trophy className="h-5 w-5 shrink-0" style={{ color: DEMO_ACCENT }} aria-hidden="true" /></div><div className="mt-4 grid grid-cols-3 gap-2 border-t pt-4 text-center" style={{ borderColor: "rgba(255,255,255,0.065)" }}><div><p className="text-sm font-bold text-white">4</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/38">Weeks</p></div><div><p className="text-sm font-bold text-white">6</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/38">Players</p></div><div><p className="text-sm font-bold text-white">Active</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/38">Status</p></div></div></article>
+    </section>
   );
 }
 
@@ -504,7 +516,7 @@ export default function ClubDashboardDemo() {
           </header>
 
           <main className="flex-1 overflow-x-hidden overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
-            <div className="px-4 py-4 lg:px-6"><div className="mx-auto max-w-4xl"><DemoBanner activeTab={tab} /><TabTransition tabKey={tab}>{tab === "overview" && <DemoOverview onSelect={selectTab} />}{tab === "feed" && <DemoFeed />}{tab === "events" && <DemoEvents />}{tab === "members" && <DemoMembers />}{tab === "album" && <DemoAlbum />}{tab === "settings" && <DemoSettings />}</TabTransition><section className="mt-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[oklch(0.15_0.045_145)] p-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-bold text-white/92">Ready to build your Club workspace?</p><p className="mt-1 text-sm text-white/46">Create a private home for your members, events, feed, and media.</p></div><button type="button" onClick={() => navigate("/clubs?create=1")} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.98]" style={{ background: "#426f45" }}><Plus className="h-4 w-4" aria-hidden="true" />Create a club</button></section></div></div>
+            <div className="px-4 py-4 lg:px-6"><div className="mx-auto max-w-4xl"><DemoBanner activeTab={tab} /><TabTransition tabKey={tab}>{tab === "overview" && <DemoOverview onSelect={selectTab} />}{tab === "feed" && <DemoFeed />}{tab === "events" && <DemoEvents />}{tab === "leagues" && <DemoLeagues />}{tab === "members" && <DemoMembers />}{tab === "album" && <DemoAlbum />}{tab === "settings" && <DemoSettings />}</TabTransition><section className="mt-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[oklch(0.15_0.045_145)] p-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-bold text-white/92">Ready to build your Club workspace?</p><p className="mt-1 text-sm text-white/46">Create a private home for your members, events, feed, and media.</p></div><button type="button" onClick={() => navigate("/clubs?create=1")} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.98]" style={{ background: "#426f45" }}><Plus className="h-4 w-4" aria-hidden="true" />Create a club</button></section></div></div>
           </main>
         </div>
       </div>

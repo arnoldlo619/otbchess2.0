@@ -13,24 +13,27 @@ describe("Club Dashboard workspace headers", () => {
     expect(dashboard).toContain('data-testid="club-dashboard-full-bleed-banner"');
   });
 
-  it("uses one compact Album-style profile header for Feed, Events, and Members", () => {
+  it("uses one compact Album-style profile header for Feed, Events, League, and Members", () => {
     expect(dashboard).toContain("function ClubWorkspaceSocialHeader");
     expect(dashboard).toContain('data-testid="club-dashboard-workspace-header"');
-    expect(dashboard).toContain('tab === "feed" || tab === "events" || tab === "members"');
+    expect(dashboard).toContain('tab === "feed" || tab === "events" || tab === "members" || tab === "leagues"');
     expect(dashboard).toContain('label: "Feed"');
     expect(dashboard).toContain('label: "Events"');
     expect(dashboard).toContain('label: "Members"');
+    expect(dashboard).toContain('leagues: {');
     expect(dashboard).toContain('size={72}');
     expect(dashboard).toContain('tracking-[0.12em]');
     expect(dashboard).toContain("relative mb-6 pb-6 after:absolute after:inset-x-0 after:bottom-0 after:h-px");
     expect(dashboard).not.toContain("mb-5 border-b px-1 pb-5");
   });
 
-  it("keeps one relevant owner or member action in the compact header", () => {
+  it("keeps one relevant owner or member action in each compact header", () => {
     expect(dashboard).toContain('label: "Create event"');
+    expect(dashboard).toContain('label: "New League"');
     expect(dashboard).toContain('label: "Invite members"');
     expect(dashboard).toContain('label: "Post update"');
     expect(dashboard).toContain("setShowCreateEvent(true)");
+    expect(dashboard).toContain("setLeagueWizardOpen(true)");
     expect(dashboard).toContain("function openInviteDialog()");
     expect(dashboard).toContain("onClick: openInviteDialog");
     expect(dashboard).toContain("setFeedComposerOpenRequest((current) => current + 1)");
@@ -39,6 +42,12 @@ describe("Club Dashboard workspace headers", () => {
     expect(dashboard).toContain('data-testid="club-members-invite-dialog"');
     expect(dashboard).not.toContain('>New tournament<');
     expect(dashboard).not.toContain('>Create meetup<');
+  });
+
+  it("removes the inaccurate Events label from the League header", () => {
+    expect(dashboard).toContain('label: undefined,');
+    expect(dashboard).toContain('{content.label && <span');
+    expect(dashboard).toContain('aria-label={`${club.name}${content.label ? ` ${content.label.toLowerCase()}` : ""} header`}');
   });
 
   it("moves member invitations into an accessible dialog rather than an inline drawer", () => {
@@ -59,8 +68,10 @@ describe("Club Dashboard workspace headers", () => {
   it("keeps the demo aligned with live workspace header hierarchy", () => {
     expect(demo).toContain("function DemoWorkspaceHeader");
     expect(demo).toContain('data-testid="club-demo-workspace-header"');
-    expect(demo).toContain('if (activeTab === "feed" || activeTab === "events" || activeTab === "members")');
+    expect(demo).toContain('activeTab === "feed" || activeTab === "events" || activeTab === "leagues" || activeTab === "members"');
     expect(demo).toContain('if (activeTab !== "overview") return null;');
     expect(demo).toContain("relative mb-6 pb-6 text-white after:absolute after:inset-x-0");
+    expect(demo).toContain('label: undefined, primary: "1 league"');
+    expect(demo).toContain('{ id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" }');
   });
 });

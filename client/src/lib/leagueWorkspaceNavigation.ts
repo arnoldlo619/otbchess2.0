@@ -10,7 +10,7 @@ interface LeagueWorkspaceResponse {
 }
 
 export function getClubLeagueWorkspacePath(clubId: string): string {
-  return `/clubs/${encodeURIComponent(clubId)}/home?tab=events&view=leagues`;
+  return `/clubs/${encodeURIComponent(clubId)}/home?tab=leagues`;
 }
 
 function getFallbackLeagueDestination(user: AuthUser | null | undefined): string {
@@ -18,7 +18,7 @@ function getFallbackLeagueDestination(user: AuthUser | null | undefined): string
 }
 
 /**
- * Resolves the most relevant Club Events → Leagues workspace for the signed-in
+ * Resolves the most relevant dedicated Club League workspace for the signed-in
  * member. The server scopes the decision to owned/joined clubs and prioritizes
  * active leagues before drafts and completed history.
  */
