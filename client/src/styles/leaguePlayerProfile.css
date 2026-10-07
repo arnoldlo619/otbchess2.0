@@ -1,0 +1,36 @@
+@keyframes league-profile-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes league-rating-ticker-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.league-player-profile-modal {
+  animation: league-profile-modal-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.league-rating-ticker {
+  animation: league-rating-ticker-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .league-player-profile-modal,
+  .league-rating-ticker {
+    animation: none !important;
+  }
+}

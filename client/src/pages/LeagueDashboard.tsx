@@ -11,8 +11,8 @@ import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
-  Share2, Copy, Check, QrCode, X, History, Settings, Pencil,
-  ExternalLink, Star, AlertTriangle, Download
+  Share2, Copy, Check, QrCode, X, Settings, Pencil,
+  Star, AlertTriangle, Download
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon, MembersIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
@@ -21,6 +21,7 @@ import AuthModal from "@/components/AuthModal";
 import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
+import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
 import { OTBLoader } from "@/components/OTBLoader";
@@ -447,240 +448,6 @@ function PlayerSeasonCardPreview({
               {sharing ? <Clock size={16} className="animate-spin" aria-hidden="true" /> : <Share2 size={16} aria-hidden="true" />}
               {sharing ? "Preparing card" : "Share Card"}
             </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Player Profile Modal ────────────────────────────────────────────────────
-interface ChessComStats {
-  chess_rapid?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
-  chess_blitz?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
-  chess_bullet?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
-  chess_daily?: { last?: { rating?: number }; best?: { rating?: number }; record?: { win?: number; loss?: number; draw?: number } };
-  fide?: number;
-}
-interface ChessComProfile {
-  username?: string;
-  name?: string;
-  country?: string;
-  location?: string;
-  joined?: number;
-  last_online?: number;
-  followers?: number;
-  is_streamer?: boolean;
-  verified?: boolean;
-  title?: string;
-  url?: string;
-}
-
-function PlayerProfileModal({
-  player, allMatches, isDark, onClose, chesscomAvatarUrl,
-}: {
-  player: LeaguePlayer;
-  allMatches: LeagueMatch[];
-  isDark: boolean;
-  onClose: () => void;
-  chesscomAvatarUrl?: string | null;
-}) {
-  const bg = isDark ? "oklch(0.19 0.05 145)" : "oklch(1.00 0.00 145)";
-  const cardBg = isDark ? "oklch(0.24 0.07 145)" : "oklch(0.96 0.02 145)";
-  const border = isDark ? "oklch(0.28 0.07 145)" : "oklch(0.88 0.03 145)";
-  const textMain = isDark ? "oklch(0.95 0.02 145)" : "oklch(0.18 0.06 145)";
-  const textMuted = isDark ? "oklch(0.74 0.04 145)" : "oklch(0.38 0.05 145)";
-  const accent = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
-
-  const [profile, setProfile] = useState<ChessComProfile | null>(null);
-  const [stats, setStats] = useState<ChessComStats | null>(null);
-  const [loadingData, setLoadingData] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch chess.com profile + stats on mount
-  useEffect(() => {
-    if (!player.chesscomUsername) return;
-    setLoadingData(true);
-    fetch(`/api/chess/player/${encodeURIComponent(player.chesscomUsername)}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) { setError(data.error); return; }
-        setProfile(data.profile as ChessComProfile);
-        setStats(data.stats as ChessComStats);
-      })
-      .catch(() => setError("Could not load chess.com data"))
-      .finally(() => setLoadingData(false));
-  }, [player.chesscomUsername]);
-
-  // Derive recent league matches for this player
-  const playerMatches = allMatches
-    .filter(m => m.playerWhiteId === player.playerId || m.playerBlackId === player.playerId)
-    .filter(m => m.resultStatus === "completed" && m.result)
-    .sort((a, b) => (b.weekNumber - a.weekNumber) || (b.id - a.id))
-    .slice(0, 5);
-
-  function matchOutcome(m: LeagueMatch): "win" | "loss" | "draw" {
-    const isWhite = m.playerWhiteId === player.playerId;
-    if (m.result === "draw") return "draw";
-    if ((m.result === "white_win" && isWhite) || (m.result === "black_win" && !isWhite)) return "win";
-    return "loss";
-  }
-
-  function matchOpponent(m: LeagueMatch): string {
-    return m.playerWhiteId === player.playerId ? m.playerBlackName : m.playerWhiteName;
-  }
-
-  const ratingTypes = [
-    { key: "chess_rapid" as const, label: "Rapid" },
-    { key: "chess_blitz" as const, label: "Blitz" },
-    { key: "chess_bullet" as const, label: "Bullet" },
-    { key: "chess_daily" as const, label: "Daily" },
-  ];
-
-  const outcomeColor = { win: accent, loss: isDark ? "oklch(0.68 0.18 25)" : "oklch(0.42 0.18 25)", draw: isDark ? "oklch(0.72 0.15 60)" : "oklch(0.45 0.15 60)" };
-  const outcomeLabel = { win: "W", loss: "L", draw: "D" };
-
-  return (
-    <div
-      className="modal-overlay z-50"
-      style={{ background: "rgba(0,0,0,0.65)" }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: bg, border: `1px solid ${border}` }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Header strip */}
-        <div
-          className="relative h-20 flex-shrink-0"
-          style={{ background: `linear-gradient(135deg, oklch(0.22 0.08 145), oklch(0.30 0.10 145))` }}
-        >
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 p-1.5 rounded-xl"
-            style={{ background: "oklch(0.18 0.06 145 / 0.7)" }}
-          >
-            <X size={14} style={{ color: textMuted }} />
-          </button>
-        </div>
-
-        {/* Avatar — overlaps the header */}
-        <div className="px-5 pb-1" style={{ marginTop: "-2.5rem" }}>
-          <div className="flex items-end justify-between">
-            <div
-              className="rounded-2xl overflow-hidden flex-shrink-0"
-              style={{ width: 72, height: 72, border: `3px solid ${bg}`, boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}
-            >
-              {chesscomAvatarUrl ? (
-                <img loading="lazy" decoding="async" src={chesscomAvatarUrl} alt={player.displayName} className="w-full h-full object-cover" />
-              ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center text-2xl font-black"
-                  style={{ background: "linear-gradient(135deg, oklch(0.32 0.10 145), oklch(0.22 0.07 145))", color: "oklch(0.75 0.12 145)" }}
-                >
-                  {player.displayName.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
-                </div>
-              )}
-            </div>
-            {player.chesscomUsername && (
-              <a
-                href={`https://www.chess.com/member/${player.chesscomUsername}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-opacity hover:opacity-80"
-                style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}33` }}
-              >
-                <ExternalLink size={11} />
-                chess.com
-              </a>
-            )}
-          </div>
-
-          {/* Name + username */}
-          <div className="mt-2.5 mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-black" style={{ color: textMain }}>{player.displayName}</h3>
-              {profile?.title && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${accent}22`, color: accent }}>{profile.title}</span>
-              )}
-            </div>
-            {player.chesscomUsername && (
-              <p className="text-xs mt-0.5" style={{ color: textMuted }}>@{player.chesscomUsername}</p>
-            )}
-          </div>
-
-          {/* Chess.com ratings */}
-          {loadingData ? (
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {[0,1,2,3].map(i => (
-                <div key={i} className="rounded-xl h-16 overflow-hidden" style={{ background: cardBg }}>
-                  <div className="w-full h-full" style={{ background: "linear-gradient(90deg, transparent, oklch(0.32 0.08 145 / 0.5), transparent)", backgroundSize: "200% 100%", animation: "avatar-shimmer 1.4s ease-in-out infinite" }} />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="mb-4 text-xs text-center py-3 rounded-xl" style={{ background: cardBg, color: textMuted }}>
-              {!player.chesscomUsername ? "No chess.com username linked" : error}
-            </div>
-          ) : stats ? (
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {ratingTypes.map(({ key, label }) => {
-                const r = stats[key];
-                const rating = r?.last?.rating;
-                const best = r?.best?.rating;
-                return (
-                  <div key={key} className="rounded-xl p-2.5 text-center" style={{ background: cardBg }}>
-                    <div className="text-[10px] font-semibold mb-1" style={{ color: textMuted }}>{label}</div>
-                    <div className="text-base font-black" style={{ color: rating ? textMain : textMuted }}>
-                      {rating ?? "—"}
-                    </div>
-                    {best && best !== rating && (
-                      <div className="text-[10px] mt-0.5" style={{ color: textMuted }}>↑{best}</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
-
-          {/* League match history */}
-          <div className="mb-5">
-            <div className="flex items-center gap-2 mb-2.5">
-              <History size={13} style={{ color: accent }} />
-              <span className="text-xs font-semibold" style={{ color: textMain }}>Recent League Matches</span>
-            </div>
-            {playerMatches.length === 0 ? (
-              <div className="text-xs text-center py-3 rounded-xl" style={{ background: cardBg, color: textMuted }}>No completed matches yet</div>
-            ) : (
-              <div className="space-y-1.5">
-                {playerMatches.map(m => {
-                  const outcome = matchOutcome(m);
-                  const opp = matchOpponent(m);
-                  const isWhite = m.playerWhiteId === player.playerId;
-                  const score = m.result === "draw" ? "½–½" : m.result === "white_win" ? (isWhite ? "1–0" : "0–1") : (isWhite ? "0–1" : "1–0");
-                  return (
-                    <div
-                      key={m.id}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
-                      style={{ background: cardBg }}
-                    >
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0"
-                        style={{ background: `${outcomeColor[outcome]}22`, color: outcomeColor[outcome] }}
-                      >
-                        {outcomeLabel[outcome]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold truncate" style={{ color: textMain }}>vs {opp}</div>
-                        <div className="text-[10px]" style={{ color: textMuted }}>Week {m.weekNumber} · {isWhite ? "White" : "Black"}</div>
-                      </div>
-                      <span className="text-xs font-black flex-shrink-0" style={{ color: outcomeColor[outcome] }}>{score}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1457,6 +1224,33 @@ export default function LeagueDashboard() {
   function openPlayerProfile(playerId: string) {
     const p = getPlayer(playerId);
     if (p) setSelectedPlayer(p);
+  }
+
+  function getPlayerProfileRecentMatches(playerId: string): LeagueProfileRecentMatch[] {
+    return allMatches
+      .filter((match) => match.playerWhiteId === playerId || match.playerBlackId === playerId)
+      .filter((match) => match.resultStatus === "completed" && match.result)
+      .sort((a, b) => (b.weekNumber - a.weekNumber) || (b.id - a.id))
+      .slice(0, 5)
+      .map((match) => {
+        const isWhite = match.playerWhiteId === playerId;
+        const outcome = match.result === "draw"
+          ? "draw"
+          : (match.result === "white_win") === isWhite ? "win" : "loss";
+        const score = match.result === "draw"
+          ? "½–½"
+          : match.result === "white_win"
+            ? isWhite ? "1–0" : "0–1"
+            : isWhite ? "0–1" : "1–0";
+        return {
+          id: match.id,
+          weekNumber: match.weekNumber,
+          opponentName: isWhite ? match.playerBlackName : match.playerWhiteName,
+          color: isWhite ? "white" : "black",
+          outcome,
+          score,
+        };
+      });
   }
 
   // Recent completed matches (last 5)
@@ -4571,12 +4365,17 @@ export default function LeagueDashboard() {
 
       {/* Player profile modal */}
       {selectedPlayer && (
-        <PlayerProfileModal
-          player={selectedPlayer}
-          allMatches={allMatches}
+        <LeaguePlayerProfileModal
+          player={{
+            id: selectedPlayer.playerId,
+            displayName: selectedPlayer.displayName,
+            chesscomUsername: selectedPlayer.chesscomUsername,
+            avatarUrl: getChesscomAvatar(selectedPlayer.chesscomUsername) ?? selectedPlayer.avatarUrl,
+            rating: selectedPlayer.leagueRating ?? selectedPlayer.rating,
+          }}
+          recentMatches={getPlayerProfileRecentMatches(selectedPlayer.playerId)}
           isDark={isDark}
           onClose={() => setSelectedPlayer(null)}
-          chesscomAvatarUrl={getChesscomAvatar(selectedPlayer.chesscomUsername)}
         />
       )}
 

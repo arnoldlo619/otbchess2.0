@@ -20,6 +20,7 @@ import {
 } from "@/components/OtbIcons";
 import { AsciiArt } from "@/components/ui/d60-hero";
 import { LeagueBracket } from "@/components/LeagueBracket";
+import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -178,6 +179,7 @@ export default function LeagueDemo() {
   const [hasLeague, setHasLeague] = useState(false);
   const [hasClub, setHasClub] = useState(false);
   const [firstClubId, setFirstClubId] = useState<string | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<DemoPlayer | null>(null);
   const isGuest = !user || user.isGuest;
   // Sign-in gate for guest CTA clicks
   const [authOpen, setAuthOpen] = useState(false);
@@ -229,6 +231,31 @@ export default function LeagueDemo() {
   // H2H between Magnus and Hikaru (mock)
   const h2hW = 3, h2hD = 2, h2hL = 2;
   const h2hTotal = h2hW + h2hD + h2hL;
+
+  function getDemoRecentMatches(player: DemoPlayer): LeagueProfileRecentMatch[] {
+    return CURRENT_WEEK_MATCHUPS
+      .filter((match) => match.white.id === player.id || match.black.id === player.id)
+      .filter((match) => match.result !== null)
+      .map((match, index) => {
+        const isWhite = match.white.id === player.id;
+        const outcome = match.result === "draw"
+          ? "draw"
+          : (match.result === "white_win") === isWhite ? "win" : "loss";
+        const score = match.result === "draw"
+          ? "½–½"
+          : match.result === "white_win"
+            ? isWhite ? "1–0" : "0–1"
+            : isWhite ? "0–1" : "1–0";
+        return {
+          id: `week-14-${player.id}-${index}`,
+          weekNumber: 14,
+          opponentName: isWhite ? match.black.displayName : match.white.displayName,
+          color: isWhite ? "white" : "black",
+          outcome,
+          score,
+        };
+      });
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -437,7 +464,17 @@ export default function LeagueDemo() {
                       <div className="flex items-center justify-between gap-4">
                         {/* White player */}
                         <div
-                          className="flex flex-col items-center gap-3 flex-1 rounded-2xl p-4 cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open ${featuredMatchup.white.displayName}'s League profile`}
+                          onClick={() => setSelectedPlayer(featuredMatchup.white)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedPlayer(featuredMatchup.white);
+                            }
+                          }}
+                          className="flex flex-col items-center gap-3 flex-1 rounded-2xl p-4 cursor-pointer focus:outline-none focus:ring-2"
                           style={{ transition: "background 0.22s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease" }}
                           onMouseEnter={(e) => {
                             const el = e.currentTarget as HTMLDivElement;
@@ -478,7 +515,17 @@ export default function LeagueDemo() {
 
                         {/* Black player */}
                         <div
-                          className="flex flex-col items-center gap-3 flex-1 rounded-2xl p-4 cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open ${featuredMatchup.black.displayName}'s League profile`}
+                          onClick={() => setSelectedPlayer(featuredMatchup.black)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedPlayer(featuredMatchup.black);
+                            }
+                          }}
+                          className="flex flex-col items-center gap-3 flex-1 rounded-2xl p-4 cursor-pointer focus:outline-none focus:ring-2"
                           style={{ transition: "background 0.22s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease" }}
                           onMouseEnter={(e) => {
                             const el = e.currentTarget as HTMLDivElement;
@@ -577,7 +624,17 @@ export default function LeagueDemo() {
                       return (
                         <div
                           key={p.id}
-                          className="hidden sm:grid items-center px-4 py-3 transition-all duration-200 hover:bg-white/5 hover:scale-[1.005] cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open ${p.displayName}'s League profile`}
+                          onClick={() => setSelectedPlayer(p)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedPlayer(p);
+                            }
+                          }}
+                          className="hidden sm:grid items-center px-4 py-3 transition-all duration-200 hover:bg-white/5 hover:scale-[1.005] cursor-pointer focus:outline-none focus:ring-2"
                           style={{
                             gridTemplateColumns: "2.5rem 1fr 4rem 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
                             gap: "0.5rem",
@@ -622,7 +679,17 @@ export default function LeagueDemo() {
                     {DEMO_PLAYERS.slice(0, 8).map((p, i) => (
                       <div
                         key={`m-${p.id}`}
-                        className="sm:hidden flex items-center gap-3 px-4 py-3.5 transition-all duration-200 hover:bg-white/5 cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Open ${p.displayName}'s League profile`}
+                        onClick={() => setSelectedPlayer(p)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedPlayer(p);
+                          }
+                        }}
+                        className="sm:hidden flex items-center gap-3 px-4 py-3.5 transition-all duration-200 hover:bg-white/5 cursor-pointer focus:outline-none focus:ring-2"
                         style={{ borderBottom: i < 7 ? `1px solid ${cardBorder}` : "none" }}
                       >
                         <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{i + 1}</span>
@@ -960,7 +1027,17 @@ export default function LeagueDemo() {
                       <div key={p.id}>
                         {/* Desktop row */}
                         <div
-                          className="hidden sm:grid items-center px-4 py-3 transition-colors hover:bg-white/5"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open ${p.displayName}'s League profile`}
+                          onClick={() => setSelectedPlayer(p)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedPlayer(p);
+                            }
+                          }}
+                          className="hidden sm:grid items-center px-4 py-3 transition-colors hover:bg-white/5 cursor-pointer focus:outline-none focus:ring-2"
                           style={{
                             gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
                             gap: "0.5rem",
@@ -1016,7 +1093,17 @@ export default function LeagueDemo() {
 
                         {/* Mobile card */}
                         <div
-                          className="sm:hidden px-4 py-4"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open ${p.displayName}'s League profile`}
+                          onClick={() => setSelectedPlayer(p)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedPlayer(p);
+                            }
+                          }}
+                          className="sm:hidden px-4 py-4 cursor-pointer focus:outline-none focus:ring-2"
                           style={{
                             borderBottom: i < DEMO_PLAYERS.length - 1 ? `1px solid ${cardBorder}` : "none",
                             background: i < 3 && podiumColor ? `${podiumColor}06` : "transparent",
@@ -1071,6 +1158,7 @@ export default function LeagueDemo() {
                           {/* Prep button */}
                           <a
                             href={`/prep/${encodeURIComponent(p.chesscomUsername)}`}
+                            onClick={(event) => event.stopPropagation()}
                             className="mt-2 ml-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
                             style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
                           >
@@ -1224,6 +1312,21 @@ export default function LeagueDemo() {
         </div>
       </div>
     </div>
+
+    {selectedPlayer && (
+      <LeaguePlayerProfileModal
+        player={{
+          id: selectedPlayer.id,
+          displayName: selectedPlayer.displayName,
+          chesscomUsername: selectedPlayer.chesscomUsername,
+          avatarUrl: getAvatar(selectedPlayer.chesscomUsername) ?? selectedPlayer.avatarUrl,
+          rating: selectedPlayer.rating,
+        }}
+        recentMatches={getDemoRecentMatches(selectedPlayer)}
+        isDark={isDark}
+        onClose={() => setSelectedPlayer(null)}
+      />
+    )}
 
     {/* ── Sign-in gate modal for guest CTA clicks ── */}
     <AuthModal
