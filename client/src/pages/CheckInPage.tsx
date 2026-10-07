@@ -34,6 +34,7 @@ import {
 } from "@/lib/clubEventRegistry";
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { authFetch } from "@/lib/apiFetch";
+import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 
 interface AttendeeWithRating {
   userId: string;
@@ -67,11 +68,11 @@ async function fetchChessComRating(username: string): Promise<{ rapid: number | 
   }
 }
 
-const sidebarTabs = [
-  { id: "feed", label: "Feed", icon: Megaphone },
-  { id: "events", label: "Events", icon: Calendar },
-  { id: "members", label: "Members", icon: Users },
-  { id: "settings", label: "Settings", icon: Settings2 },
+const sidebarTabs: ClubDashboardSidebarItem[] = [
+  { id: "feed", label: "Feed", icon: Megaphone, group: "workspace" },
+  { id: "events", label: "Events", icon: Calendar, group: "workspace" },
+  { id: "members", label: "Members", icon: Users, group: "workspace" },
+  { id: "settings", label: "Settings", icon: Settings2, group: "workspace" },
 ];
 
 export default function CheckInPage() {
@@ -92,6 +93,9 @@ export default function CheckInPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   // Pending check-in flag — auto-fires after sign-in
   const [pendingCheckIn, setPendingCheckIn] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
+  const sidebarTemporarilyExpanded = sidebarHovered || sidebarKeyboardExpanded;
 
   const refresh = useCallback(async () => {
     if (!eventId) return;
@@ -257,62 +261,24 @@ export default function CheckInPage() {
     <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
-        <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
-          style={{ borderRight: "1px solid oklch(0.22 0.06 145)" }}
-        >
-          <div
-            className="absolute inset-0 pointer-events-none z-0"
-            style={{ background: "oklch(0.15 0.04 145 / 0.80)" }}
-          />
-          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
-            {/* Club avatar / back to club */}
-            <button
-              onClick={() => clubId && navigate(`/clubs/${clubId}/home`)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
-              style={{ background: accentColor }}
-              title="Back to Club"
-            >
-              {club?.avatarUrl ? (
-                <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
-              ) : (
-                <img
-                  src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
-                  alt="OTB!!"
-                  className="w-8 h-8 object-contain"
-                />
-              )}
-            </button>
-            <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-            <nav aria-label="Club dashboard navigation" className="flex flex-col items-center gap-1 flex-1">
-              {sidebarTabs.map((ct) => {
-                const Icon = ct.icon;
-                const isActive = ct.id === "events";
-                return (
-                  <button
-                    key={ct.id}
-                    onClick={() => clubId && navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
-                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
-                    style={{
-                      background: isActive ? accentColor : "transparent",
-                      color: isActive ? "oklch(0.12 0.04 145)" : "oklch(0.55 0.08 145)",
-                    }}
-                    title={ct.label}
-                  >
-                    <Icon size={17} />
-                    <span
-                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                      style={{ background: "oklch(0.25 0.06 145)", color: "#fff" }}
-                    >
-                      {ct.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </aside>
+        <div className="hidden w-[72px] min-w-[72px] flex-shrink-0 lg:block" />
+        <ClubDashboardSidebar
+          accent={accentColor}
+          background="oklch(0.115 0.025 145)"
+          borderColor="oklch(0.22 0.06 145)"
+          brandImageSrc={club?.avatarUrl}
+          brandLabel={club?.name ?? "Club"}
+          brandActionLabel="Back to Club dashboard"
+          items={sidebarTabs}
+          activeId="events"
+          collapsed
+          temporarilyExpanded={sidebarTemporarilyExpanded}
+          onPointerExpandedChange={setSidebarHovered}
+          onFocusExpandedChange={setSidebarKeyboardExpanded}
+          onSelect={(nextTab) => clubId && navigate(`/clubs/${clubId}/home?tab=${nextTab}`)}
+          onBackToClubs={() => clubId && navigate(`/clubs/${clubId}/home`)}
+          footerAction={{ label: "Back to Club", icon: ChevronLeft, onClick: () => clubId && navigate(`/clubs/${clubId}/home`) }}
+        />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

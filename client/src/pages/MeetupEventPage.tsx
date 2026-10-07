@@ -28,7 +28,6 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
-import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import {
@@ -45,6 +44,7 @@ import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
 import { authFetch } from "@/lib/apiFetch";
 import { ClipboardList } from "lucide-react";
 import { ClubPuzzleRelaySession } from "@/components/club/ClubPuzzleRelaySession";
+import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   none: "One-time",
@@ -80,6 +80,8 @@ export default function MeetupEventPage() {
   const [dbCheckinIds, setDbCheckinIds] = useState<string[]>([]);
   const [showQr, setShowQr] = useState(false);
   const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
   // Server-fetched members so isOwnerOrDirector works even when localStorage is empty
   // (e.g. when navigating directly via QR scan without visiting ClubDashboard first)
   const [serverMembers, setServerMembers] = useState<{ userId: string; role: string; displayName?: string; chesscomUsername?: string | null; avatarUrl?: string | null }[]>([]);
@@ -194,13 +196,15 @@ export default function MeetupEventPage() {
 
   const accent = club?.accentColor ?? event?.accentColor ?? "#4CAF50";
 
-  // Sidebar nav tabs (mirrors ClubDashboard — 4 tabs, no standalone Leagues)
-  const sidebarTabs = [
-    { id: "feed", label: "Feed", icon: Megaphone },
-    { id: "events", label: "Events", icon: Calendar },
-    { id: "members", label: "Members", icon: Users },
-    { id: "settings", label: "Settings", icon: Settings2 },
+  // Sidebar nav tabs mirror the Club workspace. Settings remains reachable in the
+  // primary rail here because this child surface has a dedicated back action below.
+  const sidebarTabs: ClubDashboardSidebarItem[] = [
+    { id: "feed", label: "Feed", icon: Megaphone, group: "workspace" },
+    { id: "events", label: "Events", icon: Calendar, group: "workspace" },
+    { id: "members", label: "Members", icon: Users, group: "workspace" },
+    { id: "settings", label: "Settings", icon: Settings2, group: "workspace" },
   ];
+  const sidebarTemporarilyExpanded = sidebarHovered || sidebarKeyboardExpanded;
 
   if (!event) {
     return (
@@ -223,137 +227,24 @@ export default function MeetupEventPage() {
     <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
       <div className="flex h-screen overflow-hidden">
 
-        {/* ── LEFT SIDEBAR — expand-on-hover (matches ClubDashboard) ─────── */}
-        <aside
-          className="hidden lg:flex flex-col flex-shrink-0 h-full overflow-hidden"
-          style={{
-            width: "68px",
-            transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
-            backgroundImage: `repeating-conic-gradient(oklch(0.17 0.05 145) 0% 25%, oklch(0.13 0.04 145) 0% 50%)`,
-            backgroundSize: "12px 12px",
-            borderRight: "1px solid oklch(0.22 0.06 145)",
-            zIndex: 40,
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
-        >
-          {/* Top logo */}
-          <div className="pt-4 pb-3 px-2 flex-shrink-0">
-            <button
-              onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="flex items-center justify-start w-full"
-              style={{ height: "52px" }}
-              title="Back to Club"
-            >
-              {club?.avatarUrl ? (
-                <img src={club.avatarUrl} alt={club.name ?? "Club"} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
-              ) : (
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: accentColor }}
-                >
-                  <span className="text-white font-black text-xs">OTB</span>
-                </div>
-              )}
-            </button>
-          </div>
-
-          {/* Nav items */}
-          <nav aria-label="Club dashboard navigation" className="flex flex-col gap-0.5 flex-1 justify-center px-2">
-            {sidebarTabs.map((ct) => {
-              const Icon = ct.icon;
-              const isActive = ct.id === "events";
-              return (
-                <button
-                  key={ct.id}
-                  onClick={() => navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
-                  className="group/navbtn flex flex-row items-center gap-3 rounded-xl text-left"
-                  style={{
-                    height: "48px",
-                    paddingLeft: "12px",
-                    paddingRight: "8px",
-                    background: isActive ? "rgba(124,245,98,0.12)" : "transparent",
-                    color: isActive ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.45)",
-                    transition: "background 200ms ease, color 160ms ease, box-shadow 200ms ease",
-                    boxShadow: isActive ? "inset 0 0 0 1px rgba(124,245,98,0.22)" : "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.95)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
-                      e.currentTarget.style.background = "transparent";
-                    }
-                  }}
-                  title={ct.label}
-                >
-                  <span className="flex-shrink-0 w-7 flex items-center justify-center" style={{ color: isActive ? "#7cf562" : "inherit" }}>
-                    <Icon size={19} strokeWidth={isActive ? 2.2 : 1.8} />
-                  </span>
-                  <span
-                    className="text-[13px] font-semibold whitespace-nowrap overflow-hidden"
-                    style={{
-                      maxWidth: 0,
-                      opacity: 0,
-                      transition: "max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease",
-                    }}
-                    ref={(el) => {
-                      if (!el) return;
-                      const aside = el.closest("aside");
-                      if (!aside) return;
-                      const obs = new ResizeObserver(() => {
-                        const w = aside.offsetWidth;
-                        el.style.maxWidth = w > 100 ? "140px" : "0px";
-                        el.style.opacity = w > 100 ? "1" : "0";
-                      });
-                      obs.observe(aside);
-                    }}
-                  >
-                    {ct.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Bottom: back to club */}
-          <div className="pb-4 px-2">
-            <div className="h-px mb-2" style={{ background: "rgba(255,255,255,0.07)" }} />
-            <button
-              onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="flex flex-row items-center gap-3 rounded-xl w-full"
-              style={{ height: "44px", paddingLeft: "12px", color: "rgba(255,255,255,0.35)", transition: "color 160ms ease" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "transparent"; }}
-              title="Back to Club"
-            >
-              <span className="flex-shrink-0 w-7 flex items-center justify-center">
-                <ChevronLeft size={17} strokeWidth={1.8} />
-              </span>
-              <span
-                className="text-[13px] font-semibold whitespace-nowrap overflow-hidden"
-                style={{ maxWidth: 0, opacity: 0, transition: "max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease" }}
-                ref={(el) => {
-                  if (!el) return;
-                  const aside = el.closest("aside");
-                  if (!aside) return;
-                  const obs = new ResizeObserver(() => {
-                    const w = aside.offsetWidth;
-                    el.style.maxWidth = w > 100 ? "140px" : "0px";
-                    el.style.opacity = w > 100 ? "1" : "0";
-                  });
-                  obs.observe(aside);
-                }}
-              >
-                Back to Club
-              </span>
-            </button>
-          </div>
-        </aside>
+        <div className="hidden w-[72px] min-w-[72px] flex-shrink-0 lg:block" />
+        <ClubDashboardSidebar
+          accent={accentColor}
+          background="oklch(0.115 0.025 145)"
+          borderColor="oklch(0.22 0.06 145)"
+          brandImageSrc={club?.avatarUrl}
+          brandLabel={club?.name ?? "Club"}
+          brandActionLabel="Back to Club dashboard"
+          items={sidebarTabs}
+          activeId="events"
+          collapsed
+          temporarilyExpanded={sidebarTemporarilyExpanded}
+          onPointerExpandedChange={setSidebarHovered}
+          onFocusExpandedChange={setSidebarKeyboardExpanded}
+          onSelect={(nextTab) => navigate(`/clubs/${clubId}/home?tab=${nextTab}`)}
+          onBackToClubs={() => navigate(`/clubs/${clubId}/home`)}
+          footerAction={{ label: "Back to Club", icon: ChevronLeft, onClick: () => navigate(`/clubs/${clubId}/home`) }}
+        />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

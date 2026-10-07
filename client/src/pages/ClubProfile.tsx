@@ -1512,8 +1512,7 @@ export default function ClubProfile() {
           onMouseEnter={(e) => { e.currentTarget.style.width = "210px"; }}
           onMouseLeave={(e) => { e.currentTarget.style.width = "68px"; }}
         >
-          {/* Top: !! thumbnail icon + OTB!! logo on hover */}
-          {/* Logo crossfade: !! thumbnail fades out, OTB!! logo fades in on hover */}
+          {/* Top: persist the Club identity here; fall back to the shared OTB!! mark. */}
           <div className="pt-5 pb-3 px-2 flex-shrink-0">
             <button
               onClick={() => navigate("/clubs")}
@@ -1521,12 +1520,20 @@ export default function ClubProfile() {
               style={{ height: "60px" }}
               title="ChessOTB.Club — Back to Clubs"
             >
-              {/* Thumbnail logo — single logo for both collapsed and expanded sidebar */}
-              <img
-                src="/manus-storage/OTBTHUMBNAILLOGO_64dac1d1.png"
-                alt="OTB!!"
-                className="w-14 h-14 object-contain flex-shrink-0"
-              />
+              {club.avatarUrl && !avatarBroken ? (
+                <img
+                  src={club.avatarUrl}
+                  alt={club.name}
+                  className="h-14 w-14 flex-shrink-0 rounded-2xl border border-white/10 object-cover"
+                  onError={() => setAvatarBroken(true)}
+                />
+              ) : (
+                <img
+                  src="/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"
+                  alt="OTB!!"
+                  className="h-14 w-14 flex-shrink-0 object-contain"
+                />
+              )}
             </button>
           </div>
 
