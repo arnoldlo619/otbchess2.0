@@ -1776,7 +1776,7 @@ export default function LeagueDashboard() {
           {/* Player invite banner */}
           {user && !isCommissioner && myInvite && (
             <div
-              className="mx-4 lg:mx-6 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+              className="mx-4 lg:mx-6 mt-0 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
               style={{
                 background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
                 border: `1px solid ${accent}55`,
@@ -1819,7 +1819,7 @@ export default function LeagueDashboard() {
 
           {/* Scrollable content */}
           <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
-            <div className="px-4 lg:px-6 py-4">
+            <div data-testid="league-dashboard-content-shell" className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6">
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}
                                 <div className="flex-1 min-w-0 space-y-4">
@@ -4131,7 +4131,7 @@ export default function LeagueDashboard() {
         </TabTransition>
           {/* ── SETTINGS TAB (commissioner-only) ─────────────────────── */}
           {activeTab === "settings" && (
-            <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-6 space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 pt-0 pb-6 lg:px-6 lg:pt-0 lg:pb-6 space-y-6">
               {/* Header */}
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${accent}22` }}>

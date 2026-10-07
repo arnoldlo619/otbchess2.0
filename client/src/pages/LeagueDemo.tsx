@@ -414,7 +414,7 @@ export default function LeagueDemo() {
             {activeTab === "overview" && (
               <div className="flex">
                 {/* Main content */}
-                <div className="flex-1 p-4 lg:p-6 space-y-5">
+                <div data-testid="league-demo-content-shell" className="flex-1 px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
 
                   {/* Featured Matchup Hero */}
                   <div
@@ -753,7 +753,7 @@ export default function LeagueDemo() {
 
             {/* ── MATCHUP TAB ───────────────────────────────────────────────── */}
             {activeTab === "matchup" && (
-              <div className="p-4 lg:p-6 max-w-3xl mx-auto space-y-5">
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 max-w-3xl mx-auto space-y-5">
                 {/* Hero card */}
                 <div
                   className="rounded-2xl overflow-hidden"
@@ -880,7 +880,7 @@ export default function LeagueDemo() {
 
             {/* ── STANDINGS TAB ─────────────────────────────────────────────── */}
             {activeTab === "standings" && (
-              <div className="p-4 lg:p-6">
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6">
                 {/* Standings subtab toggle */}
                 <div className="flex items-center gap-2 mb-4">
                   {(["table", "bracket"] as const).map((sub) => (
@@ -1088,7 +1088,7 @@ export default function LeagueDemo() {
 
             {/* ── SCHEDULE TAB ──────────────────────────────────────────────── */}
             {activeTab === "schedule" && (
-              <div className="p-4 lg:p-6 space-y-4">
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-4">
                 {Array.from({ length: 16 }, (_, i) => i + 1).map((week) => {
                   const isCurrentWeek = week === 14;
                   const isPast = week < 14;
@@ -1148,7 +1148,7 @@ export default function LeagueDemo() {
 
             {/* ── HISTORY TAB ───────────────────────────────────────────────── */}
             {activeTab === "history" && (
-              <div className="p-4 lg:p-6 space-y-4">
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-4">
                 <div className="rounded-2xl p-6 text-center" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                   <TournamentsIcon size={36} className="mx-auto mb-3 opacity-40" style={{ color: accent }} />
                   <div className="text-base font-bold mb-1" style={{ color: textMain }}>Season in Progress</div>
