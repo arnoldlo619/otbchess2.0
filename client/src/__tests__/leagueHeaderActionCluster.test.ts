@@ -28,6 +28,15 @@ describe("League commissioner header action cluster", () => {
     expect(heroSource).toContain('league.status !== "active" ? (');
   });
 
+  it("pins season metrics to the trophy side of the hero instead of the centered action cluster", () => {
+    expect(heroSource).toContain('data-testid="league-dashboard-hero-metrics"');
+    expect(heroSource).toContain('absolute right-6 top-1/2 hidden -translate-y-1/2');
+    expect(heroSource).toContain('sm:flex lg:right-8');
+    expect(heroSource).toContain('{ label: "Players", value: `${league.players.length}/${league.maxPlayers}` }');
+    expect(heroSource).toContain('{ label: "Matches", value: `${completedMatchCount}/${totalMatches}` }');
+    expect(heroSource).toContain('{ label: "Week", value: `${league.currentWeek}/${league.totalWeeks}` }');
+  });
+
   it("gives Report the primary treatment and preserves direct mobile controls", () => {
     expect(heroSource).toContain('aria-label="Report League Result"');
     expect(heroSource).toContain('linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))');

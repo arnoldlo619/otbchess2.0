@@ -1550,8 +1550,10 @@ export default function LeagueDashboard() {
                   </div>
                 ) : null}
               </div>
-              <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
-              <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
+              <div
+                data-testid="league-dashboard-hero-metrics"
+                className="absolute right-6 top-1/2 hidden -translate-y-1/2 items-center gap-5 sm:flex lg:right-8"
+              >
                 {[
                   { label: "Players", value: `${league.players.length}/${league.maxPlayers}` },
                   { label: "Matches", value: `${completedMatchCount}/${totalMatches}` },
