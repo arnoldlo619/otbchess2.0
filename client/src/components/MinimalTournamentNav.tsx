@@ -14,6 +14,7 @@ import { type ReactNode } from "react";
 import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const LOGO_URL =
   "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
@@ -86,8 +87,9 @@ export function MinimalTournamentNav({
         </div>
       )}
 
-      {/* Right slot — AvatarNavDropdown (consistent with all other platform headers) */}
-      <div className="flex-1 flex items-center justify-end">
+      {/* Right slot — appearance plus account controls, matching the landing header. */}
+      <div className="flex flex-1 items-center justify-end gap-2">
+        <ThemeToggle />
         <AvatarNavDropdown
           currentPage={currentPage}
           onSignInClick={onSignInClick}

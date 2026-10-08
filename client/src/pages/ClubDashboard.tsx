@@ -186,6 +186,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { ClubFeedMediaGallery } from "@/components/club/ClubFeedMediaGallery";
@@ -4050,8 +4051,9 @@ export default function ClubDashboard() {
                 </button>
               </div>
             )}
-            {/* Right side: avatar dropdown */}
+            {/* Right side: shared appearance and account controls */}
             <div className="flex items-center gap-2 ml-auto">
+              <ThemeToggle />
               <button
                 ref={mobileNavTriggerRef}
                 type="button"
