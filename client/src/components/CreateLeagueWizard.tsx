@@ -10,12 +10,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Crown,
   Loader2,
-  RotateCcw,
-  ShieldCheck,
-  Sparkles,
-  Trophy,
   Users,
   X,
 } from "lucide-react";
@@ -100,23 +95,18 @@ function FullSeasonPreview({ structure, timeControlBase, timeControlIncrement, c
         ["Match set", "3 opponents · 6 games"],
         ["Championship Day", `Top ${structure.playoffQualifierCount}`],
         ["Session estimate", estimateSession(timeControlBase, timeControlIncrement, 6)],
-      ];
+  ];
   return (
     <section className="overflow-hidden rounded-2xl border border-[oklch(0.68_0.16_145)]/25 bg-[oklch(0.68_0.16_145)]/[0.07]">
-      <div className="flex items-start gap-3 px-4 py-3.5 border-b border-[oklch(0.68_0.16_145)]/15">
-        <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-[oklch(0.68_0.16_145)]/15 text-[oklch(0.78_0.17_145)]">
-          <Trophy size={16} aria-hidden="true" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[oklch(0.76_0.16_145)]">Full Season structure</p>
-          <p className="mt-0.5 text-sm text-white/70">Every opponent twice, with colors reversed.</p>
-        </div>
+      <div className="px-5 py-4 border-b border-[oklch(0.68_0.16_145)]/15">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[oklch(0.76_0.16_145)]">Full Season structure</p>
+        <p className="mt-1 text-base leading-relaxed text-white/70">Every opponent twice, with colors reversed.</p>
       </div>
       <dl className={`grid ${compact ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-3"} divide-x divide-y divide-white/[0.07]`}>
         {statistics.map(([label, value]) => (
-          <div key={label} className="min-w-0 px-3.5 py-3">
-            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/40">{label}</dt>
-            <dd className="mt-1 truncate text-sm font-semibold text-white/90">{value}</dd>
+          <div key={label} className="min-w-0 px-4 py-3.5">
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/45">{label}</dt>
+            <dd className="mt-1 truncate text-base font-semibold text-white/90">{value}</dd>
           </div>
         ))}
       </dl>
@@ -241,16 +231,14 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
         aria-modal="true"
         aria-labelledby="create-league-title"
         tabIndex={-1}
-        className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl sm:max-h-[90vh]"
+        data-testid="create-league-wizard"
+        className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-[22px] shadow-2xl sm:max-h-[90vh]"
         style={{ background: isDark ? "oklch(0.15 0.05 145)" : "oklch(0.17 0.05 145)", border: "1px solid oklch(0.68 0.16 145 / 0.2)" }}
       >
-        <header className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-5 py-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[oklch(0.68_0.16_145)]/15 text-[oklch(0.76_0.16_145)]"><Sparkles size={17} aria-hidden="true" /></div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[oklch(0.76_0.16_145)]">Create Club League</p>
-              <h1 id="create-league-title" className="truncate text-sm font-semibold text-white">{panelTitle}</h1>
-            </div>
+        <header className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-5 py-5 sm:px-8">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-[oklch(0.76_0.16_145)]">Create Club League</p>
+            <h1 id="create-league-title" className="mt-1 truncate text-[18px] font-semibold leading-none text-white">{panelTitle}</h1>
           </div>
           <div className="flex items-center gap-3">
             <StepIndicator current={step} />
@@ -258,17 +246,17 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
           {step === 0 && (
             <section className="space-y-4">
-              <div><h2 className="text-2xl font-bold tracking-tight text-white">Which club is this for?</h2><p className="mt-1 text-sm text-white/55">Only club owners, admins, and directors can create a league.</p></div>
+              <div><h2 className="text-3xl font-bold tracking-tight text-white sm:text-[32px]">Which club is this for?</h2><p className="mt-2 text-base leading-relaxed text-white/55">Only club owners, admins, and directors can create a league.</p></div>
               {clubsLoading ? <div className="flex justify-center py-12"><Loader2 className="animate-spin text-white/40" /></div> : clubs.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center"><Users className="mx-auto mb-3 text-white/25" size={32} /><p className="font-semibold text-white/85">No eligible clubs found</p><a href="/clubs" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[oklch(0.76_0.16_145)] hover:underline">Create or join a club <ArrowRight size={14} /></a></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-10 text-center"><Users className="mx-auto mb-3 text-white/25" size={32} /><p className="text-base font-semibold text-white/85">No eligible clubs found</p><a href="/clubs" className="mt-3 inline-flex items-center gap-1.5 text-base font-semibold text-[oklch(0.76_0.16_145)] hover:underline">Create or join a club <ArrowRight size={16} /></a></div>
               ) : <div className="space-y-2">{clubs.map((club) => {
                 const selected = selectedClubId === club.id;
-                return <button key={club.id} type="button" onClick={() => setSelectedClubId(club.id)} className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition ${selected ? "border-[oklch(0.68_0.16_145)]/70 bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"}`}>
-                  <div className="flex h-10 w-10 flex-none items-center justify-center overflow-hidden rounded-lg bg-[oklch(0.28_0.08_145)] font-semibold text-white">{club.avatarUrl ? <img src={club.avatarUrl} alt="" className="h-full w-full object-cover" /> : club.name.charAt(0).toUpperCase()}</div>
-                  <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{club.name}</p><p className="mt-0.5 text-xs text-white/45">{club.memberCount ?? 0} members</p></div>
+                return <button key={club.id} type="button" onClick={() => setSelectedClubId(club.id)} className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition duration-200 hover:-translate-y-px ${selected ? "border-[oklch(0.68_0.16_145)]/70 bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"}`}>
+                  <div className="flex h-11 w-11 flex-none items-center justify-center overflow-hidden rounded-lg bg-[oklch(0.28_0.08_145)] text-base font-semibold text-white">{club.avatarUrl ? <img src={club.avatarUrl} alt="" className="h-full w-full object-cover" /> : club.name.charAt(0).toUpperCase()}</div>
+                  <div className="min-w-0 flex-1"><p className="truncate text-base font-semibold text-white">{club.name}</p><p className="mt-0.5 text-sm text-white/50">{club.memberCount ?? 0} members</p></div>
                   {selected && <CheckCircle2 className="flex-none text-[oklch(0.76_0.16_145)]" size={19} />}
                 </button>;
               })}</div>}
@@ -276,44 +264,44 @@ export function CreateLeagueWizard({ onClose }: CreateLeagueWizardProps) {
           )}
 
           {step === 1 && (
-            <section className="space-y-5"><div><h2 className="text-2xl font-bold tracking-tight text-white">Name the season</h2><p className="mt-1 text-sm text-white/55">Players will see this name across the season, standings, and Championship Day.</p></div>
-              <div><label htmlFor="league-name" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-white/55">League name</label><input id="league-name" autoFocus value={leagueName} onChange={(event) => { setLeagueName(event.target.value); if (event.target.value.trim().length >= 2) setNameError(""); }} maxLength={100} placeholder="e.g. Spring 2026 Club League" className={`${fieldClass} ${nameError ? "border-red-400/70" : ""}`} />{nameError && <p className="mt-1.5 text-xs text-red-300">{nameError}</p>}</div>
-              <div><label htmlFor="league-description" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-white/55">Season note <span className="font-normal normal-case tracking-normal">(optional)</span></label><textarea id="league-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={4} placeholder="Optional rules, venue notes, or prize details." className={`${fieldClass} resize-none text-sm`} /><p className="mt-1 text-right text-xs text-white/30">{description.length}/500</p></div>
+            <section className="space-y-5"><div><h2 className="text-3xl font-bold tracking-tight text-white sm:text-[32px]">Name the season</h2><p className="mt-2 text-base leading-relaxed text-white/55">Players will see this name across the season, standings, and Championship Day.</p></div>
+              <div><label htmlFor="league-name" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-white/55">League name</label><input id="league-name" autoFocus value={leagueName} onChange={(event) => { setLeagueName(event.target.value); if (event.target.value.trim().length >= 2) setNameError(""); }} maxLength={100} placeholder="e.g. Spring 2026 Club League" className={`${fieldClass} ${nameError ? "border-red-400/70" : ""}`} />{nameError && <p className="mt-1.5 text-sm text-red-300">{nameError}</p>}</div>
+              <div><label htmlFor="league-description" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-white/55">Season note <span className="font-normal normal-case tracking-normal">(optional)</span></label><textarea id="league-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={4} placeholder="Optional rules, venue notes, or prize details." className={`${fieldClass} resize-none text-base`} /><p className="mt-1 text-right text-xs text-white/35">{description.length}/500</p></div>
             </section>
           )}
 
           {step === 2 && (
-            <section className="space-y-6"><div><h2 className="text-2xl font-bold tracking-tight text-white">Choose the competition</h2><p className="mt-1 text-sm text-white/55">Full Season is the recommended club experience. Classic stays available for smaller, simpler leagues.</p></div>
+            <section className="space-y-6"><div><h2 className="text-3xl font-bold tracking-tight text-white sm:text-[32px]">Choose the competition</h2><p className="mt-2 text-base leading-relaxed text-white/55">Full Season is the recommended club experience. Classic stays available for smaller, simpler leagues.</p></div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <button type="button" onClick={() => switchFormat(FULL_SEASON_FORMAT)} className={`relative rounded-2xl border p-4 text-left transition ${formatType === FULL_SEASON_FORMAT ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}>
-                  <span className="absolute right-3 top-3 rounded-full bg-[oklch(0.68_0.16_145)]/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[oklch(0.78_0.16_145)]">Recommended</span><Trophy size={20} className="mb-4 text-[oklch(0.76_0.16_145)]" /><p className="font-semibold text-white">Full Season League</p><p className="mt-1.5 text-sm leading-relaxed text-white/55">Three opponents per week, two color-reversed games each, standings, ratings, and Championship Day.</p>
+                <button type="button" onClick={() => switchFormat(FULL_SEASON_FORMAT)} className={`relative rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-px ${formatType === FULL_SEASON_FORMAT ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}>
+                  <span className="absolute right-4 top-4 rounded-full bg-[oklch(0.68_0.16_145)]/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[oklch(0.78_0.16_145)]">Recommended</span><p className="pr-28 text-lg font-semibold text-white">Full Season League</p><p className="mt-2 text-base leading-relaxed text-white/55">Three opponents per week, two color-reversed games each, standings, ratings, and Championship Day.</p>
                 </button>
-                <button type="button" onClick={() => switchFormat(CLASSIC_ROUND_ROBIN_FORMAT)} className={`rounded-2xl border p-4 text-left transition ${formatType === CLASSIC_ROUND_ROBIN_FORMAT ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><RotateCcw size={20} className="mb-4 text-white/55" /><p className="font-semibold text-white">Classic Round Robin</p><p className="mt-1.5 text-sm leading-relaxed text-white/55">The established single-game format for compact clubs and shorter league nights.</p></button>
+                <button type="button" onClick={() => switchFormat(CLASSIC_ROUND_ROBIN_FORMAT)} className={`rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-px ${formatType === CLASSIC_ROUND_ROBIN_FORMAT ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><p className="text-lg font-semibold text-white">Classic Round Robin</p><p className="mt-2 text-base leading-relaxed text-white/55">The established single-game format for compact clubs and shorter league nights.</p></button>
               </div>
-              {formatType === FULL_SEASON_FORMAT ? <div className="space-y-3"><div className="flex items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-white/55">Roster size</p><p className="mt-1 text-sm text-white/50">Optimized for even rosters of 4–28 players.</p></div></div>
-                <div className="grid grid-cols-3 gap-2">{FULL_SEASON_RECOMMENDATIONS.map((size) => <button key={size.value} type="button" onClick={() => setMaxPlayers(size.value)} className={`rounded-xl border px-3 py-3 text-center transition ${maxPlayers === size.value ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><span className="block text-lg font-bold text-white">{size.label}</span><span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide text-[oklch(0.76_0.16_145)]">{size.tag}</span></button>)}</div>
-                <label className="block text-xs font-semibold text-white/55">All supported sizes<select aria-label="Full Season roster size" value={maxPlayers} onChange={(event) => setMaxPlayers(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[oklch(0.68_0.16_145)]/30">{FULL_SEASON_SIZES.map((size) => <option key={size} value={size} className="bg-[#122016]">{size} players</option>)}</select></label>
-              </div> : <div><p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-white/55">League size</p><div className="grid grid-cols-4 gap-2">{CLASSIC_SIZES.map((size) => <button key={size} type="button" onClick={() => setMaxPlayers(size)} className={`rounded-xl border py-3 text-center text-sm font-semibold transition ${maxPlayers === size ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10 text-white" : "border-white/10 bg-white/[0.03] text-white/60"}`}>{size}</button>)}</div></div>}
-              <div><p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-white/55">Time control</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{TIME_CONTROLS.map((control) => { const selected = timeControlBase === control.base && timeControlIncrement === control.increment; return <button key={control.label} type="button" onClick={() => { setTimeControlBase(control.base); setTimeControlIncrement(control.increment); }} className={`rounded-xl border p-3 text-left transition ${selected ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><span className="block text-sm font-bold text-white">{control.label}</span><span className="mt-0.5 block text-[10px] text-white/45">{control.hint}</span></button>; })}</div></div>
-              {structure ? <FullSeasonPreview structure={structure} timeControlBase={timeControlBase} timeControlIncrement={timeControlIncrement} /> : <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60"><strong className="text-white">Classic structure:</strong> {selectedClassicWeeks} rounds with one game against every player.</div>}
+              {formatType === FULL_SEASON_FORMAT ? <div className="space-y-3"><div className="flex items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-white/55">Roster size</p><p className="mt-1 text-base text-white/55">Optimized for even rosters of 4–28 players.</p></div></div>
+                <div className="grid grid-cols-3 gap-2">{FULL_SEASON_RECOMMENDATIONS.map((size) => <button key={size.value} type="button" onClick={() => setMaxPlayers(size.value)} className={`rounded-xl border px-3 py-3.5 text-center transition duration-200 hover:-translate-y-px ${maxPlayers === size.value ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><span className="block text-xl font-bold text-white">{size.label}</span><span className="mt-1 block text-[11px] font-semibold uppercase tracking-wide text-[oklch(0.76_0.16_145)]">{size.tag}</span></button>)}</div>
+                <label className="block text-sm font-semibold text-white/60">All supported sizes<select aria-label="Full Season roster size" value={maxPlayers} onChange={(event) => setMaxPlayers(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-white/15 bg-white/[0.06] px-3 py-3 text-base text-white outline-none focus:ring-2 focus:ring-[oklch(0.68_0.16_145)]/30">{FULL_SEASON_SIZES.map((size) => <option key={size} value={size} className="bg-[#122016]">{size} players</option>)}</select></label>
+              </div> : <div><p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-white/55">League size</p><div className="grid grid-cols-4 gap-2">{CLASSIC_SIZES.map((size) => <button key={size} type="button" onClick={() => setMaxPlayers(size)} className={`rounded-xl border py-3.5 text-center text-base font-semibold transition duration-200 hover:-translate-y-px ${maxPlayers === size ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10 text-white" : "border-white/10 bg-white/[0.03] text-white/60"}`}>{size}</button>)}</div></div>}
+              <div><p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-white/55">Time control</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{TIME_CONTROLS.map((control) => { const selected = timeControlBase === control.base && timeControlIncrement === control.increment; return <button key={control.label} type="button" onClick={() => { setTimeControlBase(control.base); setTimeControlIncrement(control.increment); }} className={`rounded-xl border p-3.5 text-left transition duration-200 hover:-translate-y-px ${selected ? "border-[oklch(0.68_0.16_145)] bg-[oklch(0.68_0.16_145)]/10" : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"}`}><span className="block text-base font-bold text-white">{control.label}</span><span className="mt-0.5 block text-[11px] text-white/50">{control.hint}</span></button>; })}</div></div>
+              {structure ? <FullSeasonPreview structure={structure} timeControlBase={timeControlBase} timeControlIncrement={timeControlIncrement} /> : <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-base leading-relaxed text-white/60"><strong className="text-white">Classic structure:</strong> {selectedClassicWeeks} rounds with one game against every player.</div>}
             </section>
           )}
 
           {step === 3 && (
-            <section className="space-y-5"><div><h2 className="text-2xl font-bold tracking-tight text-white">Ready to create?</h2><p className="mt-1 text-sm text-white/55">The league opens in Draft. Invite players, lock the roster, then generate the first Match Set.</p></div>
+            <section className="space-y-5"><div><h2 className="text-3xl font-bold tracking-tight text-white sm:text-[32px]">Ready to create?</h2><p className="mt-2 text-base leading-relaxed text-white/55">The league opens in Draft. Invite players, lock the roster, then generate the first Match Set.</p></div>
               <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] divide-y divide-white/[0.08]"><ReviewRow label="Club" value={selectedClub?.name ?? "—"} /><ReviewRow label="Season" value={leagueName || "—"} /><ReviewRow label="Format" value={formatLabel(formatType)} /><ReviewRow label="Roster" value={`${maxPlayers} players`} /><ReviewRow label="Time control" value={`${timeControlBase} + ${timeControlIncrement}`} />{structure && <ReviewRow label="Season map" value={`${structure.regularSeasonWeeks} weeks · ${structure.gamesPerPlayer} games/player · Top ${structure.playoffQualifierCount}`} />}</div>
               {structure && <FullSeasonPreview structure={structure} timeControlBase={timeControlBase} timeControlIncrement={timeControlIncrement} compact />}
-              <div className="flex gap-3 rounded-2xl border border-[oklch(0.68_0.16_145)]/20 bg-[oklch(0.68_0.16_145)]/[0.06] p-4"><ShieldCheck className="mt-0.5 flex-none text-[oklch(0.76_0.16_145)]" size={18} /><p className="text-sm leading-relaxed text-white/65">{formatType === FULL_SEASON_FORMAT ? "Every Full Season encounter is a locked two-game, color-reversed set. Pairings never repeat and the regular season remains mathematically complete." : "Classic Round Robin keeps the established single-game club league experience."}</p></div>
+              <div className="rounded-2xl border border-[oklch(0.68_0.16_145)]/20 bg-[oklch(0.68_0.16_145)]/[0.06] p-5"><p className="text-base leading-relaxed text-white/70">{formatType === FULL_SEASON_FORMAT ? "Every Full Season encounter is a locked two-game, color-reversed set. Pairings never repeat and the regular season remains mathematically complete." : "Classic Round Robin keeps the established single-game club league experience."}</p></div>
             </section>
           )}
         </main>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-white/[0.08] px-5 py-4 sm:px-6"><button type="button" onClick={step === 0 ? closeWizard : () => setStep((current) => current - 1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-white/55 transition hover:text-white"><ChevronLeft size={16} />{step === 0 ? "Cancel" : "Back"}</button>{step < 3 ? <button type="button" disabled={!canAdvance()} onClick={advance} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[oklch(0.68_0.16_145)] px-5 text-sm font-bold text-[oklch(0.12_0.04_145)] transition hover:bg-[oklch(0.75_0.17_145)] disabled:cursor-not-allowed disabled:opacity-40">Continue <ChevronRight size={16} /></button> : <button type="button" disabled={submitting} onClick={() => void handleCreate()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[oklch(0.68_0.16_145)] px-5 text-sm font-bold text-[oklch(0.12_0.04_145)] transition hover:bg-[oklch(0.75_0.17_145)] disabled:cursor-wait disabled:opacity-60">{submitting ? <><Loader2 size={16} className="animate-spin" />Creating</> : <><Crown size={16} />Create league</>}</button>}</footer>
+        <footer className="flex items-center justify-between gap-3 border-t border-white/[0.08] px-5 py-5 sm:px-8"><button type="button" onClick={step === 0 ? closeWizard : () => setStep((current) => current - 1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-base font-medium text-white/55 transition hover:text-white"><ChevronLeft size={18} />{step === 0 ? "Cancel" : "Back"}</button>{step < 3 ? <button type="button" disabled={!canAdvance()} onClick={advance} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[oklch(0.68_0.16_145)] px-6 text-base font-bold text-[oklch(0.12_0.04_145)] transition hover:bg-[oklch(0.75_0.17_145)] disabled:cursor-not-allowed disabled:opacity-40">Continue <ChevronRight size={18} /></button> : <button type="button" disabled={submitting} onClick={() => void handleCreate()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[oklch(0.68_0.16_145)] px-6 text-base font-bold text-[oklch(0.12_0.04_145)] transition hover:bg-[oklch(0.75_0.17_145)] disabled:cursor-wait disabled:opacity-60">{submitting ? <><Loader2 size={18} className="animate-spin" />Creating</> : "Create league"}</button>}</footer>
       </div>
     </div>
   );
 }
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
-  return <div className="flex items-start gap-4 px-4 py-3"><dt className="w-28 flex-none pt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white/40">{label}</dt><dd className="min-w-0 flex-1 text-sm font-medium text-white/85">{value}</dd></div>;
+  return <div className="flex items-start gap-5 px-5 py-4"><dt className="w-32 flex-none pt-0.5 text-xs font-bold uppercase tracking-[0.12em] text-white/45">{label}</dt><dd className="min-w-0 flex-1 text-base font-medium leading-relaxed text-white/90">{value}</dd></div>;
 }
