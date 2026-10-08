@@ -252,7 +252,7 @@ export default function MeetupEventPage() {
           accent={accentColor}
           background="oklch(0.115 0.025 145)"
           borderColor="oklch(0.22 0.06 145)"
-          brandActionLabel="Back to Club dashboard"
+          brandActionLabel="Back to all clubs"
           items={sidebarTabs}
           activeId="events"
           collapsed
@@ -260,7 +260,7 @@ export default function MeetupEventPage() {
           onPointerExpandedChange={setSidebarHovered}
           onFocusExpandedChange={setSidebarKeyboardExpanded}
           onSelect={(nextTab) => navigate(`/clubs/${clubId}/home?tab=${nextTab}`)}
-          onBackToClubs={() => navigate(`/clubs/${clubId}/home`)}
+          onBackToClubs={() => navigate("/clubs")}
         />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────────── */}

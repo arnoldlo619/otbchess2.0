@@ -113,13 +113,14 @@ describe("ClubDashboardSidebar", () => {
     expect(onBackToClubs).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps compact mode defaulted in the primary Club Dashboard without a persistent pin control", () => {
+  it("keeps compact mode defaulted and routes the brand mark to the Club index", () => {
     const dashboard = readFileSync(resolve(process.cwd(), "client/src/pages/ClubDashboard.tsx"), "utf8");
 
     expect(dashboard).toContain("collapsed");
     expect(dashboard).not.toContain("toggleSidebar");
     expect(dashboard).not.toContain("club-sidebar-collapsed");
     expect(dashboard).not.toContain("brandImageSrc={club.avatarUrl}");
-    expect(dashboard).toContain("brandActionLabel={`Open ${club.name} profile`}");
+    expect(dashboard).toContain('brandActionLabel="Back to all clubs"');
+    expect(dashboard).toContain('onBackToClubs={() => navigate("/clubs")}');
   });
 });

@@ -50,8 +50,9 @@ describe("private Club workspace model", () => {
 
   it("keeps the demo Overview action rail aligned with Club Timeline without card containers", () => {
     expect(demo).toContain('data-demo-overview-action-rail');
-    expect(demo).toContain('xl:grid-cols-[minmax(0,1fr)_216px]');
-    expect(demo).toContain('grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 xl:grid-cols-1');
+    expect(demo).toContain('min-[1440px]:absolute min-[1440px]:left-full');
+    expect(demo).toContain('min-[1440px]:w-[172px]');
+    expect(demo).toContain('min-[1440px]:-ml-[34px]');
     expect(demo).not.toContain('mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3');
   });
 

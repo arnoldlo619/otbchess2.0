@@ -3986,7 +3986,7 @@ export default function ClubDashboard() {
           accent={accent}
           background={sidebarBg ?? "oklch(0.115 0.025 145)"}
           borderColor={navBorder}
-          brandActionLabel={`Open ${club.name} profile`}
+          brandActionLabel="Back to all clubs"
           items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
           activeId={tab}
           collapsed
@@ -3994,7 +3994,7 @@ export default function ClubDashboard() {
           onPointerExpandedChange={setSidebarHovered}
           onFocusExpandedChange={setSidebarKeyboardExpanded}
           onSelect={(nextTab) => setTab(nextTab as Tab)}
-          onBackToClubs={() => navigate(`/clubs/${club.id}`)}
+          onBackToClubs={() => navigate("/clubs")}
         />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
@@ -4436,7 +4436,7 @@ export default function ClubDashboard() {
             })()}
 
             {/* ── Club Timeline + owner action rail ── */}
-            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_216px] xl:gap-7">
+            <div className="relative">
               {/* ── 5. Recent Activity ── */}
               <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
               <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
@@ -4489,9 +4489,9 @@ export default function ClubDashboard() {
               )}
               </section>
 
-              <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="xl:sticky xl:top-6">
+              <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:left-full min-[1440px]:top-0 min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[172px]">
                 <h3 id="overview-quick-actions" className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 xl:grid-cols-1 xl:gap-y-1 xl:border-y-0 xl:py-0" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)" }}>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 sm:grid-cols-4 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-1 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-5 min-[1440px]:before:absolute min-[1440px]:before:bottom-3 min-[1440px]:before:left-0 min-[1440px]:before:top-3 min-[1440px]:before:w-px min-[1440px]:before:bg-[var(--overview-action-rail-line)]" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", "--overview-action-rail-line": isDark ? "rgba(255,255,255,0.12)" : "rgba(21,41,28,0.14)" } as React.CSSProperties}>
                   {[
                     { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                     { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
@@ -4502,13 +4502,15 @@ export default function ClubDashboard() {
                       key={label}
                       type="button"
                       onClick={action}
-                      className="group flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--overview-action-hover)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
+                      className="group relative flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--overview-action-hover)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none min-[1440px]:min-h-10 min-[1440px]:gap-2 min-[1440px]:rounded-lg min-[1440px]:px-0 min-[1440px]:py-1.5 min-[1440px]:hover:bg-transparent"
                       style={{
                         color: isDark ? "rgba(255,255,255,0.88)" : "#15291c",
                         "--overview-action-hover": isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.055)",
                       } as React.CSSProperties}
                     >
-                      <Icon className="h-5 w-5 shrink-0 transition-transform duration-200 ease-out group-hover:scale-[1.06] motion-reduce:transition-none" style={{ color: accent }} aria-hidden="true" />
+                      <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--overview-action-icon-surface)] transition-[background-color,transform] duration-200 ease-out group-hover:scale-[1.08] min-[1440px]:-ml-[34px] min-[1440px]:h-7 min-[1440px]:w-7 motion-reduce:transition-none" style={{ "--overview-action-icon-surface": isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.96)" } as React.CSSProperties}>
+                        <Icon className="h-4 w-4" style={{ color: accent }} aria-hidden="true" />
+                      </span>
                       <span className="min-w-0 text-sm font-semibold leading-5">{label}</span>
                     </button>
                   ))}

@@ -266,7 +266,7 @@ export default function CheckInPage() {
           accent={accentColor}
           background="oklch(0.115 0.025 145)"
           borderColor="oklch(0.22 0.06 145)"
-          brandActionLabel="Back to Club dashboard"
+          brandActionLabel="Back to all clubs"
           items={sidebarTabs}
           activeId="events"
           collapsed
@@ -274,7 +274,7 @@ export default function CheckInPage() {
           onPointerExpandedChange={setSidebarHovered}
           onFocusExpandedChange={setSidebarKeyboardExpanded}
           onSelect={(nextTab) => clubId && navigate(`/clubs/${clubId}/home?tab=${nextTab}`)}
-          onBackToClubs={() => clubId && navigate(`/clubs/${clubId}/home`)}
+          onBackToClubs={() => navigate("/clubs")}
         />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────────── */}

@@ -8,14 +8,15 @@ describe("Club Owner Overview UI contract", () => {
   it("places owner quick actions in a responsive rail beside Club Timeline without card chrome", () => {
     expect(source).toContain('id="overview-quick-actions"');
     expect(source).toContain('data-club-overview-action-rail');
-    expect(source).toContain('xl:grid-cols-[minmax(0,1fr)_216px]');
-    expect(source).toContain('xl:sticky xl:top-6');
-    expect(source).toContain('grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 xl:grid-cols-1');
+    expect(source).toContain('min-[1440px]:absolute min-[1440px]:left-full');
+    expect(source).toContain('min-[1440px]:w-[172px]');
+    expect(source).toContain('min-[1440px]:relative min-[1440px]:block');
+    expect(source).toContain('min-[1440px]:-ml-[34px]');
     expect(source).toContain('label: "New Meetup"');
     expect(source).toContain('label: "Tournament"');
     expect(source).toContain('label: "Leagues"');
     expect(source).toContain('label: "Post"');
-    expect(source).toContain('min-h-12');
+    expect(source).toContain('min-[1440px]:hover:bg-transparent');
     expect(source).not.toContain('mx-auto grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4');
   });
 
