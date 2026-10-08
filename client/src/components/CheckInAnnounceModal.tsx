@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { QRCodeSVG } from "qrcode.react";
-import { X, Copy, Check, Maximize2 } from "lucide-react";
+import { X, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface CheckInAnnounceModalProps {
@@ -81,15 +81,8 @@ export function CheckInAnnounceModal({
     >
 
       {/* ── Sticky top bar ─────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
-        {/* Left: hint */}
-        <div className="flex items-center gap-1.5 text-white/25 text-xs">
-          <Maximize2 className="w-3.5 h-3.5" />
-          <span className="hidden sm:block">Press Escape to close</span>
-          <span className="sm:hidden">Tap × to close</span>
-        </div>
-
-        {/* Right: close button */}
+      <div className="flex-shrink-0 flex items-center justify-end px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
+        {/* Close button */}
         <button
           ref={closeButtonRef}
           onClick={onClose}

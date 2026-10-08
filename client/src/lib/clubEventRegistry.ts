@@ -251,17 +251,7 @@ export function getClubEvent(eventId: string): ClubEvent | null {
   return loadEvents().find((e) => e.id === eventId) ?? null;
 }
 
-/**
- * Create a Club Event on the authoritative server, then cache the canonical row.
- *
- * Event creation must never present a local-only record as a completed meetup:
- * members need the same event, RSVP and attendance record across devices.
- */
-export async function createPersistedClubEvent(
-  data: Omit<ClubEvent, "id" | "createdAt" | "updatedAt">
-): Promise<ClubEvent> {
-  const now = new Date().toISOString();
-  const event: ClubEvent = { ...data, id: genId(), createdAt: now, updatedAt: now };
+async function persistClubEvent(event: ClubEvent): Promise<ClubEvent> {
   const response = await authFetch(`/api/clubs/${encodeURIComponent(event.clubId)}/events`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -294,6 +284,28 @@ export async function createPersistedClubEvent(
   events.push(canonicalEvent);
   saveEvents(events);
   return canonicalEvent;
+}
+
+/**
+ * Idempotently persists a legacy local event under its current ID before a
+ * cross-device surface (such as a check-in QR code) shares that ID publicly.
+ */
+export async function ensurePersistedClubEvent(event: ClubEvent): Promise<ClubEvent> {
+  return persistClubEvent(event);
+}
+
+/**
+ * Create a Club Event on the authoritative server, then cache the canonical row.
+ *
+ * Event creation must never present a local-only record as a completed meetup:
+ * members need the same event, RSVP and attendance record across devices.
+ */
+export async function createPersistedClubEvent(
+  data: Omit<ClubEvent, "id" | "createdAt" | "updatedAt">
+): Promise<ClubEvent> {
+  const now = new Date().toISOString();
+  const event: ClubEvent = { ...data, id: genId(), createdAt: now, updatedAt: now };
+  return persistClubEvent(event);
 }
 
 /**

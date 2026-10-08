@@ -32,6 +32,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import {
   getClubEvent,
+  ensurePersistedClubEvent,
   getEventRSVPs,
   upsertRSVP,
   getUserRSVP,
@@ -43,6 +44,7 @@ import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { CheckInAnnounceModal } from "@/components/CheckInAnnounceModal";
 import { authFetch } from "@/lib/apiFetch";
 import { ClipboardList } from "lucide-react";
+import { toast } from "sonner";
 import { ClubPuzzleRelaySession } from "@/components/club/ClubPuzzleRelaySession";
 import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
 
@@ -79,6 +81,7 @@ export default function MeetupEventPage() {
   const [rsvps, setRsvps] = useState<ClubEventRSVP[]>([]);
   const [dbCheckinIds, setDbCheckinIds] = useState<string[]>([]);
   const [showQr, setShowQr] = useState(false);
+  const [qrPreparing, setQrPreparing] = useState(false);
   const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
@@ -194,6 +197,23 @@ export default function MeetupEventPage() {
     setRsvpSubmitting(false);
   }
 
+  async function openCheckInQr() {
+    if (!event || qrPreparing) return;
+
+    setQrPreparing(true);
+    try {
+      // Legacy local events may still be visible to their host. Persist the
+      // exact ID before projecting it so every scanned device resolves it.
+      const canonicalEvent = await ensurePersistedClubEvent(event);
+      setEvent(canonicalEvent);
+      setShowQr(true);
+    } catch {
+      toast.error("The check-in QR could not be prepared. Please try again.");
+    } finally {
+      setQrPreparing(false);
+    }
+  }
+
   const accent = club?.accentColor ?? event?.accentColor ?? "#4CAF50";
 
   // Sidebar nav tabs mirror the Club workspace. Settings remains reachable in the
@@ -277,8 +297,10 @@ export default function MeetupEventPage() {
             <div className="flex-1 flex items-center justify-center">
               {isOwnerOrDirector ? (
                 <button
-                  onClick={() => setShowQr(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95"
+                  onClick={openCheckInQr}
+                  disabled={qrPreparing}
+                  aria-busy={qrPreparing}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95 disabled:cursor-wait disabled:opacity-70 disabled:hover:scale-100"
                   style={{
                     background: onEventDay ? accentColor : "oklch(0.22 0.06 145)",
                     color: onEventDay ? "#ffffff" : "rgba(255,255,255,0.75)",
@@ -286,7 +308,7 @@ export default function MeetupEventPage() {
                   }}
                 >
                   <QrCode className="w-4 h-4" />
-                  <span>Check-in QR Code</span>
+                  <span>{qrPreparing ? "Preparing QR…" : "Check-in QR Code"}</span>
                 </button>
               ) : (
                 <span className="text-sm font-semibold text-white/80 truncate max-w-xs">{event.title}</span>
