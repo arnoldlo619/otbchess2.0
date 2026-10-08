@@ -3,7 +3,11 @@
  * Tests the pure functions: time formatting, progress calculation, warning threshold
  */
 
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect } from "vitest";
+
+const roundTimerSource = readFileSync(resolve(process.cwd(), "client/src/components/RoundTimer.tsx"), "utf8");
 
 // ── Pure helpers extracted from RoundTimer ─────────────────────────────────
 
@@ -146,5 +150,12 @@ describe("clampMinutes", () => {
   it("accepts boundary values", () => {
     expect(clampMinutes(1)).toBe(1);
     expect(clampMinutes(180)).toBe(180);
+  });
+});
+
+describe("RoundTimer UI copy", () => {
+  it("labels the idle control as Timer while retaining running and expiry states", () => {
+    expect(roundTimerSource).toContain('{isExpired ? "Time\'s Up" : running ? "Running" : "Timer"}');
+    expect(roundTimerSource).not.toContain('{isExpired ? "Time\'s Up" : running ? "Running" : "Round"}');
   });
 });

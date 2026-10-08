@@ -1160,14 +1160,14 @@ function VerticalRoundTracker({
 }) {
   return (
     <div
-      className={`flex flex-col items-center gap-0 rounded-2xl px-3 py-4 ${
+      className={`flex flex-col items-center gap-0 rounded-2xl px-4 py-5 ${
         isDark ? "bg-white/05 border border-white/08" : "bg-[#FBFADA]/70 border border-[#ADBC9F]"
       }`}
-      style={{ minWidth: 56 }}
+      style={{ minWidth: 72 }}
     >
       {/* Header label */}
       <span
-        className={`text-[9px] font-bold uppercase tracking-widest mb-4 ${
+        className={`text-[10px] font-bold uppercase tracking-widest mb-5 ${
           isDark ? "text-white/30" : "text-[#436850]"
         }`}
       >
@@ -1197,9 +1197,9 @@ function VerticalRoundTracker({
                 <div className={`w-0.5 h-3 rounded-full ${isDark ? "bg-white/10" : "bg-[#ADBC9F]"}`} />
               </div>
             )}
-            {/* Round dot — larger: w-10 h-10 */}
+            {/* Round dot */}
             <div
-              className={`relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold transition-all duration-300 ${
+              className={`relative flex items-center justify-center w-12 h-12 rounded-full text-base font-bold transition-all duration-300 ${
                 isComplete
                   ? "bg-[#436850] text-white shadow-md"
                   : isCurrent
@@ -1219,7 +1219,7 @@ function VerticalRoundTracker({
                 />
               )}
               {isComplete ? (
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-5 h-5" />
               ) : (
                 <span>{r}</span>
               )}
@@ -1228,7 +1228,7 @@ function VerticalRoundTracker({
             {/* Per-round completion count — shown for current and completed rounds */}
             {showCount && (
               <span
-                className={`text-[9px] font-bold tabular-nums leading-none mt-0.5 mb-0.5 ${
+                className={`text-[10px] font-bold tabular-nums leading-none mt-1 mb-1 ${
                   isComplete
                     ? isDark ? "text-[#4CAF50]" : "text-[#436850]"
                     : roundDone === roundTotal
@@ -1244,7 +1244,7 @@ function VerticalRoundTracker({
             {r < totalRounds && (
               <div
                 className={`w-0.5 ${
-                  showCount ? "h-4" : "h-7"
+                  showCount ? "h-5" : "h-8"
                 } rounded-full transition-all duration-300 ${
                   isComplete
                     ? "bg-[#436850]"
@@ -1260,12 +1260,12 @@ function VerticalRoundTracker({
 
       {/* Completion indicator */}
       {currentRound > totalRounds && (
-        <div className="mt-4 flex flex-col items-center gap-1">
+        <div className="mt-5 flex flex-col items-center gap-1">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center shadow-md"
+            className="w-12 h-12 rounded-full flex items-center justify-center shadow-md"
             style={{ background: "#436850" }}
           >
-            <Trophy className="w-4 h-4 text-white" />
+            <Trophy className="w-5 h-5 text-white" />
           </div>
         </div>
       )}
@@ -1699,28 +1699,6 @@ function PublicTournamentCard({
         )}
       </div>
     </div>
-  );
-}
-
-/** Tiny chip that shows public/private status in the Command Center strip */
-function PublicModeChip({ tournamentId, isDark }: { tournamentId: string; isDark: boolean }) {
-  const [isPublic, setIsPublic] = useState<boolean | null>(null);
-  useEffect(() => {
-    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setIsPublic(!!d.isPublic); })
-      .catch(() => {});
-  }, [tournamentId]);
-  if (isPublic === null) return null;
-  return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-      isPublic
-        ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-green-50 text-green-600"
-        : isDark ? "bg-white/06 text-white/30" : "bg-[#ADBC9F]/40 text-[#436850]"
-    }`}>
-      {isPublic ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-      {isPublic ? "Public" : "Private"}
-    </span>
   );
 }
 
@@ -3587,7 +3565,7 @@ export default function Director() {
               <div className="flex flex-col items-center">
                 <div className="flex items-center justify-center gap-2.5 flex-wrap">
                   <h1
-                    className={`text-2xl sm:text-3xl font-black tracking-tight leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
+                    className={`text-3xl sm:text-4xl font-black tracking-tight leading-tight ${isDark ? "text-white" : "text-[#12372A]"}`}
                     style={{ fontFamily: "'Clash Display', sans-serif" }}
                   >
                     {state.tournamentName}
@@ -3628,49 +3606,6 @@ export default function Director() {
                     </span>
                   </div>
                 )}
-                {/* Command Center — operational status strip */}
-                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-1.5">
-                  {/* Format + Time */}
-                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
-                    isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
-                  }`}>
-                    <Trophy className="w-3 h-3" />
-                    {getTournamentFormatLabel(state.format)}
-                    {state.format === "quads" && state.quadSections ? ` · ${state.quadSections.length} Section${state.quadSections.length > 1 ? "s" : ""}` : ""}
-                    {tournamentConfig?.timePreset ? ` · ${tournamentConfig.timePreset}` : ""}
-                  </span>
-                  {/* Round indicator */}
-                  {!isRegistration && (
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
-                      isDark ? "bg-[#436850]/25 text-[#6FCF7F]" : "bg-[#436850]/10 text-[#436850]"
-                    }`}>
-                      <Circle className="w-2.5 h-2.5 fill-current" />
-                      Round {state.currentRound} / {state.totalRounds}
-                    </span>
-                  )}
-                  {/* Players */}
-                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md ${
-                    isDark ? "bg-white/06 text-white/50" : "bg-[#ADBC9F]/40 text-[#436850]"
-                  }`}>
-                    <Users className="w-3 h-3" />
-                    {state.players.length}
-                  </span>
-                  {/* Results progress — only during active round */}
-                  {!isRegistration && totalGames > 0 && (
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                      allResultsIn
-                        ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
-                        : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-800"
-                    }`}>
-                      <CheckCircle2 className="w-3 h-3" />
-                      {completedGames}/{totalGames}
-                    </span>
-                  )}
-                  {/* Public mode indicator */}
-                  {!isRegistration && tournamentId !== "otb-demo-2026" && (
-                    <PublicModeChip tournamentId={tournamentId} isDark={isDark} />
-                  )}
-                </div>
               </div>
 
             </div>

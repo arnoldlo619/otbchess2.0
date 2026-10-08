@@ -210,7 +210,7 @@ export function RoundTimer({
           ? isDark ? "text-amber-400/70" : "text-amber-600/70"
           : isDark ? "text-white/30" : "text-[#436850]"
       }`}>
-        {isExpired ? "Time's Up" : running ? "Running" : "Round"}
+        {isExpired ? "Time's Up" : running ? "Running" : "Timer"}
       </div>
 
       {/* Center: clock display or edit input */}

@@ -57,11 +57,13 @@ describe("Command Center Status Strip", () => {
   });
 
   describe("Consolidated round navigation", () => {
-    it("keeps the single round status label while rendering the detailed tracker in the left rail", () => {
-      expect(directorSource).toContain("Round {state.currentRound} / {state.totalRounds}");
+    it("keeps the detailed, legible tracker in the left rail without duplicating summary chips", () => {
       expect(directorSource).toContain("<VerticalRoundTracker");
       expect(directorSource).toContain("Pulse ring for current round");
-    });
+    expect(directorSource).toContain("w-12 h-12 rounded-full text-base font-bold");
+    expect(directorSource).not.toContain("Command Center — operational status strip");
+    expect(directorSource).not.toContain("function PublicModeChip");
+  });
 
     it("does not reintroduce the redundant header timeline-dot group", () => {
       expect(directorSource).not.toContain("Round timeline dots");
@@ -383,14 +385,15 @@ describe("Director Home and Standings readability", () => {
     expect(doubleSwissCardSource).toContain('style={{ minHeight: "44px", touchAction: "manipulation" }}');
   });
 
-  it("centers the tournament name and operational summary details in the Director identity block", () => {
+  it("centers the enlarged tournament name without redundant operational metadata", () => {
     const identityStart = directorSource.indexOf("/* Round title row */");
     const identitySource = directorSource.slice(identityStart, directorSource.indexOf("/* Round Timer", identityStart));
 
     expect(identitySource).toContain('className="flex flex-col items-center gap-2 text-center"');
     expect(identitySource).toContain('className="flex items-center justify-center gap-2.5 flex-wrap"');
-    expect(identitySource).toContain('className="flex flex-wrap items-center justify-center gap-1.5 mt-1.5"');
-    expect(identitySource).toContain("Round {state.currentRound} / {state.totalRounds}");
+    expect(identitySource).toContain("text-3xl sm:text-4xl font-black tracking-tight leading-tight");
+    expect(identitySource).not.toContain("Command Center — operational status strip");
+    expect(identitySource).not.toContain("Round {state.currentRound} / {state.totalRounds}");
   });
 
   it("gives completed winner and draw score badges a dedicated light-mode contrast treatment", () => {
