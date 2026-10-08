@@ -6,6 +6,7 @@
   --rsvp-surface: oklch(0.17 0.05 145);
   --rsvp-input: oklch(0.20 0.05 145);
   --rsvp-nav: rgba(0, 0, 0, 0.16);
+  --rsvp-nav-active-text: #dcfce7;
   --rsvp-text: #ffffff;
   --rsvp-text-80: rgba(255, 255, 255, 0.80);
   --rsvp-text-70: rgba(255, 255, 255, 0.70);
@@ -42,6 +43,7 @@
   --rsvp-surface: #ffffff;
   --rsvp-input: #f4f8f3;
   --rsvp-nav: rgba(18, 55, 42, 0.045);
+  --rsvp-nav-active-text: #174b2b;
   --rsvp-text: #12372a;
   --rsvp-text-80: rgba(18, 55, 42, 0.80);
   --rsvp-text-70: rgba(18, 55, 42, 0.70);

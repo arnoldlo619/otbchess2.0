@@ -4403,7 +4403,7 @@ export default function ClubDashboard() {
         <TabTransition tabKey={tab}>
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (
-          <div className="space-y-5">
+          <div className="relative space-y-5">
             {/* ── Upcoming Event (next one, prominent) ── */}
             {upcomingEvents.length > 0 && (() => {
               const next = upcomingEvents[0];
@@ -4438,7 +4438,7 @@ export default function ClubDashboard() {
             })()}
 
             {/* ── Club Timeline + owner action rail ── */}
-            <div className="relative">
+            <div>
               {/* ── 5. Recent Activity ── */}
               <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
               <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
@@ -4491,36 +4491,40 @@ export default function ClubDashboard() {
               )}
               </section>
 
-              <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:left-full min-[1440px]:top-0 min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[172px]">
-                <h3 id="overview-quick-actions" className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 sm:grid-cols-4 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-1 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-5 min-[1440px]:before:absolute min-[1440px]:before:bottom-3 min-[1440px]:before:left-0 min-[1440px]:before:top-3 min-[1440px]:before:w-px min-[1440px]:before:bg-[var(--overview-action-rail-line)]" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", "--overview-action-rail-line": isDark ? "rgba(255,255,255,0.12)" : "rgba(21,41,28,0.14)" } as React.CSSProperties}>
-                  {[
-                    { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
-                    { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
-                    { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
-                    { icon: Megaphone, label: "Post", action: () => setTab("feed") },
-                  ].map(({ icon: Icon, label, action }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={action}
-                      className="group relative flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--overview-action-hover)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none min-[1440px]:min-h-10 min-[1440px]:gap-2 min-[1440px]:rounded-lg min-[1440px]:px-0 min-[1440px]:py-1.5 min-[1440px]:hover:bg-transparent"
-                      style={{
-                        color: isDark ? "rgba(255,255,255,0.88)" : "#15291c",
-                        "--overview-action-hover": isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.055)",
-                      } as React.CSSProperties}
-                    >
-                      <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--overview-action-icon-surface)] transition-[background-color,transform] duration-200 ease-out group-hover:scale-[1.08] min-[1440px]:-ml-[34px] min-[1440px]:h-7 min-[1440px]:w-7 motion-reduce:transition-none" style={{ "--overview-action-icon-surface": isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.96)" } as React.CSSProperties}>
-                        <Icon className="h-4 w-4" style={{ color: accent }} aria-hidden="true" />
-                      </span>
-                      <span className="min-w-0 text-sm font-semibold leading-5">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
+
             </div>
 
 
+
+            <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[208px]">
+              <div className="min-[1440px]:sticky min-[1440px]:top-6">
+                <h3 id="overview-quick-actions" className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 sm:grid-cols-4 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-6 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-[var(--overview-action-rail-line)]" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", "--overview-action-rail-line": isDark ? "rgba(255,255,255,0.12)" : "rgba(21,41,28,0.14)" } as React.CSSProperties}>
+                {[
+                  { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
+                  { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
+                  { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
+                  { icon: Megaphone, label: "Post", action: () => setTab("feed") },
+                ].map(({ icon: Icon, label, action }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={action}
+                    className="group relative flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--overview-action-hover)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none min-[1440px]:min-h-12 min-[1440px]:gap-3 min-[1440px]:rounded-lg min-[1440px]:px-0 min-[1440px]:py-2 min-[1440px]:hover:bg-transparent"
+                    style={{
+                      color: isDark ? "rgba(255,255,255,0.88)" : "#15291c",
+                      "--overview-action-hover": isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.055)",
+                    } as React.CSSProperties}
+                  >
+                    <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--overview-action-icon-surface)] transition-[background-color,transform] duration-200 ease-out group-hover:scale-[1.08] min-[1440px]:-ml-[42px] min-[1440px]:h-9 min-[1440px]:w-9 motion-reduce:transition-none" style={{ "--overview-action-icon-surface": isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.96)" } as React.CSSProperties}>
+                      <Icon className="h-4 w-4 min-[1440px]:h-[18px] min-[1440px]:w-[18px]" style={{ color: accent }} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 text-sm font-semibold leading-5 min-[1440px]:text-base">{label}</span>
+                  </button>
+                ))}
+                </div>
+              </div>
+            </section>
 
             {/* Empty state for new clubs */}
             {members.length <= 1 && upcomingEvents.length === 0 && feedEvents.length === 0 && (

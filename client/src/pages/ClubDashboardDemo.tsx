@@ -324,22 +324,24 @@ function DemoQuickActions({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
     { label: "Post", icon: MessageSquare, tab: "feed" as const },
   ];
   return (
-    <section data-demo-overview-action-rail aria-labelledby="demo-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:left-full min-[1440px]:top-0 min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[172px]">
-      <h2 id="demo-quick-actions" className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/38">Quick Actions</h2>
-      <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 sm:grid-cols-3 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-1 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-5 min-[1440px]:before:absolute min-[1440px]:before:bottom-3 min-[1440px]:before:left-0 min-[1440px]:before:top-3 min-[1440px]:before:w-px min-[1440px]:before:bg-white/12">
+    <section data-demo-overview-action-rail aria-labelledby="demo-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[208px]">
+      <div className="min-[1440px]:sticky min-[1440px]:top-6">
+        <h2 id="demo-quick-actions" className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/38">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 sm:grid-cols-3 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-6 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-white/12">
         {actions.map(({ label, icon: Icon, tab }) => (
           <button
             key={label}
             type="button"
             onClick={() => onSelect(tab)}
-            className="group relative flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left text-white/92 transition-[background-color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-white/[0.065] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none min-[1440px]:min-h-10 min-[1440px]:gap-2 min-[1440px]:rounded-lg min-[1440px]:px-0 min-[1440px]:py-1.5 min-[1440px]:hover:bg-transparent"
+            className="group relative flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left text-white/92 transition-[background-color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-white/[0.065] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none min-[1440px]:min-h-12 min-[1440px]:gap-3 min-[1440px]:rounded-lg min-[1440px]:px-0 min-[1440px]:py-2 min-[1440px]:hover:bg-transparent"
           >
-            <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[oklch(0.15_0.045_145)] transition-transform duration-200 ease-out group-hover:scale-[1.08] min-[1440px]:-ml-[34px] motion-reduce:transition-none">
-              <Icon className="h-4 w-4" style={{ color: DEMO_ACCENT }} aria-hidden="true" />
+            <span className="relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[oklch(0.15_0.045_145)] transition-transform duration-200 ease-out group-hover:scale-[1.08] min-[1440px]:-ml-[42px] min-[1440px]:h-9 min-[1440px]:w-9 motion-reduce:transition-none">
+              <Icon className="h-4 w-4 min-[1440px]:h-[18px] min-[1440px]:w-[18px]" style={{ color: DEMO_ACCENT }} aria-hidden="true" />
             </span>
-            <span className="min-w-0 text-sm font-semibold leading-5">{label}</span>
+            <span className="min-w-0 text-sm font-semibold leading-5 min-[1440px]:text-base">{label}</span>
           </button>
         ))}
+        </div>
       </div>
     </section>
   );
@@ -347,7 +349,7 @@ function DemoQuickActions({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
 
 function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
   return (
-    <div className="space-y-5">
+    <div className="relative space-y-5">
       <section className="cursor-pointer rounded-2xl border border-white/8 bg-[oklch(0.16_0.05_145)] p-4 transition-colors hover:border-white/15 hover:bg-[oklch(0.18_0.06_145)]" onClick={() => onSelect("events")}>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-white/30">Next Event</h2>
@@ -360,7 +362,7 @@ function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
         </div>
       </section>
 
-      <div className="relative">
+      <div>
         <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }} aria-labelledby="demo-recent-activity">
         <header className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: "rgba(255,255,255,0.065)" }}>
           <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club timeline</p><h2 id="demo-recent-activity" className="mt-0.5 text-sm font-bold text-white/92">Recent Activity</h2></div>
@@ -381,8 +383,9 @@ function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
         </div>
         </section>
 
-        <DemoQuickActions onSelect={onSelect} />
       </div>
+
+      <DemoQuickActions onSelect={onSelect} />
     </div>
   );
 }

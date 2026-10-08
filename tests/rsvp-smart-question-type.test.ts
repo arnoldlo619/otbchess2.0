@@ -50,14 +50,16 @@ describe("smart RSVP question types", () => {
     });
   });
 
-  it("keeps manual type selection available as an explicit override in both builders", () => {
+  it("keeps manual type selection available while full-page inference stays silent", () => {
     const inlineBuilder = read("client/src/components/club/RsvpFormBuilder.tsx");
     const fullBuilder = read("client/src/pages/RsvpFormBuilderPage.tsx");
 
     expect(inlineBuilder).toContain('typeSource: "manual"');
     expect(inlineBuilder).toContain("Use smart type");
     expect(fullBuilder).toContain('typeSource: "manual"');
-    expect(fullBuilder).toContain("Use smart type");
+    expect(fullBuilder).toContain('getSmartRsvpQuestionConfig(label, question)');
+    expect(fullBuilder).not.toContain("Use smart type");
+    expect(fullBuilder).not.toContain(">Smart type<");
     expect(fullBuilder).toContain("function addQuestion(type?: QuestionType)");
   });
 });

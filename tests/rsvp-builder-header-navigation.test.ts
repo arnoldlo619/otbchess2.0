@@ -35,6 +35,10 @@ describe("RSVP builder header navigation", () => {
     expect(source).toContain('{Boolean(form.isPublished) && (');
   });
 
+  it("keeps the active desktop tab legible in both appearance modes", () => {
+    expect(source).toContain('color: "var(--rsvp-nav-active-text)"');
+  });
+
   it("reserves responsive content space below the desktop or mobile header", () => {
     expect(source).toContain('className="flex-1 overflow-y-auto pb-16 pt-28 lg:pt-16"');
     expect(source).toContain('className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-3 sm:px-5"');

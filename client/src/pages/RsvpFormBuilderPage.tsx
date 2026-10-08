@@ -499,7 +499,7 @@ export default function RsvpFormBuilderPage() {
                 aria-current={tab === id ? "page" : undefined}
                 className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
                 style={tab === id
-                  ? { background: `${ACCENT}20`, color: "#dcfce7", boxShadow: `inset 0 0 0 1px ${ACCENT}2b` }
+                  ? { background: `${ACCENT}20`, color: "var(--rsvp-nav-active-text)", boxShadow: `inset 0 0 0 1px ${ACCENT}2b` }
                   : { color: "var(--rsvp-text-48)" }}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -1219,33 +1219,22 @@ function QuestionCard({
                 placeholder={`Question ${index + 1}`}
                 className="flex-1 bg-transparent text-white text-base font-medium outline-none border-b border-transparent hover:border-white/20 focus:border-white/50 transition-colors pb-1 placeholder-white/25"
               />
-              {/* Type selector */}
+              {/* Type selector — inference runs silently as the question is authored. */}
               <div className="relative flex-shrink-0">
                 <select
                   aria-label="Question type"
                   value={question.type}
                   onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, typeSource: "manual", options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined, fieldKey: undefined }); }}
                   onClick={(e) => e.stopPropagation()}
-                  className="appearance-none pl-3 pr-8 py-1.5 rounded-xl text-sm font-semibold text-white/70 outline-none cursor-pointer"
+                  className="h-8 w-40 appearance-none rounded-lg px-2.5 pr-7 text-xs font-semibold text-white/70 outline-none cursor-pointer"
                   style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-10)" }}
                 >
                   {(Object.entries(QUESTION_TYPE_META) as [QuestionType, typeof QUESTION_TYPE_META[QuestionType]][]).map(([t, meta]) => (
                     <option key={t} value={t}>{meta.label}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-white/40" />
               </div>
-              {question.typeSource !== "manual" ? (
-                <span className="text-xs font-semibold text-green-300/80 whitespace-nowrap">Smart type</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onUpdate(getSmartRsvpQuestionConfig(question.label, question)); }}
-                  className="text-xs font-semibold text-white/45 hover:text-green-300 transition-colors whitespace-nowrap"
-                >
-                  Use smart type
-                </button>
-              )}
             </div>
 
             {/* Answer preview */}
