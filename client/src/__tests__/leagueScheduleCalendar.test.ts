@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
 
 const clientRoot = resolve(import.meta.dirname, "..");
 const calendarSource = readFileSync(resolve(clientRoot, "components/league/LeagueMonthCalendar.tsx"), "utf8");
@@ -28,6 +31,36 @@ describe("League Schedule monthly glass calendar", () => {
     expect(calendarSource).toContain("backgroundImage");
     expect(calendarSource).toContain("opacity: isDark ? 0.23 : 0.13");
     expect(calendarSource).toContain("backdropFilter: \"blur(20px)\"");
+  });
+
+  it("treats a draft League with no generated weeks as a valid pre-season schedule", () => {
+    expect(calendarSource).toContain("function dateForWeek(week: LeagueMonthCalendarWeek | undefined");
+    expect(calendarSource).toContain("if (!week) return null;");
+    expect(calendarSource).toContain("const hasScheduledWeeks = weeks.length > 0;");
+    expect(calendarSource).toContain("Schedule opens when the season begins");
+    expect(dashboardSource).toContain("{weeks.length > 0 && (() => {");
+  });
+
+  it("renders the pre-season schedule without a League week record", () => {
+    const markup = renderToStaticMarkup(createElement(LeagueMonthCalendar, {
+      leagueName: "Draft League",
+      seasonStartAt: "2026-10-08T00:00:00.000Z",
+      totalWeeks: 5,
+      currentWeek: 0,
+      leagueStatus: "draft",
+      weeks: [],
+      selectedWeekNumber: 1,
+      onSelectWeek: () => undefined,
+      isDark: true,
+      accent: "#4CAF50",
+      textMain: "#ffffff",
+      textMuted: "#a3b5a8",
+      cardBorder: "#23412c",
+    }));
+
+    expect(markup).toContain("Schedule opens when the season begins");
+    expect(markup).toContain("Draft");
+    expect(markup).toContain("Not generated");
   });
 
   it("maps persisted League weeks to real matchup progress and preserves the selected detail route", () => {

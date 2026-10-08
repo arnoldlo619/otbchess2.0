@@ -3402,7 +3402,7 @@ export default function LeagueDashboard() {
               }))}
             />
 
-            {(() => {
+            {weeks.length > 0 && (() => {
               const selectedScheduleWeek = weeks.find((week) => week.weekNumber === selectedWeek);
               const selectedMatches = selectedScheduleWeek?.matches ?? [];
               return (

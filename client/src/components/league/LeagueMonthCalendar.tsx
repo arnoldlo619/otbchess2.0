@@ -37,7 +37,8 @@ function toValidDate(value?: string | null) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function dateForWeek(week: LeagueMonthCalendarWeek, seasonStartAt?: string | null) {
+function dateForWeek(week: LeagueMonthCalendarWeek | undefined, seasonStartAt?: string | null) {
+  if (!week) return null;
   const explicitDate = toValidDate(week.deadline) ?? toValidDate(week.publishedAt);
   if (explicitDate) return explicitDate;
 
@@ -83,6 +84,8 @@ export function LeagueMonthCalendar({
     ?? toValidDate(seasonStartAt)
     ?? new Date();
   const progress = Math.round((completedWeeks / Math.max(totalWeeks, 1)) * 100);
+  const hasScheduledWeeks = weeks.length > 0;
+  const seasonDescriptor = hasScheduledWeeks ? `${totalWeeks} scheduled weeks` : `${totalWeeks}-week season`;
 
   return (
     <section
@@ -127,7 +130,7 @@ export function LeagueMonthCalendar({
             {monthFormat.format(currentScheduleDate)}
           </h2>
           <p className="mt-1 text-sm" style={{ color: textMuted }}>
-            {leagueName} · {totalWeeks} scheduled weeks
+            {leagueName} · {seasonDescriptor}
           </p>
         </div>
 
@@ -139,20 +142,21 @@ export function LeagueMonthCalendar({
             Month view
           </span>
           <div className="text-right">
-            <div className="text-lg font-bold tabular-nums leading-none" style={{ color: textMain }}>{progress}%</div>
-            <div className="mt-1 text-[11px] font-medium" style={{ color: textMuted }}>{completedWeeks} complete</div>
+            <div className="text-lg font-bold tabular-nums leading-none" style={{ color: textMain }}>{hasScheduledWeeks ? `${progress}%` : "Draft"}</div>
+            <div className="mt-1 text-[11px] font-medium" style={{ color: textMuted }}>{hasScheduledWeeks ? `${completedWeeks} complete` : "Not generated"}</div>
           </div>
         </div>
       </header>
 
-      <div className="relative z-10 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" role="list" aria-label="League schedule by week">
-        {weeks.map((week) => {
-          const isSelected = week.weekNumber === selectedWeekNumber;
-          const status = getWeekStatus(week, currentWeek, leagueStatus);
-          const scheduledDate = dateForWeek(week, seasonStartAt);
-          const hasMatchProgress = typeof week.matchCount === "number" && week.matchCount > 0;
-          const matchProgress = hasMatchProgress ? Math.round(((week.completedMatchCount ?? 0) / week.matchCount!) * 100) : 0;
-          const statusColor = status.tone === "complete" ? accent : status.tone === "current" ? accent : status.tone === "attention" ? "#d97706" : textMuted;
+      {hasScheduledWeeks ? (
+        <div className="relative z-10 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" role="list" aria-label="League schedule by week">
+          {weeks.map((week) => {
+            const isSelected = week.weekNumber === selectedWeekNumber;
+            const status = getWeekStatus(week, currentWeek, leagueStatus);
+            const scheduledDate = dateForWeek(week, seasonStartAt);
+            const hasMatchProgress = typeof week.matchCount === "number" && week.matchCount > 0;
+            const matchProgress = hasMatchProgress ? Math.round(((week.completedMatchCount ?? 0) / week.matchCount!) * 100) : 0;
+            const statusColor = status.tone === "complete" ? accent : status.tone === "current" ? accent : status.tone === "attention" ? "#d97706" : textMuted;
 
           return (
             <button
@@ -212,8 +216,17 @@ export function LeagueMonthCalendar({
               </div>
             </button>
           );
-        })}
-      </div>
+          })}
+        </div>
+      ) : (
+        <div className="relative z-10 mt-4 rounded-2xl border px-5 py-10 text-center" style={{ borderColor: isDark ? "rgba(255,255,255,0.12)" : cardBorder, background: isDark ? "rgba(3, 19, 9, 0.46)" : "rgba(255,255,255,0.60)" }}>
+          <CalendarDays size={28} className="mx-auto mb-3" style={{ color: accent }} aria-hidden="true" />
+          <p className="text-base font-semibold" style={{ color: textMain }}>Schedule opens when the season begins</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6" style={{ color: textMuted }}>
+            The commissioner is still building the roster. Match weeks will appear here after the season is generated.
+          </p>
+        </div>
+      )}
     </section>
   );
 }
