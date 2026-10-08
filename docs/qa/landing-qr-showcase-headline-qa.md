@@ -4,7 +4,7 @@
 
 ## Completed behavior
 
-- Replaced the first `Share your QR Code` showcase asset with the supplied `landing-qr-share-showcase.png` capture.
+- Replaced the first `Share your QR Code` showcase asset with the latest supplied high-visibility `landing-qr-share-showcase.png` capture.
 - Preserved the established MacBook display frame while adding an explicit, typed per-step image-fit option.
 - Applied `object-fit: fill` only to the supplied QR-share screen, so the complete QR screen fills its presentation surface without changing the crop behavior of other landing images.
 - Updated the visual section heading to **“Chess Tournaments Made Simple.”**
@@ -20,9 +20,9 @@
 | Changed-file ESLint | Passed with no errors |
 | Project lint (`pnpm lint`) | 0 errors / 233 established warnings |
 | Production build (`pnpm run build`) | Passed |
-| Asset integrity | PNG present; 1917×955 RGBA |
-| Local route health | `/` and `/images/landing-qr-share-showcase.png` returned HTTP 200 |
-| Browser QA | Headline present; image reports `object-fit: fill`, descriptive alt text, lazy loading, and a 577×360 desktop rendered surface |
+| Asset integrity | PNG present; 1917×955 RGBA; SHA-256 `dbf41c49d2d5c5ec631e525c01a74c26d21fc0c9255aba7f50f9955ac714928c` |
+| Local route health | `/` and `/images/landing-qr-share-showcase.png` returned HTTP 200; served image bytes exactly match the supplied replacement |
+| Browser QA | Headline present; the browser reload hash matches the updated asset; image reports `object-fit: fill`, descriptive alt text, lazy loading, and a 577×360 desktop rendered surface |
 | Responsive QA | Full-page desktop (1440px) and mobile (390px) captures show the new QR showcase without horizontal overflow |
 | Full Vitest baseline | 7,180 passed, 2 skipped; 29 known unrelated legacy failures across 17 suites. No Home/landing regression failed. |
 | Aggregate image-loading suite | Existing threshold failure: 32 optimized images vs stale expectation of 35; unrelated to this change and present without QR asset regression |
