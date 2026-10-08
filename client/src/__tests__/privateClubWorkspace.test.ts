@@ -48,6 +48,13 @@ describe("private Club workspace model", () => {
     expect(demo).not.toMatch(/[🏆🌍🥇🥈🥉🔥]/u);
   });
 
+  it("keeps the demo Overview action rail aligned with Club Timeline without card containers", () => {
+    expect(demo).toContain('data-demo-overview-action-rail');
+    expect(demo).toContain('xl:grid-cols-[minmax(0,1fr)_216px]');
+    expect(demo).toContain('grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 xl:grid-cols-1');
+    expect(demo).not.toContain('mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3');
+  });
+
   it("uses cached Chess.com profile photos instead of generic activity glyphs in the demo feed", () => {
     expect(demo).toContain('avatarSrc: "/club-assets/chesscom-hikaru-avatar.png"');
     expect(demo).toContain('avatarSrc: "/club-assets/chesscom-anna-avatar.jpg"');

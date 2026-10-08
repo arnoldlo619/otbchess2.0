@@ -323,18 +323,18 @@ function DemoQuickActions({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
     { label: "Post", icon: MessageSquare, tab: "feed" as const },
   ];
   return (
-    <section aria-labelledby="demo-quick-actions">
-      <h2 id="demo-quick-actions" className="mb-3 text-center text-[10px] font-bold uppercase tracking-widest text-white/38">Quick Actions</h2>
-      <div className="mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3">
+    <section data-demo-overview-action-rail aria-labelledby="demo-quick-actions" className="xl:sticky xl:top-6">
+      <h2 id="demo-quick-actions" className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/38">Quick Actions</h2>
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 xl:grid-cols-1 xl:gap-y-1 xl:border-y-0 xl:py-0">
         {actions.map(({ label, icon: Icon, tab }) => (
           <button
             key={label}
             type="button"
             onClick={() => onSelect(tab)}
-            className="group flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-white/9 bg-[oklch(0.14_0.04_145)] px-2 py-2 text-center text-white/92 transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-px hover:border-white/15 hover:bg-[oklch(0.17_0.05_145)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.98] sm:min-h-16 sm:flex-row sm:gap-2 sm:px-3 sm:py-3"
+            className="group flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left text-white/92 transition-[background-color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-white/[0.065] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.075] sm:h-10 sm:w-10"><Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /></span>
-            <span className="text-xs font-semibold sm:text-sm">{label}</span>
+            <Icon className="h-5 w-5 shrink-0 transition-transform duration-200 ease-out group-hover:scale-[1.06] motion-reduce:transition-none" style={{ color: DEMO_ACCENT }} aria-hidden="true" />
+            <span className="min-w-0 text-sm font-semibold leading-5">{label}</span>
           </button>
         ))}
       </div>
@@ -357,9 +357,8 @@ function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
         </div>
       </section>
 
-      <DemoQuickActions onSelect={onSelect} />
-
-      <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }} aria-labelledby="demo-recent-activity">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_216px] xl:gap-7">
+        <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }} aria-labelledby="demo-recent-activity">
         <header className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: "rgba(255,255,255,0.065)" }}>
           <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club timeline</p><h2 id="demo-recent-activity" className="mt-0.5 text-sm font-bold text-white/92">Recent Activity</h2></div>
           <button type="button" onClick={() => onSelect("feed")} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" style={{ color: DEMO_ACCENT }}>View all</button>
@@ -377,7 +376,10 @@ function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
             </article>
           ))}
         </div>
-      </section>
+        </section>
+
+        <DemoQuickActions onSelect={onSelect} />
+      </div>
     </div>
   );
 }

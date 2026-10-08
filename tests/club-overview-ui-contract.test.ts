@@ -5,14 +5,18 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync(resolve(import.meta.dirname, "../client/src/pages/ClubDashboard.tsx"), "utf8");
 
 describe("Club Owner Overview UI contract", () => {
-  it("keeps the owner quick actions centered in a responsive, touch-safe grid", () => {
+  it("places owner quick actions in a responsive rail beside Club Timeline without card chrome", () => {
     expect(source).toContain('id="overview-quick-actions"');
-    expect(source).toContain('mx-auto grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4');
+    expect(source).toContain('data-club-overview-action-rail');
+    expect(source).toContain('xl:grid-cols-[minmax(0,1fr)_216px]');
+    expect(source).toContain('xl:sticky xl:top-6');
+    expect(source).toContain('grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 xl:grid-cols-1');
     expect(source).toContain('label: "New Meetup"');
     expect(source).toContain('label: "Tournament"');
     expect(source).toContain('label: "Leagues"');
     expect(source).toContain('label: "Post"');
     expect(source).toContain('min-h-12');
+    expect(source).not.toContain('mx-auto grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4');
   });
 
   it("renders Recent Activity as a theme-aware event-led list with a named view action", () => {

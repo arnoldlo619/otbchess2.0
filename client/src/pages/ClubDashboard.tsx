@@ -4435,49 +4435,10 @@ export default function ClubDashboard() {
               );
             })()}
 
-            {/* ── Quick Actions — centered owner controls ── */}
-            <section aria-labelledby="overview-quick-actions">
-              <h3 id="overview-quick-actions" className="mb-3 text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
-              <div className="mx-auto grid max-w-[720px] grid-cols-2 gap-3 sm:grid-cols-4">
-                {[
-                  { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
-                  { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
-                  { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
-                  { icon: Megaphone, label: "Post", action: () => setTab("feed") },
-                ].map(({ icon: Icon, label, action }) => (
-                  <button
-                    key={label}
-                    onClick={action}
-                    className="group relative isolate flex min-h-[72px] items-center justify-center gap-2.5 overflow-hidden rounded-2xl border px-3 py-3 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--quick-action-hover-border)] hover:shadow-[var(--quick-action-hover-shadow)] focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
-                    style={{
-                      background: isDark ? "oklch(0.14 0.04 145)" : "rgba(255,255,255,0.72)",
-                      borderColor: isDark ? "rgba(255,255,255,0.09)" : "rgba(21,41,28,0.12)",
-                      color: isDark ? "rgba(255,255,255,0.92)" : "#15291c",
-                      boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 1px 2px rgba(21,41,28,0.04)",
-                      "--quick-action-hover-border": isDark ? `${accent}82` : `${accent}58`,
-                      "--quick-action-hover-shadow": isDark ? "0 14px 30px rgba(0,0,0,0.28)" : "0 14px 30px rgba(20,55,31,0.12)",
-                      // The visible green focus outline stays consistent in both appearances.
-                      "--tw-ring-offset-color": isDark ? "oklch(0.12 0.04 145)" : "#f4f7f3",
-                    } as React.CSSProperties}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 motion-reduce:transition-none"
-                      style={{ background: isDark ? `radial-gradient(circle at 15% 0%, ${accent}2b 0%, transparent 59%)` : `radial-gradient(circle at 15% 0%, ${accent}1c 0%, transparent 59%)` }}
-                    />
-                    <span className="relative z-10 flex items-center gap-2.5">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-[background-color,box-shadow,transform] duration-200 ease-out group-hover:scale-[1.045] group-hover:shadow-sm motion-reduce:transition-none sm:h-11 sm:w-11" style={{ background: isDark ? "rgba(255,255,255,0.075)" : "rgba(21,41,28,0.055)" }}>
-                        <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" style={{ color: isDark ? "rgba(255,255,255,0.88)" : "#15291c" }} aria-hidden="true" />
-                      </span>
-                      <span className="whitespace-nowrap text-sm font-semibold sm:text-[15px]">{label}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* ── 5. Recent Activity ── */}
-            <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
+            {/* ── Club Timeline + owner action rail ── */}
+            <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_216px] xl:gap-7">
+              {/* ── 5. Recent Activity ── */}
+              <section className="overflow-hidden rounded-2xl border" aria-labelledby="recent-club-activity" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
               <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.46)" }}>Club timeline</p>
@@ -4526,7 +4487,34 @@ export default function ClubDashboard() {
                   })}
                 </div>
               )}
-            </section>
+              </section>
+
+              <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="xl:sticky xl:top-6">
+                <h3 id="overview-quick-actions" className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 xl:grid-cols-1 xl:gap-y-1 xl:border-y-0 xl:py-0" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)" }}>
+                  {[
+                    { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
+                    { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },
+                    { icon: LeaguesIcon, label: "Leagues", action: () => setTab("leagues") },
+                    { icon: Megaphone, label: "Post", action: () => setTab("feed") },
+                  ].map(({ icon: Icon, label, action }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={action}
+                      className="group flex min-h-11 items-center gap-2 rounded-xl px-2 py-2 text-left transition-[background-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--overview-action-hover)] focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
+                      style={{
+                        color: isDark ? "rgba(255,255,255,0.88)" : "#15291c",
+                        "--overview-action-hover": isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.055)",
+                      } as React.CSSProperties}
+                    >
+                      <Icon className="h-5 w-5 shrink-0 transition-transform duration-200 ease-out group-hover:scale-[1.06] motion-reduce:transition-none" style={{ color: accent }} aria-hidden="true" />
+                      <span className="min-w-0 text-sm font-semibold leading-5">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </div>
 
 
 
