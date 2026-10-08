@@ -1,0 +1,97 @@
+.rsvp-builder {
+  --rsvp-page-bg: oklch(0.13 0.04 145);
+  --rsvp-page-deep: oklch(0.11 0.04 145);
+  --rsvp-header: oklch(0.14 0.045 145 / 0.96);
+  --rsvp-header-solid: oklch(0.14 0.045 145 / 0.98);
+  --rsvp-surface: oklch(0.17 0.05 145);
+  --rsvp-input: oklch(0.20 0.05 145);
+  --rsvp-nav: rgba(0, 0, 0, 0.16);
+  --rsvp-text: #ffffff;
+  --rsvp-text-80: rgba(255, 255, 255, 0.80);
+  --rsvp-text-70: rgba(255, 255, 255, 0.70);
+  --rsvp-text-60: rgba(255, 255, 255, 0.60);
+  --rsvp-text-55: rgba(255, 255, 255, 0.55);
+  --rsvp-text-50: rgba(255, 255, 255, 0.50);
+  --rsvp-text-48: rgba(255, 255, 255, 0.48);
+  --rsvp-text-45: rgba(255, 255, 255, 0.45);
+  --rsvp-text-40: rgba(255, 255, 255, 0.40);
+  --rsvp-text-38: rgba(255, 255, 255, 0.38);
+  --rsvp-text-30: rgba(255, 255, 255, 0.30);
+  --rsvp-text-25: rgba(255, 255, 255, 0.25);
+  --rsvp-text-20: rgba(255, 255, 255, 0.20);
+  --rsvp-text-10: rgba(255, 255, 255, 0.10);
+  --rsvp-white-20: rgba(255, 255, 255, 0.20);
+  --rsvp-white-15: rgba(255, 255, 255, 0.15);
+  --rsvp-white-14: rgba(255, 255, 255, 0.14);
+  --rsvp-white-12: rgba(255, 255, 255, 0.12);
+  --rsvp-white-10: rgba(255, 255, 255, 0.10);
+  --rsvp-white-09: rgba(255, 255, 255, 0.09);
+  --rsvp-white-08: rgba(255, 255, 255, 0.08);
+  --rsvp-white-07: rgba(255, 255, 255, 0.07);
+  --rsvp-white-06: rgba(255, 255, 255, 0.06);
+  --rsvp-white-035: rgba(255, 255, 255, 0.035);
+  color: var(--rsvp-text);
+  background: var(--rsvp-page-bg);
+}
+
+.rsvp-builder[data-rsvp-theme="light"] {
+  --rsvp-page-bg: #f7faf8;
+  --rsvp-page-deep: #eef4ed;
+  --rsvp-header: rgba(255, 255, 255, 0.96);
+  --rsvp-header-solid: rgba(255, 255, 255, 0.98);
+  --rsvp-surface: #ffffff;
+  --rsvp-input: #f4f8f3;
+  --rsvp-nav: rgba(18, 55, 42, 0.045);
+  --rsvp-text: #12372a;
+  --rsvp-text-80: rgba(18, 55, 42, 0.80);
+  --rsvp-text-70: rgba(18, 55, 42, 0.70);
+  --rsvp-text-60: rgba(18, 55, 42, 0.60);
+  --rsvp-text-55: rgba(18, 55, 42, 0.55);
+  --rsvp-text-50: rgba(18, 55, 42, 0.50);
+  --rsvp-text-48: rgba(18, 55, 42, 0.48);
+  --rsvp-text-45: rgba(18, 55, 42, 0.45);
+  --rsvp-text-40: rgba(18, 55, 42, 0.40);
+  --rsvp-text-38: rgba(18, 55, 42, 0.38);
+  --rsvp-text-30: rgba(18, 55, 42, 0.30);
+  --rsvp-text-25: rgba(18, 55, 42, 0.25);
+  --rsvp-text-20: rgba(18, 55, 42, 0.20);
+  --rsvp-text-10: rgba(18, 55, 42, 0.10);
+  --rsvp-white-20: rgba(18, 55, 42, 0.20);
+  --rsvp-white-15: rgba(18, 55, 42, 0.15);
+  --rsvp-white-14: rgba(18, 55, 42, 0.14);
+  --rsvp-white-12: rgba(18, 55, 42, 0.12);
+  --rsvp-white-10: rgba(18, 55, 42, 0.10);
+  --rsvp-white-09: rgba(18, 55, 42, 0.09);
+  --rsvp-white-08: rgba(18, 55, 42, 0.08);
+  --rsvp-white-07: rgba(18, 55, 42, 0.07);
+  --rsvp-white-06: rgba(18, 55, 42, 0.06);
+  --rsvp-white-035: rgba(18, 55, 42, 0.035);
+}
+
+.rsvp-builder[data-rsvp-theme="light"] .text-white { color: var(--rsvp-text); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/80 { color: var(--rsvp-text-80); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/70 { color: var(--rsvp-text-70); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/60 { color: var(--rsvp-text-60); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/55 { color: var(--rsvp-text-55); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/50 { color: var(--rsvp-text-50); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/48 { color: var(--rsvp-text-48); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/45 { color: var(--rsvp-text-45); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/40 { color: var(--rsvp-text-40); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/38 { color: var(--rsvp-text-38); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/30 { color: var(--rsvp-text-30); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/25 { color: var(--rsvp-text-25); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/20 { color: var(--rsvp-text-20); }
+.rsvp-builder[data-rsvp-theme="light"] .text-white\/10 { color: var(--rsvp-text-10); }
+.rsvp-builder[data-rsvp-theme="light"] .bg-white\/8 { background-color: var(--rsvp-white-08); }
+.rsvp-builder[data-rsvp-theme="light"] .bg-white\/10 { background-color: var(--rsvp-white-10); }
+.rsvp-builder[data-rsvp-theme="light"] .border-white\/20 { border-color: var(--rsvp-white-20); }
+.rsvp-builder[data-rsvp-theme="light"] .border-white\/10 { border-color: var(--rsvp-white-10); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rsvp-builder *,
+  .rsvp-builder *::before,
+  .rsvp-builder *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

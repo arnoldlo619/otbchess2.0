@@ -54,6 +54,8 @@ import {
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import {
   createClubMeetupRsvpQuestions,
@@ -61,6 +63,7 @@ import {
   type RsvpFormQuestion,
   type RsvpQuestionType,
 } from "@shared/rsvpMeetupTemplate";
+import "@/styles/rsvpFormBuilder.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type QuestionType = RsvpQuestionType;
@@ -149,6 +152,7 @@ function makeQuestion(type: QuestionType = "text", typeSource: "smart" | "manual
 export default function RsvpFormBuilderPage() {
   const { clubId, eventId } = useParams<{ clubId: string; eventId: string }>();
   const [, navigate] = useLocation();
+  const { theme } = useTheme();
   const draftKey = rsvpBuilderDraftKey(clubId, eventId);
 
   const [tab, setTab] = useState<"questions" | "responses" | "settings" | "theme">("questions");
@@ -421,7 +425,7 @@ export default function RsvpFormBuilderPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.11 0.04 145)" }}>
+      <div className="rsvp-builder min-h-screen flex items-center justify-center" data-rsvp-theme={theme} style={{ background: "var(--rsvp-page-deep)" }}>
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: ACCENT }} />
           <p className="text-white/40 text-sm">Loading form builder…</p>
@@ -432,14 +436,14 @@ export default function RsvpFormBuilderPage() {
 
   if (!form) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.11 0.04 145)" }}>
+      <div className="rsvp-builder min-h-screen flex items-center justify-center" data-rsvp-theme={theme} style={{ background: "var(--rsvp-page-deep)" }}>
         <div className="flex flex-col items-center gap-3">
           <AlertCircle className="w-8 h-8 text-red-400" />
           <p className="text-white/60 text-sm">Could not load form. Please go back and try again.</p>
           <button
             onClick={() => navigate(`/clubs/${clubId}/meetup/${eventId}`)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white/70 hover:text-white transition"
-            style={{ background: "rgba(255,255,255,0.08)" }}
+            style={{ background: "var(--rsvp-white-08)" }}
           >
             <ChevronLeft className="w-4 h-4" /> Back to Event
           </button>
@@ -455,16 +459,16 @@ export default function RsvpFormBuilderPage() {
       : saveStatus === "unsaved"
         ? { label: "Unsaved changes", Icon: Save, tone: "text-amber-200", iconClass: "" }
         : saveStatus === "recovered"
-          ? { label: "Recovered locally", Icon: AlertCircle, tone: "text-amber-200", iconClass: "" }
+          ? null
           : { label: "Saved locally · sync failed", Icon: AlertCircle, tone: "text-amber-200", iconClass: "" };
-  const SaveStateIcon = saveState.Icon;
+  const SaveStateIcon = saveState?.Icon;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "oklch(0.13 0.04 145)" }}>
+    <div className="rsvp-builder min-h-screen flex flex-col" data-rsvp-theme={theme} style={{ background: "var(--rsvp-page-bg)" }}>
       {/* ── TOP HEADER ─────────────────────────────────────────────────────── */}
       <header
         className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-3 sm:px-5"
-        style={{ background: "oklch(0.14 0.045 145 / 0.96)", borderColor: "rgba(255,255,255,0.08)", backdropFilter: "blur(18px)" }}
+        style={{ background: "var(--rsvp-header)", borderColor: "var(--rsvp-white-08)", backdropFilter: "blur(18px)" }}
       >
         <div className="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-5">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -477,21 +481,17 @@ export default function RsvpFormBuilderPage() {
             </button>
             <div className="h-8 w-px bg-white/10" aria-hidden="true" />
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl sm:flex" style={{ background: `${ACCENT}1c`, border: `1px solid ${ACCENT}30` }}>
-                <ClipboardList className="h-4 w-4" style={{ color: ACCENT }} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/38">RSVP form</p>
-                <p className="max-w-[13rem] truncate text-sm font-semibold text-white sm:max-w-[19rem]">{form.title.trim() || "Untitled RSVP form"}</p>
-              </div>
-              <div role="status" aria-live="polite" className={`hidden items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold lg:flex ${saveState.tone}`} style={{ background: "rgba(255,255,255,0.035)", borderColor: "rgba(255,255,255,0.08)" }}>
-                <SaveStateIcon className={`h-3 w-3 ${saveState.iconClass}`} />
-                <span>{saveState.label}</span>
-              </div>
+              <p className="max-w-[15rem] truncate text-sm font-semibold text-white sm:max-w-[22rem]">{form.title.trim() || "Untitled RSVP form"}</p>
+              {saveState && SaveStateIcon && (
+                <div role="status" aria-live="polite" className={`hidden items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold lg:flex ${saveState.tone}`} style={{ background: "var(--rsvp-white-035)", borderColor: "var(--rsvp-white-08)" }}>
+                  <SaveStateIcon className={`h-3 w-3 ${saveState.iconClass}`} />
+                  <span>{saveState.label}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          <nav aria-label="Form builder sections" className="hidden items-center gap-1 rounded-xl border p-1 lg:flex" style={{ background: "rgba(0,0,0,0.16)", borderColor: "rgba(255,255,255,0.08)" }}>
+          <nav aria-label="Form builder sections" className="hidden items-center gap-1 rounded-xl border p-1 lg:flex" style={{ background: "var(--rsvp-nav)", borderColor: "var(--rsvp-white-08)" }}>
             {FORM_BUILDER_TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -500,7 +500,7 @@ export default function RsvpFormBuilderPage() {
                 className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
                 style={tab === id
                   ? { background: `${ACCENT}20`, color: "#dcfce7", boxShadow: `inset 0 0 0 1px ${ACCENT}2b` }
-                  : { color: "rgba(255,255,255,0.48)" }}
+                  : { color: "var(--rsvp-text-48)" }}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
@@ -509,13 +509,14 @@ export default function RsvpFormBuilderPage() {
           </nav>
 
           <div className="flex items-center justify-end gap-2">
-            {form.isPublished && (
+            <ThemeToggle className="flex-shrink-0" />
+            {Boolean(form.isPublished) && (
               <a
                 href={shareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold text-white/70 transition-colors hover:bg-white/8 hover:text-white sm:flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
-                style={{ borderColor: "rgba(255,255,255,0.12)" }}
+                style={{ borderColor: "var(--rsvp-white-12)" }}
               >
                 <Eye className="h-3.5 w-3.5" />
                 Preview
@@ -526,7 +527,7 @@ export default function RsvpFormBuilderPage() {
               disabled={saving}
               className="flex h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 sm:px-4 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#102d1d]"
               style={form.isPublished
-                ? { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.76)", border: "1px solid rgba(255,255,255,0.14)" }
+                ? { background: "var(--rsvp-white-08)", color: "var(--rsvp-text-70)", border: "1px solid var(--rsvp-white-14)" }
                 : { background: ACCENT, color: "#0a1a0f", boxShadow: `0 6px 18px ${ACCENT}22` }
               }
             >
@@ -540,7 +541,7 @@ export default function RsvpFormBuilderPage() {
       {/* ── MOBILE TAB NAV ─────────────────────────────────────────────────── */}
       <div
         className="fixed top-16 left-0 right-0 z-40 grid grid-cols-4 border-b lg:hidden"
-        style={{ background: "oklch(0.14 0.045 145 / 0.98)", borderColor: "rgba(255,255,255,0.08)", backdropFilter: "blur(14px)" }}
+        style={{ background: "var(--rsvp-header-solid)", borderColor: "var(--rsvp-white-08)", backdropFilter: "blur(14px)" }}
       >
         {FORM_BUILDER_TABS.map(({ id, label }) => (
           <button
@@ -550,7 +551,7 @@ export default function RsvpFormBuilderPage() {
             className="min-h-11 border-b-2 px-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-400/70"
             style={tab === id
               ? { color: ACCENT, borderColor: ACCENT }
-              : { color: "rgba(255,255,255,0.40)", borderColor: "transparent" }
+              : { color: "var(--rsvp-text-40)", borderColor: "transparent" }
             }
           >
             {label}
@@ -568,7 +569,7 @@ export default function RsvpFormBuilderPage() {
             {/* Form header card */}
             <div
               className="rounded-2xl overflow-hidden mb-4 shadow-lg"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               {/* Accent top bar */}
               <div className="h-2.5 w-full" style={{ background: ACCENT }} />
@@ -588,7 +589,7 @@ export default function RsvpFormBuilderPage() {
                   rows={2}
                   className="w-full bg-transparent text-white/60 text-sm outline-none resize-none border-b border-transparent hover:border-white/15 focus:border-white/30 transition-colors pb-1"
                 />
-                {form.isPublished && (
+                {Boolean(form.isPublished) && (
                   <div
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white/50"
                     style={{ background: `${ACCENT}11`, border: `1px solid ${ACCENT}33` }}
@@ -598,7 +599,7 @@ export default function RsvpFormBuilderPage() {
                     <button
                       onClick={copyLink}
                       className="ml-auto flex items-center gap-1 font-semibold transition-colors"
-                      style={{ color: copied ? ACCENT : "rgba(255,255,255,0.5)" }}
+                      style={{ color: copied ? ACCENT : "var(--rsvp-text-50)" }}
                     >
                       {copied ? <CheckCircle className="w-3 h-3" /> : <Link2 className="w-3 h-3" />}
                       {copied ? "Copied!" : "Copy link"}
@@ -653,7 +654,7 @@ export default function RsvpFormBuilderPage() {
             {/* Floating right toolbar */}
             <div
               className="hidden lg:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col gap-1 p-2 rounded-2xl shadow-2xl"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest px-2 py-1 text-center">Add</p>
               {(Object.entries(QUESTION_TYPE_META) as [QuestionType, typeof QUESTION_TYPE_META[QuestionType]][]).map(([type, meta]) => (
@@ -662,9 +663,9 @@ export default function RsvpFormBuilderPage() {
                   onClick={() => addQuestion(type)}
                   title={`${meta.label} — ${meta.description}`}
                   className="group flex items-center gap-0 w-10 h-10 rounded-xl transition-all hover:w-40 overflow-hidden"
-                  style={{ color: "rgba(255,255,255,0.55)", background: "transparent" }}
+                  style={{ color: "var(--rsvp-text-55)", background: "transparent" }}
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${ACCENT}18`; (e.currentTarget as HTMLElement).style.color = ACCENT; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--rsvp-text-55)"; }}
                 >
                   <span className="w-10 flex items-center justify-center flex-shrink-0">{meta.icon}</span>
                   <span className="text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pr-3">{meta.label}</span>
@@ -680,7 +681,7 @@ export default function RsvpFormBuilderPage() {
             {/* Summary bar */}
             <div
               className="rounded-2xl p-5 flex items-center gap-5"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <div className="text-center">
                 <div className="text-3xl font-bold text-white">{responses.length}</div>
@@ -695,13 +696,13 @@ export default function RsvpFormBuilderPage() {
                   }
                 </p>
               </div>
-              {form.isPublished && (
+              {Boolean(form.isPublished) && (
                 <button
                   onClick={copyLink}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0"
                   style={copied
                     ? { background: `${ACCENT}22`, color: ACCENT }
-                    : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }
+                    : { background: "var(--rsvp-white-08)", color: "var(--rsvp-text-60)" }
                   }
                 >
                   {copied ? <CheckCircle className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -734,7 +735,7 @@ export default function RsvpFormBuilderPage() {
                 <div
                   key={q.id}
                   className="rounded-2xl p-5 space-y-4"
-                  style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+                  style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-white font-semibold text-base">{idx + 1}. {q.label || `Question ${idx + 1}`}</p>
@@ -751,7 +752,7 @@ export default function RsvpFormBuilderPage() {
                               <span className="text-white/70 truncate max-w-[70%]">{opt}</span>
                               <span className="text-white/40 flex-shrink-0 ml-2 text-xs">{count} · {pct}%</span>
                             </div>
-                            <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+                            <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--rsvp-white-07)" }}>
                               <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{ width: `${pct}%`, background: ACCENT }}
@@ -771,7 +772,7 @@ export default function RsvpFormBuilderPage() {
                         <div
                           key={i}
                           className="px-3 py-2 rounded-xl text-sm text-white/60"
-                          style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.06)" }}
+                          style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-06)" }}
                         >
                           {t}
                         </div>
@@ -789,12 +790,12 @@ export default function RsvpFormBuilderPage() {
             {responses.length > 0 && (
               <div
                 className="rounded-2xl overflow-hidden"
-                style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+                style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
               >
-                <div className="px-5 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+                <div className="px-5 py-4 border-b" style={{ borderColor: "var(--rsvp-white-07)" }}>
                   <h3 className="text-white font-semibold">Individual Responses</h3>
                 </div>
-                <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                <div className="divide-y" style={{ borderColor: "var(--rsvp-white-06)" }}>
                   {responses.map((r) => (
                     <div key={r.id} className="px-5 py-4 space-y-2">
                       <div className="flex items-center justify-between">
@@ -825,7 +826,7 @@ export default function RsvpFormBuilderPage() {
                 <p className="text-white/20 text-sm mt-1">
                   {form.isPublished ? "Share the form link to start collecting RSVPs." : "Publish the form first, then share the link."}
                 </p>
-                {form.isPublished && (
+                {Boolean(form.isPublished) && (
                   <button
                     onClick={copyLink}
                     className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
@@ -846,12 +847,12 @@ export default function RsvpFormBuilderPage() {
             {/* Share link */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <h3 className="text-white font-semibold">Share Link</h3>
               <div
                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-08)" }}
               >
                 <Link2 className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
                 <span className="flex-1 text-sm text-white/60 truncate">{shareUrl}</span>
@@ -860,7 +861,7 @@ export default function RsvpFormBuilderPage() {
                   className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all flex-shrink-0"
                   style={copied
                     ? { background: `${ACCENT}22`, color: ACCENT }
-                    : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }
+                    : { background: "var(--rsvp-white-08)", color: "var(--rsvp-text-60)" }
                   }
                 >
                   {copied ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -889,7 +890,7 @@ export default function RsvpFormBuilderPage() {
             {/* Collect email toggle */}
             <div
               className="rounded-2xl p-5 flex items-center justify-between gap-4"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <div>
                 <h3 className="text-white font-semibold">Collect Email Addresses</h3>
@@ -898,7 +899,7 @@ export default function RsvpFormBuilderPage() {
               <button
                 onClick={() => updateForm({ collectEmail: form.collectEmail ? 0 : 1 })}
                 className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
-                style={{ background: form.collectEmail ? ACCENT : "rgba(255,255,255,0.15)" }}
+                style={{ background: form.collectEmail ? ACCENT : "var(--rsvp-white-15)" }}
               >
                 <span
                   className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
@@ -910,7 +911,7 @@ export default function RsvpFormBuilderPage() {
             {/* Limit responses */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -920,7 +921,7 @@ export default function RsvpFormBuilderPage() {
                 <button
                   onClick={() => updateForm({ maxResponses: form.maxResponses ? null : 50 })}
                   className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
-                  style={{ background: form.maxResponses ? ACCENT : "rgba(255,255,255,0.15)" }}
+                  style={{ background: form.maxResponses ? ACCENT : "var(--rsvp-white-15)" }}
                 >
                   <span
                     className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
@@ -942,7 +943,7 @@ export default function RsvpFormBuilderPage() {
                       if (!isNaN(val) && val > 0) updateForm({ maxResponses: val });
                     }}
                     className="w-24 px-3 py-2 rounded-xl text-sm text-white/80 outline-none transition-all"
-                    style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-12)" }}
                   />
                   <span className="text-white/30 text-xs">submissions</span>
                 </div>
@@ -952,7 +953,7 @@ export default function RsvpFormBuilderPage() {
             {/* Allow multiple submissions */}
             <div
               className="rounded-2xl p-5 flex items-center justify-between gap-4"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <div>
                 <h3 className="text-white font-semibold">Allow Multiple Submissions</h3>
@@ -961,7 +962,7 @@ export default function RsvpFormBuilderPage() {
               <button
                 onClick={() => updateForm({ allowMultipleSubmissions: form.allowMultipleSubmissions ? 0 : 1 })}
                 className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
-                style={{ background: form.allowMultipleSubmissions ? ACCENT : "rgba(255,255,255,0.15)" }}
+                style={{ background: form.allowMultipleSubmissions ? ACCENT : "var(--rsvp-white-15)" }}
               >
                 <span
                   className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
@@ -976,7 +977,7 @@ export default function RsvpFormBuilderPage() {
             {/* Closes at */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <h3 className="text-white font-semibold">Close Date</h3>
               <p className="text-white/40 text-sm">Automatically stop accepting responses after this date.</p>
@@ -986,7 +987,7 @@ export default function RsvpFormBuilderPage() {
                 value={form.closesAt ? form.closesAt.slice(0, 16) : ""}
                 onChange={(e) => updateForm({ closesAt: e.target.value ? new Date(e.target.value).toISOString() : null })}
                 className="px-3 py-2.5 rounded-xl text-sm text-white/70 outline-none transition-all"
-                style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }}
+                style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-08)", colorScheme: theme }}
               />
               {form.closesAt && (
                 <button
@@ -1004,7 +1005,7 @@ export default function RsvpFormBuilderPage() {
             {/* Confirmation message */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <h3 className="text-white font-semibold">Confirmation Message</h3>
               <p className="text-white/40 text-sm">Shown to respondents after they submit the form.</p>
@@ -1015,7 +1016,7 @@ export default function RsvpFormBuilderPage() {
                 placeholder="Thanks for your RSVP! We'll see you there."
                 rows={3}
                 className="w-full px-3 py-2.5 rounded-xl text-sm text-white/70 placeholder-white/25 outline-none resize-none transition-all"
-                style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-08)" }}
               />
             </div>
 
@@ -1024,7 +1025,7 @@ export default function RsvpFormBuilderPage() {
 
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(239,68,68,0.2)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid rgba(239,68,68,0.2)" }}
             >
               <p className="text-white/40 text-sm">Unpublishing the form will stop new responses. Existing responses are preserved.</p>
               {form.isPublished ? (
@@ -1053,7 +1054,7 @@ export default function RsvpFormBuilderPage() {
             {/* Primary Color */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <h3 className="text-white font-semibold">Primary Color</h3>
               <p className="text-white/40 text-sm">Used for buttons, accents, and interactive elements.</p>
@@ -1073,7 +1074,7 @@ export default function RsvpFormBuilderPage() {
                     onChange={(e) => updateForm({ theme_color: e.target.value })}
                     placeholder="#22c55e"
                     className="w-full px-3 py-2 rounded-xl text-sm text-white/80 outline-none transition-all"
-                    style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-12)" }}
                   />
                 </div>
               </div>
@@ -1082,7 +1083,7 @@ export default function RsvpFormBuilderPage() {
             {/* Header Image */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <h3 className="text-white font-semibold">Header Image</h3>
               <p className="text-white/40 text-sm">Upload a custom image to display at the top of the form.</p>
@@ -1120,10 +1121,10 @@ export default function RsvpFormBuilderPage() {
             {/* Preview */}
             <div
               className="rounded-2xl p-5 space-y-3"
-              style={{ background: "oklch(0.17 0.05 145)", border: "1px solid rgba(255,255,255,0.09)" }}
+              style={{ background: "var(--rsvp-surface)", border: "1px solid var(--rsvp-white-09)" }}
             >
               <h3 className="text-white font-semibold">Preview</h3>
-              <div className="rounded-xl overflow-hidden" style={{ background: "oklch(0.14 0.04 145)" }}>
+              <div className="rounded-xl overflow-hidden" style={{ background: "var(--rsvp-header)" }}>
                 {form.header_image && (
                   <div className="h-24 overflow-hidden">
                     <img src={form.header_image} alt="Header" className="w-full h-full object-cover" />
@@ -1187,8 +1188,8 @@ function QuestionCard({
       onClick={onActivate}
       className="rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer"
       style={{
-        background: "oklch(0.17 0.05 145)",
-        border: isActive ? `2px solid ${ACCENT}` : "2px solid rgba(255,255,255,0.07)",
+        background: "var(--rsvp-surface)",
+        border: isActive ? `2px solid ${ACCENT}` : "2px solid var(--rsvp-white-07)",
         boxShadow: isActive ? `0 0 0 1px ${ACCENT}22` : "none",
       }}
     >
@@ -1226,7 +1227,7 @@ function QuestionCard({
                   onChange={(e) => { e.stopPropagation(); onUpdate({ type: e.target.value as QuestionType, typeSource: "manual", options: ["radio","checkbox","select"].includes(e.target.value) ? ["Option 1"] : undefined, fieldKey: undefined }); }}
                   onClick={(e) => e.stopPropagation()}
                   className="appearance-none pl-3 pr-8 py-1.5 rounded-xl text-sm font-semibold text-white/70 outline-none cursor-pointer"
-                  style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-10)" }}
                 >
                   {(Object.entries(QUESTION_TYPE_META) as [QuestionType, typeof QUESTION_TYPE_META[QuestionType]][]).map(([t, meta]) => (
                     <option key={t} value={t}>{meta.label}</option>
@@ -1251,7 +1252,7 @@ function QuestionCard({
             {question.type === "text" && (
               <div
                 className="h-9 rounded-lg px-3 flex items-center text-sm text-white/20"
-                style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-06)" }}
               >
                 Short answer text
               </div>
@@ -1259,7 +1260,7 @@ function QuestionCard({
             {question.type === "textarea" && (
               <div
                 className="h-16 rounded-lg px-3 pt-2 text-sm text-white/20"
-                style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-06)" }}
               >
                 Long answer text
               </div>
@@ -1267,7 +1268,7 @@ function QuestionCard({
             {question.type === "number" && (
               <div
                 className="h-9 rounded-lg px-3 flex items-center text-sm text-white/20 w-32"
-                style={{ background: "oklch(0.20 0.05 145)", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--rsvp-input)", border: "1px solid var(--rsvp-white-06)" }}
               >
                 0
               </div>
@@ -1279,10 +1280,10 @@ function QuestionCard({
                 {(question.options ?? []).map((opt, i) => (
                   <div key={i} className="flex items-center gap-2.5">
                     {question.type === "radio" && (
-                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ border: "2px solid rgba(255,255,255,0.25)" }} />
+                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ border: "2px solid var(--rsvp-text-25)" }} />
                     )}
                     {question.type === "checkbox" && (
-                      <div className="w-4 h-4 rounded flex-shrink-0" style={{ border: "2px solid rgba(255,255,255,0.25)" }} />
+                      <div className="w-4 h-4 rounded flex-shrink-0" style={{ border: "2px solid var(--rsvp-text-25)" }} />
                     )}
                     {question.type === "select" && (
                       <span className="text-white/30 text-xs w-4 text-center flex-shrink-0">{i + 1}.</span>
@@ -1320,7 +1321,7 @@ function QuestionCard({
         {isActive && (
           <div
             className="flex items-center justify-end gap-3 pt-3 border-t"
-            style={{ borderColor: "rgba(255,255,255,0.07)" }}
+            style={{ borderColor: "var(--rsvp-white-07)" }}
           >
             <button
               onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
@@ -1342,7 +1343,7 @@ function QuestionCard({
               <button
                 onClick={(e) => { e.stopPropagation(); onUpdate({ required: !question.required }); }}
                 className="relative w-9 h-5 rounded-full transition-all"
-                style={{ background: question.required ? ACCENT : "rgba(255,255,255,0.15)" }}
+                style={{ background: question.required ? ACCENT : "var(--rsvp-white-15)" }}
               >
                 <span
                   className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all"

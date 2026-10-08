@@ -25,6 +25,16 @@ describe("RSVP builder header navigation", () => {
     expect(source).toContain('className="fixed top-16 left-0 right-0 z-40 grid grid-cols-4 border-b lg:hidden"');
   });
 
+  it("uses the platform appearance toggle and a single text-only form identity", () => {
+    expect(source).toContain('import { ThemeToggle } from "@/components/ThemeToggle"');
+    expect(source).toContain('<ThemeToggle className="flex-shrink-0" />');
+    expect(source).toContain('data-rsvp-theme={theme}');
+    expect(source).not.toContain('Recovered locally');
+    expect(source).not.toContain('<ClipboardList className="h-4 w-4" style={{ color: ACCENT }} />');
+    expect(source).not.toContain('text-[11px] font-semibold uppercase tracking-[0.14em] text-white/38">RSVP form');
+    expect(source).toContain('{Boolean(form.isPublished) && (');
+  });
+
   it("reserves responsive content space below the desktop or mobile header", () => {
     expect(source).toContain('className="flex-1 overflow-y-auto pb-16 pt-28 lg:pt-16"');
     expect(source).toContain('className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-3 sm:px-5"');
