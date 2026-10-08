@@ -13,7 +13,7 @@ import AuthModal from "@/components/AuthModal";
 import {
   Trophy, Users as _Users, Calendar, BarChart3 as _BarChart3, ListOrdered as _ListOrdered,
   Clock, Swords as _Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
-  History as _History, Shield as _Shield, Zap, CheckCircle2, Plus, Users2,
+  History as _History, Shield as _Shield, Plus, Users2,
 } from "lucide-react";
 import {
   DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon,
@@ -21,6 +21,7 @@ import {
 import { AsciiArt } from "@/components/ui/d60-hero";
 import { LeagueBracket } from "@/components/LeagueBracket";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
+import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -174,6 +175,7 @@ export default function LeagueDemo() {
   const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
   const [activeTab, setActiveTab] = useState<TabId>("standings");
   const [standingsView, setStandingsView] = useState<"table" | "bracket">("bracket");
+  const [selectedScheduleWeek, setSelectedScheduleWeek] = useState(14);
   const { user } = useAuthContext();
   // Determine if the user already has a league and/or a club (to conditionally show CTAs)
   const [hasLeague, setHasLeague] = useState(false);
@@ -218,6 +220,24 @@ export default function LeagueDemo() {
   const textMain  = isDark ? "#f0f5ee" : "#111827";
   const textMuted = isDark ? "oklch(0.78 0.04 145)" : "#374151";
   const accent    = isDark ? "oklch(0.68 0.16 145)" : "oklch(0.38 0.13 145)";
+  const demoSeasonStart = new Date();
+  demoSeasonStart.setDate(demoSeasonStart.getDate() - 13 * 7);
+  const demoScheduleWeeks = Array.from({ length: 16 }, (_, index) => {
+    const weekNumber = index + 1;
+    const deadline = new Date(demoSeasonStart);
+    deadline.setDate(deadline.getDate() + index * 7);
+    const isComplete = weekNumber < 14;
+    const isCurrent = weekNumber === 14;
+    const matchCount = CURRENT_WEEK_MATCHUPS.length;
+    return {
+      id: `demo-week-${weekNumber}`,
+      weekNumber,
+      isComplete,
+      deadline: deadline.toISOString(),
+      matchCount,
+      completedMatchCount: isComplete ? matchCount : isCurrent ? CURRENT_WEEK_MATCHUPS.filter((match) => match.result !== null).length : 0,
+    };
+  });
 
   const featuredMatchup = CURRENT_WEEK_MATCHUPS[0]; // Magnus vs Hikaru
   const _upcomingMatchups = CURRENT_WEEK_MATCHUPS.slice(0, 5);
@@ -1176,61 +1196,51 @@ export default function LeagueDemo() {
 
             {/* ── SCHEDULE TAB ──────────────────────────────────────────────── */}
             {activeTab === "schedule" && (
-              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-4">
-                {Array.from({ length: 16 }, (_, i) => i + 1).map((week) => {
-                  const isCurrentWeek = week === 14;
-                  const isPast = week < 14;
-                  return (
-                    <div
-                      key={week}
-                      className="rounded-2xl overflow-hidden"
-                      style={{ background: cardBg, border: `1.5px solid ${isCurrentWeek ? `${accent}55` : cardBorder}` }}
-                    >
-                      <div
-                        className="flex items-center justify-between px-4 py-3"
-                        style={{
-                          borderBottom: `1px solid ${cardBorder}`,
-                          background: isCurrentWeek ? `${accent}10` : isDark ? "oklch(0.23 0.06 145)" : "#f9fafb",
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Calendar size={14} style={{ color: isCurrentWeek ? accent : textMuted }} />
-                          <span className="font-semibold text-sm" style={{ color: textMain }}>Week {week}</span>
-                          {isCurrentWeek && (
-                            <span className="text-xs font-bold px-2 py-0.5 rounded-full animate-pulse" style={{ background: `${accent}22`, color: accent }}>Current</span>
-                          )}
-                          {isPast && (
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMuted }}>Complete</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isPast && <CheckCircle2 size={14} style={{ color: "oklch(0.65 0.2 145)" }} />}
-                          {isCurrentWeek && <Clock size={14} style={{ color: accent }} />}
-                          <span className="text-xs" style={{ color: textMuted }}>
-                            {isPast ? `${Math.floor(Math.random() * 5) + 8}/12 completed` : isCurrentWeek ? "7/12 completed" : "Upcoming"}
-                          </span>
-                        </div>
-                      </div>
-                      {isCurrentWeek && (
-                        <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {CURRENT_WEEK_MATCHUPS.slice(0, 4).map((m, j) => (
-                            <div key={j} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f9fafb" }}>
-                              <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{j + 1}</span>
-                              <span className="text-xs font-semibold truncate flex-1" style={{ color: textMain }}>{m.white.displayName.split(" ")[0]}</span>
-                              <span className="text-xs font-bold" style={{ color: textMuted }}>vs</span>
-                              <span className="text-xs font-semibold truncate flex-1 text-right" style={{ color: textMain }}>{m.black.displayName.split(" ")[0]}</span>
-                              {m.result ? (
-                                <CheckCircle2 size={12} style={{ color: "oklch(0.65 0.2 145)", flexShrink: 0 }} />
-                              ) : (
-                                <Clock size={12} style={{ color: accent, flexShrink: 0 }} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+              <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5">
+                <LeagueMonthCalendar
+                  leagueName="Demo League"
+                  seasonStartAt={demoSeasonStart.toISOString()}
+                  totalWeeks={16}
+                  currentWeek={14}
+                  leagueStatus="active"
+                  weeks={demoScheduleWeeks}
+                  selectedWeekNumber={selectedScheduleWeek}
+                  onSelectWeek={setSelectedScheduleWeek}
+                  isDark={isDark}
+                  accent={accent}
+                  textMain={textMain}
+                  textMuted={textMuted}
+                  cardBorder={cardBorder}
+                />
+
+                <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }} aria-labelledby="demo-schedule-week-details">
+                  <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: accent }}>Selected schedule</p>
+                      <h2 id="demo-schedule-week-details" className="mt-1 text-lg font-bold" style={{ color: textMain }}>Week {selectedScheduleWeek} matchups</h2>
                     </div>
-                  );
-                })}
+                    {selectedScheduleWeek !== 14 && <span className="text-sm" style={{ color: textMuted }}>Pairings are published for the active week.</span>}
+                  </div>
+                  {selectedScheduleWeek === 14 ? (
+                    <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0" style={{ borderColor: cardBorder }}>
+                      {CURRENT_WEEK_MATCHUPS.slice(0, 8).map((match, index) => (
+                        <div key={`${match.white.id}-${match.black.id}`} className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 py-4">
+                          <span className="truncate text-sm font-medium" style={{ color: textMain }}>{match.white.displayName}</span>
+                          <span className="text-xs font-bold tabular-nums" style={{ color: match.result ? accent : textMuted }}>
+                            {match.result === "white_win" ? "1–0" : match.result === "black_win" ? "0–1" : match.result === "draw" ? "½–½" : "vs"}
+                          </span>
+                          <span className="truncate text-right text-sm font-medium" style={{ color: textMain }}>{match.black.displayName}</span>
+                          <span className="sr-only">Board {index + 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-4 py-10 text-center">
+                      <Calendar size={28} className="mx-auto mb-2" style={{ color: textMuted }} />
+                      <p className="text-sm" style={{ color: textMuted }}>Open Week 14 to preview the active demo matchups.</p>
+                    </div>
+                  )}
+                </section>
               </div>
             )}
 

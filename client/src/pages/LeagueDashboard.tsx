@@ -10,9 +10,9 @@ import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, BarChart3, ListOrdered, CheckCircle2,
-  Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target, Binoculars, Medal,
+  Clock, Shield, ChevronUp, ChevronDown, Minus, Zap, Target, Binoculars, Medal,
   Share2, Copy, Check, QrCode, X, Settings, Pencil,
-  Star, AlertTriangle, Download
+  AlertTriangle, Download
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { DashboardIcon, BattleIcon, RatingIcon, EventsIcon, TournamentsIcon, MembersIcon, SettingsIcon as OtbSettingsIcon } from "@/components/OtbIcons";
@@ -22,6 +22,7 @@ import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
+import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
 import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
 import { OTBLoader } from "@/components/OTBLoader";
@@ -3378,152 +3379,71 @@ export default function LeagueDashboard() {
 
         {/* ── SCHEDULE ──────────────────────────────────────────────────────── */}
         {activeTab === "schedule" && (
-          <div className="space-y-4">
-            <div
-              className="rounded-2xl px-4 py-3 flex items-center gap-3"
-              style={{ background: isDark ? "oklch(0.18 0.05 145 / 0.72)" : "oklch(0.97 0.02 145)", border: `1px solid ${cardBorder}` }}
-            >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}14`, color: accent }}>
-                <Calendar size={16} aria-hidden="true" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold" style={{ color: textMain }}>Season progress</p>
-                <p className="mt-0.5 text-xs leading-5" style={{ color: textMuted }}>
-                  {weeks.filter((week) => week.isComplete).length} of {league.totalWeeks} weeks complete
-                </p>
-              </div>
-              <span className="text-sm font-bold tabular-nums" style={{ color: accent }}>
-                {Math.round((weeks.filter((week) => week.isComplete).length / Math.max(league.totalWeeks, 1)) * 100)}%
-              </span>
-            </div>
-            {weeks.map((week, index) => {
-              const isCompletedWeek = league.status === "completed" || week.isComplete || week.weekNumber < league.currentWeek;
-              const isCurrentWeek = league.status !== "completed" && week.weekNumber === league.currentWeek;
-              const previousWeek = weeks[index - 1];
-              const showSectionLabel = index === 0 || isCompletedWeek !== (league.status === "completed" || previousWeek?.isComplete || previousWeek?.weekNumber < league.currentWeek);
-              const sectionLabel = isCurrentWeek ? "Current week" : isCompletedWeek ? "Completed weeks" : "Upcoming weeks";
+          <div className="space-y-5">
+            <LeagueMonthCalendar
+              leagueName={league.name}
+              seasonStartAt={league.createdAt}
+              totalWeeks={league.totalWeeks}
+              currentWeek={league.currentWeek}
+              leagueStatus={league.status}
+              selectedWeekNumber={selectedWeek}
+              onSelectWeek={setSelectedWeek}
+              isDark={isDark}
+              accent={accent}
+              textMain={textMain}
+              textMuted={textMuted}
+              cardBorder={cardBorder}
+              weeks={weeks.map((week) => ({
+                ...week,
+                matchCount: week.matches.length,
+                completedMatchCount: week.matches.filter((match) => match.resultStatus === "completed").length,
+              }))}
+            />
+
+            {(() => {
+              const selectedScheduleWeek = weeks.find((week) => week.weekNumber === selectedWeek);
+              const selectedMatches = selectedScheduleWeek?.matches ?? [];
               return (
-                <div key={week.weekNumber} className="space-y-2">
-                  {showSectionLabel && (
-                    <div className="flex items-center gap-2 px-1 pt-2">
-                      <span className="h-px flex-1" style={{ background: cardBorder }} />
-                      <h2 className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: isCurrentWeek ? accent : textMuted }}>{sectionLabel}</h2>
-                      <span className="h-px flex-1" style={{ background: cardBorder }} />
+                <section className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }} aria-labelledby="league-schedule-week-details">
+                  <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: accent }}>Selected schedule</p>
+                      <h2 id="league-schedule-week-details" className="mt-1 text-lg font-bold" style={{ color: textMain }}>Week {selectedWeek} matchups</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("matchups")}
+                      className="min-h-11 rounded-xl px-4 text-sm font-semibold transition-all hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 active:translate-y-0"
+                      style={{ background: `${accent}16`, color: accent, border: `1px solid ${accent}42` }}
+                    >
+                      Open matchups
+                    </button>
+                  </div>
+                  {selectedMatches.length === 0 ? (
+                    <div className="px-4 py-10 text-center">
+                      <Calendar size={28} className="mx-auto mb-2" style={{ color: textMuted }} />
+                      <p className="text-sm" style={{ color: textMuted }}>This week has not been published yet.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y" style={{ borderColor: cardBorder }}>
+                      {selectedMatches.map((match) => {
+                        const mine = isMyMatch(match);
+                        const score = match.resultStatus === "completed"
+                          ? match.result === "white_win" ? "1–0" : match.result === "black_win" ? "0–1" : "½–½"
+                          : "vs";
+                        return (
+                          <div key={match.id} className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-4 py-4" style={mine ? { background: `${accent}08` } : undefined}>
+                            <span className="truncate text-sm font-medium" style={{ color: textMain }}>{match.playerWhiteName}</span>
+                            <span className="text-xs font-bold tabular-nums" style={{ color: match.resultStatus === "completed" ? accent : textMuted }}>{score}</span>
+                            <span className="truncate text-right text-sm font-medium" style={{ color: textMain }}>{match.playerBlackName}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
-                  <div
-                key={week.weekNumber}
-                className="rounded-2xl overflow-hidden"
-                style={{
-                  background: cardBg,
-                  border: `1.5px solid ${isCurrentWeek ? accent + "55" : cardBorder}`,
-                }}
-              >
-                {/* Week header */}
-                <div
-                  className="flex items-center justify-between px-4 py-3"
-                  style={{
-                    borderBottom: `1px solid ${cardBorder}`,
-                    background: isCurrentWeek
-                      ? `${accent}10`
-                      : isDark ? "oklch(0.23 0.06 145)" : "#f9fafb",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} style={{ color: isCurrentWeek ? accent : textMuted }} />
-                    <span className="font-semibold text-sm" style={{ color: textMain }}>Week {week.weekNumber}</span>
-                    {isCurrentWeek && (
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full font-medium"
-                        style={{ background: `${accent}22`, color: accent }}
-                      >
-                        Current
-                      </span>
-                    )}
-                  </div>
-                  {week.isComplete ? (
-                    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: accent }}>
-                      <CheckCircle2 size={12} /> Complete
-                    </span>
-                  ) : week.weekNumber < league.currentWeek ? (
-                    <span className="text-xs" style={{ color: "#f87171" }}>Incomplete</span>
-                  ) : isCurrentWeek ? (
-                    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#facc15" }}>
-                      <Circle size={10} className="fill-current" /> Active
-                    </span>
-                  ) : (
-                    <span className="text-xs" style={{ color: textMuted }}>Upcoming</span>
-                  )}
-                </div>
-                {/* Matches */}
-                <div className="divide-y" style={{ borderColor: cardBorder }}>
-                  {week.matches.map((match) => {
-                    const mine = isMyMatch(match);
-                    return (
-                      <div
-                        key={match.id}
-                        className="flex items-center gap-3 px-4 py-3.5"
-                        style={mine ? { background: `${accent}08` } : {}}
-                      >
-                        <div
-                          className="flex-1 text-sm truncate"
-                          style={{
-                            color: textMain,
-                            fontWeight: match.result === "white_win" ? 600 : 400,
-                          }}
-                        >
-                          {mine && match.playerWhiteId === user?.id && (
-                            <Star className="inline-block mr-1 -mt-0.5" size={12} fill="currentColor" style={{ color: accent }} aria-label="Your match" />
-                          )}
-                          {match.playerWhiteName}
-                        </div>
-                        <div
-                          className="text-xs font-semibold px-2 flex-shrink-0"
-                          style={{ color: match.resultStatus === "completed" ? accent : textMuted }}
-                        >
-                          {match.resultStatus === "completed"
-                            ? (match.result === "white_win" ? "1-0" : match.result === "black_win" ? "0-1" : "½-½")
-                            : "vs"}
-                        </div>
-                        <div
-                          className="flex-1 text-sm truncate text-right"
-                          style={{
-                            color: textMain,
-                            fontWeight: match.result === "black_win" ? 600 : 400,
-                          }}
-                        >
-                          {match.playerBlackName}
-                          {mine && match.playerBlackId === user?.id && (
-                            <Star className="inline-block ml-1 -mt-0.5" size={12} fill="currentColor" style={{ color: accent }} aria-label="Your match" />
-                          )}
-                        </div>
-                        <div className="flex-shrink-0 ml-1">
-                          {match.resultStatus === "completed"
-                            ? <CheckCircle2 size={14} style={{ color: accent }} />
-                            : <Clock size={14} style={{ color: textMuted }} />}
-                        </div>
-                        {mine && (() => {
-                          const oppChessCom = getOpponentChesscom(match);
-                          if (!oppChessCom) return null;
-                          return (
-                            <button
-                              onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
-                              className="flex-shrink-0 ml-1 p-2 rounded-lg transition-all hover:opacity-80 touch-manipulation"
-                              style={{ background: `${accent}15`, color: accent }}
-                              title={`Prep for ${oppChessCom}`}
-                            >
-                              <Target size={13} />
-                            </button>
-                          );
-                        })()}
-                      </div>
-                    );
-                  })}
-                </div>
-                  </div>
-                </div>
+                </section>
               );
-            })}
+            })()}
           </div>
         )}
 
