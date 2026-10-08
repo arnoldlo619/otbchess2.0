@@ -21,6 +21,27 @@ describe("Home page visual edits", () => {
     expect(hero).not.toContain("Host tournaments with automatic pairings.");
   });
 
+  it("uses the simplified How It Works headline and an authentic fill-mode QR share showcase", () => {
+    const howItWorks = homeSource.slice(
+      homeSource.indexOf("function HowItWorks"),
+      homeSource.indexOf("// ─── Capabilities Bento"),
+    );
+
+    expect(howItWorks).toContain("Chess Tournaments Made Simple.");
+    expect(howItWorks).not.toContain("The easiest way to");
+    expect(howItWorks).not.toContain("host a chess tournament");
+    expect(howItWorks).toContain('imageSrc: "/images/landing-qr-share-showcase.png"');
+    expect(howItWorks).toContain('objectFit: "fill"');
+    expect(howItWorks).toContain("ChessOTB tournament join QR screen");
+
+    const macBookMockup = homeSource.slice(
+      homeSource.indexOf("function MacBookMockup"),
+      homeSource.indexOf("// ─── iPhone Mockup Frame"),
+    );
+    expect(macBookMockup).toContain('objectFit = "cover"');
+    expect(macBookMockup).toContain("style={{ objectFit }}");
+  });
+
   it("keeps the requested Chess Club starter headings", () => {
     expect(homeSource).toContain("The Chess Club Starter Pack");
     expect(homeSource).toContain("Your Chess Club Website");

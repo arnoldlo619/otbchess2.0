@@ -626,7 +626,17 @@ function StatsBar() {
 
 // ─── How It Works ────────────────────────────────────────────────────────────
 // ─── MacBook Mockup Frame ───────────────────────────────────────────────────
-function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
+function MacBookMockup({
+  src,
+  alt,
+  isDark,
+  objectFit = "cover",
+}: {
+  src: string;
+  alt: string;
+  isDark: boolean;
+  objectFit?: React.CSSProperties["objectFit"];
+}) {
   return (
     <div className="relative mx-auto select-none w-full">
       {/* Lid / Screen */}
@@ -659,7 +669,8 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
             decoding="async"
             src={src}
             alt={alt}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-center"
+            style={{ objectFit }}
             loading="lazy"
           />
         </div>
@@ -857,8 +868,8 @@ function ParallaxStep({
   imageAlt2?: string;
   objectPosition?: string;
   objectPosition2?: string;
-  objectFit?: string;
-  objectFit2?: string;
+  objectFit?: React.CSSProperties["objectFit"];
+  objectFit2?: React.CSSProperties["objectFit"];
   phoneLeft: boolean;
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
@@ -883,7 +894,7 @@ function ParallaxStep({
           animate={isInView ? "visible" : "hidden"}
         >
           <div className="w-full transition-transform duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5" style={{ maxWidth: 640 }}>
-            <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+            <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} objectFit={objectFit} />
           </div>
         </motion.div>
 
@@ -1053,8 +1064,8 @@ interface LandingStep {
   imageAlt2?: string;
   objectPosition?: string;
   objectPosition2?: string;
-  objectFit?: string;
-  objectFit2?: string;
+  objectFit?: React.CSSProperties["objectFit"];
+  objectFit2?: React.CSSProperties["objectFit"];
   phoneLeft: boolean;
   mockupType?: "phone" | "macbook";
   caption1?: string;
@@ -1073,10 +1084,11 @@ function HowItWorks() {
       description: "Players scan once arriving for seamless check-in process for everyone.",
       cta: "Host a Tournament",
       ctaHref: NAV_CTA_PRIMARY.path,
-      imageSrc: "/manus-storage/qr-screen-720_e2bcd40f.webp",
-      imageAlt: "Tournament QR Code screen",
+      imageSrc: "/images/landing-qr-share-showcase.png",
+      imageAlt: "ChessOTB tournament join QR screen with a scannable QR code and manual entry code",
       phoneLeft: true,
       mockupType: "macbook",
+      objectFit: "fill",
     },
     {
       number: "02",
@@ -1129,9 +1141,7 @@ function HowItWorks() {
           className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4"
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
-          The easiest way to{" "}
-          <br />
-          host a chess tournament
+          Chess Tournaments Made Simple.
         </h2>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
           No spreadsheets. No manual pairings. Just a QR code and a room full of chess players.
