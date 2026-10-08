@@ -51,7 +51,7 @@ describe("League Dashboard implementation", () => {
     expect(dashboard).toContain('justify-center gap-1 flex-1');
     expect(dashboard).toContain('data-testid="league-dashboard-hero"');
     expect(dashboard).toContain('h-[132px] sm:h-[144px] lg:h-[156px]');
-    expect(dashboard).toContain('Desktop spacer: the league identity lives exclusively in the hero.');
+    expect(dashboard).toContain('otb-header-safe lg:hidden');
     expect(dashboard).toContain('data-testid="league-dashboard-header-actions"');
     expect(dashboard.match(/title="Share League"/g) ?? []).toHaveLength(1);
     expect(dashboard.match(/title=\{pushStatus === "subscribed" \? "Notifications On"/g) ?? []).toHaveLength(1);

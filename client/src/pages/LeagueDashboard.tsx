@@ -10,7 +10,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, BarChart3, ListOrdered, CheckCircle2,
-  Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
+  Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target, Binoculars, Medal,
   Share2, Copy, Check, QrCode, X, Settings, Pencil,
   Star, AlertTriangle, Download
 } from "lucide-react";
@@ -1423,7 +1423,7 @@ export default function LeagueDashboard() {
 
           {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
-            className="relative flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
+            className="relative flex flex-shrink-0 items-center gap-3 px-4 py-2.5 otb-header-safe lg:hidden"
             style={{
               background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
               backdropFilter: "blur(12px)",
@@ -1443,62 +1443,7 @@ export default function LeagueDashboard() {
               <span className="block whitespace-nowrap text-base font-bold" style={{ color: "#ffffff" }}>ChessOTB Club League</span>
             </div>
 
-            {/* Desktop spacer: the league identity lives exclusively in the hero. */}
-            <div className="hidden lg:block flex-1" />
-
-            {/* Desktop header focal point: commissioner's operational path replaces the redundant live-week badge. */}
-            <div data-testid="league-dashboard-header-actions" className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center justify-center">
-              {isCommissioner && league.status === "active" ? (
-                <div className="flex items-center gap-2 rounded-2xl px-1.5 py-1" style={{ background: "oklch(0.12 0.04 145 / 0.72)", border: "1px solid oklch(0.42 0.10 145 / 0.28)" }}>
-                  <span
-                    className="flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[11px] font-bold uppercase tracking-[0.12em] select-none"
-                    style={{ color: "oklch(0.88 0.15 80)" }}
-                  >
-                    <Crown size={12} aria-hidden="true" />
-                    Commissioner
-                  </span>
-                  <button
-                    onClick={() => setActiveTab("matchups")}
-                    className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-bold"
-                    style={{ background: `linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))`, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
-                    title="Report Results"
-                    aria-label="Report League Results"
-                  >
-                    <span className="league-header-action__content flex items-center gap-2">
-                      <CheckCircle2 size={15} aria-hidden="true" />
-                      Report Results
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setShowAdvanceConfirm(true)}
-                    className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-semibold"
-                    style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
-                    title="Close Week and Advance"
-                    aria-label="Close current week and advance"
-                  >
-                    <span className="league-header-action__content flex items-center gap-2">
-                      <ChevronRight size={16} aria-hidden="true" />
-                      Advance
-                    </span>
-                  </button>
-                </div>
-              ) : league.status !== "active" ? (
-                <div
-                  data-testid="league-dashboard-status"
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{
-                    background: league.status === "completed" ? "oklch(0.22 0.08 85)" : "oklch(0.20 0.04 145)",
-                    color: league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.60 0.08 145)",
-                    border: `1px solid ${league.status === "completed" ? "oklch(0.72 0.18 85 / 0.3)" : "oklch(0.30 0.05 145)"}`,
-                  }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.45 0.05 145)" }} />
-                  {league.status === "completed" ? "Season Complete" : "Building Roster"}
-                </div>
-              ) : null}
-            </div>
-
-            {/* Mobile commissioner controls retain direct tap access while the desktop action cluster stays centered. */}
+            {/* Mobile commissioner controls retain direct tap access within the compact header. */}
             <div className="ml-auto flex items-center gap-1.5 lg:hidden">
               {isCommissioner && league.status === "active" && (
                 <>
@@ -1506,7 +1451,7 @@ export default function LeagueDashboard() {
                     onClick={() => setActiveTab("matchups")}
                     className="league-header-action flex min-h-11 min-w-11 items-center justify-center rounded-xl border"
                     style={{ background: accent, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
-                    aria-label="Report League Results"
+                    aria-label="Report League Result"
                   >
                     <span className="league-header-action__content"><CheckCircle2 size={17} aria-hidden="true" /></span>
                   </button>
@@ -1519,40 +1464,6 @@ export default function LeagueDashboard() {
                     <span className="league-header-action__content"><ChevronRight size={18} aria-hidden="true" /></span>
                   </button>
                 </>
-              )}
-            </div>
-
-            {/* Supplemental desktop actions stay at the trailing edge. */}
-            <div className="ml-auto hidden items-center gap-1.5 lg:flex">
-              {/* Push notifications bell — draft phase only */}
-              {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
-                <button
-                  onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
-                  disabled={pushLoading || pushStatus === "denied"}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-                  style={{ background: pushStatus === "subscribed" ? `${accent}22` : "oklch(0.22 0.06 145)", color: pushStatus === "subscribed" ? accent : "oklch(0.60 0.08 145)" }}
-                  title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
-                >
-                  {pushLoading ? (
-                    <span className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-                  ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                  )}
-                </button>
-              )}
-              {/* Share — shown for non-active leagues or non-commissioners */}
-              {(!isCommissioner || league.status !== "active") && !(isCommissioner && activeTab === "requests") && (
-                <button
-                  onClick={() => setShowShare(true)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-                  style={{ background: "oklch(0.22 0.06 145)", color: accent }}
-                  title="Share League"
-                >
-                  <Share2 size={14} />
-                </button>
               )}
             </div>
           </div>
@@ -1571,7 +1482,7 @@ export default function LeagueDashboard() {
               }}
             />
             <div className="relative z-10 h-full flex items-center gap-5 px-4 sm:px-6">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 lg:max-w-[31%]">
                 <h1
                   className="truncate text-[clamp(1.65rem,7vw,2.5rem)] font-black leading-tight"
                   style={{ color: "#fff", fontFamily: "'Clash Display', sans-serif", textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}
@@ -1588,6 +1499,56 @@ export default function LeagueDashboard() {
                   </span>
                 </div>
               </div>
+              <div
+                data-testid="league-dashboard-header-actions"
+                className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center lg:flex"
+              >
+                {isCommissioner && league.status === "active" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="flex min-h-9 items-center gap-1.5 px-2 text-[11px] font-bold uppercase tracking-[0.12em] select-none" style={{ color: "oklch(0.88 0.15 80)" }}>
+                      <Crown size={12} aria-hidden="true" />
+                      Commissioner
+                    </span>
+                    <button
+                      onClick={() => setActiveTab("matchups")}
+                      className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-bold"
+                      style={{ background: `linear-gradient(135deg, ${accent}, oklch(0.51 0.15 145))`, color: "oklch(0.98 0.01 145)", borderColor: `${accent}99` }}
+                      title="Report results"
+                      aria-label="Report League Result"
+                    >
+                      <span className="league-header-action__content flex items-center gap-2">
+                        <CheckCircle2 size={15} aria-hidden="true" />
+                        Report
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setShowAdvanceConfirm(true)}
+                      className="league-header-action min-h-10 rounded-xl border px-4 text-sm font-semibold"
+                      style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f3f4f6", color: textMain, borderColor: `${accent}66` }}
+                      title="Close Week and Advance"
+                      aria-label="Close current week and advance"
+                    >
+                      <span className="league-header-action__content flex items-center gap-2">
+                        <ChevronRight size={16} aria-hidden="true" />
+                        Advance
+                      </span>
+                    </button>
+                  </div>
+                ) : league.status !== "active" ? (
+                  <div
+                    data-testid="league-dashboard-status"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                    style={{
+                      background: league.status === "completed" ? "oklch(0.22 0.08 85)" : "oklch(0.20 0.04 145)",
+                      color: league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.60 0.08 145)",
+                      border: `1px solid ${league.status === "completed" ? "oklch(0.72 0.18 85 / 0.3)" : "oklch(0.30 0.05 145)"}`,
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: league.status === "completed" ? "oklch(0.72 0.18 85)" : "oklch(0.45 0.05 145)" }} />
+                    {league.status === "completed" ? "Season Complete" : "Building Roster"}
+                  </div>
+                ) : null}
+              </div>
               <div className="hidden sm:block w-px h-10 opacity-20" style={{ background: accent }} />
               <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
                 {[
@@ -1600,6 +1561,36 @@ export default function LeagueDashboard() {
                     <div className="text-[11px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "rgba(255,255,255,0.58)" }}>{label}</div>
                   </div>
                 ))}
+              </div>
+              <div className="absolute right-4 top-3 hidden items-center gap-1.5 sm:right-6 lg:flex">
+                {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
+                  <button
+                    onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
+                    disabled={pushLoading || pushStatus === "denied"}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:opacity-80"
+                    style={{ background: pushStatus === "subscribed" ? `${accent}22` : "oklch(0.12 0.04 145 / 0.72)", color: pushStatus === "subscribed" ? accent : "oklch(0.72 0.08 145)", border: "1px solid oklch(0.42 0.10 145 / 0.28)" }}
+                    title={pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
+                  >
+                    {pushLoading ? (
+                      <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+                {(!isCommissioner || league.status !== "active") && !(isCommissioner && activeTab === "requests") && (
+                  <button
+                    onClick={() => setShowShare(true)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:opacity-80"
+                    style={{ background: "oklch(0.12 0.04 145 / 0.72)", color: accent, border: "1px solid oklch(0.42 0.10 145 / 0.28)" }}
+                    title="Share League"
+                  >
+                    <Share2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -2215,7 +2206,7 @@ export default function LeagueDashboard() {
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
-                            <Target size={16} />
+                            <Binoculars size={16} />
                           </div>
                           <div className="text-left">
                             <div className="text-sm font-bold" style={{ color: accent }}>Prep for Next Round</div>
@@ -2246,7 +2237,7 @@ export default function LeagueDashboard() {
                 {myStanding && (
                   <div className="rounded-2xl p-4" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                     <div className="flex items-center gap-1.5 mb-2">
-                      <Target size={13} style={{ color: accent }} />
+                      <Medal size={13} style={{ color: accent }} />
                       <span className="text-sm font-semibold" style={{ color: textMuted }}>My Standing</span>
                     </div>
                     <div className="flex items-baseline gap-1">
@@ -2363,7 +2354,7 @@ export default function LeagueDashboard() {
               <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Crown size={15} style={{ color: accent }} />
+                    <Trophy size={15} style={{ color: accent }} />
                     <span className="font-semibold text-base" style={{ color: textMain }}>Standings</span>
                   </div>
                   <button

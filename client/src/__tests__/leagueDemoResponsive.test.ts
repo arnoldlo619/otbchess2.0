@@ -36,4 +36,18 @@ describe("LeagueDemo responsive containment", () => {
     expect(dashboardSource).toContain("px-4 pt-0 pb-6 lg:px-6 lg:pt-0 lg:pb-6 space-y-6");
     expect(dashboardSource).toContain("mx-4 lg:mx-6 mt-0 rounded-2xl");
   });
+
+  it("uses the League hero as the continuous desktop identity surface", () => {
+    const demoTopBar = demoSource.slice(
+      demoSource.indexOf("BRANDED TOP BAR"),
+      demoSource.indexOf("LEAGUE HERO BANNER")
+    );
+    const dashboardTopBar = dashboardSource.slice(
+      dashboardSource.indexOf("BRANDED TOP BAR"),
+      dashboardSource.indexOf("LEAGUE HERO BANNER")
+    );
+
+    expect(demoTopBar).toContain("lg:hidden");
+    expect(dashboardTopBar).toContain("lg:hidden");
+  });
 });

@@ -349,7 +349,7 @@ export default function LeagueDemo() {
 
           {/* ── BRANDED TOP BAR ───────────────────────────────────────────── */}
           <div
-            className="relative flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5"
+            className="relative flex-shrink-0 flex items-center gap-3 px-4 py-2.5 lg:hidden"
             style={{
               background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
               backdropFilter: "blur(12px)",
@@ -584,7 +584,7 @@ export default function LeagueDemo() {
                   >
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
-                        <RatingIcon size={14} style={{ color: accent }} />
+                        <Trophy size={14} style={{ color: accent }} />
                         <span className="text-base font-bold" style={{ color: textMain }}>Premier Chess League Standings</span>
                       </div>
                       <button
