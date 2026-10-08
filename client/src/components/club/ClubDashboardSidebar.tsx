@@ -1,7 +1,12 @@
-import { useEffect, useState, type ElementType, type FocusEvent } from "react";
+import { useState, type ElementType, type FocusEvent } from "react";
+import { MessagesSquare, UsersRound } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const OTB_THUMBNAIL_LOGO = "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
+const CLUB_SIDEBAR_ICON_OVERRIDES: Record<string, ElementType> = {
+  feed: MessagesSquare,
+  members: UsersRound,
+};
 
 export type ClubDashboardSidebarItem = {
   id: string;
@@ -15,8 +20,6 @@ type ClubDashboardSidebarProps = {
   accent: string;
   background: string;
   borderColor: string;
-  brandImageSrc?: string | null;
-  brandLabel?: string;
   brandActionLabel?: string;
   items: ClubDashboardSidebarItem[];
   activeId: string;
@@ -26,11 +29,6 @@ type ClubDashboardSidebarProps = {
   onFocusExpandedChange: (expanded: boolean) => void;
   onSelect: (id: string) => void;
   onBackToClubs: () => void;
-  footerAction?: {
-    label: string;
-    onClick: () => void;
-    icon: ElementType;
-  };
 };
 
 function badgeLabel(value: number) {
@@ -41,8 +39,6 @@ export function ClubDashboardSidebar({
   accent,
   background,
   borderColor,
-  brandImageSrc,
-  brandLabel,
   brandActionLabel = "Back to all clubs",
   items,
   activeId,
@@ -52,20 +48,12 @@ export function ClubDashboardSidebar({
   onFocusExpandedChange,
   onSelect,
   onBackToClubs,
-  footerAction,
 }: ClubDashboardSidebarProps) {
   const expanded = !collapsed || temporarilyExpanded;
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
-  const [brandImageFailed, setBrandImageFailed] = useState(false);
   const workspaceItems = items.filter((item) => item.group === "workspace");
   const settingsItem = items.find((item) => item.group === "manage" && item.id === "settings");
   const primaryItems = [...workspaceItems, ...items.filter((item) => item.group === "manage" && item.id !== "settings")];
-  const displayedBrandImageSrc = brandImageSrc && !brandImageFailed ? brandImageSrc : OTB_THUMBNAIL_LOGO;
-  const displayedBrandLabel = brandImageSrc && !brandImageFailed ? (brandLabel ?? "Club") : "OTB!!";
-
-  useEffect(() => {
-    setBrandImageFailed(false);
-  }, [brandImageSrc]);
 
   function handleBlur(event: FocusEvent<HTMLElement>) {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -74,7 +62,7 @@ export function ClubDashboardSidebar({
   }
 
   function renderItem(item: ClubDashboardSidebarItem) {
-    const Icon = item.icon;
+    const Icon = CLUB_SIDEBAR_ICON_OVERRIDES[item.id] ?? item.icon;
     const active = activeId === item.id;
     const badge = item.badge ?? 0;
     const button = (
@@ -173,30 +161,7 @@ export function ClubDashboardSidebar({
   }
 
   function renderFooter() {
-    if (!footerAction) return settingsItem ? renderItem(settingsItem) : null;
-
-    const FooterIcon = footerAction.icon;
-    return (
-      <button
-        type="button"
-        onClick={footerAction.onClick}
-        aria-label={footerAction.label}
-        className="flex h-[52px] w-full items-center gap-3 rounded-xl px-3 text-left text-base font-semibold text-[rgba(229,238,232,0.68)] outline-none transition-[background-color,color,transform] duration-200 ease-out hover:bg-white/[0.055] hover:text-white active:scale-[0.98] focus-visible:ring-2 motion-reduce:transition-none"
-        style={{
-          // @ts-expect-error CSS custom property is supported by React at runtime.
-          "--tw-ring-color": accent,
-        }}
-      >
-        <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center"><FooterIcon size={22} strokeWidth={1.8} /></span>
-        <span
-          className="min-w-0 truncate transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none"
-          style={{ opacity: expanded ? 1 : 0, transform: expanded ? "translateX(0)" : "translateX(-5px)", transitionDelay: expanded ? "95ms" : "0ms" }}
-          aria-hidden={!expanded}
-        >
-          {footerAction.label}
-        </span>
-      </button>
-    );
+    return settingsItem ? renderItem(settingsItem) : null;
   }
 
   return (
@@ -234,16 +199,13 @@ export function ClubDashboardSidebar({
               "--tw-ring-color": accent,
             }}
           >
-            {/* The image-error handler swaps an unavailable Club asset for the branded fallback. */}
-            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
             <img
-              src={displayedBrandImageSrc}
-              alt={displayedBrandLabel}
-              className={`h-14 w-14 origin-center object-${brandImageSrc && !brandImageFailed ? "cover" : "contain"} transition-transform duration-200 ease-out motion-reduce:transition-none ${brandImageSrc && !brandImageFailed ? "rounded-2xl border border-white/10" : ""}`}
+              src={OTB_THUMBNAIL_LOGO}
+              alt="OTB!!"
+              className="h-14 w-14 origin-center object-contain transition-transform duration-200 ease-out motion-reduce:transition-none"
               style={{
                 transform: expanded ? "scale(1.04)" : "scale(1)",
               }}
-              onError={() => setBrandImageFailed(true)}
               draggable={false}
             />
           </button>
@@ -257,7 +219,7 @@ export function ClubDashboardSidebar({
         {renderGroup(primaryItems)}
       </nav>
 
-      {(footerAction || settingsItem) && (
+      {settingsItem && (
         <footer aria-label="Club dashboard footer navigation" className="border-t border-white/[0.065] px-3 py-3">
           {renderFooter()}
         </footer>

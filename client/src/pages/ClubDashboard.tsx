@@ -3858,7 +3858,7 @@ export default function ClubDashboard() {
     { id: "events", label: "Events", icon: EventsIcon, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined, group: "workspace" },
     { id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" },
     { id: "members", label: "Members", icon: MembersIcon, group: "workspace" },
-    { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true, group: "workspace" },
+    { id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true, group: "manage" },
     // battles tab removed - now a sub-tab of Feed
   ];
 
@@ -3986,8 +3986,6 @@ export default function ClubDashboard() {
           accent={accent}
           background={sidebarBg ?? "oklch(0.115 0.025 145)"}
           borderColor={navBorder}
-          brandImageSrc={club.avatarUrl}
-          brandLabel={club.name}
           brandActionLabel={`Open ${club.name} profile`}
           items={clubTabs.filter((item) => !item.ownerOnly || isOwnerOrDirector)}
           activeId={tab}
@@ -3997,7 +3995,6 @@ export default function ClubDashboard() {
           onFocusExpandedChange={setSidebarKeyboardExpanded}
           onSelect={(nextTab) => setTab(nextTab as Tab)}
           onBackToClubs={() => navigate(`/clubs/${club.id}`)}
-          footerAction={{ label: "Back to Club", icon: ChevronLeft, onClick: () => navigate(`/clubs/${club.id}`) }}
         />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}

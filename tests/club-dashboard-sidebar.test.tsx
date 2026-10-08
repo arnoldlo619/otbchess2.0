@@ -4,7 +4,6 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ChevronLeft } from "lucide-react";
 import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "../client/src/components/club/ClubDashboardSidebar";
 
 class TestResizeObserver {
@@ -57,38 +56,19 @@ describe("ClubDashboardSidebar", () => {
     expect(screen.getByRole("button", { name: "Back to all clubs" })).toBeTruthy();
   });
 
-  it("uses a Club-provided identity image in place of the generic mark and restores the fallback after an image error", () => {
-    renderSidebar({
-      brandImageSrc: "/club-avatar.png",
-      brandLabel: "1904 Chess Club",
-      brandActionLabel: "Open 1904 Chess Club dashboard",
-    });
+  it("uses the OTB thumbnail as the permanent header mark while retaining the contextual Club return action", () => {
+    renderSidebar({ brandActionLabel: "Back to Club dashboard" });
 
-    const customBrand = screen.getByRole("img", { name: "1904 Chess Club" });
-    expect(customBrand.getAttribute("src")).toBe("/club-avatar.png");
-    expect(customBrand.className).toContain("object-cover");
-    expect(screen.getByRole("button", { name: "Open 1904 Chess Club dashboard" })).toBeTruthy();
-
-    fireEvent.error(customBrand);
     expect(screen.getByRole("img", { name: "OTB!!" }).getAttribute("src")).toBe("/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp");
+    expect(screen.getByRole("button", { name: "Back to Club dashboard" })).toBeTruthy();
   });
 
-  it("keeps Settings in the footer for the root dashboard while child workspaces can supply a Back to Club footer action", () => {
-    const { rerender, props } = renderSidebar({ temporarilyExpanded: true });
+  it("keeps Settings in the footer so the branded header is the single Club-return action", () => {
+    renderSidebar({ temporarilyExpanded: true });
 
     const footer = screen.getByRole("contentinfo", { name: "Club dashboard footer navigation" });
     expect(footer.contains(screen.getByRole("button", { name: "Settings" }))).toBe(true);
-
-    rerender(
-      <ClubDashboardSidebar
-        {...props}
-        temporarilyExpanded
-        footerAction={{ label: "Back to Club", icon: ChevronLeft, onClick: vi.fn() }}
-      />,
-    );
-
-    expect(screen.getByRole("button", { name: "Back to Club" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Settings" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Back to Club" })).toBeNull();
   });
 
   it("requests temporary expansion for both pointer and keyboard users", () => {
@@ -139,6 +119,7 @@ describe("ClubDashboardSidebar", () => {
     expect(dashboard).toContain("collapsed");
     expect(dashboard).not.toContain("toggleSidebar");
     expect(dashboard).not.toContain("club-sidebar-collapsed");
-    expect(dashboard).toContain("brandImageSrc={club.avatarUrl}");
+    expect(dashboard).not.toContain("brandImageSrc={club.avatarUrl}");
+    expect(dashboard).toContain("brandActionLabel={`Open ${club.name} profile`}");
   });
 });

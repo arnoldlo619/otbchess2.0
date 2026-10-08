@@ -67,7 +67,7 @@ const DEMO_NAV: DemoNavItem[] = [
   { id: "events", label: "Events", icon: EventsIcon, badge: 2, group: "workspace" },
   { id: "leagues", label: "League", icon: LeaguesIcon, group: "workspace" },
   { id: "members", label: "Members", icon: MembersIcon, group: "workspace" },
-  { id: "settings", label: "Settings", icon: SettingsIcon, group: "workspace" },
+  { id: "settings", label: "Settings", icon: SettingsIcon, group: "manage" },
 ];
 
 const DEMO_ACTIVITY = [
@@ -497,7 +497,6 @@ export default function ClubDashboardDemo() {
           accent={DEMO_ACCENT}
           background="oklch(0.115 0.025 145)"
           borderColor={NAV_BORDER}
-          brandLabel={DEMO_CLUB_NAME}
           items={DEMO_NAV}
           activeId={tab}
           collapsed

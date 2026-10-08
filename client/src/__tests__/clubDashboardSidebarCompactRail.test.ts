@@ -59,31 +59,37 @@ describe("Club Dashboard shared sidebar", () => {
     expect(sidebarSource).toContain("motion-reduce:transition-none");
   });
 
-  it("renders an uploaded Club identity in the header with a durable OTB fallback and no generic wordmark swap", () => {
+  it("renders the OTB thumbnail as the permanent Club dashboard header identity", () => {
     expect(sidebarSource).toContain('const OTB_THUMBNAIL_LOGO = "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp"');
-    expect(sidebarSource).toContain("brandImageSrc?: string | null;");
-    expect(sidebarSource).toContain("brandLabel?: string;");
-    expect(sidebarSource).toContain("const displayedBrandImageSrc = brandImageSrc");
-    expect(sidebarSource).toContain("onError={() => setBrandImageFailed(true)}");
+    expect(sidebarSource).toContain('src={OTB_THUMBNAIL_LOGO}');
+    expect(sidebarSource).toContain('alt="OTB!!"');
+    expect(sidebarSource).not.toContain("brandImageSrc");
+    expect(sidebarSource).not.toContain("brandLabel");
     expect(sidebarSource).not.toContain("otb-wordmark-brilliant.webp");
     expect(sidebarSource).toContain("aria-label={brandActionLabel}");
-    expect(dashboardSource).toContain("brandImageSrc={club.avatarUrl}");
-    expect(dashboardSource).toContain("brandLabel={club.name}");
+    expect(dashboardSource).not.toContain("brandImageSrc={club.avatarUrl}");
   });
 
-  it("keeps Settings in the centered primary stack and reserves the footer for returning to the Club profile", () => {
-    expect(dashboardSource).toContain('{ id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true, group: "workspace" }');
-    expect(dashboardSource).toContain('footerAction={{ label: "Back to Club", icon: ChevronLeft');
-    expect(demoSource).toContain('{ id: "settings", label: "Settings", icon: SettingsIcon, group: "workspace" }');
+  it("keeps Settings in the sidebar footer and removes the redundant Back to Club footer action", () => {
+    expect(dashboardSource).toContain('{ id: "settings", label: "Settings", icon: OtbSettingsIcon, ownerOnly: true, group: "manage" }');
+    expect(dashboardSource).not.toContain('footerAction={{ label: "Back to Club"');
+    expect(demoSource).toContain('{ id: "settings", label: "Settings", icon: SettingsIcon, group: "manage" }');
   });
 
   it("uses the same controlled sidebar component for root, Meetup, and QR check-in Club contexts", () => {
     expect(meetupSource).toContain('import { ClubDashboardSidebar, type ClubDashboardSidebarItem }');
-    expect(meetupSource).toContain("footerAction={{ label: \"Back to Club\"");
     expect(checkInSource).toContain('import { ClubDashboardSidebar, type ClubDashboardSidebarItem }');
-    expect(checkInSource).toContain("footerAction={{ label: \"Back to Club\"");
-    expect(meetupSource).toContain("brandImageSrc={club?.avatarUrl}");
-    expect(checkInSource).toContain("brandImageSrc={club?.avatarUrl}");
+    expect(meetupSource).not.toContain("footerAction={{ label: \"Back to Club\"");
+    expect(checkInSource).not.toContain("footerAction={{ label: \"Back to Club\"");
+    expect(meetupSource).not.toContain("brandImageSrc={club?.avatarUrl}");
+    expect(checkInSource).not.toContain("brandImageSrc={club?.avatarUrl}");
+  });
+
+  it("uses communication and community icons only for Feed and Members while preserving the existing chess-native icons elsewhere", () => {
+    expect(sidebarSource).toContain('import { MessagesSquare, UsersRound } from "lucide-react"');
+    expect(sidebarSource).toContain("feed: MessagesSquare");
+    expect(sidebarSource).toContain("members: UsersRound");
+    expect(sidebarSource).toContain("const Icon = CLUB_SIDEBAR_ICON_OVERRIDES[item.id] ?? item.icon");
   });
 
   it("keeps compact navigation vertically centered and labels available through tooltips", () => {

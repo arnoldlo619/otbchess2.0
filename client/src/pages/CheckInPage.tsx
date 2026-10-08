@@ -72,7 +72,7 @@ const sidebarTabs: ClubDashboardSidebarItem[] = [
   { id: "feed", label: "Feed", icon: Megaphone, group: "workspace" },
   { id: "events", label: "Events", icon: Calendar, group: "workspace" },
   { id: "members", label: "Members", icon: Users, group: "workspace" },
-  { id: "settings", label: "Settings", icon: Settings2, group: "workspace" },
+  { id: "settings", label: "Settings", icon: Settings2, group: "manage" },
 ];
 
 export default function CheckInPage() {
@@ -266,8 +266,6 @@ export default function CheckInPage() {
           accent={accentColor}
           background="oklch(0.115 0.025 145)"
           borderColor="oklch(0.22 0.06 145)"
-          brandImageSrc={club?.avatarUrl}
-          brandLabel={club?.name ?? "Club"}
           brandActionLabel="Back to Club dashboard"
           items={sidebarTabs}
           activeId="events"
@@ -277,7 +275,6 @@ export default function CheckInPage() {
           onFocusExpandedChange={setSidebarKeyboardExpanded}
           onSelect={(nextTab) => clubId && navigate(`/clubs/${clubId}/home?tab=${nextTab}`)}
           onBackToClubs={() => clubId && navigate(`/clubs/${clubId}/home`)}
-          footerAction={{ label: "Back to Club", icon: ChevronLeft, onClick: () => clubId && navigate(`/clubs/${clubId}/home`) }}
         />
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────────── */}
