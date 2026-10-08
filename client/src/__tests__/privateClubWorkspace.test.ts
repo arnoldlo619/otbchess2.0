@@ -48,13 +48,24 @@ describe("private Club workspace model", () => {
     expect(demo).not.toMatch(/[🏆🌍🥇🥈🥉🔥]/u);
   });
 
-  it("keeps the demo Overview action rail aligned with Club Timeline without card containers", () => {
+  it("keeps the demo Overview action rail spaced from Club Timeline without card containers", () => {
     expect(demo).toContain('data-demo-overview-action-rail');
     expect(demo).toContain('min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full');
-    expect(demo).toContain('min-[1440px]:w-[208px]');
+    expect(demo).toContain('min-[1440px]:ml-14 min-[1440px]:w-[224px]');
     expect(demo).toContain('min-[1440px]:sticky min-[1440px]:top-6');
+    expect(demo).toContain('min-[1440px]:pl-8');
     expect(demo).toContain('min-[1440px]:-ml-[42px]');
     expect(demo).not.toContain('mx-auto grid max-w-[560px] grid-cols-3 gap-2 sm:gap-3');
+  });
+
+  it("uses the real Overview media-row hierarchy for the demo Next Event", () => {
+    expect(demo).toContain('data-demo-overview-next-event');
+    expect(demo).toContain('aria-labelledby="demo-next-club-event"');
+    expect(demo).toContain('Club schedule');
+    expect(demo).toContain('src={DEMO_BANNER_IMAGE}');
+    expect(demo).toContain('className="group flex min-h-[132px] gap-3 px-4 py-4');
+    expect(demo).toContain('sm:min-h-[148px]');
+    expect(demo).toContain('aria-label="Open RSVPs for Thursday Night Rapid"');
   });
 
   it("uses cached Chess.com profile photos instead of generic activity glyphs in the demo feed", () => {

@@ -4404,36 +4404,55 @@ export default function ClubDashboard() {
         {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
         {tab === "overview" && isOwnerOrDirector && (
           <div className="relative space-y-5">
-            {/* ── Upcoming Event (next one, prominent) ── */}
+            {/* ── Upcoming Event (same editorial row language as Club Timeline) ── */}
             {upcomingEvents.length > 0 && (() => {
               const next = upcomingEvents[0];
               const dateStr = new Date(next.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+              const nextEventKind = next.eventType === "tournament"
+                ? "Tournament"
+                : next.eventType === "lecture"
+                  ? "Lecture"
+                  : next.eventType === "puzzle_relay"
+                    ? "Puzzle relay"
+                    : "Club event";
+              const nextEventImage = next.coverImageUrl ?? club.bannerUrl;
               return (
-                <div className="rounded-2xl border border-white/08 p-4 cursor-pointer transition-all hover:border-white/15 hover:bg-[oklch(0.18_0.06_145)]" style={{ background: "oklch(0.16 0.05 145)" }} onClick={() => setTab("events")}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Next Event</h3>
-                    {upcomingEvents.length > 1 && (
-                      <button onClick={(e) => { e.stopPropagation(); setTab("events"); }} className="text-xs font-semibold" style={{ color: accent }}>+{upcomingEvents.length - 1} more</button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}18` }}>
-                      <Calendar className="w-5 h-5" style={{ color: accent }} />
+                <section data-club-overview-next-event className="overflow-hidden rounded-2xl border" aria-labelledby="next-club-event" style={{ background: isDark ? "oklch(0.155 0.045 145)" : "rgba(255,255,255,0.76)", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.025)" : "0 10px 30px rgba(31,57,39,0.055)" }}>
+                  <div className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: isDark ? "rgba(255,255,255,0.065)" : "rgba(21,41,28,0.08)" }}>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.46)" }}>Club schedule</p>
+                      <h3 id="next-club-event" className="mt-0.5 text-sm font-bold" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>Next Event</h3>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-bold truncate">{next.title}</p>
-                      <p className="text-white/50 text-xs">{dateStr}</p>
-                    </div>
-                    <button
-                      onClick={() => openRsvpPanel(next.id)}
-                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-105"
-                      style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
-                    >
-                      <Users className="w-3 h-3" />
-                      RSVPs
+                    <button type="button" onClick={() => setTab("events")} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] dark:hover:bg-white/5" style={{ color: accent }}>
+                      View all
                     </button>
                   </div>
-                </div>
+                  <article className="group flex min-h-[132px] gap-3 px-4 py-4 transition-colors duration-200 hover:bg-black/[0.025] sm:min-h-[148px] sm:gap-4 sm:px-5 sm:py-4.5 dark:hover:bg-white/[0.025]">
+                    <div className="relative flex h-[96px] w-[116px] shrink-0 items-end overflow-hidden rounded-xl border sm:h-[112px] sm:w-[136px]" style={{ background: `${accent}18`, borderColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(21,41,28,0.11)" }}>
+                      {nextEventImage ? <img src={nextEventImage} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 chess-board-bg opacity-[0.18]" />}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {!nextEventImage && <Calendar className="absolute right-3 top-3 h-5 w-5" style={{ color: accent }} aria-hidden="true" />}
+                      <span className="relative z-10 px-2.5 pb-2 text-[10px] font-bold uppercase tracking-[0.07em] text-white sm:text-[11px]">{nextEventKind}</span>
+                    </div>
+                    <div className="min-w-0 flex-1 py-0.5 sm:py-1">
+                      <button type="button" onClick={() => setTab("events")} className="block min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2 focus:ring-offset-transparent">
+                        <h2 className="line-clamp-2 text-base font-bold leading-5 sm:text-lg sm:leading-6" style={{ color: isDark ? "rgba(255,255,255,0.92)" : "#15291c" }}>{next.title}</h2>
+                        <p className="mt-2 truncate text-sm" style={{ color: isDark ? "rgba(255,255,255,0.46)" : "rgba(21,41,28,0.56)" }}>{dateStr}</p>
+                        {next.venue && <p className="mt-1 truncate text-xs sm:text-sm" style={{ color: isDark ? "rgba(255,255,255,0.34)" : "rgba(21,41,28,0.44)" }}>{next.venue}</p>}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openRsvpPanel(next.id)}
+                      className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-[background-color,transform] duration-200 hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none"
+                      style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                      aria-label={`Open RSVPs for ${next.title}`}
+                    >
+                      <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                      RSVPs
+                    </button>
+                  </article>
+                </section>
               );
             })()}
 
@@ -4496,10 +4515,10 @@ export default function ClubDashboard() {
 
 
 
-            <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[208px]">
+            <section data-club-overview-action-rail aria-labelledby="overview-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-14 min-[1440px]:w-[224px]">
               <div className="min-[1440px]:sticky min-[1440px]:top-6">
                 <h3 id="overview-quick-actions" className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.38)" : "rgba(21,41,28,0.48)" }}>Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 sm:grid-cols-4 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-6 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-[var(--overview-action-rail-line)]" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", "--overview-action-rail-line": isDark ? "rgba(255,255,255,0.12)" : "rgba(21,41,28,0.14)" } as React.CSSProperties}>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y py-2 sm:grid-cols-4 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-8 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-[var(--overview-action-rail-line)]" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(21,41,28,0.10)", "--overview-action-rail-line": isDark ? "rgba(255,255,255,0.12)" : "rgba(21,41,28,0.14)" } as React.CSSProperties}>
                 {[
                   { icon: Plus, label: "New Meetup", action: () => setShowMeetupWizard(true) },
                   { icon: GanttChart, label: "Tournament", action: () => setShowTournamentWizard(true) },

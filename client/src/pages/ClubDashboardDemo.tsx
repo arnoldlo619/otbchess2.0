@@ -324,10 +324,10 @@ function DemoQuickActions({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
     { label: "Post", icon: MessageSquare, tab: "feed" as const },
   ];
   return (
-    <section data-demo-overview-action-rail aria-labelledby="demo-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-7 min-[1440px]:w-[208px]">
+    <section data-demo-overview-action-rail aria-labelledby="demo-quick-actions" className="mt-4 min-[1440px]:absolute min-[1440px]:inset-y-0 min-[1440px]:left-full min-[1440px]:mt-0 min-[1440px]:ml-14 min-[1440px]:w-[224px]">
       <div className="min-[1440px]:sticky min-[1440px]:top-6">
         <h2 id="demo-quick-actions" className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/38">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 sm:grid-cols-3 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-6 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-white/12">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1 border-y border-white/8 py-2 sm:grid-cols-3 min-[1440px]:relative min-[1440px]:block min-[1440px]:space-y-2 min-[1440px]:border-y-0 min-[1440px]:py-0 min-[1440px]:pl-8 min-[1440px]:before:absolute min-[1440px]:before:bottom-4 min-[1440px]:before:left-0 min-[1440px]:before:top-4 min-[1440px]:before:w-px min-[1440px]:before:bg-white/12">
         {actions.map(({ label, icon: Icon, tab }) => (
           <button
             key={label}
@@ -350,16 +350,20 @@ function DemoQuickActions({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
 function DemoOverview({ onSelect }: { onSelect: (tab: DemoTab) => void }) {
   return (
     <div className="relative space-y-5">
-      <section className="cursor-pointer rounded-2xl border border-white/8 bg-[oklch(0.16_0.05_145)] p-4 transition-colors hover:border-white/15 hover:bg-[oklch(0.18_0.06_145)]" onClick={() => onSelect("events")}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-white/30">Next Event</h2>
-          <button type="button" onClick={(event) => { event.stopPropagation(); onSelect("events"); }} className="text-xs font-semibold" style={{ color: DEMO_ACCENT }}>+1 more</button>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: `${DEMO_ACCENT}18` }}><Calendar className="h-5 w-5" style={{ color: DEMO_ACCENT }} aria-hidden="true" /></div>
-          <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-white">Thursday Night Rapid</p><p className="text-xs text-white/50">Thu, Oct 8 · 7:00 PM</p></div>
-          <button type="button" onClick={(event) => { event.stopPropagation(); onSelect("events"); }} className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: `${DEMO_ACCENT}22`, color: DEMO_ACCENT, border: `1px solid ${DEMO_ACCENT}44` }}><Users className="h-3 w-3" aria-hidden="true" />RSVPs</button>
-        </div>
+      <section data-demo-overview-next-event className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }} aria-labelledby="demo-next-club-event">
+        <header className="flex items-center justify-between border-b px-4 py-3.5" style={{ borderColor: "rgba(255,255,255,0.065)" }}>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club schedule</p><h2 id="demo-next-club-event" className="mt-0.5 text-sm font-bold text-white/92">Next Event</h2></div>
+          <button type="button" onClick={() => onSelect("events")} className="min-h-11 rounded-xl px-3 text-xs font-semibold transition-colors hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]" style={{ color: DEMO_ACCENT }}>View all</button>
+        </header>
+        <article className="group flex min-h-[132px] gap-3 px-4 py-4 transition-colors hover:bg-white/[0.025] sm:min-h-[148px] sm:gap-4 sm:px-5 sm:py-[18px]">
+          <div className="relative flex h-[96px] w-[116px] shrink-0 items-end overflow-hidden rounded-xl border sm:h-[112px] sm:w-[136px]" style={{ background: `${DEMO_ACCENT}18`, borderColor: "rgba(255,255,255,0.10)" }}>
+            <img src={DEMO_BANNER_IMAGE} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <span className="relative z-10 px-2.5 pb-2 text-[10px] font-bold uppercase tracking-[0.07em] text-white sm:text-[11px]">Club event</span>
+          </div>
+          <div className="min-w-0 flex-1 py-0.5 sm:py-1"><button type="button" onClick={() => onSelect("events")} className="block min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2 focus:ring-offset-transparent"><h2 className="line-clamp-2 text-base font-bold leading-5 text-white/92 sm:text-lg sm:leading-6">Thursday Night Rapid</h2><p className="mt-2 truncate text-sm text-white/46">Thu, Oct 8 · 7:00 PM</p><p className="mt-1 truncate text-xs text-white/34 sm:text-sm">The OTB Chess Club</p></button></div>
+          <button type="button" onClick={() => onSelect("events")} className="mt-auto inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold transition-[background-color,transform] duration-200 hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[#4CAF50] active:translate-y-0 active:scale-[0.985] motion-reduce:transition-none" style={{ background: `${DEMO_ACCENT}22`, color: DEMO_ACCENT, border: `1px solid ${DEMO_ACCENT}44` }} aria-label="Open RSVPs for Thursday Night Rapid"><Users className="h-3.5 w-3.5" aria-hidden="true" />RSVPs</button>
+        </article>
       </section>
 
       <div>
