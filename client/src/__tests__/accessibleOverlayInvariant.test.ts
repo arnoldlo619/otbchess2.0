@@ -9,6 +9,7 @@ const migratedOverlays = [
   "client/src/components/QrScanner.tsx",
   "client/src/components/ProUpgradeModal.tsx",
   "client/src/components/PlayerProfileSheet.tsx",
+  "client/src/components/meetup/MeetupAttendeeProfileSheet.tsx",
   "client/src/components/AnnounceModal.tsx",
   "client/src/components/CheckInAnnounceModal.tsx",
   "client/src/components/CutoffOverrideModal.tsx",

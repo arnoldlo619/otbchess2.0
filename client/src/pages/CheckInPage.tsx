@@ -35,14 +35,10 @@ import {
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { authFetch } from "@/lib/apiFetch";
 import { ClubDashboardSidebar, type ClubDashboardSidebarItem } from "@/components/club/ClubDashboardSidebar";
+import { MeetupAttendeeProfileSheet, type MeetupAttendeeProfile } from "@/components/meetup/MeetupAttendeeProfileSheet";
 
-interface AttendeeWithRating {
+interface AttendeeWithRating extends MeetupAttendeeProfile {
   userId: string;
-  displayName: string;
-  avatarUrl: string | null;
-  chesscomUsername: string | null;
-  rapid: number | null;
-  blitz: number | null;
 }
 
 function formatEventDate(isoString: string): string {
@@ -53,19 +49,6 @@ function formatEventDate(isoString: string): string {
 function formatEventTime(isoString: string): string {
   const d = new Date(isoString);
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-}
-
-async function fetchChessComRating(username: string): Promise<{ rapid: number | null; blitz: number | null }> {
-  try {
-    const res = await authFetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
-    if (!res.ok) return { rapid: null, blitz: null };
-    const data = await res.json() as { stats?: Record<string, Record<string, Record<string, number>>> };
-    const rapid = data.stats?.chess_rapid?.last?.rating ?? null;
-    const blitz = data.stats?.chess_blitz?.last?.rating ?? null;
-    return { rapid, blitz };
-  } catch {
-    return { rapid: null, blitz: null };
-  }
 }
 
 const sidebarTabs: ClubDashboardSidebarItem[] = [
@@ -86,7 +69,7 @@ export default function CheckInPage() {
   const [attendees, setAttendees] = useState<AttendeeWithRating[]>([]);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
-  const [loadingRatings, setLoadingRatings] = useState(false);
+  const [selectedAttendee, setSelectedAttendee] = useState<AttendeeWithRating | null>(null);
   // True while the initial event fetch is in-flight (prevents "Event not found" flash)
   const [loadingEvent, setLoadingEvent] = useState(true);
   // Auth modal — shown when unauthenticated user lands via QR scan
@@ -136,22 +119,16 @@ export default function CheckInPage() {
         ids = rows.map((r) => r.userId);
         setCheckedIn(ids);
         if (user) setHasCheckedIn(ids.includes(user.id));
-        // Build attendees directly from DB rows (no need for member lookup)
-        setLoadingRatings(true);
-        const list: AttendeeWithRating[] = await Promise.all(
-          rows.map(async (row) => {
-            let rapid: number | null = null;
-            let blitz: number | null = null;
-            if (row.chesscomUsername) {
-              const ratings = await fetchChessComRating(row.chesscomUsername);
-              rapid = ratings.rapid;
-              blitz = ratings.blitz;
-            }
-            return { userId: row.userId, displayName: row.displayName, avatarUrl: row.avatarUrl, chesscomUsername: row.chesscomUsername, rapid, blitz };
-          })
-        );
+        // Ratings are loaded only if an attendee opens the compact profile sheet.
+        const list: AttendeeWithRating[] = rows.map((row) => ({
+          userId: row.userId,
+          displayName: row.displayName,
+          avatarUrl: row.avatarUrl,
+          chesscomUsername: row.chesscomUsername,
+          rapid: null,
+          blitz: null,
+        }));
         setAttendees(list);
-        setLoadingRatings(false);
         return;
       }
     } catch { /* fall through to localStorage */ }
@@ -161,29 +138,18 @@ export default function CheckInPage() {
     setCheckedIn(ids);
     if (user) setHasCheckedIn(ids.includes(user.id));
     const members = getClubMembers(ev.clubId);
-    setLoadingRatings(true);
-    const list: AttendeeWithRating[] = await Promise.all(
-      ids.map(async (uid) => {
+    const list: AttendeeWithRating[] = ids.map((uid) => {
         const member = members.find((m) => m.userId === uid);
-        let rapid: number | null = null;
-        let blitz: number | null = null;
-        if (member?.chesscomUsername) {
-          const ratings = await fetchChessComRating(member.chesscomUsername);
-          rapid = ratings.rapid;
-          blitz = ratings.blitz;
-        }
         return {
           userId: uid,
           displayName: member?.displayName ?? uid,
           avatarUrl: member?.avatarUrl ?? null,
           chesscomUsername: member?.chesscomUsername ?? null,
-          rapid,
-          blitz,
+          rapid: null,
+          blitz: null,
         };
-      })
-    );
+      });
     setAttendees(list);
-    setLoadingRatings(false);
   }, [eventId, user]);
 
   useEffect(() => {
@@ -475,18 +441,9 @@ export default function CheckInPage() {
                       </div>
                     )}
 
-                    {/* Back to event page */}
-                    <Link
-                      href={`/clubs/${clubId}/meetup/${event.id}`}
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/40 hover:text-white/70 transition-colors"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Back to Event Page
-                    </Link>
                   </div>
 
-                  {/* ── RIGHT: Attendees with ratings ────────────────── */}
+                  {/* ── RIGHT: Checked-in attendees ──────────────────── */}
                   <div className="lg:col-span-2">
                     <div
                       className="rounded-2xl overflow-hidden"
@@ -499,7 +456,6 @@ export default function CheckInPage() {
                             Checked In · {checkedIn.length}
                           </span>
                         </div>
-                        {loadingRatings && <Loader2 className="w-3.5 h-3.5 text-white/30 animate-spin" />}
                       </div>
 
                       {attendees.length === 0 ? (
@@ -521,17 +477,20 @@ export default function CheckInPage() {
                               <span className="text-white/20 text-xs font-bold w-5 text-right flex-shrink-0">
                                 {idx + 1}
                               </span>
-                              {/* Avatar */}
-                              {a.avatarUrl ? (
-                                <img loading="lazy" decoding="async" src={a.avatarUrl} alt={a.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                              ) : (
-                                <div
-                                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                  style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.60)" }}
-                                >
-                                  {a.displayName.charAt(0).toUpperCase()}
-                                </div>
-                              )}
+                              {/* Avatar opens a compact, ratings-first attendee preview. */}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedAttendee(a)}
+                                className="group relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-transparent text-sm font-bold transition duration-200 hover:scale-105 hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.60)" }}
+                                aria-label={`View ${a.displayName}'s profile`}
+                              >
+                                {a.avatarUrl ? (
+                                  <img loading="lazy" decoding="async" src={a.avatarUrl} alt="" className="h-full w-full object-cover transition duration-200 group-hover:scale-110" />
+                                ) : (
+                                  a.displayName.charAt(0).toUpperCase()
+                                )}
+                              </button>
                               {/* Name + chess.com */}
                               <div className="flex-1 min-w-0">
                                 <div className="text-white text-sm font-semibold truncate">{a.displayName}</div>
@@ -545,22 +504,6 @@ export default function CheckInPage() {
                                     <ExternalLink className="w-2.5 h-2.5" />
                                     {a.chesscomUsername}
                                   </a>
-                                )}
-                              </div>
-                              {/* Ratings */}
-                              <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                                {a.rapid !== null && (
-                                  <span className="text-xs font-bold" style={{ color: accentColor }}>
-                                    {a.rapid} <span className="text-white/30 font-normal">rapid</span>
-                                  </span>
-                                )}
-                                {a.blitz !== null && (
-                                  <span className="text-xs font-semibold text-amber-400">
-                                    {a.blitz} <span className="text-white/30 font-normal">blitz</span>
-                                  </span>
-                                )}
-                                {a.rapid === null && a.blitz === null && a.chesscomUsername && (
-                                  <span className="text-white/20 text-xs">—</span>
                                 )}
                               </div>
                               {/* Checked-in badge */}
@@ -604,6 +547,12 @@ export default function CheckInPage() {
           );
         })}
       </nav>
+
+      <MeetupAttendeeProfileSheet
+        attendee={selectedAttendee}
+        accentColor={accentColor}
+        onClose={() => setSelectedAttendee(null)}
+      />
 
       {/* ── AUTH MODAL — shown when unauthenticated user scans QR code ─────── */}
       {showAuthModal && (
