@@ -2496,7 +2496,7 @@ export default function LeagueDashboard() {
             {/* ── Current Matchup Hero (shown when viewing current week + user has a match) ── */}
             {selectedWeek === league.currentWeek && myMatchThisWeek && (
               <div
-                className="rounded-3xl overflow-hidden mb-4"
+                className="league-matchup-card rounded-3xl overflow-hidden mb-4"
                 style={{
                   background: isDark
                     ? "linear-gradient(135deg, oklch(0.18 0.09 145) 0%, oklch(0.14 0.06 145) 100%)"

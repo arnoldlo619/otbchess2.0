@@ -466,7 +466,7 @@ export default function LeagueDemo() {
 
                   {/* Featured Matchup Hero */}
                   <div
-                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                    className="league-matchup-card rounded-2xl overflow-hidden"
                     style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
                   >
                     <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -844,7 +844,7 @@ export default function LeagueDemo() {
               <div className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 max-w-3xl mx-auto space-y-5">
                 {/* Hero card */}
                 <div
-                  className="rounded-2xl overflow-hidden"
+                  className="league-matchup-card rounded-2xl overflow-hidden"
                   style={{ background: cardBg, border: `1.5px solid ${accent}44` }}
                 >
                   {/* Header */}
