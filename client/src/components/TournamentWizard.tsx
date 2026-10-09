@@ -188,14 +188,15 @@ const DEFAULT_DATA: WizardData = {
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
 
-const OTB_LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png";
+// Keep the wizard identity aligned with the landing-page header rather than
+// falling back to a text treatment or a separate remote thumbnail asset.
+const TOURNAMENT_WIZARD_LOGO_URL = "/manus-storage/chessotb-wordmark-320_e1731168.webp";
 
 const SCHEDULE_STEPS = [
   {
     id: 0,
     label: "Details",
     icon: Trophy,
-    iconImg: OTB_LOGO_URL,
     hero: {
       eyebrow: "Step 1 of 4",
       title: "Name your\ntournament",
@@ -566,7 +567,7 @@ function HeroPanel({
 
   return (
     <div
-      className="relative flex flex-col justify-between h-full px-10 py-12 overflow-hidden"
+      className="relative flex flex-col justify-between h-full px-10 py-12 xl:px-14 xl:py-14 overflow-hidden"
       style={{
         background: isDark
           ? "oklch(0.20 0.08 145)"
@@ -590,13 +591,13 @@ function HeroPanel({
         style={{ background: "none", border: "none", padding: 0 }}
       >
         <img
-          src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+          src={TOURNAMENT_WIZARD_LOGO_URL}
           alt="OTB Chess"
           style={{
-            height: 36,
+            height: 42,
             width: "auto",
             objectFit: "contain",
-            filter: "brightness(0) invert(1) opacity(0.85)",
+            filter: "brightness(0) invert(1) opacity(0.94)",
             transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease",
           }}
           className="group-hover:scale-110 group-hover:opacity-100"
@@ -605,18 +606,18 @@ function HeroPanel({
 
       {/* Step content */}
       <div className="relative" key={`${mode}-${step}`} style={{ animation: `heroIn 0.45s cubic-bezier(0.22,1,0.36,1) both` }}>
-        <p className="text-xs font-semibold tracking-widest uppercase text-white/68 mb-4">
+        <p className="text-sm font-semibold tracking-widest uppercase text-white/70 mb-5">
           {s.hero.eyebrow}
         </p>
-        <div className="mb-6">
+        <div className="mb-7">
           <h2
-            className="text-4xl font-bold text-white leading-tight"
+            className="text-[2.75rem] xl:text-5xl font-bold text-white leading-[1.04]"
             style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
           >
             {s.hero.title}
           </h2>
         </div>
-        <p className="text-white/78 text-sm leading-relaxed max-w-xs">{s.hero.body}</p>
+        <p className="text-white/82 text-base xl:text-[17px] leading-relaxed max-w-sm">{s.hero.body}</p>
       </div>
 
       {/* Step dots */}
@@ -2879,7 +2880,7 @@ function SegmentedOnboardingStep({
   };
 
   const card = (content: React.ReactNode) => (
-    <div className="mx-auto w-full max-w-2xl rounded-[24px] p-5 sm:p-8" style={sectionStyle}>
+    <div className="mx-auto w-full max-w-3xl rounded-[24px] p-6 sm:p-9" style={sectionStyle}>
       {content}
     </div>
   );
@@ -2889,7 +2890,7 @@ function SegmentedOnboardingStep({
       <div className="space-y-7">
         <div>
           <TextInput value={data.name} onChange={(name) => onChange({ name })} placeholder="e.g. Friday Night Blitz" ariaLabel="Tournament name" icon={Trophy} autoFocus isDark={isDark} large />
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          <p className="mt-3 text-base leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             This is what players will see on the join page, pairings, and standings.
           </p>
         </div>
@@ -2902,7 +2903,7 @@ function SegmentedOnboardingStep({
       <div className="space-y-7">
         <div>
           <TextInput value={data.date} onChange={(date) => onChange({ date })} type="date" ariaLabel="Tournament date" icon={Calendar} isDark={isDark} large />
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          <p className="mt-3 text-base leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
             Players will see this date before they check in through your QR invite.
           </p>
         </div>
@@ -2936,27 +2937,27 @@ function SegmentedOnboardingStep({
         <div className="grid gap-5 sm:grid-cols-3">
           <div>
             <Label isDark={isDark}>Format</Label>
-            <select aria-label="Tournament Format" value={data.format} onChange={(event) => selectFormat(event.target.value as WizardData["format"])} className="h-12 w-full appearance-none rounded-2xl px-4 text-sm font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
+            <select aria-label="Tournament Format" value={data.format} onChange={(event) => selectFormat(event.target.value as WizardData["format"])} className="h-14 w-full appearance-none rounded-2xl px-4 text-base font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
               {formatOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
-            <p className="mt-2 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{formatOptions.find((option) => option.value === data.format)?.detail}</p>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{formatOptions.find((option) => option.value === data.format)?.detail}</p>
           </div>
           <div>
             <Label isDark={isDark}># Rounds</Label>
-            <select aria-label="Tournament Rounds" value={data.format === "quads" ? 3 : data.rounds} disabled={data.format === "quads"} onChange={(event) => onChange({ rounds: Number(event.target.value) })} className="h-12 w-full appearance-none rounded-2xl px-4 text-sm font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-70" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
+            <select aria-label="Tournament Rounds" value={data.format === "quads" ? 3 : data.rounds} disabled={data.format === "quads"} onChange={(event) => onChange({ rounds: Number(event.target.value) })} className="h-14 w-full appearance-none rounded-2xl px-4 text-base font-semibold outline-none disabled:cursor-not-allowed disabled:opacity-70" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
               {(data.format === "quads" ? [3] : roundOptions).map((rounds) => <option key={rounds} value={rounds}>{rounds} rounds{data.format === "quads" ? " · fixed" : ""}</option>)}
             </select>
-            <p className="mt-2 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{data.format === "quads" ? "Three rounds is fixed for every quad." : "Choose the planned number of pairings."}</p>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{data.format === "quads" ? "Three rounds is fixed for every quad." : "Choose the planned number of pairings."}</p>
           </div>
           <div>
             <Label isDark={isDark}>Max Players</Label>
-            <select aria-label="Maximum Players" value={data.maxPlayers} onChange={(event) => onChange({ maxPlayers: Number(event.target.value) })} className="h-12 w-full appearance-none rounded-2xl px-4 text-sm font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
+            <select aria-label="Maximum Players" value={data.maxPlayers} onChange={(event) => onChange({ maxPlayers: Number(event.target.value) })} className="h-14 w-full appearance-none rounded-2xl px-4 text-base font-semibold outline-none" style={{ background: isDark ? T.dInput : T.lInput, border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`, color: isDark ? T.dText : T.lText }}>
               {playerOptions.map((maxPlayers) => <option key={maxPlayers} value={maxPlayers}>{maxPlayers} players</option>)}
             </select>
-            <p className="mt-2 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Registration closes once this capacity is reached.</p>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Registration closes once this capacity is reached.</p>
           </div>
         </div>
-        <div className="rounded-2xl px-4 py-3 text-sm leading-relaxed" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
+        <div className="rounded-2xl px-5 py-4 text-base leading-relaxed" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
           {data.format === "quads"
             ? `Your players will be grouped into ${Math.max(1, Math.floor(data.maxPlayers / 4))} rating-based quads of four.`
             : `${getTournamentFormatLabel(data.format)} · ${data.rounds} rounds · up to ${data.maxPlayers} players.`}
@@ -2972,9 +2973,9 @@ function SegmentedOnboardingStep({
           {TIME_PRESETS.map((preset) => {
             const active = data.timePreset === preset.sub;
             return (
-              <button key={preset.sub} type="button" onClick={() => onChange(preset.base === -1 ? { timePreset: "custom" } : { timePreset: preset.sub, timeBase: preset.base, timeIncrement: preset.inc, ratingType: preset.label === "Bullet" || preset.label === "Blitz" ? "blitz" : "rapid" })} className="min-h-[78px] rounded-2xl px-3 py-3 text-left transition-all duration-200 active:scale-[0.99]" style={selectionStyle(active)}>
-                <span className="block text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{preset.sub === "custom" ? "Custom" : preset.sub}</span>
-                <span className="mt-1 block text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{preset.sub === "custom" ? "Set manually" : preset.label}</span>
+              <button key={preset.sub} type="button" onClick={() => onChange(preset.base === -1 ? { timePreset: "custom" } : { timePreset: preset.sub, timeBase: preset.base, timeIncrement: preset.inc, ratingType: preset.label === "Bullet" || preset.label === "Blitz" ? "blitz" : "rapid" })} className="min-h-[88px] rounded-2xl px-4 py-4 text-left transition-all duration-200 active:scale-[0.99]" style={selectionStyle(active)}>
+                <span className="block text-lg font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{preset.sub === "custom" ? "Custom" : preset.sub}</span>
+                <span className="mt-1 block text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{preset.sub === "custom" ? "Set manually" : preset.label}</span>
               </button>
             );
           })}
@@ -2991,7 +2992,7 @@ function SegmentedOnboardingStep({
             </div>
           </div>
         )}
-        <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
+        <div className="rounded-2xl px-5 py-4 text-base" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
           {activeTime ? `${activeTime.sub} is a ${activeTime.label.toLowerCase()} time control.` : isCustomTime ? `${data.timeBase}+${data.timeIncrement} custom time control.` : "Choose a time control to continue."}
         </div>
       </div>,
@@ -3012,7 +3013,7 @@ function SegmentedOnboardingStep({
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {platforms.map((platform) => {
               const active = data.ratingSystem === platform.value;
-              return <button key={platform.value} type="button" onClick={() => onChange({ ratingSystem: platform.value })} className="rounded-2xl px-4 py-3 text-left transition-all" style={selectionStyle(active)}><span className="block text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{platform.label}</span><span className="mt-1 block text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{platform.detail}</span></button>;
+              return <button key={platform.value} type="button" onClick={() => onChange({ ratingSystem: platform.value })} className="rounded-2xl px-5 py-4 text-left transition-all" style={selectionStyle(active)}><span className="block text-base font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{platform.label}</span><span className="mt-1 block text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{platform.detail}</span></button>;
             })}
           </div>
         </div>
@@ -3021,7 +3022,7 @@ function SegmentedOnboardingStep({
           <div className="grid grid-cols-2 gap-2">
             {(["rapid", "blitz"] as const).map((ratingType) => {
               const active = data.ratingType === ratingType;
-              return <button key={ratingType} type="button" onClick={() => onChange({ ratingType })} className="rounded-2xl px-4 py-3 text-left transition-all" style={selectionStyle(active)}><span className="block text-sm font-semibold capitalize" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{ratingType}</span><span className="mt-1 block text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{ratingType === "rapid" ? "Longer online games" : "Faster online games"}</span></button>;
+              return <button key={ratingType} type="button" onClick={() => onChange({ ratingType })} className="rounded-2xl px-5 py-4 text-left transition-all" style={selectionStyle(active)}><span className="block text-base font-semibold capitalize" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>{ratingType}</span><span className="mt-1 block text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{ratingType === "rapid" ? "Longer online games" : "Faster online games"}</span></button>;
             })}
           </div>
         </div>
@@ -3037,23 +3038,23 @@ function SegmentedOnboardingStep({
   ];
   return card(
     <div className="space-y-7">
-      <p className="text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Review the plan below. You can always return to an earlier question to refine it.</p>
+      <p className="text-base leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>Review the plan below. You can always return to an earlier question to refine it.</p>
       <div className="overflow-hidden rounded-[20px] border" style={{ borderColor: isDark ? "rgba(255,255,255,0.10)" : "#E2EAE2", background: isDark ? "rgba(0,0,0,0.13)" : "#F8FBF8" }}>
         <div className="grid gap-px sm:grid-cols-2" style={{ background: isDark ? "rgba(255,255,255,0.10)" : "#E2EAE2" }}>
           {stages.map((stage, index) => {
             const Icon = stage.icon;
             return (
-              <div key={stage.label} className="relative min-h-[116px] p-4" style={{ background: isDark ? "oklch(0.24 0.06 145)" : "#FFFFFF" }}>
-                <span className="absolute right-4 top-4 text-[10px] font-bold tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#96A59A" }}>0{index + 1}</span>
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: isDark ? "rgba(93,164,112,0.16)" : "#EAF4EB", color: T.green }}><Icon className="h-4 w-4" /></div>
-                <p className="mt-3 text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{stage.label}</p>
-                <p className="mt-1 text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{stage.detail}</p>
+              <div key={stage.label} className="relative min-h-[132px] p-5" style={{ background: isDark ? "oklch(0.24 0.06 145)" : "#FFFFFF" }}>
+                <span className="absolute right-5 top-5 text-xs font-bold tracking-[0.16em]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#96A59A" }}>0{index + 1}</span>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: isDark ? "rgba(93,164,112,0.16)" : "#EAF4EB", color: T.green }}><Icon className="h-[18px] w-[18px]" /></div>
+                <p className="mt-3 text-base font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{stage.label}</p>
+                <p className="mt-1 text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>{stage.detail}</p>
               </div>
             );
           })}
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-4 py-3 text-sm" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F0F7F1", color: isDark ? T.dSub : T.lSub }}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl px-5 py-4 text-base" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F0F7F1", color: isDark ? T.dSub : T.lSub }}>
         <span className="font-semibold" style={{ color: T.green }}>{data.ratingSystem === "chess.com" ? "Chess.com" : data.ratingSystem === "lichess" ? "Lichess" : data.ratingSystem === "fide" ? "FIDE" : "Unrated"}</span>
         <span aria-hidden="true">•</span>
         <span className="capitalize">{data.ratingType} ELO</span>
@@ -4906,10 +4907,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
           className="lg:hidden flex items-center justify-between px-4 pb-3 flex-shrink-0 border-b"
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", borderColor: isDark ? "rgba(255,255,255,0.07)" : "#F0F0F0" }}
         >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
-              <img src={OTB_LOGO_URL} alt="OTB" className="w-4.5 h-4.5 object-contain" />
-            </div>
+          <div className="flex items-center gap-3">
+            <img src={TOURNAMENT_WIZARD_LOGO_URL} alt="OTB Chess" className="h-7 w-auto object-contain" />
             <div className="flex flex-col leading-none gap-0.5">
               <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                 Step {step + 1} of {totalSteps}
@@ -4964,7 +4963,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         {/* Step content */}
         <div className="flex-1 overflow-y-auto" ref={scrollContainerRef} style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", scrollPaddingBottom: "8rem" }}>
           <div
-            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-5 sm:py-10 pb-6"
+            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-6 sm:py-10 lg:py-12 pb-7"
             key={`${mode}-${step}`}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
