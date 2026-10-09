@@ -22,6 +22,7 @@ import { AsciiArt } from "@/components/ui/d60-hero";
 import { LeagueBracket } from "@/components/LeagueBracket";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
+import "@/styles/leagueContentReadability.css";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -455,7 +456,7 @@ export default function LeagueDemo() {
           </div>
 
           {/* ── SCROLLABLE CONTENT ────────────────────────────────────────── */}
-          <div className="flex-1">
+          <div className="league-content-scale flex-1">
 
             {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
             {activeTab === "overview" && (

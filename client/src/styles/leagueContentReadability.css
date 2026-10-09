@@ -1,0 +1,59 @@
+/*
+ * League content readability scale
+ *
+ * League dashboards use dense operational cards. Keep hero/header typography
+ * independent while lifting the small content tokens to a readable baseline.
+ */
+.league-content-scale .text-\[9px\],
+.league-content-scale .text-\[10px\] {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.league-content-scale .text-\[11px\],
+.league-content-scale .text-xs {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+
+.league-content-scale .text-sm {
+  font-size: 0.9375rem;
+  line-height: 1.375rem;
+}
+
+.league-content-scale .text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .league-content-scale .text-\[9px\],
+  .league-content-scale .text-\[10px\] {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+  }
+
+  .league-content-scale .text-\[11px\],
+  .league-content-scale .text-xs {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .league-content-scale .text-sm {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .league-content-scale .text-base {
+    font-size: 1.125rem;
+    line-height: 1.625rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .league-content-scale *,
+  .league-content-scale *::before,
+  .league-content-scale *::after {
+    scroll-behavior: auto;
+  }
+}

@@ -29,10 +29,11 @@ describe("LeagueDemo responsive containment", () => {
 
   it("removes the post-banner top inset in both League dashboards", () => {
     expect(demoSource).toContain('data-testid="league-demo-content-shell"');
+    expect(demoSource).toContain("league-content-scale flex-1");
     expect(demoSource).toContain("px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6 space-y-5");
     expect(demoSource).not.toContain('className="p-4 lg:p-6');
     expect(dashboardSource).toContain('data-testid="league-dashboard-content-shell"');
-    expect(dashboardSource).toContain("px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6");
+    expect(dashboardSource).toContain("league-content-scale px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6");
     expect(dashboardSource).toContain("px-4 pt-0 pb-6 lg:px-6 lg:pt-0 lg:pb-6 space-y-6");
     expect(dashboardSource).toContain("mx-4 lg:mx-6 mt-0 rounded-2xl");
   });

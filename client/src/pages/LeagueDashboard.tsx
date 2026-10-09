@@ -23,6 +23,7 @@ import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useAccessibleOverlay } from "@/hooks/useAccessibleOverlay";
 import { LeaguePlayerProfileModal, type LeagueProfileRecentMatch } from "@/components/league/LeaguePlayerProfileModal";
 import { LeagueMonthCalendar } from "@/components/league/LeagueMonthCalendar";
+import "@/styles/leagueContentReadability.css";
 import { logger } from "@/lib/logger";
 import { authFetch } from "@/lib/apiFetch";
 import { OTBLoader } from "@/components/OTBLoader";
@@ -1644,7 +1645,7 @@ export default function LeagueDashboard() {
 
           {/* Scrollable content */}
           <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pb-[calc(7rem+env(safe-area-inset-bottom,0px))] lg:pb-6">
-            <div data-testid="league-dashboard-content-shell" className="px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6">
+            <div data-testid="league-dashboard-content-shell" className="league-content-scale px-4 pt-0 pb-4 lg:px-6 lg:pt-0 lg:pb-6">
               <div className="flex flex-col lg:flex-row gap-4 items-start">
                 {/* Main content column */}
                                 <div className="flex-1 min-w-0 space-y-4">
