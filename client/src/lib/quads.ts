@@ -179,6 +179,27 @@ export function sortPlayersForQuads(
 
 // ─── Section Generation ───────────────────────────────────────────────────────
 
+export interface QuadSectionPlan {
+  quadCount: number;
+  bottomSwissPlayerCount: number;
+}
+
+/**
+ * Split a Quads roster into complete four-player sections and, when necessary,
+ * one bottom Swiss section. The final complete quad joins the remainder so that
+ * the Swiss section always has a viable 5–7 player roster.
+ */
+export function getQuadSectionPlan(playerCount: number): QuadSectionPlan {
+  if (playerCount < 4) return { quadCount: 0, bottomSwissPlayerCount: playerCount };
+  if (playerCount >= 5 && playerCount <= 7) return { quadCount: 0, bottomSwissPlayerCount: playerCount };
+
+  const remainder = playerCount % 4;
+  if (remainder === 0) return { quadCount: playerCount / 4, bottomSwissPlayerCount: 0 };
+
+  const quadCount = Math.floor(playerCount / 4) - 1;
+  return { quadCount, bottomSwissPlayerCount: playerCount - quadCount * 4 };
+}
+
 /**
  * Generate quad sections from sorted players.
  * Handles remainder players according to the configured strategy.
@@ -190,20 +211,20 @@ export function generateQuadSections(
   const sorted = sortPlayersForQuads(players, settings);
   const n = sorted.length;
 
-  // Special cases: fewer than 4 players
-  if (n < 4) {
-    return [createSection(sorted, 0, "bottom_swiss", `Mini Section`, settings)];
+  const { quadCount, bottomSwissPlayerCount } = getQuadSectionPlan(n);
+  if (quadCount === 0) {
+    return [createSection(
+      sorted,
+      0,
+      "bottom_swiss",
+      n < 4 ? "Mini Section" : "Bottom Swiss",
+      settings,
+    )];
   }
 
-  // Special cases: 5-7 players → single mini-Swiss section
-  if (n >= 5 && n <= 7) {
-    return [createSection(sorted, 0, "bottom_swiss", `Section 1`, settings)];
-  }
-
-  const remainder = n % 4;
   const sections: QuadSection[] = [];
 
-  if (remainder === 0) {
+  if (bottomSwissPlayerCount === 0) {
     // Perfect division — all full quads
     for (let i = 0; i < n; i += 4) {
       const quadPlayers = sorted.slice(i, i + 4);
@@ -214,9 +235,8 @@ export function generateQuadSections(
     }
   } else {
     // Create full quads for the top players, then handle remainder
-    const fullQuadCount = Math.floor(n / 4) - 1; // Reserve last quad for borrowing
     // Full quads (all except the last one which gets borrowed from)
-    for (let i = 0; i < fullQuadCount * 4; i += 4) {
+    for (let i = 0; i < quadCount * 4; i += 4) {
       const quadPlayers = sorted.slice(i, i + 4);
       const quadIndex = Math.floor(i / 4);
       sections.push(
@@ -225,12 +245,12 @@ export function generateQuadSections(
     }
 
     // Bottom Swiss section: last quad's players + remainder
-    const bottomStart = fullQuadCount * 4;
+    const bottomStart = quadCount * 4;
     const bottomPlayers = sorted.slice(bottomStart);
     sections.push(
       createSection(
         bottomPlayers,
-        fullQuadCount,
+        quadCount,
         "bottom_swiss",
         `Bottom Swiss`,
         settings

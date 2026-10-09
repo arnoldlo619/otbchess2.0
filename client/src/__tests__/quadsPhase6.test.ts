@@ -9,7 +9,7 @@
  *  5. Sonneborn-Berger calculation
  *  6. Co-champion fallback (getSectionWinners with tied rank-1)
  *  7. Tournament-state canStart transitions (quads requires ≥ 4 players)
- *  8. Pairing integrity for 4, 8, 16 players
+ *  8. Pairing integrity for complete Quads and bottom Swiss remainders
  */
 
 import { describe, it, expect } from "vitest";
@@ -25,10 +25,12 @@ import {
   calculateDirectEncounter,
   getSectionWinners,
   generateQuadTournament,
+  getQuadSectionPlan,
   DEFAULT_QUAD_SETTINGS,
 } from "../lib/quads";
 import type { QuadSection, QuadStanding } from "../lib/quads";
 import type { Player, Game, Result } from "../lib/tournamentData";
+import { isPlayerCountValid } from "../lib/formatRegistry";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -400,10 +402,10 @@ describe("getSectionWinners — co-champion fallback", () => {
 // ─── 7. canStart transitions for quads ───────────────────────────────────────
 
 describe("canStart logic for quads format", () => {
-  // canStart = isRegistration && players.length >= (format === "quads" ? 4 : 2)
+  // Start availability delegates to the same format policy as the Director.
   function canStart(format: string, playerCount: number, status = "registration"): boolean {
     const isRegistration = status === "registration";
-    return isRegistration && playerCount >= (format === "quads" ? 4 : 2);
+    return isRegistration && isPlayerCountValid(format, playerCount);
   }
 
   it("quads: cannot start with 0 players", () => {
@@ -434,6 +436,10 @@ describe("canStart logic for quads format", () => {
     expect(canStart("quads", 16)).toBe(true);
   });
 
+  it("quads: can start with 18 players and a bottom Swiss section", () => {
+    expect(canStart("quads", 18)).toBe(true);
+  });
+
   it("quads: cannot start when status is not registration", () => {
     expect(canStart("quads", 8, "in_progress")).toBe(false);
     expect(canStart("quads", 8, "completed")).toBe(false);
@@ -452,9 +458,13 @@ describe("canStart logic for quads format", () => {
   });
 });
 
-// ─── 8. Pairing integrity for 4, 8, 16 players ───────────────────────────────
+// ─── 8. Pairing integrity for complete Quads and bottom Swiss remainders ──────
 
 describe("Pairing integrity — generateQuadTournament", () => {
+  it("plans three Quads plus a six-player bottom Swiss section for eighteen players", () => {
+    expect(getQuadSectionPlan(18)).toEqual({ quadCount: 3, bottomSwissPlayerCount: 6 });
+  });
+
   function runIntegrityCheck(playerCount: number) {
     const players = makePlayers(playerCount);
     const result = generateQuadTournament(players, DEFAULT_QUAD_SETTINGS);
@@ -521,6 +531,18 @@ describe("Pairing integrity — generateQuadTournament", () => {
       expect(section.playerIds).toHaveLength(4);
       checkSection(section, games);
     }
+  });
+
+  it("18 players: creates three Quads plus a six-player bottom Swiss section", () => {
+    const { sections, games } = runIntegrityCheck(18);
+    const quads = sections.filter((section) => section.type === "quad");
+    const bottomSwiss = sections.find((section) => section.type === "bottom_swiss");
+
+    expect(quads).toHaveLength(3);
+    expect(quads.flatMap((section) => section.playerIds)).toHaveLength(12);
+    expect(bottomSwiss?.playerIds).toHaveLength(6);
+    expect(new Set(sections.flatMap((section) => section.playerIds)).size).toBe(18);
+    expect(games.filter((game) => game.sectionId === bottomSwiss?.id && game.blackId !== "BYE")).not.toHaveLength(0);
   });
 
   it("4 players: exactly 3 rounds total", () => {

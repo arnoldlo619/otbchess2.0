@@ -4,7 +4,7 @@
  * Covers:
  *  1. formatRegistry: getFormatLabel, getFormatShortLabel, isPlayerCountValid, getPlayerCountError
  *  2. navRegistry: canonical route ordering, no duplicate paths
- *  3. Quads canStart policy: only valid when player count is divisible by 4
+ *  3. Quads canStart policy: every roster of four or more is supported
  */
 
 import { describe, it, expect } from "vitest";
@@ -82,7 +82,7 @@ describe("formatRegistry — isPlayerCountValid", () => {
     expect(isPlayerCountValid("swiss", 1)).toBe(false);
   });
 
-  // Quads — must be multiples of 4, min 4
+  // Quads — full groups of four plus a bottom Swiss section for any remainder
   it("quads: valid with 4 players", () => {
     expect(isPlayerCountValid("quads", 4)).toBe(true);
   });
@@ -95,16 +95,20 @@ describe("formatRegistry — isPlayerCountValid", () => {
     expect(isPlayerCountValid("quads", 12)).toBe(true);
   });
 
-  it("quads: invalid with 5 players (not divisible by 4)", () => {
-    expect(isPlayerCountValid("quads", 5)).toBe(false);
+  it("quads: valid with 5 players through a bottom Swiss section", () => {
+    expect(isPlayerCountValid("quads", 5)).toBe(true);
   });
 
-  it("quads: invalid with 6 players (not divisible by 4)", () => {
-    expect(isPlayerCountValid("quads", 6)).toBe(false);
+  it("quads: valid with 6 players through a bottom Swiss section", () => {
+    expect(isPlayerCountValid("quads", 6)).toBe(true);
   });
 
-  it("quads: invalid with 7 players (not divisible by 4)", () => {
-    expect(isPlayerCountValid("quads", 7)).toBe(false);
+  it("quads: valid with 7 players through a bottom Swiss section", () => {
+    expect(isPlayerCountValid("quads", 7)).toBe(true);
+  });
+
+  it("quads: valid with 18 players through three Quads and a bottom Swiss section", () => {
+    expect(isPlayerCountValid("quads", 18)).toBe(true);
   });
 
   it("quads: invalid with 3 players (below minimum)", () => {
@@ -121,27 +125,9 @@ describe("formatRegistry — getPlayerCountError", () => {
     expect(getPlayerCountError("swiss", 4)).toBeNull();
   });
 
-  it("returns null for valid quads count (multiple of 4)", () => {
+  it("returns null for valid Quads rosters with or without a remainder", () => {
     expect(getPlayerCountError("quads", 8)).toBeNull();
-  });
-
-  it("returns error message for quads with 5 players", () => {
-    const err = getPlayerCountError("quads", 5);
-    expect(err).not.toBeNull();
-    expect(err).toContain("Quads requires groups of 4");
-    expect(err).toContain("5 players");
-  });
-
-  it("returns error message for quads with 6 players, says add 2 more", () => {
-    const err = getPlayerCountError("quads", 6);
-    expect(err).not.toBeNull();
-    expect(err).toContain("Add 2 more");
-  });
-
-  it("returns error message for quads with 7 players, says add 1 more", () => {
-    const err = getPlayerCountError("quads", 7);
-    expect(err).not.toBeNull();
-    expect(err).toContain("Add 1 more");
+    expect(getPlayerCountError("quads", 18)).toBeNull();
   });
 
   it("returns error for swiss with 1 player (below minimum)", () => {

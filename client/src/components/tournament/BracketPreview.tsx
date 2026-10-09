@@ -608,7 +608,7 @@ const FORMAT_META: Record<
   quads: {
     icon: "\u2666",
     label: "Quads",
-    desc: "Players grouped by rating into 4-player sections. Each quad plays a 3-round round robin.",
+    desc: "Players grouped by rating into 4-player sections. Extra players form a bottom Swiss section.",
   },
 };
 

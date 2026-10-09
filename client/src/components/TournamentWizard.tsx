@@ -32,6 +32,7 @@ import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
 import {recommendedRounds, roundsHint} from "@/lib/recommendedRounds";
 import { registerTournament, makeSlug, generateDirectorCode, grantDirectorSession } from "@/lib/tournamentRegistry";
+import { getQuadSectionPlan } from "@/lib/quads";
 import { encodeMetaParam } from "@/lib/base64";
 import {
   X,
@@ -1338,7 +1339,7 @@ function QuickstartForm({
                   : data.format === "swiss_elim"
                   ? "Swiss qualification rounds lead into a seeded elimination bracket."
                   : data.format === "quads"
-                  ? "Players are grouped by rating into four-player round-robin sections."
+                  ? "Players are grouped by rating into four-player round-robin sections; extra players form a bottom Swiss section."
                   : "Standard Swiss pairings balance score groups, colors, and rematches."}
               </p>
             </div>
@@ -1535,7 +1536,7 @@ function QuickstartForm({
               style={{ borderTop: `1px solid ${isDark ? T.dInputBorder : T.lInputBorder}` }}
             >
               <div className="flex flex-wrap gap-2 pt-3">
-                {(data.format === "quads" ? [4, 8, 12, 16, 20, 24, 32, 40, 48, 100] : capOptions).map((cap) => {
+                {(data.format === "quads" ? [4, 8, 12, 16, 18, 20, 24, 32, 40, 48, 100] : capOptions).map((cap) => {
                   const active = data.maxPlayers === cap;
                   const isQuadsFormat = data.format === "quads";
                   const optRounds = recommendedRounds(cap);
@@ -1583,7 +1584,7 @@ function QuickstartForm({
               </div>
               <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
                 {data.format === "quads"
-                  ? "Capacity must be a multiple of 4. Each group of 4 players forms one quad (3-round round robin)."
+                  ? "Every four players form a 3-round quad. If registration ends with extra players, they play in a bottom Swiss section."
                   : "Cap limits how many players can join via the invite link. Recommended rounds updates automatically."
                 }
               </p>
@@ -2715,7 +2716,8 @@ function QuadsEloPreview({
   isDark: boolean;
   T: Record<string, string>;
 }) {
-  const numSections = Math.ceil(maxPlayers / 4);
+  const { quadCount, bottomSwissPlayerCount } = getQuadSectionPlan(maxPlayers);
+  const numSections = quadCount + (bottomSwissPlayerCount > 0 ? 1 : 0);
   const eloTop = 2200;
   const eloBot = 800;
   const spread = eloTop - eloBot;
@@ -2732,8 +2734,9 @@ function QuadsEloPreview({
     const hiElo = eloTop - i * sectionSpread;
     const loElo = hiElo - sectionSpread + 1;
     const color = sectionColors[Math.min(i, sectionColors.length - 1)];
-    const label = numSections <= 4 ? color.rank : `Q${i + 1}`;
-    return { label, hiElo, loElo, color };
+    const isBottomSwiss = bottomSwissPlayerCount > 0 && i === numSections - 1;
+    const label = isBottomSwiss ? "Swiss" : numSections <= 4 ? color.rank : `Q${i + 1}`;
+    return { label, hiElo, loElo, color, playerCount: isBottomSwiss ? bottomSwissPlayerCount : 4 };
   });
 
   return (
@@ -2756,7 +2759,7 @@ function QuadsEloPreview({
           className="text-[10px] font-medium px-2 py-0.5 rounded-full"
           style={{ background: isDark ? "rgba(77,105,64,0.20)" : "#D1FAE5", color: T.green }}
         >
-          {numSections} section{numSections !== 1 ? "s" : ""} &middot; {maxPlayers} players
+          {quadCount > 0 ? `${quadCount} quad${quadCount !== 1 ? "s" : ""}` : ""}{quadCount > 0 && bottomSwissPlayerCount > 0 ? " + " : ""}{bottomSwissPlayerCount > 0 ? `${bottomSwissPlayerCount}-player Swiss` : ""} &middot; {maxPlayers} players
         </span>
       </div>
 
@@ -2788,7 +2791,7 @@ function QuadsEloPreview({
               </span>
             </div>
             <div className="space-y-1">
-              {Array.from({ length: 4 }, (_, pi) => (
+              {Array.from({ length: sec.playerCount }, (_, pi) => (
                 <div
                   key={pi}
                   className="flex items-center gap-1.5 rounded-lg px-2 py-1"
@@ -2811,7 +2814,7 @@ function QuadsEloPreview({
                     className="text-[10px] font-mono ml-auto"
                     style={{ color: isDark ? "rgba(255,255,255,0.30)" : "rgba(0,0,0,0.30)" }}
                   >
-                    ~{Math.round(sec.hiElo - (pi * sectionSpread) / 4)}
+                    ~{Math.round(sec.hiElo - (pi * sectionSpread) / sec.playerCount)}
                   </span>
                 </div>
               ))}
@@ -2852,10 +2855,13 @@ function SegmentedOnboardingStep({
     { value: "swiss_elim", label: "Swiss + Elim", detail: "Qualification then bracket" },
     { value: "quads", label: "Quads", detail: "Four-player sections" },
   ];
-  const playerOptions = data.format === "quads" ? [4, 8, 12, 16, 20, 24, 32, 40, 48, 100] : [8, 12, 16, 24, 32, 48, 64, 100];
+  const playerOptions = data.format === "quads" ? [4, 8, 12, 16, 18, 20, 24, 32, 40, 48, 100] : [8, 12, 16, 24, 32, 48, 64, 100];
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
   const isCustomTime = data.timePreset === "custom";
   const activeTime = TIME_PRESETS.find((preset) => preset.sub === data.timePreset);
+  const { quadCount, bottomSwissPlayerCount } = data.format === "quads"
+    ? getQuadSectionPlan(data.maxPlayers)
+    : { quadCount: 0, bottomSwissPlayerCount: 0 };
   const sectionStyle = {
     background: isDark ? "rgba(255,255,255,0.035)" : "#FFFFFF",
     border: `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#E4E9E4"}`,
@@ -2870,7 +2876,7 @@ function SegmentedOnboardingStep({
     const next: Partial<WizardData> = { format };
     if (format === "quads") {
       next.rounds = 3;
-      if (data.maxPlayers % 4 !== 0) next.maxPlayers = 16;
+      if (data.maxPlayers < 4) next.maxPlayers = 16;
     } else if (format === "roundrobin") {
       next.rounds = Math.max(3, data.maxPlayers - 1);
     } else if (format === "swiss" || format === "doubleswiss") {
@@ -2959,7 +2965,7 @@ function SegmentedOnboardingStep({
         </div>
         <div className="rounded-2xl px-5 py-4 text-base leading-relaxed" style={{ background: isDark ? "rgba(77,105,64,0.14)" : "#F3F8F3", color: isDark ? T.dSub : T.lSub }}>
           {data.format === "quads"
-            ? `Your players will be grouped into ${Math.max(1, Math.floor(data.maxPlayers / 4))} rating-based quads of four.`
+            ? `Your players will be grouped into ${quadCount > 0 ? `${quadCount} rating-based quad${quadCount !== 1 ? "s" : ""} of four` : "a bottom Swiss section"}${bottomSwissPlayerCount > 0 ? `${quadCount > 0 ? " plus " : ""}a ${bottomSwissPlayerCount}-player bottom Swiss section` : ""}.`
             : `${getTournamentFormatLabel(data.format)} · ${data.rounds} rounds · up to ${data.maxPlayers} players.`}
         </div>
       </div>,

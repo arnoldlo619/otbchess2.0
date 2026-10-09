@@ -21,7 +21,7 @@ import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useDirectorState } from "@/lib/directorState";
-import { calculateQuadStandings, DEFAULT_QUAD_SETTINGS, getSectionWinners, type QuadSection } from "@/lib/quads";
+import { calculateQuadStandings, DEFAULT_QUAD_SETTINGS, getQuadSectionPlan, getSectionWinners, type QuadSection } from "@/lib/quads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
@@ -2324,6 +2324,7 @@ export default function Director() {
   } = useDirectorState(tournamentId, resultActor);
   const [, setFinalizationStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   const devQuadsScenarioLoadedRef = useRef(false);
+  const quadStartPlan = state.format === "quads" ? getQuadSectionPlan(state.players.length) : null;
 
   useEffect(() => {
     if (!import.meta.env.DEV || devQuadsScenarioLoadedRef.current) return;
@@ -6155,7 +6156,7 @@ export default function Director() {
                               : `${state.players.length} players ready · Go to Players tab to auto-assign brackets`)
                           : (canStart
                               ? `${state.players.length} player${state.players.length !== 1 ? "s" : ""} registered · ${state.totalRounds} rounds`
-                              : `Need at least 2 players to start`)}
+                              : getPlayerCountError(state.format, state.players.length) ?? "Check the player roster to start")}
                       </p>
                     </div>
                   </div>
@@ -7227,7 +7228,7 @@ export default function Director() {
             }`}>
               {state.format === "quads" ? (
                 <>
-                  This will create {Math.floor(state.players.length / 4)} quad section{Math.floor(state.players.length / 4) > 1 ? "s" : ""} with{" "}
+                  This will create {quadStartPlan && quadStartPlan.quadCount > 0 ? `${quadStartPlan.quadCount} quad section${quadStartPlan.quadCount !== 1 ? "s" : ""}` : "a bottom Swiss section"}{quadStartPlan && quadStartPlan.bottomSwissPlayerCount > 0 ? `${quadStartPlan.quadCount > 0 ? " plus a " : " with "}${quadStartPlan.bottomSwissPlayerCount}-player bottom Swiss section` : ""} for{" "}
                   <span className="font-semibold">{state.players.length} players</span> and generate all 3 rounds.
                   Players cannot join after the tournament starts.
                 </>

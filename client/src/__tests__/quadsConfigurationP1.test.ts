@@ -84,4 +84,10 @@ describe("Quads creation and Director wiring", () => {
     expect(directorSource).toContain('quadRatingSource: rt');
     expect(directorSource).toContain('ratingSource: updated.quadRatingSource ?? updated.ratingType ?? "rapid"');
   });
+
+  it("uses centralized roster eligibility before enabling the Director start action", () => {
+    expect(directorStateSource).toContain("const canStart = isRegistration && isPlayerCountValid(state.format, state.players.length);");
+    expect(directorStateSource).toContain("if (!isPlayerCountValid(prev.format, prev.players.length)) return prev;");
+    expect(directorSource).toContain("getPlayerCountError(state.format, state.players.length)");
+  });
 });

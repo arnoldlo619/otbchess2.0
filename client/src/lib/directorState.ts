@@ -703,7 +703,7 @@ export function useDirectorState(
   const startTournament = useCallback((): { round1Games: Game[]; players: Player[] } | null => {
     let result: { round1Games: Game[]; players: Player[] } | null = null;
     setState((prev) => {
-      if (prev.players.length < 2) return prev;
+      if (!isPlayerCountValid(prev.format, prev.players.length)) return prev;
       let games: Game[];
       let nextState: DirectorState;
       if (prev.format === "quads") {

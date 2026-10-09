@@ -76,6 +76,7 @@ function getPairingInfoRows(format: string): Array<[string, string]> {
     return [
       ["Format", `${label} (Round Robin)`],
       ["Section Size", "4 players per section"],
+      ["Overflow", "Bottom Swiss section"],
       ["Color Balance", "Automatic"],
       ["Rematch Prevention", "Enabled"],
       ["Tiebreak", "Sonneborn-Berger (SB)"],

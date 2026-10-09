@@ -32,7 +32,7 @@ export interface FormatConfig {
   fixedRounds: boolean;
   /** Minimum players required to start */
   minPlayers: number;
-  /** Whether player count must satisfy a divisibility constraint */
+  /** Optional player-count divisibility constraint for formats that truly require one. */
   playerDivisor: number | null;
   /** Human-readable capacity note shown in wizard */
   capacityNote: string;
@@ -127,15 +127,15 @@ export const FORMAT_REGISTRY: Record<TournamentFormat, FormatConfig> = {
     value: "quads",
     label: "Quads",
     shortLabel: "Quads",
-    description: "4-player rating-grouped sections, 3-round round robin.",
+    description: "4-player rating-grouped sections, with a bottom Swiss section for extra players.",
     wizardHeroTitle: "Quads\nsetup",
     wizardHeroBody:
-      "Give your Quads event a name and location. Players are grouped into rating-based sections of 4 by rating. Each section plays a 3-round round robin — no algorithmic pairings needed.",
+      "Give your Quads event a name and location. Players are grouped into rating-based sections of 4 by rating. Extra players join a bottom Swiss section, while every quad plays a 3-round round robin.",
     defaultRounds: 3,
     fixedRounds: true,
     minPlayers: 4,
-    playerDivisor: 4,
-    capacityNote: "Multiples of 4 (4, 8, 12, 16 …)",
+    playerDivisor: null,
+    capacityNote: "4 – ∞ players (extra players form a bottom Swiss section)",
     tiebreakLabel: "Sonneborn-Berger",
     tiebreakSecondaryLabel: "Head-to-Head",
   },
@@ -183,8 +183,9 @@ export function getFormatLabel(format: string): string {
 }
 
 /**
- * Returns true when the given player count satisfies the format's
- * divisibility constraint (if any). Always true for formats with no constraint.
+ * Returns true when the given player count satisfies the format's optional
+ * divisibility constraint. Quads accept every roster of four or more because
+ * its pairing engine places the final 5–7 players in a bottom Swiss section.
  */
 export function isPlayerCountValid(format: string, playerCount: number): boolean {
   const config = getFormatConfig(format);
