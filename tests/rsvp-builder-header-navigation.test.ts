@@ -35,6 +35,16 @@ describe("RSVP builder header navigation", () => {
     expect(source).toContain('{Boolean(form.isPublished) && (');
   });
 
+  it("places an accessible Share action beside Publish with a native-share and copy-link fallback", () => {
+    expect(source).toContain("Share2,");
+    expect(source).toContain("async function shareForm()");
+    expect(source).toContain("await navigator.share(shareData)");
+    expect(source).toContain("await navigator.clipboard.writeText(shareUrl)");
+    expect(source).toContain('aria-label={form.isPublished ? "Share published RSVP form" : "Publish the RSVP form before sharing"}');
+    expect(source).toContain("disabled={!form.isPublished || saving}");
+    expect(source.indexOf('aria-label={form.isPublished ? "Share published RSVP form"')).toBeLessThan(source.indexOf("onClick={togglePublish}"));
+  });
+
   it("keeps the active desktop tab legible in both appearance modes", () => {
     expect(source).toContain('color: "var(--rsvp-nav-active-text)"');
   });

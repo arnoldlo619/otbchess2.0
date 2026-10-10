@@ -51,6 +51,7 @@ import {
   AlertCircle,
   SlidersHorizontal,
   Palette,
+  Share2,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { clearDraft, readDraft, sanitizeDraftUrl, writeDraft } from "@/lib/draftStorage";
@@ -423,6 +424,37 @@ export default function RsvpFormBuilderPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function shareForm() {
+    if (!form?.isPublished || !shareUrl) {
+      toast.error("Publish the form before sharing.");
+      return;
+    }
+
+    const shareData = {
+      title: form.title.trim() || "RSVP form",
+      text: "RSVP for this club event.",
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Share link copied.");
+    } catch {
+      toast.error("Could not copy the RSVP form link.");
+    }
+  }
+
   if (loading) {
     return (
       <div className="rsvp-builder min-h-screen flex items-center justify-center" data-rsvp-theme={theme} style={{ background: "var(--rsvp-page-deep)" }}>
@@ -523,6 +555,19 @@ export default function RsvpFormBuilderPage() {
               </a>
             )}
             <button
+              type="button"
+              onClick={shareForm}
+              disabled={!form.isPublished || saving}
+              aria-label={form.isPublished ? "Share published RSVP form" : "Publish the RSVP form before sharing"}
+              title={form.isPublished ? "Share RSVP form" : "Publish the form before sharing"}
+              className="flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold text-white/80 transition-colors hover:bg-white/8 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 sm:px-3.5 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/70"
+              style={{ borderColor: "var(--rsvp-white-12)" }}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              <span>{copied ? "Copied" : "Share"}</span>
+            </button>
+            <button
+              type="button"
               onClick={togglePublish}
               disabled={saving}
               className="flex h-10 items-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50 sm:px-4 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#102d1d]"
