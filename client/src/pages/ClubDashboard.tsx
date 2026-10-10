@@ -263,6 +263,19 @@ function isUpcoming(event: ClubEvent): boolean {
 
 type ClubWorkspaceHeaderTab = "feed" | "events" | "members" | "leagues";
 
+type ClubLeagueSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  currentWeek: number;
+  totalWeeks: number;
+  playerCount: number;
+  maxPlayers: number;
+  commissionerId: string;
+  pendingRequests?: number;
+};
+
 function ClubWorkspaceSocialHeader({
   club,
   tab,
@@ -657,6 +670,107 @@ function ScheduledEventGalleryCard({
           )}
         </div>
       )}
+    </article>
+  );
+}
+
+/** Club League card — shares the cover-led Events card language while retaining season context. */
+function ClubLeagueGalleryCard({
+  league,
+  isDark,
+  accent,
+  clubBannerUrl,
+}: {
+  league: ClubLeagueSummary;
+  isDark: boolean;
+  accent: string;
+  clubBannerUrl?: string | null;
+}) {
+  const isActive = league.status === "active";
+  const isCompleted = league.status === "completed";
+  const isDraft = !isActive && !isCompleted;
+  const statusLabel = isActive ? "Active" : isCompleted ? "Completed" : "Draft";
+  const statusColor = isActive ? accent : isCompleted ? "#94a3b8" : "#d99a28";
+  const detail = league.description?.trim() || (
+    isActive
+      ? "Weekly pairings, live standings, and season progress for your club."
+      : isCompleted
+        ? "Review final standings and the completed season record."
+        : "Build the roster before the first round is released."
+  );
+  const progressValue = isDraft ? league.playerCount : isActive ? league.currentWeek : league.totalWeeks;
+  const progressTotal = isDraft ? league.maxPlayers : league.totalWeeks;
+  const progress = progressTotal > 0 ? Math.min(100, Math.round((progressValue / progressTotal) * 100)) : 0;
+  const progressLabel = isActive
+    ? `Week ${league.currentWeek} of ${league.totalWeeks}`
+    : isCompleted
+      ? "Season complete"
+      : `Roster ${league.playerCount}/${league.maxPlayers}`;
+  const coverImageUrl = clubBannerUrl ?? "/images/league-schedule-chess-lawn.jpg";
+  const textMain = isDark ? "text-white" : "text-[#15291c]";
+  const textMuted = isDark ? "text-white/58" : "text-[#496052]";
+
+  return (
+    <article
+      data-club-league-card="gallery"
+      className={`group relative overflow-hidden rounded-3xl border transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-2xl motion-reduce:transform-none motion-reduce:transition-none ${
+        isDark ? "border-white/10 bg-white/[0.055] hover:border-[#78c86c]/40" : "border-[#dbe6d9] bg-white hover:border-[#78a873]/65"
+      }`}
+    >
+      <a
+        href={`/leagues/${league.id}`}
+        className="absolute inset-0 z-10 cursor-pointer touch-manipulation rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]"
+        aria-label={`Open ${league.name} League dashboard`}
+      >
+        <span className="sr-only">Open {league.name} League dashboard</span>
+      </a>
+      <div className="relative z-0 pointer-events-none">
+        <div className="relative aspect-[16/10] overflow-hidden bg-[oklch(0.14_0.05_145)]">
+          <img
+            src={coverImageUrl}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transition-none"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" aria-hidden="true" />
+          <span
+            className="absolute left-4 top-4 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] shadow-sm sm:left-5 sm:top-5"
+            style={{ background: "rgba(4, 20, 10, 0.72)", borderColor: `${statusColor}66`, color: statusColor }}
+          >
+            {statusLabel}
+          </span>
+          <span className="absolute bottom-4 left-4 rounded-full border border-white/20 bg-black/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm sm:bottom-5 sm:left-5">
+            Club League
+          </span>
+        </div>
+
+        <div className="flex min-h-[184px] flex-col p-5 sm:min-h-[198px] sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className={`line-clamp-2 text-xl font-bold leading-[1.12] tracking-tight sm:text-2xl ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                {league.name}
+              </h3>
+              <p className={`mt-2 line-clamp-2 text-sm leading-5 ${textMuted}`}>{detail}</p>
+            </div>
+            <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-transform duration-200 group-hover:translate-x-1 ${isDark ? "border-white/10 bg-white/[0.06] text-white/72" : "border-[#d9e5d7] bg-[#f7fbf6] text-[#31533a]"}`} aria-hidden="true">
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </div>
+
+          <div className="mt-auto pt-5">
+            <div className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm font-medium ${textMuted}`}>
+              <span className="flex items-center gap-1.5"><Users className="h-4 w-4 shrink-0" aria-hidden="true" />{league.playerCount}/{league.maxPlayers} players</span>
+              <span>{progressLabel}</span>
+            </div>
+            {!isCompleted && progressTotal > 0 && (
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/10" aria-label={`${progressLabel}: ${progress}%`}>
+                <div className="h-full rounded-full" style={{ width: `${progress}%`, background: statusColor }} />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </article>
   );
 }
@@ -3059,18 +3173,7 @@ export default function ClubDashboard() {
   }, [memberMenuOpenId]);
 
   // League state
-  const [clubLeagues, setClubLeagues] = useState<Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    status: string;
-    currentWeek: number;
-    totalWeeks: number;
-    playerCount: number;
-    maxPlayers: number;
-    commissionerId: string;
-    pendingRequests?: number;
-  }>>([]);
+  const [clubLeagues, setClubLeagues] = useState<ClubLeagueSummary[]>([]);
   const [leagueWizardOpen, setLeagueWizardOpen] = useState(false);
   const [clubLeaguesLoading, setClubLeaguesLoading] = useState(false);
 
@@ -6181,77 +6284,17 @@ export default function ClubDashboard() {
                 )}
               </div>
             ) : (
-              <div className="space-y-3">
+              <section aria-label="Club League seasons" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-2 xl:gap-6">
                 {clubLeagues.map((league) => (
-                  <div
+                  <ClubLeagueGalleryCard
                     key={league.id}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/8 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                              league.status === "active" ? "bg-green-500/20 text-green-400" :
-                              league.status === "completed" ? "bg-white/10 text-white/40" :
-                              "bg-amber-500/20 text-amber-400"
-                            }`}
-                          >
-                            {league.status === "active" ? "Active" : league.status === "completed" ? "Completed" : "Draft"}
-                          </span>
-                          {league.status === "active" && (
-                            <span className="text-white/40 text-xs">Week {league.currentWeek} of {league.totalWeeks}</span>
-                          )}
-                        </div>
-                        <h3 className="text-white font-semibold text-base truncate">{league.name}</h3>
-                        {league.description && <p className="text-white/40 text-xs mt-0.5 line-clamp-1">{league.description}</p>}
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="flex items-center gap-1 text-white/40 text-xs">
-                            <Users className="w-3 h-3" />
-                            {league.playerCount}/{league.maxPlayers} players
-                          </span>
-                          {league.status === "draft" && league.commissionerId === user?.id && (
-                            <span className="text-xs text-amber-400/70">Roster {league.playerCount}/{league.maxPlayers} filled</span>
-                          )}
-                        </div>
-                      </div>
-                      <a
-                        href={`/leagues/${league.id}`}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition flex-shrink-0"
-                      >
-                        Open
-                        <ArrowRight className="w-3 h-3" />
-                      </a>
-                    </div>
-                    {/* Progress bar for draft leagues */}
-                    {league.status === "draft" && (
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white/30 text-xs">Roster progress</span>
-                          <span className="text-white/50 text-xs font-semibold">{league.playerCount}/{league.maxPlayers}</span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${(league.playerCount / league.maxPlayers) * 100}%`, background: accent }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {/* Week progress bar for active leagues */}
-                    {league.status === "active" && league.totalWeeks > 0 && (
-                      <div className="mt-4">
-                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${(league.currentWeek / league.totalWeeks) * 100}%`, background: accent }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    league={league}
+                    isDark={isDark}
+                    accent={accent}
+                    clubBannerUrl={club.bannerUrl}
+                  />
                 ))}
-              </div>
+              </section>
             )}
                     </div>
         )}

@@ -134,6 +134,25 @@ const DEMO_EVENTS = [
   },
 ];
 
+const DEMO_LEAGUES = [
+  {
+    name: "Autumn Club League",
+    description: "Weekly round-robin matchups with live standings for club members.",
+    status: "Active",
+    playerLabel: "6/8 players",
+    progressLabel: "Week 3 of 4",
+    progress: 75,
+  },
+  {
+    name: "Winter League Registration",
+    description: "Build the roster now, then release the first round when every seat is filled.",
+    status: "Draft",
+    playerLabel: "4/10 players",
+    progressLabel: "Roster 4/10",
+    progress: 40,
+  },
+];
+
 function DemoAvatar({ initials, tone, size = "md" }: { initials: string; tone: string; size?: "sm" | "md" | "lg" }) {
   const dimensions = size === "sm" ? "h-9 w-9 text-[11px]" : size === "lg" ? "h-[72px] w-[72px] rounded-full text-lg" : "h-11 w-11 text-xs";
   return (
@@ -443,14 +462,30 @@ function DemoEvents() {
   );
 }
 
-function DemoLeagues() {
+function DemoLeagues({ onSelect }: { onSelect: () => void }) {
   return (
-    <section className="overflow-hidden rounded-2xl border" style={{ background: SURFACE, borderColor: SURFACE_BORDER }}>
-      <header className="flex items-center justify-between border-b px-4 py-3.5 sm:px-5" style={{ borderColor: "rgba(255,255,255,0.065)" }}>
-        <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/34">Club season</p><h2 className="mt-0.5 text-sm font-bold text-white/92">Club Leagues</h2></div>
-        <span className="rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: `${DEMO_ACCENT}18`, color: DEMO_ACCENT }}>1 active</span>
-      </header>
-      <article className="p-5"><div className="flex items-start justify-between gap-4"><div><p className="text-base font-bold text-white">Autumn Club League</p><p className="mt-1 text-sm leading-6 text-white/50">Weekly round-robin matchups for club members.</p></div><Trophy className="h-5 w-5 shrink-0" style={{ color: DEMO_ACCENT }} aria-hidden="true" /></div><div className="mt-4 grid grid-cols-3 gap-2 border-t pt-4 text-center" style={{ borderColor: "rgba(255,255,255,0.065)" }}><div><p className="text-sm font-bold text-white">4</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/38">Weeks</p></div><div><p className="text-sm font-bold text-white">6</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/38">Players</p></div><div><p className="text-sm font-bold text-white">Active</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/38">Status</p></div></div></article>
+    <section aria-label="Demo Club League seasons" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-2 xl:gap-6">
+      {DEMO_LEAGUES.map((league) => {
+        const isActive = league.status === "Active";
+        const statusColor = isActive ? DEMO_ACCENT : "#d99a28";
+        return (
+          <article key={league.name} data-demo-club-league-card="gallery" className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.055] transition-[transform,border-color,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:border-[#78c86c]/40 hover:shadow-2xl motion-reduce:transform-none motion-reduce:transition-none">
+            <button type="button" onClick={onSelect} className="absolute inset-0 z-10 cursor-pointer touch-manipulation rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4CAF50]" aria-label={`Open ${league.name} League dashboard`}><span className="sr-only">Open {league.name} League dashboard</span></button>
+            <div className="relative z-0 pointer-events-none">
+              <div className="relative aspect-[16/10] overflow-hidden bg-[oklch(0.14_0.05_145)]">
+                <img src={DEMO_BANNER_IMAGE} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transition-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
+                <span className="absolute left-4 top-4 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.1em] shadow-sm sm:left-5 sm:top-5" style={{ background: "rgba(4, 20, 10, 0.72)", borderColor: `${statusColor}66`, color: statusColor }}>{league.status}</span>
+                <span className="absolute bottom-4 left-4 rounded-full border border-white/20 bg-black/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm sm:bottom-5 sm:left-5">Club League</span>
+              </div>
+              <div className="flex min-h-[184px] flex-col p-5 sm:min-h-[198px] sm:p-6">
+                <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h2 className="line-clamp-2 text-xl font-bold leading-[1.12] tracking-tight text-white sm:text-2xl" style={{ fontFamily: "'Clash Display', sans-serif" }}>{league.name}</h2><p className="mt-2 line-clamp-2 text-sm leading-5 text-white/58">{league.description}</p></div><span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-white/72 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"><ArrowRight className="h-4 w-4" /></span></div>
+                <div className="mt-auto pt-5"><div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm font-medium text-white/58"><span className="flex items-center gap-1.5"><Users className="h-4 w-4 shrink-0" aria-hidden="true" />{league.playerLabel}</span><span>{league.progressLabel}</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full" style={{ width: `${league.progress}%`, background: statusColor }} /></div></div>
+              </div>
+            </div>
+          </article>
+        );
+      })}
     </section>
   );
 }
@@ -487,7 +522,7 @@ export default function ClubDashboardDemo() {
   const [, navigate] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [tab, setTab] = useState<DemoTab>("overview");
+  const [tab, setTab] = useState<DemoTab>(() => new URLSearchParams(window.location.search).get("tab") === "leagues" ? "leagues" : "overview");
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarKeyboardExpanded, setSidebarKeyboardExpanded] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -527,7 +562,7 @@ export default function ClubDashboardDemo() {
           </header>
 
           <main className="flex-1 overflow-x-hidden overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))] lg:pb-6" style={{ WebkitOverflowScrolling: "touch" }}>
-            <div className="px-4 py-4 lg:px-6"><div className="mx-auto max-w-4xl"><DemoBanner activeTab={tab} /><TabTransition tabKey={tab}>{tab === "overview" && <DemoOverview onSelect={selectTab} />}{tab === "feed" && <DemoFeed />}{tab === "events" && <DemoEvents />}{tab === "leagues" && <DemoLeagues />}{tab === "members" && <DemoMembers />}{tab === "album" && <DemoAlbum />}{tab === "settings" && <DemoSettings />}</TabTransition><section className="mt-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[oklch(0.15_0.045_145)] p-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-bold text-white/92">Ready to build your Club workspace?</p><p className="mt-1 text-sm text-white/46">Create a private home for your members, events, feed, and media.</p></div><button type="button" onClick={() => navigate("/clubs?create=1")} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.98]" style={{ background: "#426f45" }}><Plus className="h-4 w-4" aria-hidden="true" />Create a club</button></section></div></div>
+            <div className="px-4 py-4 lg:px-6"><div className="mx-auto max-w-4xl"><DemoBanner activeTab={tab} /><TabTransition tabKey={tab}>{tab === "overview" && <DemoOverview onSelect={selectTab} />}{tab === "feed" && <DemoFeed />}{tab === "events" && <DemoEvents />}{tab === "leagues" && <DemoLeagues onSelect={() => navigate("/league-demo")} />}{tab === "members" && <DemoMembers />}{tab === "album" && <DemoAlbum />}{tab === "settings" && <DemoSettings />}</TabTransition><section className="mt-5 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[oklch(0.15_0.045_145)] p-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="text-sm font-bold text-white/92">Ready to build your Club workspace?</p><p className="mt-1 text-sm text-white/46">Create a private home for your members, events, feed, and media.</p></div><button type="button" onClick={() => navigate("/clubs?create=1")} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition-colors hover:brightness-110 active:scale-[0.98]" style={{ background: "#426f45" }}><Plus className="h-4 w-4" aria-hidden="true" />Create a club</button></section></div></div>
           </main>
         </div>
       </div>
