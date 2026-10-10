@@ -499,7 +499,7 @@ export default function RsvpFormBuilderPage() {
     <div className="rsvp-builder min-h-screen flex flex-col" data-rsvp-theme={theme} style={{ background: "var(--rsvp-page-bg)" }}>
       {/* ── TOP HEADER ─────────────────────────────────────────────────────── */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-3 sm:px-5"
+        className="sticky top-0 z-50 h-16 border-b px-3 sm:px-5 lg:fixed lg:left-0 lg:right-0"
         style={{ background: "var(--rsvp-header)", borderColor: "var(--rsvp-white-08)", backdropFilter: "blur(18px)" }}
       >
         <div className="mx-auto grid h-full w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-5">
@@ -585,7 +585,7 @@ export default function RsvpFormBuilderPage() {
 
       {/* ── MOBILE TAB NAV ─────────────────────────────────────────────────── */}
       <div
-        className="fixed top-16 left-0 right-0 z-40 grid grid-cols-4 border-b lg:hidden"
+        className="sticky top-16 z-40 grid grid-cols-4 border-b lg:hidden"
         style={{ background: "var(--rsvp-header-solid)", borderColor: "var(--rsvp-white-08)", backdropFilter: "blur(14px)" }}
       >
         {FORM_BUILDER_TABS.map(({ id, label }) => (
@@ -605,7 +605,7 @@ export default function RsvpFormBuilderPage() {
       </div>
 
       {/* ── MAIN CONTENT ───────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto pb-16 pt-28 lg:pt-16">
+      <div className="flex-1 overflow-y-auto pb-16 pt-0 lg:pt-16">
 
         {/* ── QUESTIONS TAB ──────────────────────────────────────────────── */}
         {tab === "questions" && (

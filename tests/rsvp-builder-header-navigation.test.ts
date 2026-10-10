@@ -22,7 +22,8 @@ describe("RSVP builder header navigation", () => {
     expect(source).toContain('role="status" aria-live="polite"');
     expect(source).toContain('aria-current={tab === id ? "page" : undefined}');
     expect(source).toContain('focus-visible:ring-2 focus-visible:ring-green-400/70');
-    expect(source).toContain('className="fixed top-16 left-0 right-0 z-40 grid grid-cols-4 border-b lg:hidden"');
+    expect(source).toContain('className="sticky top-0 z-50 h-16 border-b px-3 sm:px-5 lg:fixed lg:left-0 lg:right-0"');
+    expect(source).toContain('className="sticky top-16 z-40 grid grid-cols-4 border-b lg:hidden"');
   });
 
   it("uses the platform appearance toggle and a single text-only form identity", () => {
@@ -50,7 +51,7 @@ describe("RSVP builder header navigation", () => {
   });
 
   it("reserves responsive content space below the desktop or mobile header", () => {
-    expect(source).toContain('className="flex-1 overflow-y-auto pb-16 pt-28 lg:pt-16"');
-    expect(source).toContain('className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-3 sm:px-5"');
+    expect(source).toContain('className="flex-1 overflow-y-auto pb-16 pt-0 lg:pt-16"');
+    expect(source).toContain('className="sticky top-0 z-50 h-16 border-b px-3 sm:px-5 lg:fixed lg:left-0 lg:right-0"');
   });
 });
