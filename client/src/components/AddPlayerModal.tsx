@@ -41,31 +41,18 @@ import {
 import type { Player } from "@/lib/tournamentData";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
-import { authFetch } from "@/lib/apiFetch";
 import {
-  chessComPlayerEndpoint,
-  extractChessComRatings,
-  normalizeChessComPlayerPayload,
-  resolveChessComRating,
-} from "@/lib/chessComPlayerPayload";
+  createChessComTournamentPlayer,
+  fetchPlayerLookupWithRetry,
+  lookupChessCom,
+  type ChessComLookupResult,
+} from "@/lib/playerLookup";
+
+export { lookupChessCom } from "@/lib/playerLookup";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Platform = "chess.com" | "lichess" | "manual" | "csv";
-
-interface LookupResult {
-  name: string;
-  username: string;
-  elo: number;
-  rapid?: number;
-  blitz?: number;
-  bullet?: number;
-  daily?: number;
-  rapidElo?: number;
-  blitzElo?: number;
-  avatar?: string;
-  country?: string;
-  title?: string;
-}
+type LookupResult = ChessComLookupResult;
 
 /** A parsed CSV row with upsert classification. */
 interface CsvRow {
@@ -99,43 +86,9 @@ const _AMBER_RING = "rgba(217,119,6,0.25)";
 
 // ─── ELO lookup helpers ─────────────────────────────────────────────────────────
 
-/** Retry-aware fetch: retries on 429 / 503 with exponential backoff (up to 3 attempts). */
-async function fetchWithRetry(url: string, fetchFn: (url: string) => Promise<Response> = fetch, maxRetries = 3): Promise<Response> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const res = await fetchFn(url);
-    if (res.status === 429 || res.status === 503) {
-      const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
-      await new Promise((r) => setTimeout(r, delay));
-      continue;
-    }
-    return res;
-  }
-  return fetchFn(url);
-}
-
-export async function lookupChessCom(username: string): Promise<LookupResult> {
-  // Route through server proxy to avoid browser User-Agent restrictions and
-  // Cloudflare rate-limiting on direct browser → api.chess.com calls
-  const res = await fetchWithRetry(chessComPlayerEndpoint(username), authFetch);
-  if (res.status === 404) throw new Error("Player not found on chess.com");
-  if (res.status === 429) throw new Error("Rate limited — try again in a moment");
-  if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`);
-  const { profile, stats } = normalizeChessComPlayerPayload(await res.json(), username);
-  const ratings = extractChessComRatings(stats);
-  return {
-    name: (profile.name as string) || (profile.username as string),
-    username: profile.username as string,
-    ...ratings,
-    elo: resolveChessComRating(ratings),
-    avatar: profile.avatar as string | undefined,
-    country: (profile.country as string | undefined)?.split("/").pop()?.toUpperCase(),
-    title: profile.title as string | undefined,
-  };
-}
-
 async function lookupLichess(username: string): Promise<LookupResult> {
   // Route through the server-side proxy to avoid CORS and IP-based rate limiting
-  const res = await fetchWithRetry(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
+  const res = await fetchPlayerLookupWithRetry(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
   if (res.status === 404) throw new Error("Player not found on Lichess");
   if (res.status === 429) throw new Error("Rate limited — try again in a moment");
   if (!res.ok) throw new Error(`Lichess lookup failed (${res.status})`);
@@ -824,24 +777,20 @@ export function AddPlayerModal({
       };
     } else {
       if (lookupState !== "found" || !lookupResult) return;
-      const isChessCom = platform === "chess.com";
-      const activeElo = isChessCom
-        ? resolveChessComRating(lookupResult, ratingType)
-        : lookupResult.elo;
-      player = {
-        id: nanoid(),
-        name: lookupResult.name || lookupResult.username,
-        username: lookupResult.username,
-        elo: activeElo,
-        // Store both chess.com ratings so the director can switch rating type later
-        ...(isChessCom && lookupResult.rapid ? { rapidElo: lookupResult.rapid } : {}),
-        ...(isChessCom && lookupResult.blitz ? { blitzElo: lookupResult.blitz } : {}),
-        platform: isChessCom ? "chesscom" : "lichess",
-        country: lookupResult.country ?? "Unknown",
-        title: lookupResult.title as Player["title"],
-        avatarUrl: lookupResult.avatar,
-        wins: 0, draws: 0, losses: 0, points: 0, buchholz: 0, colorHistory: [],
-      };
+      if (platform === "chess.com") {
+        player = createChessComTournamentPlayer(lookupResult, ratingType);
+      } else {
+        player = {
+          id: nanoid(),
+          name: lookupResult.name || lookupResult.username,
+          username: lookupResult.username,
+          elo: lookupResult.elo,
+          platform: "lichess",
+          country: lookupResult.country ?? "Unknown",
+          title: lookupResult.title as Player["title"],
+          wins: 0, draws: 0, losses: 0, points: 0, buchholz: 0, colorHistory: [],
+        };
+      }
     }
 
     onAdd(player);

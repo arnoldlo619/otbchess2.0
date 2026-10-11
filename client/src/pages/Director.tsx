@@ -44,6 +44,7 @@ import {type StylePairingPlayer} from "@/lib/styleAwarePairings";
 import { PairingSwapModal } from "@/components/PairingSwapModal";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import { SwissPhaseSummaryModal } from "@/components/SwissPhaseSummaryModal";
+import { PreStartPlayerLookup } from "@/components/tournament/PreStartPlayerLookup";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -5563,49 +5564,64 @@ export default function Director() {
                     </span>
                   </div>
 
-                  {/* Search input — full width on mobile */}
-                  <div className={`relative flex-1 w-full sm:max-w-xs`}>
-                    <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${
-                      isDark ? "text-white/30" : "text-[#436850]"
-                    }`} />
-                    <input
-                      aria-label="Search name, username, ELO"
-                      type="text"
-                      value={playerSearch}
-                      onChange={(e) => setPlayerSearch(e.target.value)}
-                      placeholder="Search name, username, ELO…"
-                      style={{ minHeight: "44px" }}
-                      className={`w-full pl-8 pr-8 py-2.5 text-base rounded-lg border outline-none transition-colors ${
-                        isDark
-                          ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50 focus:bg-white/08"
-                          : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
-                      }`}
+                  {isRegistration ? (
+                    <PreStartPlayerLookup
+                      isDark={isDark}
+                      existingUsernames={existingUsernames}
+                      ratingType={tournamentConfig?.ratingType}
+                      onAdd={(player) => {
+                        addPlayer(player);
+                        toast.success(`${player.name} added to the tournament`);
+                      }}
                     />
-                    {playerSearch && (
-                      <button
-                        onClick={() => setPlayerSearch("")}
-                        className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${
-                          isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"
+                  ) : (
+                    <div className={`relative flex-1 w-full sm:max-w-xs`}>
+                      <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${
+                        isDark ? "text-white/30" : "text-[#436850]"
+                      }`} />
+                      <input
+                        aria-label="Search name, username, ELO"
+                        type="text"
+                        value={playerSearch}
+                        onChange={(e) => setPlayerSearch(e.target.value)}
+                        placeholder="Search name, username, ELO…"
+                        style={{ minHeight: "44px" }}
+                        className={`w-full pl-8 pr-8 py-2.5 text-base rounded-lg border outline-none transition-colors ${
+                          isDark
+                            ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50 focus:bg-white/08"
+                            : "bg-[#FBFADA]/70 border-[#ADBC9F] text-[#12372A] placeholder:text-[#436850]/60 focus:border-[#436850]/40 focus:bg-white"
                         }`}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
+                      />
+                      {playerSearch && (
+                        <button
+                          onClick={() => setPlayerSearch("")}
+                          className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${
+                            isDark ? "text-white/40 hover:text-white/70" : "text-[#436850] hover:text-[#436850]"
+                          }`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {/* Roster actions */}
                   <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0 self-end sm:ml-auto">
-                    {/* Registration intake, including CSV import, lives in Add Player. */}
+                    {/* Manual, Lichess, and CSV intake remain available without competing with the inline Chess.com path. */}
                     {isRegistration && (
                       <button
                         onClick={() => setShowAddPlayer(true)}
-                        className="flex items-center gap-1 text-sm font-semibold px-2.5 py-2 rounded-lg transition-all"
-                        style={{ background: "#436850", color: "#FFFFFF" }}
-                        title="Add a player or import a CSV"
+                        aria-label="Open manual, Lichess, and CSV player options"
+                        className={`flex min-h-11 items-center gap-1 rounded-lg border px-2.5 py-2 text-sm font-semibold transition-all active:scale-95 ${
+                          isDark
+                            ? "border-white/12 bg-white/04 text-white/70 hover:bg-white/08 hover:text-white"
+                            : "border-[#ADBC9F] bg-white text-[#436850] hover:bg-[#FBFADA] hover:text-[#12372A]"
+                        }`}
+                        title="Add a Lichess or manual player, or import a CSV"
                       >
                         <UserPlus className="w-3.5 h-3.5" />
-                        <span className="hidden min-[480px]:inline">Add Player</span>
-                        <span className="min-[480px]:hidden">Add</span>
+                        <span className="hidden min-[560px]:inline">Other methods</span>
+                        <span className="min-[560px]:hidden">More</span>
                       </button>
                     )}
                     {isRegistration && state.players.length > 0 && (
@@ -5631,21 +5647,6 @@ export default function Director() {
                         <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         <span className="hidden min-[480px]:inline">{isEditingRoster ? "Done" : "Edit Players"}</span>
                         <span className="min-[480px]:hidden">{isEditingRoster ? "Done" : "Edit"}</span>
-                      </button>
-                    )}
-                    {/* Late Registration button — only during Round 1 */}
-                    {!isRegistration && state.currentRound === 1 && !allResultsIn && state.format !== "quads" && (
-                      <button
-                        onClick={() => setShowAddPlayer(true)}
-                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all active:scale-95 ${
-                          isDark
-                            ? "bg-amber-500/12 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-                            : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
-                        }`}
-                        title="Late registration open — players added now will be paired or given a bye"
-                      >
-                        <UserPlus className="w-3.5 h-3.5" />
-                        Late Registration
                       </button>
                     )}
                   </div>

@@ -21,6 +21,10 @@ const addPlayerSrc = fs.readFileSync(
   path.resolve(__dirname, "../components/AddPlayerModal.tsx"),
   "utf-8"
 );
+const playerLookupSrc = fs.readFileSync(
+  path.resolve(__dirname, "../lib/playerLookup.ts"),
+  "utf-8"
+);
 
 describe("Server: chessProxyLimiter", () => {
   it("limits provider lookups to 60 requests per minute", () => {
@@ -113,17 +117,19 @@ describe("UploadRSVPModal: lookupLichess uses fetchWithRetry", () => {
   });
 });
 
-describe("AddPlayerModal: fetchWithRetry", () => {
-  it("defines fetchWithRetry function", () => {
-    expect(addPlayerSrc).toContain("async function fetchWithRetry");
+describe("Director player lookup: shared retry behavior", () => {
+  it("keeps the modal and inline lookup on one shared retry utility", () => {
+    expect(addPlayerSrc).toContain('from "@/lib/playerLookup"');
+    expect(addPlayerSrc).toContain("fetchPlayerLookupWithRetry");
+    expect(playerLookupSrc).toContain("async function fetchPlayerLookupWithRetry");
   });
 
-  it("lookupChessCom uses fetchWithRetry", () => {
-    const fnMatch = addPlayerSrc.match(
+  it("uses the shared retry utility for Chess.com lookup", () => {
+    const fnMatch = playerLookupSrc.match(
       /async function lookupChessCom[\s\S]*?^}/m
     );
     expect(fnMatch).not.toBeNull();
-    expect(fnMatch![0]).toContain("fetchWithRetry");
+    expect(fnMatch![0]).toContain("fetchPlayerLookupWithRetry");
   });
 
   it("lookupLichess uses fetchWithRetry", () => {
@@ -131,11 +137,11 @@ describe("AddPlayerModal: fetchWithRetry", () => {
       /async function lookupLichess[\s\S]*?^}/m
     );
     expect(fnMatch).not.toBeNull();
-    expect(fnMatch![0]).toContain("fetchWithRetry");
+    expect(fnMatch![0]).toContain("fetchPlayerLookupWithRetry");
   });
 
   it("distinguishes 404 from 429 errors in chess.com lookup", () => {
-    expect(addPlayerSrc).toContain('throw new Error("Player not found on chess.com")');
-    expect(addPlayerSrc).toContain('throw new Error("Rate limited');
+    expect(playerLookupSrc).toContain('throw new Error("Player not found on chess.com")');
+    expect(playerLookupSrc).toContain('throw new Error("Rate limited');
   });
 });

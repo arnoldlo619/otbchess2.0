@@ -39,11 +39,13 @@ describe("Chess.com player proxy payload normalization", () => {
     expect(() => normalizeChessComPlayerPayload({ stats: {} })).toThrow("incomplete player profile");
   });
 
-  it("routes both director participant lookup and RSVP upload through the shared safe normalizer", () => {
+  it("routes director participant lookup and RSVP upload through the shared safe normalizer", () => {
     const addPlayerSource = readFileSync(resolve(process.cwd(), "client/src/components/AddPlayerModal.tsx"), "utf8");
+    const playerLookupSource = readFileSync(resolve(process.cwd(), "client/src/lib/playerLookup.ts"), "utf8");
     const rsvpSource = readFileSync(resolve(process.cwd(), "client/src/components/UploadRSVPModal.tsx"), "utf8");
 
-    expect(addPlayerSource).toContain("normalizeChessComPlayerPayload(await res.json(), username)");
+    expect(addPlayerSource).toContain('from "@/lib/playerLookup"');
+    expect(playerLookupSource).toContain("normalizeChessComPlayerPayload(await res.json(), username)");
     expect(rsvpSource).toContain("normalizeChessComPlayerPayload(await res.json(), username)");
     expect(addPlayerSource).not.toContain("const { profile, stats } = data;");
     expect(rsvpSource).not.toContain("const profile = data.profile ?? {}");

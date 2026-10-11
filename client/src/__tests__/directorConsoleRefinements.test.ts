@@ -192,13 +192,15 @@ describe("Players tab hierarchy", () => {
     expect(playersTab).not.toContain("addWalkInPlayer");
   });
 
-  it("keeps registration intake to the single Add Player action", () => {
+  it("uses an inline Round-0 lookup while retaining other registration methods", () => {
     const topRowStart = playersTab.indexOf("Top row: roster identity, search, and direct actions");
     const topRowSource = playersTab.slice(topRowStart, playersTab.indexOf("Sort controls and roster export", topRowStart));
 
     expect(topRowSource).toContain("self-end sm:ml-auto");
     expect(topRowSource).toContain("setShowAddPlayer(true)");
-    expect(topRowSource).toContain("Registration intake, including CSV import, lives in Add Player.");
+    expect(topRowSource).toContain("<PreStartPlayerLookup");
+    expect(topRowSource).toContain("Manual, Lichess, and CSV intake remain available");
+    expect(topRowSource).toContain('aria-label="Open manual, Lichess, and CSV player options"');
     expect(topRowSource).not.toContain("setShowUploadRSVP");
     expect(topRowSource).not.toContain("Upload RSVPs");
     expect(directorSource).not.toContain("UploadRSVPModal");
