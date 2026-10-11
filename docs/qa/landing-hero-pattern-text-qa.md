@@ -30,3 +30,22 @@
 ## Baseline Note
 
 The full-suite failures are pre-existing and unrelated to the landing hero Pattern Text update. No focused hero, Home, or stats-divider test failed.
+
+## Visibility Repair
+
+### Root cause
+
+The decorative duplicate text used a negative z-index inside an isolated stacking context. This allowed it to sit behind the hero surface rather than reliably behind the readable glyphs, while its 15-second texture shift was too slow to register as purposeful motion.
+
+### Resolution
+
+- Added an explicit foreground text layer at `z-index: 1`.
+- Kept the patterned duplicate in the same isolated stack at `z-index: 0`, using a responsive 5–10px offset.
+- Increased the pattern contrast and shortened the diagonal texture shift to a visible five-second loop.
+- Preserved the semantic headline and static reduced-motion fallback.
+
+### Repair validation
+
+- Runtime layer order confirmed as foreground `1` / patterned duplicate `0`, with no horizontal overflow.
+- Dark runtime geometry: 7.2px offset, 6.4px texture, and an active five-second animation.
+- Desktop dark/light and mobile dark visual checks confirm the moving pattern is visible without affecting headline readability or CTA access.

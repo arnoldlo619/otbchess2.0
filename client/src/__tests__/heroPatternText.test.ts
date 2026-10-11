@@ -20,18 +20,22 @@ describe("landing hero pattern text", () => {
     expect(patternText).toContain('type PatternTextProps = Omit<ComponentProps<"span">, "children">');
     expect(patternText).toContain("data-shadow={text}");
     expect(patternText).toContain('className={cn("otb-pattern-text", className)}');
-    expect(patternText).toContain("{text}\n    </span>");
+    expect(patternText).toContain('<span className="otb-pattern-text__foreground">{text}</span>');
   });
 
-  it("uses the supplied fine diagonal pattern motion with a reduced-motion fallback", () => {
+  it("keeps the animated duplicate above the headline surface and behind an explicit foreground layer", () => {
     expect(styles).toContain(".otb-pattern-text::after");
-    expect(styles).toContain("top: 0.065em;");
-    expect(styles).toContain("left: 0.065em;");
-    expect(styles).toContain("background-size: 0.1em 0.1em;");
+    expect(styles).toContain(".otb-pattern-text__foreground");
+    expect(styles).toContain("--otb-pattern-offset: clamp(5px, 0.09em, 10px);");
+    expect(styles).toContain("top: var(--otb-pattern-offset);");
+    expect(styles).toContain("left: var(--otb-pattern-offset);");
+    expect(styles).toContain("z-index: 0;");
+    expect(styles).toContain("z-index: 1;");
+    expect(styles).toContain("background-size: 0.08em 0.08em;");
     expect(styles).toContain("background-image: linear-gradient(");
-    expect(styles).toContain("animation: otb-pattern-text-shift 15s linear infinite;");
+    expect(styles).toContain("animation: otb-pattern-text-shift 5s linear infinite;");
     expect(styles).toContain("@keyframes otb-pattern-text-shift");
-    expect(styles).toContain("background-position: 100% -100%;");
+    expect(styles).toContain("background-position: 0.8em -0.8em;");
     expect(styles).toContain(".otb-pattern-text--dark");
     expect(styles).toContain(".otb-pattern-text--light");
     expect(styles).toContain(".otb-pattern-text::after {\n    animation: none;");

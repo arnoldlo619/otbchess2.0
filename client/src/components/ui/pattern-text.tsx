@@ -16,7 +16,7 @@ export function PatternText({ text, className, ...props }: PatternTextProps) {
       className={cn("otb-pattern-text", className)}
       {...props}
     >
-      {text}
+      <span className="otb-pattern-text__foreground">{text}</span>
     </span>
   );
 }

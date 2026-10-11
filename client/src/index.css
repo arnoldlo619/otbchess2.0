@@ -119,11 +119,17 @@
 }
 
 .otb-pattern-text {
+  --otb-pattern-offset: clamp(5px, 0.09em, 10px);
   position: relative;
   z-index: 0;
   display: inline-block;
   isolation: isolate;
   white-space: nowrap;
+}
+
+.otb-pattern-text__foreground {
+  position: relative;
+  z-index: 1;
   color: var(--otb-pattern-text-foreground);
   text-shadow: 0.02em 0.02em 0 var(--otb-pattern-text-surface);
 }
@@ -131,13 +137,13 @@
 .otb-pattern-text::after {
   content: attr(data-shadow);
   position: absolute;
-  top: 0.065em;
-  left: 0.065em;
-  z-index: -1;
+  top: var(--otb-pattern-offset);
+  left: var(--otb-pattern-offset);
+  z-index: 0;
   pointer-events: none;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  background-size: 0.1em 0.1em;
+  background-size: 0.08em 0.08em;
   background-image: linear-gradient(
     45deg,
     transparent 45%,
@@ -147,23 +153,23 @@
   );
   -webkit-background-clip: text;
   background-clip: text;
-  animation: otb-pattern-text-shift 15s linear infinite;
+  animation: otb-pattern-text-shift 5s linear infinite;
 }
 
 .otb-pattern-text--dark {
   --otb-pattern-text-foreground: oklch(0.93 0.05 142);
-  --otb-pattern-text-pattern: oklch(0.74 0.13 139);
+  --otb-pattern-text-pattern: oklch(0.72 0.14 142);
   --otb-pattern-text-surface: oklch(0.15 0.04 145);
 }
 
 .otb-pattern-text--light {
   --otb-pattern-text-foreground: #164b2a;
-  --otb-pattern-text-pattern: #174b2c;
-  --otb-pattern-text-surface: #eef4eb;
+  --otb-pattern-text-pattern: #467b55;
+  --otb-pattern-text-surface: #f7fbf5;
 }
 
 @keyframes otb-pattern-text-shift {
-  from { background-position: 100% -100%; }
+  from { background-position: 0.8em -0.8em; }
   to { background-position: 0 0; }
 }
 
