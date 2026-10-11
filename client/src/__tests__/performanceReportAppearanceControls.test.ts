@@ -18,8 +18,10 @@ describe("Performance Report appearance controls", () => {
   it("keeps achievement badges in the player identity stack instead of the header overlay", () => {
     expect(playerCard).toContain("data-card-achievement");
     expect(playerCard).toContain('maxWidth: "100%"');
-    expect(playerCard).toContain("minHeight: forExport ? 38 : 22");
-    expect(playerCard).toContain('textOverflow: "ellipsis"');
+    expect(playerCard).toContain("minHeight: forExport ? 40 : 26");
+    expect(playerCard).toContain('fontSize: forExport ? 19 : 11');
+    expect(playerCard).toContain('whiteSpace: "normal"');
+    expect(playerCard).toContain('overflowWrap: "anywhere"');
     expect(playerCard).not.toContain("/* Badge pill — bottom-left of header */");
   });
 });

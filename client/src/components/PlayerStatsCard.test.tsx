@@ -34,7 +34,35 @@ const performance = {
   buchholz: 17.5,
   badge: "champion",
   badgeLabel: "Champion",
-  roundHistory: [],
+  roundHistory: [
+    {
+      roundNumber: 1,
+      opponent: { id: "opponent-1", name: "Opponent One", elo: 1720 },
+      color: "W",
+      result: "win",
+      gameResult: "1-0",
+      pointsEarned: 1,
+      runningScore: 1,
+    },
+    {
+      roundNumber: 2,
+      opponent: { id: "opponent-2", name: "Opponent Two", elo: 1780 },
+      color: "B",
+      result: "draw",
+      gameResult: "½-½",
+      pointsEarned: 0.5,
+      runningScore: 1.5,
+    },
+    {
+      roundNumber: 3,
+      opponent: { id: "opponent-3", name: "Opponent Three", elo: 1810 },
+      color: "W",
+      result: "loss",
+      gameResult: "0-1",
+      pointsEarned: 0,
+      runningScore: 1.5,
+    },
+  ],
 } as unknown as PlayerPerformance;
 
 const reportSource = readFileSync(resolve(process.cwd(), "client/src/pages/Report.tsx"), "utf8");
@@ -48,9 +76,6 @@ function renderCard(theme: "light" | "dark", forExport = false) {
         tournamentDate="2026-09-10"
         forExport={forExport}
         accentColor="#F59E0B"
-        chesscomWins={24}
-        chesscomDraws={3}
-        chesscomLosses={8}
       />
     </ThemeProvider>,
   );
@@ -65,7 +90,11 @@ describe("PlayerStatsCard appearance modes", () => {
 
     expect(card?.getAttribute("data-card-theme")).toBe("light");
     expect(card?.style.background).toContain("rgb(250, 253, 248)");
-    expect(card?.textContent).toContain("Recent Form");
+    expect(card?.textContent).toContain("Recent Tournament Form");
+    expect(card?.textContent).toContain("1W");
+    expect(card?.textContent).toContain("1D");
+    expect(card?.textContent).toContain("1L");
+    expect(container.querySelector("[data-tournament-form]")).toBeTruthy();
   });
 
   it("retains the existing dark card canvas when dark appearance is selected", () => {

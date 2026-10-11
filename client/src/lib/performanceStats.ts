@@ -146,21 +146,21 @@ function assignBadge(
   playerId: string
 ): { badge: AchievementBadge; label: string } {
   // Podium
-  if (rank === 1) return { badge: "champion",    label: "🏆 Champion" };
-  if (rank === 2) return { badge: "runner_up",   label: "🥈 Runner-Up" };
-  if (rank === 3) return { badge: "third_place", label: "🥉 Third Place" };
+  if (rank === 1) return { badge: "champion",    label: "Champion" };
+  if (rank === 2) return { badge: "runner_up",   label: "Runner-Up" };
+  if (rank === 3) return { badge: "third_place", label: "Third Place" };
 
   // Perfect score
-  if (points === totalRounds) return { badge: "perfect_score", label: "⭐ Perfect Score" };
+  if (points === totalRounds) return { badge: "perfect_score", label: "Perfect Score" };
 
   // Giant killer: beat someone 200+ ELO higher
   if (biggestUpset && biggestUpset.eloGap >= 200) {
-    return { badge: "giant_killer", label: "⚡ Giant Killer" };
+    return { badge: "giant_killer", label: "Giant Killer" };
   }
 
   // Iron wall: more draws than wins and no losses
   if (draws > wins && losses === 0) {
-    return { badge: "iron_wall", label: "🛡️ Iron Wall" };
+    return { badge: "iron_wall", label: "Iron Wall" };
   }
 
   // Comeback: lost round 1 but won the last round
@@ -180,17 +180,17 @@ function assignBadge(
         (lastGame.whiteId === playerId && lastGame.result === "1-0") ||
         (lastGame.blackId === playerId && lastGame.result === "0-1");
       if (lostFirst && wonLast) {
-        return { badge: "comeback", label: "🔥 Comeback Player" };
+        return { badge: "comeback", label: "Comeback Player" };
       }
     }
   }
 
   // Consistent: all results within ½pt of each other (won at least half)
   if (losses === 0 && points >= totalRounds / 2) {
-    return { badge: "consistent", label: "💎 Consistent Performer" };
+    return { badge: "consistent", label: "Consistent Performer" };
   }
 
-  return { badge: "participant", label: "🎖️ Participant" };
+  return { badge: "participant", label: "Participant" };
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
@@ -431,12 +431,12 @@ export function computeQuadSectionPerformances(
       let badgeLabel = perf.badgeLabel;
       if (perf.rank === 1) {
         badgeLabel = isCo
-          ? `🏆 ${section.name} Co-Champion`
-          : `🏆 ${section.name} Champion`;
+          ? `${section.name} Co-Champion`
+          : `${section.name} Champion`;
       } else if (perf.rank === 2) {
-        badgeLabel = `🥈 2nd in ${section.name}`;
+        badgeLabel = `2nd in ${section.name}`;
       } else if (perf.rank === 3) {
-        badgeLabel = `🥉 3rd in ${section.name}`;
+        badgeLabel = `3rd in ${section.name}`;
       } else {
         badgeLabel = `4th in ${section.name}`;
       }

@@ -554,9 +554,6 @@ function ExportableCard({
   exportRef,
   accentColor,
   onAccentChange,
-  chesscomWins,
-  chesscomDraws,
-  chesscomLosses,
   clubName,
 }: {
   perf: PlayerPerformance;
@@ -569,9 +566,6 @@ function ExportableCard({
   exportRef: React.RefObject<HTMLDivElement | null>;
   accentColor: string;
   onAccentChange: (hex: string) => void;
-  chesscomWins?: number;
-  chesscomDraws?: number;
-  chesscomLosses?: number;
   clubName?: string;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -704,9 +698,6 @@ function ExportableCard({
         avatarStatus={avatarStatus}
         forExport={false}
         accentColor={accentColor}
-        chesscomWins={chesscomWins}
-        chesscomDraws={chesscomDraws}
-        chesscomLosses={chesscomLosses}
         clubName={clubName}
       />
 
@@ -883,7 +874,6 @@ export default function ReportPage() {
   // Using player.avatarUrl directly avoids username-collision bugs where two
   // players with the same username (or a stale memCache entry) end up sharing
   // the same profile picture across multiple performance cards.
-  const allUsernames = performances.map((p) => p.player.username);
   const usernamesNeedingFetch = performances
     .filter((p) => !p.player.avatarUrl && p.player.platform === "chesscom" && p.player.username)
     .map((p) => p.player.username);
@@ -900,29 +890,6 @@ export default function ReportPage() {
     }
   }
   const avatarsLoaded = performances.every((p) => p.player.avatarUrl) || fetchedLoaded;
-
-  // chess.com recent form — keyed by lowercase username
-  type ChesscomForm = { wins: number; draws: number; losses: number };
-  const [chesscomForm, setChesscomForm] = useState<Map<string, ChesscomForm>>(new Map());
-  useEffect(() => {
-    if (allUsernames.length === 0) return;
-    // Fetch analysis for each player in parallel, non-blocking
-    allUsernames.forEach((username) => {
-      const key = username.toLowerCase();
-      fetch(`/api/chess/player/${encodeURIComponent(key)}/analysis`)
-        .then((r) => r.ok ? r.json() : null)
-        .then((data: { wins?: number; draws?: number; losses?: number } | null) => {
-          if (!data || data.wins === undefined) return;
-          setChesscomForm((prev) => {
-            const next = new Map(prev);
-            next.set(key, { wins: data.wins!, draws: data.draws ?? 0, losses: data.losses ?? 0 });
-            return next;
-          });
-        })
-        .catch(() => { /* silently ignore */ });
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allUsernames.join(",")]);
 
   // Per-player accent color state — keyed by player id
   const [accentColors, setAccentColors] = useState<Map<string, string>>(() => {
@@ -1521,7 +1488,6 @@ export default function ReportPage() {
               {filtered.map((perf) => {
                 const exportRef = getExportRef(perf.player.id);
                 const accent = getAccent(perf);
-                const form = chesscomForm.get(perf.player.username.toLowerCase());
                 // For Quads, use the section name the player belongs to as the card tournament name.
                 // This ensures the share text and card header say "Quad 1" not the global tournament name.
                 const cardTournamentName = isQuads
@@ -1550,9 +1516,6 @@ export default function ReportPage() {
                         avatarStatus="loaded"
                         forExport
                         accentColor={accent}
-                        chesscomWins={form?.wins}
-                        chesscomDraws={form?.draws}
-                        chesscomLosses={form?.losses}
                         clubName={config?.clubName ?? undefined}
                       />
                     </div>
@@ -1568,9 +1531,6 @@ export default function ReportPage() {
                       exportRef={exportRef}
                       accentColor={accent}
                       onAccentChange={(hex) => setAccent(perf.player.id, hex)}
-                      chesscomWins={form?.wins}
-                      chesscomDraws={form?.draws}
-                      chesscomLosses={form?.losses}
                       clubName={config?.clubName ?? undefined}
                     />
                   </div>

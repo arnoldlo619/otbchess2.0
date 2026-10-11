@@ -6,9 +6,7 @@
  */
 import { Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const LOGO_URL =
-  "/manus-storage/otb-logo-exclamation-256_9b50f5ee.webp";
+import { OTB_LOGO_ASSET } from "@/lib/brandAssets";
 
 interface NavLogoProps {
   /** Extra Tailwind classes to apply to the <img> element */
@@ -23,7 +21,7 @@ export function NavLogo({ className = "", linked = true }: NavLogoProps) {
 
   const img = (
     <img
-      src={LOGO_URL}
+      src={OTB_LOGO_ASSET}
       alt="OTB Chess"
       className={`h-9 w-auto object-contain transition-opacity hover:opacity-90 active:opacity-70 ${className}`}
       style={{ mixBlendMode: isDark ? "screen" : "normal" }}

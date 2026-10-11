@@ -22,6 +22,7 @@ import type { PlayerPerformance } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { useTheme } from "@/contexts/ThemeContext";
+import { OTB_LOGO_ASSET } from "@/lib/brandAssets";
 
 // ─── Accent palette ───────────────────────────────────────────────────────────
 /** Curated palette exposed to the Report page color picker. */
@@ -176,7 +177,7 @@ function StatBlock({
       {sub && (
         <span
           style={{
-            fontSize: forExport ? 17 : 9,
+            fontSize: forExport ? 17 : 11,
             color: isDark ? "rgba(255,255,255,0.35)" : "#587166",
             fontWeight: 500,
           }}
@@ -186,7 +187,7 @@ function StatBlock({
       )}
       <span
         style={{
-          fontSize: forExport ? 16 : 8,
+          fontSize: forExport ? 16 : 10,
           fontWeight: 700,
           color: isDark ? "rgba(255,255,255,0.28)" : "#6E847A",
           textTransform: "uppercase",
@@ -209,10 +210,6 @@ export interface PlayerStatsCardProps {
   forExport?: boolean;
   /** Hex accent color — defaults to the badge's own color */
   accentColor?: string;
-  /** chess.com recent form — wins/draws/losses from last 50 online games */
-  chesscomWins?: number;
-  chesscomDraws?: number;
-  chesscomLosses?: number;
   /** Optional club name shown as subtitle below tournament name in header */
   clubName?: string;
 }
@@ -227,9 +224,6 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       avatarStatus = "loaded",
       forExport = false,
       accentColor: accentColorProp,
-      chesscomWins,
-      chesscomDraws,
-      chesscomLosses,
       clubName,
     },
     ref
@@ -249,6 +243,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       badge,
       badgeLabel,
       longestStreak,
+      roundHistory,
     } = perf;
 
     const [imgError, setImgError] = useState(false);
@@ -280,8 +275,8 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           avatarShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}20`,
           draw: "rgba(255,255,255,0.28)",
           loss: "rgba(239,68,68,0.55)",
-          onlineWin: "#4ade80",
-          onlineLoss: "rgba(239,68,68,0.65)",
+          formWin: "#4ade80",
+          formLoss: "rgba(239,68,68,0.65)",
           badgeBackground: badgeCfg.color,
           badgeText: badgeCfg.textColor,
           badgeBorder: `${badgeCfg.textColor}30`,
@@ -306,8 +301,8 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           avatarShadow: `0 8px 22px rgba(18,55,42,0.14), 0 0 0 1px ${accentColor}24`,
           draw: "#71877D",
           loss: "#C84D4D",
-          onlineWin: "#16803E",
-          onlineLoss: "#B53A3A",
+          formWin: "#16803E",
+          formLoss: "#B53A3A",
           badgeBackground: hexToGlow(badgeBaseColor, 0.13),
           badgeText: badge === "champion" ? "#9A6700" : badge === "runner_up" ? "#52667A" : badge === "third_place" ? "#A34212" : badgeBaseColor,
           badgeBorder: hexToGlow(badgeBaseColor, 0.28),
@@ -326,6 +321,10 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
     const wPct = total > 0 ? (wins / total) * 100 : 0;
     const dPct = total > 0 ? (draws / total) * 100 : 0;
     const lPct = total > 0 ? (losses / total) * 100 : 0;
+    const recentTournamentForm = roundHistory.slice(-5);
+    const recentWins = recentTournamentForm.filter((entry) => entry.result === "win").length;
+    const recentDraws = recentTournamentForm.filter((entry) => entry.result === "draw").length;
+    const recentLosses = recentTournamentForm.filter((entry) => entry.result === "loss").length;
 
     // Export dimensions — Instagram portrait (4:5 ratio = 1080×1350)
     const EW = 1080;
@@ -417,7 +416,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               <p
                 style={{
                   marginTop: forExport ? 10 : 4,
-                  fontSize: forExport ? 20 : 9,
+                  fontSize: forExport ? 20 : 11,
                   fontWeight: 600,
                   color: accentColor,
                   letterSpacing: "0.02em",
@@ -431,7 +430,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               <p
                 style={{
                   marginTop: forExport ? 10 : 4,
-                  fontSize: forExport ? 18 : 8,
+                  fontSize: forExport ? 18 : 10,
                   fontWeight: 500,
                   color: visual.mutedText,
                 }}
@@ -516,20 +515,20 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   display: "inline-flex",
                   alignItems: "center",
                   maxWidth: "100%",
-                  minHeight: forExport ? 38 : 22,
+                  minHeight: forExport ? 40 : 26,
                   boxSizing: "border-box",
-                  fontSize: forExport ? 18 : 10,
+                  fontSize: forExport ? 19 : 11,
                   fontWeight: 800,
-                  lineHeight: 1.1,
-                  padding: forExport ? "8px 16px" : "4px 9px",
+                  lineHeight: 1.2,
+                  padding: forExport ? "8px 16px" : "5px 10px",
                   borderRadius: 999,
                   background: visual.badgeBackground,
                   color: visual.badgeText,
                   border: `1px solid ${visual.badgeBorder}`,
                   boxShadow: `0 4px 14px ${hexToGlow(badgeBaseColor, 0.16)}`,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  whiteSpace: "normal",
+                  overflowWrap: "anywhere",
+                  textAlign: "left",
                   marginBottom: forExport ? 12 : 6,
                 }}
               >
@@ -540,7 +539,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 <span
                   style={{
                     display: "inline-block",
-                    fontSize: forExport ? 16 : 8,
+                    fontSize: forExport ? 16 : 10,
                     fontWeight: 900,
                     padding: forExport ? "4px 12px" : "2px 6px",
                     borderRadius: 4,
@@ -572,7 +571,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               {/* Username · ELO */}
               <p
                 style={{
-                  fontSize: forExport ? 20 : 9,
+                  fontSize: forExport ? 20 : 11,
                   color: visual.mutedText,
                   fontWeight: 500,
                   overflow: "hidden",
@@ -605,7 +604,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               </p>
               <p
                 style={{
-                  fontSize: forExport ? 17 : 8,
+                  fontSize: forExport ? 17 : 10,
                   color: visual.subtleText,
                   fontWeight: 600,
                   textTransform: "uppercase",
@@ -652,49 +651,67 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 {losses > 0 && <div style={{ width: `${lPct}%`, background: visual.loss, borderRadius: 999 }} />}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: accentColor }}>{wins}W</span>
-                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: visual.draw }}>{draws}D</span>
-                <span style={{ fontSize: forExport ? 20 : 10, fontWeight: 700, color: visual.loss }}>{losses}L</span>
+                <span style={{ fontSize: forExport ? 20 : 11, fontWeight: 700, color: accentColor }}>{wins}W</span>
+                <span style={{ fontSize: forExport ? 20 : 11, fontWeight: 700, color: visual.draw }}>{draws}D</span>
+                <span style={{ fontSize: forExport ? 20 : 11, fontWeight: 700, color: visual.loss }}>{losses}L</span>
               </div>
             </div>
           )}
 
-          {/* ── chess.com Recent Form bar ── */}
-          {chesscomWins !== undefined && chesscomDraws !== undefined && chesscomLosses !== undefined && (() => {
-            const cfTotal = chesscomWins + chesscomDraws + chesscomLosses;
-            if (cfTotal === 0) return null;
-            const cfWPct = (chesscomWins / cfTotal) * 100;
-            const cfDPct = (chesscomDraws / cfTotal) * 100;
-            const cfLPct = 100 - cfWPct - cfDPct;
-            const cfWinRate = Math.round(cfWPct);
+          {/* ── Tournament-native Recent Form ── */}
+          {recentTournamentForm.length > 0 && (() => {
             return (
               <div
+                data-tournament-form
                 style={{
                   marginBottom: forExport ? 40 : 16,
-                  padding: forExport ? "24px 28px" : "10px 12px",
+                  padding: forExport ? "24px 28px" : "12px 14px",
                   borderRadius: forExport ? 20 : 10,
                   background: visual.surface,
                   border: `1px solid ${visual.surfaceBorder}`,
                 }}
               >
-                {/* Label row */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: forExport ? 12 : 6 }}>
-                  <span style={{ fontSize: forExport ? 15 : 7, fontWeight: 700, color: visual.subtleText, textTransform: "uppercase", letterSpacing: "0.10em" }}>
-                    Recent Form (Last {cfTotal})
+                  <span style={{ fontSize: forExport ? 15 : 10, fontWeight: 700, color: visual.subtleText, textTransform: "uppercase", letterSpacing: "0.10em" }}>
+                    Recent Tournament Form
                   </span>
                   <div style={{ display: "flex", gap: forExport ? 12 : 6 }}>
-                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: visual.onlineWin, fontFamily: "'JetBrains Mono', monospace" }}>{chesscomWins}W</span>
-                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: visual.draw, fontFamily: "'JetBrains Mono', monospace" }}>{chesscomDraws}D</span>
-                    <span style={{ fontSize: forExport ? 17 : 9, fontWeight: 700, color: visual.onlineLoss, fontFamily: "'JetBrains Mono', monospace" }}>{chesscomLosses}L</span>
+                    <span style={{ fontSize: forExport ? 17 : 11, fontWeight: 800, color: visual.formWin, fontFamily: "'JetBrains Mono', monospace" }}>{recentWins}W</span>
+                    <span style={{ fontSize: forExport ? 17 : 11, fontWeight: 800, color: visual.draw, fontFamily: "'JetBrains Mono', monospace" }}>{recentDraws}D</span>
+                    <span style={{ fontSize: forExport ? 17 : 11, fontWeight: 800, color: visual.formLoss, fontFamily: "'JetBrains Mono', monospace" }}>{recentLosses}L</span>
                   </div>
                 </div>
-                {/* Segmented bar */}
-                <div style={{ display: "flex", height: forExport ? 10 : 5, borderRadius: 999, overflow: "hidden", gap: 1, marginBottom: forExport ? 10 : 4 }}>
-                  {cfWPct > 0 && <div style={{ width: `${cfWPct}%`, background: isDark ? "linear-gradient(90deg, #16a34a, #4ade80)" : "linear-gradient(90deg, #127536, #38A35D)", borderRadius: 999 }} />}
-                  {cfDPct > 0 && <div style={{ width: `${cfDPct}%`, background: visual.draw, borderRadius: 999 }} />}
-                  {cfLPct > 0 && <div style={{ width: `${cfLPct}%`, background: isDark ? "linear-gradient(90deg, #dc2626, #f87171)" : "linear-gradient(90deg, #B53A3A, #DE7373)", borderRadius: 999 }} />}
+                <div style={{ display: "flex", gap: forExport ? 12 : 6 }} aria-label={`Last ${recentTournamentForm.length} tournament results`}>
+                  {recentTournamentForm.map((entry) => {
+                    const result = entry.result === "win" ? "W" : entry.result === "draw" ? "D" : "L";
+                    const color = entry.result === "win" ? visual.formWin : entry.result === "draw" ? visual.draw : visual.formLoss;
+                    return (
+                      <span
+                        key={`${entry.roundNumber}-${entry.opponent.id}`}
+                        title={`Round ${entry.roundNumber}: ${result}`}
+                        style={{
+                          minWidth: forExport ? 42 : 28,
+                          minHeight: forExport ? 42 : 28,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: 999,
+                          background: hexToGlow(color, isDark ? 0.18 : 0.14),
+                          border: `1px solid ${hexToGlow(color, isDark ? 0.42 : 0.32)}`,
+                          color,
+                          fontSize: forExport ? 18 : 12,
+                          fontWeight: 900,
+                          fontFamily: "'JetBrains Mono', monospace",
+                        }}
+                      >
+                        {result}
+                      </span>
+                    );
+                  })}
                 </div>
-                <span style={{ fontSize: forExport ? 14 : 7, color: visual.subtleText }}>{cfWinRate}% win rate online</span>
+                <span style={{ display: "block", marginTop: forExport ? 12 : 7, fontSize: forExport ? 14 : 10, color: visual.subtleText }}>
+                  Last {recentTournamentForm.length} tournament {recentTournamentForm.length === 1 ? "round" : "rounds"}
+                </span>
               </div>
             );
           })()}
@@ -714,7 +731,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p
                   style={{
-                    fontSize: forExport ? 14 : 7,
+                    fontSize: forExport ? 14 : 9,
                     fontWeight: 700,
                     color: visual.subtleText,
                     textTransform: "uppercase",
@@ -726,7 +743,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 </p>
                 <p
                   style={{
-                  fontSize: forExport ? 22 : 11,
+                  fontSize: forExport ? 22 : 13,
                   fontWeight: 700,
                   color: visual.strongText,
                     overflow: "hidden",
@@ -736,7 +753,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 >
                   {bestWin.opponent.name}
                 </p>
-                <p style={{ fontSize: forExport ? 16 : 8, color: visual.mutedText }}>
+                <p style={{ fontSize: forExport ? 16 : 10, color: visual.mutedText }}>
                   {bestWin.opponent.elo} ELO
                 </p>
               </div>
@@ -744,7 +761,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             <div style={{ textAlign: "right", flexShrink: 0 }}>
               <p
                 style={{
-                  fontSize: forExport ? 14 : 7,
+                  fontSize: forExport ? 14 : 9,
                   fontWeight: 700,
                   color: visual.subtleText,
                   textTransform: "uppercase",
@@ -754,7 +771,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               >
                 Buchholz
               </p>
-              <p style={{ fontSize: forExport ? 22 : 11, fontWeight: 700, color: visual.strongText }}>
+              <p style={{ fontSize: forExport ? 22 : 13, fontWeight: 700, color: visual.strongText }}>
                 {buchholz.toFixed(1)}
               </p>
             </div>
@@ -775,9 +792,8 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             {/* Left: OTB!! logo + ChessOTB.club wordmark */}
             <div style={{ display: "flex", alignItems: "center", gap: forExport ? 10 : 5, flexShrink: 0 }}>
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png"
+                src={OTB_LOGO_ASSET}
                 alt="OTB!!"
-                crossOrigin="anonymous"
                 style={{
                   width: forExport ? 36 : 16,
                   height: forExport ? 36 : 16,
@@ -789,7 +805,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               <span
                 style={{
                   fontFamily: "'Clash Display', sans-serif",
-                  fontSize: forExport ? 18 : 8,
+                  fontSize: forExport ? 18 : 10,
                   fontWeight: 800,
                   color: accentColor,
                   letterSpacing: "0.08em",
@@ -804,7 +820,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             <div style={{ textAlign: "right", minWidth: 0, flex: 1 }}>
               <p
                 style={{
-                  fontSize: forExport ? 11 : 6,
+                  fontSize: forExport ? 11 : 9,
                   fontWeight: 700,
                   color: visual.subtleText,
                   textTransform: "uppercase",
@@ -816,7 +832,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               </p>
               <p
                 style={{
-                  fontSize: forExport ? 16 : 7,
+                  fontSize: forExport ? 16 : 10,
                   fontWeight: 600,
                   color: visual.mutedText,
                   overflow: "hidden",
